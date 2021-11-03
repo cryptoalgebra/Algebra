@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\V3Migrator.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> V3Migrator.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/26</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/18</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/2</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/27</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity =0.7.6;
+pragma abicoder v2;
+&nbsp;
+import 'algebra/contracts/libraries/LowGasSafeMath.sol';
+import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
+&nbsp;
+import './interfaces/INonfungiblePositionManager.sol';
+&nbsp;
+import './libraries/TransferHelper.sol';
+&nbsp;
+import './interfaces/IV3Migrator.sol';
+import './base/PeripheryImmutableState.sol';
+import './base/Multicall.sol';
+import './base/SelfPermit.sol';
+import './interfaces/external/IWNativeToken.sol';
+import './base/PoolInitializer.sol';
+&nbsp;
+/// @title Algebra Migrator
+contract V3Migrator is IV3Migrator, PeripheryImmutableState, PoolInitializer, Multicall, SelfPermit {
+    using LowGasSafeMath for uint256;
+&nbsp;
+    address public immutable nonfungiblePositionManager;
+&nbsp;
+<span class="fstat-no" title="function not covered" >    constructor(</span>
+        address _factory,
+        address _WNativeToken,
+        address _nonfungiblePositionManager,
+        address _poolDeployer
+    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {
+<span class="cstat-no" title="statement not covered" >        nonfungiblePositionManager = _nonfungiblePositionManager</span>;
+    }
+&nbsp;
+    receive() external payable {
+        require(msg.sender == WNativeToken, 'Not WNativeToken');
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function migrate(MigrateParams calldata params) external override {</span>
+<span class="cstat-no" title="statement not covered" >        require(params.percentageToMigrate &gt; 0, 'Percentage too small')</span>;
+<span class="cstat-no" title="statement not covered" >        require(params.percentageToMigrate &lt;= 100, 'Percentage too large')</span>;
+&nbsp;
+        // burn v2 liquidity to this address
+<span class="cstat-no" title="statement not covered" >        IUniswapV2Pair(params.pair).transferFrom(msg.sender, params.pair, params.liquidityToMigrate)</span>;
+<span class="cstat-no" title="statement not covered" >        (uint256 amount0V2, uint256 amount1V2) = IUniswapV2Pair(params.pair).burn(address(this));</span>
+&nbsp;
+        // calculate the amounts to migrate to v3
+<span class="cstat-no" title="statement not covered" >        uint256 amount0V2ToMigrate = amount0V2.mul(params.percentageToMigrate) / 100;</span>
+<span class="cstat-no" title="statement not covered" >        uint256 amount1V2ToMigrate = amount1V2.mul(params.percentageToMigrate) / 100;</span>
+&nbsp;
+        // approve the position manager up to the maximum token amounts
+<span class="cstat-no" title="statement not covered" >        TransferHelper.safeApprove(params.token0, nonfungiblePositionManager, amount0V2ToMigrate)</span>;
+<span class="cstat-no" title="statement not covered" >        TransferHelper.safeApprove(params.token1, nonfungiblePositionManager, amount1V2ToMigrate)</span>;
+&nbsp;
+        // mint v3 position
+<span class="cstat-no" title="statement not covered" >        (, , uint256 amount0V3, uint256 amount1V3) = INonfungiblePositionManager(nonfungiblePositionManager).mint(</span>
+            INonfungiblePositionManager.MintParams({
+                token0: params.token0,
+                token1: params.token1,
+                tickLower: params.tickLower,
+                tickUpper: params.tickUpper,
+                amount0Desired: amount0V2ToMigrate,
+                amount1Desired: amount1V2ToMigrate,
+                amount0Min: params.amount0Min,
+                amount1Min: params.amount1Min,
+                recipient: params.recipient,
+                deadline: params.deadline
+            })
+        );
+&nbsp;
+        // if necessary, clear allowance and refund dust
+<span class="cstat-no" title="statement not covered" >        if (amount0V3 &lt; amount0V2) {</span>
+<span class="cstat-no" title="statement not covered" >            if (amount0V3 &lt; amount0V2ToMigrate) {</span>
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeApprove(params.token0, nonfungiblePositionManager, 0)</span>;
+            }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            uint256 refund0 = amount0V2 - amount0V3;</span>
+<span class="cstat-no" title="statement not covered" >            if (params.refundAsNative &amp;&amp; params.token0 == WNativeToken) {</span>
+<span class="cstat-no" title="statement not covered" >                IWNativeToken(WNativeToken).withdraw(refund0)</span>;
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeTransferNative(msg.sender, refund0)</span>;
+            } else {
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeTransfer(params.token0, msg.sender, refund0)</span>;
+            }
+        }
+<span class="cstat-no" title="statement not covered" >        if (amount1V3 &lt; amount1V2) {</span>
+<span class="cstat-no" title="statement not covered" >            if (amount1V3 &lt; amount1V2ToMigrate) {</span>
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeApprove(params.token1, nonfungiblePositionManager, 0)</span>;
+            }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >            uint256 refund1 = amount1V2 - amount1V3;</span>
+<span class="cstat-no" title="statement not covered" >            if (params.refundAsNative &amp;&amp; params.token1 == WNativeToken) {</span>
+<span class="cstat-no" title="statement not covered" >                IWNativeToken(WNativeToken).withdraw(refund1)</span>;
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeTransferNative(msg.sender, refund1)</span>;
+            } else {
+<span class="cstat-no" title="statement not covered" >                TransferHelper.safeTransfer(params.token1, msg.sender, refund1)</span>;
+            }
+        }
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:26:12 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

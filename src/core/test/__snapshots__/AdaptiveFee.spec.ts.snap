@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AdaptiveFee #getFee fee grid snapshot 1`] = `
+"[Volm: 0Volt: 0]500
+[Volm: 0Volt: 50]500
+[Volm: 0Volt: 100]500
+[Volm: 0Volt: 150]500
+[Volm: 0Volt: 200]500
+[Volm: 0Volt: 250]500
+[Volm: 0Volt: 300]500
+[Volm: 0Volt: 350]500
+[Volm: 0Volt: 400]500
+[Volm: 0Volt: 500]500
+[Volm: 0Volt: 800]500
+[Volm: 0Volt: 1000]500
+[Volm: 0Volt: 1500]500
+[Volm: 0Volt: 2000]500
+
+======================================
+[Volm: 15Volt: 0]500
+[Volm: 15Volt: 50]500
+[Volm: 15Volt: 100]500
+[Volm: 15Volt: 150]500
+[Volm: 15Volt: 200]500
+[Volm: 15Volt: 250]500
+[Volm: 15Volt: 300]500
+[Volm: 15Volt: 350]500
+[Volm: 15Volt: 400]500
+[Volm: 15Volt: 500]500
+[Volm: 15Volt: 800]500
+[Volm: 15Volt: 1000]500
+[Volm: 15Volt: 1500]500
+[Volm: 15Volt: 2000]500
+
+======================================
+[Volm: 30Volt: 0]500
+[Volm: 30Volt: 50]500
+[Volm: 30Volt: 100]500
+[Volm: 30Volt: 150]500
+[Volm: 30Volt: 200]500
+[Volm: 30Volt: 250]500
+[Volm: 30Volt: 300]500
+[Volm: 30Volt: 350]500
+[Volm: 30Volt: 400]500
+[Volm: 30Volt: 500]500
+[Volm: 30Volt: 800]500
+[Volm: 30Volt: 1000]500
+[Volm: 30Volt: 1500]500
+[Volm: 30Volt: 2000]500
+
+======================================
+[Volm: 45Volt: 0]519
+[Volm: 45Volt: 50]587
+[Volm: 45Volt: 100]897
+[Volm: 45Volt: 150]1750
+[Volm: 45Volt: 200]2602
+[Volm: 45Volt: 250]2912
+[Volm: 45Volt: 300]2980
+[Volm: 45Volt: 350]3000
+[Volm: 45Volt: 400]3000
+[Volm: 45Volt: 500]3000
+[Volm: 45Volt: 800]3000
+[Volm: 45Volt: 1000]3054
+[Volm: 45Volt: 1500]6500
+[Volm: 45Volt: 2000]9945
+
+======================================
+[Volm: 60Volt: 0]519
+[Volm: 60Volt: 50]587
+[Volm: 60Volt: 100]897
+[Volm: 60Volt: 150]1750
+[Volm: 60Volt: 200]2602
+[Volm: 60Volt: 250]2912
+[Volm: 60Volt: 300]2980
+[Volm: 60Volt: 350]3000
+[Volm: 60Volt: 400]3000
+[Volm: 60Volt: 500]3000
+[Volm: 60Volt: 800]3000
+[Volm: 60Volt: 1000]3054
+[Volm: 60Volt: 1500]6500
+[Volm: 60Volt: 2000]9945
+
+======================================
+"
+`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `4245`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `4246`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `4245`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `4246`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `4196`;

@@ -1,0 +1,142 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity >=0.5.0;
+
+/// @title Packed tick initialized state library
+/// @notice Stores a packed mapping of tick index to its initialized state
+/// @dev The mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
+library TickTable {
+    /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
+    /// @param self The mapping in which to toggle the tick
+    /// @param tick The tick to toggle
+    function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
+        require(tick % 60 == 0, 'tick is not spaced'); // ensure that the tick is spaced
+        tick /= 60; // compress tick
+        int16 rowNumber;
+        uint8 bitNumber;
+
+        assembly {
+            bitNumber := and(tick, 0xFF)
+            rowNumber := shr(8, tick)
+        }
+        self[rowNumber] ^= 1 << bitNumber;
+    }
+
+    /// @notice get position of single 1-bit
+    /// @param word The word containing only one 1-bit
+    function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
+        assembly {
+            singleBitPos := gt(and(word, 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA), 0)
+            singleBitPos := or(
+                singleBitPos,
+                shl(7, gt(and(word, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(6, gt(and(word, 0xFFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(5, gt(and(word, 0xFFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(4, gt(and(word, 0xFFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(3, gt(and(word, 0xFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(2, gt(and(word, 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0), 0))
+            )
+            singleBitPos := or(
+                singleBitPos,
+                shl(1, gt(and(word, 0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC), 0))
+            )
+        }
+    }
+
+    function getMostSignificantBit(uint256 word) internal pure returns (uint8 mostBitPos) {
+        // filter only the most significant bit by algorithm:
+        // separate even and odd bits and choose max
+        // shift and invert like 0x0101 -> 0x0001 -> 0xFFF0
+        // do "and" like 0x0101 & 0xFFF0 -> 0x0100
+        assembly {
+            let even := and(word, 0x5555555555555555555555555555555555555555555555555555555555555555)
+            let odd := and(word, not(even))
+            if lt(odd, even) {
+                odd := even
+            }
+            word := and(odd, not(shr(2, odd)))
+        }
+        return (getSingleSignificantBit(word));
+    }
+
+    /// @notice Returns the next initialized tick contained in the same word (or adjacent word) as the tick that is either
+    /// to the left (less than or equal to) or right (greater than) of the given tick
+    /// @param self The mapping in which to compute the next initialized tick
+    /// @param tick The starting tick
+    /// @param lte Whether to search for the next initialized tick to the left (less than or equal to the starting tick)
+    /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
+    /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
+    function nextTickInTheSameRow(
+        mapping(int16 => uint256) storage self,
+        int24 tick,
+        bool lte
+    ) internal view returns (int24, bool) {
+        // compress and round towards negative infinity if negative
+        assembly {
+            tick := sub(sdiv(tick, 60), and(slt(tick, 0), not(iszero(smod(tick, 60)))))
+        }
+
+        if (lte) {
+            // unpacking not made into a separate function for gas and contract size savings
+            int16 rowNumber;
+            uint8 bitNumber;
+            assembly {
+                bitNumber := and(tick, 0xFF)
+                rowNumber := shr(8, tick)
+            }
+            // all the 1s at or to the right of the current bitNumber
+            uint256 _row = self[rowNumber] << (255 - bitNumber);
+
+            if (_row != 0) {
+                tick -= int24(255 - getMostSignificantBit(_row));
+                return (uncompressAndBoundTick(tick), true);
+            } else {
+                tick -= int24(bitNumber);
+                return (uncompressAndBoundTick(tick), false);
+            }
+        } else {
+            // start from the word of the next tick, since the current tick state doesn't matter
+            tick += 1;
+            int16 rowNumber;
+            uint8 bitNumber;
+            assembly {
+                bitNumber := and(tick, 0xFF)
+                rowNumber := shr(8, tick)
+            }
+
+            // all the 1s at or to the left of the bitNumber
+            uint256 _row = self[rowNumber] >> (bitNumber);
+
+            if (_row != 0) {
+                tick += int24(getSingleSignificantBit(-_row & _row)); // least significant bit
+                return (uncompressAndBoundTick(tick), true);
+            } else {
+                tick += int24(255 - bitNumber);
+                return (uncompressAndBoundTick(tick), false);
+            }
+        }
+    }
+
+    function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
+        boundedTick = tick * 60;
+        if (boundedTick < -887272) {
+            boundedTick = -887272;
+        } else if (boundedTick > 887272) {
+            boundedTick = 887272;
+        }
+    }
+}

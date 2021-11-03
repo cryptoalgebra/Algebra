@@ -1,0 +1,95 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  core:
+    strategy:
+      matrix:
+        node: ['14.x']
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - run: npm i -g npm
+      - run: npm run ci-install
+
+      - run: npm run compile
+        working-directory: ./src/core
+      - run: npm run test
+        working-directory: ./src/core
+
+
+  periphery:
+    strategy:
+      matrix:
+        node: ['14.x']
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: ./src/periphery
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm i -g npm
+        working-directory: ./
+      - run: npm run bootstrap
+        working-directory: ./
+      - run: npm run compile
+        working-directory: ./src/core
+
+      - run: npm install && npm run compile
+      - run: npm run test
+  
+  staker:
+    strategy:
+      matrix:
+        node: ['14.x']
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        working-directory: ./src/staker
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm i -g npm
+        working-directory: ./
+      - run: npm run bootstrap
+        working-directory: ./
+      - run: npm run compile
+        working-directory: ./src/core
+
+      - run: npm install && npm run compile
+        working-directory: ./src/periphery
+
+      - run: npm install && npm run compile
+      - run: npm run test

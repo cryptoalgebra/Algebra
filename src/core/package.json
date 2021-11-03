@@ -1,0 +1,32 @@
+{
+  "name": "algebra",
+  "description": "Core smart contracts of Algebra",
+  "license": "GPL-2.0-or-later",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "keywords": [
+    "algebra"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Algebra/"
+  },
+  "files": [
+    "contracts/interfaces",
+    "contracts/libraries",
+    "artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json",
+    "artifacts/contracts/AlgebraPool.sol/AlgebraPool.json",
+    "artifacts/contracts/DataStorageOperator.sol/DataStorageOperator.json",
+    "artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json",
+    "artifacts/contracts/interfaces/**/*.json",
+    "!artifacts/contracts/interfaces/**/*.dbg.json"
+  ],
+  "scripts": {
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
+  }
+}

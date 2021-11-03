@@ -1,0 +1,4477 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AlgebraPool swap tests close to max price Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "950",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26083334577657556165937366525255483287",
+  "executionPrice": "2.7456e+34",
+  "poolPriceAfter": "4.6248e+30",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 706125,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "2211835384986100012503",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "24783253868132286203464186431879765901",
+  "amount1Delta": "950",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26087635650665564420486510980399489975",
+  "executionPrice": "2.7461e+19",
+  "poolPriceAfter": "4.4366",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 14899,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "80817062143729010155156046157387262",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "24783253868132286203464186431879765901",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "1000",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26083554020048502481172152644649564420",
+  "executionPrice": "2.6084e+34",
+  "poolPriceAfter": "4.1649e+30",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 705077,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "2211835384986100012503",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "1000",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26087635650665564420697142612004766326",
+  "executionPrice": "2.6088e+19",
+  "poolPriceAfter": "4.0040",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 13873,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "85070591730240740948448228750284364",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26087635650665564420697142612004766326",
+  "executionPrice": "2.6088e+19",
+  "poolPriceAfter": "4.0040",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 13873,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "85070591730240740948448228750284364",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 880340,
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "2",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-1000",
+  "executionPrice": "500.00",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "2",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "5.0000e+17",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "2",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "5.0000e+17",
+  "poolPriceAfter": "1.7014e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 880340,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "3163859589963361077",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26087635650665564423434232548437664977",
+  "executionPrice": "8.2455e+18",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": -9164,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "269151407469566620958724371938389081",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "1265543835985344470",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "-26087635650665564421536865952336637378",
+  "executionPrice": "2.0614e+19",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 9163,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "107660562987830323433052494910761019",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "10714032694684514365028774550107559491",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 887271,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "911449101153891744758023671283193305795659156874096481",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "1",
+  "amount0Delta": "0",
+  "amount1Before": "26087635650665564424699143612505016738",
+  "amount1Delta": "10714032694684514365028774550107559491",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.7014e+38",
+  "tickAfter": 887271,
+  "tickBefore": 880340,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "911449101153891744758023671283193305795659156874096481",
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 880340,
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 880340,
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 880340,
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "24735893086677014261654493491412087075",
+  "amount0Delta": "950",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731687",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26033482391360462966745805844401565438",
+  "amount1Before": "1",
+  "amount1Delta": "950",
+  "executionPrice": "0.000000000000000000000000000000000036491",
+  "poolPriceAfter": "0.00000000000000000000000000000021635",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -706120,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "2211835384986100012503",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "24735893086677014261654493491412087075",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731687303715884105728",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26037782196502120271213149990433512255",
+  "amount1Before": "1",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "0.000000000000000000036485",
+  "poolPriceAfter": "0.22540",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -14900,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "80817062143729180296339506626618992",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "1000",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731687",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26033701707694885679551007893470080315",
+  "amount1Before": "1",
+  "amount1Delta": "1000",
+  "executionPrice": "0.000000000000000000000000000000000038412",
+  "poolPriceAfter": "0.00000000000000000000000000000024023",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -705073,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "2211835384986100012503",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731687303715884105728",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -880303,
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26037782196502120271423781622038788605",
+  "amount1Before": "1",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.000000000000000000038406",
+  "poolPriceAfter": "0.24975",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -13874,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730240911089631689219516095",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26037782196502120271423781622038788605",
+  "amount1Before": "1",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.000000000000000000038406",
+  "poolPriceAfter": "0.24975",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -13874,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730240911089631689219516095",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "10763911081142753163594299259196578522",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -887272,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "915692285004443440546462917438841002672439487196985689",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "10763911081142753163594299259196578522",
+  "amount1Before": "1",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -887272,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "915692285004443440546462917438841002672439487196985689",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -880303,
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -880303,
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -880303,
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-1000",
+  "amount1Before": "1",
+  "amount1Delta": "2",
+  "executionPrice": "0.0020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "1",
+  "amount1Delta": "2",
+  "executionPrice": "0.0000000000000000020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "1",
+  "amount1Delta": "2",
+  "executionPrice": "0.0000000000000000020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -880303,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26037782196502120272263504962370659661",
+  "amount1Before": "1",
+  "amount1Delta": "1265543835985344471",
+  "executionPrice": "0.000000000000000000048604",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": -9164,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "107660562987830493574235955379992750",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "26037782196502120275425782622539039026",
+  "amount0Delta": "-26037782196502120274160871558471687260",
+  "amount1Before": "1",
+  "amount1Delta": "3163859589963361080",
+  "executionPrice": "0.00000000000000000012151",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "tickAfter": 9163,
+  "tickBefore": -880303,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "269151407469567131382274753346084275",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "179095982589967612349",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-948",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-633122187031171861",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-633122187031171861",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-998",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-666444407401233538",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-666444407401233538",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1002",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "2001000500250125063",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.49975",
+  "poolPriceAfter": "0.25000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -13864,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170226296608773698291977743817627986",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1162859089713235950",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-735088935932648267",
+  "executionPrice": "0.63214",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860786967725325511697650515",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "2001000500250125063",
+  "executionPrice": "2.0010",
+  "poolPriceAfter": "4.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 13863,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170226296608773698291977743817627986",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests high fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-735088935932648267",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1162859089713235950",
+  "executionPrice": "1.5819",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860786967725325511697650515",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "950",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36792010255994728273783626688087988997",
+  "executionPrice": "3.8728e+34",
+  "poolPriceAfter": "4.6248e+30",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 706125,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "2211835384986100012503",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "34956495762552599705918133586570646326",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36796311329002736528332771143231995685",
+  "executionPrice": "3.8733e+19",
+  "poolPriceAfter": "4.4366",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 14899,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "80817062143729010155156046157387262",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "34956495762552599705918133586570646326",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1000",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36792229698385674589018412807482070130",
+  "executionPrice": "3.6792e+34",
+  "poolPriceAfter": "4.1649e+30",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 705077,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "2211835384986100012503",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36796311329002736528543402774837272036",
+  "executionPrice": "3.6796e+19",
+  "poolPriceAfter": "4.0040",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 13873,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "85070591730240740948448228750284364",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36796311329002736528543402774837272036",
+  "executionPrice": "3.6796e+19",
+  "poolPriceAfter": "4.0040",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 13873,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "85070591730240740948448228750284364",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "2",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-1000",
+  "executionPrice": "500.00",
+  "poolPriceAfter": "3.3849e+38",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 887219,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "2",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "5.0000e+17",
+  "poolPriceAfter": "3.3849e+38",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 887219,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "2",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "5.0000e+17",
+  "poolPriceAfter": "3.3849e+38",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 887219,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "3163859589963361077",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36796311329002736531280492711270170687",
+  "executionPrice": "1.1630e+19",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": -9164,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "269151407469566620958724371938389081",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1265543835985344470",
+  "amount1Before": "36796311329002736532545403775337522448",
+  "amount1Delta": "-36796311329002736529383126115169143088",
+  "executionPrice": "2.9075e+19",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "3.4026e+38",
+  "tickAfter": 9163,
+  "tickBefore": 887271,
+  "totalFeeGrowth0TokenDelta": "107660562987830323433052494910761019",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "poolBalance0": "34956495755999086959316370495500718295",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36792011516962644753758307953968545670",
+  "amount1Before": "0",
+  "amount1Delta": "950",
+  "executionPrice": "0.000000000000000000000000000000000025821",
+  "poolPriceAfter": "0.00000000000000000000000000000021635",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -706120,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "2211835384986100012503",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "poolBalance0": "34956495755999086959316370495500718295",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36796311322104302058225652100000492487",
+  "amount1Before": "0",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "0.000000000000000000025818",
+  "poolPriceAfter": "0.22540",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -14900,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "80817062143729180296339506626618992",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36792230833297067466563510003037060547",
+  "amount1Before": "0",
+  "amount1Delta": "1000",
+  "executionPrice": "0.000000000000000000000000000000000027180",
+  "poolPriceAfter": "0.00000000000000000000000000000024023",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -705073,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "2211835384986100012503",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36796311322104302058436283731605768837",
+  "amount1Before": "0",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.000000000000000000027177",
+  "poolPriceAfter": "0.24975",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -13874,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730240911089631689219516095",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36796311322104302058436283731605768837",
+  "amount1Before": "0",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.000000000000000000027177",
+  "poolPriceAfter": "0.24975",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -13874,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730240911089631689219516095",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -887272,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-1000",
+  "amount1Before": "0",
+  "amount1Delta": "2",
+  "executionPrice": "0.0020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -887220,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "0",
+  "amount1Delta": "2",
+  "executionPrice": "0.0000000000000000020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -887220,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "0",
+  "amount1Delta": "2",
+  "executionPrice": "0.0000000000000000020000",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -887220,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36796311322104302059276007071937639893",
+  "amount1Before": "0",
+  "amount1Delta": "1265543835985344471",
+  "executionPrice": "0.000000000000000000034393",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": -9164,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "107660562987830493574235955379992750",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "36796311322104302062438284732106019258",
+  "amount0Delta": "-36796311322104302061173373668038667492",
+  "amount1Before": "0",
+  "amount1Delta": "3163859589963361080",
+  "executionPrice": "0.000000000000000000085983",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "tickAfter": 9163,
+  "tickBefore": -887272,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "269151407469567131382274753346084275",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "179095982589967612349",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-948",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-633122187031171861",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-633122187031171861",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-998",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-666444407401233538",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-666444407401233538",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1002",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "2001000500250125063",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.49975",
+  "poolPriceAfter": "0.25000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -13864,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170226296608773698291977743817627986",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1162859089713235950",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-735088935932648267",
+  "executionPrice": "0.63214",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860786967725325511697650515",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "2001000500250125063",
+  "executionPrice": "2.0010",
+  "poolPriceAfter": "4.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 13863,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170226296608773698291977743817627986",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-735088935932648267",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1162859089713235950",
+  "executionPrice": "1.5819",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860786967725325511697650515",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "5691174416230484",
+  "amount0Delta": "950",
+  "amount1Before": "5691174416230484",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "179095982589967609238",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "5691174416230484",
+  "amount0Delta": "-948",
+  "amount1Before": "5691174416230484",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967609238",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "5691174416230484",
+  "amount0Delta": "5711128283351335",
+  "amount1Before": "5691174416230484",
+  "amount1Delta": "-5691174416230483",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802140695523864960875109",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "5691174416230484",
+  "amount0Delta": "-5691174416230483",
+  "amount1Before": "5691174416230484",
+  "amount1Delta": "5711128283351335",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802140695523864960875109",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "1000",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-998",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "6011713982475090",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-5990709911821561",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802158614004682995252472",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "6011713982475090",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-5990709911821561",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802158614004682995252472",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-5990709911821561",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "6011713982475090",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802158614004682995252472",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-5990709911821561",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "6011713982475090",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802158614004682995252472",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "1002",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "6011713982475090",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-5990709911821561",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802158614004682995252472",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "6011713982475090",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-5990709911821561",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802158614004682995252472",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "6011713982475090",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "-5990709911821561",
+  "executionPrice": "0.99651",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "511420065802158614004682995252472",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "5990709911821562",
+  "poolBalance1": "5990709911821562",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-1000",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-5990709911821561",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "6011713982475090",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802158614004682995252472",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-5990709911821561",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "6011713982475090",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802158614004682995252472",
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "5990709911821562",
+  "poolBalance1": "5990709911821562",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests low fee, large liquidity around current price (stable swap) swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "5990709911821562",
+  "amount0Delta": "-5990709911821561",
+  "amount1Before": "5990709911821562",
+  "amount1Delta": "6011713982475090",
+  "executionPrice": "1.0035",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "511420065802158614004682995252472",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "10930456418424058842692652216342464",
+  "amount0Delta": "950",
+  "amount1Before": "10930456418424058842692652216231083",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "29575000",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "10930456418424058842692652216342464",
+  "amount0Delta": "0",
+  "amount1Before": "10930456418424058842692652216231083",
+  "amount1Delta": "950",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "29575000",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "10930456418424058842692652216342464",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "10930456418424058842692652216231083",
+  "amount1Delta": "-949524999999977556",
+  "executionPrice": "0.99950",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "14787500000696102105",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "10930456418424058842692652216342464",
+  "amount0Delta": "-949524999999977474",
+  "amount1Before": "10930456418424058842692652216231083",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.0005",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "14787500000698686026",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "1000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "0",
+  "executionPrice": "0.0000",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "29575000",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "0",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "1000",
+  "executionPrice": "-Infinity",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "29575000",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-999499999999976375",
+  "executionPrice": "0.99950",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "14787500000696106775",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-999499999999976375",
+  "executionPrice": "0.99950",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "14787500000696106775",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-999499999999976288",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.0005",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "14787500000698679800",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-999499999999976288",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.0005",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "14787500000698679800",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "145296",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.0068825",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "2158975",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "1000500250125179687",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.99950",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "14794897448726099250",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "1000500250125179687",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.99950",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "14794897448726099250",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "6689779263620420183910324433911634",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "-4228872409409224753601131225116702",
+  "executionPrice": "0.63214",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860786963469573922566473704",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "11505743598341114571255423385623647",
+  "poolBalance1": "11505743598341114571255423385506404",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-1000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "145296",
+  "executionPrice": "145.30",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "2158975",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "1000500250125179600",
+  "executionPrice": "1.0005",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "14794897448726099250",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "1000500250125179600",
+  "executionPrice": "1.0005",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "14794897448726099250",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "11505743598341114571255423385623647",
+  "poolBalance1": "11505743598341114571255423385506404",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "11505743598341114571255423385623647",
+  "amount0Delta": "-4228872409409224753601131224936259",
+  "amount1Before": "11505743598341114571255423385506404",
+  "amount1Delta": "6689779263620420183910324433460300",
+  "executionPrice": "1.5819",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860786963469573922559819329",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1894308825583769517",
+  "amount0Delta": "950",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-943",
+  "executionPrice": "0.99263",
+  "poolPriceAfter": "0.99402",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -61,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-943",
+  "amount1Before": "1894308825583769517",
+  "amount1Delta": "950",
+  "executionPrice": "1.0074",
+  "poolPriceAfter": "1.0060",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 60,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1894308825583769517",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-640615827173841419",
+  "executionPrice": "0.67433",
+  "poolPriceAfter": "0.45792",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -7812,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "80817062143722885072551469265044950",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-640615827173841419",
+  "amount1Before": "1894308825583769517",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.4829",
+  "poolPriceAfter": "2.1838",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 7811,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "80817062143722885072551469265044950",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "1000",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-993",
+  "executionPrice": "0.99300",
+  "poolPriceAfter": "0.99402",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -61,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-993",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0070",
+  "poolPriceAfter": "1.0060",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 60,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-663119784033553205",
+  "executionPrice": "0.66312",
+  "poolPriceAfter": "0.44282",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8147,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "822829831536474485",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-579795727715083389",
+  "executionPrice": "0.70464",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "69998620662097277332311396511937634",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-663119784033553205",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.5080",
+  "poolPriceAfter": "2.2583",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8146,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-579795727715083389",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "822829831536474485",
+  "executionPrice": "1.4192",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "69998620662097277332311396511937634",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "1008",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99206",
+  "poolPriceAfter": "0.99402",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -61,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "2019108105171289046",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.49527",
+  "poolPriceAfter": "0.24701",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -13984,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "171766721274234428103758397480829466",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "822829831536474485",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-579795727715083389",
+  "executionPrice": "0.70464",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "69998620662097277332311396511937634",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "1156847375730760862",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "-729098226020826705",
+  "executionPrice": "0.63025",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98413690794984979252504289171629775",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "1994009290088178439",
+  "poolBalance1": "1994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-1000",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "1008",
+  "executionPrice": "1.0080",
+  "poolPriceAfter": "1.0060",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 60,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "2019108105171289046",
+  "executionPrice": "2.0191",
+  "poolPriceAfter": "4.0484",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 13983,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "171766721274234428103758397480829466",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-579795727715083389",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "822829831536474485",
+  "executionPrice": "1.4192",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "69998620662097277332311396511937634",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "1994009290088178439",
+  "poolBalance1": "1994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 0 liquidity, all liquidity around current price swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "1994009290088178439",
+  "amount0Delta": "-729098226020826705",
+  "amount1Before": "1994009290088178439",
+  "amount1Delta": "1156847375730760862",
+  "executionPrice": "1.5867",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98413690794984979252504289171629775",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "179095982589967612349",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-948",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "-633122187031171861",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1900000000000000000",
+  "amount0Delta": "-633122187031171861",
+  "amount1Before": "1900000000000000000",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-998",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-666444407401233538",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-666444407401233538",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1002",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "2001000500250125063",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.49975",
+  "poolPriceAfter": "0.25000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -13864,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170226296608773698291977743817627986",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "1162859089713235950",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "-735088935932648267",
+  "executionPrice": "0.63214",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860786967725325511697650515",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "2001000500250125063",
+  "executionPrice": "2.0010",
+  "poolPriceAfter": "4.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 13863,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170226296608773698291977743817627986",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "2000000000000000000",
+  "amount0Delta": "-735088935932648267",
+  "amount1Before": "2000000000000000000",
+  "amount1Delta": "1162859089713235950",
+  "executionPrice": "1.5819",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860786967725325511697650515",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "3794308825583769517",
+  "amount0Delta": "950",
+  "amount1Before": "3894009290088178439",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "179095982589967612349",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "3894009290088178439",
+  "amount0Delta": "-948",
+  "amount1Before": "3794308825583769517",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "3794308825583769517",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "3894009290088178439",
+  "amount1Delta": "-761500916282255970",
+  "executionPrice": "0.80158",
+  "poolPriceAfter": "0.64514",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -4384,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "41706913953602664573405822427060471",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "3894009290088178439",
+  "amount0Delta": "-761500916282255970",
+  "amount1Before": "3794308825583769517",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.2475",
+  "poolPriceAfter": "1.5500",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 4383,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "41706913953602664573405822427060471",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-998",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-797530983292494086",
+  "executionPrice": "0.79753",
+  "poolPriceAfter": "0.63859",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -4486,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "42791005898018472310515897661213128",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-797530983292494086",
+  "executionPrice": "0.79753",
+  "poolPriceAfter": "0.63859",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -4486,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "42791005898018472310515897661213128",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-797530983292494086",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.2539",
+  "poolPriceAfter": "1.5659",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 4485,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "42791005898018472310515897661213128",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-797530983292494086",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.2539",
+  "poolPriceAfter": "1.5659",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 4485,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "42791005898018472310515897661213128",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1002",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1338665418746961186",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.74701",
+  "poolPriceAfter": "0.56026",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -5794,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "57196239683704346690653338368962492",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "1338665418746961186",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.74701",
+  "poolPriceAfter": "0.56026",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -5794,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "57196239683704346690653338368962492",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "2319706465443996813",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "-1464187161953474971",
+  "executionPrice": "0.63120",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860787052795917241932266381",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "3994009290088178439",
+  "poolBalance1": "3994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-1000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1338665418746961186",
+  "executionPrice": "1.3387",
+  "poolPriceAfter": "1.7849",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 5793,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "57196239683704346690653338368962492",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "1338665418746961186",
+  "executionPrice": "1.3387",
+  "poolPriceAfter": "1.7849",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 5793,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "57196239683704346690653338368962492",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "3994009290088178439",
+  "poolBalance1": "3994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:1 price, additional liquidity around current price swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "3994009290088178439",
+  "amount0Delta": "-1464187161953474971",
+  "amount1Before": "3994009290088178439",
+  "amount1Delta": "2319706465443996813",
+  "executionPrice": "1.5843",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860787052795917241932266381",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "6008327554319920731",
+  "amount0Delta": "950",
+  "amount1Before": "600832755431992073",
+  "amount1Delta": "-94",
+  "executionPrice": "0.098947",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "179095982589967612349",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "6008327554319920734",
+  "amount0Delta": "-9489",
+  "amount1Before": "600832755431992074",
+  "amount1Delta": "950",
+  "executionPrice": "0.10012",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612254",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "6008327554319920731",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "600832755431992073",
+  "amount1Delta": "-81994511618006691",
+  "executionPrice": "0.086310",
+  "poolPriceAfter": "0.074569",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -25962,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "6008327554319920734",
+  "amount0Delta": "-3679832736042246041",
+  "amount1Before": "600832755431992074",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "0.25816",
+  "poolPriceAfter": "0.66582",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -4068,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234794917052246178062404",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "1000",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "-99",
+  "executionPrice": "0.099000",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-9989",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "1000",
+  "executionPrice": "0.10011",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "-86310012229480727",
+  "executionPrice": "0.086310",
+  "poolPriceAfter": "0.074569",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -25962,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -23028,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-3873508143202364251",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.25816",
+  "poolPriceAfter": "0.66582",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -4068,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234786007027112327173784",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-3873508143202364251",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "0.25816",
+  "poolPriceAfter": "0.66582",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -4068,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234786007027112327173784",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "10007",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.099930",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "1020847100762815390390",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "36814718681445024568397928375957239272",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "-632455532033675838",
+  "executionPrice": "0.000000000000000000017179",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -887272,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "3131849902612650928597237314753120935011461010577408279",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -23028,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -23028,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": -23028,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-1000",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "102",
+  "executionPrice": "0.10200",
+  "poolPriceAfter": "0.10000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -23028,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "118840331243408266",
+  "executionPrice": "0.11884",
+  "poolPriceAfter": "0.14109",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -19585,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "10109817300293977190211119028951601",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "118840331243408266",
+  "executionPrice": "0.11884",
+  "poolPriceAfter": "0.14109",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -19585,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "10109817300293977190211119028951601",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-3162277660168379331",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "632771917992672205",
+  "executionPrice": "0.20010",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": -9164,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "53830281493912269316407419478441085",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 1:10 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "6324555320336758664",
+  "amount0Delta": "-5059644256269406930",
+  "amount1Before": "632455532033675867",
+  "amount1Delta": "2531087671970688814",
+  "executionPrice": "0.50025",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "0.10000",
+  "tickAfter": 9163,
+  "tickBefore": -23028,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "215321125975648907124446217444532610",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "600832755431992074",
+  "amount0Delta": "950",
+  "amount1Before": "6008327554319920734",
+  "amount1Delta": "-9489",
+  "executionPrice": "9.9884",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "179095982589967612254",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "600832755431992073",
+  "amount0Delta": "-94",
+  "amount1Before": "6008327554319920731",
+  "amount1Delta": "950",
+  "executionPrice": "10.106",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "179095982589967612349",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "600832755431992074",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "6008327554319920734",
+  "amount1Delta": "-3679832736042246040",
+  "executionPrice": "3.8735",
+  "poolPriceAfter": "1.5019",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 4067,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "85070591730234794917052246178062403",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "600832755431992073",
+  "amount0Delta": "-81994511618006691",
+  "amount1Before": "6008327554319920731",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "11.586",
+  "poolPriceAfter": "13.410",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 25961,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "1000",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-9989",
+  "executionPrice": "9.9890",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "-99",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "1000",
+  "executionPrice": "10.101",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-3873508143202364253",
+  "executionPrice": "3.8735",
+  "poolPriceAfter": "1.5019",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 4067,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "85070591730234786007027112327173783",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-3873508143202364253",
+  "executionPrice": "3.8735",
+  "poolPriceAfter": "1.5019",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 4067,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "85070591730234786007027112327173783",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "-86310012229480727",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "11.586",
+  "poolPriceAfter": "13.410",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 25961,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 23027,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "102",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-1000",
+  "executionPrice": "9.8039",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "118840331243408266",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "8.4147",
+  "poolPriceAfter": "7.0877",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 19584,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "10109817300293977190211119028951601",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "118840331243408266",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "8.4147",
+  "poolPriceAfter": "7.0877",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 19584,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "10109817300293977190211119028951601",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "2531087671970688811",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-5059644256269406930",
+  "executionPrice": "1.9990",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": -9164,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "215321125975648566842079296506069146",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "632771917992672204",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "-3162277660168379331",
+  "executionPrice": "4.9975",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 9163,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "53830281493912269316407419478441084",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "-1000",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "10007",
+  "executionPrice": "10.007",
+  "poolPriceAfter": "10.000",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 23027,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "1020847100762815390390",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "632455532033675867",
+  "amount0Delta": "-632455532033675838",
+  "amount1Before": "6324555320336758664",
+  "amount1Delta": "36814718688346909981211454182091809749",
+  "executionPrice": "5.8209e+19",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "10.000",
+  "tickAfter": 887271,
+  "tickBefore": 23027,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "3131849903199798404719558571050695495236646859993260177",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 23027,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 23027,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, 10:1 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 23027,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1895288957857852491",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-948",
+  "amount1Before": "0",
+  "amount1Delta": "950",
+  "executionPrice": "1.0021",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1895288957857852491",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-643849433383341385",
+  "amount1Before": "0",
+  "amount1Delta": "950000000000000000",
+  "executionPrice": "1.4755",
+  "poolPriceAfter": "2.1749",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 7770,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "80817062143722885072551469265044950",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-998",
+  "amount1Before": "0",
+  "amount1Delta": "1000",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-666444407401233538",
+  "amount1Before": "0",
+  "amount1Delta": "1000000000000000000",
+  "executionPrice": "1.5005",
+  "poolPriceAfter": "2.2493",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 8106,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "85070591730234615865843651857942052",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "0",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -887272,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "0",
+  "amount1Before": "0",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "1995041008271423675",
+  "poolBalance1": "0",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-1000",
+  "amount1Before": "0",
+  "amount1Delta": "1002",
+  "executionPrice": "1.0020",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 0,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170141183460469231731",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-1000000000000000000",
+  "amount1Before": "0",
+  "amount1Delta": "2001000500250125063",
+  "executionPrice": "2.0010",
+  "poolPriceAfter": "4.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 13863,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "170226296608773698291977743817627986",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-585786437626904951",
+  "amount1Before": "0",
+  "amount1Delta": "828841545518949573",
+  "executionPrice": "1.4149",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "70510040727899265805132619037958374",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "1995041008271423675",
+  "poolBalance1": "0",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token0 liquidity only swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "1995041008271423675",
+  "amount0Delta": "-735088935932648267",
+  "amount1Before": "0",
+  "amount1Delta": "1162859089713235950",
+  "executionPrice": "1.5819",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "98925110860786967725325511697650515",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only Token with comission swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "950",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-948",
+  "executionPrice": "0.99789",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only Token with comission swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1895288957857852491",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only Token with comission swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "950000000000000000",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-643849433383341385",
+  "executionPrice": "0.67774",
+  "poolPriceAfter": "0.45979",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -7771,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "80817062143722885072551469265044950",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only Token with comission swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1895288957857852491",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 0.0000000000000010000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1000",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-998",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 0.0000000000000010000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 1.0000 token0 for token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1000000000000000000",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-666444407401233538",
+  "executionPrice": "0.66644",
+  "poolPriceAfter": "0.44459",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -8107,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "85070591730234615865843651857942052",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 1.0000 token0 for token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 1.0000 token1 for token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap exactly 1.0000 token1 for token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token0 for exactly 0.0000000000000010000 token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1002",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-1000",
+  "executionPrice": "0.99800",
+  "poolPriceAfter": "1.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -1,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170141183460469231731",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token0 for exactly 1.0000 token1 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "2001000500250125063",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-1000000000000000000",
+  "executionPrice": "0.49975",
+  "poolPriceAfter": "0.25000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -13864,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "170226296608773698291977743817627986",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token0 for exactly 1.0000 token1 to price 0.50000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "828841545518949573",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-585786437626904951",
+  "executionPrice": "0.70675",
+  "poolPriceAfter": "0.50000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -6932,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "70510040727899265805132619037958374",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token0 for token1 to price 0.40000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "1162859089713235950",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "-735088935932648267",
+  "executionPrice": "0.63214",
+  "poolPriceAfter": "0.40000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": -9164,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "98925110860786967725325511697650515",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token0 for token1 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "1995041008271423675",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token1 for exactly 0.0000000000000010000 token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token1 for exactly 1.0000 token0 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "3.4026e+38",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 887271,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token1 for exactly 1.0000 token0 to price 2.0000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "2.0000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 6931,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token1 for token0 to price 0.40000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "1995041008271423675",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with reason string 'SPL'",
+  "tickBefore": 0,
+}
+`;
+
+exports[`AlgebraPool swap tests medium fee, token1 liquidity only swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "amount0Before": "0",
+  "amount0Delta": "0",
+  "amount1Before": "1995041008271423675",
+  "amount1Delta": "0",
+  "executionPrice": "NaN",
+  "poolPriceAfter": "2.5000",
+  "poolPriceBefore": "1.0000",
+  "tickAfter": 9163,
+  "tickBefore": 0,
+  "totalFeeGrowth0TokenDelta": "0",
+  "totalFeeGrowth1TokenDelta": "0",
+}
+`;

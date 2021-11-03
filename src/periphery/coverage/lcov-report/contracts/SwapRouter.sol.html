@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\SwapRouter.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> SwapRouter.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/53</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/26</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">10% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/10</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/51</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity =0.7.6;
+pragma abicoder v2;
+&nbsp;
+import 'algebra/contracts/libraries/SafeCast.sol';
+import 'algebra/contracts/libraries/TickMath.sol';
+import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+&nbsp;
+import './interfaces/ISwapRouter.sol';
+import './base/PeripheryImmutableState.sol';
+import './base/PeripheryValidation.sol';
+import './base/PeripheryPaymentsWithFee.sol';
+import './base/Multicall.sol';
+import './base/SelfPermit.sol';
+import './libraries/Path.sol';
+import './libraries/PoolAddress.sol';
+import './libraries/CallbackValidation.sol';
+import './interfaces/external/IWNativeToken.sol';
+&nbsp;
+/// @title Algebra Swap Router
+/// @notice Router for stateless execution of swaps against Algebra
+contract SwapRouter is
+    ISwapRouter,
+    PeripheryImmutableState,
+    PeripheryValidation,
+    PeripheryPaymentsWithFee,
+    Multicall,
+    SelfPermit
+{
+    using Path for bytes;
+    using SafeCast for uint256;
+&nbsp;
+    /// @dev Used as the placeholder value for amountInCached, because the computed amount in for an exact output swap
+    /// can never actually be this value
+    uint256 private constant DEFAULT_AMOUNT_IN_CACHED = type(uint256).max;
+&nbsp;
+    /// @dev Transient storage variable used for returning the computed amount in for an exact output swap.
+    uint256 private amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+&nbsp;
+    constructor(
+        address _factory,
+        address _WNativeToken,
+        address _poolDeployer
+    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
+&nbsp;
+    /// @dev Returns the pool for the given token pair and fee. The pool contract may or may not exist.
+<span class="fstat-no" title="function not covered" >    function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {</span>
+<span class="cstat-no" title="statement not covered" >        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));</span>
+    }
+&nbsp;
+    struct SwapCallbackData {
+        bytes path;
+        address payer;
+    }
+&nbsp;
+    /// @inheritdoc IAlgebraSwapCallback
+<span class="fstat-no" title="function not covered" >    function AlgebraSwapCallback(</span>
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata _data
+    ) external override {
+<span class="cstat-no" title="statement not covered" >        require(amount0Delta &gt; 0 || amount1Delta &gt; 0)</span>; // swaps entirely within 0-liquidity regions are not supported
+<span class="cstat-no" title="statement not covered" >        SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));</span>
+<span class="cstat-no" title="statement not covered" >        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();</span>
+<span class="cstat-no" title="statement not covered" >        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (bool isExactInput, uint256 amountToPay) = amount0Delta &gt; 0</span>
+            ? (tokenIn &lt; tokenOut, uint256(amount0Delta))
+            : (tokenOut &lt; tokenIn, uint256(amount1Delta));
+<span class="cstat-no" title="statement not covered" >        if (isExactInput) {</span>
+<span class="cstat-no" title="statement not covered" >            pay(tokenIn, data.payer, msg.sender, amountToPay)</span>;
+        } else {
+            // either initiate the next swap or pay
+<span class="cstat-no" title="statement not covered" >            if (data.path.hasMultiplePools()) {</span>
+<span class="cstat-no" title="statement not covered" >                data.path = data.path.skipToken()</span>;
+<span class="cstat-no" title="statement not covered" >                exactOutputInternal(amountToPay, msg.sender, 0, data)</span>;
+            } else {
+<span class="cstat-no" title="statement not covered" >                amountInCached = amountToPay</span>;
+<span class="cstat-no" title="statement not covered" >                tokenIn = tokenOut</span>; // swap in/out because exact output swaps are reversed
+<span class="cstat-no" title="statement not covered" >                pay(tokenIn, data.payer, msg.sender, amountToPay)</span>;
+            }
+        }
+    }
+&nbsp;
+    /// @dev Performs a single exact input swap
+<span class="fstat-no" title="function not covered" >    function exactInputInternal(</span>
+        uint256 amountIn,
+        address recipient,
+        uint160 limitSqrtPrice,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountOut) {
+        // allow swapping to the router address with address 0
+<span class="cstat-no" title="statement not covered" >        if (recipient == address(0)) <span class="cstat-no" title="statement not covered" >recipient = address(this)</span>;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool zeroForOne = tokenIn &lt; tokenOut;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut).swap(</span>
+            recipient,
+            zeroForOne,
+            amountIn.toInt256(),
+            limitSqrtPrice == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : limitSqrtPrice,
+            abi.encode(data)
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return uint256(-(zeroForOne ? amount1 : amount0));</span>
+    }
+&nbsp;
+    /// @inheritdoc ISwapRouter
+<span class="fstat-no" title="function not covered" >    function exactInputSingle(ExactInputSingleParams calldata params)</span>
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint256 amountOut)
+    {
+<span class="cstat-no" title="statement not covered" >        amountOut = exactInputInternal(</span>
+            params.amountIn,
+            params.recipient,
+            params.limitSqrtPrice,
+            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.tokenOut), payer: msg.sender})
+        );
+<span class="cstat-no" title="statement not covered" >        require(amountOut &gt;= params.amountOutMinimum, 'Too little received')</span>;
+    }
+&nbsp;
+    /// @inheritdoc ISwapRouter
+<span class="fstat-no" title="function not covered" >    function exactInput(ExactInputParams memory params)</span>
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint256 amountOut)
+    {
+<span class="cstat-no" title="statement not covered" >        address payer = msg.sender;</span> // msg.sender pays for the first hop
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        while (true) {</span>
+<span class="cstat-no" title="statement not covered" >            bool hasMultiplePools = params.path.hasMultiplePools();</span>
+&nbsp;
+            // the outputs of prior swaps become the inputs to subsequent ones
+<span class="cstat-no" title="statement not covered" >            params.amountIn = exactInputInternal(</span>
+                params.amountIn,
+                hasMultiplePools ? address(this) : params.recipient, // for intermediate swaps, this contract custodies
+                0,
+                SwapCallbackData({
+                    path: params.path.getFirstPool(), // only the first pool in the path is necessary
+                    payer: payer
+                })
+            );
+&nbsp;
+            // decide whether to continue or terminate
+<span class="cstat-no" title="statement not covered" >            if (hasMultiplePools) {</span>
+<span class="cstat-no" title="statement not covered" >                payer = address(this)</span>; // at this point, the caller has paid
+<span class="cstat-no" title="statement not covered" >                params.path = params.path.skipToken()</span>;
+            } else {
+<span class="cstat-no" title="statement not covered" >                amountOut = params.amountIn</span>;
+                break;
+            }
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(amountOut &gt;= params.amountOutMinimum, 'Too little received')</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function exactInputSingleSupportingFeeOnTransferTokens(ExactInputSingleParams calldata params)</span>
+        external
+        checkDeadline(params.deadline)
+        returns (uint256 amountOut)
+    {
+<span class="cstat-no" title="statement not covered" >        SwapCallbackData memory data = SwapCallbackData({</span>
+            path: abi.encodePacked(params.tokenIn, params.tokenOut),
+            payer: msg.sender
+        });
+<span class="cstat-no" title="statement not covered" >        address recipient = params.recipient == address(0) ? address(this) : params.recipient;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool zeroForOne = params.tokenIn &lt; params.tokenOut;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut).swapSupportingFeeOnInputTokens(</span>
+            msg.sender,
+            recipient,
+            zeroForOne,
+            params.amountIn.toInt256(),
+            params.limitSqrtPrice == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : params.limitSqrtPrice,
+            abi.encode(data)
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        amountOut = uint256(-(zeroForOne ? amount1 : amount0))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(amountOut &gt;= params.amountOutMinimum, 'Too little received')</span>;
+    }
+&nbsp;
+    /// @dev Performs a single exact output swap
+<span class="fstat-no" title="function not covered" >    function exactOutputInternal(</span>
+        uint256 amountOut,
+        address recipient,
+        uint160 limitSqrtPrice,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountIn) {
+        // allow swapping to the router address with address 0
+<span class="cstat-no" title="statement not covered" >        if (recipient == address(0)) <span class="cstat-no" title="statement not covered" >recipient = address(this)</span>;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (address tokenOut, address tokenIn) = data.path.decodeFirstPool();</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bool zeroForOne = tokenIn &lt; tokenOut;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut).swap(</span>
+            recipient,
+            zeroForOne,
+            -amountOut.toInt256(),
+            limitSqrtPrice == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : limitSqrtPrice,
+            abi.encode(data)
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint256 amountOutReceived;</span>
+<span class="cstat-no" title="statement not covered" >        (amountIn, amountOutReceived) = zeroForOne</span>
+            ? (uint256(amount0Delta), uint256(-amount1Delta))
+            : (uint256(amount1Delta), uint256(-amount0Delta));
+        // it's technically possible to not receive the full output amount,
+        // so if no price limit has been specified, require this possibility away
+<span class="cstat-no" title="statement not covered" >        if (limitSqrtPrice == 0) <span class="cstat-no" title="statement not covered" >require(amountOutReceived == amountOut)</span>;</span>
+    }
+&nbsp;
+    /// @inheritdoc ISwapRouter
+<span class="fstat-no" title="function not covered" >    function exactOutputSingle(ExactOutputSingleParams calldata params)</span>
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint256 amountIn)
+    {
+        // avoid an SLOAD by using the swap return data
+<span class="cstat-no" title="statement not covered" >        amountIn = exactOutputInternal(</span>
+            params.amountOut,
+            params.recipient,
+            params.limitSqrtPrice,
+            SwapCallbackData({path: abi.encodePacked(params.tokenOut, params.tokenIn), payer: msg.sender})
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(amountIn &lt;= params.amountInMaximum, 'Too much requested')</span>;
+        // has to be reset even though we don't use it in the single hop case
+<span class="cstat-no" title="statement not covered" >        amountInCached = DEFAULT_AMOUNT_IN_CACHED</span>;
+    }
+&nbsp;
+    /// @inheritdoc ISwapRouter
+<span class="fstat-no" title="function not covered" >    function exactOutput(ExactOutputParams calldata params)</span>
+        external
+        payable
+        override
+        checkDeadline(params.deadline)
+        returns (uint256 amountIn)
+    {
+        // it's okay that the payer is fixed to msg.sender here, as they're only paying for the "final" exact output
+        // swap, which happens first, and subsequent swaps are paid for within nested callback frames
+<span class="cstat-no" title="statement not covered" >        exactOutputInternal(</span>
+            params.amountOut,
+            params.recipient,
+            0,
+            SwapCallbackData({path: params.path, payer: msg.sender})
+        );
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        amountIn = amountInCached</span>;
+<span class="cstat-no" title="statement not covered" >        require(amountIn &lt;= params.amountInMaximum, 'Too much requested')</span>;
+<span class="cstat-no" title="statement not covered" >        amountInCached = DEFAULT_AMOUNT_IN_CACHED</span>;
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:26:12 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\libraries\NFTSVG.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/libraries/</a> NFTSVG.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">94.03% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>63/67</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">89.47% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>34/38</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>12/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.45% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>49/53</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity &gt;=0.7.6;
+&nbsp;
+import '@openzeppelin/contracts/utils/Strings.sol';
+import 'algebra/contracts/libraries/TickTable.sol';
+import 'base64-sol/base64.sol';
+&nbsp;
+/// @title NFTSVG
+/// @notice Provides a function for generating an SVG associated with a Algebra NFT
+library NFTSVG {
+    using Strings for uint256;
+&nbsp;
+    string constant curve1 = 'M1 1C41 41 105 105 145 145';
+    string constant curve2 = 'M1 1C33 49 97 113 145 145';
+    string constant curve3 = 'M1 1C33 57 89 113 145 145';
+    string constant curve4 = 'M1 1C25 65 81 121 145 145';
+    string constant curve5 = 'M1 1C17 73 73 129 145 145';
+    string constant curve6 = 'M1 1C9 81 65 137 145 145';
+    string constant curve7 = 'M1 1C1 89 57.5 145 145 145';
+    string constant curve8 = 'M1 1C1 97 49 145 145 145';
+&nbsp;
+    struct SVGParams {
+        string quoteToken;
+        string baseToken;
+        address poolAddress;
+        string quoteTokenSymbol;
+        string baseTokenSymbol;
+        int24 tickLower;
+        int24 tickUpper;
+        int24 tickSpacing;
+        int8 overRange;
+        uint256 tokenId;
+        string color0;
+        string color1;
+        string color2;
+        string color3;
+        string x1;
+        string y1;
+        string x2;
+        string y2;
+        string x3;
+        string y3;
+    }
+&nbsp;
+    function generateSVG(SVGParams memory params) internal pure returns (string memory svg) {
+        /**
+        address: "0xe8ab59d3bcde16a29912de83a90eb39628cfc163",
+        msg: "Forged in SVG for Algebra in 2021 by 0xe8ab59d3bcde16a29912de83a90eb39628cfc163",
+        sig: "0x2df0e99d9cbfec33a705d83f75666d98b22dea7c1af412c584f7d626d83f02875993df740dc87563b9c73378f8462426da572d7989de88079a382ad96c57b68d1b",
+        version: "2"
+        */
+        return
+            string(
+                abi.encodePacked(
+                    generateSVGDefs(params),
+                    generateSVGBorderText(
+                        params.quoteToken,
+                        params.baseToken,
+                        params.quoteTokenSymbol,
+                        params.baseTokenSymbol
+                    ),
+                    generateSVGCardMantle(params.quoteTokenSymbol, params.baseTokenSymbol),
+                    generageSvgCurve(params.tickLower, params.tickUpper, params.tickSpacing, params.overRange),
+                    generateSVGPositionDataAndLocationCurve(
+                        params.tokenId.toString(),
+                        params.tickLower,
+                        params.tickUpper
+                    ),
+                    generateSVGRareSparkle(params.tokenId, params.poolAddress),
+                    '&lt;/svg&gt;'
+                )
+            );
+    }
+&nbsp;
+    function generateSVGDefs(SVGParams memory params) private pure returns (string memory svg) {
+        svg = string(
+            abi.encodePacked(
+                '&lt;svg width="290" height="500" viewBox="0 0 290 500" xmlns="http://www.w3.org/2000/svg"',
+                " xmlns:xlink='http://www.w3.org/1999/xlink'&gt;",
+                '&lt;defs&gt;',
+                '&lt;filter id="f1"&gt;&lt;feImage result="p0" xlink:href="data:image/svg+xml;base64,',
+                Base64.encode(
+                    bytes(
+                        abi.encodePacked(
+                            "&lt;svg width='290' height='500' viewBox='0 0 290 500' xmlns='http://www.w3.org/2000/svg'&gt;&lt;rect width='290px' height='500px' fill='#",
+                            params.color0,
+                            "'/&gt;&lt;/svg&gt;"
+                        )
+                    )
+                ),
+                '"/&gt;&lt;feImage result="p1" xlink:href="data:image/svg+xml;base64,',
+                Base64.encode(
+                    bytes(
+                        abi.encodePacked(
+                            "&lt;svg width='290' height='500' viewBox='0 0 290 500' xmlns='http://www.w3.org/2000/svg'&gt;&lt;circle cx='",
+                            params.x1,
+                            "' cy='",
+                            params.y1,
+                            "' r='120px' fill='#",
+                            params.color1,
+                            "'/&gt;&lt;/svg&gt;"
+                        )
+                    )
+                ),
+                '"/&gt;&lt;feImage result="p2" xlink:href="data:image/svg+xml;base64,',
+                Base64.encode(
+                    bytes(
+                        abi.encodePacked(
+                            "&lt;svg width='290' height='500' viewBox='0 0 290 500' xmlns='http://www.w3.org/2000/svg'&gt;&lt;circle cx='",
+                            params.x2,
+                            "' cy='",
+                            params.y2,
+                            "' r='120px' fill='#",
+                            params.color2,
+                            "'/&gt;&lt;/svg&gt;"
+                        )
+                    )
+                ),
+                '" /&gt;',
+                '&lt;feImage result="p3" xlink:href="data:image/svg+xml;base64,',
+                Base64.encode(
+                    bytes(
+                        abi.encodePacked(
+                            "&lt;svg width='290' height='500' viewBox='0 0 290 500' xmlns='http://www.w3.org/2000/svg'&gt;&lt;circle cx='",
+                            params.x3,
+                            "' cy='",
+                            params.y3,
+                            "' r='100px' fill='#",
+                            params.color3,
+                            "'/&gt;&lt;/svg&gt;"
+                        )
+                    )
+                ),
+                '" /&gt;&lt;feBlend mode="overlay" in="p0" in2="p1" /&gt;&lt;feBlend mode="exclusion" in2="p2" /&gt;&lt;feBlend mode="overlay" in2="p3" result="blendOut" /&gt;&lt;feGaussianBlur ',
+                'in="blendOut" stdDeviation="42" /&gt;&lt;/filter&gt; &lt;clipPath id="corners"&gt;&lt;rect width="290" height="500" rx="42" ry="42" /&gt;&lt;/clipPath&gt;',
+                '&lt;path id="text-path-a" d="M40 12 H250 A28 28 0 0 1 278 40 V460 A28 28 0 0 1 250 488 H40 A28 28 0 0 1 12 460 V40 A28 28 0 0 1 40 12 z" /&gt;',
+                '&lt;path id="minimap" d="M234 444C234 457.949 242.21 463 253 463" /&gt;',
+                '&lt;filter id="top-region-blur"&gt;&lt;feGaussianBlur in="SourceGraphic" stdDeviation="24" /&gt;&lt;/filter&gt;',
+                '&lt;linearGradient id="grad-up" x1="1" x2="0" y1="1" y2="0"&gt;&lt;stop offset="0.0" stop-color="white" stop-opacity="1" /&gt;',
+                '&lt;stop offset=".9" stop-color="white" stop-opacity="0" /&gt;&lt;/linearGradient&gt;',
+                '&lt;linearGradient id="grad-down" x1="0" x2="1" y1="0" y2="1"&gt;&lt;stop offset="0.0" stop-color="white" stop-opacity="1" /&gt;&lt;stop offset="0.9" stop-color="white" stop-opacity="0" /&gt;&lt;/linearGradient&gt;',
+                '&lt;mask id="fade-up" maskContentUnits="objectBoundingBox"&gt;&lt;rect width="1" height="1" fill="url(#grad-up)" /&gt;&lt;/mask&gt;',
+                '&lt;mask id="fade-down" maskContentUnits="objectBoundingBox"&gt;&lt;rect width="1" height="1" fill="url(#grad-down)" /&gt;&lt;/mask&gt;',
+                '&lt;mask id="none" maskContentUnits="objectBoundingBox"&gt;&lt;rect width="1" height="1" fill="white" /&gt;&lt;/mask&gt;',
+                '&lt;linearGradient id="grad-symbol"&gt;&lt;stop offset="0.7" stop-color="white" stop-opacity="1" /&gt;&lt;stop offset=".95" stop-color="white" stop-opacity="0" /&gt;&lt;/linearGradient&gt;',
+                '&lt;mask id="fade-symbol" maskContentUnits="userSpaceOnUse"&gt;&lt;rect width="290px" height="200px" fill="url(#grad-symbol)" /&gt;&lt;/mask&gt;&lt;/defs&gt;',
+                '&lt;g clip-path="url(#corners)"&gt;',
+                '&lt;rect fill="',
+                params.color0,
+                '" x="0px" y="0px" width="290px" height="500px" /&gt;',
+                '&lt;rect style="filter: url(#f1)" x="0px" y="0px" width="290px" height="500px" /&gt;',
+                ' &lt;g style="filter:url(#top-region-blur); transform:scale(1.5); transform-origin:center top;"&gt;',
+                '&lt;rect fill="none" x="0px" y="0px" width="290px" height="500px" /&gt;',
+                '&lt;ellipse cx="50%" cy="0px" rx="180px" ry="120px" fill="#000" opacity="0.85" /&gt;&lt;/g&gt;',
+                '&lt;rect x="0" y="0" width="290" height="500" rx="42" ry="42" fill="rgba(0,0,0,0)" stroke="rgba(255,255,255,0.2)" /&gt;&lt;/g&gt;'
+            )
+        );
+    }
+&nbsp;
+    function generateSVGBorderText(
+        string memory quoteToken,
+        string memory baseToken,
+        string memory quoteTokenSymbol,
+        string memory baseTokenSymbol
+    ) private pure returns (string memory svg) {
+        svg = string(
+            abi.encodePacked(
+                '&lt;text text-rendering="optimizeSpeed"&gt;',
+                '&lt;textPath startOffset="-100%" fill="white" font-family="\'Courier New\', monospace" font-size="10px" xlink:href="#text-path-a"&gt;',
+                baseToken,
+                unicode' • ',
+                baseTokenSymbol,
+                ' &lt;animate additive="sum" attributeName="startOffset" from="0%" to="100%" begin="0s" dur="30s" repeatCount="indefinite" /&gt;',
+                '&lt;/textPath&gt; &lt;textPath startOffset="0%" fill="white" font-family="\'Courier New\', monospace" font-size="10px" xlink:href="#text-path-a"&gt;',
+                baseToken,
+                unicode' • ',
+                baseTokenSymbol,
+                ' &lt;animate additive="sum" attributeName="startOffset" from="0%" to="100%" begin="0s" dur="30s" repeatCount="indefinite" /&gt; &lt;/textPath&gt;',
+                '&lt;textPath startOffset="50%" fill="white" font-family="\'Courier New\', monospace" font-size="10px" xlink:href="#text-path-a"&gt;',
+                quoteToken,
+                unicode' • ',
+                quoteTokenSymbol,
+                ' &lt;animate additive="sum" attributeName="startOffset" from="0%" to="100%" begin="0s" dur="30s"',
+                ' repeatCount="indefinite" /&gt;&lt;/textPath&gt;&lt;textPath startOffset="-50%" fill="white" font-family="\'Courier New\', monospace" font-size="10px" xlink:href="#text-path-a"&gt;',
+                quoteToken,
+                unicode' • ',
+                quoteTokenSymbol,
+                ' &lt;animate additive="sum" attributeName="startOffset" from="0%" to="100%" begin="0s" dur="30s" repeatCount="indefinite" /&gt;&lt;/textPath&gt;&lt;/text&gt;'
+            )
+        );
+    }
+&nbsp;
+    function generateSVGCardMantle(string memory quoteTokenSymbol, string memory baseTokenSymbol)
+        private
+        pure
+        returns (string memory svg)
+    {
+        svg = string(
+            abi.encodePacked(
+                '&lt;g mask="url(#fade-symbol)"&gt;&lt;rect fill="none" x="0px" y="0px" width="290px" height="200px" /&gt; &lt;text y="70px" x="32px" fill="white" font-family="\'Courier New\', monospace" font-weight="200" font-size="36px"&gt;',
+                quoteTokenSymbol,
+                '/',
+                baseTokenSymbol,
+                '&lt;/text&gt;&lt;/g&gt;',
+                '&lt;rect x="16" y="16" width="258" height="468" rx="26" ry="26" fill="rgba(0,0,0,0)" stroke="rgba(255,255,255,0.2)" /&gt;'
+            )
+        );
+    }
+&nbsp;
+    function generageSvgCurve(
+        int24 tickLower,
+        int24 tickUpper,
+        int24 tickSpacing,
+        int8 overRange
+    ) private pure returns (string memory svg) {
+        string memory fade = overRange == 1 ? '#fade-up' : overRange == -1 ? '#fade-down' : '#none';
+        string memory curve = getCurve(tickLower, tickUpper, tickSpacing);
+        svg = string(
+            abi.encodePacked(
+                '&lt;g mask="url(',
+                fade,
+                ')"',
+                ' style="transform:translate(72px,189px)"&gt;'
+                '&lt;rect x="-16px" y="-16px" width="180px" height="180px" fill="none" /&gt;'
+                '&lt;path d="',
+                curve,
+                '" stroke="rgba(0,0,0,0.3)" stroke-width="32px" fill="none" stroke-linecap="round" /&gt;',
+                '&lt;/g&gt;&lt;g mask="url(',
+                fade,
+                ')"',
+                ' style="transform:translate(72px,189px)"&gt;',
+                '&lt;rect x="-16px" y="-16px" width="180px" height="180px" fill="none" /&gt;',
+                '&lt;path d="',
+                curve,
+                '" stroke="rgba(255,255,255,1)" fill="none" stroke-linecap="round" /&gt;&lt;/g&gt;',
+                generateSVGCurveCircle(overRange)
+            )
+        );
+    }
+&nbsp;
+    function getCurve(
+        int24 tickLower,
+        int24 tickUpper,
+        int24 tickSpacing
+    ) internal pure returns (string memory curve) {
+        int24 tickRange = (tickUpper - tickLower) / tickSpacing;
+        if (tickRange &lt;= 4) {
+            curve = curve1;
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (tickRange &lt;= 8) {
+<span class="cstat-no" title="statement not covered" >            curve = curve2</span>;
+        } else if (tickRange &lt;= 16) {
+            curve = curve3;
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (tickRange &lt;= 32) {
+<span class="cstat-no" title="statement not covered" >            curve = curve4</span>;
+        } else if (tickRange &lt;= 64) {
+            curve = curve5;
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (tickRange &lt;= 128) {
+<span class="cstat-no" title="statement not covered" >            curve = curve6</span>;
+        } else <span class="missing-if-branch" title="if path not taken" >I</span>if (tickRange &lt;= 256) {
+<span class="cstat-no" title="statement not covered" >            curve = curve7</span>;
+        } else {
+            curve = curve8;
+        }
+    }
+&nbsp;
+    function generateSVGCurveCircle(int8 overRange) internal pure returns (string memory svg) {
+        string memory curvex1 = '73';
+        string memory curvey1 = '190';
+        string memory curvex2 = '217';
+        string memory curvey2 = '334';
+        if (overRange == 1 || overRange == -1) {
+            svg = string(
+                abi.encodePacked(
+                    '&lt;circle cx="',
+                    overRange == -1 ? curvex1 : curvex2,
+                    'px" cy="',
+                    overRange == -1 ? curvey1 : curvey2,
+                    'px" r="4px" fill="white" /&gt;&lt;circle cx="',
+                    overRange == -1 ? curvex1 : curvex2,
+                    'px" cy="',
+                    overRange == -1 ? curvey1 : curvey2,
+                    'px" r="24px" fill="none" stroke="white" /&gt;'
+                )
+            );
+        } else {
+            svg = string(
+                abi.encodePacked(
+                    '&lt;circle cx="',
+                    curvex1,
+                    'px" cy="',
+                    curvey1,
+                    'px" r="4px" fill="white" /&gt;',
+                    '&lt;circle cx="',
+                    curvex2,
+                    'px" cy="',
+                    curvey2,
+                    'px" r="4px" fill="white" /&gt;'
+                )
+            );
+        }
+    }
+&nbsp;
+    function generateSVGPositionDataAndLocationCurve(
+        string memory tokenId,
+        int24 tickLower,
+        int24 tickUpper
+    ) private pure returns (string memory svg) {
+        string memory tickLowerStr = tickToString(tickLower);
+        string memory tickUpperStr = tickToString(tickUpper);
+        uint256 str1length = bytes(tokenId).length + 4;
+        uint256 str2length = bytes(tickLowerStr).length + 10;
+        uint256 str3length = bytes(tickUpperStr).length + 10;
+        (string memory xCoord, string memory yCoord) = rangeLocation(tickLower, tickUpper);
+        svg = string(
+            abi.encodePacked(
+                ' &lt;g style="transform:translate(29px, 384px)"&gt;',
+                '&lt;rect width="',
+                uint256(7 * (str1length + 4)).toString(),
+                'px" height="26px" rx="8px" ry="8px" fill="rgba(0,0,0,0.6)" /&gt;',
+                '&lt;text x="12px" y="17px" font-family="\'Courier New\', monospace" font-size="12px" fill="white"&gt;&lt;tspan fill="rgba(255,255,255,0.6)"&gt;ID: &lt;/tspan&gt;',
+                tokenId,
+                '&lt;/text&gt;&lt;/g&gt;',
+                ' &lt;g style="transform:translate(29px, 414px)"&gt;',
+                '&lt;rect width="',
+                uint256(7 * (str2length + 4)).toString(),
+                'px" height="26px" rx="8px" ry="8px" fill="rgba(0,0,0,0.6)" /&gt;',
+                '&lt;text x="12px" y="17px" font-family="\'Courier New\', monospace" font-size="12px" fill="white"&gt;&lt;tspan fill="rgba(255,255,255,0.6)"&gt;Min Tick: &lt;/tspan&gt;',
+                tickLowerStr,
+                '&lt;/text&gt;&lt;/g&gt;',
+                ' &lt;g style="transform:translate(29px, 444px)"&gt;',
+                '&lt;rect width="',
+                uint256(7 * (str3length + 4)).toString(),
+                'px" height="26px" rx="8px" ry="8px" fill="rgba(0,0,0,0.6)" /&gt;',
+                '&lt;text x="12px" y="17px" font-family="\'Courier New\', monospace" font-size="12px" fill="white"&gt;&lt;tspan fill="rgba(255,255,255,0.6)"&gt;Max Tick: &lt;/tspan&gt;',
+                tickUpperStr,
+                '&lt;/text&gt;&lt;/g&gt;'
+                '&lt;g style="transform:translate(226px, 433px)"&gt;',
+                '&lt;rect width="36px" height="36px" rx="8px" ry="8px" fill="none" stroke="rgba(255,255,255,0.2)" /&gt;',
+                '&lt;path stroke-linecap="round" d="M8 9C8.00004 22.9494 16.2099 28 27 28" fill="none" stroke="white" /&gt;',
+                '&lt;circle style="transform:translate3d(',
+                xCoord,
+                'px, ',
+                yCoord,
+                'px, 0px)" cx="0px" cy="0px" r="4px" fill="white"/&gt;&lt;/g&gt;'
+            )
+        );
+    }
+&nbsp;
+    function tickToString(int24 tick) private pure returns (string memory) {
+        string memory sign = '';
+        if (tick &lt; 0) {
+            tick = tick * -1;
+            sign = '-';
+        }
+        return string(abi.encodePacked(sign, uint256(tick).toString()));
+    }
+&nbsp;
+    function rangeLocation(int24 tickLower, int24 tickUpper) internal pure returns (string memory, string memory) {
+        int24 midPoint = (tickLower + tickUpper) / 2;
+        if (midPoint &lt; -125_000) {
+            return ('8', '7');
+        } else if (midPoint &lt; -75_000) {
+            return ('8', '10.5');
+        } else if (midPoint &lt; -25_000) {
+            return ('8', '14.25');
+        } else if (midPoint &lt; -5_000) {
+            return ('10', '18');
+        } else if (midPoint &lt; 0) {
+            return ('11', '21');
+        } else if (midPoint &lt; 5_000) {
+            return ('13', '23');
+        } else if (midPoint &lt; 25_000) {
+            return ('15', '25');
+        } else if (midPoint &lt; 75_000) {
+            return ('18', '26');
+        } else if (midPoint &lt; 125_000) {
+            return ('21', '27');
+        } else {
+            return ('24', '27');
+        }
+    }
+&nbsp;
+    function generateSVGRareSparkle(uint256 tokenId, address poolAddress) private pure returns (string memory svg) {
+        if (isRare(tokenId, poolAddress)) {
+            svg = string(
+                abi.encodePacked(
+                    '&lt;g style="transform:translate(226px, 392px)"&gt;&lt;rect width="36px" height="36px" rx="8px" ry="8px" fill="none" stroke="rgba(255,255,255,0.2)" /&gt;',
+                    '&lt;g&gt;&lt;path style="transform:translate(6px,6px)" d="M12 0L12.6522 9.56587L18 1.6077L13.7819 10.2181L22.3923 6L14.4341 ',
+                    '11.3478L24 12L14.4341 12.6522L22.3923 18L13.7819 13.7819L18 22.3923L12.6522 14.4341L12 24L11.3478 14.4341L6 22.39',
+                    '23L10.2181 13.7819L1.6077 18L9.56587 12.6522L0 12L9.56587 11.3478L1.6077 6L10.2181 10.2181L6 1.6077L11.3478 9.56587L12 0Z" fill="white" /&gt;',
+                    '&lt;animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="10s" repeatCount="indefinite"/&gt;&lt;/g&gt;&lt;/g&gt;'
+                )
+            );
+        } else {
+            svg = '';
+        }
+    }
+&nbsp;
+    function isRare(uint256 tokenId, address poolAddress) internal pure returns (bool) {
+        bytes32 h = keccak256(abi.encodePacked(tokenId, poolAddress));
+        return uint256(h) &lt; type(uint256).max / (1 + TickTable.getMostSignificantBit(tokenId) * 2);
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:26:12 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

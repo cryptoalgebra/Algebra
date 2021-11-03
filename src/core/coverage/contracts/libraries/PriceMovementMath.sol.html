@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\libraries\PriceMovementMath.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/libraries/</a> PriceMovementMath.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">98.08% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>51/52</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">91.18% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>31/34</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>8/8</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">98% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>49/50</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">326×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">82×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">408×</span>
+<span class="cline-any cline-yes">406×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">404×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">280×</span>
+<span class="cline-any cline-yes">275×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">275×</span>
+<span class="cline-any cline-yes">236×</span>
+<span class="cline-any cline-yes">236×</span>
+<span class="cline-any cline-yes">234×</span>
+<span class="cline-any cline-yes">234×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">234×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">39×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">39×</span>
+<span class="cline-any cline-yes">38×</span>
+<span class="cline-any cline-yes">35×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">124×</span>
+<span class="cline-any cline-yes">84×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">40×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">39×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2481×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1839×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2282×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1792×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4010×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4010×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3403×</span>
+<span class="cline-any cline-yes">3403×</span>
+<span class="cline-any cline-yes">3403×</span>
+<span class="cline-any cline-yes">3093×</span>
+<span class="cline-any cline-yes">3093×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">310×</span>
+<span class="cline-any cline-yes">310×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">310×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">310×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3403×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">607×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">607×</span>
+<span class="cline-any cline-yes">607×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">64×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">607×</span>
+<span class="cline-any cline-yes">607×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity &gt;=0.5.0;
+&nbsp;
+import './FullMath.sol';
+import './TokenDeltaMath.sol';
+&nbsp;
+/// @title Computes the result of price movement
+/// @notice Contains methods for computing the result of price movement within a single tick price range.
+library PriceMovementMath {
+    using LowGasSafeMath for uint256;
+    using SafeCast for uint256;
+&nbsp;
+    /// @notice Gets the next sqrt price given an input amount of token0 or token1
+    /// @dev Throws if price or liquidity are 0, or if the next price is out of bounds
+    /// @param price The starting price, i.e., before accounting for the input amount
+    /// @param liquidity The amount of usable liquidity
+    /// @param input How much of token0, or token1, is being swapped in
+    /// @param zeroForOne Whether the amount in is token0 or token1
+    /// @return resultPrice The price after adding the input amount to token0 or token1
+    function getNewPriceAfterInput(
+        uint160 price,
+        uint128 liquidity,
+        uint256 input,
+        bool zeroForOne
+    ) internal pure returns (uint160 resultPrice) {
+        return getNewPrice(price, liquidity, input, zeroForOne, true);
+    }
+&nbsp;
+    /// @notice Gets the next sqrt price given an output amount of token0 or token1
+    /// @dev Throws if price or liquidity are 0 or the next price is out of bounds
+    /// @param price The starting price before accounting for the output amount
+    /// @param liquidity The amount of usable liquidity
+    /// @param output How much of token0, or token1, is being swapped out
+    /// @param zeroForOne Whether the amount out is token0 or token1
+    /// @return resultPrice The price after removing the output amount of token0 or token1
+    function getNewPriceAfterOutput(
+        uint160 price,
+        uint128 liquidity,
+        uint256 output,
+        bool zeroForOne
+    ) internal pure returns (uint160 resultPrice) {
+        return getNewPrice(price, liquidity, output, zeroForOne, false);
+    }
+&nbsp;
+    function getNewPrice(
+        uint160 price,
+        uint128 liquidity,
+        uint256 amount,
+        bool zeroForOne,
+        bool fromInput
+    ) internal pure returns (uint160 resultPrice) {
+        require(price &gt; 0);
+        require(liquidity &gt; 0);
+&nbsp;
+        if (zeroForOne == fromInput) {
+            // rounding up or down
+            if (amount == 0) return price;
+            uint256 liquidityShifted = uint256(liquidity) &lt;&lt; Constants.RESOLUTION;
+&nbsp;
+            if (fromInput) {
+                uint256 product;
+                if ((product = amount * price) / amount == price) {
+                    uint256 denominator = liquidityShifted + product;
+                    <span class="missing-if-branch" title="else path not taken" >E</span>if (denominator &gt;= liquidityShifted)
+                        // always fits in 160 bits
+                        return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator));
+                }
+&nbsp;
+                return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
+            } else {
+                uint256 product;
+                // if the product overflows, we know the denominator underflows
+                // in addition, we must check that the denominator does not underflow
+                require((product = amount * price) / amount == price);
+                require(liquidityShifted &gt; product);
+                return FullMath.mulDivRoundingUp(liquidityShifted, price, liquidityShifted - product).toUint160();
+            }
+        } else {
+            // if we're adding (subtracting), rounding down requires rounding the quotient down (up)
+            // in both cases, avoid a mulDiv for most inputs
+            if (fromInput) {
+                return
+                    uint256(price)
+                        .add(
+                            amount &lt;= type(uint160).max
+                                ? (amount &lt;&lt; Constants.RESOLUTION) / liquidity
+                                : FullMath.mulDiv(amount, Constants.Q96, liquidity)
+                        )
+                        .toUint160();
+            } else {
+                uint256 quotient = amount &lt;= type(uint160).max
+                    ? FullMath.divRoundingUp(amount &lt;&lt; Constants.RESOLUTION, liquidity)
+                    : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
+&nbsp;
+                require(price &gt; quotient);
+                // always fits 160 bits
+                return uint160(price - quotient);
+            }
+        }
+    }
+&nbsp;
+    function getTokenADelta01(
+        uint160 to,
+        uint160 from,
+        uint128 liquidity
+    ) internal pure returns (uint256) {
+        return TokenDeltaMath.getToken0Delta(to, from, liquidity, true);
+    }
+&nbsp;
+    function getTokenADelta10(
+        uint160 to,
+        uint160 from,
+        uint128 liquidity
+    ) internal pure returns (uint256) {
+        return TokenDeltaMath.getToken1Delta(from, to, liquidity, true);
+    }
+&nbsp;
+    function getTokenBDelta01(
+        uint160 to,
+        uint160 from,
+        uint128 liquidity
+    ) internal pure returns (uint256) {
+        return TokenDeltaMath.getToken1Delta(to, from, liquidity, false);
+    }
+&nbsp;
+    function getTokenBDelta10(
+        uint160 to,
+        uint160 from,
+        uint128 liquidity
+    ) internal pure returns (uint256) {
+        return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
+    }
+&nbsp;
+    /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
+    /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
+    /// @param currentPrice The current sqrt price of the pool
+    /// @param targetPrice The price that cannot be exceeded, from which the direction of the swap is inferred
+    /// @param liquidity The usable liquidity
+    /// @param amountAvailable How much input or output amount is remaining to be swapped in/out
+    /// @param fee The fee taken from the input amount, expressed in hundredths of a bip
+    /// @return resultPrice The price after swapping the amount in/out, not to exceed the price target
+    /// @return input The amount to be swapped in, of either token0 or token1, based on the direction of the swap
+    /// @return output The amount to be received, of either token0 or token1, based on the direction of the swap
+    /// @return feeAmount The amount of input that will be taken as a fee
+    function movePriceTowardsTarget(
+        bool zeroForOne,
+        uint160 currentPrice,
+        uint160 targetPrice,
+        uint128 liquidity,
+        int256 amountAvailable,
+        uint24 fee
+    )
+        internal
+        pure
+        returns (
+            uint160 resultPrice,
+            uint256 input,
+            uint256 output,
+            uint256 feeAmount
+        )
+    {
+        function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroForOne
+            ? getTokenADelta01
+            : getTokenADelta10;
+&nbsp;
+        if (amountAvailable &gt;= 0) {
+            // exactIn or not
+            uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
+            input = getAmountA(targetPrice, currentPrice, liquidity);
+            if (amountAvailableAfterFee &gt;= input) {
+                resultPrice = targetPrice;
+                feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+            } else {
+                resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroForOne);
+                <span class="missing-if-branch" title="else path not taken" >E</span>if (targetPrice != resultPrice) {
+                    // != MAX
+                    input = getAmountA(resultPrice, currentPrice, liquidity);
+&nbsp;
+                    // we didn't reach the target, so take the remainder of the maximum input as fee
+                    feeAmount = uint256(amountAvailable) - input;
+                } else {
+<span class="cstat-no" title="statement not covered" >                    feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee)</span>;
+                }
+            }
+&nbsp;
+            output = (zeroForOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
+        } else {
+            function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroForOne
+                ? getTokenBDelta01
+                : getTokenBDelta10;
+&nbsp;
+            output = getAmountB(targetPrice, currentPrice, liquidity);
+            if (uint256(-amountAvailable) &gt;= output) resultPrice = targetPrice;
+            else {
+                resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(-amountAvailable), zeroForOne);
+&nbsp;
+                <span class="missing-if-branch" title="else path not taken" >E</span>if (targetPrice != resultPrice) {
+                    // != MAX
+                    output = getAmountB(resultPrice, currentPrice, liquidity);
+                }
+&nbsp;
+                // cap the output amount to not exceed the remaining output amount
+                if (output &gt; uint256(-amountAvailable)) {
+                    output = uint256(-amountAvailable);
+                }
+            }
+&nbsp;
+            input = getAmountA(resultPrice, currentPrice, liquidity);
+            feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+        }
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:28:53 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\libraries\SafeERC20Namer.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/libraries/</a> SafeERC20Namer.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/37</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/7</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/37</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-3.0-or-later
+&nbsp;
+pragma solidity &gt;=0.5.0;
+&nbsp;
+import './AddressStringUtil.sol';
+&nbsp;
+// produces token descriptors from inconsistent or absent ERC20 symbol implementations that can return string or bytes32
+// this library will always produce a string symbol to represent the token
+library SafeERC20Namer {
+<span class="fstat-no" title="function not covered" >    function bytes32ToString(bytes32 x) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        bytes memory bytesString = new bytes(32);</span>
+<span class="cstat-no" title="statement not covered" >        uint256 charCount = 0;</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 j = 0; j &lt; 32; j++) {</span>
+<span class="cstat-no" title="statement not covered" >            bytes1 char = x[j];</span>
+<span class="cstat-no" title="statement not covered" >            if (char != 0) {</span>
+<span class="cstat-no" title="statement not covered" >                bytesString[charCount] = char</span>;
+                charCount++;
+            }
+        }
+<span class="cstat-no" title="statement not covered" >        bytes memory bytesStringTrimmed = new bytes(charCount);</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 j = 0; j &lt; charCount; j++) {</span>
+<span class="cstat-no" title="statement not covered" >            bytesStringTrimmed[j] = bytesString[j]</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        return string(bytesStringTrimmed);</span>
+    }
+&nbsp;
+    // assumes the data is in position 2
+<span class="fstat-no" title="function not covered" >    function parseStringData(bytes memory b) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 charCount = 0;</span>
+        // first parse the charCount out of the data
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 32; i &lt; 64; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            charCount &lt;&lt;= 8</span>;
+<span class="cstat-no" title="statement not covered" >            charCount += uint8(b[i])</span>;
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bytes memory bytesStringTrimmed = new bytes(charCount);</span>
+<span class="cstat-no" title="statement not covered" >        for (uint256 i = 0; i &lt; charCount; i++) {</span>
+<span class="cstat-no" title="statement not covered" >            bytesStringTrimmed[i] = b[i + 64]</span>;
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return string(bytesStringTrimmed);</span>
+    }
+&nbsp;
+    // uses a heuristic to produce a token name from the address
+    // the heuristic returns the full hex of the address string in upper case
+<span class="fstat-no" title="function not covered" >    function addressToName(address token) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        return AddressStringUtil.toAsciiString(token, 40);</span>
+    }
+&nbsp;
+    // uses a heuristic to produce a token symbol from the address
+    // the heuristic returns the first 6 hex of the address string in upper case
+<span class="fstat-no" title="function not covered" >    function addressToSymbol(address token) private pure returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        return AddressStringUtil.toAsciiString(token, 6);</span>
+    }
+&nbsp;
+    // calls an external view token contract method that returns a symbol or name, and parses the output into a string
+<span class="fstat-no" title="function not covered" >    function callAndParseStringReturn(address token, bytes4 selector) private view returns (string memory) {</span>
+<span class="cstat-no" title="statement not covered" >        (bool success, bytes memory data) = token.staticcall(abi.encodeWithSelector(selector));</span>
+        // if not implemented, or returns empty data, return empty string
+<span class="cstat-no" title="statement not covered" >        if (!success || data.length == 0) {</span>
+<span class="cstat-no" title="statement not covered" >            return '';</span>
+        }
+        // bytes32 data always has length 32
+<span class="cstat-no" title="statement not covered" >        if (data.length == 32) {</span>
+<span class="cstat-no" title="statement not covered" >            bytes32 decoded = abi.decode(data, (bytes32));</span>
+<span class="cstat-no" title="statement not covered" >            return bytes32ToString(decoded);</span>
+        } else <span class="cstat-no" title="statement not covered" >if (data.length &gt; 64) {</span>
+<span class="cstat-no" title="statement not covered" >            return abi.decode(data, (string));</span>
+        }
+<span class="cstat-no" title="statement not covered" >        return '';</span>
+    }
+&nbsp;
+    // attempts to extract the token symbol. if it does not implement symbol, returns a symbol derived from the address
+<span class="fstat-no" title="function not covered" >    function tokenSymbol(address token) internal view returns (string memory) {</span>
+        // 0x95d89b41 = bytes4(keccak256("symbol()"))
+<span class="cstat-no" title="statement not covered" >        string memory symbol = callAndParseStringReturn(token, 0x95d89b41);</span>
+<span class="cstat-no" title="statement not covered" >        if (bytes(symbol).length == 0) {</span>
+            // fallback to 6 uppercase hex of address
+<span class="cstat-no" title="statement not covered" >            return addressToSymbol(token);</span>
+        }
+<span class="cstat-no" title="statement not covered" >        return symbol;</span>
+    }
+&nbsp;
+    // attempts to extract the token name. if it does not implement name, returns a name derived from the address
+<span class="fstat-no" title="function not covered" >    function tokenName(address token) internal view returns (string memory) {</span>
+        // 0x06fdde03 = bytes4(keccak256("name()"))
+<span class="cstat-no" title="statement not covered" >        string memory name = callAndParseStringReturn(token, 0x06fdde03);</span>
+<span class="cstat-no" title="statement not covered" >        if (bytes(name).length == 0) {</span>
+            // fallback to full hex of address
+<span class="cstat-no" title="statement not covered" >            return addressToName(token);</span>
+        }
+<span class="cstat-no" title="statement not covered" >        return name;</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:26:12 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

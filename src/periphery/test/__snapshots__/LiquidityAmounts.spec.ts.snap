@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LiquidityAmounts #getAmount0ForLiquidity gas 1`] = `343`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price above 1`] = `472`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price below 1`] = `493`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price inside 1`] = `822`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount0 gas 1`] = `547`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount1 gas 1`] = `353`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount1 gas 2`] = `359`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price above 1`] = `528`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price below 1`] = `694`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price inside 1`] = `1135`;

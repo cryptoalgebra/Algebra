@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts\base\PeripheryPayments.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/base/</a> PeripheryPayments.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/17</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/16</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/4</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/16</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity &gt;=0.7.5;
+&nbsp;
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+&nbsp;
+import '../interfaces/IPeripheryPayments.sol';
+import '../interfaces/external/IWNativeToken.sol';
+&nbsp;
+import '../libraries/TransferHelper.sol';
+&nbsp;
+import './PeripheryImmutableState.sol';
+&nbsp;
+abstract contract PeripheryPayments is IPeripheryPayments, PeripheryImmutableState {
+    receive() external payable {
+        require(msg.sender == WNativeToken, 'Not WNativeToken');
+    }
+&nbsp;
+    /// @inheritdoc IPeripheryPayments
+<span class="fstat-no" title="function not covered" >    function unwrapWNativeToken(uint256 amountMinimum, address recipient) external payable override {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 balanceWNativeToken = IWNativeToken(WNativeToken).balanceOf(address(this));</span>
+<span class="cstat-no" title="statement not covered" >        require(balanceWNativeToken &gt;= amountMinimum, 'Insufficient WNativeToken')</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (balanceWNativeToken &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            IWNativeToken(WNativeToken).withdraw(balanceWNativeToken)</span>;
+<span class="cstat-no" title="statement not covered" >            TransferHelper.safeTransferNative(recipient, balanceWNativeToken)</span>;
+        }
+    }
+&nbsp;
+    /// @inheritdoc IPeripheryPayments
+<span class="fstat-no" title="function not covered" >    function sweepToken(</span>
+        address token,
+        uint256 amountMinimum,
+        address recipient
+    ) external payable override {
+<span class="cstat-no" title="statement not covered" >        uint256 balanceToken = IERC20(token).balanceOf(address(this));</span>
+<span class="cstat-no" title="statement not covered" >        require(balanceToken &gt;= amountMinimum, 'Insufficient token')</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (balanceToken &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >            TransferHelper.safeTransfer(token, recipient, balanceToken)</span>;
+        }
+    }
+&nbsp;
+    /// @inheritdoc IPeripheryPayments
+<span class="fstat-no" title="function not covered" >    function refundNativeToken() external payable override {</span>
+<span class="cstat-no" title="statement not covered" >        if (address(this).balance &gt; 0) <span class="cstat-no" title="statement not covered" >TransferHelper.safeTransferNative(msg.sender, address(this).balance)</span>;</span>
+    }
+&nbsp;
+    /// @param token The token to pay
+    /// @param payer The entity that must pay
+    /// @param recipient The entity that will receive payment
+    /// @param value The amount to pay
+<span class="fstat-no" title="function not covered" >    function pay(</span>
+        address token,
+        address payer,
+        address recipient,
+        uint256 value
+    ) internal {
+<span class="cstat-no" title="statement not covered" >        if (token == WNativeToken &amp;&amp; address(this).balance &gt;= value) {</span>
+            // pay with WNativeToken
+<span class="cstat-no" title="statement not covered" >            IWNativeToken(WNativeToken).deposit{value: value}()</span>; // wrap only what is needed to pay
+<span class="cstat-no" title="statement not covered" >            IWNativeToken(WNativeToken).transfer(recipient, value)</span>;
+        } else <span class="cstat-no" title="statement not covered" >if (payer == address(this)) {</span>
+            // pay with tokens already in the contract (for the exact input multihop case)
+<span class="cstat-no" title="statement not covered" >            TransferHelper.safeTransfer(token, recipient, value)</span>;
+        } else {
+            // pull payment
+<span class="cstat-no" title="statement not covered" >            TransferHelper.safeTransferFrom(token, payer, recipient, value)</span>;
+        }
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue Oct 19 2021 12:26:12 GMT+0300 (Москва, стандартное время)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

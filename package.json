@@ -1,0 +1,48 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.4",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "^7.0.0",
+    "@typechain/hardhat": "^2.0.1",
+    "@types/chai": "^4.2.6",
+    "@types/console-log-level": "^1.4.0",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "console-log-level": "^1.4.1",
+    "decimal.js": "^10.2.1",
+    "dotenv": "^10.0.0",
+    "ethereum-waffle": "^3.0.2",
+    "ethers": "^5.0.8",
+    "hardhat": "^2.6.4",
+    "hardhat-contract-sizer": "^2.0.3",
+    "hardhat-watcher": "^2.1.1",
+    "husky": "^7.0.2",
+    "lerna": "^4.0.0",
+    "mocha": "^6.2.2",
+    "mocha-chai-jest-snapshot": "^1.1.0",
+    "prettier": "^2.4.1",
+    "prettier-check": "^2.0.0",
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
+    "pretty-quick": "^3.1.1",
+    "solhint": "^3.3.6",
+    "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.16",
+    "ts-generator": "^0.1.1",
+    "ts-node": "^8.5.4",
+    "typechain": "^5.0.0",
+    "typescript": "^4.3.2"
+  },
+  "scripts": {
+    "postinstall": "husky install",
+    "lint": "prettier .",
+    "bootstrap": "npm install && lerna bootstrap",
+    "ci-install": "npm ci && lerna bootstrap",
+    "deploy": "node scripts/deployAll.js"
+  },
+  "dependencies": {
+    "@ethersproject/solidity": "^5.4.0"
+  }
+}
