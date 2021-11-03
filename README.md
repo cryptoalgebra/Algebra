@@ -4,6 +4,12 @@ Innovative DEX with concentrated liquidity, adaptive fee, build-in farming etc.
  
 [![Tests](https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml/badge.svg)](https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml)
 
+- [Build](#Build)
+- [Tests](#Tests)
+- [Coverage](#Tests-coverage)
+- [Deploy](#Deploy)
+
+
 ## Build
 
 To install dependencies, you need to run the command in the root directory:
