@@ -104,28 +104,36 @@ export class HelperCommands {
       endTime,
     }
     const bal = await params.rewardToken.balanceOf(incentiveCreator.address)
+    const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address)
 
     if (bal < params.totalReward) {
       await params.rewardToken.transfer(incentiveCreator.address, params.totalReward)
     }
 
+    if (bonusBal < params.bonusReward) {
+      await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward)
+    }
+
     await params.rewardToken.connect(incentiveCreator).approve(this.staker.address, params.totalReward)
+    await params.bonusRewardToken.connect(incentiveCreator).approve(this.staker.address, params.bonusReward)
 
     const txResult = await this.staker.connect(incentiveCreator).createIncentive(
       {
         pool: params.poolAddress,
         rewardToken: params.rewardToken.address,
+        bonusRewardToken: params.bonusRewardToken.address,
         ...times,
         refundee: params.refundee || incentiveCreator.address,
       },
-      params.totalReward
+      params.totalReward,
+      params.bonusReward
     )
 
     // @ts-ignore
-    const virtualPoolAddress = (await txResult.wait(1)).events[2].args['virtualPool']
+    const virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
 
     return {
-      ..._.pick(params, ['poolAddress', 'totalReward', 'rewardToken']),
+      ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       ...times,
       refundee: params.refundee || incentiveCreator.address,
       virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0())
@@ -235,7 +243,6 @@ export class HelperCommands {
     await this.staker.connect(params.lp).unstakeToken(
       incentiveResultToStakeAdapter(params.createIncentiveResult),
       params.tokenId,
-
       maxGas
     )
 
@@ -244,6 +251,10 @@ export class HelperCommands {
     await this.staker
       .connect(params.lp)
       .claimReward(params.createIncentiveResult.rewardToken.address, params.lp.address, BN('0'))
+
+    await this.staker
+      .connect(params.lp)
+      .claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
 
     await this.staker.connect(params.lp).withdrawToken(params.tokenId, params.lp.address, '0x', maxGas)
 
@@ -275,9 +286,11 @@ export class HelperCommands {
     await this.nft.connect(params.lp).burn(params.tokenId, maxGas)
 
     const balance = await params.createIncentiveResult.rewardToken.connect(params.lp).balanceOf(params.lp.address)
+    const bonusBalance = await params.createIncentiveResult.bonusRewardToken.connect(params.lp).balanceOf(params.lp.address)
 
     return {
       balance,
+      bonusBalance,
       unstakedAt,
     }
   }
@@ -316,6 +329,7 @@ export class HelperCommands {
   getIncentiveId: HelperTypes.GetIncentiveId.Command = async (params) => {
     return this.testIncentiveId.compute({
       rewardToken: params.rewardToken.address,
+      bonusRewardToken: params.bonusRewardToken.address,
       pool: params.poolAddress,
       startTime: params.startTime,
       endTime: params.endTime,
@@ -435,5 +449,6 @@ export const incentiveResultToStakeAdapter: IncentiveAdapterFunc = (params) => (
   startTime: params.startTime,
   endTime: params.endTime,
   rewardToken: params.rewardToken.address,
+  bonusRewardToken: params.bonusRewardToken.address,
   refundee: params.refundee,
 })

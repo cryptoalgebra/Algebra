@@ -51,6 +51,7 @@ describe('AlgebraStaker', async ()=>{
 		let subject: TestSubject
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 		const ticksToStake: [number, number] = [
 			getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -63,7 +64,7 @@ describe('AlgebraStaker', async ()=>{
 			const epoch = await blockTimestamp()
 
 			const {
-				tokens: [token0, token1, rewardToken],
+				tokens: [token0, token1, rewardToken, bonusRewardToken],
 			} = context
 			const helpers = HelperCommands.fromTestContext(context, actors, provider)
 
@@ -76,8 +77,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken,
+				bonusRewardToken,
 				poolAddress: context.pool01,
 				totalReward,
+				bonusReward
 			})
 
 			const params = {
@@ -251,6 +254,7 @@ describe('AlgebraStaker', async ()=>{
 
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
 		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
@@ -265,8 +269,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
-				totalReward
+				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -381,6 +387,7 @@ describe('AlgebraStaker', async ()=>{
 			const rewardInfo1 = await context.staker.connect(actors.lpUser0()).getRewardInfo(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -392,6 +399,7 @@ describe('AlgebraStaker', async ()=>{
 		    const rewardInfo2 = await context.staker.connect(actors.lpUser0()).getRewardInfo(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -408,9 +416,10 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -419,9 +428,10 @@ describe('AlgebraStaker', async ()=>{
 			    2
 			);
 
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -455,6 +465,7 @@ describe('AlgebraStaker', async ()=>{
 
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
 		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
@@ -469,8 +480,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
-				totalReward
+				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -575,6 +588,7 @@ describe('AlgebraStaker', async ()=>{
 		    await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -585,6 +599,7 @@ describe('AlgebraStaker', async ()=>{
 			await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -594,7 +609,7 @@ describe('AlgebraStaker', async ()=>{
 			);
 
 
-			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
+			const reward1 = await context.staker.rewards(context.rewardToken.address, actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
 
 			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
@@ -618,6 +633,7 @@ describe('AlgebraStaker', async ()=>{
 
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
 		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
@@ -632,8 +648,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
-				totalReward
+				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -713,6 +731,7 @@ describe('AlgebraStaker', async ()=>{
 		    await Time.set(createIncentiveResult.startTime + 1)
 			const rew = await context.staker.getRewardInfo({
 				rewardToken: context.rewardToken.address,
+				bonusRewardToken: context.rewardToken.address,
 				pool: context.poolObj.address,
 				startTime: createIncentiveResult.startTime,
 				endTime: createIncentiveResult.endTime,
@@ -737,6 +756,7 @@ describe('AlgebraStaker', async ()=>{
 		    await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -747,6 +767,7 @@ describe('AlgebraStaker', async ()=>{
 			await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -780,6 +801,7 @@ describe('AlgebraStaker', async ()=>{
 
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
 		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
@@ -787,15 +809,17 @@ describe('AlgebraStaker', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 100
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
-				totalReward
+				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -823,29 +847,42 @@ describe('AlgebraStaker', async ()=>{
 				// The non-staking user will deposit 25x the liquidity as the others
 				const balanceDeposited = amountsToStake[0]
 
-				// Someone starts staking
-				// await e20h.ensureBalancesAndApprovals(
-				// 	lpUser3,
-				// 	[context.token0, context.token1],
-				// 	balanceDeposited,
-				// 	context.nft.address
-				// )
+				
+				await e20h.ensureBalancesAndApprovals(
+					lpUser3,
+					[context.token0, context.token1],
+					balanceDeposited,
+					context.nft.address
+				)
 
-				// await mintPosition(context.nft.connect(lpUser3), {
-				// 	token0: context.token0.address,
-				// 	token1: context.token1.address,
-				// 	fee: FeeAmount.MEDIUM,
-				// 	tickLower: ticksToStake[0],
-				// 	tickUpper: ticksToStake[1],
-				// 	recipient: lpUser3.address,
-				// 	amount0Desired: balanceDeposited,
-				// 	amount1Desired: balanceDeposited,
-				// 	amount0Min: 0,
-				// 	amount1Min: 0,
-				// 	deadline: (await blockTimestamp()) + 1000,
-				// })
+				await mintPosition(context.nft.connect(lpUser3), {
+					token0: context.token0.address,
+					token1: context.token1.address,
+					fee: FeeAmount.MEDIUM,
+					tickLower: ticksToStake[0],
+					tickUpper: ticksToStake[1],
+					recipient: lpUser3.address,
+					amount0Desired: balanceDeposited,
+					amount1Desired: balanceDeposited,
+					amount0Min: 0,
+					amount1Min: 0,
+					deadline: (await blockTimestamp()) + 1000,
+				})
 
 		    const positions: Array<Position> = [
+				{
+					lp: actors.lpUser0(),
+					amounts: [BN('252473' + '0'.repeat(13)), BN('552446' + '0'.repeat(13))],
+					ticks: [-240, 240],
+				},
+				{
+					lp: actors.lpUser1(),
+					amounts: [BN('441204' + '0'.repeat(13)), BN('799696' + '0'.repeat(13))],
+					ticks: [-480, 480],
+				}
+			]
+
+			const positions2: Array<Position> = [
 				{
 					lp: actors.lpUser0(),
 					amounts: [BN('252473' + '0'.repeat(13)), BN('552446' + '0'.repeat(13))],
@@ -861,7 +898,7 @@ describe('AlgebraStaker', async ()=>{
 		    const tokensToStake: [TestERC20, TestERC20] = [context.tokens[0], context.tokens[1]]
 
 			const stakes = await Promise.all(
-				positions.map((p) =>
+				positions2.map((p) =>
 					helpers.mintDepositStakeFlow({
 						lp: p.lp,
 						tokensToStake,
@@ -872,7 +909,7 @@ describe('AlgebraStaker', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await Time.set(createIncentiveResult.startTime + 20)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -893,9 +930,10 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -903,9 +941,11 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    1
 			);
-			await context.staker.unstakeToken(
+
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -917,7 +957,7 @@ describe('AlgebraStaker', async ()=>{
 
 			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+			expect(reward1.add(reward2)).be.gte(BN("29999999999999"))
 
 	    }).timeout(60000)
 	})
@@ -931,6 +971,7 @@ describe('AlgebraStaker', async ()=>{
 		let subject: TestSubject
 
         const totalReward = BNe18(3_000)
+        const bonusReward = BNe18(4_000)
 		const duration = days(1)
 		const baseAmount = BNe18(2)
 
@@ -946,8 +987,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
 				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -1018,9 +1061,10 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -1028,9 +1072,10 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    1
 			);
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -1061,6 +1106,7 @@ describe('AlgebraStaker', async ()=>{
 
 
 		const totalReward = BNe18(3_000)
+		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
 		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
@@ -1075,8 +1121,10 @@ describe('AlgebraStaker', async ()=>{
 				startTime,
 				endTime,
 				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
 				poolAddress: context.pool01,
-				totalReward
+				totalReward,
+				bonusReward
 			})
 			return {
 				context,
@@ -1201,6 +1249,7 @@ describe('AlgebraStaker', async ()=>{
 			const rewardInfo1 = await context.staker.connect(actors.lpUser0()).getRewardInfo(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -1212,6 +1261,7 @@ describe('AlgebraStaker', async ()=>{
 		    const rewardInfo2 = await context.staker.connect(actors.lpUser0()).getRewardInfo(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -1232,6 +1282,7 @@ describe('AlgebraStaker', async ()=>{
 			await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,
@@ -1242,6 +1293,7 @@ describe('AlgebraStaker', async ()=>{
 			await context.staker.unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
 				    pool: context.poolObj.address,
 				    startTime: createIncentiveResult.startTime,
 				    endTime: createIncentiveResult.endTime,

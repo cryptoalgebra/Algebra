@@ -8,15 +8,19 @@ export module HelperTypes {
   export module CreateIncentive {
     export type Args = {
       rewardToken: TestERC20
+      bonusRewardToken: TestERC20
       poolAddress: string
       startTime: number
       endTime?: number
       totalReward: BigNumber
+      bonusReward: BigNumber
       refundee?: string
     }
     export type Result = {
       poolAddress: string
       rewardToken: TestERC20
+      bonusRewardToken: TestERC20
+      bonusReward: BigNumber
       totalReward: BigNumber
       startTime: number
       endTime: number

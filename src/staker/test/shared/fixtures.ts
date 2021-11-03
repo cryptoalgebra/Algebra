@@ -5,6 +5,7 @@ import { ethers, waffle } from 'hardhat'
 import AlgebraPool from 'algebra/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
 import AlgebraFactoryJson from 'algebra/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
 import AlgebraPoolDeployerJson from 'algebra/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
+import VirtualPoolDeployerJson from '../../artifacts/contracts/VirtualPoolDeployer.sol/VirtualPoolDeployer.json'
 import NFTDescriptorJson from 'algebra-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json'
 import NonfungiblePositionManagerJson from 'algebra-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import NonfungibleTokenPositionDescriptor from 'algebra-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json'
@@ -16,6 +17,7 @@ import { IWNativeToken } from '../../types/IWNativeToken'
 import {
   AlgebraStaker,
   TestERC20,
+  IVirtualPoolDeployer,
   INonfungiblePositionManager,
   IAlgebraFactory,
   IAlgebraPoolDeployer,
@@ -27,8 +29,6 @@ import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
 
 type WNativeTokenFixture = { wnative: IWNativeToken }
-
-export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
 
 export const wnativeFixture: Fixture<WNativeTokenFixture> = async ([wallet]) => {
   const wnative = (await waffle.deployContract(wallet, {
@@ -51,7 +51,7 @@ const v3CoreFactoryFixture: Fixture<[IAlgebraFactory,IAlgebraPoolDeployer]> = as
   const factory = ((await waffle.deployContract(wallet, {
     bytecode: AlgebraFactoryJson.bytecode,
     abi: AlgebraFactoryJson.abi,
-  }, [deployer.address, vaultAddress])) as unknown) as IAlgebraFactory
+  }, [deployer.address])) as unknown) as IAlgebraFactory
 
   await deployer.setFactory(factory.address)
 
@@ -87,13 +87,20 @@ const nftDescriptorLibraryFixture: Fixture<NFTDescriptor> = async ([wallet]) => 
   })) as NFTDescriptor
 }
 
+const VirtualPoolDeployerFixture: Fixture<IVirtualPoolDeployer> = async ([wallet]) => {
+  return ((await waffle.deployContract(wallet, {
+    bytecode: VirtualPoolDeployerJson.bytecode,
+    abi: VirtualPoolDeployerJson.abi,
+  })) as unknown) as IVirtualPoolDeployer
+}
+
 type AlgebraFactoryFixture = {
   wnative: IWNativeToken
   factory: IAlgebraFactory
   deployer: IAlgebraPoolDeployer
   router: ISwapRouter
   nft: INonfungiblePositionManager
-  tokens: [TestERC20, TestERC20, TestERC20]
+  tokens: [TestERC20, TestERC20, TestERC20,TestERC20]
 }
 
 export const algebraFactoryFixture: Fixture<AlgebraFactoryFixture> = async (wallets, provider) => {
@@ -103,7 +110,8 @@ export const algebraFactoryFixture: Fixture<AlgebraFactoryFixture> = async (wall
     tokenFactory.deploy(constants.MaxUint256.div(2)), // do not use maxu256 to avoid overflowing
     tokenFactory.deploy(constants.MaxUint256.div(2)),
     tokenFactory.deploy(constants.MaxUint256.div(2)),
-  ])) as [TestERC20, TestERC20, TestERC20]
+    tokenFactory.deploy(constants.MaxUint256.div(2)),
+  ])) as [TestERC20, TestERC20, TestERC20,TestERC20]
 
   const nftDescriptorLibrary = await nftDescriptorLibraryFixture(wallets, provider)
 
@@ -228,21 +236,24 @@ export type AlgebraFixtureType = {
   factory: IAlgebraFactory
   poolObj: IAlgebraPool
   router: ISwapRouter
+  vdeployer: IVirtualPoolDeployer
   staker: AlgebraStaker
   testIncentiveId: TestIncentiveId
-  tokens: [TestERC20, TestERC20, TestERC20]
+  tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
   token1: TestERC20
   rewardToken: TestERC20
+  bonusRewardToken: TestERC20
 }
 export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provider) => {
   const { tokens, nft, factory, deployer, router } = await algebraFactoryFixture(wallets, provider)
+  const vdeployer = await VirtualPoolDeployerFixture(wallets, provider)
   const signer = new ActorFixture(wallets, provider).stakerDeployer()
   const stakerFactory = await ethers.getContractFactory('AlgebraStaker', signer)
-  const staker = (await stakerFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraStaker
+  const staker = (await stakerFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraStaker
 
   await factory.setStakerAddress(staker.address)
-
+  await vdeployer.setFactory(staker.address) 
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
 
@@ -276,6 +287,8 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
     token0: tokens[0],
     token1: tokens[1],
     rewardToken: tokens[2],
+    bonusRewardToken: tokens[1],
+    vdeployer
   }
 }
 
