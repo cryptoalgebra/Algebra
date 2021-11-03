@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.4.0;
+pragma solidity =0.7.6;
 
 import './Constants.sol';
 
@@ -24,7 +24,9 @@ library AdaptiveFee {
         uint256 sigm1 = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1);
         uint256 sigm2 = sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
-        fee = Constants.BASE_FEE + sigmoid(volumePerLiquidity, config.volumeGamma << 64, sigm1 + sigm2, config.volumeBeta);
+        fee =
+            Constants.BASE_FEE +
+            sigmoid(volumePerLiquidity, config.volumeGamma << 64, sigm1 + sigm2, config.volumeBeta);
     }
 
     function sigmoid(

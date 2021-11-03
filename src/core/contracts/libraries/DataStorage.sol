@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0;
+pragma solidity >=0.7.0;
 
 import './FullMath.sol';
 
@@ -32,7 +32,6 @@ library DataStorage {
     /// @param tick The active tick at the time of the new timepoint
     /// @param liquidity The total in-range liquidity at the time of the new timepoint
     /// @return Timepoint The newly populated timepoint
-    //TODO: doc
     function createNewTimepoint(
         Timepoint memory last,
         uint32 blockTimestamp,

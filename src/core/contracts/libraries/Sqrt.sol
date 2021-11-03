@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity =0.7.6;
+pragma solidity >=0.5.0;
 
 library Sqrt {
     function sqrt(int256 _x) internal pure returns (uint256 result) {
