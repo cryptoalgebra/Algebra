@@ -1,8 +1,15 @@
-# Algebra 
-Innovative DEX with concentrated liquidity, adaptive fee, build-in farming etc.
+<p align="center">
+  <img alt="Algebra" src="https://algebra.finance/assets/img/logo.svg" width="360">
+</p>
 
+<p align="center">
+Innovative DEX with concentrated liquidity, adaptive fee, build-in farming etc.
+</p>
  
-[![Tests](https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml/badge.svg)](https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml)
+ <p align="center">
+ <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml/badge.svg"></a>
+</p>
+
 
 - [Build](#Build)
 - [Tests](#Tests)
