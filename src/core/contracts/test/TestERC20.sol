@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import '../interfaces/IERC20Minimal.sol';
-import 'hardhat/console.sol';
 
 contract TestERC20 is IERC20Minimal {
     mapping(address => uint256) public override balanceOf;
