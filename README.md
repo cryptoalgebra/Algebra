@@ -12,6 +12,8 @@ Innovative DEX with concentrated liquidity, adaptive fee, build-in farming etc.
 
 ## Build
 
+*Requires npm >= 8.0.0*
+
 To install dependencies, you need to run the command in the root directory:
 ```
 $ npm run bootstrap
