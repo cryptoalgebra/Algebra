@@ -9,19 +9,26 @@ async function main() {
   const maxIncentiveStartLeadTime = 2592000;
   const maxIncentiveDuration = 63072000;
 
+  const VirtualPoolDeployerFactory = await hre.ethers.getContractFactory("VirtualPoolDeployer");
+  const VirtualPoolDeployer = await VirtualPoolDeployerFactory.deploy();
+
+  await VirtualPoolDeployer.deployed();
 
   const AlgebraStakerFactory = await hre.ethers.getContractFactory("AlgebraStaker");
-  const AlgebraStaker = await AlgebraStakerFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
+  const AlgebraStaker = await AlgebraStakerFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, VirtualPoolDeployer.address, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
   await AlgebraStaker.deployed();
+
+  await VirtualPoolDeployer.setFactory(AlgebraStaker.address);
 
   console.log("AlgebraStaker deployed to:", AlgebraStaker.address);
 
   await hre.run("verify:verify", {
     address: AlgebraStaker.address,
     constructorArguments: [
-      Pooldeployer,
-      nonfungiblePositionManagerAddress,
+      deploysData.poolDeployer,
+      deploysData.nonfungiblePositionManager,
+      VirtualPoolDeployer.address,
       maxIncentiveStartLeadTime,
       maxIncentiveDuration,
     ],

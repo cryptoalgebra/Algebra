@@ -8,12 +8,16 @@ import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
+import './IVirtualPoolDeployer.sol';
+import './IAlgebraVirtualPool.sol';
+
+import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 
 /// @title Algebra Staker Interface
 /// @notice Allows staking nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraStaker is IERC721Receiver, IMulticall {
+interface IAlgebraStaker is IERC721Receiver, IERC721Permit, IMulticall {
     /// @param rewardToken The token being distributed as a reward
     /// @param pool The Algebra pool
     /// @param startTime The time when the incentive program begins
@@ -21,6 +25,7 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @param refundee The address which receives any remaining reward tokens when the incentive is ended
     struct IncentiveKey {
         IERC20Minimal rewardToken;
+        IERC20Minimal bonusRewardToken;
         IAlgebraPool pool;
         uint256 startTime;
         uint256 endTime;
@@ -31,6 +36,8 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
 
     /// @notice The nonfungible position manager with which this staking contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
+
+    function vdeployer() external view returns (IVirtualPoolDeployer);
 
     /// @notice The max duration of an incentive in seconds
     function maxIncentiveDuration() external view returns (uint256);
@@ -46,6 +53,7 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
         view
         returns (
             uint256 totalReward,
+            uint256 bonusReward,
             address virtualPoolAddress,
             uint96 numberOfStakes,
             bool isPoolCreated,
@@ -53,16 +61,16 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
         );
 
     /// @notice Returns information about a deposited NFT
+    /// @return _tokenId
     /// @return owner The owner of the deposited NFT
-    /// @return numberOfStakes Counter of how many incentives for which the liquidity is staked
     /// @return tickLower The lower tick of the range
     /// @return tickUpper The upper tick of the range
     function deposits(uint256 tokenId)
         external
         view
         returns (
+            uint256 _tokenId,
             address owner,
-            uint48 numberOfStakes,
             int24 tickLower,
             int24 tickUpper
         );
@@ -73,6 +81,8 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
     function stakes(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity);
 
+    function setIncentiveMaker(address _incentiveMaker) external;
+
     /// @notice Returns amounts of reward tokens owed to a given address according to the last time all stakes were updated
     /// @param rewardToken The token for which to check rewards
     /// @param owner The owner for which the rewards owed are checked
@@ -82,7 +92,11 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @notice Creates a new liquidity mining incentive program
     /// @param key Details of the incentive to create
     /// @param reward The amount of reward tokens to be distributed
-    function createIncentive(IncentiveKey memory key, uint256 reward) external returns (address virtualPool);
+    function createIncentive(
+        IncentiveKey memory key,
+        uint256 reward,
+        uint256 algReward
+    ) external returns (address virtualPool);
 
     /// @notice Ends an incentive after the incentive end time has passed and all stakes have been withdrawn
     /// @param key Details of the incentive to end
@@ -92,7 +106,7 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @notice Transfers ownership of a deposit from the sender to the given recipient
     /// @param tokenId The ID of the token (and the deposit) to transfer
     /// @param to The new owner of the deposit
-    function transferDeposit(uint256 tokenId, address to) external;
+    //function transferDeposit(uint256 tokenId, address to) external;
 
     /// @notice Withdraws a Algebra LP token `tokenId` from this contract to the recipient `to`
     /// @param tokenId The unique identifier of an Algebra LP token
@@ -129,7 +143,9 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @param key The key of the incentive
     /// @param tokenId The ID of the token
     /// @return reward The reward accrued to the NFT for the given incentive thus far
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward);
+    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
+        external
+        returns (uint256 reward, uint256 algReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
@@ -140,12 +156,14 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @param reward The amount of reward tokens to be distributed
     event IncentiveCreated(
         IERC20Minimal indexed rewardToken,
+        IERC20Minimal indexed bonusRewardToken,
         IAlgebraPool indexed pool,
         address virtualPool,
         uint256 startTime,
         uint256 endTime,
         address refundee,
-        uint256 reward
+        uint256 reward,
+        uint256 bonusReward
     );
 
     /// @notice Event that can be emitted when a liquidity mining incentive has ended
@@ -163,7 +181,12 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity staked
     /// @param incentiveId The incentive in which the token is staking
-    event TokenStaked(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
+    event TokenStaked(
+        uint256 indexed tokenId,
+        uint256 indexed L2tokenId,
+        bytes32 indexed incentiveId,
+        uint128 liquidity
+    );
 
     /// @notice Event emitted when a Algebra LP token has been unstaked
     /// @param tokenId The unique identifier of an Algebra LP token
@@ -172,8 +195,10 @@ interface IAlgebraStaker is IERC721Receiver, IMulticall {
         uint256 indexed tokenId,
         bytes32 indexed incentiveId,
         address indexed rewardAddress,
+        address bonusRewardToken,
         address owner,
-        uint256 reward
+        uint256 reward,
+        uint256 bonusReward
     );
 
     /// @notice Event emitted when a reward token has been claimed
