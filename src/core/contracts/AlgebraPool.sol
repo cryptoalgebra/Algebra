@@ -283,7 +283,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             uint32 time = _blockTimestamp();
             (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, , ) = IDataStorageOperator(
                 dataStorageOperator
-            ).getSingleTimepoint(time, 0, globalState.tick, globalState.timepointIndex, liquidity);
+            ).getSingleTimepoint(time, 0, _globalState.tick, _globalState.timepointIndex, liquidity);
 
             if (
                 ticks.update(
@@ -330,18 +330,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
         _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
 
-        // if liquidityDelta is negative, i.e. the liquidity was removed, and also the tick was toggled, it
-        // means that it should not be initialized anymore, so we delete it
-        if (liquidityDelta < 0) {
-            if (toggledBottom) {
-                delete ticks[bottomTick];
-            }
-            if (toggledTop) {
-                delete ticks[topTick];
-            }
-        }
-
         if (liquidityDelta != 0) {
+            // if liquidityDelta is negative, i.e. the liquidity was removed, and also the tick was toggled, it
+            // means that it should not be initialized anymore, so we delete it
+            if (liquidityDelta < 0) {
+                if (toggledBottom) {
+                    delete ticks[bottomTick];
+                }
+                if (toggledTop) {
+                    delete ticks[topTick];
+                }
+            }
+
             int128 globalLiquidityDelta;
             (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(
                 bottomTick,
@@ -358,7 +358,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                     liquidityBefore,
                     volumePerLiquidityInBlock
                 );
-                if (globalState.timepointIndex != newTimepointIndex) {
+                if (_globalState.timepointIndex != newTimepointIndex) {
                     globalState.timepointIndex = newTimepointIndex;
                     _changeFee(_blockTimestamp(), _globalState.tick, newTimepointIndex, liquidityBefore);
                     volumePerLiquidityInBlock = 0;
@@ -564,8 +564,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint16 _index,
         uint128 _liquidity
     ) private {
-        globalState.fee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
-        emit ChangeFee(globalState.fee);
+        uint16 newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
+        globalState.fee = newFee;
+        emit ChangeFee(newFee);
     }
 
     // @inheritdoc IAlgebraPoolActions
@@ -798,7 +799,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
         StepComputations memory step;
         // swap until there is remaining input or output tokens or we reach the price limit
-        while (amountRequired != 0 && currentPrice != limitSqrtPrice) {
+        while (true) {
             step.stepSqrtPrice = currentPrice;
 
             (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroForOne);
@@ -902,8 +903,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 currentTick = zeroForOne ? step.nextTick - 1 : step.nextTick;
             } else if (currentPrice != step.stepSqrtPrice) {
                 // if the price has changed but hasn't reached the target
-
                 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
+            }
+
+            // check stop condition
+            if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
+                break;
             }
         }
 
