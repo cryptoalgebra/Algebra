@@ -78,7 +78,22 @@ contract DataStorageOperator is IDataStorageOperator {
             uint256 volumePerAvgLiquidity
         )
     {
-        return timepoints.getSingleTimepoint(time, secondsAgo, tick, index, liquidity);
+        DataStorage.Timepoint storage oldest = timepoints[addmod(index, 1, 65535)];
+        if (!oldest.initialized) oldest = timepoints[0];
+        DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(
+            oldest,
+            time,
+            secondsAgo,
+            tick,
+            index,
+            liquidity
+        );
+        (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative, volumePerAvgLiquidity) = (
+            result.tickCumulative,
+            result.secondsPerLiquidityCumulative,
+            result.volatilityCumulative,
+            result.volumePerLiquidityCumulative
+        );
     }
 
     function getTimepoints(
