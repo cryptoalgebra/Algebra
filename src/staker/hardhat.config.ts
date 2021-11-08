@@ -23,11 +23,27 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   },
 }
 
+const LOW_OPTIMIZER_COMPILER_SETTINGS = {
+  version: '0.6.12',
+  settings: {
+    optimizer: {
+      enabled: true,
+      runs: 1_000_000,
+    },
+    metadata: {
+      bytecodeHash: 'none',
+    },
+  },
+}
+
 const config: HardhatUserConfig = {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
+    // overrides: {
+    //   'contracts/AlgebraTokenStaking.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
+    // },
   },
   contractSizer: {
     alphaSort: false,
