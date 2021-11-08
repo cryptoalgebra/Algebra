@@ -89,20 +89,20 @@ abstract contract FreezableToken is ERC20{
     /**
      * @dev release first available freezing tokens.
      */
-    function releaseOnce() public {
-        bytes32 headKey = toKey(msg.sender, 0);
+    function releaseOnce(address account) public {
+        bytes32 headKey = toKey(account, 0);
         uint64 head = chains[headKey];
         require(head != 0);
         require(uint64(block.timestamp) > head);
-        bytes32 currentKey = toKey(msg.sender, head);
+        bytes32 currentKey = toKey(account, head);
 
         uint64 next = chains[currentKey];
 
-        uint amount = freezings[currentKey];
+        uint256 amount = freezings[currentKey];
         delete freezings[currentKey];
 
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-        freezingBalance[msg.sender] = freezingBalance[msg.sender].sub(amount);
+        _balances[account] = _balances[account].add(amount);
+        freezingBalance[account] = freezingBalance[account].sub(amount);
 
         if (next == 0) {
             delete chains[headKey];
@@ -110,21 +110,21 @@ abstract contract FreezableToken is ERC20{
             chains[headKey] = next;
             delete chains[currentKey];
         }
-        emit Released(msg.sender, amount);
+        emit Released(account, amount);
     }
 
     /**
      * @dev release all available for release freezing tokens. Gas usage is not deterministic!
      * @return tokens how many tokens was released
      */
-    function releaseAll() public returns (uint tokens) {
-        uint release;
-        uint balance;
-        (release, balance) = getFreezing(msg.sender, 0);
+    function releaseAll(address account) public returns (uint256 tokens) {
+        uint256 release;
+        uint256 balance;
+        (release, balance) = getFreezing(account, 0);
         while (release != 0 && block.timestamp > release) {
-            releaseOnce();
+            releaseOnce(account);
             tokens += balance;
-            (release, balance) = getFreezing(msg.sender, 0);
+            (release, balance) = getFreezing(account, 0);
         }
     }
 

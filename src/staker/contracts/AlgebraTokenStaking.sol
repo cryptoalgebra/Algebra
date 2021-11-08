@@ -14,19 +14,12 @@ contract AlgebraTokenStaking is FreezableToken{
         ALGB = _ALGB;
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal override{
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-
-        (uint64 release, uint256 balance) = getFreezing(msg.sender, 0);
+   function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+       (uint64 release, uint256 balance) = getFreezing(from, 0);
         if (release < block.timestamp && balance > 0){
-            releaseAll();
+            releaseAll(from);
         }
-
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        _balances[recipient] = _balances[recipient].add(amount);
-        emit Transfer(sender, recipient, amount);
-    }
+   }
 
     // Enter the bar. Pay some ALGBSs. Earn some shares.
     // Locks ALGB and mints xALGB
@@ -37,12 +30,12 @@ contract AlgebraTokenStaking is FreezableToken{
         uint256 totalShares = totalSupply();
         // If no xALGB exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalALGB == 0) {
-            _mint(msg.sender, _amount);
+            mintAndFreeze(msg.sender, _amount, uint64(block.timestamp + 1200));
         }
         // Calculate and mint the amount of xALGB the ALGB is worth. The ratio will change overtime, as xALGB is burned/minted and ALGB deposited + gained from fees / withdrawn.
         else {
             uint256 what = _amount.mul(totalShares).div(totalALGB);
-            _mint(msg.sender, what);
+            mintAndFreeze(msg.sender, what, uint64(block.timestamp + 1200));
         }
         // Lock the ALGB in the contract
         ALGB.transferFrom(msg.sender, address(this), _amount);

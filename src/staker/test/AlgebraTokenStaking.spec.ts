@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import {ethers, network} from "hardhat";
 import { expect } from "chai";
 
 describe("AlgebraTokenStaking", function () {
@@ -35,6 +35,22 @@ describe("AlgebraTokenStaking", function () {
     await expect(this.AlgebraStaking.leave("200")).to.be.revertedWith("ERC20: burn amount exceeds balance")
   })
 
+  it("should not be able to transfer xALGB until unfreeze time", async function (){
+    await this.ALGB.approve(this.AlgebraStaking.address, "100")
+    await this.AlgebraStaking.enter("20")
+
+    await expect(this.AlgebraStaking.transfer(this.bob.address, "1")).to.be.revertedWith(
+        "ERC20: transfer amount exceeds balance"
+    )
+
+    await network.provider.send("evm_increaseTime", [1200])
+    await network.provider.send("evm_mine")
+
+    await this.AlgebraStaking.transfer(this.bob.address, "1")
+
+    expect(await this.AlgebraStaking.balanceOf(this.bob.address)).to.equal("1")
+  })
+
   it("should work with more than one participant", async function () {
     await this.ALGB.approve(this.AlgebraStaking.address, "100")
     await this.ALGB.connect(this.bob).approve(this.AlgebraStaking.address, "100", { from: this.bob.address })
@@ -51,6 +67,11 @@ describe("AlgebraTokenStaking", function () {
     expect(await this.AlgebraStaking.balanceOf(this.alice.address)).to.equal("26")
     expect(await this.AlgebraStaking.balanceOf(this.bob.address)).to.equal("10")
     // Bob withdraws 5 shares. He should receive 5*60/36 = 8 shares
+    await expect(this.AlgebraStaking.connect(this.bob).leave("5", { from: this.bob.address })).to.be.revertedWith(
+        "ERC20: burn amount exceeds balance"
+    )
+    await network.provider.send("evm_increaseTime", [1200])
+    await network.provider.send("evm_mine")
     await this.AlgebraStaking.connect(this.bob).leave("5", { from: this.bob.address })
     expect(await this.AlgebraStaking.balanceOf(this.alice.address)).to.equal("26")
     expect(await this.AlgebraStaking.balanceOf(this.bob.address)).to.equal("5")
