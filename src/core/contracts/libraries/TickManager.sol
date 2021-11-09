@@ -97,13 +97,21 @@ library TickManager {
     ) internal returns (bool flipped) {
         Tick storage data = self[tick];
 
+        int128 liquidityDeltaBefore = data.liquidityDelta;
         uint128 liquidityTotalBefore = data.liquidityTotal;
+
         uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
         require(liquidityTotalAfter <= 11505743598341114571880798222544994, 'LO');
+        flipped = (liquidityTotalAfter == 0);
 
-        flipped = (liquidityTotalAfter == 0) != (liquidityTotalBefore == 0);
+        data.liquidityTotal = liquidityTotalAfter;
+        // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
+        data.liquidityDelta = upper
+            ? int256(liquidityDeltaBefore).sub(liquidityDelta).toInt128()
+            : int256(liquidityDeltaBefore).add(liquidityDelta).toInt128();
 
         if (liquidityTotalBefore == 0) {
+            flipped = !flipped;
             // by convention, we assume that all growth before a tick was initialized happened _below_ the tick
             if (tick <= currentTick) {
                 data.outerFeeGrowth0Token = totalFeeGrowth0Token;
@@ -111,16 +119,11 @@ library TickManager {
                 data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
                 data.outerTickCumulative = tickCumulative;
                 data.outerSecondsSpent = time;
+                data.initialized = true;
+            } else {
+                data.initialized = true;
             }
-            data.initialized = true;
         }
-
-        data.liquidityTotal = liquidityTotalAfter;
-
-        // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
-        data.liquidityDelta = upper
-            ? int256(data.liquidityDelta).sub(liquidityDelta).toInt128()
-            : int256(data.liquidityDelta).add(liquidityDelta).toInt128();
     }
 
     /// @notice Transitions to next tick as needed by price movement
@@ -141,11 +144,14 @@ library TickManager {
         uint32 time
     ) internal returns (int128 liquidityDelta) {
         Tick storage data = self[tick];
+
         data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+
         data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
         data.outerTickCumulative = tickCumulative - data.outerTickCumulative;
         data.outerSecondsSpent = time - data.outerSecondsSpent;
+
         liquidityDelta = data.liquidityDelta;
     }
 }
