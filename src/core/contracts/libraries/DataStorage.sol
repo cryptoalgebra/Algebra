@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.7.0;
+pragma solidity =0.7.6;
 
 import './FullMath.sol';
 
 /// @title DataStorage
-/// @notice Provides price and liquidity data useful for a wide variety of system designs
+/// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
-/// Every pool is initialized with an dataStorage array length of 1. Anyone can pay the SSTOREs to increase the
-/// maximum length of the dataStorage array. New slots will be added when the array is fully populated.
 /// Timepoints are overwritten when the full length of the dataStorage array is populated.
-/// The most recent timepoint is available, independent of the length of the dataStorage array, by passing 0 to getTimepoints()
+/// The most recent timepoint is available by passing 0 to getSingleTimepoint()
 library DataStorage {
     uint32 public constant WINDOW = 1 days;
     struct Timepoint {
@@ -21,7 +19,9 @@ library DataStorage {
         int56 tickCumulative;
         // the seconds per liquidity, i.e. seconds elapsed / max(1, liquidity) since the pool was first initialized
         uint160 secondsPerLiquidityCumulative;
+        // the volatility accumulator
         uint112 volatilityCumulative;
+        // the gmean(volumes)/liquidity accumulator
         uint144 volumePerLiquidityCumulative;
     }
 
@@ -31,6 +31,8 @@ library DataStorage {
     /// @param blockTimestamp The timestamp of the new timepoint
     /// @param tick The active tick at the time of the new timepoint
     /// @param liquidity The total in-range liquidity at the time of the new timepoint
+    /// @param averageTick The average tick at the time of the new timepoint
+    /// @param volumePerLiquidity The gmean(volumes)/liquidity at the time of the new timepoint
     /// @return Timepoint The newly populated timepoint
     function createNewTimepoint(
         Timepoint memory last,
@@ -71,31 +73,31 @@ library DataStorage {
 
     function _getAverageTick(
         Timepoint[65535] storage self,
-        Timepoint storage oldest,
         uint32 time,
         int24 tick,
         uint16 index,
+        uint16 oldestIndex,
         uint32 lastTimestamp,
         int56 lastTickCumulative
     ) private view returns (int24 avgTick) {
-        uint32 oldestTimestamp = oldest.blockTimestamp;
-        int96 oldestTickCumulative = oldest.tickCumulative;
+        uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+        int56 oldestTickCumulative = self[oldestIndex].tickCumulative;
 
         if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
-            if (!lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
-                Timepoint memory startOfWindow = getSingleTimepoint(self, oldest, time, WINDOW, tick, index, 0);
-
-                //    current-WINDOW  last   current
-                // _________*____________*_______*_
-                //           ||||||||||||
-                avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW));
-            } else {
+            if (lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
                 index = index == 0 ? 65535 - 1 : index - 1;
                 avgTick = self[index].initialized
                     ? int24(
                         (lastTickCumulative - self[index].tickCumulative) / (lastTimestamp - self[index].blockTimestamp)
                     )
                     : tick;
+            } else {
+                Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
+
+                //    current-WINDOW  last   current
+                // _________*____________*_______*_
+                //           ||||||||||||
+                avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW));
             }
         } else {
             avgTick = (lastTimestamp == oldestTimestamp)
@@ -111,53 +113,42 @@ library DataStorage {
     /// @param self The stored dataStorage array
     /// @param time The current block.timestamp
     /// @param target The timestamp at which the reserved timepoint should be for
-    /// @param index The index of the timepoint that was most recently written to the timepoints array
+    /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
+    /// @param oldestIndex The index of the oldest timepoint in the timepoints array
     /// @return beforeOrAt The timepoint recorded before, or at, the target
     /// @return atOrAfter The timepoint recorded at, or after, the target
     function binarySearch(
         Timepoint[65535] storage self,
         uint32 time,
         uint32 target,
-        uint16 index
-    ) private view returns (Timepoint memory beforeOrAt, Timepoint memory atOrAfter) {
-        uint256 l = addmod(index, 1, 65535); // oldest timepoint
-        uint256 r = l + 65534; // newest timepoint
-        uint256 i;
-        uint256 currentTimepointNum;
+        uint16 lastIndex,
+        uint16 oldestIndex
+    ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) {
+        uint256 left = oldestIndex; // oldest timepoint
+        uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + 65535; // newest timepoint considering overflow
+        uint256 current = (left + right) / 2;
+
+        beforeOrAt = self[current % 65535];
+        atOrAfter = beforeOrAt; // will override in cycle
+
         while (true) {
-            i = (l + r) / 2;
-            currentTimepointNum = i % 65535;
-            (
-                beforeOrAt.initialized,
-                beforeOrAt.blockTimestamp,
-                beforeOrAt.tickCumulative,
-                beforeOrAt.secondsPerLiquidityCumulative
-            ) = (
-                self[currentTimepointNum].initialized,
-                self[currentTimepointNum].blockTimestamp,
-                self[currentTimepointNum].tickCumulative,
-                self[currentTimepointNum].secondsPerLiquidityCumulative
-            );
-
-            // we've landed on an uninitialized tick, keep searching higher (more recently)
-            if (!beforeOrAt.initialized) {
-                l = i + 1;
-                continue;
-            }
-
-            // check if we've found the answer!
-            if (lteConsideringOverflow(beforeOrAt.blockTimestamp, target, time)) {
-                atOrAfter.blockTimestamp = self[addmod(i, 1, 65535)].blockTimestamp;
-                if (lteConsideringOverflow(target, atOrAfter.blockTimestamp, time)) {
-                    beforeOrAt.volatilityCumulative = self[currentTimepointNum].volatilityCumulative;
-                    beforeOrAt.volumePerLiquidityCumulative = self[currentTimepointNum].volumePerLiquidityCumulative;
-                    atOrAfter = self[addmod(i, 1, 65535)];
-                    break;
+            if (beforeOrAt.initialized) {
+                // check if we've found the answer!
+                if (lteConsideringOverflow(beforeOrAt.blockTimestamp, target, time)) {
+                    atOrAfter = self[addmod(current, 1, 65535)];
+                    if (lteConsideringOverflow(target, atOrAfter.blockTimestamp, time)) {
+                        break;
+                    }
+                    left = current + 1;
+                } else {
+                    right = current - 1;
                 }
-                l = i + 1;
             } else {
-                r = i - 1;
+                // we've landed on an uninitialized timepoint, keep searching higher (more recently)
+                left = current + 1;
             }
+            current = (left + right) / 2;
+            beforeOrAt = self[current % 65535];
         }
     }
 
@@ -166,6 +157,7 @@ library DataStorage {
     /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
     /// at exactly the timestamp between the two timepoints.
     /// @param self The stored dataStorage array
+    /// @param self The oldest timepoint
     /// @param time The current block timestamp
     /// @param secondsAgo The amount of time to look back, in seconds, at which point to return an timepoint
     /// @param tick The current tick
@@ -173,14 +165,16 @@ library DataStorage {
     /// @param liquidity The current in-range pool liquidity
     function getSingleTimepoint(
         Timepoint[65535] storage self,
-        Timepoint storage oldest,
         uint32 time,
         uint32 secondsAgo,
         int24 tick,
         uint16 index,
+        uint16 oldestIndex,
         uint128 liquidity
     ) internal view returns (Timepoint memory) {
         uint32 target = time - secondsAgo;
+
+        // if target is newer than last timepoint
         if (secondsAgo == 0 || lteConsideringOverflow(self[index].blockTimestamp, target, time)) {
             Timepoint memory beforeOrAt = self[index];
             if (beforeOrAt.blockTimestamp == target) {
@@ -189,10 +183,10 @@ library DataStorage {
                 // otherwise, we need to add new timepoint
                 int24 avgTick = _getAverageTick(
                     self,
-                    oldest,
                     time,
                     tick,
                     index,
+                    oldestIndex,
                     beforeOrAt.blockTimestamp,
                     beforeOrAt.tickCumulative
                 );
@@ -200,8 +194,14 @@ library DataStorage {
             }
         }
 
-        require(lteConsideringOverflow(oldest.blockTimestamp, target, time), 'OLD');
-        (Timepoint memory beforeOrAt, Timepoint memory atOrAfter) = binarySearch(self, time, target, index);
+        require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
+        (Timepoint memory beforeOrAt, Timepoint memory atOrAfter) = binarySearch(
+            self,
+            time,
+            target,
+            index,
+            oldestIndex
+        );
 
         if (target == atOrAfter.blockTimestamp) {
             // we're at the right boundary
@@ -265,12 +265,15 @@ library DataStorage {
         volatilityCumulatives = new uint112[](secondsAgos.length);
         volumePerAvgLiquiditys = new uint256[](secondsAgos.length);
 
-        Timepoint storage oldest = self[addmod(index, 1, 65535)];
-        if (!oldest.initialized) oldest = self[0];
+        uint16 oldestIndex;
+        // check if we have overflow in the past
+        if (self[addmod(index, 1, 65535)].initialized) {
+            oldestIndex = uint16(addmod(index, 1, 65535));
+        }
 
         Timepoint memory current;
         for (uint256 i = 0; i < secondsAgos.length; i++) {
-            current = getSingleTimepoint(self, oldest, time, secondsAgos[i], tick, index, liquidity);
+            current = getSingleTimepoint(self, time, secondsAgos[i], tick, index, oldestIndex, liquidity);
             (
                 tickCumulatives[i],
                 secondsPerLiquidityCumulatives[i],
@@ -286,7 +289,6 @@ library DataStorage {
     }
 
     /// @notice Returns average volatility in the range from time-WINDOW to time
-    /// @dev if the oldest timepoint was written later than time-WINDOW returns 0 as average volatility
     /// @param self The stored dataStorage array
     /// @param time The current block.timestamp
     /// @param tick The current tick
@@ -300,13 +302,25 @@ library DataStorage {
         uint16 index,
         uint128 liquidity
     ) internal view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
-        Timepoint storage oldest = self[addmod(index, 1, 65535)];
-        if (!oldest.initialized) oldest = self[0];
+        uint16 oldestIndex;
+        Timepoint storage oldest = self[0];
+        if (self[addmod(index, 1, 65535)].initialized) {
+            oldestIndex = uint16(addmod(index, 1, 65535));
+            oldest = self[oldestIndex];
+        }
 
-        Timepoint memory endOfWindow = getSingleTimepoint(self, oldest, time, 0, tick, index, liquidity);
+        Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
 
         if (lteConsideringOverflow(oldest.blockTimestamp, time - WINDOW, time)) {
-            Timepoint memory startOfWindow = getSingleTimepoint(self, oldest, time, WINDOW, tick, index, liquidity);
+            Timepoint memory startOfWindow = getSingleTimepoint(
+                self,
+                time,
+                WINDOW,
+                tick,
+                index,
+                oldestIndex,
+                liquidity
+            );
             return (
                 (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
                 uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative))
@@ -332,13 +346,12 @@ library DataStorage {
 
     /// @notice Writes an dataStorage timepoint to the array
     /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
-    /// If the index is at the end of the allowable array length (according to cardinality), and the next cardinality
-    /// is greater than the current one, cardinality may be increased. This restriction is created to preserve ordering.
     /// @param self The stored dataStorage array
     /// @param index The index of the timepoint that was most recently written to the timepoints array
     /// @param blockTimestamp The timestamp of the new timepoint
     /// @param tick The active tick at the time of the new timepoint
     /// @param liquidity The total in-range liquidity at the time of the new timepoint
+    /// @param volumePerLiquidity The gmean(volumes)/liquidity at the time of the new timepoint
     /// @return indexUpdated The new index of the most recently written element in the dataStorage array
     function write(
         Timepoint[65535] storage self,
@@ -349,22 +362,26 @@ library DataStorage {
         uint128 volumePerLiquidity
     ) internal returns (uint16 indexUpdated) {
         // early return if we've already written an timepoint this block
-
         if (self[index].blockTimestamp == blockTimestamp) {
             return index;
         }
         Timepoint memory last = self[index];
+
+        // get next index considering overflow
         indexUpdated = uint16(addmod(index, 1, 65535));
 
-        Timepoint storage oldest = self[indexUpdated];
-        if (!oldest.initialized) oldest = self[0];
+        uint16 oldestIndex;
+        // check if we have overflow in the past
+        if (self[indexUpdated].initialized) {
+            oldestIndex = indexUpdated;
+        }
 
         int24 avgTick = _getAverageTick(
             self,
-            oldest,
             blockTimestamp,
             tick,
             index,
+            oldestIndex,
             last.blockTimestamp,
             last.tickCumulative
         );

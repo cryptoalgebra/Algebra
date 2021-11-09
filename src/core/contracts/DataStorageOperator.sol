@@ -78,14 +78,18 @@ contract DataStorageOperator is IDataStorageOperator {
             uint256 volumePerAvgLiquidity
         )
     {
-        DataStorage.Timepoint storage oldest = timepoints[addmod(index, 1, 65535)];
-        if (!oldest.initialized) oldest = timepoints[0];
+        uint16 oldestIndex;
+        // check if we have overflow in the past
+        if (timepoints[addmod(index, 1, 65535)].initialized) {
+            oldestIndex = uint16(addmod(index, 1, 65535));
+        }
+
         DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(
-            oldest,
             time,
             secondsAgo,
             tick,
             index,
+            oldestIndex,
             liquidity
         );
         (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative, volumePerAvgLiquidity) = (
