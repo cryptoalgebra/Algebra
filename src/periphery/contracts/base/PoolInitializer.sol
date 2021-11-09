@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 
 import 'algebra/contracts/interfaces/IAlgebraFactory.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
-
 import './PeripheryImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
 
@@ -16,10 +15,12 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         uint160 sqrtPriceX96
     ) external payable override returns (address pool) {
         require(token0 < token1);
+
         pool = IAlgebraFactory(factory).poolByPair(token0, token1);
 
         if (pool == address(0)) {
             pool = IAlgebraFactory(factory).createPool(token0, token1);
+
             IAlgebraPool(pool).initialize(sqrtPriceX96);
         } else {
             (uint160 sqrtPriceX96Existing, , , , , , , ) = IAlgebraPool(pool).globalState();

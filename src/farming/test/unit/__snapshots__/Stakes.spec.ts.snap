@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`] = `58756`;
+
+exports[`unit/Farms #farmToken works and has gas cost 1`] = `447932`;
+
+exports[`unit/Farms #unfarmToken works and has gas cost 1`] = `153778`;

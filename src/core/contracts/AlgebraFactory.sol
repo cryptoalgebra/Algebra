@@ -19,7 +19,7 @@ contract AlgebraFactory is IAlgebraFactory {
     address public override poolDeployer;
 
     // @inheritdoc IAlgebraFactory
-    address public override stakerAddress;
+    address public override farmingAddress;
 
     // @inheritdoc IAlgebraFactory
     address public override vaultAddress;
@@ -66,8 +66,8 @@ contract AlgebraFactory is IAlgebraFactory {
     }
 
     // @inheritdoc IAlgebraFactory
-    function setStakerAddress(address _stakerAddress) external override onlyOwner {
-        stakerAddress = _stakerAddress;
+    function setFarmingAddress(address _farmingAddress) external override onlyOwner {
+        farmingAddress = _farmingAddress;
     }
 
     // @inheritdoc IAlgebraFactory
@@ -75,7 +75,7 @@ contract AlgebraFactory is IAlgebraFactory {
         vaultAddress = _vaultAddres;
     }
 
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0x3053a47763f959a1a7c44f3e89144f0b9b20acf59ffae4b693aab3965c7d6bf5;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0x695d8e8c7264e92872b3689f4989d027437452e211b411154764907fe7419adb;
 
     /// @notice Deterministically computes the pool address given the factory and PoolKey
     /// @param token0 first token
