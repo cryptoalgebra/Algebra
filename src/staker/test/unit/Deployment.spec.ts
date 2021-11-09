@@ -23,6 +23,7 @@ describe('unit/Deployment', () => {
     const staker = (await stakerFactory.deploy(
       context.deployer.address,
       context.nft.address,
+      context.vdeployer.address,
       2 ** 32,
       2 ** 32
     )) as AlgebraStaker
@@ -34,6 +35,7 @@ describe('unit/Deployment', () => {
     const staker = (await stakerFactory.deploy(
       context.deployer.address,
       context.nft.address,
+      context.vdeployer.address,
       2 ** 32,
       2 ** 32
     )) as AlgebraStaker

@@ -28,6 +28,7 @@ describe('unit/Multicall', () => {
   const lpUser0 = actors.lpUser0()
   const amountDesired = BNe18(10)
   const totalReward = BNe18(100)
+  const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
@@ -52,6 +53,7 @@ describe('unit/Multicall', () => {
       amountDesired,
       context.nft.address
     )
+
     await mintPosition(context.nft.connect(multicaller), {
       token0: context.token0.address,
       token1: context.token1.address,
@@ -67,21 +69,25 @@ describe('unit/Multicall', () => {
     })
 
     await erc20Helper.ensureBalancesAndApprovals(multicaller, context.rewardToken, totalReward, context.staker.address)
+    await erc20Helper.ensureBalancesAndApprovals(multicaller, context.bonusRewardToken, totalReward, context.staker.address)
 
     const createIncentiveTx = context.staker.interface.encodeFunctionData('createIncentive', [
       {
         pool: context.pool01,
         rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
         refundee: incentiveCreator.address,
         ...makeTimestamps(currentTime + 100),
       },
       totalReward,
+      bonusReward
     ])
+    await context.staker.setIncentiveMaker(multicaller.address)
     await context.staker.connect(multicaller).multicall([createIncentiveTx], maxGas)
 
-    // expect((await context.staker.deposits(tokenId)).owner).to.eq(
-    //   multicaller.address
-    // )
+     // expect((await context.staker.deposits(tokenId)).owner).to.eq(
+     //   multicaller.address
+     // )
   })
 
   // it('can be used to exit multiple tokens from one incentive', async () => {

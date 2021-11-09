@@ -31,12 +31,14 @@ describe('unit/Stakes', () => {
   const lpUser0 = actors.lpUser0()
   const amountDesired = BNe18(10)
   const totalReward = BNe18(100)
+  const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
   let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
   let tokenId: string
+  let L2tokenId: string
 
   before('loader', async () => {
     loadFixture = createFixtureLoader(provider.getWallets(), provider)
@@ -87,7 +89,9 @@ describe('unit/Stakes', () => {
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
         totalReward,
+        bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
       }
@@ -100,6 +104,7 @@ describe('unit/Stakes', () => {
             refundee: incentiveCreator.address,
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
           _tokenId
@@ -116,17 +121,17 @@ describe('unit/Stakes', () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
           .to.emit(context.staker, 'TokenStaked')
-          .withArgs(tokenId, incentiveId, liquidity)
+          .withArgs(tokenId, tokenId, incentiveId, liquidity)
       })
 
       it('sets the stake struct properly', async () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const stakeBefore = await context.staker.stakes(tokenId, incentiveId)
-        const depositStakesBefore = (await context.staker.deposits(tokenId)).numberOfStakes
+        const depositStakesBefore = (await context.staker.deposits(tokenId))._tokenId
         await subject(tokenId, lpUser0)
         const stakeAfter = await context.staker.stakes(tokenId, incentiveId)
-        const depositStakesAfter = (await context.staker.deposits(tokenId)).numberOfStakes
+        const depositStakesAfter = (await context.staker.deposits(tokenId))._tokenId
 
         expect(stakeBefore).to.eq(0)
         expect(depositStakesBefore).to.eq(0)
@@ -135,10 +140,10 @@ describe('unit/Stakes', () => {
       })
 
       it('increments the number of stakes on the deposit', async () => {
-        const nStakesBefore: number = (await context.staker.deposits(tokenId)).numberOfStakes
+        const nStakesBefore: BigNumber = (await context.staker.deposits(tokenId))._tokenId
         await subject(tokenId, lpUser0)
 
-        expect((await context.staker.deposits(tokenId)).numberOfStakes).to.eq(nStakesBefore + 1)
+        expect((await context.staker.deposits(tokenId))._tokenId).to.eq(nStakesBefore.add(1))
       })
 
       it('increments the number of stakes on the incentive', async () => {
@@ -233,6 +238,7 @@ describe('unit/Stakes', () => {
               refundee: incentiveCreator.address,
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
+              bonusRewardToken: context.bonusRewardToken.address,
               ...timestamps,
             },
             otherTokenId
@@ -249,6 +255,7 @@ describe('unit/Stakes', () => {
               refundee: incentiveCreator.address,
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
+              bonusRewardToken: context.bonusRewardToken.address,
               ...timestamps,
               startTime: timestamps.startTime + 10,
             },
@@ -292,6 +299,7 @@ describe('unit/Stakes', () => {
       stakeIncentiveKey = {
         refundee: incentiveCreator.address,
         rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
         ...timestamps,
       }
@@ -299,7 +307,9 @@ describe('unit/Stakes', () => {
       incentiveId = await helpers.getIncentiveId(
         await helpers.createIncentiveFlow({
           rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           totalReward,
+          bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
         })
@@ -342,7 +352,7 @@ describe('unit/Stakes', () => {
         .mul(stake)
 
       // @ts-ignore
-      expect(rewardInfo).to.be.closeTo(BNe(1, 20),  BN('809939148073022313'))
+      expect(rewardInfo.reward).to.be.closeTo(BNe(1, 20),  BN('809939148073022313'))
       //expect(rewardInfo.secondsInsideX128).to.equal(expectedSecondsInPeriod)
     })
 
@@ -369,7 +379,9 @@ describe('unit/Stakes', () => {
 
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
         totalReward,
+        bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
       })
@@ -390,6 +402,7 @@ describe('unit/Stakes', () => {
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
           ...timestamps,
         },
@@ -490,7 +503,9 @@ describe('unit/Stakes', () => {
 
         createIncentiveResult = await helpers.createIncentiveFlow({
           rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           totalReward,
+          bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
         })
@@ -526,6 +541,7 @@ describe('unit/Stakes', () => {
           {
             refundee: incentiveCreator.address,
             rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
             ...timestamps,
           },
@@ -539,6 +555,7 @@ describe('unit/Stakes', () => {
             refundee: incentiveCreator.address,
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
           tokenId
@@ -551,7 +568,9 @@ describe('unit/Stakes', () => {
 
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
         totalReward,
+        bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
       })
@@ -587,6 +606,7 @@ describe('unit/Stakes', () => {
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
           ...timestamps,
         },
@@ -603,6 +623,7 @@ describe('unit/Stakes', () => {
             refundee: incentiveCreator.address,
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
           tokenId
@@ -611,10 +632,10 @@ describe('unit/Stakes', () => {
 
     describe('works and', () => {
       it('decrements deposit numberOfStakes by 1', async () => {
-        const { numberOfStakes: stakesPre } = await context.staker.deposits(tokenId)
+        const { _tokenId: stakesPre } = await context.staker.deposits(tokenId)
         await subject(lpUser0)
-        const { numberOfStakes: stakesPost } = await context.staker.deposits(tokenId)
-        expect(stakesPre).to.not.equal(stakesPost - 1)
+        const { _tokenId: stakesPost } = await context.staker.deposits(tokenId)
+        expect(stakesPre).to.not.equal(stakesPost.sub(1))
       })
 
       it('decrements incentive numberOfStakes by 1', async () => {
@@ -629,7 +650,9 @@ describe('unit/Stakes', () => {
             tokenId,
             incentiveId,
             context.rewardToken.address,
+            context.bonusRewardToken.address,
             lpUser0.address,
+            BN('99999999999999999999'),
             BN('99999999999999999999')
         )
       })
@@ -659,9 +682,9 @@ describe('unit/Stakes', () => {
           // await Time.setAndMine(timestamps.endTime + 1)
         })
 
-        it('anyone can unstake', async () => {
-          await subject(actors.lpUser1())
-        })
+        // it('anyone cant unstake', async () => {
+        //   await subject(actors.lpUser1())
+        // })
 
         it('owner can unstake', async () => {
           await subject(lpUser0)
@@ -676,7 +699,7 @@ describe('unit/Stakes', () => {
       it('stake has already been unstaked', async () => {
         // await Time.setAndMine(timestamps.endTime + 1)
         await subject(lpUser0)
-        await expect(subject(lpUser0)).to.revertedWith('AlgebraStaker::unstakeToken: stake does not exist')
+        await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
       })
     })
   })
@@ -691,7 +714,9 @@ describe('unit/Stakes', () => {
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
       incentive = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
         totalReward,
+        bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
       })

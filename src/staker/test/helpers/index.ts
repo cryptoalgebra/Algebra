@@ -445,10 +445,10 @@ export class ERC20Helper {
 type IncentiveAdapterFunc = (params: HelperTypes.CreateIncentive.Result) => ContractParams.IncentiveKey
 
 export const incentiveResultToStakeAdapter: IncentiveAdapterFunc = (params) => ({
+  rewardToken: params.rewardToken.address,
+  bonusRewardToken: params.bonusRewardToken.address,
   pool: params.poolAddress,
   startTime: params.startTime,
   endTime: params.endTime,
-  rewardToken: params.rewardToken.address,
-  bonusRewardToken: params.bonusRewardToken.address,
   refundee: params.refundee,
 })

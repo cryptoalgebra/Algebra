@@ -26,6 +26,7 @@ describe('unit/Incentives', async () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
   const incentiveCreator = actors.incentiveCreator()
   const totalReward = BNe18(100)
+  const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
 
@@ -54,17 +55,26 @@ describe('unit/Incentives', async () => {
           context.staker.address
         )
 
+        await erc20Helper.ensureBalancesAndApprovals(
+          incentiveCreator,
+          params.bonusRewardToken ? await erc20Wrap(params?.bonusRewardToken) : context.bonusRewardToken,
+          bonusReward,
+          context.staker.address
+        )
+
         const { startTime, endTime } = makeTimestamps(await blockTimestamp())
 
         return await context.staker.connect(incentiveCreator).createIncentive(
           {
             rewardToken: params.rewardToken || context.rewardToken.address,
+            bonusRewardToken: params.bonusRewardToken || context.bonusRewardToken.address,
             pool: context.pool01,
             startTime: params.startTime || startTime,
             endTime: params.endTime || endTime,
             refundee: params.refundee || incentiveCreator.address,
           },
-          totalReward
+          totalReward,
+          bonusReward
         )
       }
     })
@@ -76,6 +86,7 @@ describe('unit/Incentives', async () => {
           reward: totalReward,
           rewardToken: context.rewardToken.address,
         })
+
         expect(await context.rewardToken.balanceOf(context.staker.address)).to.eq(balanceBefore.add(totalReward))
       })
 
@@ -84,6 +95,7 @@ describe('unit/Incentives', async () => {
         await subject(timestamps)
         const incentiveId = await context.testIncentiveId.compute({
           rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
           startTime: timestamps.startTime,
           endTime: timestamps.endTime,
@@ -99,6 +111,7 @@ describe('unit/Incentives', async () => {
         await expect(subject(params)).to.be.revertedWith('AlgebraStaker::createIncentive: there is already active incentive');
         const incentiveId = await context.testIncentiveId.compute({
           rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
           startTime: timestamps.startTime,
           endTime: timestamps.endTime,
@@ -113,14 +126,17 @@ describe('unit/Incentives', async () => {
       it('does not override the existing numberOfStakes', async () => {
         const testTimestamps = makeTimestamps(await blockTimestamp() + 100)
         const rewardToken = context.token0
+        const bonusRewardToken = context.token1
         const incentiveKey = {
           ...testTimestamps,
           rewardToken: rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
           refundee: incentiveCreator.address,
           pool: context.pool01,
         }
-        await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(100), context.staker.address)
-        await context.staker.connect(actors.lpUser0()).createIncentive(incentiveKey, 100)
+        await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.staker.address)
+        await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.staker.address)
+        await context.staker.connect(actors.incentiveCreator()).createIncentive(incentiveKey, 100, 100)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
         let { numberOfStakes } = await context.staker.incentives(
           incentiveId
@@ -206,10 +222,12 @@ describe('unit/Incentives', async () => {
             context.staker.connect(incentiveCreator).createIncentive(
               {
                 rewardToken: context.rewardToken.address,
+                bonusRewardToken: context.bonusRewardToken.address,
                 pool: context.pool01,
                 refundee: incentiveCreator.address,
                 ...makeTimestamps(now, 1_000),
               },
+              BNe18(0),
               BNe18(0)
             )
           ).to.be.revertedWith('AlgebraStaker::createIncentive: reward must be positive')

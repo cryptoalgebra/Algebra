@@ -30,6 +30,8 @@ import { ActorFixture } from './actors'
 
 type WNativeTokenFixture = { wnative: IWNativeToken }
 
+export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
+
 export const wnativeFixture: Fixture<WNativeTokenFixture> = async ([wallet]) => {
   const wnative = (await waffle.deployContract(wallet, {
     bytecode: WNativeToken.bytecode,
@@ -51,7 +53,7 @@ const v3CoreFactoryFixture: Fixture<[IAlgebraFactory,IAlgebraPoolDeployer]> = as
   const factory = ((await waffle.deployContract(wallet, {
     bytecode: AlgebraFactoryJson.bytecode,
     abi: AlgebraFactoryJson.abi,
-  }, [deployer.address])) as unknown) as IAlgebraFactory
+  }, [deployer.address, vaultAddress])) as unknown) as IAlgebraFactory
 
   await deployer.setFactory(factory.address)
 
@@ -249,11 +251,13 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   const { tokens, nft, factory, deployer, router } = await algebraFactoryFixture(wallets, provider)
   const vdeployer = await VirtualPoolDeployerFixture(wallets, provider)
   const signer = new ActorFixture(wallets, provider).stakerDeployer()
+  const incentiveCreator = new ActorFixture(wallets, provider).incentiveCreator()
   const stakerFactory = await ethers.getContractFactory('AlgebraStaker', signer)
   const staker = (await stakerFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraStaker
 
   await factory.setStakerAddress(staker.address)
-  await vdeployer.setFactory(staker.address) 
+  await vdeployer.setFarming(staker.address)
+  await staker.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
 

@@ -29,6 +29,8 @@ import { Fixture } from 'ethereum-waffle'
 import { HelperTypes } from './helpers/types'
 import { Wallet } from '@ethersproject/wallet'
 
+import './matchers/beWithin'
+
 let loadFixture: LoadFixtureFunction
 
 describe('AlgebraStaker', async ()=>{
@@ -262,7 +264,7 @@ describe('AlgebraStaker', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 100
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -440,11 +442,14 @@ describe('AlgebraStaker', async ()=>{
 			    3
 			);
 
-			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = BN(await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address))
+			const reward2 = BN(await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address))
 
+			const reward3 = BN(await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address))
+			const reward4 = BN(await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address))
 
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+			expect(BigNumber.from(reward2.add(reward1))).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 
 	    }).timeout(60000)
 	})
@@ -473,7 +478,7 @@ describe('AlgebraStaker', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 100
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -585,7 +590,7 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-		    await context.staker.unstakeToken(
+		    await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -596,7 +601,7 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    2
 			);
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -609,10 +614,17 @@ describe('AlgebraStaker', async ()=>{
 			);
 
 
-			const reward1 = await context.staker.rewards(context.rewardToken.address, actors.lpUser0().address)
+			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
 
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+
+			const reward3 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+
+
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
 
 	    }).timeout(60000)
 	})
@@ -641,7 +653,7 @@ describe('AlgebraStaker', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 100
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -729,15 +741,6 @@ describe('AlgebraStaker', async ()=>{
 			)
 
 		    await Time.set(createIncentiveResult.startTime + 1)
-			const rew = await context.staker.getRewardInfo({
-				rewardToken: context.rewardToken.address,
-				bonusRewardToken: context.rewardToken.address,
-				pool: context.poolObj.address,
-				startTime: createIncentiveResult.startTime,
-				endTime: createIncentiveResult.endTime,
-				refundee: createIncentiveResult.refundee
-			},
-			2)
 
 		    const trader = actors.traderUser0()
 		    // await helpers.makeTickGoFlow({
@@ -753,7 +756,7 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-		    await context.staker.unstakeToken(
+		    await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -764,7 +767,7 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    2
 			);
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -779,7 +782,17 @@ describe('AlgebraStaker', async ()=>{
 
 			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+			console.log(reward1.toString())
+			console.log(reward2.toString())
+
+			const reward3 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+
+			console.log(reward3.toString())
+			console.log(reward4.toString())
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
 
 	    }).timeout(60000)
 	})
@@ -882,23 +895,11 @@ describe('AlgebraStaker', async ()=>{
 				}
 			]
 
-			const positions2: Array<Position> = [
-				{
-					lp: actors.lpUser0(),
-					amounts: [BN('252473' + '0'.repeat(13)), BN('552446' + '0'.repeat(13))],
-					ticks: [-240, 240],
-				},
-				{
-					lp: actors.lpUser1(),
-					amounts: [BN('441204' + '0'.repeat(13)), BN('799696' + '0'.repeat(13))],
-					ticks: [-480, 480],
-				}
-			]
 
 		    const tokensToStake: [TestERC20, TestERC20] = [context.tokens[0], context.tokens[1]]
 
 			const stakes = await Promise.all(
-				positions2.map((p) =>
+				positions.map((p) =>
 					helpers.mintDepositStakeFlow({
 						lp: p.lp,
 						tokensToStake,
@@ -939,7 +940,7 @@ describe('AlgebraStaker', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    refundee: createIncentiveResult.refundee
 			    },
-			    1
+			    2
 			);
 
 			await context.staker.connect(actors.lpUser1()).unstakeToken(
@@ -951,13 +952,23 @@ describe('AlgebraStaker', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    refundee: createIncentiveResult.refundee
 			    },
-			    2
+			    3
 			);
 
 
 			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
-			expect(reward1.add(reward2)).be.gte(BN("29999999999999"))
+			console.log(reward1.toString())
+			console.log(reward2.toString())
+
+			const reward3 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+
+			console.log(reward3.toString())
+			console.log(reward4.toString())
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
 
 	    }).timeout(60000)
 	})
@@ -1086,7 +1097,17 @@ describe('AlgebraStaker', async ()=>{
 
 			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+			console.log(reward1.toString())
+			console.log(reward2.toString())
+
+			const reward3 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+
+			console.log(reward3.toString())
+			console.log(reward4.toString())
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
 	    })
     })
 
@@ -1114,7 +1135,7 @@ describe('AlgebraStaker', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 100
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -1279,7 +1300,7 @@ describe('AlgebraStaker', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 			
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser0()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1290,7 +1311,7 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    2
 			);
-			await context.staker.unstakeToken(
+			await context.staker.connect(actors.lpUser1()).unstakeToken(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1301,11 +1322,20 @@ describe('AlgebraStaker', async ()=>{
 			    },
 			    3
 			);
+
 			const reward1 = await context.staker.rewards(context.rewardToken.address,actors.lpUser0().address)
 			const reward2 = await context.staker.rewards(context.rewardToken.address, actors.lpUser1().address)
+			console.log(reward1.toString())
+			console.log(reward2.toString())
 
+			const reward3 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.staker.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
 
-			expect(reward2.add(reward1)).be.gte(BN("29999999999999"))
+			console.log(reward3.toString())
+			console.log(reward4.toString())
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
 
 	    }).timeout(60000)
 	})
