@@ -354,7 +354,7 @@ describe('unit/Deposits', () => {
               tokenId,
               invalidData
             )
-        ).to.be.revertedWith('AlgebraFarming::farmToken: non-existent incentive')
+        ).to.be.revertedWith('AlgebraFarming::EnterFarming: non-existent incentive')
       })
     })
   })
@@ -414,7 +414,7 @@ describe('unit/Deposits', () => {
         }
         const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-        await context.farming.connect(lpUser0).farmToken(
+        await context.farming.connect(lpUser0).EnterFarming(
           {
             ...incentive,
             pool: context.pool01,

@@ -142,9 +142,9 @@ describe('AlgebraFarming', async ()=>{
 				)
 
 				// Everyone pulls their liquidity at the same time
-				const unfarms = await Promise.all(
+				const exitFarmings = await Promise.all(
 					subject.farms.map(({ lp, tokenId }) =>
-						helpers.unfarmCollectBurnFlow({
+						helpers.exitFarmingCollectBurnFlow({
 							lp,
 							tokenId,
 							createIncentiveResult,
@@ -152,7 +152,7 @@ describe('AlgebraFarming', async ()=>{
 					)
 				)
 
-				const rewardsEarned = bnSum(unfarms.map((o) => o.balance))
+				const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance))
 				log.debug('Total rewards ', rewardsEarned.toString())
 
 				// const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
@@ -205,9 +205,9 @@ describe('AlgebraFarming', async ()=>{
 					desiredValue: 20,
 				})
 
-				const unfarms = await Promise.all(
+				const exitFarmings = await Promise.all(
 					farms.map(({ lp, tokenId }) =>
-						helpers.unfarmCollectBurnFlow({
+						helpers.exitFarmingCollectBurnFlow({
 							lp,
 							tokenId,
 							createIncentiveResult,
@@ -231,7 +231,7 @@ describe('AlgebraFarming', async ()=>{
 				 * each get 1/4 the liquidity for that time. So That's 1/4 * 1/2 * 3_000e18 per farmd LP.
 				 * */
 				const secondHalfRewards = totalReward.div(BN('2')).mul('3').div('4')
-				const rewardsEarned = bnSum(unfarms.map((s) => s.balance))
+				const rewardsEarned = bnSum(exitFarmings.map((s) => s.balance))
 				// @ts-ignore
 				expect(rewardsEarned).be.gte(totalReward.mul(BN(9999)).div(BN(10000)))
 				// const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
@@ -419,7 +419,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.farming.connect(actors.lpUser0()).unfarmToken(
+			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -431,7 +431,7 @@ describe('AlgebraFarming', async ()=>{
 			    2
 			);
 
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -591,7 +591,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-		    await context.farming.connect(actors.lpUser0()).unfarmToken(
+		    await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -602,7 +602,7 @@ describe('AlgebraFarming', async ()=>{
 			    },
 			    2
 			);
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -757,7 +757,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-		    await context.farming.connect(actors.lpUser0()).unfarmToken(
+		    await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -768,7 +768,7 @@ describe('AlgebraFarming', async ()=>{
 			    },
 			    2
 			);
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -928,7 +928,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.farming.connect(actors.lpUser0()).unfarmToken(
+			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -940,7 +940,7 @@ describe('AlgebraFarming', async ()=>{
 			    2
 			);
 
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1066,7 +1066,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 
-			await context.farming.connect(actors.lpUser0()).unfarmToken(
+			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1077,7 +1077,7 @@ describe('AlgebraFarming', async ()=>{
 			    },
 			    1
 			);
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1292,7 +1292,7 @@ describe('AlgebraFarming', async ()=>{
 
 		    await Time.set(createIncentiveResult.endTime + 1)
 			
-			await context.farming.connect(actors.lpUser0()).unfarmToken(
+			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,
@@ -1303,7 +1303,7 @@ describe('AlgebraFarming', async ()=>{
 			    },
 			    2
 			);
-			await context.farming.connect(actors.lpUser1()).unfarmToken(
+			await context.farming.connect(actors.lpUser1()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
 				    bonusRewardToken: context.bonusRewardToken.address,

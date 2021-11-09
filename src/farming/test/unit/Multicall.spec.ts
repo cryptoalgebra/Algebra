@@ -114,10 +114,10 @@ describe('unit/Multicall', () => {
   //   const { tokenId: tokenId1 } = await helpers.mintDepositFarmFlow(params)
   //   const { tokenId: tokenId2 } = await helpers.mintDepositFarmFlow(params)
   //
-  //   const unfarm = (tokenId) =>
-  //     context.farming.interface.encodeFunctionData('unfarmToken', [incentiveResultToFarmAdapter(incentive), tokenId])
+  //   const exitFarming = (tokenId) =>
+  //     context.farming.interface.encodeFunctionData('exitFarming', [incentiveResultToFarmAdapter(incentive), tokenId])
   //
-  //   await context.farming.connect(multicaller).multicall([unfarm(tokenId0), unfarm(tokenId1), unfarm(tokenId2)])
+  //   await context.farming.connect(multicaller).multicall([exitFarming(tokenId0), exitFarming(tokenId1), exitFarming(tokenId2)])
   //
   //   const { numberOfFarms: n0 } = await context.farming.deposits(tokenId0)
   //   expect(n0).to.eq(BN('0'))

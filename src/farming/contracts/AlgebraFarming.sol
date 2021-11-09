@@ -41,6 +41,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         uint96 nonce;
         // the address that is approved for spending this token
         address operator;
+        uint256 tokenId;
     }
 
     /// @notice Represents a farmd liquidity NFT
@@ -204,14 +205,8 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         emit DepositTransferred(tokenId, address(0), from);
 
         if (data.length > 0) {
-            if (data.length == 192) {
-                _farmToken(abi.decode(data, (IncentiveKey)), tokenId);
-            } else {
-                IncentiveKey[] memory keys = abi.decode(data, (IncentiveKey[]));
-                for (uint256 i = 0; i < keys.length; i++) {
-                    _farmToken(keys[i], tokenId);
-                }
-            }
+            require(data.length == 192, 'AlgebraFarming::onERC721Received: data is invalid');
+            _EnterFarming(abi.decode(data, (IncentiveKey)), tokenId);
         }
         return this.onERC721Received.selector;
     }
@@ -243,20 +238,20 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function farmToken(IncentiveKey memory key, uint256 tokenId) external override {
-        require(deposits[tokenId].owner == msg.sender, 'AlgebraFarming::farmToken: only owner can farm token');
-        require(deposits[tokenId]._tokenId == 0, 'AlgebraFarming::farmToken: already farmd');
-        _farmToken(key, tokenId);
+    function EnterFarming(IncentiveKey memory key, uint256 tokenId) external override {
+        require(deposits[tokenId].owner == msg.sender, 'AlgebraFarming::EnterFarming: only owner can farm token');
+        require(deposits[tokenId]._tokenId == 0, 'AlgebraFarming::EnterFarming: already farmd');
+        _EnterFarming(key, tokenId);
         _nextId++;
     }
 
     /// @inheritdoc IAlgebraFarming
-    function unfarmToken(IncentiveKey memory key, uint256 tokenId)
+    function exitFarming(IncentiveKey memory key, uint256 tokenId)
         external
         override
         isAuthorizedForToken(deposits[tokenId]._tokenId)
     {
-        _unfarmToken(key, tokenId);
+        _exitFarming(key, tokenId);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -324,15 +319,15 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     }
 
     /// @dev Farms a deposited token without doing an ownership check
-    function _farmToken(IncentiveKey memory key, uint256 tokenId) private {
-        require(block.timestamp < key.startTime, 'AlgebraFarming::farmToken: incentive has already started');
+    function _EnterFarming(IncentiveKey memory key, uint256 tokenId) private {
+        require(block.timestamp < key.startTime, 'AlgebraFarming::EnterFarming: incentive has already started');
 
         bytes32 incentiveId = IncentiveId.compute(key);
 
-        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::farmToken: non-existent incentive');
+        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::EnterFarming: non-existent incentive');
         require(
             _farms[tokenId][incentiveId].liquidityNoOverflow == 0,
-            'AlgebraFarming::farmToken: token already farmd'
+            'AlgebraFarming::EnterFarming: token already farmd'
         );
 
         (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) = NFTPositionInfo.getPositionInfo(
@@ -341,8 +336,8 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
             tokenId
         );
 
-        require(pool == key.pool, 'AlgebraFarming::farmToken: token pool is not the incentive pool');
-        require(liquidity > 0, 'AlgebraFarming::farmToken: cannot farm token with 0 liquidity');
+        require(pool == key.pool, 'AlgebraFarming::EnterFarming: token pool is not the incentive pool');
+        require(liquidity > 0, 'AlgebraFarming::EnterFarming: cannot farm token with 0 liquidity');
 
         incentives[incentiveId].numberOfFarms++;
         (, int24 tick, , , , , , ) = pool.globalState();
@@ -350,6 +345,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int128(liquidity), tick);
         _mint(msg.sender, _nextId);
         deposits[tokenId]._tokenId = _nextId;
+        _deposits[_nextId].tokenId = tokenId;
         if (liquidity >= type(uint96).max) {
             _farms[tokenId][incentiveId] = Farm({
                 liquidityNoOverflow: type(uint96).max,
@@ -361,7 +357,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         }
         incentives[incentiveId].totalLiquidity += liquidity;
 
-        emit TokenFarmd(tokenId, _nextId, incentiveId, liquidity);
+        emit farmStarted(tokenId, _nextId, incentiveId, liquidity);
     }
 
     function burn(uint256 tokenId) private isAuthorizedForToken(tokenId) {
@@ -386,15 +382,15 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
 
-    function _unfarmToken(IncentiveKey memory key, uint256 tokenId) private {
+    function _exitFarming(IncentiveKey memory key, uint256 tokenId) private {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        // anyone can call unfarmToken if the block time is after the end time of the incentive
-        require(block.timestamp > key.endTime, 'AlgebraFarming::unfarmToken: cannot unfarm before end time');
+        // anyone can call exitFarming if the block time is after the end time of the incentive
+        require(block.timestamp > key.endTime, 'AlgebraFarming::exitFarming: cannot exitFarming before end time');
 
         uint128 liquidity = farms(tokenId, incentiveId);
 
-        require(liquidity != 0, 'AlgebraFarming::unfarmToken: farm does not exist');
+        require(liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
 
         deposits[tokenId].owner = msg.sender;
         Deposit memory deposit = deposits[tokenId];
@@ -440,7 +436,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         delete farm.liquidityNoOverflow;
         if (liquidity >= type(uint96).max) delete farm.liquidityIfOverflow;
 
-        emit TokenUnfarmd(
+        emit farmEnded(
             tokenId,
             incentiveId,
             address(key.rewardToken),

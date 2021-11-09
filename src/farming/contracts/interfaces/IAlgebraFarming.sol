@@ -121,12 +121,12 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice Farms a Algebra LP token
     /// @param key The key of the incentive for which to farm the NFT
     /// @param tokenId The ID of the token to farm
-    function farmToken(IncentiveKey memory key, uint256 tokenId) external;
+    function EnterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
-    /// @notice Unfarms a Algebra LP token
-    /// @param key The key of the incentive for which to unfarm the NFT
-    /// @param tokenId The ID of the token to unfarm
-    function unfarmToken(IncentiveKey memory key, uint256 tokenId) external;
+    /// @notice exitFarmings a Algebra LP token
+    /// @param key The key of the incentive for which to exitFarming the NFT
+    /// @param tokenId The ID of the token to exitFarming
+    function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice Transfers `amountRequested` of accrued `rewardToken` rewards from the contract to the recipient `to`
     /// @param rewardToken The token being distributed as a reward
@@ -181,17 +181,17 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is staking
-    event TokenFarmd(
+    event farmStarted(
         uint256 indexed tokenId,
         uint256 indexed L2tokenId,
         bytes32 indexed incentiveId,
         uint128 liquidity
     );
 
-    /// @notice Event emitted when a Algebra LP token has been unfarmd
+    /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param incentiveId The incentive in which the token is staking
-    event TokenUnfarmd(
+    event farmEnded(
         uint256 indexed tokenId,
         bytes32 indexed incentiveId,
         address indexed rewardAddress,

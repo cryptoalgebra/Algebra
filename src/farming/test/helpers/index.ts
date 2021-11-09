@@ -191,7 +191,7 @@ export class HelperCommands {
       ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.farming.address, tokenId)
     await this.farming
       .connect(params.lp)
-      .farmToken(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+      .EnterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
 
     const farmdAt = await blockTimestamp()
 
@@ -239,14 +239,14 @@ export class HelperCommands {
     return { tokenId, lp: params.lp }
   }
 
-  unfarmCollectBurnFlow: HelperTypes.UnfarmCollectBurn.Command = async (params) => {
-    await this.farming.connect(params.lp).unfarmToken(
+  exitFarmingCollectBurnFlow: HelperTypes.exitFarmingCollectBurn.Command = async (params) => {
+    await this.farming.connect(params.lp).exitFarming(
       incentiveResultToFarmAdapter(params.createIncentiveResult),
       params.tokenId,
       maxGas
     )
 
-    const unfarmdAt = await blockTimestamp()
+    const exitFarmingdAt = await blockTimestamp()
 
     await this.farming
       .connect(params.lp)
@@ -291,7 +291,7 @@ export class HelperCommands {
     return {
       balance,
       bonusBalance,
-      unfarmdAt,
+      exitFarmingdAt,
     }
   }
 

@@ -76,7 +76,7 @@ export module HelperTypes {
     export type Command = CommandFunction<Args, Result>
   }
 
-  export module UnfarmCollectBurn {
+  export module exitFarmingCollectBurn {
     type Args = {
       lp: Wallet
       tokenId: string
@@ -84,7 +84,7 @@ export module HelperTypes {
     }
     export type Result = {
       balance: BigNumber
-      unfarmdAt: number
+      exitFarmingdAt: number
     }
 
     export type Command = CommandFunction<Args, Result>

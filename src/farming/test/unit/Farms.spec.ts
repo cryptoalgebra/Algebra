@@ -49,7 +49,7 @@ describe('unit/Farms', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
-  describe('#farmToken', () => {
+  describe('#EnterFarming', () => {
     let incentiveId: string
     let incentiveArgs: HelperTypes.CreateIncentive.Args
     let subject: (_tokenId: string, _actor: Wallet) => Promise<any>
@@ -99,7 +99,7 @@ describe('unit/Farms', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
 
       subject = (_tokenId: string, _actor: Wallet) =>
-        context.farming.connect(_actor).farmToken(
+        context.farming.connect(_actor).EnterFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -120,7 +120,7 @@ describe('unit/Farms', () => {
       it('emits the farm event', async () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
-          .to.emit(context.farming, 'TokenFarmd')
+          .to.emit(context.farming, 'farmStarted')
           .withArgs(tokenId, tokenId, incentiveId, liquidity)
       })
 
@@ -162,14 +162,14 @@ describe('unit/Farms', () => {
       it('deposit is already farmd in the incentive', async () => {
         //await Time.set(timestamps.startTime + 500)
         await subject(tokenId, lpUser0)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::farmToken: already farmd')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::EnterFarming: already farmd')
       })
 
       it('you are not the owner of the deposit', async () => {
         //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
         await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'AlgebraFarming::farmToken: only owner can farm token'
+          'AlgebraFarming::EnterFarming: only owner can farm token'
         )
       })
 
@@ -211,7 +211,7 @@ describe('unit/Farms', () => {
           })
 
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'AlgebraFarming::farmToken: cannot farm token with 0 liquidity'
+          'AlgebraFarming::EnterFarming: cannot farm token with 0 liquidity'
         )
       })
 
@@ -233,7 +233,7 @@ describe('unit/Farms', () => {
         })
 
         await expect(
-          context.farming.connect(lpUser0).farmToken(
+          context.farming.connect(lpUser0).EnterFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -243,14 +243,14 @@ describe('unit/Farms', () => {
             },
             otherTokenId
           )
-        ).to.be.revertedWith('AlgebraFarming::farmToken: token pool is not the incentive pool')
+        ).to.be.revertedWith('AlgebraFarming::EnterFarming: token pool is not the incentive pool')
       })
 
       it('incentive key does not exist', async () => {
         // await Time.setAndMine(timestamps.startTime + 20)
 
         await expect(
-          context.farming.connect(lpUser0).farmToken(
+          context.farming.connect(lpUser0).EnterFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -261,12 +261,12 @@ describe('unit/Farms', () => {
             },
             tokenId
           )
-        ).to.be.revertedWith('AlgebraFarming::farmToken: non-existent incentive')
+        ).to.be.revertedWith('AlgebraFarming::EnterFarming: non-existent incentive')
       })
 
       it('is past the end time', async () => {
         await Time.set(timestamps.endTime + 100)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::farmToken: incentive has already started')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::EnterFarming: incentive has already started')
       })
 
       it('is after the start time', async () => {
@@ -274,7 +274,7 @@ describe('unit/Farms', () => {
           throw new Error('no good')
         }
         await Time.set(timestamps.startTime + 2)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::farmToken: incentive has already started')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::EnterFarming: incentive has already started')
       })
     })
   })
@@ -316,7 +316,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farming.connect(lpUser0).farmToken(farmIncentiveKey, tokenId)
+      await context.farming.connect(lpUser0).EnterFarming(farmIncentiveKey, tokenId)
       await context.farming.farms(tokenId, incentiveId)
     })
 
@@ -398,7 +398,7 @@ describe('unit/Farms', () => {
       tokenId = mintResult.tokenId
 
       await Time.setAndMine(timestamps.endTime + 10)
-      await context.farming.connect(lpUser0).unfarmToken(
+      await context.farming.connect(lpUser0).exitFarming(
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
@@ -492,13 +492,13 @@ describe('unit/Farms', () => {
     })
   })
 
-  describe('#unfarmToken', () => {
+  describe('#exitFarming', () => {
     let incentiveId: string
     let subject: (actor: Wallet) => Promise<any>
     let createIncentiveResult: HelperTypes.CreateIncentive.Result
 
     describe('before end time', () => {
-      it('cannot unfarm', async() => {
+      it('cannot exitFarming', async() => {
         timestamps = makeTimestamps(await blockTimestamp())
 
         createIncentiveResult = await helpers.createIncentiveFlow({
@@ -537,7 +537,7 @@ describe('unit/Farms', () => {
 
         // await Time.setAndMine(timestamps.startTime + 1)
 
-        await context.farming.connect(lpUser0).farmToken(
+        await context.farming.connect(lpUser0).EnterFarming(
           {
             refundee: incentiveCreator.address,
             rewardToken: context.rewardToken.address,
@@ -550,7 +550,7 @@ describe('unit/Farms', () => {
 
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
-        await expect(context.farming.connect(actors.lpUser0()).unfarmToken(
+        await expect(context.farming.connect(actors.lpUser0()).exitFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -559,7 +559,7 @@ describe('unit/Farms', () => {
             ...timestamps,
           },
           tokenId
-        )).to.be.revertedWith('AlgebraFarming::unfarmToken: cannot unfarm before end time')
+        )).to.be.revertedWith('AlgebraFarming::exitFarming: cannot exitFarming before end time')
       })
     })
 
@@ -602,7 +602,7 @@ describe('unit/Farms', () => {
 
       // await Time.setAndMine(timestamps.startTime + 1)
 
-      await context.farming.connect(lpUser0).farmToken(
+      await context.farming.connect(lpUser0).EnterFarming(
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
@@ -618,7 +618,7 @@ describe('unit/Farms', () => {
       incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
       subject = (_actor: Wallet) =>
-        context.farming.connect(_actor).unfarmToken(
+        context.farming.connect(_actor).exitFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -645,8 +645,8 @@ describe('unit/Farms', () => {
         expect(farmsPre).to.not.equal(farmsPost.sub(1))
       })
 
-      it('emits an unfarmd event', async () => {
-        await expect(subject(lpUser0)).to.emit(context.farming, 'TokenUnfarmd').withArgs(
+      it('emits an exitFarmingd event', async () => {
+        await expect(subject(lpUser0)).to.emit(context.farming, 'farmEnded').withArgs(
             tokenId,
             incentiveId,
             context.rewardToken.address,
@@ -682,11 +682,11 @@ describe('unit/Farms', () => {
           // await Time.setAndMine(timestamps.endTime + 1)
         })
 
-        // it('anyone cant unfarm', async () => {
+        // it('anyone cant exitFarming', async () => {
         //   await subject(actors.lpUser1())
         // })
 
-        it('owner can unfarm', async () => {
+        it('owner can exitFarming', async () => {
           await subject(lpUser0)
         })
       })
@@ -696,7 +696,7 @@ describe('unit/Farms', () => {
     })
 
     describe('fails if', () => {
-      it('farm has already been unfarmd', async () => {
+      it('farm has already been exitFarmingd', async () => {
         // await Time.setAndMine(timestamps.endTime + 1)
         await subject(lpUser0)
         await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
@@ -741,7 +741,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farming.connect(lpUser0).farmToken(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farming.connect(lpUser0).EnterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const liquidity= await context.farming.farms(tokenId, incentiveId)
       expect(liquidity).to.be.lt(MAX_UINT_96)
     })
@@ -762,7 +762,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farming.connect(lpUser0).farmToken(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farming.connect(lpUser0).EnterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const liquidity = await context.farming.farms(tokenId, incentiveId)
       expect(liquidity).to.be.gt(MAX_UINT_96)
     })
