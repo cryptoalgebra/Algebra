@@ -5,11 +5,11 @@ import './interfaces/IVirtualPoolDeployer.sol';
 import './AlgebraVirtualPool.sol';
 
 contract VirtualPoolDeployer is IVirtualPoolDeployer {
-    address private factory;
+    address private farming;
     address private owner;
 
-    modifier onlyFactory() {
-        require(msg.sender == factory);
+    modifier onlyFarming() {
+        require(msg.sender == farming);
         _;
     }
 
@@ -22,14 +22,14 @@ contract VirtualPoolDeployer is IVirtualPoolDeployer {
         owner = msg.sender;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
-    function setFactory(address _factory) external override onlyOwner {
-        require(factory == address(0));
-        factory = _factory;
+    // @inheritdoc IVirtualPoolDeployer
+    function setFarming(address _farming) external override onlyOwner {
+        require(farming == address(0));
+        farming = _farming;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
-    function deploy(address poolAddress, address staker) external override onlyFactory returns (address virtualPool) {
-        virtualPool = address(new AlgebraVirtualPool(poolAddress, staker));
+    // @inheritdoc IVirtualPoolDeployer
+    function deploy(address poolAddress, address _farming) external override onlyFarming returns (address virtualPool) {
+        virtualPool = address(new AlgebraVirtualPool(poolAddress, _farming));
     }
 }

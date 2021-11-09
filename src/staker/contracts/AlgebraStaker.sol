@@ -5,7 +5,6 @@ import './interfaces/IAlgebraStaker.sol';
 import './libraries/IncentiveId.sol';
 import './libraries/RewardMath.sol';
 import './libraries/NFTPositionInfo.sol';
-import 'hardhat/console.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
@@ -82,7 +81,6 @@ contract AlgebraStaker is IAlgebraStaker, ERC721Permit, Multicall {
 
     // @inheritdoc IAlgebraPoolDeployer
     function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
-        require(incentiveMaker == address(0));
         incentiveMaker = _incentiveMaker;
     }
 
@@ -100,8 +98,6 @@ contract AlgebraStaker is IAlgebraStaker, ERC721Permit, Multicall {
     mapping(IERC20Minimal => mapping(address => uint256)) public override rewards;
 
     modifier isAuthorizedForToken(uint256 tokenId) {
-        console.log('tokenIdu', tokenId);
-        console.log('msg senderu', msg.sender);
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
         _;
     }
@@ -146,6 +142,7 @@ contract AlgebraStaker is IAlgebraStaker, ERC721Permit, Multicall {
             'AlgebraStaker::createIncentive: there is already active incentive'
         );
         require(reward > 0, 'AlgebraStaker::createIncentive: reward must be positive');
+        require(bonusReward > 0, 'AlgebraStaker::createIncentive: bonusReward must be positive');
         require(
             block.timestamp <= key.startTime,
             'AlgebraStaker::createIncentive: start time must be now or in the future'
@@ -207,7 +204,7 @@ contract AlgebraStaker is IAlgebraStaker, ERC721Permit, Multicall {
         emit DepositTransferred(tokenId, address(0), from);
 
         if (data.length > 0) {
-            if (data.length == 160) {
+            if (data.length == 192) {
                 _stakeToken(abi.decode(data, (IncentiveKey)), tokenId);
             } else {
                 IncentiveKey[] memory keys = abi.decode(data, (IncentiveKey[]));
@@ -352,8 +349,6 @@ contract AlgebraStaker is IAlgebraStaker, ERC721Permit, Multicall {
         IAlgebraVirtualPool virtualPool = IAlgebraVirtualPool(incentives[incentiveId].virtualPoolAddress);
         virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int128(liquidity), tick);
         _mint(msg.sender, _nextId);
-        console.log('tokenId', tokenId);
-        console.log('msg sender', msg.sender);
         deposits[tokenId]._tokenId = _nextId;
         if (liquidity >= type(uint96).max) {
             _stakes[tokenId][incentiveId] = Stake({
