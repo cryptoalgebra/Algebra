@@ -59,7 +59,6 @@ contract TokenDeltaMathEchidnaTest {
         }
     }
 
-    /* TODO
     function getNextSqrtPriceFromAmount0RoundingUpInvariants(
         uint160 sqrtPX96,
         uint128 liquidity,
@@ -68,7 +67,14 @@ contract TokenDeltaMathEchidnaTest {
     ) external pure {
         require(sqrtPX96 > 0);
         require(liquidity > 0);
-        uint160 sqrtQX96 = TokenDeltaMath.getNextSqrtPriceFromAmount0RoundingUp(sqrtPX96, liquidity, amount, add);
+
+        uint160 sqrtQX96;
+
+        if (add) {
+            sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(sqrtPX96, liquidity, amount, true);
+        } else {
+            sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(sqrtPX96, liquidity, amount, false);
+        }
 
         if (add) {
             assert(sqrtQX96 <= sqrtPX96);
@@ -89,7 +95,13 @@ contract TokenDeltaMathEchidnaTest {
     ) external pure {
         require(sqrtPX96 > 0);
         require(liquidity > 0);
-        uint160 sqrtQX96 = TokenDeltaMath.getNextSqrtPriceFromAmount1RoundingDown(sqrtPX96, liquidity, amount, add);
+        uint160 sqrtQX96;
+
+        if (add) {
+            sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(sqrtPX96, liquidity, amount, false);
+        } else {
+            sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(sqrtPX96, liquidity, amount, true);
+        }
 
         if (add) {
             assert(sqrtQX96 >= sqrtPX96);
@@ -101,19 +113,17 @@ contract TokenDeltaMathEchidnaTest {
             assert(sqrtPX96 == sqrtQX96);
         }
     }
-*/
+
     function getToken0DeltaInvariants(
         uint160 sqrtP,
         uint160 sqrtQ,
         uint128 liquidity
     ) external pure {
         require(sqrtP > 0 && sqrtQ > 0);
-
+        if (sqrtP < sqrtQ) (sqrtP, sqrtQ) = (sqrtQ, sqrtP);
         uint256 amount0Down = TokenDeltaMath.getToken0Delta(sqrtQ, sqrtP, liquidity, false);
-        assert(amount0Down == TokenDeltaMath.getToken0Delta(sqrtP, sqrtQ, liquidity, false));
 
         uint256 amount0Up = TokenDeltaMath.getToken0Delta(sqrtQ, sqrtP, liquidity, true);
-        assert(amount0Up == TokenDeltaMath.getToken0Delta(sqrtP, sqrtQ, liquidity, true));
 
         assert(amount0Down <= amount0Up);
         // diff is 0 or 1
@@ -150,12 +160,11 @@ contract TokenDeltaMathEchidnaTest {
         uint128 liquidity
     ) external pure {
         require(sqrtP > 0 && sqrtQ > 0);
+        if (sqrtP > sqrtQ) (sqrtP, sqrtQ) = (sqrtQ, sqrtP);
 
         uint256 amount1Down = TokenDeltaMath.getToken1Delta(sqrtP, sqrtQ, liquidity, false);
-        assert(amount1Down == TokenDeltaMath.getToken1Delta(sqrtQ, sqrtP, liquidity, false));
 
         uint256 amount1Up = TokenDeltaMath.getToken1Delta(sqrtP, sqrtQ, liquidity, true);
-        assert(amount1Up == TokenDeltaMath.getToken1Delta(sqrtQ, sqrtP, liquidity, true));
 
         assert(amount1Down <= amount1Up);
         // diff is 0 or 1

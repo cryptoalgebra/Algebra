@@ -15,30 +15,41 @@ contract TickTableEchidnaTest {
     }
 
     function toggleTick(int24 tick) external {
+        tick = (tick / 60);
+        tick = tick * 60;
+        require(tick >= -887272);
+        require(tick <= 887272);
+        require(tick % 60 == 0);
         bool before = isInitialized(tick);
         bitmap.toggleTick(tick);
         assert(isInitialized(tick) == !before);
     }
 
     function checkNextInitializedTickWithinOneWordInvariants(int24 tick, bool lte) external view {
+        tick = (tick / 60);
+        tick = tick * 60;
+
+        require(tick % 60 == 0);
+        require(tick >= -887272);
+        require(tick <= 887272);
+
         (int24 next, bool initialized) = bitmap.nextTickInTheSameRow(tick, lte);
         if (lte) {
             // type(int24).min + 256
-            require(tick >= -8388352);
             assert(next <= tick);
-            assert(tick - next < 256);
+            assert(tick - next < 256 * 60);
             // all the ticks between the input tick and the next tick should be uninitialized
-            for (int24 i = tick; i > next; i--) {
+            for (int24 i = tick; i > next; i -= 60) {
                 assert(!isInitialized(i));
             }
             assert(isInitialized(next) == initialized);
         } else {
             // type(int24).max - 256
-            require(tick < 8388351);
+            require(tick < 887272);
             assert(next > tick);
-            assert(next - tick <= 256);
+            assert(next - tick <= 256 * 60);
             // all the ticks between the input tick and the next tick should be uninitialized
-            for (int24 i = tick + 1; i < next; i++) {
+            for (int24 i = tick + 60; i < next; i += 60) {
                 assert(!isInitialized(i));
             }
             assert(isInitialized(next) == initialized);
