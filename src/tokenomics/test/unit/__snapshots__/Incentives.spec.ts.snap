@@ -1,3 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/Incentives #createIncentive works and has gas cost 1`] = `1127744`;
+exports[`unit/Incentives #createIncentive works and has gas cost 1`] = `1127732`;

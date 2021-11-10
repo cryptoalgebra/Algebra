@@ -1,10 +1,11 @@
 node_modules
-.env
-cache
-artifacts
-typechain
+**/.env
+**/cache
+**/artifacts
+**/typechain
 .idea
 .vscode
 bytecode
-hashCalc.js
-*/coverage
+**/coverage
+**/crytic-export
+**/coverage.json

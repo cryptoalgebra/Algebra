@@ -58,17 +58,16 @@ library TickTable {
     }
 
     function getMostSignificantBit(uint256 word) internal pure returns (uint8 mostBitPos) {
-        // filter only the most significant bit by algorithm:
-        // separate even and odd bits and choose max
-        // shift and invert like 0x0101 -> 0x0001 -> 0xFFF0
-        // do "and" like 0x0101 & 0xFFF0 -> 0x0100
         assembly {
-            let even := and(word, 0x5555555555555555555555555555555555555555555555555555555555555555)
-            let odd := and(word, not(even))
-            if lt(odd, even) {
-                odd := even
-            }
-            word := and(odd, not(shr(2, odd)))
+            word := or(word, shr(1, word))
+            word := or(word, shr(2, word))
+            word := or(word, shr(4, word))
+            word := or(word, shr(8, word))
+            word := or(word, shr(16, word))
+            word := or(word, shr(32, word))
+            word := or(word, shr(64, word))
+            word := or(word, shr(128, word))
+            word := sub(word, shr(1, word))
         }
         return (getSingleSignificantBit(word));
     }
