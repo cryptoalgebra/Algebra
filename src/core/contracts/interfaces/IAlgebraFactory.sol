@@ -35,10 +35,10 @@ interface IAlgebraFactory {
 
     /**
      * @dev Is retrieved from the pools to restrict calling
-     * certain functions not by a staker contract
-     * @return The staker contract address
+     * certain functions not by a farming contract
+     * @return The farming contract address
      */
-    function stakerAddress() external view returns (address);
+    function farmingAddress() external view returns (address);
 
     // TODO: documentation
     function vaultAddress() external view returns (address);
@@ -71,10 +71,10 @@ interface IAlgebraFactory {
     function setOwner(address _owner) external;
 
     /**
-     * @dev updates staker address on the factory
-     * @param _stakerAddress The new staker contract address
+     * @dev updates farming address on the factory
+     * @param _farmingAddress The new farming contract address
      */
-    function setStakerAddress(address _stakerAddress) external;
+    function setFarmingAddress(address _farmingAddress) external;
 
     // TODO: doc
     function setVaultAddress(address _vaultAddress) external;

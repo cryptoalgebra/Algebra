@@ -62,7 +62,7 @@ jobs:
       - run: npm install && npm run compile
       - run: npm run test
   
-  staker:
+  farming:
     strategy:
       matrix:
         node: ['14.x']
@@ -72,7 +72,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./src/staker
+        working-directory: ./src/farming
 
     steps:
       - uses: actions/checkout@v2

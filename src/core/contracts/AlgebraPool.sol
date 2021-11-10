@@ -1035,7 +1035,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint32 endTimestamp,
         uint32 startTimestamp
     ) external override {
-        require(msg.sender == IAlgebraFactory(factory).stakerAddress());
+        require(msg.sender == IAlgebraFactory(factory).farmingAddress());
         require(activeIncentive.endTimestamp < _blockTimestamp());
         activeIncentive = Incentive(virtualPoolAddress, endTimestamp, startTimestamp);
 

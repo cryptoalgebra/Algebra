@@ -6,4 +6,4 @@ execSync(`cd src/core && npx hardhat run --network ${network} scripts/deploy.js`
 
 execSync(`cd src/periphery && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});
 
-execSync(`cd src/staker && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});
+execSync(`cd src/farming && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});

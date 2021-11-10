@@ -19,7 +19,7 @@ contract AlgebraFactory is IAlgebraFactory {
     address public override poolDeployer;
 
     // @inheritdoc IAlgebraFactory
-    address public override stakerAddress;
+    address public override farmingAddress;
 
     // @inheritdoc IAlgebraFactory
     address public override vaultAddress;
@@ -66,8 +66,8 @@ contract AlgebraFactory is IAlgebraFactory {
     }
 
     // @inheritdoc IAlgebraFactory
-    function setStakerAddress(address _stakerAddress) external override onlyOwner {
-        stakerAddress = _stakerAddress;
+    function setFarmingAddress(address _farmingAddress) external override onlyOwner {
+        farmingAddress = _farmingAddress;
     }
 
     // @inheritdoc IAlgebraFactory
