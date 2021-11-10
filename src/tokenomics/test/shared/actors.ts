@@ -39,7 +39,7 @@ export class ActorFixture {
     return this._getActor(WALLET_USER_INDEXES.UNISWAP_ROOT)
   }
 
-  /** EOA that will deploy the farming */
+  /** EOA that will deploy the tokenomics */
   farmingDeployer() {
     return this._getActor(WALLET_USER_INDEXES.STAKER_DEPLOYER)
   }

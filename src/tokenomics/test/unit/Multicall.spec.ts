@@ -85,7 +85,7 @@ describe('unit/Multicall', () => {
     await context.farming.setIncentiveMaker(multicaller.address)
     await context.farming.connect(multicaller).multicall([createIncentiveTx], maxGas)
 
-     // expect((await context.farming.deposits(tokenId)).owner).to.eq(
+     // expect((await context.tokenomics.deposits(tokenId)).owner).to.eq(
      //   multicaller.address
      // )
   })
@@ -115,15 +115,15 @@ describe('unit/Multicall', () => {
   //   const { tokenId: tokenId2 } = await helpers.mintDepositFarmFlow(params)
   //
   //   const exitFarming = (tokenId) =>
-  //     context.farming.interface.encodeFunctionData('exitFarming', [incentiveResultToFarmAdapter(incentive), tokenId])
+  //     context.tokenomics.interface.encodeFunctionData('exitFarming', [incentiveResultToFarmAdapter(incentive), tokenId])
   //
-  //   await context.farming.connect(multicaller).multicall([exitFarming(tokenId0), exitFarming(tokenId1), exitFarming(tokenId2)])
+  //   await context.tokenomics.connect(multicaller).multicall([exitFarming(tokenId0), exitFarming(tokenId1), exitFarming(tokenId2)])
   //
-  //   const { numberOfFarms: n0 } = await context.farming.deposits(tokenId0)
+  //   const { numberOfFarms: n0 } = await context.tokenomics.deposits(tokenId0)
   //   expect(n0).to.eq(BN('0'))
-  //   const { numberOfFarms: n1 } = await context.farming.deposits(tokenId1)
+  //   const { numberOfFarms: n1 } = await context.tokenomics.deposits(tokenId1)
   //   expect(n1).to.eq(BN('0'))
-  //   const { numberOfFarms: n2 } = await context.farming.deposits(tokenId2)
+  //   const { numberOfFarms: n2 } = await context.tokenomics.deposits(tokenId2)
   //   expect(n2).to.eq(BN('0'))
   // })
 })

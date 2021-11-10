@@ -72,7 +72,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./src/farming
+        working-directory: ./src/tokenomics
 
     steps:
       - uses: actions/checkout@v2

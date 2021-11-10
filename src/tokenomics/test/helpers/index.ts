@@ -180,7 +180,7 @@ export class HelperCommands {
       deadline: (await blockTimestamp()) + 1000,
     })
 
-    // Make sure LP has authorized farming
+    // Make sure LP has authorized tokenomics
     await params.tokensToFarm[0].connect(params.lp).approve(this.farming.address, params.amountsToFarm[0])
     await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
 
@@ -300,7 +300,7 @@ export class HelperCommands {
   //   const { rewardToken } = params.createIncentiveResult
   //
   //   const receipt = await (
-  //     await this.farming.connect(incentiveCreator).endIncentive(
+  //     await this.tokenomics.connect(incentiveCreator).endIncentive(
   //       _.assign({}, _.pick(params.createIncentiveResult, ['startTime', 'endTime']), {
   //         rewardToken: rewardToken.address,
   //         pool: params.createIncentiveResult.poolAddress,
@@ -309,7 +309,7 @@ export class HelperCommands {
   //     )
   //   ).wait()
   //
-  //   const transferFilter = rewardToken.filters.Transfer(this.farming.address, incentiveCreator.address, null)
+  //   const transferFilter = rewardToken.filters.Transfer(this.tokenomics.address, incentiveCreator.address, null)
   //   const transferTopic = rewardToken.interface.getEventTopic('Transfer')
   //   const logItem = receipt.logs.find((log) => log.topics.includes(transferTopic))
   //   const events = await rewardToken.queryFilter(transferFilter, logItem?.blockHash)

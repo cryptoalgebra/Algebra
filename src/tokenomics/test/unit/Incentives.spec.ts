@@ -158,7 +158,7 @@ describe('unit/Incentives', async () => {
         await context.farming
           .connect(actors.lpUser0())
           .multicall([
-            //context.farming.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]),
+            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]),
             context.farming.interface.encodeFunctionData('EnterFarming', [incentiveKey, tokenId]),
           ])
         ;({ numberOfFarms } = await context.farming
@@ -251,7 +251,7 @@ describe('unit/Incentives', async () => {
   //     })
   //
   //     subject = async (params: Partial<ContractParams.EndIncentive> = {}) => {
-  //       return await context.farming.connect(incentiveCreator).endIncentive({
+  //       return await context.tokenomics.connect(incentiveCreator).endIncentive({
   //         rewardToken: params.rewardToken || context.rewardToken.address,
   //         pool: context.pool01,
   //         startTime: params.startTime || timestamps.startTime,
@@ -268,17 +268,17 @@ describe('unit/Incentives', async () => {
   //       const incentiveId = await helpers.getIncentiveId(createIncentiveResult)
   //
   //       await expect(subject({}))
-  //         .to.emit(context.farming, 'IncentiveEnded')
+  //         .to.emit(context.tokenomics, 'IncentiveEnded')
   //         .withArgs(incentiveId, '100000000000000000000')
   //     })
   //
   //     it('deletes incentives[key]', async () => {
   //       const incentiveId = await helpers.getIncentiveId(createIncentiveResult)
-  //       expect((await context.farming.incentives(incentiveId)).totalRewardUnclaimed).to.be.gt(0)
+  //       expect((await context.tokenomics.incentives(incentiveId)).totalRewardUnclaimed).to.be.gt(0)
   //
   //       await Time.set(timestamps.endTime + 1)
   //       await subject({})
-  //       const { totalRewardUnclaimed, totalSecondsClaimedX128, numberOfFarms } = await context.farming.incentives(
+  //       const { totalRewardUnclaimed, totalSecondsClaimedX128, numberOfFarms } = await context.tokenomics.incentives(
   //         incentiveId
   //       )
   //       expect(totalRewardUnclaimed).to.eq(0)

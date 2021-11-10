@@ -661,7 +661,7 @@ describe('unit/Farms', () => {
         await snapshotGasCost(subject(lpUser0))
       })
 
-      it('updates the reward available for the context.farming', async () => {
+      it('updates the reward available for the context.tokenomics', async () => {
         const rewardsAccured = await context.farming.rewards(context.rewardToken.address, lpUser0.address)
         await subject(lpUser0)
         expect(await context.farming.rewards(context.rewardToken.address, lpUser0.address)).to.be.gt(rewardsAccured)

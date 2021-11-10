@@ -9,7 +9,7 @@ interface IVirtualPoolDeployer {
 
     /**
      * @dev Sets the factory address to the poolDeployer for permissioned actions
-     * @param farming The address of the Algebra farming
+     * @param tokenomics The address of the Algebra tokenomics
      */
     function setFarming(address farming) external;
 }

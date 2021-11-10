@@ -35,8 +35,8 @@ interface IAlgebraFactory {
 
     /**
      * @dev Is retrieved from the pools to restrict calling
-     * certain functions not by a farming contract
-     * @return The farming contract address
+     * certain functions not by a tokenomics contract
+     * @return The tokenomics contract address
      */
     function farmingAddress() external view returns (address);
 
@@ -71,8 +71,8 @@ interface IAlgebraFactory {
     function setOwner(address _owner) external;
 
     /**
-     * @dev updates farming address on the factory
-     * @param _farmingAddress The new farming contract address
+     * @dev updates tokenomics address on the factory
+     * @param _farmingAddress The new tokenomics contract address
      */
     function setFarmingAddress(address _farmingAddress) external;
 

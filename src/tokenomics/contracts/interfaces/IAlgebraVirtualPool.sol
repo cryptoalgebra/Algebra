@@ -65,7 +65,7 @@ interface IAlgebraVirtualPool {
     function cross(int24 nextTick, bool zeroForOne) external;
 
     /**
-     * @dev This function is called by a farming when someone calls #exitFarming() after the end timestamp
+     * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestamp
      * @param _endTimestamp The timestamp of the exitFarming
      * @param startTime The timestamp of planned start of the incentive. Used as initTimestamp
      * if there were no swaps through the entire incentive

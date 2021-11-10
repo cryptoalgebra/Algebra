@@ -33,7 +33,7 @@ describe('unit/RewardMath', () => {
       /**totalLiq=*/ 0,
       /**innerSecondsSpentPerLiquidity=*/ BigNumber.from(100).shl(128).div(100)
     )
-    // half the reward goes to the farming, the other half goes to those staking after the period
+    // half the reward goes to the tokenomics, the other half goes to those staking after the period
     expect(reward).to.eq(1000)
   })
 

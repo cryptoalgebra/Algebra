@@ -436,34 +436,34 @@ describe('unit/Deposits', () => {
   //   beforeEach('create a deposit by lpUser0', async () => {
   //     await context.nft
   //       .connect(lpUser0)
-  //       ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farming.address, tokenId)
+  //       ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.tokenomics.address, tokenId)
   //   })
 
   //   it('emits a DepositTransferred event', () =>
-  //     expect(context.farming.connect(lpUser0).transferDeposit(tokenId, lpUser1.address))
-  //       .to.emit(context.farming, 'DepositTransferred')
+  //     expect(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address))
+  //       .to.emit(context.tokenomics, 'DepositTransferred')
   //       .withArgs(tokenId, recipient, lpUser1.address))
 
   //   it('transfers nft ownership', async () => {
-  //     const { owner: ownerBefore } = await context.farming.deposits(tokenId)
-  //     await context.farming.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)
-  //     const { owner: ownerAfter } = await context.farming.deposits(tokenId)
+  //     const { owner: ownerBefore } = await context.tokenomics.deposits(tokenId)
+  //     await context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)
+  //     const { owner: ownerAfter } = await context.tokenomics.deposits(tokenId)
   //     expect(ownerBefore).to.eq(lpUser0.address)
   //     expect(ownerAfter).to.eq(lpUser1.address)
   //   })
 
   //   it('can only be called by the owner', async () => {
-  //     await expect(context.farming.connect(lpUser1).transferDeposit(tokenId, lpUser1.address)).to.be.revertedWith(
+  //     await expect(context.tokenomics.connect(lpUser1).transferDeposit(tokenId, lpUser1.address)).to.be.revertedWith(
   //       'AlgebraFarming::transferDeposit: can only be called by deposit owner'
   //     )
   //   })
 
   //   it('cannot be transferred to address 0', async () => {
-  //     await expect(context.farming.connect(lpUser0).transferDeposit(tokenId, constants.AddressZero)).to.be.revertedWith(
+  //     await expect(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, constants.AddressZero)).to.be.revertedWith(
   //       'AlgebraFarming::transferDeposit: invalid transfer recipient'
   //     )
   //   })
 
-  //   it('has gas cost', () => snapshotGasCost(context.farming.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)))
+  //   it('has gas cost', () => snapshotGasCost(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)))
   // })
 })

@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 /**
  * @title Permissioned pool actions
- * @notice Contains pool methods that may only be called by the factory owner or farming
+ * @notice Contains pool methods that may only be called by the factory owner or tokenomics
  */
 interface IAlgebraPoolPermissionedActions {
     /**
