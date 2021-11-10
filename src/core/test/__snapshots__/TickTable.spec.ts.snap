@@ -8,7 +8,7 @@ exports[`TickTable #nextTickInTheSameRow lte = false gas cost on boundary 1`] = 
 
 exports[`TickTable #nextTickInTheSameRow lte = true gas cost for entire word 1`] = `2565`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary 1`] = `2965`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary 1`] = `3030`;
 
 exports[`TickTable #nextTickInTheSameRow lte = true gas cost on boundary 1`] = `2565`;
 
