@@ -28,9 +28,13 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
     // @inheritdoc IAlgebraVirtualPool
     uint128 public override currentLiquidity;
     // @inheritdoc IAlgebraVirtualPool
-    uint32 public override _prevTimestamp;
+    uint32 public override prevTimestamp;
     // @inheritdoc IAlgebraVirtualPool
     int24 public override globalTick;
+    // @inheritdoc IAlgebraVirtualPool
+    uint32 public override desiredEndTimestamp;
+    // @inheritdoc IAlgebraVirtualPool
+    uint32 public override desiredStartTimestamp;
 
     // @inheritdoc IAlgebraVirtualPool
     mapping(int24 => TickManager.Tick) public override ticks;
@@ -46,15 +50,24 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
         _;
     }
 
-    constructor(address _poolAddress, address _farmingAddress) {
+    constructor(
+        address _poolAddress,
+        address _farmingAddress,
+        uint32 _desiredStartTimestamp,
+        uint32 _desiredEndTimestamp
+    ) {
         poolAddress = _poolAddress;
         farmingAddress = _farmingAddress;
+        desiredStartTimestamp = _desiredStartTimestamp;
+        desiredEndTimestamp = _desiredEndTimestamp;
+
+        prevTimestamp = _desiredStartTimestamp;
     }
 
     // @inheritdoc IAlgebraVirtualPool
     function finish(uint32 _endTimestamp, uint32 startTime) external override onlyFarming {
         uint32 currentTimestamp = _endTimestamp;
-        uint32 previousTimestamp = _prevTimestamp;
+        uint32 previousTimestamp = prevTimestamp;
 
         if (initTimestamp == 0) {
             initTimestamp = startTime;
@@ -119,18 +132,27 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
     }
 
     // @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 previousTimestamp, uint32 currentTimestamp) external override onlyPool {
+    function increaseCumulative(uint32 currentTimestamp) external override onlyPool returns (Status) {
+        if (desiredStartTimestamp >= currentTimestamp) {
+            return Status.NOT_STARTED;
+        }
+        if (desiredEndTimestamp <= currentTimestamp) {
+            return Status.FINISHED;
+        }
+
         if (initTimestamp == 0) {
             initTimestamp = currentTimestamp;
             prevLiquidity = currentLiquidity;
         }
-        previousTimestamp = previousTimestamp < initTimestamp ? initTimestamp : previousTimestamp;
+        uint32 previousTimestamp = prevTimestamp < initTimestamp ? initTimestamp : prevTimestamp;
         if (prevLiquidity > 0)
             globalSecondsPerLiquidityCumulative =
                 globalSecondsPerLiquidityCumulative +
                 ((uint160(currentTimestamp - previousTimestamp) << 128) / (prevLiquidity));
         else timeOutside += currentTimestamp - previousTimestamp;
-        _prevTimestamp = currentTimestamp;
+        prevTimestamp = currentTimestamp;
+
+        return Status.ACTIVE;
     }
 
     // @inheritdoc IAlgebraVirtualPool

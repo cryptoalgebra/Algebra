@@ -132,10 +132,8 @@ interface IAlgebraPoolEvents {
     /**
      * @notice Emitted when new activeIncentive is set
      * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
-     * @param endTimestamp The timestamp when the active incentive is finished
-     * @param startTimestamp The first swap after this timestamp is going to initialize the virtual pool
      */
-    event IncentiveSet(address virtualPoolAddress, uint32 endTimestamp, uint32 startTimestamp);
+    event IncentiveSet(address virtualPoolAddress);
     /**
      * @notice Emitted when the fee changes
      * @param Fee The value of the token fee

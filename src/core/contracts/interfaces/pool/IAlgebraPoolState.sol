@@ -139,12 +139,5 @@ interface IAlgebraPoolState {
      * endTimestamp The timestamp when the active incentive is finished
      * startTimestamp The first swap after this timestamp is going to initialize the virtual pool
      */
-    function activeIncentive()
-        external
-        view
-        returns (
-            address virtualPool,
-            uint32 endTimestamp,
-            uint32 startTimestamp
-        );
+    function activeIncentive() external view returns (address virtualPool);
 }

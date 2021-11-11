@@ -2,6 +2,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import './interfaces/IAlgebraFarming.sol';
+import './interfaces/IAlgebraVirtualPool.sol';
 import './libraries/IncentiveId.sol';
 import './libraries/RewardMath.sol';
 import './libraries/NFTPositionInfo.sol';
@@ -128,7 +129,12 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        (, uint32 _activeEndTimestamp, ) = key.pool.activeIncentive();
+        address _incentive = key.pool.activeIncentive();
+        uint32 _activeEndTimestamp;
+        if (_incentive != address(0)) {
+            _activeEndTimestamp = IAlgebraVirtualPool(_incentive).desiredEndTimestamp();
+        }
+
         require(
             _activeEndTimestamp < block.timestamp,
             'AlgebraFarming::createIncentive: there is already active incentive'
@@ -154,8 +160,8 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         incentives[incentiveId].totalReward += reward;
         incentives[incentiveId].bonusReward += bonusReward;
 
-        virtualPool = vdeployer.deploy(address(key.pool), address(this));
-        key.pool.setIncentive(virtualPool, uint32(key.endTime), uint32(key.startTime));
+        virtualPool = vdeployer.deploy(address(key.pool), address(this), uint32(key.startTime), uint32(key.endTime));
+        key.pool.setIncentive(virtualPool);
 
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = address(virtualPool);
