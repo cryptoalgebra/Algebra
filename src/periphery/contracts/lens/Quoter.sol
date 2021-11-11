@@ -47,11 +47,16 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta), uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
+
+        IAlgebraPool pool = getPool(tokenIn, tokenOut);
+        (, , uint16 fee, , , , , ) = pool.globalState();
+
         if (isExactInput) {
             assembly {
                 let ptr := mload(0x40)
                 mstore(ptr, amountReceived)
-                revert(ptr, 32)
+                mstore(add(ptr, 0x20), fee)
+                revert(ptr, 64)
             }
         } else {
             // if the cache has been populated, ensure that the full output amount has been received
@@ -59,21 +64,22 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             assembly {
                 let ptr := mload(0x40)
                 mstore(ptr, amountToPay)
-                revert(ptr, 32)
+                mstore(add(ptr, 0x20), fee)
+                revert(ptr, 64)
             }
         }
     }
 
     /// @dev Parses a revert reason that should contain the numeric quote
-    function parseRevertReason(bytes memory reason) private pure returns (uint256) {
-        if (reason.length != 32) {
+    function parseRevertReason(bytes memory reason) private pure returns (uint256, uint16) {
+        if (reason.length != 64) {
             if (reason.length < 68) revert('Unexpected error');
             assembly {
                 reason := add(reason, 0x04)
             }
             revert(abi.decode(reason, (string)));
         }
-        return abi.decode(reason, (uint256));
+        return abi.decode(reason, (uint256, uint16));
     }
 
     /// @inheritdoc IQuoter
@@ -82,7 +88,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         address tokenOut,
         uint256 amountIn,
         uint160 limitSqrtPrice
-    ) public override returns (uint256 amountOut) {
+    ) public override returns (uint256 amountOut, uint16 fee) {
         bool zeroForOne = tokenIn < tokenOut;
 
         try
@@ -96,26 +102,33 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
                 abi.encodePacked(tokenIn, tokenOut)
             )
         {} catch (bytes memory reason) {
-            return parseRevertReason(reason);
+            (amountOut, fee) = parseRevertReason(reason);
         }
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactInput(bytes memory path, uint256 amountIn) external override returns (uint256 amountOut) {
+    function quoteExactInput(bytes memory path, uint256 amountIn)
+        external
+        override
+        returns (uint256 amountOut, uint16[] memory fees)
+    {
+        fees = new uint16[](path.numPools());
+        uint256 i = 0;
         while (true) {
             bool hasMultiplePools = path.hasMultiplePools();
 
             (address tokenIn, address tokenOut) = path.decodeFirstPool();
 
             // the outputs of prior swaps become the inputs to subsequent ones
-            amountIn = quoteExactInputSingle(tokenIn, tokenOut, amountIn, 0);
+            (amountIn, fees[i]) = quoteExactInputSingle(tokenIn, tokenOut, amountIn, 0);
 
             // decide whether to continue or terminate
             if (hasMultiplePools) {
                 path = path.skipToken();
             } else {
-                return amountIn;
+                return (amountIn, fees);
             }
+            i++;
         }
     }
 
@@ -125,7 +138,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         address tokenOut,
         uint256 amountOut,
         uint160 limitSqrtPrice
-    ) public override returns (uint256 amountIn) {
+    ) public override returns (uint256 amountIn, uint16 fee) {
         bool zeroForOne = tokenIn < tokenOut;
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
@@ -142,26 +155,33 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             )
         {} catch (bytes memory reason) {
             if (limitSqrtPrice == 0) delete amountOutCached; // clear cache
-            return parseRevertReason(reason);
+            (amountIn, fee) = parseRevertReason(reason);
         }
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactOutput(bytes memory path, uint256 amountOut) external override returns (uint256 amountIn) {
+    function quoteExactOutput(bytes memory path, uint256 amountOut)
+        external
+        override
+        returns (uint256 amountIn, uint16[] memory fees)
+    {
+        fees = new uint16[](path.numPools());
+        uint256 i = 0;
         while (true) {
             bool hasMultiplePools = path.hasMultiplePools();
 
             (address tokenOut, address tokenIn) = path.decodeFirstPool();
 
             // the inputs of prior swaps become the outputs of subsequent ones
-            amountOut = quoteExactOutputSingle(tokenIn, tokenOut, amountOut, 0);
+            (amountOut, fees[i]) = quoteExactOutputSingle(tokenIn, tokenOut, amountOut, 0);
 
             // decide whether to continue or terminate
             if (hasMultiplePools) {
                 path = path.skipToken();
             } else {
-                return amountOut;
+                return (amountOut, fees);
             }
+            i++;
         }
     }
 }
