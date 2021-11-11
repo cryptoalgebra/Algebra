@@ -29,7 +29,14 @@ contract VirtualPoolDeployer is IVirtualPoolDeployer {
     }
 
     // @inheritdoc IVirtualPoolDeployer
-    function deploy(address poolAddress, address _farming) external override onlyFarming returns (address virtualPool) {
-        virtualPool = address(new AlgebraVirtualPool(poolAddress, _farming));
+    function deploy(
+        address poolAddress,
+        address _farming,
+        uint32 _desiredStartTimestamp,
+        uint32 _desiredEndTimestamp
+    ) external override onlyFarming returns (address virtualPool) {
+        virtualPool = address(
+            new AlgebraVirtualPool(poolAddress, _farming, _desiredStartTimestamp, _desiredEndTimestamp)
+        );
     }
 }

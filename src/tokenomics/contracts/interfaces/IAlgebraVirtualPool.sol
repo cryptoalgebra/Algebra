@@ -3,6 +3,12 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 interface IAlgebraVirtualPool {
+    enum Status {
+        NOT_STARTED,
+        ACTIVE,
+        FINISHED
+    }
+
     // returns the timestamp of the first swap after start timestamp
     function initTimestamp() external returns (uint32);
 
@@ -25,7 +31,13 @@ interface IAlgebraVirtualPool {
     function prevLiquidity() external returns (uint128);
 
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
-    function _prevTimestamp() external returns (uint32);
+    function prevTimestamp() external returns (uint32);
+
+    // The timestamp when the active incentive is finished
+    function desiredEndTimestamp() external returns (uint32);
+
+    // The first swap after this timestamp is going to initialize the virtual pool
+    function desiredStartTimestamp() external returns (uint32);
 
     // returns data associated with a tick
     function ticks(int24 tickId)
@@ -95,8 +107,7 @@ interface IAlgebraVirtualPool {
     /**
      * @dev This function is called from the main pool before every swap To increase seconds per liquidity
      * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
-     * @param previousTimestamp The timestamp of the previous swap
      * @param currentTimestamp The timestamp of the current swap
      */
-    function increaseCumulative(uint32 previousTimestamp, uint32 currentTimestamp) external;
+    function increaseCumulative(uint32 currentTimestamp) external returns (Status);
 }
