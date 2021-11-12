@@ -11,7 +11,7 @@ library TickTable {
     /// @return bitNumber The bit position in the word where the flag is stored
     function position(int24 tick) private pure returns (int16 rowNumber, uint8 bitNumber) {
         assembly {
-            bitNumber := smod(tick, 256)
+            bitNumber := and(tick, 0xFF)
             rowNumber := shr(8, tick)
         }
     }

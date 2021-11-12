@@ -2,7 +2,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import './interfaces/IAlgebraFarming.sol';
-import './interfaces/IAlgebraVirtualPool.sol';
+import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 import './libraries/IncentiveId.sol';
 import './libraries/RewardMath.sol';
 import './libraries/NFTPositionInfo.sol';
@@ -132,7 +132,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         address _incentive = key.pool.activeIncentive();
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
-            _activeEndTimestamp = IAlgebraVirtualPool(_incentive).desiredEndTimestamp();
+            _activeEndTimestamp = IAlgebraIncentiveVirtualPool(_incentive).desiredEndTimestamp();
         }
 
         require(
@@ -193,7 +193,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     ) external override returns (bytes4) {
         require(
             msg.sender == address(nonfungiblePositionManager),
-            'AlgebraFarming::onERC721Received: not a  Algebra nft'
+            'AlgebraFarming::onERC721Received: not an Algebra nft'
         );
 
         (, , , , int24 tickLower, int24 tickUpper, , , , , ) = nonfungiblePositionManager.positions(tokenId);
@@ -275,9 +275,14 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         Deposit memory deposit = deposits[tokenId];
         Incentive memory incentive = incentives[incentiveId];
 
-        (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
-            incentive.virtualPoolAddress
-        ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+        (
+            uint160 secondsPerLiquidityInsideX128,
+            uint256 initTimestamp,
+            uint256 endTimestamp
+        ) = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).getInnerSecondsPerLiquidity(
+                deposit.tickLower,
+                deposit.tickUpper
+            );
 
         if (initTimestamp == 0) {
             initTimestamp = key.startTime;
@@ -295,7 +300,6 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
             incentive.totalLiquidity,
             secondsPerLiquidityInsideX128
         );
-
         bonusReward = RewardMath.computeRewardAmount(
             incentive.bonusReward,
             initTimestamp,
@@ -326,7 +330,10 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
 
         incentives[incentiveId].numberOfFarms++;
         (, int24 tick, , , , , , ) = pool.globalState();
-        IAlgebraVirtualPool virtualPool = IAlgebraVirtualPool(incentives[incentiveId].virtualPoolAddress);
+
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
+            incentives[incentiveId].virtualPoolAddress
+        );
         virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int256(liquidity).toInt128(), tick);
 
         _mint(msg.sender, _nextId);
@@ -378,13 +385,21 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
 
         incentives[incentiveId].numberOfFarms--;
 
-        (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
-            incentive.virtualPoolAddress
-        ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+        (
+            uint160 secondsPerLiquidityInsideX128,
+            uint256 initTimestamp,
+            uint256 endTimestamp
+        ) = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).getInnerSecondsPerLiquidity(
+                deposit.tickLower,
+                deposit.tickUpper
+            );
 
         if (endTimestamp == 0) {
-            IAlgebraVirtualPool(incentive.virtualPoolAddress).finish(uint32(block.timestamp), uint32(key.startTime));
-            (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = IAlgebraVirtualPool(
+            IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).finish(
+                uint32(block.timestamp),
+                uint32(key.startTime)
+            );
+            (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = IAlgebraIncentiveVirtualPool(
                 incentive.virtualPoolAddress
             ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
         }

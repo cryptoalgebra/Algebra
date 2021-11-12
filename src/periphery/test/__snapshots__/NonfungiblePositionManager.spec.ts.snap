@@ -8,7 +8,7 @@ exports[`NonfungiblePositionManager #collect gas transfers token0 only 1`] = `11
 
 exports[`NonfungiblePositionManager #collect gas transfers token1 only 1`] = `111078`;
 
-exports[`NonfungiblePositionManager #createAndInitializePoolIfNecessary gas 1`] = `6440342`;
+exports[`NonfungiblePositionManager #createAndInitializePoolIfNecessary gas 1`] = `6358635`;
 
 exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease 1`] = `189950`;
 
