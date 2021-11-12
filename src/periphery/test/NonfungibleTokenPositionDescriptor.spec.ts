@@ -10,11 +10,11 @@ import { getMaxTick, getMinTick } from './shared/ticks'
 import { sortedTokens } from './shared/tokenSort'
 import { extractJSONFromURI } from './shared/extractJSONFromURI'
 
-const DAI = '0xEC5dCb5Dbf4B114C9d0F65BcCAb49EC54F6A0867'
-const USDC = '0x9780881Bf45B83Ee028c4c1De7e0C168dF8e9eEF'
-const USDT = '0x4DbF253521E8e8080282c964975f3aFB7F87ceCe'
-const TBTC = '0xd55c4c22e2a4fAEeCfEf8C940e6382F41cD542a6'
-const WBTC = '0xF16cCC72a44EdB06E75C652706eddAE5736eF1b9'
+const DAI = '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063'
+const USDC = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'
+const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+const WETH = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619'
+const WBTC = '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6'
 
 describe('NonfungibleTokenPositionDescriptor', () => {
   let wallets: Wallet[]
@@ -76,8 +76,8 @@ describe('NonfungibleTokenPositionDescriptor', () => {
       expect(await nftPositionDescriptor.tokenRatioPriority(USDT, 1)).to.eq(200)
     })
 
-    it('returns -200 for TBTC', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(TBTC, 1)).to.eq(-200)
+    it('returns -200 for WETH', async () => {
+      expect(await nftPositionDescriptor.tokenRatioPriority(WETH, 1)).to.eq(-200)
     })
 
     it('returns -250 for WBTC', async () => {

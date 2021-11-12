@@ -20,15 +20,15 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     //address private constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     //address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     //address private constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-    //address private constant TBTC = 0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa;
+    //address private constant WETH = 0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa;
     //address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
     // bscTestnet addresses
-    address private constant DAI = 0xEC5dCb5Dbf4B114C9d0F65BcCAb49EC54F6A0867;
-    address private constant USDC = 0x9780881Bf45B83Ee028c4c1De7e0C168dF8e9eEF;
-    address private constant USDT = 0x4DbF253521E8e8080282c964975f3aFB7F87ceCe;
-    address private constant TBTC = 0xd55c4c22e2a4fAEeCfEf8C940e6382F41cD542a6;
-    address private constant WBTC = 0xF16cCC72a44EdB06E75C652706eddAE5736eF1b9;
+    address private constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
+    address private constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
+    address private constant USDT = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
+    address private constant WETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
+    address private constant WBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
 
     address public immutable WNativeToken;
 
@@ -102,7 +102,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                 return TokenRatioSortOrder.NUMERATOR_MORE;
             } else if (token == DAI) {
                 return TokenRatioSortOrder.NUMERATOR;
-            } else if (token == TBTC) {
+            } else if (token == WETH) {
                 return TokenRatioSortOrder.DENOMINATOR_MORE;
             } else if (token == WBTC) {
                 return TokenRatioSortOrder.DENOMINATOR_MOST;
