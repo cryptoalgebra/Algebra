@@ -1312,7 +1312,7 @@ describe('AlgebraFarming', async ()=>{
 
 
 		    await Time.set(createIncentiveResult.endTime + 1)
-
+			
 			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,

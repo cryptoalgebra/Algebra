@@ -686,7 +686,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // The accumulator of the community fee earned during a swap
         uint256 communityFeeAccumulated;
         // True if there is an active incentive at the moment
-        bool hasActiveIncentive;
+        IAlgebraVirtualPool.Status incentiveStatus;
         // Whether the exact input or output is specified
         bool exactInput;
         // The current dynamic fee
@@ -761,10 +761,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(
                     blockTimestamp
                 );
-                if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
-                    cache.hasActiveIncentive = true;
-                } else if (_status == IAlgebraVirtualPool.Status.FINISHED) {
+                if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
                     activeIncentive = address(0);
+                } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
+                    cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
+                } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
+                    cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
                 }
             }
 
@@ -840,7 +842,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                         cache.totalFeeGrowthB = zeroForOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
                     }
                     // every tick cross is needed to be duplicated in a virtual pool
-                    if (cache.hasActiveIncentive) {
+                    if (cache.incentiveStatus != IAlgebraVirtualPool.Status.NOT_EXIST) {
                         IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroForOne);
                     }
                     int128 liquidityDelta;
@@ -910,7 +912,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         );
 
         // the swap results should be provided to a virtual pool
-        if (cache.hasActiveIncentive) {
+        if (cache.incentiveStatus == IAlgebraVirtualPool.Status.ACTIVE) {
             IAlgebraVirtualPool(activeIncentive).processSwap();
         }
 
