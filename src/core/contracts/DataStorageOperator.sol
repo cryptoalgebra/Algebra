@@ -38,7 +38,7 @@ contract DataStorageOperator is IDataStorageOperator {
             30, // gamma1
             100, // gamma2
             0, // volumeBeta
-            4 // volumeGamma
+            10 // volumeGamma
         );
     }
 

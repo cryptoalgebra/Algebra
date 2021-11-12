@@ -1381,7 +1381,7 @@ describe('AlgebraPool', () => {
       expect(fee3).to.be.equal(fee1);
     })
 
-    const AMOUNT = 100000000
+    const AMOUNT = 500000000
     it('single huge spike after day', async () => {
       pool = await createPool(FeeAmount.MEDIUM)
       await pool.initialize(encodePriceSqrt(1, 1))
@@ -1396,7 +1396,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(527);
+      expect(fee3).to.be.equal(2983);
       /*console.log(fee1, fee2, fee3);
       let tick1 = (await pool.globalState()).tick;
       let stats = await getStatistics(DAY);
@@ -1430,7 +1430,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(1000), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(547);
+      expect(fee3).to.be.equal(3112);
       /*console.log(fee1, fee2, fee3);
       let tick1 = (await pool.globalState()).tick;
       let stats = await getStatistics(180);
