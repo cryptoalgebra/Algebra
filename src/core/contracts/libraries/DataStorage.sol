@@ -323,10 +323,13 @@ library DataStorage {
             );
             return (
                 (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
-                uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative))
+                uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative)) >> 57
             );
         } else {
-            return ((endOfWindow.volatilityCumulative) / WINDOW, uint256((endOfWindow.volumePerLiquidityCumulative)));
+            return (
+                (endOfWindow.volatilityCumulative) / WINDOW,
+                uint256((endOfWindow.volumePerLiquidityCumulative)) >> 57
+            );
         }
     }
 
