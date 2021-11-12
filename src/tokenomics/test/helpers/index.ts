@@ -191,7 +191,7 @@ export class HelperCommands {
       ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.farming.address, tokenId)
     await this.farming
       .connect(params.lp)
-      .EnterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+      .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
 
     const farmdAt = await blockTimestamp()
 

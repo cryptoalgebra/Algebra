@@ -23,16 +23,16 @@ async function main() {
 
   console.log("AlgebraFarming deployed to:", AlgebraFarming.address);
 
-  await hre.run("verify:verify", {
-    address: AlgebraFarming.address,
-    constructorArguments: [
-      deploysData.poolDeployer,
-      deploysData.nonfungiblePositionManager,
-      VirtualPoolDeployer.address,
-      maxIncentiveStartLeadTime,
-      maxIncentiveDuration,
-    ],
-  });
+  // await hre.run("verify:verify", {
+  //   address: AlgebraFarming.address,
+  //   constructorArguments: [
+  //     deploysData.poolDeployer,
+  //     deploysData.nonfungiblePositionManager,
+  //     VirtualPoolDeployer.address,
+  //     maxIncentiveStartLeadTime,
+  //     maxIncentiveDuration,
+  //   ],
+  // });
 }
 
 // We recommend this pattern to be able to use async/await everywhere

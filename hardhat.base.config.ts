@@ -58,7 +58,10 @@ export default {
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     maticMainnet: {
-      url: `https://rpc-mainnet.matic.network`,
+      url: `https://rpc-mainnet.matic.quiknode.pro`,
+      chainId: 137,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      gasPrice: 30_000_000_000
     }
   },
   etherscan: {

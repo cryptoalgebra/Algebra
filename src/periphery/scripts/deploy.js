@@ -6,20 +6,20 @@ async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
-  // WNativeTokenAddress  
-  const WNativeTokenAddress = "0xd0a1e359811322d97991e03f863a0c30c2cf029c";
+  // // WNativeTokenAddress  
+  const WNativeTokenAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens')
   const TickLens = await TickLensFactory.deploy()
 
   await TickLens.deployed()
 
-  console.log('TickLens deployed to:', TickLens.address)
+  //console.log('TickLens deployed to:', TickLens.address)
 
   // arg1 factory address
   // arg2 wnative address
   const QuoterFactory = await hre.ethers.getContractFactory("Quoter");
-  const Quoter = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const Quoter = await QuoterFactory.deploy(factory, WNativeTokenAddress, poolDeployer);
 
   await Quoter.deployed()
 
@@ -39,11 +39,11 @@ async function main() {
 
   await NFTDescriptor.deployed()
 
-  console.log('NFTDescriptor deployed to:', NFTDescriptor.address)
+  //console.log('NFTDescriptor deployed to:', NFTDescriptor.address)
 
-  // arg1 factory address
-  // arg2 wnative address
-  // arg3 tokenDescriptor address
+  // // arg1 factory address
+  // // arg2 wnative address
+  // // arg3 tokenDescriptor address
   const NonfungiblePositionManagerFactory = await hre.ethers.getContractFactory("NonfungiblePositionManager");
   const NonfungiblePositionManager = await NonfungiblePositionManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, NFTDescriptor.address, deploysData.poolDeployer);
 
@@ -66,15 +66,13 @@ async function main() {
 
   console.log('NonfungibleTokenPositionDescriptor deployed to:', NonfungibleTokenPositionDescriptor.address)
 
-  // arg1 factory address
-  // arg2 wnative address
-  // arg3 nonfungiblePositionManager address
-  // const V3MigratorFactory = await hre.ethers.getContractFactory("V3Migrator");
-  // const V3Migrator = await V3MigratorFactory.deploy(factoryAddress, WNativeTokenAddress, NonfungibleTokenPositionDescriptor.address);
-  //
-  // await V3Migrator.deployed();
-  //
-  // console.log("V3Migrator deployed to:", V3Migrator.address);
+  // // arg1 factory address
+  // // arg2 wnative address
+  // // arg3 nonfungiblePositionManager address
+  const V3MigratorFactory = await hre.ethers.getContractFactory("V3Migrator");
+  const V3Migrator = await V3MigratorFactory.deploy(deploysData.factory, WNativeTokenAddress, NonfungibleTokenPositionDescriptor.address,deploysData.poolDeployer);
+  
+  await V3Migrator.deployed();
 
 
   const AlgebraInterfaceMulticallFactory = await hre.ethers.getContractFactory('AlgebraInterfaceMulticall')
@@ -83,6 +81,8 @@ async function main() {
   await AlgebraInterfaceMulticall.deployed()
 
   console.log('AlgebraInterfaceMulticall deployed to:', AlgebraInterfaceMulticall.address)
+  console.log("V3Migrator deployed to:", V3Migrator.address);
+  
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }
 

@@ -122,7 +122,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         IVirtualPoolDeployer _vdeployer,
         uint256 _maxIncentiveStartLeadTime,
         uint256 _maxIncentiveDuration
-    ) ERC721Permit('Algebra Farming NFT-V1', 'ALGB-FARM', '2') {
+    ) ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2') {
         owner = msg.sender;
         deployer = _deployer;
         vdeployer = _vdeployer;
@@ -206,7 +206,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
 
         if (data.length > 0) {
             require(data.length == 192, 'AlgebraFarming::onERC721Received: data is invalid');
-            _EnterFarming(abi.decode(data, (IncentiveKey)), tokenId);
+            _enterFarming(abi.decode(data, (IncentiveKey)), tokenId);
         }
         return this.onERC721Received.selector;
     }
@@ -238,10 +238,10 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function EnterFarming(IncentiveKey memory key, uint256 tokenId) external override {
-        require(deposits[tokenId].owner == msg.sender, 'AlgebraFarming::EnterFarming: only owner can farm token');
-        require(deposits[tokenId]._tokenId == 0, 'AlgebraFarming::EnterFarming: already farmd');
-        _EnterFarming(key, tokenId);
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override {
+        require(deposits[tokenId].owner == msg.sender, 'AlgebraFarming::enterFarming: only owner can farm token');
+        require(deposits[tokenId]._tokenId == 0, 'AlgebraFarming::enterFarming: already farmd');
+        _enterFarming(key, tokenId);
         _nextId++;
     }
 
@@ -319,15 +319,15 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     }
 
     /// @dev Farms a deposited token without doing an ownership check
-    function _EnterFarming(IncentiveKey memory key, uint256 tokenId) private {
-        require(block.timestamp < key.startTime, 'AlgebraFarming::EnterFarming: incentive has already started');
+    function _enterFarming(IncentiveKey memory key, uint256 tokenId) private {
+        require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
 
         bytes32 incentiveId = IncentiveId.compute(key);
 
-        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::EnterFarming: non-existent incentive');
+        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
         require(
             _farms[tokenId][incentiveId].liquidityNoOverflow == 0,
-            'AlgebraFarming::EnterFarming: token already farmd'
+            'AlgebraFarming::enterFarming: token already farmd'
         );
 
         (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) = NFTPositionInfo.getPositionInfo(
@@ -336,8 +336,8 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
             tokenId
         );
 
-        require(pool == key.pool, 'AlgebraFarming::EnterFarming: token pool is not the incentive pool');
-        require(liquidity > 0, 'AlgebraFarming::EnterFarming: cannot farm token with 0 liquidity');
+        require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
+        require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
 
         incentives[incentiveId].numberOfFarms++;
         (, int24 tick, , , , , , ) = pool.globalState();
@@ -357,7 +357,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         }
         incentives[incentiveId].totalLiquidity += liquidity;
 
-        emit farmStarted(tokenId, _nextId, incentiveId, liquidity);
+        emit FarmStarted(tokenId, _nextId, incentiveId, liquidity);
     }
 
     function burn(uint256 tokenId) private isAuthorizedForToken(tokenId) {
@@ -436,7 +436,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         delete farm.liquidityNoOverflow;
         if (liquidity >= type(uint96).max) delete farm.liquidityIfOverflow;
 
-        emit farmEnded(
+        emit FarmEnded(
             tokenId,
             incentiveId,
             address(key.rewardToken),

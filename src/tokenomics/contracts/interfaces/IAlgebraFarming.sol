@@ -121,7 +121,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice Farms a Algebra LP token
     /// @param key The key of the incentive for which to farm the NFT
     /// @param tokenId The ID of the token to farm
-    function EnterFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice exitFarmings a Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
@@ -181,7 +181,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is staking
-    event farmStarted(
+    event FarmStarted(
         uint256 indexed tokenId,
         uint256 indexed L2tokenId,
         bytes32 indexed incentiveId,
@@ -191,7 +191,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param incentiveId The incentive in which the token is staking
-    event farmEnded(
+    event FarmEnded(
         uint256 indexed tokenId,
         bytes32 indexed incentiveId,
         address indexed rewardAddress,

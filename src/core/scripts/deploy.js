@@ -9,13 +9,13 @@ async function main() {
   // If this script is run directly using node you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-
+    const vault = "0xBe56E9aA7792B2f1F4132631B7A0E1927090D78A";
   // We get the contract to deploy
     const PoolDeployerFactory = await hre.ethers.getContractFactory("AlgebraPoolDeployer");
     const poolDeployer  = await PoolDeployerFactory.deploy();
     await poolDeployer.deployed();
     const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-    const Algebra = await AlgebraFactory.deploy(poolDeployer.address);
+    const Algebra = await AlgebraFactory.deploy(poolDeployer.address, vault);
 
     await Algebra.deployed();
 

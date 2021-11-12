@@ -159,7 +159,7 @@ describe('unit/Incentives', async () => {
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]),
-            context.farming.interface.encodeFunctionData('EnterFarming', [incentiveKey, tokenId]),
+            context.farming.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
           ])
         ;({ numberOfFarms } = await context.farming
           .connect(actors.lpUser0())
