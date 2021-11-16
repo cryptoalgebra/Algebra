@@ -331,7 +331,7 @@ describe('unit/Deposits', () => {
       it('reverts when called by contract other than Algebra nonfungiblePositionManager', async () => {
         await expect(
           context.farming.connect(lpUser0).onERC721Received(incentiveCreator.address, lpUser0.address, 1, data)
-        ).to.be.revertedWith('AlgebraFarming::onERC721Received: not a  Algebra nft')
+        ).to.be.revertedWith('AlgebraFarming::onERC721Received: not an Algebra nft')
       })
 
       it('reverts when staking on invalid incentive', async () => {
