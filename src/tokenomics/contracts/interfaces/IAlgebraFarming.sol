@@ -16,9 +16,10 @@ import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 
 /// @title Algebra Farming Interface
-/// @notice Allows staking nonfungible liquidity tokens in exchange for reward tokens
+/// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @param rewardToken The token being distributed as a reward
+    /// @param bonusRewardToken The bonus token being distributed as a reward
     /// @param pool The Algebra pool
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
@@ -32,11 +33,13 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
         address refundee;
     }
 
+    /// @notice The pool deployer with which this farming contract is compatible
     function deployer() external view returns (IAlgebraPoolDeployer);
 
-    /// @notice The nonfungible position manager with which this staking contract is compatible
+    /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
+    /// @notice The virtual pool deployer with which this farming contract is compatible
     function vdeployer() external view returns (IVirtualPoolDeployer);
 
     /// @notice The max duration of an incentive in seconds
@@ -45,9 +48,8 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice The max amount of seconds into the future the incentive startTime can be set
     function maxIncentiveStartLeadTime() external view returns (uint256);
 
-    /// @notice Represents a staking incentive
+    /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
-    /// @return totalReward The amount of reward token not yet claimed by users
     function incentives(bytes32 incentiveId)
         external
         view
@@ -61,7 +63,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
         );
 
     /// @notice Returns information about a deposited NFT
-    /// @return _tokenId
+    /// @return L2TokenId The nft layer2 id
     /// @return owner The owner of the deposited NFT
     /// @return tickLower The lower tick of the range
     /// @return tickUpper The upper tick of the range
@@ -69,7 +71,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
         external
         view
         returns (
-            uint256 _tokenId,
+            uint256 L2TokenId,
             address owner,
             int24 tickLower,
             int24 tickUpper
@@ -92,21 +94,13 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice Creates a new liquidity mining incentive program
     /// @param key Details of the incentive to create
     /// @param reward The amount of reward tokens to be distributed
+    /// @param bonusReward The amount of bonus reward tokens to be distributed
+    /// @return virtualPool The virtual pool
     function createIncentive(
         IncentiveKey memory key,
         uint256 reward,
-        uint256 algReward
+        uint256 bonusReward
     ) external returns (address virtualPool);
-
-    /// @notice Ends an incentive after the incentive end time has passed and all farms have been withdrawn
-    /// @param key Details of the incentive to end
-    /// @return refund The remaining reward tokens when the incentive is ended
-    //function endIncentive(IncentiveKey memory key) external returns (uint256 refund);
-
-    /// @notice Transfers ownership of a deposit from the sender to the given recipient
-    /// @param tokenId The ID of the token (and the deposit) to transfer
-    /// @param to The new owner of the deposit
-    //function transferDeposit(uint256 tokenId, address to) external;
 
     /// @notice Withdraws a Algebra LP token `tokenId` from this contract to the recipient `to`
     /// @param tokenId The unique identifier of an Algebra LP token
@@ -143,17 +137,21 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @param key The key of the incentive
     /// @param tokenId The ID of the token
     /// @return reward The reward accrued to the NFT for the given incentive thus far
+    /// @return bonusReward The bonus reward accrued to the NFT for the given incentive thus far
     function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
         external
-        returns (uint256 reward, uint256 algReward);
+        returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
+    /// @param bonusRewardToken The token being distributed as a bonus reward
     /// @param pool The Algebra pool
+    /// @param virtualPool The virtual pool address
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
     /// @param refundee The address which receives any remaining reward tokens after the end time
     /// @param reward The amount of reward tokens to be distributed
+    /// @param bonusReward The amount of bonus reward tokens to be distributed
     event IncentiveCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
@@ -166,11 +164,6 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
         uint256 bonusReward
     );
 
-    /// @notice Event that can be emitted when a liquidity mining incentive has ended
-    /// @param incentiveId The incentive which is ending
-    /// @param refund The amount of reward tokens refunded
-    //event IncentiveEnded(bytes32 indexed incentiveId, uint256 refund);
-
     /// @notice Emitted when ownership of a deposit changes
     /// @param tokenId The ID of the deposit (and token) that is being transferred
     /// @param oldOwner The owner before the deposit was transferred
@@ -179,8 +172,9 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
+    /// @param L2tokenId The unique identifier of an Algebra Farming token
     /// @param liquidity The amount of liquidity farmd
-    /// @param incentiveId The incentive in which the token is staking
+    /// @param incentiveId The incentive in which the token is farming
     event FarmStarted(
         uint256 indexed tokenId,
         uint256 indexed L2tokenId,
@@ -190,7 +184,12 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
 
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param incentiveId The incentive in which the token is staking
+    /// @param incentiveId The incentive in which the token is farming
+    /// @param rewardAddress The token being distributed as a reward
+    /// @param bonusRewardToken The token being distributed as a bonus reward
+    /// @param owner The address where claimed rewards were sent to
+    /// @param reward The amount of reward tokens to be distributed
+    /// @param bonusReward The amount of bonus reward tokens to be distributed
     event FarmEnded(
         uint256 indexed tokenId,
         bytes32 indexed incentiveId,
@@ -204,5 +203,7 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice Event emitted when a reward token has been claimed
     /// @param to The address where claimed rewards were sent to
     /// @param reward The amount of reward tokens claimed
+    /// @param rewardAddress The token reward address
+    /// @param owner The address where claimed rewards were sent to
     event RewardClaimed(address indexed to, uint256 reward, address indexed rewardAddress, address indexed owner);
 }

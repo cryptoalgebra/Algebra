@@ -52,7 +52,7 @@ describe('unit/Farms', () => {
   describe('#enterFarming', () => {
     let incentiveId: string
     let incentiveArgs: HelperTypes.CreateIncentive.Args
-    let subject: (_tokenId: string, _actor: Wallet) => Promise<any>
+    let subject: (L2TokenId: string, _actor: Wallet) => Promise<any>
 
     beforeEach(async () => {
       context = await loadFixture(algebraFixture)
@@ -98,7 +98,7 @@ describe('unit/Farms', () => {
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
 
-      subject = (_tokenId: string, _actor: Wallet) =>
+      subject = (L2TokenId: string, _actor: Wallet) =>
         context.farming.connect(_actor).enterFarming(
           {
             refundee: incentiveCreator.address,
@@ -107,7 +107,7 @@ describe('unit/Farms', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          _tokenId
+          L2TokenId
         )
     })
 
@@ -128,10 +128,10 @@ describe('unit/Farms', () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.farming.deposits(tokenId))._tokenId
+        const depositFarmsBefore = (await context.farming.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.farming.deposits(tokenId))._tokenId
+        const depositFarmsAfter = (await context.farming.deposits(tokenId)).L2TokenId
 
         expect(farmBefore).to.eq(0)
         expect(depositFarmsBefore).to.eq(0)
@@ -140,10 +140,10 @@ describe('unit/Farms', () => {
       })
 
       it('increments the number of farms on the deposit', async () => {
-        const nFarmsBefore: BigNumber = (await context.farming.deposits(tokenId))._tokenId
+        const nFarmsBefore: BigNumber = (await context.farming.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
 
-        expect((await context.farming.deposits(tokenId))._tokenId).to.eq(nFarmsBefore.add(1))
+        expect((await context.farming.deposits(tokenId)).L2TokenId).to.eq(nFarmsBefore.add(1))
       })
 
       it('increments the number of farms on the incentive', async () => {
@@ -632,9 +632,9 @@ describe('unit/Farms', () => {
 
     describe('works and', () => {
       it('decrements deposit numberOfFarms by 1', async () => {
-        const { _tokenId: farmsPre } = await context.farming.deposits(tokenId)
+        const { L2TokenId: farmsPre } = await context.farming.deposits(tokenId)
         await subject(lpUser0)
-        const { _tokenId: farmsPost } = await context.farming.deposits(tokenId)
+        const { L2TokenId: farmsPost } = await context.farming.deposits(tokenId)
         expect(farmsPre).to.not.equal(farmsPost.sub(1))
       })
 

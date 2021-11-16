@@ -115,7 +115,7 @@ describe('unit/Deposits', () => {
       // Make sure we're starting from a clean slate
       const depositBefore = await context.farming.deposits(tokenId)
       expect(depositBefore.owner).to.eq(constants.AddressZero)
-      expect(depositBefore._tokenId).to.eq(0)
+      expect(depositBefore.L2TokenId).to.eq(0)
 
       subject = async (data: string, actor: Wallet = lpUser0) => {
         await context.nft
@@ -133,7 +133,7 @@ describe('unit/Deposits', () => {
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
 
       expect(deposit.owner).to.eq(lpUser0.address)
-      expect(deposit._tokenId).to.eq(BN('0'))
+      expect(deposit.L2TokenId).to.eq(BN('0'))
       expect(incentive.numberOfFarms).to.eq(BN('0'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).to.eq(BN('0'))
     })
@@ -147,7 +147,7 @@ describe('unit/Deposits', () => {
       await subject(data, lpUser0)
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
       expect(deposit.owner).to.eq
-      expect(deposit._tokenId).to.eq(BN('1'))
+      expect(deposit.L2TokenId).to.eq(BN('1'))
       expect(incentive.numberOfFarms).to.eq(BN('1'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
     })
@@ -303,8 +303,8 @@ describe('unit/Deposits', () => {
 
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
 
-        expect(depositBefore._tokenId).to.equal(0)
-        expect((await context.farming.deposits(tokenId))._tokenId).to.equal(1)
+        expect(depositBefore.L2TokenId).to.equal(0)
+        expect((await context.farming.deposits(tokenId)).L2TokenId).to.equal(1)
         //expect(farmBefore.secondsPerLiquidityInsideInitialX128).to.equal(0)
         //expect(farmAfter.secondsPerLiquidityInsideInitialX128).to.be.gt(0)
       })
@@ -365,7 +365,7 @@ describe('unit/Deposits', () => {
         .connect(lpUser0)
         ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farming.address, tokenId)
 
-      subject = (_tokenId, _recipient) => context.farming.connect(lpUser0).withdrawToken(_tokenId, _recipient, '0x')
+      subject = (L2TokenId, _recipient) => context.farming.connect(lpUser0).withdrawToken(L2TokenId, _recipient, '0x')
     })
 
     describe('works and', () => {
