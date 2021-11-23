@@ -16,12 +16,6 @@ interface IAlgebraPoolPermissionedActions {
     /**
      * @notice Sets an active incentive
      * @param virtualPoolAddress The address of a virtual pool associated with the incentive
-     * @param endTimestamp The timestamp when the active incentive is finished
-     * @param startTimestamp The first swap after this timestamp is going to initialize the virtual pool
      */
-    function setIncentive(
-        address virtualPoolAddress,
-        uint32 endTimestamp,
-        uint32 startTimestamp
-    ) external;
+    function setIncentive(address virtualPoolAddress) external;
 }

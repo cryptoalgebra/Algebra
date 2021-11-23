@@ -9,7 +9,7 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
 import './IVirtualPoolDeployer.sol';
-import './IAlgebraVirtualPool.sol';
+import './IAlgebraIncentiveVirtualPool.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';

@@ -1312,7 +1312,7 @@ describe('AlgebraFarming', async ()=>{
 
 
 		    await Time.set(createIncentiveResult.endTime + 1)
-
+			
 			await context.farming.connect(actors.lpUser0()).exitFarming(
 			    {
 				    rewardToken: context.rewardToken.address,
@@ -1349,7 +1349,7 @@ describe('AlgebraFarming', async ()=>{
 
 	    })
 
-	    it.only('exitFarming before startTime', async () => {
+	    it('exitFarming before startTime', async () => {
 			const { helpers, context, createIncentiveResult } = subject
 			type Position = {
 				lp: Wallet

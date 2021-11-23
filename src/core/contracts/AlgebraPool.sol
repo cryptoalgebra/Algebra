@@ -52,17 +52,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     // @inheritdoc IAlgebraPoolState
     mapping(bytes32 => Position) public override positions;
 
-    struct Incentive {
-        // The address of a virtual pool associated with the current active incentive
-        address virtualPool;
-        // The timestamp when the active incentive is finished
-        uint32 endTimestamp;
-        // The first swap after this timestamp is going to initialize the virtual pool
-        uint32 startTimestamp;
-    }
-
     // @inheritdoc IAlgebraPoolState
-    Incentive public override activeIncentive;
+    address public override activeIncentive;
 
     // @dev Restricts everyone calling a function except factory owner
     modifier onlyFactoryOwner() {
@@ -695,7 +686,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // The accumulator of the community fee earned during a swap
         uint256 communityFeeAccumulated;
         // True if there is an active incentive at the moment
-        bool hasActiveIncentive;
+        IAlgebraVirtualPool.Status incentiveStatus;
         // Whether the exact input or output is specified
         bool exactInput;
         // The current dynamic fee
@@ -766,17 +757,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             cache.startTick = _globalState.tick;
 
             blockTimestamp = _blockTimestamp();
-            if (activeIncentive.virtualPool != address(0)) {
-                cache.hasActiveIncentive = true;
-                (, uint32 _time, , , , ) = IDataStorageOperator(dataStorageOperator).timepoints(
-                    _globalState.timepointIndexSwap
+            if (activeIncentive != address(0)) {
+                IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(
+                    blockTimestamp
                 );
-                if (_time != blockTimestamp) {
-                    if (
-                        activeIncentive.endTimestamp > blockTimestamp && activeIncentive.startTimestamp < blockTimestamp
-                    ) {
-                        IAlgebraVirtualPool(activeIncentive.virtualPool).increaseCumulative(_time, blockTimestamp);
-                    }
+                if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
+                    activeIncentive = address(0);
+                } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
+                    cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
+                } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
+                    cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
                 }
             }
 
@@ -852,10 +842,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                         cache.totalFeeGrowthB = zeroForOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
                     }
                     // every tick cross is needed to be duplicated in a virtual pool
-                    if (cache.hasActiveIncentive) {
-                        if (activeIncentive.endTimestamp > blockTimestamp) {
-                            IAlgebraVirtualPool(activeIncentive.virtualPool).cross(step.nextTick, zeroForOne);
-                        }
+                    if (cache.incentiveStatus != IAlgebraVirtualPool.Status.NOT_EXIST) {
+                        IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroForOne);
                     }
                     int128 liquidityDelta;
                     if (zeroForOne) {
@@ -924,15 +912,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         );
 
         // the swap results should be provided to a virtual pool
-        if (cache.hasActiveIncentive) {
-            if (activeIncentive.startTimestamp <= blockTimestamp) {
-                if (activeIncentive.endTimestamp < blockTimestamp) {
-                    activeIncentive.endTimestamp = 0;
-                    activeIncentive.virtualPool = address(0);
-                } else {
-                    IAlgebraVirtualPool(activeIncentive.virtualPool).processSwap();
-                }
-            }
+        if (cache.incentiveStatus == IAlgebraVirtualPool.Status.ACTIVE) {
+            IAlgebraVirtualPool(activeIncentive).processSwap();
         }
 
         (liquidity, volumePerLiquidityInBlock) = (
@@ -1030,15 +1011,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     // @inheritdoc IAlgebraPoolPermissionedActions
-    function setIncentive(
-        address virtualPoolAddress,
-        uint32 endTimestamp,
-        uint32 startTimestamp
-    ) external override {
+    function setIncentive(address virtualPoolAddress) external override {
         require(msg.sender == IAlgebraFactory(factory).farmingAddress());
-        require(activeIncentive.endTimestamp < _blockTimestamp());
-        activeIncentive = Incentive(virtualPoolAddress, endTimestamp, startTimestamp);
+        activeIncentive = virtualPoolAddress;
 
-        emit IncentiveSet(virtualPoolAddress, endTimestamp, startTimestamp);
+        emit IncentiveSet(virtualPoolAddress);
     }
 }

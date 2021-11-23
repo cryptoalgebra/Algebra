@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import './interfaces/IAlgebraFarming.sol';
+import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 import './libraries/IncentiveId.sol';
 import './libraries/RewardMath.sol';
 import './libraries/NFTPositionInfo.sol';
@@ -128,7 +130,12 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        (, uint32 _activeEndTimestamp, ) = key.pool.activeIncentive();
+        address _incentive = key.pool.activeIncentive();
+        uint32 _activeEndTimestamp;
+        if (_incentive != address(0)) {
+            _activeEndTimestamp = IAlgebraIncentiveVirtualPool(_incentive).desiredEndTimestamp();
+        }
+
         require(
             _activeEndTimestamp < block.timestamp,
             'AlgebraFarming::createIncentive: there is already active incentive'
@@ -154,8 +161,8 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         incentives[incentiveId].totalReward += reward;
         incentives[incentiveId].bonusReward += bonusReward;
 
-        virtualPool = vdeployer.deploy(address(key.pool), address(this));
-        key.pool.setIncentive(virtualPool, uint32(key.endTime), uint32(key.startTime));
+        virtualPool = vdeployer.deploy(address(key.pool), address(this), uint32(key.startTime), uint32(key.endTime));
+        key.pool.setIncentive(virtualPool);
 
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = address(virtualPool);
@@ -187,7 +194,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     ) external override returns (bytes4) {
         require(
             msg.sender == address(nonfungiblePositionManager),
-            'AlgebraFarming::onERC721Received: not a  Algebra nft'
+            'AlgebraFarming::onERC721Received: not an Algebra nft'
         );
 
         (, , , , int24 tickLower, int24 tickUpper, , , , , ) = nonfungiblePositionManager.positions(tokenId);
@@ -269,9 +276,14 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         Deposit memory deposit = deposits[tokenId];
         Incentive memory incentive = incentives[incentiveId];
 
-        (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
-            incentive.virtualPoolAddress
-        ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+        (
+            uint160 secondsPerLiquidityInsideX128,
+            uint256 initTimestamp,
+            uint256 endTimestamp
+        ) = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).getInnerSecondsPerLiquidity(
+                deposit.tickLower,
+                deposit.tickUpper
+            );
 
         if (initTimestamp == 0) {
             initTimestamp = key.startTime;
@@ -289,7 +301,6 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
             incentive.totalLiquidity,
             secondsPerLiquidityInsideX128
         );
-
         bonusReward = RewardMath.computeRewardAmount(
             incentive.bonusReward,
             initTimestamp,
@@ -320,7 +331,10 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
 
         incentives[incentiveId].numberOfFarms++;
         (, int24 tick, , , , , , ) = pool.globalState();
-        IAlgebraVirtualPool virtualPool = IAlgebraVirtualPool(incentives[incentiveId].virtualPoolAddress);
+
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
+            incentives[incentiveId].virtualPoolAddress
+        );
         virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int256(liquidity).toInt128(), tick);
 
         _mint(msg.sender, _nextId);
@@ -378,19 +392,20 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         uint256 reward = 0;
         uint256 bonusReward = 0;
 
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
+            incentives[incentiveId].virtualPoolAddress
+        );
+
         if (block.timestamp > key.endTime) {
-            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
-                incentive.virtualPoolAddress
-            ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = virtualPool
+                .getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
 
             if (endTimestamp == 0) {
-                IAlgebraVirtualPool(incentive.virtualPoolAddress).finish(
-                    uint32(block.timestamp),
-                    uint32(key.startTime)
+                virtualPool.finish(uint32(block.timestamp), uint32(key.startTime));
+                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
+                    deposit.tickLower,
+                    deposit.tickUpper
                 );
-                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = IAlgebraVirtualPool(
-                    incentive.virtualPoolAddress
-                ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
             }
 
             reward = RewardMath.computeRewardAmount(
@@ -416,7 +431,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         } else {
             (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
             (, int24 tick, , , , , , ) = pool.globalState();
-            IAlgebraVirtualPool virtualPool = IAlgebraVirtualPool(incentives[incentiveId].virtualPoolAddress);
+
             virtualPool.applyLiquidityDeltaToPosition(
                 deposit.tickLower,
                 deposit.tickUpper,

@@ -5,34 +5,38 @@ import './libraries/TickManager.sol';
 import './libraries/TickTable.sol';
 import './libraries/LiquidityMath.sol';
 
-import './interfaces/IAlgebraVirtualPool.sol';
+import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 
-contract AlgebraVirtualPool is IAlgebraVirtualPool {
+contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     address public immutable poolAddress;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     address public immutable farmingAddress;
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override initTimestamp;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override timeOutside;
     uint160 public override globalSecondsPerLiquidityCumulative;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override prevLiquidity;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraVirtualPool
-    uint32 public override _prevTimestamp;
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public override prevTimestamp;
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     int24 public override globalTick;
+    // @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public override desiredEndTimestamp;
+    // @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public override desiredStartTimestamp;
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     mapping(int24 => TickManager.Tick) public override ticks;
     mapping(int16 => uint256) private tickTable;
 
@@ -46,15 +50,24 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
         _;
     }
 
-    constructor(address _poolAddress, address _farmingAddress) {
+    constructor(
+        address _poolAddress,
+        address _farmingAddress,
+        uint32 _desiredStartTimestamp,
+        uint32 _desiredEndTimestamp
+    ) {
         poolAddress = _poolAddress;
         farmingAddress = _farmingAddress;
+        desiredStartTimestamp = _desiredStartTimestamp;
+        desiredEndTimestamp = _desiredEndTimestamp;
+
+        prevTimestamp = _desiredStartTimestamp;
     }
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     function finish(uint32 _endTimestamp, uint32 startTime) external override onlyFarming {
         uint32 currentTimestamp = _endTimestamp;
-        uint32 previousTimestamp = _prevTimestamp;
+        uint32 previousTimestamp = prevTimestamp;
 
         if (initTimestamp == 0) {
             initTimestamp = startTime;
@@ -72,7 +85,7 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
         endTimestamp = _endTimestamp;
     }
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external
         view
@@ -107,7 +120,7 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
         }
     }
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     function cross(int24 nextTick, bool zeroForOne) external override onlyPool {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
@@ -118,27 +131,36 @@ contract AlgebraVirtualPool is IAlgebraVirtualPool {
         globalTick = zeroForOne ? nextTick - 1 : nextTick;
     }
 
-    // @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 previousTimestamp, uint32 currentTimestamp) external override onlyPool {
+    // @inheritdoc IAlgebraIncentiveVirtualPool
+    function increaseCumulative(uint32 currentTimestamp) external override onlyPool returns (Status) {
+        if (desiredStartTimestamp >= currentTimestamp) {
+            return Status.NOT_STARTED;
+        }
+        if (desiredEndTimestamp <= currentTimestamp) {
+            return Status.NOT_EXIST;
+        }
+
         if (initTimestamp == 0) {
             initTimestamp = currentTimestamp;
             prevLiquidity = currentLiquidity;
         }
-        previousTimestamp = previousTimestamp < initTimestamp ? initTimestamp : previousTimestamp;
+        uint32 previousTimestamp = prevTimestamp < initTimestamp ? initTimestamp : prevTimestamp;
         if (prevLiquidity > 0)
             globalSecondsPerLiquidityCumulative =
                 globalSecondsPerLiquidityCumulative +
                 ((uint160(currentTimestamp - previousTimestamp) << 128) / (prevLiquidity));
         else timeOutside += currentTimestamp - previousTimestamp;
-        _prevTimestamp = currentTimestamp;
+        prevTimestamp = currentTimestamp;
+
+        return Status.ACTIVE;
     }
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     function processSwap() external override onlyPool {
         prevLiquidity = currentLiquidity;
     }
 
-    // @inheritdoc IAlgebraVirtualPool
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     function applyLiquidityDeltaToPosition(
         int24 bottomTick,
         int24 topTick,
