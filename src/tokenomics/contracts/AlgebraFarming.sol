@@ -141,7 +141,6 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
             'AlgebraFarming::createIncentive: there is already active incentive'
         );
         require(reward > 0, 'AlgebraFarming::createIncentive: reward must be positive');
-        require(bonusReward > 0, 'AlgebraFarming::createIncentive: bonusReward must be positive');
         require(
             block.timestamp <= key.startTime,
             'AlgebraFarming::createIncentive: start time must be now or in the future'
@@ -159,6 +158,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         incentives[incentiveId].totalReward += reward;
+
         incentives[incentiveId].bonusReward += bonusReward;
 
         virtualPool = vdeployer.deploy(address(key.pool), address(this), uint32(key.startTime), uint32(key.endTime));
@@ -168,6 +168,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         incentives[incentiveId].virtualPoolAddress = address(virtualPool);
 
         TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
+
         TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
 
         emit IncentiveCreated(
@@ -417,17 +418,20 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
                 secondsPerLiquidityInsideX128
             );
 
-            bonusReward = RewardMath.computeRewardAmount(
-                incentive.bonusReward,
-                initTimestamp,
-                endTimestamp,
-                liquidity,
-                incentive.totalLiquidity,
-                secondsPerLiquidityInsideX128
-            );
-
             rewards[key.rewardToken][deposit.owner] += reward;
-            rewards[key.bonusRewardToken][deposit.owner] += bonusReward;
+
+            if (incentive.bonusReward != 0) {
+                bonusReward = RewardMath.computeRewardAmount(
+                    incentive.bonusReward,
+                    initTimestamp,
+                    endTimestamp,
+                    liquidity,
+                    incentive.totalLiquidity,
+                    secondsPerLiquidityInsideX128
+                );
+
+                rewards[key.bonusRewardToken][deposit.owner] += bonusReward;
+            }
         } else {
             (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
             (, int24 tick, , , , , , ) = pool.globalState();
