@@ -361,7 +361,10 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive memory incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive
-        require(block.timestamp > key.endTime, 'AlgebraFarming::exitFarming: cannot exitFarming before end time');
+        require(
+            block.timestamp > key.endTime || block.timestamp < key.startTime,
+            'AlgebraFarming::exitFarming: cannot exitFarming before end time'
+        );
 
         uint128 liquidity = farms[tokenId][incentiveId];
 
@@ -372,40 +375,58 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
 
         incentives[incentiveId].numberOfFarms--;
 
-        (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
-            incentive.virtualPoolAddress
-        ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+        uint256 reward = 0;
+        uint256 bonusReward = 0;
 
-        if (endTimestamp == 0) {
-            IAlgebraVirtualPool(incentive.virtualPoolAddress).finish(uint32(block.timestamp), uint32(key.startTime));
-            (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = IAlgebraVirtualPool(
+        if (block.timestamp > key.endTime) {
+            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = IAlgebraVirtualPool(
                 incentive.virtualPoolAddress
             ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+
+            if (endTimestamp == 0) {
+                IAlgebraVirtualPool(incentive.virtualPoolAddress).finish(
+                    uint32(block.timestamp),
+                    uint32(key.startTime)
+                );
+                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = IAlgebraVirtualPool(
+                    incentive.virtualPoolAddress
+                ).getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
+            }
+
+            reward = RewardMath.computeRewardAmount(
+                incentive.totalReward,
+                initTimestamp,
+                endTimestamp,
+                liquidity,
+                incentive.totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+
+            bonusReward = RewardMath.computeRewardAmount(
+                incentive.bonusReward,
+                initTimestamp,
+                endTimestamp,
+                liquidity,
+                incentive.totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+
+            rewards[key.rewardToken][deposit.owner] += reward;
+            rewards[key.bonusRewardToken][deposit.owner] += bonusReward;
+        } else {
+            (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
+            (, int24 tick, , , , , , ) = pool.globalState();
+            IAlgebraVirtualPool virtualPool = IAlgebraVirtualPool(incentives[incentiveId].virtualPoolAddress);
+            virtualPool.applyLiquidityDeltaToPosition(
+                deposit.tickLower,
+                deposit.tickUpper,
+                -int256(liquidity).toInt128(),
+                tick
+            );
         }
-
-        uint256 reward = RewardMath.computeRewardAmount(
-            incentive.totalReward,
-            initTimestamp,
-            endTimestamp,
-            liquidity,
-            incentive.totalLiquidity,
-            secondsPerLiquidityInsideX128
-        );
-
-        uint256 bonusReward = RewardMath.computeRewardAmount(
-            incentive.bonusReward,
-            initTimestamp,
-            endTimestamp,
-            liquidity,
-            incentive.totalLiquidity,
-            secondsPerLiquidityInsideX128
-        );
 
         burn(deposit.L2TokenId);
         deposits[tokenId].L2TokenId = 0;
-
-        rewards[key.rewardToken][deposit.owner] += reward;
-        rewards[key.bonusRewardToken][deposit.owner] += bonusReward;
 
         delete farms[tokenId][incentiveId];
 

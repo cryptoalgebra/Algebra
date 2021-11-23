@@ -559,7 +559,7 @@ describe('unit/Farms', () => {
             ...timestamps,
           },
           tokenId
-        )).to.be.revertedWith('AlgebraFarming::exitFarming: cannot exitFarming before end time')
+        )).to.be.emit(context.farming, 'FarmEnded')
       })
     })
 

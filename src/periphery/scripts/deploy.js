@@ -7,7 +7,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
   // // WNativeTokenAddress  
-  const WNativeTokenAddress = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+  const WNativeTokenAddress = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens')
   const TickLens = await TickLensFactory.deploy()
@@ -19,7 +19,7 @@ async function main() {
   // arg1 factory address
   // arg2 wnative address
   const QuoterFactory = await hre.ethers.getContractFactory("Quoter");
-  const Quoter = await QuoterFactory.deploy(factory, WNativeTokenAddress, poolDeployer);
+  const Quoter = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
 
   await Quoter.deployed()
 

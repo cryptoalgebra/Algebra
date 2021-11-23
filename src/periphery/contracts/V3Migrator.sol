@@ -81,6 +81,7 @@ contract V3Migrator is IV3Migrator, PeripheryImmutableState, PoolInitializer, Mu
                 TransferHelper.safeTransfer(params.token0, msg.sender, refund0);
             }
         }
+
         if (amount1V3 < amount1V2) {
             if (amount1V3 < amount1V2ToMigrate) {
                 TransferHelper.safeApprove(params.token1, nonfungiblePositionManager, 0);

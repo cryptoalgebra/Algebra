@@ -1348,6 +1348,104 @@ describe('AlgebraFarming', async ()=>{
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
 
 	    })
+
+	    it.only('exitFarming before startTime', async () => {
+			const { helpers, context, createIncentiveResult } = subject
+			type Position = {
+				lp: Wallet
+				amounts: [BigNumber, BigNumber]
+				ticks: [number, number]
+			}
+
+			let midpoint = await getCurrentTick(context.poolObj.connect(actors.lpUser0()))
+
+		    const positions: Array<Position> = [
+				{
+					lp: actors.lpUser0(),
+					amounts: [BN('252473' + '0'.repeat(13)), BN('552446' + '0'.repeat(13))],
+					ticks: [-240, 240],
+				},
+				{
+					lp: actors.lpUser1(),
+					amounts: [BN('441204' + '0'.repeat(13)), BN('799696' + '0'.repeat(13))],
+					ticks: [-480, 480],
+				},
+			]
+
+		    const tokensToFarm: [TestERC20, TestERC20] = [context.tokens[0], context.tokens[1]]
+
+			const farms = await Promise.all(
+				positions.map((p) =>
+					helpers.mintDepositFarmFlow({
+						lp: p.lp,
+						tokensToFarm,
+						ticks: p.ticks,
+						amountsToFarm: p.amounts,
+						createIncentiveResult,
+					})
+				)
+			)
+
+			await context.farming.connect(actors.lpUser1()).exitFarming(
+			    {
+				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
+				    pool: context.poolObj.address,
+				    startTime: createIncentiveResult.startTime,
+				    endTime: createIncentiveResult.endTime,
+				    refundee: createIncentiveResult.refundee
+			    },
+			    2
+			);
+
+		    await Time.set(createIncentiveResult.startTime + 1)
+
+		    const trader = actors.traderUser0()
+		    await helpers.makeTickGoFlow({
+				trader,
+				direction: 'up',
+				desiredValue: midpoint + 10,
+			})
+
+
+		    await Time.set(createIncentiveResult.startTime + duration / 4)
+
+		    await helpers.makeTickGoFlow({
+				trader,
+				direction: 'up',
+				desiredValue: midpoint + 300,
+			})
+
+
+		    await Time.set(createIncentiveResult.endTime + 1)
+
+			await context.farming.connect(actors.lpUser0()).exitFarming(
+			    {
+				    rewardToken: context.rewardToken.address,
+				    bonusRewardToken: context.bonusRewardToken.address,
+				    pool: context.poolObj.address,
+				    startTime: createIncentiveResult.startTime,
+				    endTime: createIncentiveResult.endTime,
+				    refundee: createIncentiveResult.refundee
+			    },
+			    1
+			);
+
+
+			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
+			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+
+
+			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
+			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			
+			console.log(reward2)
+			console.log(reward1)
+
+			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
+			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
+
+	    })
     })
 
 
