@@ -92,8 +92,22 @@ interface IAlgebraEternalFarming is IIncentiveKey, IERC721Receiver, IERC721Permi
     function createIncentive(
         IncentiveKey memory key,
         uint256 reward,
-        uint256 bonusReward
+        uint256 bonusReward,
+        uint128 rewardRate,
+        uint128 bonusRewardRate
     ) external returns (address virtualPool);
+
+    function addRewards(
+        IncentiveKey memory key,
+        uint256 rewardAmount,
+        uint256 bonusRewardAmount
+    ) external;
+
+    function setRates(
+        IncentiveKey memory key,
+        uint128 rewardRate,
+        uint128 bonusRewardRate
+    ) external;
 
     /// @notice Withdraws a Algebra LP token `tokenId` from this contract to the recipient `to`
     /// @param tokenId The unique identifier of an Algebra LP token
@@ -109,6 +123,8 @@ interface IAlgebraEternalFarming is IIncentiveKey, IERC721Receiver, IERC721Permi
     /// @param key The key of the incentive for which to farm the NFT
     /// @param tokenId The ID of the token to farm
     function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+
+    function collectRewards(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice exitFarmings a Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT

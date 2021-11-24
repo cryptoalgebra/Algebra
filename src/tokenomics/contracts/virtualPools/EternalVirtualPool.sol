@@ -35,11 +35,11 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     mapping(int24 => TickManager.Tick) public override ticks;
     mapping(int16 => uint256) private tickTable;
 
-    uint128 public rewardRate0 = 10;
-    uint128 public rewardRate1 = 50;
+    uint128 public rewardRate0;
+    uint128 public rewardRate1;
 
-    uint256 public rewardReserve0 = 10000;
-    uint256 public rewardReserve1 = 200;
+    uint256 public rewardReserve0;
+    uint256 public rewardReserve1;
 
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
@@ -58,6 +58,21 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
         poolAddress = _poolAddress;
         farmingAddress = _farmingAddress;
         prevTimestamp = uint32(block.timestamp);
+    }
+
+    function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+        if (token0Amount > 0) {
+            rewardReserve0 += token0Amount;
+        }
+
+        if (token1Amount > 0) {
+            rewardReserve1 += token1Amount;
+        }
+    }
+
+    function setRates(uint128 rate0, uint128 rate1) external override onlyFarming {
+        rewardRate0 = rate0;
+        rewardRate1 = rate1;
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool

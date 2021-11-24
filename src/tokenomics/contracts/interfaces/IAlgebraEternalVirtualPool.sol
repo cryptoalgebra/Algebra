@@ -37,6 +37,10 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
             bool initialized
         );
 
+    function setRates(uint128 rate0, uint128 rate1) external;
+
+    function addRewards(uint256 token0Amount, uint256 token1Amount) external;
+
     function getInnerRewardsGrowth(int24 bottomTick, int24 topTick)
         external
         view
