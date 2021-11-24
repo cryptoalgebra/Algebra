@@ -118,17 +118,34 @@ export class HelperCommands {
     await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
     await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
 
-    const txResult = await this.farming.connect(incentiveCreator).createIncentive(
-      {
-        pool: params.poolAddress,
-        rewardToken: params.rewardToken.address,
-        bonusRewardToken: params.bonusRewardToken.address,
-        ...times,
-        refundee: params.refundee || incentiveCreator.address,
-      },
-      params.totalReward,
-      params.bonusReward
-    )
+    let txResult;
+    if (params.eternal) {
+      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createIncentive(
+        {
+          pool: params.poolAddress,
+          rewardToken: params.rewardToken.address,
+          bonusRewardToken: params.bonusRewardToken.address,
+          ...times,
+          refundee: params.refundee || incentiveCreator.address,
+        },
+        params.totalReward,
+        params.bonusReward,
+        params.rewardRate || 10,
+        params.bonusRewardRate || 10
+      )
+    } else {
+      txResult = await (this.farming as AlgebraIncentiveFarming).connect(incentiveCreator).createIncentive(
+        {
+          pool: params.poolAddress,
+          rewardToken: params.rewardToken.address,
+          bonusRewardToken: params.bonusRewardToken.address,
+          ...times,
+          refundee: params.refundee || incentiveCreator.address,
+        },
+        params.totalReward,
+        params.bonusReward
+      )
+    }
 
     // @ts-ignore
     const virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']

@@ -30,8 +30,8 @@ describe('unit/EternalFarms', () => {
   const incentiveCreator = actors.incentiveCreator()
   const lpUser0 = actors.lpUser0()
   const amountDesired = BNe18(10)
-  const totalReward = BNe18(100)
-  const bonusReward = BNe18(100)
+  const totalReward = BigNumber.from('10000');
+  const bonusReward = BigNumber.from('200');
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
@@ -94,6 +94,9 @@ describe('unit/EternalFarms', () => {
         bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10'),
+        bonusRewardRate: BigNumber.from('50')
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
@@ -299,6 +302,9 @@ describe('unit/EternalFarms', () => {
           bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
+          eternal: true,
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
         })
       )
 
@@ -371,6 +377,9 @@ describe('unit/EternalFarms', () => {
         bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10'),
+        bonusRewardRate: BigNumber.from('50')
       })
       //
       // await Time.setAndMine(timestamps.startTime + 1)
@@ -495,6 +504,9 @@ describe('unit/EternalFarms', () => {
           bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
+          eternal: true,
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
         })
 
         await erc20Helper.ensureBalancesAndApprovals(
@@ -562,6 +574,9 @@ describe('unit/EternalFarms', () => {
           bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
+          eternal: true,
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
         })
 
         await erc20Helper.ensureBalancesAndApprovals(
@@ -709,6 +724,9 @@ describe('unit/EternalFarms', () => {
         bonusReward,
         poolAddress: context.poolObj.address,
         ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10'),
+        bonusRewardRate: BigNumber.from('50')
       })
       incentiveId = await helpers.getIncentiveId(incentive)
       // await Time.setAndMine(timestamps.startTime + 1)

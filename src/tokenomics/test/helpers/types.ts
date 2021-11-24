@@ -15,6 +15,9 @@ export module HelperTypes {
       totalReward: BigNumber
       bonusReward: BigNumber
       refundee?: string
+      eternal? : boolean
+      rewardRate?: BigNumber,
+      bonusRewardRate?: BigNumber
     }
     export type Result = {
       poolAddress: string
