@@ -2,7 +2,7 @@
 
 pragma solidity =0.7.6;
 
-import "./libraries/FreezableToken.sol";
+import "./base/FreezableToken.sol";
 
 // This contract handles swapping to and from xALGB, Algebra's staking token.
 contract AlgebraTokenStaking is FreezableToken{
