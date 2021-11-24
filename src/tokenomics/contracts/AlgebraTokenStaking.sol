@@ -8,10 +8,18 @@ import "./libraries/FreezableToken.sol";
 contract AlgebraTokenStaking is FreezableToken{
     using SafeMath for uint256;
     IERC20Minimal public ALGB;
+    address owner;
+    uint256 freezeTime = 1800;
+
+    modifier onlyOwner(){
+        require(msg.sender == owner, 'only owner can call this');
+        _;
+    }
 
     // Define the ALGB token contract
     constructor(IERC20Minimal _ALGB) ERC20("Algebra Staking Token", "xALGB"){
         ALGB = _ALGB;
+        owner = msg.sender;
     }
 
    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
@@ -30,12 +38,12 @@ contract AlgebraTokenStaking is FreezableToken{
         uint256 totalShares = totalSupply();
         // If no xALGB exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalALGB == 0) {
-            mintAndFreeze(msg.sender, _amount, uint64(block.timestamp + 1200));
+            mintAndFreeze(msg.sender, _amount, uint64(block.timestamp + freezeTime));
         }
         // Calculate and mint the amount of xALGB the ALGB is worth. The ratio will change overtime, as xALGB is burned/minted and ALGB deposited + gained from fees / withdrawn.
         else {
             uint256 what = _amount.mul(totalShares).div(totalALGB);
-            mintAndFreeze(msg.sender, what, uint64(block.timestamp + 1200));
+            mintAndFreeze(msg.sender, what, uint64(block.timestamp + freezeTime));
         }
         // Lock the ALGB in the contract
         ALGB.transferFrom(msg.sender, address(this), _amount);
@@ -50,5 +58,10 @@ contract AlgebraTokenStaking is FreezableToken{
         uint256 what = _share.mul(ALGB.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
         ALGB.transfer(msg.sender, what);
+    }
+
+    function setFreezeTime(uint256 _freezeTime) external onlyOwner{
+        require(_freezeTime < 3600, 'freezeTime is to big');
+        freezeTime = _freezeTime;
     }
 }

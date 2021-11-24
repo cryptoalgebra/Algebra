@@ -43,7 +43,7 @@ describe("AlgebraTokenStaking", function () {
         "ERC20: transfer amount exceeds balance"
     )
 
-    await network.provider.send("evm_increaseTime", [1200])
+    await network.provider.send("evm_increaseTime", [1800])
     await network.provider.send("evm_mine")
 
     await this.AlgebraStaking.transfer(this.bob.address, "1")
@@ -70,7 +70,7 @@ describe("AlgebraTokenStaking", function () {
     await expect(this.AlgebraStaking.connect(this.bob).leave("5", { from: this.bob.address })).to.be.revertedWith(
         "ERC20: burn amount exceeds balance"
     )
-    await network.provider.send("evm_increaseTime", [1200])
+    await network.provider.send("evm_increaseTime", [1800])
     await network.provider.send("evm_mine")
     await this.AlgebraStaking.connect(this.bob).leave("5", { from: this.bob.address })
     expect(await this.AlgebraStaking.balanceOf(this.alice.address)).to.equal("26")
