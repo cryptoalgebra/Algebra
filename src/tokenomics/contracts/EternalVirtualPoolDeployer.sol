@@ -2,9 +2,9 @@
 pragma solidity =0.7.6;
 
 import './interfaces/IVirtualPoolDeployer.sol';
-import './AlgebraVirtualPool.sol';
+import './virtualPools/EternalVirtualPool.sol';
 
-contract VirtualPoolDeployer is IVirtualPoolDeployer {
+contract EternalVirtualPoolDeployer is IVirtualPoolDeployer {
     address private farming;
     address private owner;
 
@@ -22,21 +22,19 @@ contract VirtualPoolDeployer is IVirtualPoolDeployer {
         owner = msg.sender;
     }
 
-    /// @inheritdoc IVirtualPoolDeployer
+    // @inheritdoc IVirtualPoolDeployer
     function setFarming(address _farming) external override onlyOwner {
-        emit FarmingAddressChanged(farming, _farming);
+        require(farming == address(0));
         farming = _farming;
     }
 
-    /// @inheritdoc IVirtualPoolDeployer
+    // @inheritdoc IVirtualPoolDeployer
     function deploy(
         address poolAddress,
         address _farming,
         uint32 _desiredStartTimestamp,
         uint32 _desiredEndTimestamp
     ) external override onlyFarming returns (address virtualPool) {
-        virtualPool = address(
-            new AlgebraVirtualPool(poolAddress, _farming, _desiredStartTimestamp, _desiredEndTimestamp)
-        );
+        virtualPool = address(new EternalVirtualPool(poolAddress, _farming));
     }
 }
