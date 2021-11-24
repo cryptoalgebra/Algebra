@@ -17,11 +17,12 @@ import _ from 'lodash'
 import {
   TestERC20,
   INonfungiblePositionManager,
-  AlgebraFarming,
+  AlgebraIncentiveFarming,
+  AlgebraEternalFarming,
   IAlgebraPool,
   TestIncentiveId,
 } from '../../typechain'
-import abi from '../../artifacts/contracts/AlgebraVirtualPool.sol/AlgebraVirtualPool.json';
+import abi from '../../artifacts/contracts/virtualPools/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition } from '../shared/fixtures'
@@ -39,7 +40,7 @@ import { TestContext } from '../types'
 export class HelperCommands {
   actors: ActorFixture
   provider: MockProvider
-  farming: AlgebraFarming
+  farming: AlgebraIncentiveFarming | AlgebraEternalFarming
   nft: INonfungiblePositionManager
   router: ISwapRouter
   pool: IAlgebraPool
@@ -60,7 +61,7 @@ export class HelperCommands {
     testIncentiveId,
   }: {
     provider: MockProvider
-    farming: AlgebraFarming
+    farming: AlgebraIncentiveFarming | AlgebraEternalFarming
     nft: INonfungiblePositionManager
     router: ISwapRouter
     pool: IAlgebraPool

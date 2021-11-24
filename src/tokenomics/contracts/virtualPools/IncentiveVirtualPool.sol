@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import './libraries/TickManager.sol';
-import './libraries/TickTable.sol';
-import './libraries/LiquidityMath.sol';
+import '../libraries/TickManager.sol';
+import '../libraries/TickTable.sol';
+import '../libraries/LiquidityMath.sol';
 
-import './interfaces/IAlgebraIncentiveVirtualPool.sol';
+import '../interfaces/IAlgebraIncentiveVirtualPool.sol';
 
-contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
+contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 

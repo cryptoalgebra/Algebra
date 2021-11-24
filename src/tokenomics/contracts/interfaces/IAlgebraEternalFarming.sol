@@ -10,7 +10,6 @@ import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
 import './IVirtualPoolDeployer.sol';
 import './IAlgebraIncentiveVirtualPool.sol';
-
 import './IIncentiveKey.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
@@ -19,7 +18,7 @@ import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMulticall {
+interface IAlgebraEternalFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMulticall {
     /// @notice The pool deployer with which this farming contract is compatible
     function deployer() external view returns (IAlgebraPoolDeployer);
 
@@ -68,7 +67,14 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
-    function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity);
+    function farms(uint256 tokenId, bytes32 incentiveId)
+        external
+        view
+        returns (
+            uint128 liquidity,
+            uint256 innerRewardGrowth0,
+            uint256 innerRewardGrowth1
+        );
 
     function setIncentiveMaker(address _incentiveMaker) external;
 
@@ -186,11 +192,6 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
         uint256 reward,
         uint256 bonusReward
     );
-
-    /// @notice Emitted when the incentive maker is changed
-    /// @param incentiveMaker The incentive maker address before the address was changed
-    /// @param _incentiveMaker The factorincentive maker address after the address was changed
-    event IncentiveMakerChanged(address indexed incentiveMaker, address indexed _incentiveMaker);
 
     /// @notice Event emitted when a reward token has been claimed
     /// @param to The address where claimed rewards were sent to

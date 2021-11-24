@@ -5,7 +5,8 @@ import { ethers, waffle } from 'hardhat'
 import AlgebraPool from 'algebra/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
 import AlgebraFactoryJson from 'algebra/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
 import AlgebraPoolDeployerJson from 'algebra/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
-import VirtualPoolDeployerJson from '../../artifacts/contracts/VirtualPoolDeployer.sol/VirtualPoolDeployer.json'
+import VirtualPoolDeployerJson from '../../artifacts/contracts/IncentiveVirtualPoolDeployer.sol/IncentiveVirtualPoolDeployer.json'
+import EternalVirtualPoolDeployerJson from '../../artifacts/contracts/EternalVirtualPoolDeployer.sol/EternalVirtualPoolDeployer.json'
 import NFTDescriptorJson from 'algebra-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json'
 import NonfungiblePositionManagerJson from 'algebra-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 import NonfungibleTokenPositionDescriptor from 'algebra-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json'
@@ -14,7 +15,9 @@ import WNativeToken from './external/WNativeToken.json'
 import { linkLibraries } from './linkLibraries'
 import { ISwapRouter,IWNativeToken,NFTDescriptor } from 'algebra-periphery/typechain'
 import {
-  AlgebraFarming,
+  AlgebraIncentiveFarming,
+  AlgebraEternalFarming,
+  TestERC20,
   IVirtualPoolDeployer,
   INonfungiblePositionManager,
   IAlgebraFactory,
@@ -95,6 +98,15 @@ const VirtualPoolDeployerFixture: Fixture<IVirtualPoolDeployer> = async ([wallet
   return ((await waffle.deployContract(wallet, {
     bytecode: VirtualPoolDeployerJson.bytecode,
     abi: VirtualPoolDeployerJson.abi,
+  })) as unknown) as IVirtualPoolDeployer
+
+}
+
+const EternalVirtualPoolDeployerFixture: Fixture<IVirtualPoolDeployer> = async ([wallet]) => {
+
+  return ((await waffle.deployContract(wallet, {
+    bytecode: EternalVirtualPoolDeployerJson.bytecode,
+    abi: EternalVirtualPoolDeployerJson.abi,
   })) as unknown) as IVirtualPoolDeployer
 
 }
@@ -245,7 +257,7 @@ export type AlgebraFixtureType = {
   poolObj: IAlgebraPool
   router: ISwapRouter
   vdeployer: IVirtualPoolDeployer
-  farming: AlgebraFarming
+  farming: AlgebraIncentiveFarming
   testIncentiveId: TestIncentiveId
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
@@ -262,9 +274,84 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
 
   const incentiveCreator = new ActorFixture(wallets, provider).incentiveCreator()
 
-  const farmingFactory = await ethers.getContractFactory('AlgebraFarming', signer)
+  const farmingFactory = await ethers.getContractFactory('AlgebraIncentiveFarming', signer)
 
-  const farming = (await farmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraFarming
+  const farming = (await farmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraIncentiveFarming
+
+  await factory.setFarmingAddress(farming.address)
+
+  await vdeployer.setFarming(farming.address)
+  await farming.setIncentiveMaker(incentiveCreator.address)
+  const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
+  const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
+
+  for (const token of tokens) {
+    await token.approve(nft.address, constants.MaxUint256)
+  }
+
+  const fee = FeeAmount.MEDIUM
+
+  await nft.createAndInitializePoolIfNecessary(tokens[0].address ,tokens[1].address, encodePriceSqrt(1, 1))
+
+  await nft.createAndInitializePoolIfNecessary(tokens[1].address, tokens[2].address, encodePriceSqrt(1, 1))
+
+  const pool01 = await factory.poolByPair(tokens[0].address, tokens[1].address)
+
+  const pool12 = await factory.poolByPair(tokens[1].address, tokens[2].address)
+
+  const poolObj = poolFactory.attach(pool01) as IAlgebraPool
+
+  return {
+    nft,
+    router,
+    tokens,
+    farming,
+    testIncentiveId,
+    deployer,
+    factory,
+    pool01,
+    pool12,
+    fee,
+    poolObj,
+    token0: tokens[0],
+    token1: tokens[1],
+    rewardToken: tokens[2],
+    bonusRewardToken: tokens[1],
+    vdeployer
+  }
+}
+
+export type EternalAlgebraFixtureType = {
+  deployer: IAlgebraPoolDeployer
+  fee: FeeAmount
+  nft: INonfungiblePositionManager
+  pool01: string
+  pool12: string
+  factory: IAlgebraFactory
+  poolObj: IAlgebraPool
+  router: ISwapRouter
+  vdeployer: IVirtualPoolDeployer
+  farming: AlgebraEternalFarming
+  testIncentiveId: TestIncentiveId
+  tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
+  token0: TestERC20
+  token1: TestERC20
+  rewardToken: TestERC20
+  bonusRewardToken: TestERC20
+}
+
+export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (wallets, provider) => {
+  const { tokens, nft, factory, deployer, router } = await algebraFactoryFixture(wallets, provider)
+
+  const vdeployer = await EternalVirtualPoolDeployerFixture(wallets, provider)
+
+  const signer = new ActorFixture(wallets, provider).farmingDeployer()
+
+  const incentiveCreator = new ActorFixture(wallets, provider).incentiveCreator()
+
+  const farmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
+
+  const farming = (await farmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
 
   await factory.setFarmingAddress(farming.address)
 
