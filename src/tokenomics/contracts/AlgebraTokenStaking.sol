@@ -31,7 +31,7 @@ contract AlgebraTokenStaking is FreezableToken{
 
     // Enter the bar. Pay some ALGBSs. Earn some shares.
     // Locks ALGB and mints xALGB
-    function enter(uint256 _amount) public {
+    function enter(uint256 _amount) external {
         // Gets the amount of ALGB locked in the contract
         uint256 totalALGB = ALGB.balanceOf(address(this));
         // Gets the amount of xALGB in existence
@@ -51,7 +51,7 @@ contract AlgebraTokenStaking is FreezableToken{
 
     // Leave the bar. Claim back your ALGBs.
     // Unlocks the staked + gained ALGB and burns xALGB
-    function leave(uint256 _share) public {
+    function leave(uint256 _share) external {
         // Gets the amount of xALGB in existence
         uint256 totalShares = totalSupply();
         // Calculates the amount of ALGB the xALGB is worth
@@ -60,8 +60,18 @@ contract AlgebraTokenStaking is FreezableToken{
         ALGB.transfer(msg.sender, what);
     }
 
+    function currentBalance(uint256 _amount) external view returns(uint256){
+        uint256 totalShares = totalSupply();
+        return _amount.mul(ALGB.balanceOf(address(this))).div(totalShares);
+    }
+
     function setFreezeTime(uint256 _freezeTime) external onlyOwner{
-        require(_freezeTime < 3600, 'freezeTime is to big');
+        require(_freezeTime <= 3600, 'freezeTime is to big');
         freezeTime = _freezeTime;
+    }
+
+    function transferOwner(address _newOwner) external onlyOwner{
+        require(_newOwner != address(0), 'cannot be 0 address');
+        owner = _newOwner;
     }
 }

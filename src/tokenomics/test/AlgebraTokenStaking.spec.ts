@@ -20,6 +20,16 @@ describe("AlgebraTokenStaking", function () {
     this.ALGB.mint(this.carol.address, "100")
   })
 
+  it("First staker should claim all provided before rewards", async function() {
+    await this.ALGB.connect(this.carol).approve(this.AlgebraStaking.address, "20", { from: this.carol.address })
+    await this.ALGB.connect(this.carol).transfer(this.AlgebraStaking.address, "20", { from: this.carol.address })
+    await this.ALGB.approve(this.AlgebraStaking.address, "100")
+    await this.AlgebraStaking.enter("100")
+    await network.provider.send("evm_increaseTime", [1800])
+    await network.provider.send("evm_mine")
+    expect((await this.AlgebraStaking.currentBalance("100")).toString()).to.be.eq('120')
+  })
+
   it("should not allow enter if not enough approve", async function () {
     await expect(this.AlgebraStaking.enter("100")).to.be.revertedWith("allowance insufficient")
     await this.ALGB.approve(this.AlgebraStaking.address, "50")
