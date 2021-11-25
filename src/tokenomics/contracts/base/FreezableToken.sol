@@ -37,23 +37,11 @@ abstract contract FreezableToken is ERC20{
     }
 
     /**
-     * @dev gets freezing count
-     * @param _addr Address of freeze tokens owner.
-     */
-    function freezingCount(address _addr) public view returns (uint count) {
-        uint64 release = chains[toKey(_addr, 0)];
-        while (release != 0) {
-            count++;
-            release = chains[toKey(_addr, release)];
-        }
-    }
-
-    /**
      * @dev gets freezing end date and freezing balance for the freezing portion specified by index.
      * @param _addr Address of freeze tokens owner.
      * @param _index Freezing portion index. It ordered by release date descending.
      */
-    function getFreezing(address _addr, uint _index) public view returns (uint64 _release, uint _balance) {
+    function getFreezing(address _addr, uint _index) internal view returns (uint64 _release, uint _balance) {
         for (uint i = 0; i < _index + 1; i++) {
             _release = chains[toKey(_addr, _release)];
             if (_release == 0) {
@@ -64,32 +52,9 @@ abstract contract FreezableToken is ERC20{
     }
 
     /**
-     * @dev freeze your tokens to the specified address.
-     *      Be careful, gas usage is not deterministic,
-     *      and depends on how many freezes _to address already has.
-     * @param _to Address to which token will be freeze.
-     * @param _amount Amount of token to freeze.
-     * @param _until Release date, must be in future.
-     */
-    function freezeTo(address _to, uint _amount, uint64 _until) public {
-        require(_to != address(0));
-        require(_amount <= _balances[msg.sender]);
-
-        _balances[msg.sender] = _balances[msg.sender].sub(_amount);
-
-        bytes32 currentKey = toKey(_to, _until);
-        freezings[currentKey] = freezings[currentKey].add(_amount);
-        freezingBalance[_to] = freezingBalance[_to].add(_amount);
-
-        freeze(_to, _until);
-        emit Transfer(msg.sender, _to, _amount);
-        emit Freezed(_to, _until, _amount);
-    }
-
-    /**
      * @dev release first available freezing tokens.
      */
-    function releaseOnce(address account) public {
+    function releaseOnce(address account) internal {
         bytes32 headKey = toKey(account, 0);
         uint64 head = chains[headKey];
         require(head != 0);
@@ -117,7 +82,7 @@ abstract contract FreezableToken is ERC20{
      * @dev release all available for release freezing tokens. Gas usage is not deterministic!
      * @return tokens how many tokens was released
      */
-    function releaseAll(address account) public returns (uint256 tokens) {
+    function releaseAll(address account) internal returns (uint256 tokens) {
         uint256 release;
         uint256 balance;
         (release, balance) = getFreezing(account, 0);

@@ -7,9 +7,10 @@ import "./base/FreezableToken.sol";
 // This contract handles swapping to and from xALGB, Algebra's staking token.
 contract AlgebraTokenStaking is FreezableToken{
     using SafeMath for uint256;
+
+    uint256 public freezeTime = 1800;
     IERC20Minimal public ALGB;
     address owner;
-    uint256 freezeTime = 1800;
 
     modifier onlyOwner(){
         require(msg.sender == owner, 'only owner can call this');
