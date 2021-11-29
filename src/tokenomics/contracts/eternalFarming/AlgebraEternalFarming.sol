@@ -183,7 +183,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, ERC721Permit, Multical
         uint256 bonusRewardAmount
     ) external override {
         bytes32 incentiveId = IncentiveId.compute(key);
-        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
+        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::addRewards: non-existent incentive');
 
         if (rewardAmount > 0) {
             uint256 balanceBefore = key.rewardToken.balanceOf(address(this));
