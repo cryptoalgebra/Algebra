@@ -22,13 +22,13 @@ contract MockTimeAlgebraPoolDeployer {
         AdaptiveFee.Configuration(
             3000 - 500, // alpha1
             10000 - 3000, // alpha2
-            150, // beta1
+            180, // beta1
             1500, // beta2
             30, // gamma1
             100, // gamma2
-            30, // volumeBeta
+            0, // volumeBeta
             10, // volumeGamma
-            Constants.BASE_FEE
+            Constants.BASE_FEE // baseFee
         );
 
     function deployMock(
