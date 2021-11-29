@@ -74,6 +74,18 @@ interface IDataStorageOperator {
         uint128 volumePerLiquidity
     ) external returns (uint16 indexUpdated);
 
+    function changeFeeConfiguration(
+        uint32 alpha1,
+        uint32 alpha2,
+        uint32 beta1,
+        uint32 beta2,
+        uint16 gamma1,
+        uint16 gamma2,
+        uint32 volumeBeta,
+        uint32 volumeGamma,
+        uint16 baseFee
+    ) external;
+
     function calculateVolumePerLiquidity(
         uint128 liquidity,
         int256 amount0,
