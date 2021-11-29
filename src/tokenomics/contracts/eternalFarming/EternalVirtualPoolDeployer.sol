@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import './interfaces/IVirtualPoolDeployer.sol';
-import './virtualPools/EternalVirtualPool.sol';
+import '../interfaces/IVirtualPoolDeployer.sol';
+import './EternalVirtualPool.sol';
 
 contract EternalVirtualPoolDeployer is IVirtualPoolDeployer {
     address private farming;
