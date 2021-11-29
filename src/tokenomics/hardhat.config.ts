@@ -41,9 +41,6 @@ const config: HardhatUserConfig = {
   etherscan: baseConfig.etherscan,
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
-    overrides: {
-      'contracts/AlgebraVault.sol': COMPILER_SETTINGS_084,
-    }
   },
   contractSizer: {
     alphaSort: false,

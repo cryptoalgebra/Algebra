@@ -1,16 +1,26 @@
-pragma solidity =0.8.4;
+pragma solidity =0.7.6;
+pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
-import 'algebra-periphery/contracts/libraries/PoolAddress.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import 'algebra-periphery/contracts/interfaces/ISwapRouter.sol';
 
 contract AlgebraVault{
-    uint256 splippage;
-    address stakingAddress;
-    address AlgebraFactory;
-    address owner;
+    using SafeERC20 for IERC20;
 
-    event FeeDeposited(
-        address depositedToken
+    address public stakingAddress;
+    address public ALGB;
+
+    address public owner;
+    address public relayer;
+
+    ISwapRouter AlgebraRouter;
+
+    event Swap(
+        IERC20 swappedToken,
+        bytes path,
+        uint256 amountIn,
+        uint256 amountOut
     );
 
     modifier onlyOwner(){
@@ -18,28 +28,71 @@ contract AlgebraVault{
         _;
     }
 
+    modifier onlyRelayer(){
+        require(msg.sender == relayer, "only relayer can call this");
+        _;
+    }
+
     constructor(
-        address _factory
+        address _ALGB,
+        address _stakingAddress,
+        ISwapRouter _AlgebraRouter
     ){
-        AlgebraFactory = _factory;
         owner = msg.sender;
+        ALGB = _ALGB;
+        stakingAddress = _stakingAddress;
+        AlgebraRouter = _AlgebraRouter;
     }
 
-    /**
-     * @dev Since the pool contract is barely fits the byte size limits, we do not want to
-     * use any TransferFrom, which requires an allowance, or callback to pool. The idea is that only
-     * pool can ERC20.transfer() to the vault and then call the deposit() to emit an event
-     * @param depositedToken The address of token deposited
-     */
-    function deposit(address depositedToken) external{
-        IAlgebraPool poolInstance = IAlgebraPool(msg.sender);
-        pool = IAlgebraPool(PoolAddress.computeAddress(
-            factory,
-            PoolAddress.getPoolKey(poolInstance.token0(), poolInstance.token1())
-        ));
-        require(poolInstance == pool, "validation failed");
+    function swapToALGB(
+        IERC20 tokenToSwap,
+        bytes calldata path,
+        uint256 amountOutMin
+    ) external onlyRelayer{
+        uint256 _allowance = tokenToSwap.allowance(address(this), address(AlgebraRouter));
+        uint256 balance = tokenToSwap.balanceOf(address(this));
+        if (_allowance < balance){
+            if (_allowance == 0){
+                tokenToSwap.safeApprove(address(AlgebraRouter), type(uint256).max);
+            }
+            else{
+                try tokenToSwap.approve(address(AlgebraRouter), type(uint256).max) returns (bool res){
+                    require(res == true, 'Vault: approve failed');
+                }
+                catch {
+                    tokenToSwap.safeApprove(address(AlgebraRouter), 0);
+                    tokenToSwap.safeApprove(address(AlgebraRouter), type(uint256).max);
+                }
+            }
+        }
 
-        emit FeeDeposited(depositedToken);
+        ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams(
+            path,
+            stakingAddress,
+            block.timestamp,
+            balance,
+            amountOutMin
+        );
+
+        uint256 amountOut = AlgebraRouter.exactInput(
+            params
+        );
+
+        emit Swap(
+            tokenToSwap,
+            path,
+            balance,
+            amountOut
+        );
     }
 
+    function setRelayer(address _relayer) external onlyOwner{
+        require(_relayer != address(0));
+        relayer = _relayer;
+    }
+
+    function transferOwner(address _newOwner) external onlyOwner{
+        require(_newOwner != address(0));
+        owner = _newOwner;
+    }
 }
