@@ -22,7 +22,7 @@ import {
   IAlgebraPool,
   TestIncentiveId,
 } from '../../typechain'
-import abi from '../../artifacts/contracts/virtualPools/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
+import abi from '../../artifacts/contracts/incentiveFarming/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition } from '../shared/fixtures'
