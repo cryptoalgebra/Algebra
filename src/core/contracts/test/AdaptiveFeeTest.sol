@@ -2,6 +2,7 @@
 pragma solidity =0.7.6;
 
 import '../libraries/AdaptiveFee.sol';
+import '../libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
     AdaptiveFee.Configuration public feeConfig =
@@ -13,7 +14,8 @@ contract AdaptiveFeeTest {
             30, // gamma1
             100, // gamma2
             30, // volumeBeta
-            10 // volumeGamma
+            10, // volumeGamma
+            Constants.BASE_FEE
         );
 
     function getFee(uint112 volatility, uint256 volumePerLiquidity) external view returns (uint256 fee) {

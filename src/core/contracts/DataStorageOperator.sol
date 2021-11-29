@@ -8,6 +8,8 @@ import './libraries/DataStorage.sol';
 import './libraries/Sqrt.sol';
 import './libraries/AdaptiveFee.sol';
 
+import './libraries/Constants.sol';
+
 contract DataStorageOperator is IDataStorageOperator {
     using DataStorage for DataStorage.Timepoint[65535];
 
@@ -30,16 +32,6 @@ contract DataStorageOperator is IDataStorageOperator {
     constructor(address _pool) {
         factory = msg.sender;
         pool = _pool;
-        feeConfig = AdaptiveFee.Configuration(
-            3000 - 500, // alpha1
-            10000 - 3000, // alpha2
-            180, // beta1
-            1500, // beta2
-            30, // gamma1
-            100, // gamma2
-            0, // volumeBeta
-            10 // volumeGamma
-        );
     }
 
     function initialize(uint32 time) external override onlyPool {
@@ -51,13 +43,24 @@ contract DataStorageOperator is IDataStorageOperator {
         uint32 alpha2,
         uint32 beta1,
         uint32 beta2,
-        uint32 gamma1,
-        uint32 gamma2,
+        uint16 gamma1,
+        uint16 gamma2,
         uint32 volumeBeta,
-        uint32 volumeGamma
-    ) external {
-        require(msg.sender == IAlgebraFactory(factory).owner());
-        feeConfig = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma);
+        uint32 volumeGamma,
+        uint16 baseFee
+    ) external override {
+        require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
+        feeConfig = AdaptiveFee.Configuration(
+            alpha1,
+            alpha2,
+            beta1,
+            beta2,
+            gamma1,
+            gamma2,
+            volumeBeta,
+            volumeGamma,
+            baseFee
+        );
     }
 
     function getSingleTimepoint(

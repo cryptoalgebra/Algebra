@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AlgebraFactory #createPool gas 1`] = `6322516`;
+exports[`AlgebraFactory #createPool gas 1`] = `6393729`;
 
 exports[`AlgebraFactory factory bytecode size 1`] = `9768`;
 

@@ -9,10 +9,11 @@ library AdaptiveFee {
         uint32 alpha2;
         uint32 beta1;
         uint32 beta2;
-        uint32 gamma1;
-        uint32 gamma2;
+        uint16 gamma1;
+        uint16 gamma2;
         uint32 volumeBeta;
         uint32 volumeGamma;
+        uint16 baseFee;
     }
 
     // Maybe uint112
@@ -24,7 +25,7 @@ library AdaptiveFee {
         uint256 sigm1 = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1);
         uint256 sigm2 = sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
-        fee = Constants.BASE_FEE + sigmoid(volumePerLiquidity, config.volumeGamma, sigm1 + sigm2, config.volumeBeta);
+        fee = config.baseFee + sigmoid(volumePerLiquidity, config.volumeGamma, sigm1 + sigm2, config.volumeBeta);
     }
 
     function sigmoid(
