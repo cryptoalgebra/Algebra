@@ -78,4 +78,16 @@ interface IAlgebraFactory {
 
     // TODO: doc
     function setVaultAddress(address _vaultAddress) external;
+
+    function setBaseFeeConfiguration(
+        uint32 alpha1,
+        uint32 alpha2,
+        uint32 beta1,
+        uint32 beta2,
+        uint16 gamma1,
+        uint16 gamma2,
+        uint32 volumeBeta,
+        uint32 volumeGamma,
+        uint16 baseFee
+    ) external;
 }

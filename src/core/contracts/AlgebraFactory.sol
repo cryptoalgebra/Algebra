@@ -5,6 +5,7 @@ import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
 
+import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
 
 /**
@@ -23,6 +24,19 @@ contract AlgebraFactory is IAlgebraFactory {
 
     // @inheritdoc IAlgebraFactory
     address public override vaultAddress;
+
+    AdaptiveFee.Configuration public baseFeeConfiguration =
+        AdaptiveFee.Configuration(
+            3000 - 500, // alpha1
+            10000 - 3000, // alpha2
+            180, // beta1
+            1500, // beta2
+            30, // gamma1
+            100, // gamma2
+            0, // volumeBeta
+            10, // volumeGamma
+            Constants.BASE_FEE // baseFee
+        );
 
     modifier onlyOwner() {
         require(msg.sender == owner);
@@ -51,6 +65,20 @@ contract AlgebraFactory is IAlgebraFactory {
             address(new DataStorageOperator(computeAddress(token0, token1)))
         );
 
+        AdaptiveFee.Configuration memory _feeConfiguration = baseFeeConfiguration;
+
+        dataStorage.changeFeeConfiguration(
+            _feeConfiguration.alpha1,
+            _feeConfiguration.alpha2,
+            _feeConfiguration.beta1,
+            _feeConfiguration.beta2,
+            _feeConfiguration.gamma1,
+            _feeConfiguration.gamma2,
+            _feeConfiguration.volumeBeta,
+            _feeConfiguration.volumeGamma,
+            _feeConfiguration.baseFee
+        );
+
         pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
 
         poolByPair[token0][token1] = pool;
@@ -73,6 +101,31 @@ contract AlgebraFactory is IAlgebraFactory {
     // @inheritdoc IAlgebraFactory
     function setVaultAddress(address _vaultAddres) external override onlyOwner {
         vaultAddress = _vaultAddres;
+    }
+
+    // @inheritdoc IAlgebraFactory
+    function setBaseFeeConfiguration(
+        uint32 alpha1,
+        uint32 alpha2,
+        uint32 beta1,
+        uint32 beta2,
+        uint16 gamma1,
+        uint16 gamma2,
+        uint32 volumeBeta,
+        uint32 volumeGamma,
+        uint16 baseFee
+    ) external override onlyOwner {
+        baseFeeConfiguration = AdaptiveFee.Configuration(
+            alpha1,
+            alpha2,
+            beta1,
+            beta2,
+            gamma1,
+            gamma2,
+            volumeBeta,
+            volumeGamma,
+            baseFee
+        );
     }
 
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xbe64af87c62fc66a06a6fe1770f612d132c938ee3c6930a7934eb9336d865b12;
