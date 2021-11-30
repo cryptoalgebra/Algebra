@@ -127,7 +127,6 @@ describe('AlgebraVault', async ()=> {
 
     it('possible to swap to ALGB', async () =>{
       await vault.setRelayer(wallets[2].address)
-      console.log(await tokens[1].balanceOf(vault.address))
       await vault.connect(wallets[2]).swapToALGB(
         tokens[1].address,
         encodePath([tokens[1].address, ALGB.address]),
@@ -135,7 +134,7 @@ describe('AlgebraVault', async ()=> {
         '0'
       )
       expect(await ALGB.balanceOf(stakingAddress)).to.be.gt(BN(0))
-      expect(await tokens[1].balanceOf(vault.address)).to.be.eq(BN(0))
+      expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
     })
 
     it('cannot be called by not a relayer', async ()=>{
@@ -169,12 +168,12 @@ describe('AlgebraVault', async ()=> {
 
       it('should work with fee on trasfer', async ()=>{
         await vault.setRelayer(wallets[2].address)
-        expect(vault.connect(wallets[2]).swapToALGB(
+        await vault.connect(wallets[2]).swapToALGB(
           tokens[1].address,
           encodePath([tokens[1].address, ALGB.address]),
           0,
           '228'
-        ))
+        )
         expect(await ALGB.balanceOf(stakingAddress)).to.be.gt(BN(0))
       })
     })
