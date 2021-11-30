@@ -2,7 +2,7 @@ import { constants } from 'ethers'
 import { TestContext, LoadFixtureFunction } from './types'
 import { AlgebraVault } from '../typechain'
 import { IAlgebraPool } from "algebra/typechain";
-import { TestERC20 } from 'algebra/typechain'
+import { TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
 	BigNumber,

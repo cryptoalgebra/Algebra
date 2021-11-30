@@ -22,7 +22,7 @@ import {
   IAlgebraPool,
   TestIncentiveId,
 } from '../../typechain'
-import {TestERC20} from "algebra/typechain";
+import {TestERC20} from "../../typechain";
 import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
 
