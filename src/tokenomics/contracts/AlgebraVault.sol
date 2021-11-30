@@ -28,8 +28,8 @@ contract AlgebraVault{
         _;
     }
 
-    modifier onlyRelayer(){
-        require(msg.sender == relayer, "only relayer can call this");
+    modifier onlyRelayerOrOwner(){
+        require(msg.sender == relayer || msg.sender == owner, "only relayer or owner can call this");
         _;
     }
 
@@ -47,10 +47,12 @@ contract AlgebraVault{
     function swapToALGB(
         IERC20 tokenToSwap,
         bytes calldata path,
-        uint256 amountOutMin
-    ) external onlyRelayer{
+        uint256 amountOutMin,
+        uint256 withFee
+    ) external onlyRelayerOrOwner {
         uint256 _allowance = tokenToSwap.allowance(address(this), address(AlgebraRouter));
         uint256 balance = tokenToSwap.balanceOf(address(this));
+        uint256 amountOut;
         if (_allowance < balance){
             if (_allowance == 0){
                 tokenToSwap.safeApprove(address(AlgebraRouter), type(uint256).max);
@@ -65,18 +67,32 @@ contract AlgebraVault{
                 }
             }
         }
-
-        ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams(
-            path,
-            stakingAddress,
-            block.timestamp,
-            balance,
-            amountOutMin
-        );
-
-        uint256 amountOut = AlgebraRouter.exactInput(
-            params
-        );
+        if (withFee == 0){
+            ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams(
+                path,
+                stakingAddress,
+                block.timestamp,
+                balance,
+                amountOutMin
+            );
+            amountOut = AlgebraRouter.exactInput(
+                params
+            );
+        }
+        else{
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams(
+                address(tokenToSwap),
+                ALGB,
+                stakingAddress,
+                block.timestamp,
+                balance,
+                amountOutMin,
+                0
+            );
+            amountOut = AlgebraRouter.exactInputSingleSupportingFeeOnTransferTokens(
+                params
+            );
+        }
 
         emit Swap(
             tokenToSwap,
@@ -84,6 +100,11 @@ contract AlgebraVault{
             balance,
             amountOut
         );
+    }
+
+    function transferALGB() external onlyRelayerOrOwner {
+        IERC20 ALGBToken = IERC20(ALGB);
+        ALGBToken.transfer(stakingAddress, ALGBToken.balanceOf(address(this)));
     }
 
     function setRelayer(address _relayer) external onlyOwner{

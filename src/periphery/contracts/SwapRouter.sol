@@ -163,8 +163,10 @@ contract SwapRouter is
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }
 
+    /// @inheritdoc ISwapRouter
     function exactInputSingleSupportingFeeOnTransferTokens(ExactInputSingleParams calldata params)
         external
+        override
         checkDeadline(params.deadline)
         returns (uint256 amountOut)
     {

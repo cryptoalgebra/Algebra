@@ -25,7 +25,7 @@ import abi from '../../artifacts/contracts/AlgebraVirtualPool.sol/AlgebraVirtual
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition } from '../shared/fixtures'
-import { ISwapRouter } from '../../types/ISwapRouter'
+import { ISwapRouter } from 'algebra-periphery/typechain'
 import { ethers } from 'hardhat'
 import { ContractParams } from '../../types/contractParams'
 import { TestContext } from '../types'
