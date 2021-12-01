@@ -33,10 +33,10 @@ contract DataStorageOperator is IDataStorageOperator {
         feeConfig = AdaptiveFee.Configuration(
             3000 - 500, // alpha1
             10000 - 3000, // alpha2
-            180, // beta1
-            1500, // beta2
-            30, // gamma1
-            100, // gamma2
+            180 * 15, // beta1
+            1500 * 15, // beta2
+            30 * 15, // gamma1
+            100 * 15, // gamma2
             0, // volumeBeta
             10 // volumeGamma
         );
