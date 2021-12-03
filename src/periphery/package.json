@@ -26,16 +26,21 @@
   "dependencies": {
     "@openzeppelin/contracts": "3.4.1-solc-0.7-2",
     "@uniswap/v2-core": "1.0.1",
+    "algebra": "file:../core",
     "base64-sol": "1.0.1",
-    "algebra": "file:../core"
+    "root": "file:../.."
   },
   "devDependencies": {
     "is-svg": "^4.3.1"
   },
   "scripts": {
-    "compile": "hardhat compile",
+    "compile": "npm --prefix ../core run compile && hardhat compile",
     "test": "hardhat test",
     "precommit": "pretty-quick --staged --pattern **/*.sol",
     "coverage": "hardhat coverage"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
   }
 }
