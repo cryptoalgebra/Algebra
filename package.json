@@ -16,7 +16,7 @@
     "dotenv": "^10.0.0",
     "ethereum-waffle": "^3.0.2",
     "ethers": "^5.0.8",
-    "hardhat": "^2.6.4",
+    "hardhat": "2.6.5",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-watcher": "^2.1.1",
     "husky": "^7.0.2",
