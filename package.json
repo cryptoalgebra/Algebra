@@ -38,11 +38,15 @@
   "scripts": {
     "postinstall": "husky install",
     "lint": "prettier .",
-    "bootstrap": "npm install && lerna bootstrap",
+    "bootstrap": "npm install && lerna bootstrap && npm install --prefix ./src/periphery && npm install --prefix ./src/tokenomics",
     "ci-install": "npm ci && lerna bootstrap",
     "deploy": "node scripts/deployAll.js"
   },
   "dependencies": {
     "@ethersproject/solidity": "^5.4.0"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
   }
 }
