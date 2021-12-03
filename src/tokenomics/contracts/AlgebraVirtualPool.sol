@@ -17,11 +17,17 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
     address public immutable farmingAddress;
 
     // @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public immutable override desiredEndTimestamp;
+    // @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public immutable override desiredStartTimestamp;
+
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override initTimestamp;
     // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
     // @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override timeOutside;
+    // @inheritdoc IAlgebraIncentiveVirtualPool
     uint160 public override globalSecondsPerLiquidityCumulative;
     // @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override prevLiquidity;
@@ -31,10 +37,6 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
     uint32 public override prevTimestamp;
     // @inheritdoc IAlgebraIncentiveVirtualPool
     int24 public override globalTick;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public override desiredEndTimestamp;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public override desiredStartTimestamp;
 
     // @inheritdoc IAlgebraIncentiveVirtualPool
     mapping(int24 => TickManager.Tick) public override ticks;

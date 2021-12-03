@@ -5,6 +5,12 @@ pragma abicoder v2;
 import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPool {
+    // The timestamp when the active incentive is finished
+    function desiredEndTimestamp() external returns (uint32);
+
+    // The first swap after this timestamp is going to initialize the virtual pool
+    function desiredStartTimestamp() external returns (uint32);
+
     // returns the timestamp of the first swap after start timestamp
     function initTimestamp() external returns (uint32);
 
@@ -17,23 +23,17 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPool {
     // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
     function globalSecondsPerLiquidityCumulative() external returns (uint160);
 
-    // returns the current liquidity in virtual pool
-    function currentLiquidity() external returns (uint128);
-
-    // returns the current tick in virtual pool
-    function globalTick() external returns (int24);
-
     // returns the liquidity after previous swap (like the last timepoint in a default pool)
     function prevLiquidity() external returns (uint128);
+
+    // returns the current liquidity in virtual pool
+    function currentLiquidity() external returns (uint128);
 
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
     function prevTimestamp() external returns (uint32);
 
-    // The timestamp when the active incentive is finished
-    function desiredEndTimestamp() external returns (uint32);
-
-    // The first swap after this timestamp is going to initialize the virtual pool
-    function desiredStartTimestamp() external returns (uint32);
+    // returns the current tick in virtual pool
+    function globalTick() external returns (int24);
 
     // returns data associated with a tick
     function ticks(int24 tickId)
