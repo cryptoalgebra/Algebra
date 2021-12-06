@@ -25,18 +25,30 @@ library DataStorage {
         uint144 volumePerLiquidityCumulative;
     }
 
-    function integralVolat(
-        int256 dX,
-        int256 yT0,
-        int256 yT1,
-        int256 yM0,
-        int256 yM1
-    ) private pure returns (uint256 res) {
-        int256 M = (yT1 - yT0) - (yM1 - yM0);
-        int256 W = (yT0 - yM0) * dX;
-        int256 sumOfSquares = (dX * (dX + 1) * (2 * dX + 1)) / 6;
-        int256 sumOfSequence = (dX * (dX + 1)) / 2;
-        res = uint256((M**2 * sumOfSquares + 2 * W * M * sumOfSequence + (dX) * W**2) / dX**2);
+    /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
+    /// @param dt Timedelta between timepoint
+    /// @param tick0 The tick at the left timepoint
+    /// @param tick1 The tick at the right timepoint
+    /// @param avgTick0 The average tick at the left timepoint
+    /// @param avgTick1 The average tick at the right timepoint
+    /// @return volatility
+    function _volatilityOnRange(
+        int256 dt,
+        int256 tick0,
+        int256 tick1,
+        int256 avgTick0,
+        int256 avgTick1
+    ) private pure returns (uint256 volatility) {
+        // On the interval from the previous timpoint to the current
+        // tick and the and tick are straight lines that satisfy the equations
+        // yt = k*x + b   and  yat = p*x + q
+        // so: ((k*x + b) - (p*x + q))^2 = ((k-p)*x + (b-q))^2 = (k-p)^2 * x^2 + 2(k-p)(b-q)x + (b-q)^2
+        // sum from 0 to N require to use arithmetic and squares progressions
+        int256 M = (tick1 - tick0) - (avgTick1 - avgTick0);
+        int256 W = (tick0 - avgTick0) * dt;
+        int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)) / 6;
+        int256 sumOfSequence = (dt * (dt + 1)) / 2;
+        volatility = uint256((M**2 * sumOfSquares + 2 * W * M * sumOfSequence + (dt) * W**2) / dt**2);
     }
 
     /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
@@ -57,14 +69,14 @@ library DataStorage {
         int24 averageTick,
         int24 prevAverageTick,
         uint128 volumePerLiquidity
-    ) private view returns (Timepoint memory) {
+    ) private pure returns (Timepoint memory) {
         uint32 delta = blockTimestamp - last.blockTimestamp;
 
         last.initialized = true;
         last.blockTimestamp = blockTimestamp;
         last.tickCumulative += int56(tick) * delta;
         last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1));
-        last.volatilityCumulative += uint112(integralVolat(delta, prevTick, tick, prevAverageTick, averageTick));
+        last.volatilityCumulative += uint112(_volatilityOnRange(delta, prevTick, tick, prevAverageTick, averageTick));
         last.volumePerLiquidityCumulative += volumePerLiquidity;
 
         return last;
