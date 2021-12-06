@@ -25,6 +25,32 @@ library DataStorage {
         uint144 volumePerLiquidityCumulative;
     }
 
+    /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
+    /// @param dt Timedelta between timepoint
+    /// @param tick0 The tick at the left timepoint
+    /// @param tick1 The tick at the right timepoint
+    /// @param avgTick0 The average tick at the left timepoint
+    /// @param avgTick1 The average tick at the right timepoint
+    /// @return volatility
+    function _volatilityOnRange(
+        int256 dt,
+        int256 tick0,
+        int256 tick1,
+        int256 avgTick0,
+        int256 avgTick1
+    ) private pure returns (uint256 volatility) {
+        // On the interval from the previous timpoint to the current
+        // tick and the and tick are straight lines that satisfy the equations
+        // yt = k*x + b   and  yat = p*x + q
+        // so: ((k*x + b) - (p*x + q))^2 = ((k-p)*x + (b-q))^2 = (k-p)^2 * x^2 + 2(k-p)(b-q)x + (b-q)^2
+        // sum from 0 to N require to use arithmetic and squares progressions
+        int256 M = (tick1 - tick0) - (avgTick1 - avgTick0);
+        int256 W = (tick0 - avgTick0) * dt;
+        int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)) / 6;
+        int256 sumOfSequence = (dt * (dt + 1)) / 2;
+        volatility = uint256((M**2 * sumOfSquares + 2 * W * M * sumOfSequence + (dt) * W**2) / dt**2);
+    }
+
     /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
     /// @dev blockTimestamp _must_ be chronologically equal to or greater than last.blockTimestamp, safe for 0 or 1 overflows
     /// @param last The specified timepoint to be used in creation of new timepoint
@@ -38,8 +64,10 @@ library DataStorage {
         Timepoint memory last,
         uint32 blockTimestamp,
         int24 tick,
+        int24 prevTick,
         uint128 liquidity,
         int24 averageTick,
+        int24 prevAverageTick,
         uint128 volumePerLiquidity
     ) private pure returns (Timepoint memory) {
         uint32 delta = blockTimestamp - last.blockTimestamp;
@@ -48,7 +76,7 @@ library DataStorage {
         last.blockTimestamp = blockTimestamp;
         last.tickCumulative += int56(tick) * delta;
         last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1));
-        last.volatilityCumulative += uint112(int112(averageTick - tick)**2);
+        last.volatilityCumulative += uint112(_volatilityOnRange(delta, prevTick, tick, prevAverageTick, averageTick));
         last.volumePerLiquidityCumulative += volumePerLiquidity;
 
         return last;
@@ -190,7 +218,18 @@ library DataStorage {
                     beforeOrAt.blockTimestamp,
                     beforeOrAt.tickCumulative
                 );
-                return createNewTimepoint(beforeOrAt, target, tick, liquidity, avgTick, 0);
+
+                int24 prevTick = tick;
+                int24 prevAvgTick = avgTick;
+                {
+                    if (index != oldestIndex) {
+                        Timepoint memory prevLast;
+                        prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
+                        prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
+                        (prevTick, prevAvgTick) = getPrevValues(self, beforeOrAt, prevLast, index, oldestIndex);
+                    }
+                }
+                return createNewTimepoint(beforeOrAt, target, tick, prevTick, liquidity, avgTick, prevAvgTick, 0);
             }
         }
 
@@ -347,6 +386,29 @@ library DataStorage {
         });
     }
 
+    function getPrevValues(
+        Timepoint[65535] storage self,
+        Timepoint memory last,
+        Timepoint memory prevLast,
+        uint16 index,
+        uint16 oldestIndex
+    ) internal view returns (int24 prevTick, int24 prevAvgTick) {
+        prevTick = int24(
+            (int56(last.tickCumulative) - int56(prevLast.tickCumulative)) /
+                (last.blockTimestamp - prevLast.blockTimestamp)
+        );
+
+        prevAvgTick = _getAverageTick(
+            self,
+            last.blockTimestamp,
+            prevTick,
+            index - 1,
+            oldestIndex,
+            prevLast.blockTimestamp,
+            prevLast.tickCumulative
+        );
+    }
+
     /// @notice Writes an dataStorage timepoint to the array
     /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
     /// @param self The stored dataStorage array
@@ -388,6 +450,27 @@ library DataStorage {
             last.blockTimestamp,
             last.tickCumulative
         );
-        self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, liquidity, avgTick, volumePerLiquidity);
+
+        int24 prevTick = tick;
+        int24 prevAvgTick = avgTick;
+        {
+            if (index != oldestIndex) {
+                Timepoint memory prevLast;
+                prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
+                prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
+                (prevTick, prevAvgTick) = getPrevValues(self, last, prevLast, index, oldestIndex);
+            }
+        }
+
+        self[indexUpdated] = createNewTimepoint(
+            last,
+            blockTimestamp,
+            tick,
+            prevTick,
+            liquidity,
+            avgTick,
+            prevAvgTick,
+            volumePerLiquidity
+        );
     }
 }
