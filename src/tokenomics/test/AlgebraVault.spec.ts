@@ -45,7 +45,7 @@ describe('AlgebraVault', async ()=> {
     loadFixture = createFixtureLoader(wallets, provider)
   })
 
-  describe('there are three LPs in the same range', async () => {
+  describe('main', async () => {
     let context: AlgebraFixtureType
     let ALGB: TestERC20
     let tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
