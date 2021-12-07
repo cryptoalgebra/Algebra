@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity =0.7.6;
 
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
@@ -25,7 +24,11 @@ contract TestERC20 is IERC20Minimal {
 
         uint256 balanceRecipient = balanceOf[recipient];
         require(balanceRecipient + amount >= balanceRecipient, 'recipient balance overflow');
-        balanceOf[recipient] = balanceRecipient + amount;
+        if (!isDeflationary) {
+            balanceOf[recipient] = balanceRecipient + amount;
+        } else {
+            balanceOf[recipient] = balanceRecipient + (amount - (amount * 5) / 100);
+        }
 
         emit Transfer(msg.sender, recipient, amount);
         return true;
@@ -35,6 +38,12 @@ contract TestERC20 is IERC20Minimal {
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
+    }
+
+    bool isDeflationary = false;
+
+    function setDefl() external {
+        isDeflationary = true;
     }
 
     function transferFrom(
@@ -49,7 +58,11 @@ contract TestERC20 is IERC20Minimal {
 
         uint256 balanceRecipient = balanceOf[recipient];
         require(balanceRecipient + amount >= balanceRecipient, 'overflow balance recipient');
-        balanceOf[recipient] = balanceRecipient + amount;
+        if (!isDeflationary) {
+            balanceOf[recipient] = balanceRecipient + amount;
+        } else {
+            balanceOf[recipient] = balanceRecipient + (amount - (amount * 5) / 100);
+        }
         uint256 balanceSender = balanceOf[sender];
         require(balanceSender >= amount, 'underflow balance sender');
         balanceOf[sender] = balanceSender - amount;

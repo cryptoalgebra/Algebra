@@ -23,8 +23,8 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   },
 }
 
-const COMPILER_SETTINGS_OTIMISIED = {
-  version: '0.7.6',
+const COMPILER_SETTINGS_084 = {
+  version: '0.8.4',
   settings: {
     optimizer: {
       enabled: true,
