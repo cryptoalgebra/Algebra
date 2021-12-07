@@ -33,10 +33,6 @@ To compile a specific module, you need to run the following command in the modul
 ```
 $ npm run compile
 ```
-Or:
-```
-$ hardhat compile
-```
 
 
 ## Tests
@@ -44,10 +40,6 @@ $ hardhat compile
 Tests for a specific module are run by the following command in the module folder:
 ```
 $ npm run test
-```
-Or:
-```
-$ hardhat test
 ```
 
 ## Tests coverage
