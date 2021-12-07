@@ -130,7 +130,7 @@ contract AlgebraFactory is IAlgebraFactory {
         );
     }
 
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0xbe64af87c62fc66a06a6fe1770f612d132c938ee3c6930a7934eb9336d865b12;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0x7177f227ac8a91fec7cb98e0fbdb39e3a5a8dbe744749bb66c47026bf2bbcfe9;
 
     /// @notice Deterministically computes the pool address given the factory and PoolKey
     /// @param token0 first token

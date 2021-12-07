@@ -21,7 +21,8 @@ interface IDataStorageOperator {
             uint32 blockTimestamp,
             int56 tickCumulative,
             uint160 secondsPerLiquidityCumulative,
-            uint112 volatilityCumulative,
+            uint88 volatilityCumulative,
+            int24 averageTick,
             uint144 volumePerLiquidityCumulative
         );
 
