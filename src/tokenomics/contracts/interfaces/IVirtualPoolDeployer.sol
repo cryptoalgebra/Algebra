@@ -17,4 +17,11 @@ interface IVirtualPoolDeployer {
      * @param farming The address of the Algebra framing
      */
     function setFarming(address farming) external;
+
+    /**
+     * @notice Emitted when the farming address is changed
+     * @param farming The farming address before the address was changed
+     * @param _farming The farming address after the address was changed
+     */
+    event FarmingAddressChanged(address indexed farming, address indexed _farming);
 }

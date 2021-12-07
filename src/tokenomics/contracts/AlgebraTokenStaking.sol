@@ -2,10 +2,10 @@
 
 pragma solidity =0.7.6;
 
-import "./base/FreezableToken.sol";
+import './base/FreezableToken.sol';
 
 // This contract handles swapping to and from xALGB, Algebra's staking token.
-contract AlgebraTokenStaking is FreezableToken{
+contract AlgebraTokenStaking is FreezableToken {
     using SafeMath for uint256;
 
     uint256 public freezeTime = 1800;
@@ -15,23 +15,27 @@ contract AlgebraTokenStaking is FreezableToken{
     event Entered(address staker, uint256 ALGBAmount, uint256 xALGBAmount);
     event Left(address staker, uint256 xALGBAmount, uint256 ALGBAmount);
 
-    modifier onlyOwner(){
+    modifier onlyOwner() {
         require(msg.sender == owner, 'only owner can call this');
         _;
     }
 
     // Define the ALGB token contract
-    constructor(IERC20Minimal _ALGB) ERC20("Algebra Staking Token", "xALGB"){
+    constructor(IERC20Minimal _ALGB) ERC20('Algebra Staking Token', 'xALGB') {
         ALGB = _ALGB;
         owner = msg.sender;
     }
 
-   function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
-       (uint64 release, uint256 balance) = getFreezing(from, 0);
-        if (release < block.timestamp && balance > 0){
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        (uint64 release, uint256 balance) = getFreezing(from, 0);
+        if (release < block.timestamp && balance > 0) {
             releaseAll(from);
         }
-   }
+    }
 
     // Enter the bar. Pay some ALGBSs. Earn some shares.
     // Locks ALGB and mints xALGB
@@ -43,6 +47,7 @@ contract AlgebraTokenStaking is FreezableToken{
         uint256 what;
         // If no xALGB exists, mint it 1:1 to the amount put in
         if (totalShares == 0 || totalALGB == 0) {
+            what = _amount;
             mintAndFreeze(msg.sender, _amount, uint64(block.timestamp + freezeTime));
         }
         // Calculate and mint the amount of xALGB the ALGB is worth. The ratio will change overtime, as xALGB is burned/minted and ALGB deposited + gained from fees / withdrawn.
@@ -67,17 +72,17 @@ contract AlgebraTokenStaking is FreezableToken{
         emit Left(msg.sender, _share, what);
     }
 
-    function currentBalance(uint256 _amount) external view returns(uint256){
+    function currentBalance(uint256 _amount) external view returns (uint256) {
         uint256 totalShares = totalSupply();
         return _amount.mul(ALGB.balanceOf(address(this))).div(totalShares);
     }
 
-    function setFreezeTime(uint256 _freezeTime) external onlyOwner{
+    function setFreezeTime(uint256 _freezeTime) external onlyOwner {
         require(_freezeTime <= 3600, 'freezeTime is to big');
         freezeTime = _freezeTime;
     }
 
-    function transferOwner(address _newOwner) external onlyOwner{
+    function transferOwner(address _newOwner) external onlyOwner {
         require(_newOwner != address(0), 'cannot be 0 address');
         owner = _newOwner;
     }

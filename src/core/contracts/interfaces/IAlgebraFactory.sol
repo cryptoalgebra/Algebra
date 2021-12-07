@@ -13,12 +13,26 @@ interface IAlgebraFactory {
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     /**
+     *  @notice Emitted when the vault address is changed
+     *  @param vaultAddress The vault address before the address was changed
+     *  @param _vaultAddress The vault address after the address was changed
+     */
+    event VaultAddressChanged(address indexed vaultAddress, address indexed _vaultAddress);
+
+    /**
      *  @notice Emitted when a pool is created
      *  @param token0 The first token of the pool by address sort order
      *  @param token1 The second token of the pool by address sort order
      *  @param pool The address of the created pool
      */
     event PoolCreated(address indexed token0, address indexed token1, address pool);
+
+    /**
+     *  @notice Emitted when the farming address is changed
+     *  @param farmingAddress The farming address before the address was changed
+     *  @param _farmingAddress The farming address after the address was changed
+     */
+    event FarmingAddressChanged(address indexed farmingAddress, address indexed _farmingAddress);
 
     /**
      *  @notice Returns the current owner of the factory

@@ -24,7 +24,7 @@ contract VirtualPoolDeployer is IVirtualPoolDeployer {
 
     // @inheritdoc IVirtualPoolDeployer
     function setFarming(address _farming) external override onlyOwner {
-        require(farming == address(0));
+        emit FarmingAddressChanged(farming, _farming);
         farming = _farming;
     }
 

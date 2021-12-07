@@ -200,6 +200,11 @@ interface IAlgebraFarming is IERC721Receiver, IERC721Permit, IMulticall {
         uint256 bonusReward
     );
 
+    /// @notice Emitted when the incentive maker is changed
+    /// @param incentiveMaker The incentive maker address before the address was changed
+    /// @param _incentiveMaker The factorincentive maker address after the address was changed
+    event IncentiveMakerChanged(address indexed incentiveMaker, address indexed _incentiveMaker);
+
     /// @notice Event emitted when a reward token has been claimed
     /// @param to The address where claimed rewards were sent to
     /// @param reward The amount of reward tokens claimed

@@ -67,12 +67,14 @@ contract AlgebraFactory is IAlgebraFactory {
 
     // @inheritdoc IAlgebraFactory
     function setFarmingAddress(address _farmingAddress) external override onlyOwner {
+        emit FarmingAddressChanged(farmingAddress, _farmingAddress);
         farmingAddress = _farmingAddress;
     }
 
     // @inheritdoc IAlgebraFactory
-    function setVaultAddress(address _vaultAddres) external override onlyOwner {
-        vaultAddress = _vaultAddres;
+    function setVaultAddress(address _vaultAddress) external override onlyOwner {
+        emit VaultAddressChanged(vaultAddress, _vaultAddress);
+        vaultAddress = _vaultAddress;
     }
 
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xbe64af87c62fc66a06a6fe1770f612d132c938ee3c6930a7934eb9336d865b12;
