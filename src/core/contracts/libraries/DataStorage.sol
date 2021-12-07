@@ -19,8 +19,10 @@ library DataStorage {
         int56 tickCumulative;
         // the seconds per liquidity, i.e. seconds elapsed / max(1, liquidity) since the pool was first initialized
         uint160 secondsPerLiquidityCumulative;
-        // the volatility accumulator
-        uint112 volatilityCumulative;
+        // the volatility accumulator; overflow after ~34800 years is desired :)
+        uint88 volatilityCumulative;
+        // average tick at this blockTimestamp
+        int24 averageTick;
         // the gmean(volumes)/liquidity accumulator
         uint144 volumePerLiquidityCumulative;
     }
@@ -44,11 +46,11 @@ library DataStorage {
         // yt = k*x + b   and  yat = p*x + q
         // so: ((k*x + b) - (p*x + q))^2 = ((k-p)*x + (b-q))^2 = (k-p)^2 * x^2 + 2(k-p)(b-q)x + (b-q)^2
         // sum from 0 to N require to use arithmetic and squares progressions
-        int256 M = (tick1 - tick0) - (avgTick1 - avgTick0);
-        int256 W = (tick0 - avgTick0) * dt;
+        int256 K = (tick1 - tick0) - (avgTick1 - avgTick0);
+        int256 B = (tick0 - avgTick0) * dt;
         int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)) / 6;
         int256 sumOfSequence = (dt * (dt + 1)) / 2;
-        volatility = uint256((M**2 * sumOfSquares + 2 * W * M * sumOfSequence + (dt) * W**2) / dt**2);
+        volatility = uint256((K**2 * sumOfSquares + 2 * B * K * sumOfSequence + (dt) * B**2) / dt**2);
     }
 
     /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
@@ -67,7 +69,6 @@ library DataStorage {
         int24 prevTick,
         uint128 liquidity,
         int24 averageTick,
-        int24 prevAverageTick,
         uint128 volumePerLiquidity
     ) private pure returns (Timepoint memory) {
         uint32 delta = blockTimestamp - last.blockTimestamp;
@@ -76,7 +77,8 @@ library DataStorage {
         last.blockTimestamp = blockTimestamp;
         last.tickCumulative += int56(tick) * delta;
         last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1));
-        last.volatilityCumulative += uint112(_volatilityOnRange(delta, prevTick, tick, prevAverageTick, averageTick));
+        last.volatilityCumulative += uint88(_volatilityOnRange(delta, prevTick, tick, last.averageTick, averageTick));
+        last.averageTick = averageTick;
         last.volumePerLiquidityCumulative += volumePerLiquidity;
 
         return last;
@@ -204,9 +206,9 @@ library DataStorage {
 
         // if target is newer than last timepoint
         if (secondsAgo == 0 || lteConsideringOverflow(self[index].blockTimestamp, target, time)) {
-            Timepoint memory beforeOrAt = self[index];
-            if (beforeOrAt.blockTimestamp == target) {
-                return beforeOrAt;
+            Timepoint memory last = self[index];
+            if (last.blockTimestamp == target) {
+                return last;
             } else {
                 // otherwise, we need to add new timepoint
                 int24 avgTick = _getAverageTick(
@@ -215,21 +217,23 @@ library DataStorage {
                     tick,
                     index,
                     oldestIndex,
-                    beforeOrAt.blockTimestamp,
-                    beforeOrAt.tickCumulative
+                    last.blockTimestamp,
+                    last.tickCumulative
                 );
 
                 int24 prevTick = tick;
-                int24 prevAvgTick = avgTick;
                 {
                     if (index != oldestIndex) {
                         Timepoint memory prevLast;
                         prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
                         prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
-                        (prevTick, prevAvgTick) = getPrevValues(self, beforeOrAt, prevLast, index, oldestIndex);
+                        prevTick = int24(
+                            (last.tickCumulative - prevLast.tickCumulative) /
+                                (last.blockTimestamp - prevLast.blockTimestamp)
+                        );
                     }
                 }
-                return createNewTimepoint(beforeOrAt, target, tick, prevTick, liquidity, avgTick, prevAvgTick, 0);
+                return createNewTimepoint(last, target, tick, prevTick, liquidity, avgTick, 0);
             }
         }
 
@@ -382,31 +386,9 @@ library DataStorage {
             tickCumulative: 0,
             secondsPerLiquidityCumulative: 0,
             volatilityCumulative: 0,
+            averageTick: 0,
             volumePerLiquidityCumulative: 0
         });
-    }
-
-    function getPrevValues(
-        Timepoint[65535] storage self,
-        Timepoint memory last,
-        Timepoint memory prevLast,
-        uint16 index,
-        uint16 oldestIndex
-    ) internal view returns (int24 prevTick, int24 prevAvgTick) {
-        prevTick = int24(
-            (int56(last.tickCumulative) - int56(prevLast.tickCumulative)) /
-                (last.blockTimestamp - prevLast.blockTimestamp)
-        );
-
-        prevAvgTick = _getAverageTick(
-            self,
-            last.blockTimestamp,
-            prevTick,
-            index - 1,
-            oldestIndex,
-            prevLast.blockTimestamp,
-            prevLast.tickCumulative
-        );
     }
 
     /// @notice Writes an dataStorage timepoint to the array
@@ -452,13 +434,14 @@ library DataStorage {
         );
 
         int24 prevTick = tick;
-        int24 prevAvgTick = avgTick;
         {
             if (index != oldestIndex) {
                 Timepoint memory prevLast;
                 prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
                 prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
-                (prevTick, prevAvgTick) = getPrevValues(self, last, prevLast, index, oldestIndex);
+                prevTick = int24(
+                    (last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp)
+                );
             }
         }
 
@@ -469,7 +452,6 @@ library DataStorage {
             prevTick,
             liquidity,
             avgTick,
-            prevAvgTick,
             volumePerLiquidity
         );
     }

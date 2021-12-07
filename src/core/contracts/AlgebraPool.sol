@@ -83,8 +83,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             uint32 blockTimestamp,
             int56 tickCumulative,
             uint160 secondsPerLiquidityCumulative,
-            uint112 volatilityCumulative,
-            uint256 volumePerAvgLiquidity
+            uint88 volatilityCumulative,
+            int24 averageTick,
+            uint144 volumePerLiquidityCumulative
         )
     {
         return IDataStorageOperator(dataStorageOperator).timepoints(index);
