@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "@openzeppelin/contracts": "3.4.1-solc-0.7-2",
+    "@uniswap/v2-core": "^1.0.1",
     "algebra": "file:../core",
     "algebra-periphery": "file:../periphery",
     "root": "file:../.."
@@ -39,7 +40,7 @@
     "lint": "eslint . --ext .ts",
     "prettier:check": "prettier-check contracts/**/*.sol test/**/*.ts types/*.ts",
     "size-contracts": "hardhat compile && hardhat size-contracts",
-    "test": "hardhat test test/AlgebraFarming.spec.ts",
+    "test": "hardhat test",
     "clear-cache": "rm -rf artifacts/ cache/ typechain/",
     "coverage": "hardhat coverage",
     "precommit": "pretty-quick --staged --pattern **/*.sol"

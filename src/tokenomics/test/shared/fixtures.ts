@@ -12,11 +12,9 @@ import NonfungibleTokenPositionDescriptor from 'algebra-periphery/artifacts/cont
 import SwapRouter from 'algebra-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
 import WNativeToken from './external/WNativeToken.json'
 import { linkLibraries } from './linkLibraries'
-import { ISwapRouter } from '../../types/ISwapRouter'
-import { IWNativeToken } from '../../types/IWNativeToken'
+import { ISwapRouter,IWNativeToken,NFTDescriptor } from 'algebra-periphery/typechain'
 import {
   AlgebraFarming,
-  TestERC20,
   IVirtualPoolDeployer,
   INonfungiblePositionManager,
   IAlgebraFactory,
@@ -24,7 +22,7 @@ import {
   IAlgebraPool,
   TestIncentiveId,
 } from '../../typechain'
-import { NFTDescriptor } from '../../types/NFTDescriptor'
+import {TestERC20} from "../../typechain";
 import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
 

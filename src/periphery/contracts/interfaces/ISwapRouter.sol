@@ -63,4 +63,12 @@ interface ISwapRouter is IAlgebraSwapCallback {
     /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactOutputParams` in calldata
     /// @return amountIn The amount of the input token
     function exactOutput(ExactOutputParams calldata params) external payable returns (uint256 amountIn);
+
+    /// @notice Swaps `amountIn` of one token for as much as possible of another along the specified path
+    /// @dev Unlike standard swaps, handles transferring from user before the actual swap.
+    /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactInputParams` in calldata
+    /// @return amountOut The amount of the received token
+    function exactInputSingleSupportingFeeOnTransferTokens(ExactInputSingleParams calldata params)
+        external
+        returns (uint256 amountOut);
 }
