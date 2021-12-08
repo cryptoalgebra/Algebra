@@ -2,6 +2,6 @@
 
 exports[`AlgebraFactory #createPool gas 1`] = `6322516`;
 
-exports[`AlgebraFactory factory bytecode size 1`] = `9652`;
+exports[`AlgebraFactory factory bytecode size 1`] = `9768`;
 
 exports[`AlgebraFactory pool bytecode size 1`] = `22276`;
