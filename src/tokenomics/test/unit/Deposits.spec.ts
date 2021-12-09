@@ -75,6 +75,7 @@ describe('unit/Deposits', () => {
       amount1Min: 0,
       deadline: (await blockTimestamp()) + 1000,
     })
+
   })
 
   describe('nft#safeTransferFrom', () => {
@@ -100,7 +101,6 @@ describe('unit/Deposits', () => {
 
     beforeEach('setup', async () => {
       const { startTime } = makeTimestamps(await blockTimestamp())
-
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -151,34 +151,6 @@ describe('unit/Deposits', () => {
       expect(incentive.numberOfFarms).to.eq(BN('1'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
     })
-
-    // it('allows depositing and staking for two incentives', async () => {
-    //   const createIncentiveResult2 = await helpers.createIncentiveFlow({
-    //     rewardToken: context.rewardToken,
-    //     poolAddress: context.poolObj.address,
-    //     startTime: createIncentiveResult.startTime + 100,
-    //     totalReward,
-    //   })
-    //
-    //   await Time.setAndMine(createIncentiveResult2.startTime)
-    //
-    //   const data = ethers.utils.defaultAbiCoder.encode(
-    //     [`${INCENTIVE_KEY_ABI}[]`],
-    //     [[createIncentiveResult, createIncentiveResult2].map(incentiveResultToFarmAdapter)]
-    //   )
-    //
-    //   await subject(data)
-    //   const { deposit, incentive, farm } = await getTokenInfo(tokenId)
-    //   expect(deposit.owner).to.eq(lpUser0.address)
-    //   expect(deposit.numberOfFarms).to.eq(BN('2'))
-    //   expect(incentive.numberOfFarms).to.eq(BN('1'))
-    //   //expect(farm.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
-    //
-    //   const { incentive: incentive2, farm: farm2 } = await getTokenInfo(tokenId, createIncentiveResult2)
-    //
-    //   expect(incentive2.numberOfFarms).to.eq(BN('1'))
-    //   //expect(farm2.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
-    // })
 
     describe('reverts when', () => {
       it('staking info is less than 160 bytes and greater than 0 bytes', async () => {
@@ -431,39 +403,157 @@ describe('unit/Deposits', () => {
     })
   })
 
-  // xdescribe('#transferDeposit', () => {
-  //   const lpUser1 = actors.lpUser1()
-  //   beforeEach('create a deposit by lpUser0', async () => {
-  //     await context.nft
-  //       .connect(lpUser0)
-  //       ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.tokenomics.address, tokenId)
-  //   })
+  describe('#transferNFTL2',  () => {
 
-  //   it('emits a DepositTransferred event', () =>
-  //     expect(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address))
-  //       .to.emit(context.tokenomics, 'DepositTransferred')
-  //       .withArgs(tokenId, recipient, lpUser1.address))
+    const lpUser1 = actors.lpUser1()     
 
-  //   it('transfers nft ownership', async () => {
-  //     const { owner: ownerBefore } = await context.tokenomics.deposits(tokenId)
-  //     await context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)
-  //     const { owner: ownerAfter } = await context.tokenomics.deposits(tokenId)
-  //     expect(ownerBefore).to.eq(lpUser0.address)
-  //     expect(ownerAfter).to.eq(lpUser1.address)
-  //   })
+    beforeEach('setup', async () => {
 
-  //   it('can only be called by the owner', async () => {
-  //     await expect(context.tokenomics.connect(lpUser1).transferDeposit(tokenId, lpUser1.address)).to.be.revertedWith(
-  //       'AlgebraFarming::transferDeposit: can only be called by deposit owner'
-  //     )
-  //   })
+        await context.nft.connect(lpUser0).approve(lpUser1.address,tokenId)
+  
+        await context.nft.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farming.address, tokenId,{...maxGas,from: lpUser0.address,})      
 
-  //   it('cannot be transferred to address 0', async () => {
-  //     await expect(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, constants.AddressZero)).to.be.revertedWith(
-  //       'AlgebraFarming::transferDeposit: invalid transfer recipient'
-  //     )
-  //   })
 
-  //   it('has gas cost', () => snapshotGasCost(context.tokenomics.connect(lpUser0).transferDeposit(tokenId, lpUser1.address)))
-  // })
+      })
+
+    it('emits a Transfer event', async () =>{
+      
+      const timestamps = makeTimestamps(await blockTimestamp())
+        
+      const incentiveParams: HelperTypes.CreateIncentive.Args = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          ...maxGas,
+        }
+
+
+      const incentive = await helpers.createIncentiveFlow(incentiveParams)
+        //await Time.setAndMine(timestamps.startTime + 1)
+      await context.farming.connect(lpUser0).enterFarming(
+          {
+            ...incentive,
+            pool: context.pool01,
+            rewardToken: incentive.rewardToken.address,
+            bonusRewardToken: incentive.bonusRewardToken.address,
+          },
+          tokenId
+      )   
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farming.deposits(tokenId)
+      await context.farming.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farming.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId))
+        .to.emit(context.farming, 'Transfer')
+        .withArgs(lpUser0.address, lpUser1.address, tokenId)
+    })
+
+    it('transfers nft ownership', async () => {
+      const timestamps = makeTimestamps(await blockTimestamp())
+        
+      const incentiveParams: HelperTypes.CreateIncentive.Args = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          ...maxGas,
+        }
+
+
+      const incentive = await helpers.createIncentiveFlow(incentiveParams)
+        //await Time.setAndMine(timestamps.startTime + 1)
+      await context.farming.connect(lpUser0).enterFarming(
+          {
+            ...incentive,
+            pool: context.pool01,
+            rewardToken: incentive.rewardToken.address,
+            bonusRewardToken: incentive.bonusRewardToken.address,
+          },
+          tokenId
+      )   
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farming.deposits(tokenId)
+      await context.farming.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await context.farming.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId)
+      await context.farming.connect(lpUser1).exitFarming(
+          {
+            ...incentive,
+            pool: context.pool01,
+            rewardToken: incentive.rewardToken.address,
+            bonusRewardToken: incentive.bonusRewardToken.address,
+          },
+          tokenId
+        )
+      const { owner: ownerAfter } = await context.farming.deposits(tokenId)
+      expect(ownerBefore).to.eq(lpUser0.address)
+      expect(ownerAfter).to.eq(lpUser1.address)
+
+    })
+
+    it('can only be called by the owner', async () => {
+      const timestamps = makeTimestamps(await blockTimestamp())
+        
+      const incentiveParams: HelperTypes.CreateIncentive.Args = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          ...maxGas,
+        }
+
+
+      const incentive = await helpers.createIncentiveFlow(incentiveParams)
+        //await Time.setAndMine(timestamps.startTime + 1)
+      await context.farming.connect(lpUser0).enterFarming(
+          {
+            ...incentive,
+            pool: context.pool01,
+            rewardToken: incentive.rewardToken.address,
+            bonusRewardToken: incentive.bonusRewardToken.address,
+          },
+          tokenId
+      )   
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farming.deposits(tokenId)
+      await context.farming.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farming.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, lpUser0.address, l2TokenId)).to.be.revertedWith(
+        'ERC721: transfer of token that is not own')
+    })
+
+    it('cannot be transferred to address 0', async () => {
+            const timestamps = makeTimestamps(await blockTimestamp())
+        
+      const incentiveParams: HelperTypes.CreateIncentive.Args = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          ...maxGas,
+        }
+
+
+      const incentive = await helpers.createIncentiveFlow(incentiveParams)
+        //await Time.setAndMine(timestamps.startTime + 1)
+      await context.farming.connect(lpUser0).enterFarming(
+          {
+            ...incentive,
+            pool: context.pool01,
+            rewardToken: incentive.rewardToken.address,
+            bonusRewardToken: incentive.bonusRewardToken.address,
+          },
+          tokenId
+      )   
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farming.deposits(tokenId)
+      await context.farming.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farming.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, constants.AddressZero, l2TokenId)).to.be.revertedWith(
+        'ERC721: transfer of token that is not own')
+    })
+
+    //it('has gas cost', () => snapshotGasCost(context.farming.connect(lpUser0).safeTransferFrom(lpUser0.address, lpUser1.address,tokenId)))
+  })
 })

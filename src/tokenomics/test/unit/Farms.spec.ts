@@ -691,8 +691,7 @@ describe('unit/Farms', () => {
         })
       })
 
-      it('calculates the right secondsPerLiquidity')
-      it('does not overflow totalSecondsUnclaimed')
+       it('calculates the right secondsPerLiquidity')
     })
 
     describe('fails if', () => {
