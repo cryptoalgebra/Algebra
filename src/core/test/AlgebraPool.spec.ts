@@ -1408,21 +1408,6 @@ describe('AlgebraPool', () => {
       console.log((await pool.globalState()).fee);
       let fee3 = (await pool.globalState()).fee;
       expect(fee3).to.be.equal(2983);
-      /*console.log(fee1, fee2, fee3);
-      let tick1 = (await pool.globalState()).tick;
-      let stats = await getStatistics(DAY);
-      console.log('Tick:', tick1 - tick0)
-      console.log('Volt:', stats[0].toString())
-      console.log('Volm:', BigNumber.from(stats[1]).div(BigNumber.from(2).pow(63)).toString())
-
-      console.log('V/L',
-        BigNumber.from(stats[1])
-        .mul(BigNumber.from(stats[2]))
-        .div(
-          BigNumber.from(DAY).mul(BigNumber.from(2).pow(128))
-          ).toString()
-      )
-      console.log(DAY)*/
     })
 
     it('single huge spike after initialization', async () => {
@@ -1446,22 +1431,7 @@ describe('AlgebraPool', () => {
       await swapExact0For1(BigNumber.from(1000), wallet.address);
       console.log((await pool.globalState()).fee);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(3112);
-      /*console.log(fee1, fee2, fee3);
-      let tick1 = (await pool.globalState()).tick;
-      let stats = await getStatistics(180);
-      console.log('Tick:', tick1 - tick0)
-      console.log('Volt:', stats[0].toString())
-      console.log('Volm:', BigNumber.from(stats[1]).div(BigNumber.from(2).pow(63)).toString())
-
-      console.log('V/L',
-        BigNumber.from(stats[1])
-        .mul(BigNumber.from(stats[2]))
-        .div(
-          BigNumber.from(DAY).mul(BigNumber.from(2).pow(128))
-          ).toString()
-      )
-      console.log(DAY)*/
+      expect(fee3).to.be.equal(2983);
     })
 
     xit('changes', async () => {
