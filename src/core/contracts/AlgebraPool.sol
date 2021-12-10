@@ -40,6 +40,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     struct Position {
         // The amount of liquidity concentrated in the range
         uint128 liquidity;
+        // Timestamp of last adding of liquidity
+        uint32 lastModificationTimestamp;
         // The last updated fee growth per unit of liquidity
         uint256 innerFeeGrowth0Token;
         uint256 innerFeeGrowth1Token;
@@ -54,6 +56,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     // @inheritdoc IAlgebraPoolState
     address public override activeIncentive;
+    // @inheritdoc IAlgebraPoolState
+    uint32 public override liquidityCooldown;
 
     // @dev Restricts everyone calling a function except factory owner
     modifier onlyFactoryOwner() {
@@ -216,7 +220,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint256 innerFeeGrowth0Token,
         uint256 innerFeeGrowth1Token
     ) internal {
-        uint128 currentLiquidity = _position.liquidity;
+        (uint128 currentLiquidity, uint32 lastModificationTimestamp) = (
+            _position.liquidity,
+            _position.lastModificationTimestamp
+        );
         uint256 _innerFeeGrowth0Token = _position.innerFeeGrowth0Token;
         uint256 _innerFeeGrowth1Token = _position.innerFeeGrowth1Token;
 
@@ -224,6 +231,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (liquidityDelta == 0) {
             require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
         } else {
+            if (liquidityDelta < 0) {
+                uint32 _liquidityCooldown = liquidityCooldown;
+                if (_liquidityCooldown > 0) {
+                    require((_blockTimestamp() - lastModificationTimestamp) >= _liquidityCooldown);
+                }
+            }
             liquidityNext = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         }
 
@@ -233,7 +246,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         );
 
         // update the position
-        if (liquidityDelta != 0) _position.liquidity = liquidityNext;
+        if (liquidityDelta != 0) {
+            (_position.liquidity, _position.lastModificationTimestamp) = (
+                liquidityNext,
+                liquidityNext > 0 ? (liquidityDelta > 0 ? _blockTimestamp() : lastModificationTimestamp) : 0
+            );
+        }
         _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
         _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
 
@@ -250,7 +268,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
      * @return amount0 The amount of token0 the caller needs to send, negative if the pool needs to send it
      * @return amount1 The amount of token1 the caller needs to send, negative if the pool needs to send it
      */
-    function _modifyPosition(
+    function _updatePositionTickAndFees(
         address owner,
         int24 bottomTick,
         int24 topTick,
@@ -479,7 +497,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         require(_liquidity > 0, 'IIL2');
 
         {
-            (, int256 amount0Int, int256 amount1Int) = _modifyPosition(
+            (, int256 amount0Int, int256 amount1Int) = _updatePositionTickAndFees(
                 recipient,
                 bottomTick,
                 topTick,
@@ -532,7 +550,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint128 amount
     ) external override lock returns (uint256 amount0, uint256 amount1) {
         tickValidation(bottomTick, topTick);
-        (Position storage position, int256 amount0Int, int256 amount1Int) = _modifyPosition(
+        (Position storage position, int256 amount0Int, int256 amount1Int) = _updatePositionTickAndFees(
             msg.sender,
             bottomTick,
             topTick,
@@ -1017,5 +1035,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         activeIncentive = virtualPoolAddress;
 
         emit IncentiveSet(virtualPoolAddress);
+    }
+
+    // @inheritdoc IAlgebraPoolPermissionedActions
+    function setLiquidityCooldown(uint32 newLiquidityCooldown) external override onlyFactoryOwner {
+        require(newLiquidityCooldown <= 1 days);
+        liquidityCooldown = newLiquidityCooldown;
     }
 }

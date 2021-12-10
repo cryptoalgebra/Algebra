@@ -2,6 +2,6 @@
 
 exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`] = `60933`;
 
-exports[`unit/Farms #enterFarming works and has gas cost 1`] = `470183`;
+exports[`unit/Farms #enterFarming works and has gas cost 1`] = `470227`;
 
 exports[`unit/Farms #exitFarming works and has gas cost 1`] = `157373`;

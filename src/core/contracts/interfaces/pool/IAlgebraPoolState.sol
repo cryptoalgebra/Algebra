@@ -102,6 +102,7 @@ interface IAlgebraPoolState {
         view
         returns (
             uint128 _liquidity,
+            uint32 lastModificationTimestamp,
             uint256 innerFeeGrowth0Token,
             uint256 innerFeeGrowth1Token,
             uint128 fees0,
@@ -141,4 +142,9 @@ interface IAlgebraPoolState {
      * startTimestamp The first swap after this timestamp is going to initialize the virtual pool
      */
     function activeIncentive() external view returns (address virtualPool);
+
+    /**
+     * @notice Returns the lock time for added liquidity
+     */
+    function liquidityCooldown() external view returns (uint32 cooldownInSeconds);
 }
