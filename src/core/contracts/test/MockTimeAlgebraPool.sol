@@ -24,6 +24,38 @@ contract MockTimeAlgebraPool is AlgebraPool {
         return uint32(time);
     }
 
+    function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
+        (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
+            _blockTimestamp(),
+            globalState.fee,
+            globalState.timepointIndex,
+            liquidity
+        );
+    }
+
+    function getPrevTick() external view returns (int24 tick, int24 currentTick) {
+        if (globalState.timepointIndex > 2) {
+            (, uint32 lastTsmp, int56 tickCum, , , , ) = IDataStorageOperator(dataStorageOperator).timepoints(
+                globalState.timepointIndex
+            );
+            (, uint32 plastTsmp, int56 ptickCum, , , , ) = IDataStorageOperator(dataStorageOperator).timepoints(
+                globalState.timepointIndex - 1
+            );
+            tick = int24((tickCum - ptickCum) / (lastTsmp - plastTsmp));
+        }
+        currentTick = globalState.tick;
+    }
+
+    function getFee() external view returns (uint16 fee) {
+        return
+            IDataStorageOperator(dataStorageOperator).getFee(
+                _blockTimestamp(),
+                globalState.tick,
+                globalState.timepointIndex,
+                liquidity
+            );
+    }
+
     function getKeyForPosition(
         address owner,
         int24 bottomTick,
