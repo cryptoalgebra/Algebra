@@ -27,12 +27,12 @@ contract AlgebraFactory is IAlgebraFactory {
 
     AdaptiveFee.Configuration public baseFeeConfiguration =
         AdaptiveFee.Configuration(
-            3000 - 500, // alpha1
+            3000 - Constants.BASE_FEE, // alpha1
             10000 - 3000, // alpha2
-            180 * 15, // beta1
-            1500 * 15, // beta2
-            30 * 15, // gamma1
-            100 * 15, // gamma2
+            360, // beta1
+            45000, // beta2
+            59, // gamma1
+            5000, // gamma2
             0, // volumeBeta
             10, // volumeGamma
             Constants.BASE_FEE // baseFee

@@ -173,6 +173,6 @@ contract DataStorageOperator is IDataStorageOperator {
             _liquidity
         );
 
-        return uint16(AdaptiveFee.getFee(TWVolatilityAverage, TWVolumePerLiqAverage, feeConfig));
+        return uint16(AdaptiveFee.getFee(TWVolatilityAverage / 15, TWVolumePerLiqAverage, feeConfig));
     }
 }
