@@ -17,7 +17,7 @@ library AdaptiveFee {
     }
 
     function getFee(
-        uint112 volatility,
+        uint88 volatility,
         uint256 volumePerLiquidity,
         Configuration memory config
     ) internal pure returns (uint256 fee) {

@@ -12,9 +12,7 @@ interface IAlgebraPoolState {
      * boundary.
      * timepointIndex The index of the last written timepoint
      * timepointIndexSwap The index of the last written (on swap) timepoint
-     * communityFee The community fee for both tokens of the pool.
-     * Encoded as two 4 bit values, where the community fee of token1 is shifted 4 bits and the community fee of token0
-     * is the lower 4 bits. Used as the denominator of a fraction of the swap fee, e.g. 4 means 1/4th of the swap fee.
+     * communityFeeToken0, communityFeeToken1 The community fee for both tokens of the pool.
      * unlocked Whether the pool is currently locked to reentrancy
      */
     function globalState()
@@ -48,12 +46,6 @@ interface IAlgebraPoolState {
      * @dev This value has no relationship to the total liquidity across all ticks
      */
     function liquidity() external view returns (uint128);
-
-    /**
-     * @notice The pool's fee in hundredths of a bip, i.e. 1e-6
-     * @return The fee
-     */
-    //function fee() external view returns (uint24);
 
     /**
      * @notice Look up information about a specific tick in the pool

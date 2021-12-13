@@ -337,14 +337,15 @@ library DataStorage {
     /// @param tick The current tick
     /// @param index The index of the timepoint that was most recently written to the timepoints array
     /// @param liquidity The current in-range pool liquidity
-    /// @return TWVolatilityAverage The average volatility in the recent range
+    /// @return volatilityAverage The average volatility in the recent range
+    /// volumePerLiqAverage The average volume per liquidity in the recent range
     function getAverages(
         Timepoint[65535] storage self,
         uint32 time,
         int24 tick,
         uint16 index,
         uint128 liquidity
-    ) internal view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
+    ) internal view returns (uint88 volatilityAverage, uint256 volumePerLiqAverage) {
         uint16 oldestIndex;
         Timepoint storage oldest = self[0];
         if (self[addmod(index, 1, 65535)].initialized) {

@@ -18,11 +18,11 @@ contract AdaptiveFeeTest {
             Constants.BASE_FEE
         );
 
-    function getFee(uint112 volatility, uint256 volumePerLiquidity) external view returns (uint256 fee) {
+    function getFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256 fee) {
         return AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
     }
 
-    function getGasCostOfGetFee(uint112 volatility, uint256 volumePerLiquidity) external view returns (uint256) {
+    function getGasCostOfGetFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256) {
         uint256 gasBefore = gasleft();
         AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
         return gasBefore - gasleft();

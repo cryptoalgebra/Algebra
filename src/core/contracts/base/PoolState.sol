@@ -29,9 +29,6 @@ abstract contract PoolState is IAlgebraPoolState {
     // @inheritdoc IAlgebraPoolState
     GlobalState public override globalState;
 
-    // Protocol fees of token0 or token1 collect within a swap
-    uint256 internal communityFee;
-
     // @inheritdoc IAlgebraPoolState
     uint128 public override liquidity;
     uint128 internal volumePerLiquidityInBlock;
