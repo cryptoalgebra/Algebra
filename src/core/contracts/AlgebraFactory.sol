@@ -15,6 +15,7 @@ import './DataStorageOperator.sol';
 contract AlgebraFactory is IAlgebraFactory {
     // TODO: REMOVE
     bool public override isPaused;
+    bool public override isPauseForbidden;
     /// @inheritdoc IAlgebraFactory
     address public override owner;
 
@@ -150,10 +151,17 @@ contract AlgebraFactory is IAlgebraFactory {
 
     // TODO: remove
     function pause() external onlyOwner {
+        require(!isPauseForbidden, 'Forbidden');
         isPaused = true;
     }
 
     function unpause() external onlyOwner {
+        isPaused = false;
+    }
+
+    function forbidPause() external onlyOwner {
+        require(!isPauseForbidden, 'Already forbidden');
+        isPauseForbidden = true;
         isPaused = false;
     }
 }

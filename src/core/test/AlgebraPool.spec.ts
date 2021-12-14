@@ -2104,18 +2104,23 @@ describe('AlgebraPool', () => {
       ).to.not.be.revertedWith('IIA')
     })
   })
-  
-  describe('#pausable', () => {
+
+  describe.only('#pausable', () => {
     beforeEach('initialize the pool at price of 10:1', async () => {
         await pool.initialize(encodePriceSqrt(1, 10))
     })
-    it('unable to mint when paused', async() =>{
+    it('unable to mint when paused', async() => {
       await factory.pause();
       await expect(mint(wallet.address, minTick, maxTick, 3161)).to.be.revertedWith('The Algebra is paused')
     })
-    it('unable to swap when paused', async() =>{
+    it('unable to swap when paused', async() => {
       await factory.pause();
       await expect(swapExact0For1(expandTo18Decimals(1).div(10), wallet.address)).to.be.revertedWith('The Algebra is paused')
+    })
+
+    it('unable to pause when forbidden', async() => {
+      await factory.forbidPause();
+      await expect(factory.pause()).to.be.revertedWith('Forbidden');
     })
   })
 })
