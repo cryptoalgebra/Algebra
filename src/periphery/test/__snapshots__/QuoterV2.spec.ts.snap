@@ -4,7 +4,7 @@ exports[`QuoterV2 quotes #quoteExactInputSingle 0 -> 2 1`] = `197028`;
 
 exports[`QuoterV2 quotes #quoteExactInputSingle 2 -> 0 1`] = `190728`;
 
-exports[`QuoterV2 quotes #quoteExactOutput 0 -> 2 -> 1 1`] = `341728`;
+exports[`QuoterV2 quotes #quoteExactOutput 0 -> 2 -> 1 1`] = `341718`;
 
 exports[`QuoterV2 quotes #quoteExactOutput 0 -> 2 cross 0 tick starting tick initialized 1`] = `177345`;
 
@@ -22,7 +22,7 @@ exports[`QuoterV2 quotes #quoteExactOutput 2 -> 0 cross 2 ticks 1`] = `190925`;
 
 exports[`QuoterV2 quotes #quoteExactOutput 2 -> 0 cross 2 where tick after is initialized 1`] = `190909`;
 
-exports[`QuoterV2 quotes #quoteExactOutput 2 -> 1 1`] = `152375`;
+exports[`QuoterV2 quotes #quoteExactOutput 2 -> 1 1`] = `152365`;
 
 exports[`QuoterV2 quotes #quoteExactOutputSingle 0 -> 1 1`] = `158538`;
 

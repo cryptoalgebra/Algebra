@@ -1,84 +1,84 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AdaptiveFee #getFee fee grid snapshot 1`] = `
-"[Volm: 0Volt: 0]500
-[Volm: 0Volt: 50]504
-[Volm: 0Volt: 100]519
-[Volm: 0Volt: 150]559
-[Volm: 0Volt: 200]600
-[Volm: 0Volt: 250]615
-[Volm: 0Volt: 300]618
-[Volm: 0Volt: 350]619
-[Volm: 0Volt: 400]619
-[Volm: 0Volt: 500]619
-[Volm: 0Volt: 800]619
-[Volm: 0Volt: 1000]622
-[Volm: 0Volt: 1500]787
-[Volm: 0Volt: 2000]953
+"[Volm: 0Volt: 0]100
+[Volm: 0Volt: 50]104
+[Volm: 0Volt: 100]119
+[Volm: 0Volt: 150]159
+[Volm: 0Volt: 200]200
+[Volm: 0Volt: 250]215
+[Volm: 0Volt: 300]218
+[Volm: 0Volt: 350]219
+[Volm: 0Volt: 400]219
+[Volm: 0Volt: 500]219
+[Volm: 0Volt: 800]219
+[Volm: 0Volt: 1000]222
+[Volm: 0Volt: 1500]387
+[Volm: 0Volt: 2000]553
 
 ======================================
-[Volm: 15Volt: 0]503
-[Volm: 15Volt: 50]515
-[Volm: 15Volt: 100]572
-[Volm: 15Volt: 150]728
-[Volm: 15Volt: 200]883
-[Volm: 15Volt: 250]940
-[Volm: 15Volt: 300]952
-[Volm: 15Volt: 350]956
-[Volm: 15Volt: 400]956
-[Volm: 15Volt: 500]956
-[Volm: 15Volt: 800]956
-[Volm: 15Volt: 1000]965
-[Volm: 15Volt: 1500]1594
-[Volm: 15Volt: 2000]2223
+[Volm: 15Volt: 0]103
+[Volm: 15Volt: 50]115
+[Volm: 15Volt: 100]172
+[Volm: 15Volt: 150]328
+[Volm: 15Volt: 200]483
+[Volm: 15Volt: 250]540
+[Volm: 15Volt: 300]552
+[Volm: 15Volt: 350]556
+[Volm: 15Volt: 400]556
+[Volm: 15Volt: 500]556
+[Volm: 15Volt: 800]556
+[Volm: 15Volt: 1000]565
+[Volm: 15Volt: 1500]1194
+[Volm: 15Volt: 2000]1823
 
 ======================================
-[Volm: 30Volt: 0]509
-[Volm: 30Volt: 50]543
-[Volm: 30Volt: 100]698
-[Volm: 30Volt: 150]1125
-[Volm: 30Volt: 200]1551
-[Volm: 30Volt: 250]1706
-[Volm: 30Volt: 300]1740
-[Volm: 30Volt: 350]1750
-[Volm: 30Volt: 400]1750
-[Volm: 30Volt: 500]1750
-[Volm: 30Volt: 800]1750
-[Volm: 30Volt: 1000]1777
-[Volm: 30Volt: 1500]3500
-[Volm: 30Volt: 2000]5222
+[Volm: 30Volt: 0]109
+[Volm: 30Volt: 50]143
+[Volm: 30Volt: 100]298
+[Volm: 30Volt: 150]725
+[Volm: 30Volt: 200]1151
+[Volm: 30Volt: 250]1306
+[Volm: 30Volt: 300]1340
+[Volm: 30Volt: 350]1350
+[Volm: 30Volt: 400]1350
+[Volm: 30Volt: 500]1350
+[Volm: 30Volt: 800]1350
+[Volm: 30Volt: 1000]1377
+[Volm: 30Volt: 1500]3100
+[Volm: 30Volt: 2000]4822
 
 ======================================
-[Volm: 45Volt: 0]515
-[Volm: 45Volt: 50]571
-[Volm: 45Volt: 100]824
-[Volm: 45Volt: 150]1521
-[Volm: 45Volt: 200]2218
-[Volm: 45Volt: 250]2471
-[Volm: 45Volt: 300]2527
-[Volm: 45Volt: 350]2543
-[Volm: 45Volt: 400]2543
-[Volm: 45Volt: 500]2543
-[Volm: 45Volt: 800]2543
-[Volm: 45Volt: 1000]2588
-[Volm: 45Volt: 1500]5405
-[Volm: 45Volt: 2000]8221
+[Volm: 45Volt: 0]115
+[Volm: 45Volt: 50]171
+[Volm: 45Volt: 100]424
+[Volm: 45Volt: 150]1121
+[Volm: 45Volt: 200]1818
+[Volm: 45Volt: 250]2071
+[Volm: 45Volt: 300]2127
+[Volm: 45Volt: 350]2143
+[Volm: 45Volt: 400]2143
+[Volm: 45Volt: 500]2143
+[Volm: 45Volt: 800]2143
+[Volm: 45Volt: 1000]2188
+[Volm: 45Volt: 1500]5005
+[Volm: 45Volt: 2000]7821
 
 ======================================
-[Volm: 60Volt: 0]518
-[Volm: 60Volt: 50]582
-[Volm: 60Volt: 100]877
-[Volm: 60Volt: 150]1690
-[Volm: 60Volt: 200]2501
-[Volm: 60Volt: 250]2796
-[Volm: 60Volt: 300]2861
-[Volm: 60Volt: 350]2880
-[Volm: 60Volt: 400]2880
-[Volm: 60Volt: 500]2880
-[Volm: 60Volt: 800]2880
-[Volm: 60Volt: 1000]2931
-[Volm: 60Volt: 1500]6212
-[Volm: 60Volt: 2000]9491
+[Volm: 60Volt: 0]118
+[Volm: 60Volt: 50]182
+[Volm: 60Volt: 100]477
+[Volm: 60Volt: 150]1290
+[Volm: 60Volt: 200]2101
+[Volm: 60Volt: 250]2396
+[Volm: 60Volt: 300]2461
+[Volm: 60Volt: 350]2480
+[Volm: 60Volt: 400]2480
+[Volm: 60Volt: 500]2480
+[Volm: 60Volt: 800]2480
+[Volm: 60Volt: 1000]2531
+[Volm: 60Volt: 1500]5812
+[Volm: 60Volt: 2000]9091
 
 ======================================
 "

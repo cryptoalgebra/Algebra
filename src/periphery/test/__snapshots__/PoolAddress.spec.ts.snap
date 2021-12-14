@@ -2,4 +2,4 @@
 
 exports[`PoolAddress #computeAddress gas cost 1`] = `579`;
 
-exports[`PoolAddress #computeAddress matches example from core repo 1`] = `"0x0849eB13468a1C94d2E27ECfee3f7e6aCe3D1Efe"`;
+exports[`PoolAddress #computeAddress matches example from core repo 1`] = `"0x434E0D18dd4d2446dFce3fbb8B42B9dB7B2254e2"`;
