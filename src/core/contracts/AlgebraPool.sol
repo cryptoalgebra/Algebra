@@ -593,7 +593,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int256 amountRequired,
         uint160 limitSqrtPrice,
         bytes calldata data
-    ) external override whenUnpaused returns (int256 amount0, int256 amount1) {
+    ) external override returns (int256 amount0, int256 amount1) {
         uint160 currentPrice;
         int24 currentTick;
         uint128 currentLiquidity;
@@ -640,7 +640,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int256 amountRequired,
         uint160 limitSqrtPrice,
         bytes calldata data
-    ) external override whenUnpaused returns (int256 amount0, int256 amount1) {
+    ) external override returns (int256 amount0, int256 amount1) {
         uint160 currentPrice;
         int24 currentTick;
         uint128 currentLiquidity;
@@ -746,6 +746,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint160 limitSqrtPrice
     )
         private
+        whenUnpaused
         returns (
             int256 amount0,
             int256 amount1,
