@@ -24,7 +24,7 @@ contract DataStorageTest {
         time = params.time;
         tick = params.tick;
         liquidity = params.liquidity;
-        timepoints.initialize(params.time);
+        timepoints.initialize(params.time, tick);
     }
 
     function advanceTime(uint32 by) public {

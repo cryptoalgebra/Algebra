@@ -380,14 +380,19 @@ library DataStorage {
     /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
     /// @param self The stored dataStorage array
     /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
-    function initialize(Timepoint[65535] storage self, uint32 time) internal {
+    /// @param tick Initial tick
+    function initialize(
+        Timepoint[65535] storage self,
+        uint32 time,
+        int24 tick
+    ) internal {
         self[0] = Timepoint({
             initialized: true,
             blockTimestamp: time,
             tickCumulative: 0,
             secondsPerLiquidityCumulative: 0,
             volatilityCumulative: 0,
-            averageTick: 0,
+            averageTick: tick,
             volumePerLiquidityCumulative: 0
         });
     }

@@ -26,7 +26,7 @@ interface IDataStorageOperator {
             uint144 volumePerLiquidityCumulative
         );
 
-    function initialize(uint32 time) external;
+    function initialize(uint32 time, int24 tick) external;
 
     function getSingleTimepoint(
         uint32 time,
