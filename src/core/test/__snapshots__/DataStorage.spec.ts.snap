@@ -76,4 +76,4 @@ exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting 
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest 1`] = `23495`;
 
-exports[`DataStorage #initialize gas 1`] = `69767`;
+exports[`DataStorage #initialize gas 1`] = `89936`;
