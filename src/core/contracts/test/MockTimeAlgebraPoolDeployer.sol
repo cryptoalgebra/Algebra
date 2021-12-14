@@ -21,11 +21,11 @@ contract MockTimeAlgebraPoolDeployer {
     AdaptiveFee.Configuration baseFeeConfiguration =
         AdaptiveFee.Configuration(
             3000 - Constants.BASE_FEE, // alpha1
-            10000 - 3000, // alpha2
+            15000 - 3000, // alpha2
             360, // beta1
-            45000, // beta2
+            60000, // beta2
             59, // gamma1
-            5000, // gamma2
+            8500, // gamma2
             0, // volumeBeta
             10, // volumeGamma
             Constants.BASE_FEE // baseFee
