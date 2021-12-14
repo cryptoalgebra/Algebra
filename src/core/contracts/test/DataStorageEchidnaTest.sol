@@ -19,6 +19,7 @@ contract DataStorageEchidnaTest {
         int24 tick,
         uint128 liquidity
     ) external {
+        require(tick % 60 == 0);
         dataStorage.initialize(DataStorageTest.InitializeParams({time: time, tick: tick, liquidity: liquidity}));
         initialized = true;
     }

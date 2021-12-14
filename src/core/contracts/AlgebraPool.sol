@@ -65,6 +65,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         _;
     }
 
+    modifier whenUnpaused() {
+        require(IAlgebraFactory(factory).isPaused() == false, 'The Algebra is paused');
+        _;
+    }
+
     constructor() PoolImmutables(msg.sender) {
         globalState.fee = Constants.BASE_FEE;
     }
@@ -454,6 +459,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         external
         override
         lock
+        whenUnpaused
         returns (
             uint256 amount0,
             uint256 amount1,
@@ -587,7 +593,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int256 amountRequired,
         uint160 limitSqrtPrice,
         bytes calldata data
-    ) external override returns (int256 amount0, int256 amount1) {
+    ) external override whenUnpaused returns (int256 amount0, int256 amount1) {
         uint160 currentPrice;
         int24 currentTick;
         uint128 currentLiquidity;
@@ -634,7 +640,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int256 amountRequired,
         uint160 limitSqrtPrice,
         bytes calldata data
-    ) external override returns (int256 amount0, int256 amount1) {
+    ) external override whenUnpaused returns (int256 amount0, int256 amount1) {
         uint160 currentPrice;
         int24 currentTick;
         uint128 currentLiquidity;

@@ -13,6 +13,8 @@ import './DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract AlgebraFactory is IAlgebraFactory {
+    // TODO: REMOVE
+    bool public override isPaused;
     /// @inheritdoc IAlgebraFactory
     address public override owner;
 
@@ -130,7 +132,7 @@ contract AlgebraFactory is IAlgebraFactory {
         );
     }
 
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0xa6d95e5419b130f0085005dc5d21b64212e1c1009f4f3a54f58a45dec17e984f;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0xd1875ca654fa4b1198349a304090aeab7284a111469f00978ffd48dc401cd5da;
 
     /// @notice Deterministically computes the pool address given the factory and PoolKey
     /// @param token0 first token
@@ -144,5 +146,14 @@ contract AlgebraFactory is IAlgebraFactory {
                 )
             )
         );
+    }
+
+    // TODO: remove
+    function pause() external onlyOwner {
+        isPaused = true;
+    }
+
+    function unpause() external onlyOwner {
+        isPaused = false;
     }
 }
