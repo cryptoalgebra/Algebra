@@ -2105,7 +2105,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe.only('#pausable', () => {
+  describe('#pausable', () => {
     beforeEach('initialize the pool at price of 10:1', async () => {
         await pool.initialize(encodePriceSqrt(1, 10))
     })
