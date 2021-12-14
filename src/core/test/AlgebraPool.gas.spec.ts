@@ -119,7 +119,7 @@ describe('AlgebraPool gas tests', () => {
 
         it('first swap in block, large swap, no initialized crossings', async () => {
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address))
-          expect((await pool.globalState()).tick).to.eq(-35829)
+          expect((await pool.globalState()).tick).to.eq(-35836)
         })
 
         it('first swap in block, large swap crossing several initialized ticks', async () => {
