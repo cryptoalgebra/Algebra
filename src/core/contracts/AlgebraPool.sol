@@ -197,7 +197,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int24 tick = TickMath.getTickAtSqrtRatio(initialPrice);
 
         // initialize DataStorageOperator
-        IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp());
+        IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick);
 
         // initialize the pool
         globalState.price = initialPrice;

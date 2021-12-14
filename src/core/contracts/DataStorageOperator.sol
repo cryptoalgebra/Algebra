@@ -34,8 +34,8 @@ contract DataStorageOperator is IDataStorageOperator {
         pool = _pool;
     }
 
-    function initialize(uint32 time) external override onlyPool {
-        return timepoints.initialize(time);
+    function initialize(uint32 time, int24 tick) external override onlyPool {
+        return timepoints.initialize(time, tick);
     }
 
     function changeFeeConfiguration(
