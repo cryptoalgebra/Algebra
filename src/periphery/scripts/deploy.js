@@ -70,7 +70,7 @@ async function main() {
   // // arg2 wnative address
   // // arg3 nonfungiblePositionManager address
   const V3MigratorFactory = await hre.ethers.getContractFactory("V3Migrator");
-  const V3Migrator = await V3MigratorFactory.deploy(deploysData.factory, WNativeTokenAddress, NonfungibleTokenPositionDescriptor.address,deploysData.poolDeployer);
+  const V3Migrator = await V3MigratorFactory.deploy(deploysData.factory, WNativeTokenAddress, NonfungiblePositionManager.address,deploysData.poolDeployer);
   
   await V3Migrator.deployed();
 
