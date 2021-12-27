@@ -70,7 +70,7 @@ contract AlgebraVault{
         if (withFee == 0){
             ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams(
                 path,
-                stakingAddress,
+                address(this),
                 block.timestamp,
                 balance,
                 amountOutMin
@@ -83,7 +83,7 @@ contract AlgebraVault{
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams(
                 address(tokenToSwap),
                 ALGB,
-                stakingAddress,
+                address(this),
                 block.timestamp,
                 balance,
                 amountOutMin,
@@ -102,14 +102,24 @@ contract AlgebraVault{
         );
     }
 
-    function transferALGB() external onlyRelayerOrOwner {
+    function transferALGB(uint256 amountALGBToTransfer) external onlyRelayerOrOwner {
         IERC20 ALGBToken = IERC20(ALGB);
-        ALGBToken.transfer(stakingAddress, ALGBToken.balanceOf(address(this)));
+        ALGBToken.transfer(stakingAddress, amountALGBToTransfer);
     }
 
     function setRelayer(address _relayer) external onlyOwner{
         require(_relayer != address(0));
         relayer = _relayer;
+    }
+
+    function setStakingAddress(address _staking) external onlyOwner{
+        require(_staking != address(0));
+        stakingAddress = _staking;
+    }
+
+    function sweepTokens(IERC20 token, uint256 amount, address _to) external onlyOwner{
+        require(_to != address(0));
+        token.transfer(_to, amount);
     }
 
     function transferOwner(address _newOwner) external onlyOwner{

@@ -133,8 +133,30 @@ describe('AlgebraVault', async ()=> {
         0,
         '0'
       )
-      expect(await ALGB.balanceOf(stakingAddress)).to.be.gt(BN(0))
+      expect(await ALGB.balanceOf(vault.address)).to.be.gt(BN(0))
       expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
+
+      const ALGBBalance = await ALGB.balanceOf(vault.address)
+      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+      expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
+    })
+
+    it('possible to change staking address', async()=>{
+      await vault.setRelayer(wallets[2].address)
+      await vault.connect(wallets[2]).swapToALGB(
+        tokens[1].address,
+        encodePath([tokens[1].address, ALGB.address]),
+        0,
+        '0'
+      )
+      expect(await ALGB.balanceOf(vault.address)).to.be.gt(BN(0))
+      expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
+
+      await vault.setStakingAddress(wallets[2].address)
+
+      const ALGBBalance = await ALGB.balanceOf(vault.address)
+      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+      expect(await ALGB.balanceOf(wallets[2].address)).to.be.eq(ALGBBalance)
     })
 
     it('cannot be called by not a relayer', async ()=>{
@@ -149,7 +171,7 @@ describe('AlgebraVault', async ()=> {
     it('can transfer ALGB directly', async()=>{
       await vault.setRelayer(wallets[2].address)
       const ALGBBalance = await ALGB.balanceOf(vault.address)
-      await vault.connect(wallets[2]).transferALGB()
+      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
       expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
     })
 
@@ -174,7 +196,12 @@ describe('AlgebraVault', async ()=> {
           0,
           '228'
         )
-        expect(await ALGB.balanceOf(stakingAddress)).to.be.gt(BN(0))
+        expect(await ALGB.balanceOf(vault.address)).to.be.gt(BN(0))
+        expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
+
+        const ALGBBalance = await ALGB.balanceOf(vault.address)
+        await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+        expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
       })
     })
 
