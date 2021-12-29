@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 async function main() {
-  const AlgebraTokenStaker = await hre.ethers.getContractFactory("AlgebraTokenStaking");
-  const AlgebraTokenStakerDeploy = await AlgebraTokenStaker.deploy('0xB347b9f5B56b431B2CF4e1d90a5995f7519ca792');
+    const AlgebraTokenStaker = await hre.ethers.getContractFactory("AlgebraTokenStaking");
+    const AlgebraTokenStakerDeploy = await AlgebraTokenStaker.deploy(
+        '0x0169ec1f8f639b32eec6d923e24c2a2ff45b9dd6'
+    );
 
   await AlgebraTokenStakerDeploy.deployed();
 
