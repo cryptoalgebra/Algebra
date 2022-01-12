@@ -8,9 +8,9 @@ import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
+import './IProxy.sol';
 import './IVirtualPoolDeployer.sol';
 import './IAlgebraIncentiveVirtualPool.sol';
-
 import './IIncentiveKey.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
@@ -19,7 +19,7 @@ import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMulticall {
+interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @notice The pool deployer with which this farming contract is compatible
     function deployer() external view returns (IAlgebraPoolDeployer);
 
@@ -34,6 +34,9 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
 
     /// @notice The max amount of seconds into the future the incentive startTime can be set
     function maxIncentiveStartLeadTime() external view returns (uint256);
+
+    /// @notice Proxy
+    function proxy() external view returns (IProxy);
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
@@ -50,19 +53,9 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
         );
 
     /// @notice Returns information about a deposited NFT
-    /// @return L2TokenId The nft layer2 id
-    /// @return owner The owner of the deposited NFT
     /// @return tickLower The lower tick of the range
     /// @return tickUpper The upper tick of the range
-    function deposits(uint256 tokenId)
-        external
-        view
-        returns (
-            uint256 L2TokenId,
-            address owner,
-            int24 tickLower,
-            int24 tickUpper
-        );
+    function deposits(uint256 tokenId) external view returns (int24 tickLower, int24 tickUpper);
 
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
@@ -89,25 +82,27 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
         uint256 bonusReward
     ) external returns (address virtualPool);
 
-    /// @notice Withdraws a Algebra LP token `tokenId` from this contract to the recipient `to`
-    /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param to The address where the LP token will be sent
-    /// @param data An optional data array that will be passed along to the `to` address via the NFT safeTransferFrom
-    function withdrawToken(
-        uint256 tokenId,
-        address to,
-        bytes memory data
-    ) external;
-
     /// @notice Farms a Algebra LP token
     /// @param key The key of the incentive for which to farm the NFT
     /// @param tokenId The ID of the token to farm
-    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        int24 _tickLower,
+        int24 _tickUpper
+    ) external;
+
+    /// @notice
+    function setProxyAddress(address _proxy) external;
 
     /// @notice exitFarmings a Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
-    function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function exitFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        address _owner
+    ) external;
 
     /// @notice Transfers `amountRequested` of accrued `rewardToken` rewards from the contract to the recipient `to`
     /// @param rewardToken The token being distributed as a reward
@@ -159,15 +154,9 @@ interface IAlgebraFarming is IIncentiveKey, IERC721Receiver, IERC721Permit, IMul
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param L2tokenId The unique identifier of an Algebra Farming token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
-    event FarmStarted(
-        uint256 indexed tokenId,
-        uint256 indexed L2tokenId,
-        bytes32 indexed incentiveId,
-        uint128 liquidity
-    );
+    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
 
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
