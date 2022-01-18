@@ -24,6 +24,7 @@ import {
   IAlgebraPoolDeployer,
   IAlgebraPool,
   TestIncentiveId,
+  Proxy 
 } from '../../typechain'
 import {TestERC20} from "../../typechain";
 import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
@@ -258,6 +259,8 @@ export type AlgebraFixtureType = {
   router: ISwapRouter
   vdeployer: IVirtualPoolDeployer
   farming: AlgebraIncentiveFarming
+  eternalFarming: AlgebraEternalFarming
+  proxy: Proxy
   testIncentiveId: TestIncentiveId
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
@@ -273,14 +276,28 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   const signer = new ActorFixture(wallets, provider).farmingDeployer()
 
   const incentiveCreator = new ActorFixture(wallets, provider).incentiveCreator()
-
+  
   const farmingFactory = await ethers.getContractFactory('AlgebraIncentiveFarming', signer)
 
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraIncentiveFarming
 
-  await factory.setFarmingAddress(farming.address)
+  const eternalFarmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
+
+  const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
+
+  const proxyFactory = await ethers.getContractFactory('Proxy', signer) 
+
+
+  const proxy = (await proxyFactory.deploy(farming.address,eternalFarming.address, nft.address)) as Proxy
+  
+  await eternalFarming.setProxyAddress(proxy.address)
+
+  await farming.setProxyAddress(proxy.address)
+
+  await factory.setFarmingAddress(proxy.address)
 
   await vdeployer.setFarming(farming.address)
+  
   await farming.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
@@ -300,12 +317,14 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   const pool12 = await factory.poolByPair(tokens[1].address, tokens[2].address)
 
   const poolObj = poolFactory.attach(pool01) as IAlgebraPool
-
+  console.log(100)
   return {
     nft,
     router,
     tokens,
     farming,
+    eternalFarming,
+    proxy,
     testIncentiveId,
     deployer,
     factory,
@@ -332,6 +351,7 @@ export type EternalAlgebraFixtureType = {
   router: ISwapRouter
   vdeployer: IVirtualPoolDeployer
   farming: AlgebraEternalFarming
+  proxy: Proxy
   testIncentiveId: TestIncentiveId
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
@@ -349,11 +369,23 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
 
   const incentiveCreator = new ActorFixture(wallets, provider).incentiveCreator()
 
+  const incentiveFarmingFactory = await ethers.getContractFactory('AlgebraIncentiveFarming', signer)
+
+  const incentiveFarming = (await incentiveFarmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraIncentiveFarming
+
   const farmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
 
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, vdeployer.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
 
-  await factory.setFarmingAddress(farming.address)
+  const proxyFactory = await ethers.getContractFactory('Proxy', signer) 
+
+  const proxy = (await proxyFactory.deploy(incentiveFarming.address, farming.address, nft)) as Proxy
+
+  await farming.setProxyAddress(proxy.address)
+
+  await farming.setProxyAddress(proxy.address)
+
+  await factory.setFarmingAddress(proxy.address)
 
   await vdeployer.setFarming(farming.address)
   await farming.setIncentiveMaker(incentiveCreator.address)
@@ -381,6 +413,7 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
     router,
     tokens,
     farming,
+    proxy,
     testIncentiveId,
     deployer,
     factory,

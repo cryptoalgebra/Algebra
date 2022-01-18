@@ -105,10 +105,14 @@ describe('unit/Incentives', async () => {
         const incentive = await context.farming.incentives(incentiveId)
       })
 
-      it('adds to existing incentives', async () => {
+      it.only('adds to existing incentives', async () => {
+        console.log("incentive")
         const params = makeTimestamps(await blockTimestamp())
+        console.log("incentive")
         expect(await subject(params)).to.emit(context.farming, 'IncentiveCreated')
-        await expect(subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
+        console.log("incentive")
+        expect(await subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
+        console.log("incentive")
         const incentiveId = await context.testIncentiveId.compute({
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
@@ -117,6 +121,7 @@ describe('unit/Incentives', async () => {
           endTime: timestamps.endTime,
           refundee: incentiveCreator.address,
         })
+        console.log("incentive")
         const { numberOfFarms } = await context.farming.incentives(
           incentiveId
         )
@@ -159,7 +164,7 @@ describe('unit/Incentives', async () => {
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]),
-            context.farming.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
+            context.proxy.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
           ])
         ;({ numberOfFarms } = await context.farming
           .connect(actors.lpUser0())

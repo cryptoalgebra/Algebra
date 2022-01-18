@@ -86,10 +86,13 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
             L2TokenId: _nextId,
             tickLower: tickLower,
             tickUpper: tickUpper,
-            numberOfStakes: 1
+            numberOfStakes: 0
         });
-        l2Nfts[tokenId].tokenId = _nextId;
-        _mint(msg.sender, _nextId++);
+
+        l2Nfts[_nextId].tokenId = tokenId;
+
+        _mint(tx.origin, _nextId);
+        _nextId++;
 
         emit DepositTransferred(tokenId, address(0), from);
 
@@ -129,7 +132,7 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
         farming.exitFarming(key, tokenId, msg.sender);
-        deposits[tokenId].numberOfStakes += 1;
+        deposits[tokenId].numberOfStakes -= 1;
     }
 
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
@@ -162,7 +165,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
     ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
         require(to != address(this), 'AlgebraFarming::withdrawToken: cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
-        require(deposit.numberOfStakes == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmd');
+
+        require(deposit.numberOfStakes == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmed');
 
         burn(deposit.L2TokenId);
         delete deposits[tokenId];
