@@ -137,8 +137,32 @@ describe('AlgebraVault', async ()=> {
       expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
 
       const ALGBBalance = await ALGB.balanceOf(vault.address)
-      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+      await vault.connect(wallets[2]).transferALGB(1000000)
       expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
+    })
+
+    it('transfer percentage works', async()=>{
+      await vault.setRelayer(wallets[2].address)
+      await vault.connect(wallets[2]).swapToALGB(
+        tokens[1].address,
+        encodePath([tokens[1].address, ALGB.address]),
+        0,
+        '0'
+      )
+      expect(await ALGB.balanceOf(vault.address)).to.be.gt(BN(0))
+      expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
+
+      const ALGBBalance = await ALGB.balanceOf(vault.address)
+      await vault.connect(wallets[2]).transferALGB(800000)
+      const stakingBalanceFirst = await ALGB.balanceOf(stakingAddress)
+      expect(stakingBalanceFirst).to.be.eq((Number(ALGBBalance) * 0.8).toFixed(0))
+      expect(await vault.accumulatedALGB()).to.be.eq((Number(ALGBBalance) * 0.2).toFixed(0))
+
+      const amount = BigNumber.from('1000')
+      await ALGB.transfer(vault.address, amount)
+      await vault.connect(wallets[2]).transferALGB(800000)
+      expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(+stakingBalanceFirst + +(Number(amount) * 0.8)
+        .toFixed(0))
     })
 
     it('possible to change staking address', async()=>{
@@ -155,7 +179,7 @@ describe('AlgebraVault', async ()=> {
       await vault.setStakingAddress(wallets[2].address)
 
       const ALGBBalance = await ALGB.balanceOf(vault.address)
-      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+      await vault.connect(wallets[2]).transferALGB(1000000)
       expect(await ALGB.balanceOf(wallets[2].address)).to.be.eq(ALGBBalance)
     })
 
@@ -171,7 +195,7 @@ describe('AlgebraVault', async ()=> {
     it('can transfer ALGB directly', async()=>{
       await vault.setRelayer(wallets[2].address)
       const ALGBBalance = await ALGB.balanceOf(vault.address)
-      await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+      await vault.connect(wallets[2]).transferALGB(1000000)
       expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
     })
 
@@ -200,7 +224,7 @@ describe('AlgebraVault', async ()=> {
         expect(await tokens[1].balanceOf(vault.address)).to.be.lte(BN(1))
 
         const ALGBBalance = await ALGB.balanceOf(vault.address)
-        await vault.connect(wallets[2]).transferALGB(ALGBBalance)
+        await vault.connect(wallets[2]).transferALGB(1000000)
         expect(await ALGB.balanceOf(stakingAddress)).to.be.eq(ALGBBalance)
       })
     })

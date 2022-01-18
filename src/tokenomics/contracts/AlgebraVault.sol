@@ -3,16 +3,20 @@ pragma abicoder v2;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra-periphery/contracts/interfaces/ISwapRouter.sol';
 
 contract AlgebraVault{
     using SafeERC20 for IERC20;
+    using FullMath for uint256;
 
     address public stakingAddress;
     address public ALGB;
 
     address public owner;
     address public relayer;
+
+    uint256 public accumulatedALGB;
 
     ISwapRouter AlgebraRouter;
 
@@ -102,9 +106,13 @@ contract AlgebraVault{
         );
     }
 
-    function transferALGB(uint256 amountALGBToTransfer) external onlyRelayerOrOwner {
+    function transferALGB(uint256 percentToTransfer) external onlyRelayerOrOwner {
         IERC20 ALGBToken = IERC20(ALGB);
-        ALGBToken.transfer(stakingAddress, amountALGBToTransfer);
+
+        uint256 amountToTransfer = (ALGBToken.balanceOf(address(this)) - accumulatedALGB).mulDiv(percentToTransfer, 1e6);
+        ALGBToken.transfer(stakingAddress, amountToTransfer);
+
+        accumulatedALGB = ALGBToken.balanceOf(address(this));
     }
 
     function setRelayer(address _relayer) external onlyOwner{
