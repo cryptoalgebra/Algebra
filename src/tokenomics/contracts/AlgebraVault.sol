@@ -143,7 +143,7 @@ contract AlgebraVault {
             uint256 numberOfTransfers = N - count;
             ALGBToken.transfer(stakingAddress, amountToTransferByBack * numberOfTransfers);
 
-            count += numberOfTransfers;
+            count = N;
         }
     }
 
