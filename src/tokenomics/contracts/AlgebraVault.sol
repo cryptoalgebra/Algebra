@@ -18,6 +18,12 @@ contract AlgebraVault{
 
     uint256 public accumulatedALGB;
 
+    uint256 public startTime;
+    uint256 public count;
+    uint256 public maxCount;
+    uint256 public transferRate=3600;
+    uint256 public amountToTransferByBack;
+
     ISwapRouter AlgebraRouter;
 
     event Swap(
@@ -128,6 +134,58 @@ contract AlgebraVault{
     function sweepTokens(IERC20 token, uint256 amount, address _to) external onlyOwner{
         require(_to != address(0));
         token.transfer(_to, amount);
+    }
+
+    function transferALGBToStaking() external onlyRelayerOrOwner {
+        require(startTime > 0, "vault: start time is not set");
+        uint256 N = (block.timestamp - startTime) / transferRate;
+
+        if (N > maxCount){
+            numberOfTransfers = maxCount - count;
+            require(numberOfTransfers > 0 , 'vault: maxCount exceeded');
+
+            ALGBToken.transfer(amountToTransferByBack * numberOfTransfers, stakingAddress);
+
+            count += numberOfTransfers;
+        }
+        else if (N > count){
+            IERC20 ALGBToken = IERC20(ALGB);
+            uint256 numberOfTransfers = N - count;
+            ALGBToken.transfer(amountToTransferByBack * numberOfTransfers, stakingAddress);
+
+            count += numberOfTransfers;
+        }
+    }
+
+    function collectAccumulatedALGB() external onlyOwner{
+        IERC20 ALGBToken = IERC20(ALGB);
+        uint256 balance = ALGBToken.balanceOf(address(this));
+
+        if(accumulatedALGB > balance){
+            ALGBToken.transfer(balance, msg.sender);
+        }
+        else{
+            ALGBToken.transfer(accumulatedALGB, msg.sender);
+        }
+
+        accumulatedALGB = 0;
+    }
+
+    ///// MANAGEMENT /////
+
+    /**
+     * @dev Sets start time of backend transfers campaign
+     */
+    function setStartTime(uint256 _startTime) external onlyOwner{
+        startTime = _startTime;
+    }
+
+    function setAmountByBack(uint256 _amount) external onlyOwner{
+        amountToTransferByBack = _amount;
+    }
+
+    function setMaxCount(uint256 _maxCount) external onlyOwner{
+        maxCount=_maxCount;
     }
 
     function transferOwner(address _newOwner) external onlyOwner{
