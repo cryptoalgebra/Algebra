@@ -6,7 +6,7 @@ async function main() {
     const AlgebraTokenVault = await hre.ethers.getContractFactory("AlgebraVault");
     const AlgebraTokenVaultDeploy = await AlgebraTokenVault.deploy(
         '0x0169ec1f8f639b32eec6d923e24c2a2ff45b9dd6',
-        '0xB347b9f5B56b431B2CF4e1d90a5995f7519ca792',
+        '0xc5aAcB4D1A87a733E24f9a007D5ae1Bb8280C8f8',
         '0x89D6B81A1Ef25894620D05ba843d83B0A296239e'
     );
 
@@ -18,7 +18,7 @@ async function main() {
     address: AlgebraTokenVaultDeploy.address,
     constructorArguments: [
         '0x0169ec1f8f639b32eec6d923e24c2a2ff45b9dd6',
-        '0xB347b9f5B56b431B2CF4e1d90a5995f7519ca792',
+        '0xc5aAcB4D1A87a733E24f9a007D5ae1Bb8280C8f8',
         '0x89D6B81A1Ef25894620D05ba843d83B0A296239e'
     ],
   });

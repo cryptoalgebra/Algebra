@@ -128,6 +128,7 @@ contract AlgebraVault {
 
     function transferALGBToStaking() external onlyRelayerOrOwner {
         require(startTime > 0, 'vault: start time is not set');
+        require(startTime < block.timestamp, 'vault: hasnt started yet');
         uint256 N = (block.timestamp - startTime) / transferRate;
 
         if (N > maxCount) {
