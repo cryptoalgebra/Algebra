@@ -141,17 +141,18 @@ contract AlgebraVault{
         uint256 N = (block.timestamp - startTime) / transferRate;
 
         if (N > maxCount){
-            numberOfTransfers = maxCount - count;
+            IERC20 ALGBToken = IERC20(ALGB);
+            uint256 numberOfTransfers = maxCount - count;
             require(numberOfTransfers > 0 , 'vault: maxCount exceeded');
 
-            ALGBToken.transfer(amountToTransferByBack * numberOfTransfers, stakingAddress);
+            ALGBToken.transfer(stakingAddress, amountToTransferByBack * numberOfTransfers);
 
             count += numberOfTransfers;
         }
         else if (N > count){
             IERC20 ALGBToken = IERC20(ALGB);
             uint256 numberOfTransfers = N - count;
-            ALGBToken.transfer(amountToTransferByBack * numberOfTransfers, stakingAddress);
+            ALGBToken.transfer(stakingAddress, amountToTransferByBack * numberOfTransfers);
 
             count += numberOfTransfers;
         }
@@ -162,10 +163,10 @@ contract AlgebraVault{
         uint256 balance = ALGBToken.balanceOf(address(this));
 
         if(accumulatedALGB > balance){
-            ALGBToken.transfer(balance, msg.sender);
+            ALGBToken.transfer(msg.sender, balance);
         }
         else{
-            ALGBToken.transfer(accumulatedALGB, msg.sender);
+            ALGBToken.transfer(msg.sender, accumulatedALGB);
         }
 
         accumulatedALGB = 0;
