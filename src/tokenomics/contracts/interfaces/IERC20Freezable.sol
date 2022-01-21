@@ -49,7 +49,7 @@ interface IERC20Minimal {
         address recipient,
         uint256 amount
     ) external returns (bool);
-    
+
     /**
      * @dev Mint the specified amount of token to the specified address and freeze it until the specified date.
      *      Be careful, gas usage is not deterministic,
@@ -59,19 +59,23 @@ interface IERC20Minimal {
      * @param _until Release date, must be in future.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mintAndFreeze(address _to, uint _amount, uint64 _until) external  returns (bool);
-    
+    function mintAndFreeze(
+        address _to,
+        uint256 _amount,
+        uint64 _until
+    ) external returns (bool);
+
     /**
      * @dev release first available freezing tokens.
      */
     function releaseOnce() external;
-    
+
     /**
      * @dev gets freezing end date and freezing balance for the freezing portion specified by index.
      * @param _addr Address of freeze tokens owner.
      * @param _index Freezing portion index. It ordered by release date descending.
      */
-    function getFreezing(address _addr, uint _index) external view returns (uint64 _release, uint _balance);
+    function getFreezing(address _addr, uint256 _index) external view returns (uint64 _release, uint256 _balance);
 
     /**
      * @notice Event emitted when tokens are transferred from one address to another, either via `#transfer` or `#transferFrom`.
