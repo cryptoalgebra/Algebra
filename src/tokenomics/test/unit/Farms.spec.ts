@@ -132,22 +132,22 @@ describe('unit/Farms', () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.proxy.deposits(tokenId)).numberOfStakes
+        const depositFarmsBefore = (await context.proxy.deposits(tokenId)).numberOfFarms
         await subject(tokenId, lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.proxy.deposits(tokenId)).numberOfStakes
+        const depositFarmsAfter = (await context.proxy.deposits(tokenId)).numberOfFarms
 
-        expect(farmBefore).to.eq(0)
+        expect(farmBefore.liquidity).to.eq(0)
         expect(depositFarmsBefore).to.eq(0)
-        expect(farmAfter).to.eq(liquidity)
+        expect(farmAfter.liquidity).to.eq(liquidity)
         expect(depositFarmsAfter).to.eq(1)
       })
 
       it('increments the number of farms on the deposit', async () => {
-        const nFarmsBefore: number = (await context.proxy.deposits(tokenId)).numberOfStakes
+        const nFarmsBefore: number = (await context.proxy.deposits(tokenId)).numberOfFarms
         await subject(tokenId, lpUser0)
 
-        expect((await context.proxy.deposits(tokenId)).numberOfStakes).to.eq(nFarmsBefore + 1)
+        expect((await context.proxy.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore + 1)
       })
 
       it('increments the number of farms on the incentive', async () => {
@@ -353,7 +353,7 @@ describe('unit/Farms', () => {
       const farm = await context.farming.farms(tokenId, incentiveId)
 
       const expectedSecondsInPeriod = innerSecondsSpentPerLiquidity
-        .mul(farm)
+        .mul(farm.liquidity)
 
       // @ts-ignore
       expect(rewardInfo.reward).to.be.closeTo(BNe(1, 20),  BN('809939148073022313'))
@@ -679,8 +679,8 @@ describe('unit/Farms', () => {
         await subject(lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
 
-        expect(farmBefore).to.gt(0)
-        expect(farmAfter).to.eq(0)
+        expect(farmBefore.liquidity).to.gt(0)
+        expect(farmAfter.liquidity).to.eq(0)
       })
 
       describe('after the end time', () => {
@@ -748,8 +748,8 @@ describe('unit/Farms', () => {
       })
 
       await context.proxy.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
-      const liquidity= await context.farming.farms(tokenId, incentiveId)
-      expect(liquidity).to.be.lt(MAX_UINT_96)
+      const farm = await context.farming.farms(tokenId, incentiveId)
+      expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
 
     it('works when overflow', async () => {
@@ -769,8 +769,8 @@ describe('unit/Farms', () => {
       })
 
       await context.proxy.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
-      const liquidity = await context.farming.farms(tokenId, incentiveId)
-      expect(liquidity).to.be.gt(MAX_UINT_96)
+      const farm = await context.farming.farms(tokenId, incentiveId)
+      expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })
   })
 })

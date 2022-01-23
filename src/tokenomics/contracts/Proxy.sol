@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
 pragma abicoder v2;
-
-import './interfaces/IAlgebraFarming.sol';
-import './interfaces/IAlgebraEternalFarming.sol';
-import './interfaces/IAlgebraIncentiveVirtualPool.sol';
-import './interfaces/IAlgebraEternalVirtualPool.sol';
+import './incentiveFarming/interfaces/IAlgebraIncentiveVirtualPool.sol';
+import './eternalFarming/interfaces/IAlgebraEternalVirtualPool.sol';
 import './interfaces/IProxy.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
@@ -15,14 +12,14 @@ import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
 contract Proxy is IProxy, ERC721Permit, Multicall {
-    IAlgebraFarming public immutable override farming;
+    IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
 
-    mapping(address => VirtualPoolAddresses) public virtualPoolAddresses;
+    mapping(address => VirtualPoolAddresses) public override virtualPoolAddresses;
 
     /// @dev deposits[tokenId] => Deposit
     mapping(uint256 => Deposit) public override deposits;
@@ -34,7 +31,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         uint256 L2TokenId;
         int24 tickLower;
         int24 tickUpper;
-        uint32 numberOfStakes;
+        uint32 numberOfFarms;
+        address owner;
     }
 
     /// @notice Represents the nft layer 2
@@ -52,7 +50,7 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
     }
 
     constructor(
-        IAlgebraFarming _farming,
+        IAlgebraIncentiveFarming _farming,
         IAlgebraEternalFarming _eternalFarming,
         INonfungiblePositionManager _nonfungiblePositionManager
     ) ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2') {
@@ -86,7 +84,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
             L2TokenId: _nextId,
             tickLower: tickLower,
             tickUpper: tickUpper,
-            numberOfStakes: 0
+            numberOfFarms: 0,
+            owner: from
         });
 
         l2Nfts[_nextId].tokenId = tokenId;
@@ -104,8 +103,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
-        eternalFarming.enterFarming(key, tokenId, deposits[tokenId].tickLower, deposits[tokenId].tickUpper);
-        deposits[tokenId].numberOfStakes += 1;
+        eternalFarming.enterFarming(key, tokenId);
+        deposits[tokenId].numberOfFarms += 1;
     }
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId)
@@ -114,7 +113,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
         eternalFarming.exitFarming(key, tokenId, msg.sender);
-        deposits[tokenId].numberOfStakes -= 1;
+        deposits[tokenId].numberOfFarms -= 1;
+        deposits[tokenId].owner = msg.sender;
     }
 
     function enterFarming(IncentiveKey memory key, uint256 tokenId)
@@ -122,8 +122,8 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
-        farming.enterFarming(key, tokenId, deposits[tokenId].tickLower, deposits[tokenId].tickUpper);
-        deposits[tokenId].numberOfStakes += 1;
+        farming.enterFarming(key, tokenId);
+        deposits[tokenId].numberOfFarms += 1;
     }
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId)
@@ -132,7 +132,19 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
         farming.exitFarming(key, tokenId, msg.sender);
-        deposits[tokenId].numberOfStakes -= 1;
+        deposits[tokenId].numberOfFarms -= 1;
+        deposits[tokenId].owner = msg.sender;
+    }
+
+    function collectFees(
+        INonfungiblePositionManager.CollectParams calldata params // TODO test
+    )
+        external
+        override
+        isAuthorizedForToken(deposits[params.tokenId].L2TokenId)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        return nonfungiblePositionManager.collect(params);
     }
 
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
@@ -149,11 +161,11 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         }
 
         if (msg.sender == address(eternalFarming)) {
-            virtualPoolAddresses[address(pool)].eternalVirtualPool = IAlgebraEternalVirtualPool(virtualPool);
+            virtualPoolAddresses[address(pool)].eternalVirtualPool = virtualPool;
         }
 
         if (msg.sender == address(farming)) {
-            virtualPoolAddresses[address(pool)].virtualPool = IAlgebraVirtualPool(virtualPool);
+            virtualPoolAddresses[address(pool)].virtualPool = virtualPool;
         }
     }
 
@@ -166,7 +178,7 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         require(to != address(this), 'AlgebraFarming::withdrawToken: cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
 
-        require(deposit.numberOfStakes == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmed');
+        require(deposit.numberOfFarms == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmd');
 
         burn(deposit.L2TokenId);
         delete deposits[tokenId];
@@ -176,22 +188,22 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
     }
 
     function processSwap() external override {
-        if (address(virtualPoolAddresses[msg.sender].virtualPool) != address(0)) {
-            virtualPoolAddresses[msg.sender].virtualPool.processSwap();
+        if (virtualPoolAddresses[msg.sender].virtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].virtualPool).processSwap();
         }
 
-        if (address(virtualPoolAddresses[msg.sender].eternalVirtualPool) != address(0)) {
-            virtualPoolAddresses[msg.sender].eternalVirtualPool.processSwap();
+        if (virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].eternalVirtualPool).processSwap();
         }
     }
 
     function cross(int24 nextTick, bool zeroForOne) external override {
-        if (address(virtualPoolAddresses[msg.sender].virtualPool) != address(0)) {
-            virtualPoolAddresses[msg.sender].virtualPool.cross(nextTick, zeroForOne);
+        if (virtualPoolAddresses[msg.sender].virtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroForOne);
         }
 
-        if (address(virtualPoolAddresses[msg.sender].eternalVirtualPool) != address(0)) {
-            virtualPoolAddresses[msg.sender].eternalVirtualPool.cross(nextTick, zeroForOne);
+        if (virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroForOne);
         }
     }
 
@@ -218,12 +230,26 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
     }
 
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
-        if (address(virtualPoolAddresses[msg.sender].virtualPool) != address(0)) {
-            return (virtualPoolAddresses[msg.sender].virtualPool.increaseCumulative(blockTimestamp));
+        Status incentiveStatus;
+        Status eternalStatus;
+        if (virtualPoolAddresses[msg.sender].virtualPool != address(0)) {
+            incentiveStatus = IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].virtualPool).increaseCumulative(
+                blockTimestamp
+            );
         }
 
-        if (address(virtualPoolAddresses[msg.sender].eternalVirtualPool) != address(0)) {
-            return (virtualPoolAddresses[msg.sender].eternalVirtualPool.increaseCumulative(blockTimestamp));
+        if (virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
+            eternalStatus = IAlgebraVirtualPool(virtualPoolAddresses[msg.sender].eternalVirtualPool).increaseCumulative(
+                    blockTimestamp
+                );
         }
+
+        if (eternalStatus == Status.ACTIVE || incentiveStatus == Status.ACTIVE) {
+            return Status.ACTIVE;
+        } else if (incentiveStatus == Status.NOT_STARTED) {
+            return Status.NOT_STARTED;
+        }
+
+        return Status.NOT_EXIST;
     }
 }

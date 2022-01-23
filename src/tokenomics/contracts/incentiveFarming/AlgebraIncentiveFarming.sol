@@ -2,13 +2,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '../interfaces/IAlgebraFarming.sol';
-import '../interfaces/IAlgebraIncentiveVirtualPool.sol';
+import './interfaces/IAlgebraIncentiveFarming.sol';
+import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 import '../interfaces/IProxy.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/RewardMath.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/SafeCast.sol';
+
+import './IncentiveVirtualPool.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
@@ -19,7 +21,7 @@ import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 import 'algebra-periphery/contracts/base/Multicall.sol';
 
 /// @title Algebra canonical staking interface
-contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
+contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     using SafeCast for int256;
     /// @notice Represents a staking incentive
     struct Incentive {
@@ -31,8 +33,9 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
         uint224 totalLiquidity;
     }
 
-    /// @notice Represents the deposit of a liquidity NFT
-    struct Deposit {
+    /// @notice Represents the farm for nft
+    struct Farm {
+        uint128 liquidity;
         int24 tickLower;
         int24 tickUpper;
     }
@@ -42,9 +45,6 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
 
     /// @inheritdoc IAlgebraFarming
     IAlgebraPoolDeployer public immutable override deployer;
-
-    /// @inheritdoc IAlgebraFarming
-    IVirtualPoolDeployer public immutable override vdeployer;
 
     /// @inheritdoc IAlgebraFarming
     IProxy public override proxy;
@@ -57,11 +57,8 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
     /// @dev bytes32 refers to the return value of IncentiveId.compute
     mapping(bytes32 => Incentive) public override incentives;
 
-    /// @dev deposits[tokenId] => Deposit
-    mapping(uint256 => Deposit) public override deposits;
-
     /// @dev farms[tokenId][incentiveHash] => Farm
-    mapping(uint256 => mapping(bytes32 => uint128)) public override farms;
+    mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
     address private incentiveMaker;
     address private owner;
@@ -97,31 +94,28 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
 
     /// @param _deployer pool deployer contract address
     /// @param _nonfungiblePositionManager the NFT position manager contract address
-    /// @param _vdeployer virtual pool deployer contract address
     /// @param _maxIncentiveStartLeadTime the max duration of an incentive in seconds
     /// @param _maxIncentiveDuration the max amount of seconds into the future the incentive startTime can be set
     constructor(
         IAlgebraPoolDeployer _deployer,
         INonfungiblePositionManager _nonfungiblePositionManager,
-        IVirtualPoolDeployer _vdeployer,
         uint256 _maxIncentiveStartLeadTime,
         uint256 _maxIncentiveDuration
     ) {
         owner = msg.sender;
         deployer = _deployer;
-        vdeployer = _vdeployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
         maxIncentiveStartLeadTime = _maxIncentiveStartLeadTime;
         maxIncentiveDuration = _maxIncentiveDuration;
     }
 
-    /// @inheritdoc IAlgebraFarming
+    /// @inheritdoc IAlgebraIncentiveFarming
     function createIncentive(
         IncentiveKey memory key,
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        address _incentive = key.pool.activeIncentive();
+        (address _incentive, ) = proxy.virtualPoolAddresses(address(key.pool));
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
             _activeEndTimestamp = IAlgebraIncentiveVirtualPool(_incentive).desiredEndTimestamp();
@@ -152,7 +146,9 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
 
         incentives[incentiveId].bonusReward += bonusReward;
 
-        virtualPool = vdeployer.deploy(address(proxy), address(this), uint32(key.startTime), uint32(key.endTime));
+        virtualPool = address(
+            new IncentiveVirtualPool(address(proxy), address(this), uint32(key.startTime), uint32(key.endTime))
+        );
 
         proxy.setProxyAddress(key.pool, virtualPool);
 
@@ -177,15 +173,37 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        int24 _tickLower,
-        int24 _tickUpper
-    ) external override onlyProxy {
-        deposits[tokenId].tickUpper = _tickUpper;
-        deposits[tokenId].tickLower = _tickLower;
-        _enterFarming(key, tokenId);
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyProxy {
+        require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
+
+        bytes32 incentiveId = IncentiveId.compute(key);
+
+        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
+        require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
+
+        (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) = NFTPositionInfo.getPositionInfo(
+            deployer,
+            nonfungiblePositionManager,
+            tokenId
+        );
+
+        require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
+        require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
+
+        incentives[incentiveId].numberOfFarms++;
+        (, int24 tick, , , , , , ) = pool.globalState();
+
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
+            incentives[incentiveId].virtualPoolAddress
+        );
+
+        virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int256(liquidity).toInt128(), tick);
+
+        farms[tokenId][incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
+
+        incentives[incentiveId].totalLiquidity += liquidity;
+
+        emit FarmStarted(tokenId, incentiveId, liquidity);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -194,7 +212,85 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
         uint256 tokenId,
         address _owner
     ) external override onlyProxy {
-        _exitFarming(key, tokenId, _owner);
+        bytes32 incentiveId = IncentiveId.compute(key);
+        Incentive memory incentive = incentives[incentiveId];
+        // anyone can call exitFarming if the block time is after the end time of the incentive
+        require(
+            block.timestamp > key.endTime || block.timestamp < key.startTime,
+            'AlgebraFarming::exitFarming: cannot exitFarming before end time'
+        );
+
+        Farm memory farm = farms[tokenId][incentiveId];
+
+        require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
+
+        incentives[incentiveId].numberOfFarms--;
+
+        uint256 reward = 0;
+        uint256 bonusReward = 0;
+
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
+            incentives[incentiveId].virtualPoolAddress
+        );
+
+        if (block.timestamp > key.endTime) {
+            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = virtualPool
+                .getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
+
+            if (endTimestamp == 0) {
+                virtualPool.finish(uint32(block.timestamp), uint32(key.startTime));
+                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
+                    farm.tickLower,
+                    farm.tickUpper
+                );
+            }
+
+            reward = RewardMath.computeRewardAmount(
+                incentive.totalReward,
+                initTimestamp,
+                endTimestamp,
+                farm.liquidity,
+                incentive.totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+
+            rewards[key.rewardToken][_owner] += reward;
+
+            if (incentive.bonusReward != 0) {
+                bonusReward = RewardMath.computeRewardAmount(
+                    incentive.bonusReward,
+                    initTimestamp,
+                    endTimestamp,
+                    farm.liquidity,
+                    incentive.totalLiquidity,
+                    secondsPerLiquidityInsideX128
+                );
+
+                rewards[key.bonusRewardToken][_owner] += bonusReward;
+            }
+        } else {
+            (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
+            (, int24 tick, , , , , , ) = pool.globalState();
+
+            virtualPool.applyLiquidityDeltaToPosition(
+                farm.tickLower,
+                farm.tickUpper,
+                -int256(farm.liquidity).toInt128(),
+                tick
+            );
+        }
+
+        delete farms[tokenId][incentiveId];
+
+        emit FarmEnded(
+            tokenId,
+            incentiveId,
+            address(key.rewardToken),
+            address(key.bonusRewardToken),
+            _owner,
+            reward,
+            bonusReward
+        );
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -224,10 +320,9 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
     {
         bytes32 incentiveId = IncentiveId.compute(key);
 
-        uint128 liquidity = farms[tokenId][incentiveId];
-        require(liquidity > 0, 'AlgebraFarming::getRewardInfo: farm does not exist');
+        Farm memory farm = farms[tokenId][incentiveId];
+        require(farm.liquidity > 0, 'AlgebraFarming::getRewardInfo: farm does not exist');
 
-        Deposit memory deposit = deposits[tokenId];
         Incentive memory incentive = incentives[incentiveId];
 
         (
@@ -235,8 +330,8 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
             uint256 initTimestamp,
             uint256 endTimestamp
         ) = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).getInnerSecondsPerLiquidity(
-                deposit.tickLower,
-                deposit.tickUpper
+                farm.tickLower,
+                farm.tickUpper
             );
 
         if (initTimestamp == 0) {
@@ -251,7 +346,7 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
             incentive.totalReward,
             initTimestamp,
             endTimestamp,
-            liquidity,
+            farm.liquidity,
             incentive.totalLiquidity,
             secondsPerLiquidityInsideX128
         );
@@ -259,131 +354,9 @@ contract AlgebraIncentiveFarming is IAlgebraFarming, Multicall {
             incentive.bonusReward,
             initTimestamp,
             endTimestamp,
-            liquidity,
+            farm.liquidity,
             incentive.totalLiquidity,
             secondsPerLiquidityInsideX128
-        );
-    }
-
-    /// @dev Farms a deposited token without doing an ownership check
-    function _enterFarming(IncentiveKey memory key, uint256 tokenId) private {
-        require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
-
-        bytes32 incentiveId = IncentiveId.compute(key);
-
-        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
-        require(farms[tokenId][incentiveId] == 0, 'AlgebraFarming::enterFarming: token already farmed');
-
-        (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) = NFTPositionInfo.getPositionInfo(
-            deployer,
-            nonfungiblePositionManager,
-            tokenId
-        );
-
-        require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
-        require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
-
-        incentives[incentiveId].numberOfFarms++;
-        (, int24 tick, , , , , , ) = pool.globalState();
-
-        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
-            incentives[incentiveId].virtualPoolAddress
-        );
-
-        virtualPool.applyLiquidityDeltaToPosition(tickLower, tickUpper, int256(liquidity).toInt128(), tick);
-
-        farms[tokenId][incentiveId] = liquidity;
-
-        incentives[incentiveId].totalLiquidity += liquidity;
-
-        emit FarmStarted(tokenId, incentiveId, liquidity);
-    }
-
-    function _exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) private {
-        bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive memory incentive = incentives[incentiveId];
-        // anyone can call exitFarming if the block time is after the end time of the incentive
-        require(
-            block.timestamp > key.endTime || block.timestamp < key.startTime,
-            'AlgebraFarming::exitFarming: cannot exitFarming before end time'
-        );
-
-        uint128 liquidity = farms[tokenId][incentiveId];
-
-        require(liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
-
-        Deposit memory deposit = deposits[tokenId];
-
-        incentives[incentiveId].numberOfFarms--;
-
-        uint256 reward = 0;
-        uint256 bonusReward = 0;
-
-        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(
-            incentives[incentiveId].virtualPoolAddress
-        );
-
-        if (block.timestamp > key.endTime) {
-            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = virtualPool
-                .getInnerSecondsPerLiquidity(deposit.tickLower, deposit.tickUpper);
-
-            if (endTimestamp == 0) {
-                virtualPool.finish(uint32(block.timestamp), uint32(key.startTime));
-                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
-                    deposit.tickLower,
-                    deposit.tickUpper
-                );
-            }
-
-            reward = RewardMath.computeRewardAmount(
-                incentive.totalReward,
-                initTimestamp,
-                endTimestamp,
-                liquidity,
-                incentive.totalLiquidity,
-                secondsPerLiquidityInsideX128
-            );
-
-            rewards[key.rewardToken][_owner] += reward;
-
-            if (incentive.bonusReward != 0) {
-                bonusReward = RewardMath.computeRewardAmount(
-                    incentive.bonusReward,
-                    initTimestamp,
-                    endTimestamp,
-                    liquidity,
-                    incentive.totalLiquidity,
-                    secondsPerLiquidityInsideX128
-                );
-
-                rewards[key.bonusRewardToken][_owner] += bonusReward;
-            }
-        } else {
-            (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
-            (, int24 tick, , , , , , ) = pool.globalState();
-
-            virtualPool.applyLiquidityDeltaToPosition(
-                deposit.tickLower,
-                deposit.tickUpper,
-                -int256(liquidity).toInt128(),
-                tick
-            );
-        }
-
-        delete farms[tokenId][incentiveId];
-
-        emit FarmEnded(
-            tokenId,
-            incentiveId,
-            address(key.rewardToken),
-            address(key.bonusRewardToken),
-            _owner,
-            reward,
-            bonusReward
         );
     }
 }

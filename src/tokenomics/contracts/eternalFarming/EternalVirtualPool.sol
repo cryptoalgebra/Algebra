@@ -8,7 +8,7 @@ import '../libraries/LiquidityMath.sol';
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
 
-import '../interfaces/IAlgebraEternalVirtualPool.sol';
+import './interfaces/IAlgebraEternalVirtualPool.sol';
 
 contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     using TickTable for mapping(int16 => uint256);

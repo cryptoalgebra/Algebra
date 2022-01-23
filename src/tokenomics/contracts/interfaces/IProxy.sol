@@ -10,22 +10,22 @@ import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
-import './IAlgebraFarming.sol';
-import './IAlgebraEternalFarming.sol';
-import './IAlgebraIncentiveVirtualPool.sol';
-import './IAlgebraEternalVirtualPool.sol';
+import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
+import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IIncentiveKey.sol';
 
 interface IProxy is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMulticall, IERC721Permit {
     struct VirtualPoolAddresses {
-        IAlgebraVirtualPool virtualPool;
-        IAlgebraEternalVirtualPool eternalVirtualPool;
+        address virtualPool;
+        address eternalVirtualPool;
     }
+
+    function virtualPoolAddresses(address) external view returns (address, address);
 
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    function farming() external view returns (IAlgebraFarming);
+    function farming() external view returns (IAlgebraIncentiveFarming);
 
     function eternalFarming() external view returns (IAlgebraEternalFarming);
 
@@ -49,7 +49,8 @@ interface IProxy is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMultic
             uint256 L2TokenId,
             int24 tickLower,
             int24 tickUpper,
-            uint32 numberOfStakes
+            uint32 numberOfFarms,
+            address owner
         );
 
     function setProxyAddress(IAlgebraPool pool, address virtualPool) external;
@@ -57,6 +58,10 @@ interface IProxy is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMultic
     function enterEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
+
+    function collectFees(INonfungiblePositionManager.CollectParams calldata params)
+        external
+        returns (uint256 amount0, uint256 amount1);
 
     function collectRewards(IncentiveKey memory key, uint256 tokenId) external;
 

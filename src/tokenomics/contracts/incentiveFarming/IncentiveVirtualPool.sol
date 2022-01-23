@@ -5,7 +5,7 @@ import '../libraries/TickManager.sol';
 import '../libraries/TickTable.sol';
 import '../libraries/LiquidityMath.sol';
 
-import '../interfaces/IAlgebraIncentiveVirtualPool.sol';
+import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 
 contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);

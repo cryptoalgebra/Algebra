@@ -46,7 +46,9 @@ describe('unit/EternalFarms', () => {
 
   beforeEach('create fixture loader', async () => {
     context = await loadFixture(algebraEternalFixture)
+    console.log('13')
     helpers = HelperCommands.fromTestContext(context, actors, provider)
+    console.log('14')
   })
 
   describe('#enterFarming', () => {
@@ -85,7 +87,8 @@ describe('unit/EternalFarms', () => {
 
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farming.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+      console.log('HERE15')
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -100,7 +103,7 @@ describe('unit/EternalFarms', () => {
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
-
+      console.log('HERE16')
       subject = (L2TokenId: string, _actor: Wallet) =>
         context.proxy.connect(_actor).enterEternalFarming(
           {
@@ -124,7 +127,7 @@ describe('unit/EternalFarms', () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
           .to.emit(context.farming, 'FarmStarted')
-          .withArgs(tokenId, tokenId, incentiveId, liquidity)
+          .withArgs(tokenId, incentiveId, liquidity)
       })
 
       it('sets the farm struct properly', async () => {
@@ -137,16 +140,16 @@ describe('unit/EternalFarms', () => {
         const depositFarmsAfter = (await context.proxy.deposits(tokenId)).L2TokenId
 
         expect(farmBefore.liquidity).to.eq(0)
-        expect(depositFarmsBefore).to.eq(0)
+        expect(depositFarmsBefore).to.eq(1)
         expect(farmAfter.liquidity).to.eq(liquidity)
         expect(depositFarmsAfter).to.eq(1)
       })
 
       it('increments the number of farms on the deposit', async () => {
-        const nFarmsBefore: BigNumber = (await context.proxy.deposits(tokenId)).L2TokenId
+        const nFarmsBefore: BigNumber = BigNumber.from((await context.proxy.deposits(tokenId)).numberOfFarms)
         await subject(tokenId, lpUser0)
 
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.eq(nFarmsBefore.add(1))
+        expect((await context.proxy.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore.add(1))
       })
 
       it('increments the number of farms on the incentive', async () => {
@@ -165,14 +168,14 @@ describe('unit/EternalFarms', () => {
       it('deposit is already farmd in the incentive', async () => {
         //await Time.set(timestamps.startTime + 500)
         await subject(tokenId, lpUser0)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: already farmd')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: token already farmed')
       })
 
       it('you are not the owner of the deposit', async () => {
         //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
         await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'AlgebraFarming::enterFarming: only owner can farm token'
+          'Not approved'
         )
       })
 
@@ -382,7 +385,7 @@ describe('unit/EternalFarms', () => {
         bonusRewardRate: BigNumber.from('50')
       })
       //
-      // await Time.setAndMine(timestamps.startTime + 1)
+      await Time.setAndMine(timestamps.startTime + 1)
 
       const mintResult = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -390,6 +393,7 @@ describe('unit/EternalFarms', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult,
+        eternal: true
       })
       tokenId = mintResult.tokenId
 
@@ -494,7 +498,7 @@ describe('unit/EternalFarms', () => {
     let createIncentiveResult: HelperTypes.CreateIncentive.Result
 
     describe('before end time', () => {
-      it('cannot exitFarming', async() => {
+      it('can exitFarming', async() => {
         timestamps = makeTimestamps(await blockTimestamp())
 
         createIncentiveResult = await helpers.createIncentiveFlow({
@@ -602,7 +606,7 @@ describe('unit/EternalFarms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farming.address, tokenId)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
 
         await Time.setAndMine(timestamps.startTime + 1)
 
