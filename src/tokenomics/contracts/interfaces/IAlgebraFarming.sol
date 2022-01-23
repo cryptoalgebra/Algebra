@@ -9,8 +9,6 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
 import './IProxy.sol';
-import './IVirtualPoolDeployer.sol';
-import './IAlgebraIncentiveVirtualPool.sol';
 import './IIncentiveKey.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
@@ -20,14 +18,8 @@ import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraFarming is IIncentiveKey, IMulticall {
-    /// @notice The pool deployer with which this farming contract is compatible
-    function deployer() external view returns (IAlgebraPoolDeployer);
-
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
-
-    /// @notice The virtual pool deployer with which this farming contract is compatible
-    function vdeployer() external view returns (IVirtualPoolDeployer);
 
     /// @notice The max duration of an incentive in seconds
     function maxIncentiveDuration() external view returns (uint256);
@@ -52,16 +44,7 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
             uint224 totalLiquidity
         );
 
-    /// @notice Returns information about a deposited NFT
-    /// @return tickLower The lower tick of the range
-    /// @return tickUpper The upper tick of the range
-    function deposits(uint256 tokenId) external view returns (int24 tickLower, int24 tickUpper);
-
-    /// @notice Returns information about a farmd liquidity NFT
-    /// @param tokenId The ID of the farmd token
-    /// @param incentiveId The ID of the incentive for which the token is farmd
-    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
-    function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity);
+    function deployer() external returns (IAlgebraPoolDeployer);
 
     function setIncentiveMaker(address _incentiveMaker) external;
 
@@ -71,26 +54,10 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @return rewardsOwed The amount of the reward token claimable by the owner
     function rewards(IERC20Minimal rewardToken, address owner) external view returns (uint256 rewardsOwed);
 
-    /// @notice Creates a new liquidity mining incentive program
-    /// @param key Details of the incentive to create
-    /// @param reward The amount of reward tokens to be distributed
-    /// @param bonusReward The amount of bonus reward tokens to be distributed
-    /// @return virtualPool The virtual pool
-    function createIncentive(
-        IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward
-    ) external returns (address virtualPool);
-
     /// @notice Farms a Algebra LP token
     /// @param key The key of the incentive for which to farm the NFT
     /// @param tokenId The ID of the token to farm
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        int24 _tickLower,
-        int24 _tickUpper
-    ) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice
     function setProxyAddress(address _proxy) external;

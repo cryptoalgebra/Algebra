@@ -41,6 +41,7 @@ export module HelperTypes {
       amountsToFarm: [BigNumber, BigNumber]
       ticks: [number, number]
       createIncentiveResult: CreateIncentive.Result
+      eternal?: boolean
     }
 
     export type Result = {

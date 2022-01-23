@@ -219,9 +219,15 @@ export class HelperCommands {
     console.log("test",tokenId)
     console.log("test2", l2tokenId)
     console.log("nft address:",this.nft.address)
-    await this.proxy
-      .connect(params.lp)
-      .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+    if(params.eternal) {
+      await this.proxy
+        .connect(params.lp)
+        .enterEternalFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+    } else {
+      await this.proxy
+        .connect(params.lp)
+        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+    }
 
     const farmdAt = await blockTimestamp()
 

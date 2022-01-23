@@ -23,7 +23,6 @@ describe('unit/Deployment', () => {
     const farming = (await farmingFactory.deploy(
       context.deployer.address,
       context.nft.address,
-      context.vdeployer.address,
       2 ** 32,
       2 ** 32
     )) as AlgebraIncentiveFarming
@@ -35,7 +34,6 @@ describe('unit/Deployment', () => {
     const farming = (await farmingFactory.deploy(
       context.deployer.address,
       context.nft.address,
-      context.vdeployer.address,
       2 ** 32,
       2 ** 32
     )) as AlgebraIncentiveFarming

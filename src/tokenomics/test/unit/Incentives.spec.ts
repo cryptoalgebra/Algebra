@@ -105,14 +105,14 @@ describe('unit/Incentives', async () => {
         const incentive = await context.farming.incentives(incentiveId)
       })
 
-      it.only('adds to existing incentives', async () => {
-        console.log("incentive")
+      it('adds to existing incentives', async () => {
+        console.log("incentive0")
         const params = makeTimestamps(await blockTimestamp())
-        console.log("incentive")
-        expect(await subject(params)).to.emit(context.farming, 'IncentiveCreated')
-        console.log("incentive")
-        expect(await subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
-        console.log("incentive")
+        console.log("incentive1")
+        expect(subject(params)).to.emit(context.farming, 'IncentiveCreated')
+        console.log("incentive2")
+        expect(subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
+        console.log("incentive3")
         const incentiveId = await context.testIncentiveId.compute({
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
@@ -160,10 +160,10 @@ describe('unit/Incentives', async () => {
         await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
-        await context.farming
+        await context.proxy
           .connect(actors.lpUser0())
           .multicall([
-            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]),
+            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
             context.proxy.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
           ])
         ;({ numberOfFarms } = await context.farming
