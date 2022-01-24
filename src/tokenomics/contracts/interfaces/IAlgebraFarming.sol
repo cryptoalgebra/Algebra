@@ -48,6 +48,10 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
 
     function setIncentiveMaker(address _incentiveMaker) external;
 
+    /// @notice Detach incentive from pool
+    /// @param key The key of the incentive
+    function detachIncentive(IncentiveKey memory key) external;
+
     /// @notice Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
     /// @param rewardToken The token for which to check rewards
     /// @param owner The owner for which the rewards owed are checked
@@ -123,6 +127,22 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         uint256 endTime,
         uint256 reward,
         uint256 bonusReward
+    );
+
+    /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
+    /// @param rewardToken The token being distributed as a reward
+    /// @param bonusRewardToken The token being distributed as a bonus reward
+    /// @param pool The Algebra pool
+    /// @param virtualPool The virtual pool address
+    /// @param startTime The time when the incentive program begins
+    /// @param endTime The time when rewards stop accruing
+    event IncentiveDetached(
+        IERC20Minimal indexed rewardToken,
+        IERC20Minimal indexed bonusRewardToken,
+        IAlgebraPool indexed pool,
+        address virtualPool,
+        uint256 startTime,
+        uint256 endTime
     );
 
     /// @notice Event emitted when a Algebra LP token has been farmd
