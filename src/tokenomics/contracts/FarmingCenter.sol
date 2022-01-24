@@ -155,6 +155,20 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
         eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
+    function claimReward(
+        IERC20Minimal rewardToken,
+        address to,
+        uint256 amountRequestedIncentive,
+        uint256 amountRequestedEternal
+    ) external override returns (uint256 reward) {
+        if (amountRequestedIncentive != 0) {
+            reward = farming.claimRewardFrom(rewardToken, msg.sender, to, amountRequestedIncentive);
+        }
+        if (amountRequestedEternal != 0) {
+            reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequestedEternal);
+        }
+    }
+
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
         if (pool.activeIncentive() == address(0)) {
             pool.setIncentive(address(this));

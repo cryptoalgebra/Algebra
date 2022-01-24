@@ -320,16 +320,35 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         address to,
         uint256 amountRequested
     ) external override returns (uint256 reward) {
-        reward = rewards[rewardToken][msg.sender];
+        return _claimReward(rewardToken, msg.sender, to, amountRequested);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function claimRewardFrom(
+        IERC20Minimal rewardToken,
+        address from,
+        address to,
+        uint256 amountRequested
+    ) external override onlyFarmingCenter returns (uint256 reward) {
+        return _claimReward(rewardToken, from, to, amountRequested);
+    }
+
+    function _claimReward(
+        IERC20Minimal rewardToken,
+        address from,
+        address to,
+        uint256 amountRequested
+    ) private returns (uint256 reward) {
+        reward = rewards[rewardToken][from];
 
         if (amountRequested != 0 && amountRequested < reward) {
             reward = amountRequested;
         }
 
-        rewards[rewardToken][msg.sender] -= reward;
+        rewards[rewardToken][from] -= reward;
         TransferHelper.safeTransfer(address(rewardToken), to, reward);
 
-        emit RewardClaimed(to, reward, address(rewardToken), msg.sender);
+        emit RewardClaimed(to, reward, address(rewardToken), from);
     }
 
     /// @inheritdoc IAlgebraFarming

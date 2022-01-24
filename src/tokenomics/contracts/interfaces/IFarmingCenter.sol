@@ -65,6 +65,13 @@ interface IFarmingCenter is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey,
 
     function collectRewards(IncentiveKey memory key, uint256 tokenId) external;
 
+    function claimReward(
+        IERC20Minimal rewardToken,
+        address to,
+        uint256 amountRequestedIncentive,
+        uint256 amountRequestedEternal
+    ) external returns (uint256 reward);
+
     function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId) external;

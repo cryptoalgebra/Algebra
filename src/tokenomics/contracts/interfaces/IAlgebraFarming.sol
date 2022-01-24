@@ -82,6 +82,20 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         uint256 amountRequested
     ) external returns (uint256 reward);
 
+    /// @notice Transfers `amountRequested` of accrued `rewardToken` rewards from the contract to the recipient `to`
+    /// @notice only for FarmingCenter
+    /// @param rewardToken The token being distributed as a reward
+    /// @param from The address of position owner
+    /// @param to The address where claimed rewards will be sent to
+    /// @param amountRequested The amount of reward tokens to claim. Claims entire reward amount if set to 0.
+    /// @return reward The amount of reward tokens claimed
+    function claimRewardFrom(
+        IERC20Minimal rewardToken,
+        address from,
+        address to,
+        uint256 amountRequested
+    ) external returns (uint256 reward);
+
     /// @notice Calculates the reward amount that will be received for the given farm
     /// @param key The key of the incentive
     /// @param tokenId The ID of the token
