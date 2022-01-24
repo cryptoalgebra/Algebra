@@ -112,7 +112,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @param virtualPool The virtual pool address
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
-    /// @param refundee The address which receives any remaining reward tokens after the end time
     /// @param reward The amount of reward tokens to be distributed
     /// @param bonusReward The amount of bonus reward tokens to be distributed
     event IncentiveCreated(
@@ -122,16 +121,9 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         address virtualPool,
         uint256 startTime,
         uint256 endTime,
-        address refundee,
         uint256 reward,
         uint256 bonusReward
     );
-
-    /// @notice Emitted when ownership of a deposit changes
-    /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @param oldOwner The owner before the deposit was transferred
-    /// @param newOwner The owner after the deposit was transferred
-    event DepositTransferred(uint256 indexed tokenId, address indexed oldOwner, address indexed newOwner);
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token

@@ -151,7 +151,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
             virtualPool,
             key.startTime,
             key.endTime,
-            key.refundee,
             reward,
             bonusReward
         );

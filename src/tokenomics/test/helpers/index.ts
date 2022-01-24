@@ -131,7 +131,7 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          refundee: params.refundee || incentiveCreator.address,
+          
         },
         params.totalReward,
         params.bonusReward,
@@ -145,7 +145,7 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          refundee: params.refundee || incentiveCreator.address,
+          
         },
         params.totalReward,
         params.bonusReward
@@ -156,7 +156,7 @@ export class HelperCommands {
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       ...times,
-      refundee: params.refundee || incentiveCreator.address,
+      
       virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0())
     }
   }
@@ -333,8 +333,7 @@ export class HelperCommands {
   //     await this.tokenomics.connect(incentiveCreator).endIncentive(
   //       _.assign({}, _.pick(params.createIncentiveResult, ['startTime', 'endTime']), {
   //         rewardToken: rewardToken.address,
-  //         pool: params.createIncentiveResult.poolAddress,
-  //         refundee: params.createIncentiveResult.refundee,
+  //         pool: params.createIncentiveResult.poolAddress
   //       })
   //     )
   //   ).wait()
@@ -363,7 +362,7 @@ export class HelperCommands {
       pool: params.poolAddress,
       startTime: params.startTime,
       endTime: params.endTime,
-      refundee: params.refundee,
+      
     })
   }
 
@@ -480,5 +479,5 @@ export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = (params) => ({
   pool: params.poolAddress,
   startTime: params.startTime,
   endTime: params.endTime,
-  refundee: params.refundee,
+  
 })

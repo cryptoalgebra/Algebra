@@ -71,7 +71,7 @@ describe('unit/Incentives', async () => {
             pool: context.pool01,
             startTime: params.startTime || startTime,
             endTime: params.endTime || endTime,
-            refundee: params.refundee || incentiveCreator.address,
+            
           },
           totalReward,
           bonusReward
@@ -99,7 +99,7 @@ describe('unit/Incentives', async () => {
           pool: context.pool01,
           startTime: timestamps.startTime,
           endTime: timestamps.endTime,
-          refundee: incentiveCreator.address,
+          
         })
 
         const incentive = await context.farming.incentives(incentiveId)
@@ -115,7 +115,7 @@ describe('unit/Incentives', async () => {
           pool: context.pool01,
           startTime: timestamps.startTime,
           endTime: timestamps.endTime,
-          refundee: incentiveCreator.address,
+          
         })
         const { numberOfFarms } = await context.farming.incentives(
           incentiveId
@@ -131,7 +131,7 @@ describe('unit/Incentives', async () => {
           ...testTimestamps,
           rewardToken: rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
-          refundee: incentiveCreator.address,
+          
           pool: context.pool01,
         }
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
@@ -224,7 +224,7 @@ describe('unit/Incentives', async () => {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,
                 pool: context.pool01,
-                refundee: incentiveCreator.address,
+                
                 ...makeTimestamps(now, 1_000),
               },
               BNe18(0),
@@ -256,7 +256,7 @@ describe('unit/Incentives', async () => {
   //         pool: context.pool01,
   //         startTime: params.startTime || timestamps.startTime,
   //         endTime: params.endTime || timestamps.endTime,
-  //         refundee: incentiveCreator.address,
+  //         
   //       })
   //     }
   //   })

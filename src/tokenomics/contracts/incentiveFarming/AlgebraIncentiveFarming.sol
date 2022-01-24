@@ -167,7 +167,6 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
             virtualPool,
             key.startTime,
             key.endTime,
-            key.refundee,
             reward,
             bonusReward
         );
