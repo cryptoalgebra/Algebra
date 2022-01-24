@@ -87,7 +87,7 @@ describe('unit/EternalFarms', () => {
 
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
       console.log('HERE15')
 
       incentiveArgs = {
@@ -105,7 +105,7 @@ describe('unit/EternalFarms', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
       console.log('HERE16')
       subject = (L2TokenId: string, _actor: Wallet) =>
-        context.proxy.connect(_actor).enterEternalFarming(
+        context.farmingCenter.connect(_actor).enterEternalFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -134,10 +134,10 @@ describe('unit/EternalFarms', () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.proxy.deposits(tokenId)).L2TokenId
+        const depositFarmsBefore = (await context.farmingCenter.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.proxy.deposits(tokenId)).L2TokenId
+        const depositFarmsAfter = (await context.farmingCenter.deposits(tokenId)).L2TokenId
 
         expect(farmBefore.liquidity).to.eq(0)
         expect(depositFarmsBefore).to.eq(1)
@@ -146,10 +146,10 @@ describe('unit/EternalFarms', () => {
       })
 
       it('increments the number of farms on the deposit', async () => {
-        const nFarmsBefore: BigNumber = BigNumber.from((await context.proxy.deposits(tokenId)).numberOfFarms)
+        const nFarmsBefore: BigNumber = BigNumber.from((await context.farmingCenter.deposits(tokenId)).numberOfFarms)
         await subject(tokenId, lpUser0)
 
-        expect((await context.proxy.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore.add(1))
+        expect((await context.farmingCenter.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore.add(1))
       })
 
       it('increments the number of farms on the incentive', async () => {
@@ -212,7 +212,7 @@ describe('unit/EternalFarms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId2, {
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId2, {
             ...maxGas,
           })
 
@@ -239,7 +239,7 @@ describe('unit/EternalFarms', () => {
         })
 
         await expect(
-          context.proxy.connect(lpUser0).enterEternalFarming(
+          context.farmingCenter.connect(lpUser0).enterEternalFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -256,7 +256,7 @@ describe('unit/EternalFarms', () => {
         // await Time.setAndMine(timestamps.startTime + 20)
 
         await expect(
-          context.proxy.connect(lpUser0).enterEternalFarming(
+          context.farmingCenter.connect(lpUser0).enterEternalFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -287,7 +287,7 @@ describe('unit/EternalFarms', () => {
 
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       farmIncentiveKey = {
         refundee: incentiveCreator.address,
@@ -312,7 +312,7 @@ describe('unit/EternalFarms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.proxy.connect(lpUser0).enterEternalFarming(farmIncentiveKey, tokenId)
+      await context.farmingCenter.connect(lpUser0).enterEternalFarming(farmIncentiveKey, tokenId)
       await context.farming.farms(tokenId, incentiveId)
     })
 
@@ -398,7 +398,7 @@ describe('unit/EternalFarms', () => {
       tokenId = mintResult.tokenId
 
       await Time.setAndMine(timestamps.endTime + 10)
-      await context.proxy.connect(lpUser0).exitEternalFarming(
+      await context.farmingCenter.connect(lpUser0).exitEternalFarming(
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
@@ -537,11 +537,11 @@ describe('unit/EternalFarms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
         // await Time.setAndMine(timestamps.startTime + 1)
 
-        await context.proxy.connect(lpUser0).enterEternalFarming(
+        await context.farmingCenter.connect(lpUser0).enterEternalFarming(
           {
             refundee: incentiveCreator.address,
             rewardToken: context.rewardToken.address,
@@ -554,7 +554,7 @@ describe('unit/EternalFarms', () => {
 
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
-        await expect(context.proxy.connect(actors.lpUser0()).exitEternalFarming(
+        await expect(context.farmingCenter.connect(actors.lpUser0()).exitEternalFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -606,11 +606,11 @@ describe('unit/EternalFarms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
         await Time.setAndMine(timestamps.startTime + 1)
 
-        await context.proxy.connect(lpUser0).enterEternalFarming(
+        await context.farmingCenter.connect(lpUser0).enterEternalFarming(
           {
             refundee: incentiveCreator.address,
             rewardToken: context.rewardToken.address,
@@ -626,7 +626,7 @@ describe('unit/EternalFarms', () => {
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
         subject = (_actor: Wallet) =>
-          context.proxy.connect(_actor).exitEternalFarming(
+          context.farmingCenter.connect(_actor).exitEternalFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -640,9 +640,9 @@ describe('unit/EternalFarms', () => {
 
       describe('works and', () => {
         it('decrements deposit numberOfFarms by 1', async () => {
-          const { L2TokenId: farmsPre } = await context.proxy.deposits(tokenId)
+          const { L2TokenId: farmsPre } = await context.farmingCenter.deposits(tokenId)
           await subject(lpUser0)
-          const { L2TokenId: farmsPost } = await context.proxy.deposits(tokenId)
+          const { L2TokenId: farmsPost } = await context.farmingCenter.deposits(tokenId)
           expect(farmsPre).to.not.equal(farmsPost.sub(1))
         })
 
@@ -753,7 +753,7 @@ describe('unit/EternalFarms', () => {
         tokenId,
       })
 
-      await context.proxy.connect(lpUser0).enterEternalFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterEternalFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
@@ -774,7 +774,7 @@ describe('unit/EternalFarms', () => {
         tokenId,
       })
 
-      await context.proxy.connect(lpUser0).enterEternalFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterEternalFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })

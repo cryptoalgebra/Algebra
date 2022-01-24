@@ -8,7 +8,7 @@ import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
-import './IProxy.sol';
+import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
@@ -27,8 +27,8 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @notice The max amount of seconds into the future the incentive startTime can be set
     function maxIncentiveStartLeadTime() external view returns (uint256);
 
-    /// @notice Proxy
-    function proxy() external view returns (IProxy);
+    /// @notice FarmingCenter
+    function farmingCenter() external view returns (IFarmingCenter);
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
@@ -60,7 +60,7 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice
-    function setProxyAddress(address _proxy) external;
+    function setFarmingCenterAddress(address _farmingCenter) external;
 
     /// @notice exitFarmings a Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT

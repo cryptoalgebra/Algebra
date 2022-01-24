@@ -21,7 +21,7 @@ import {
   AlgebraEternalFarming,
   IAlgebraPool,
   TestIncentiveId,
-  Proxy
+  FarmingCenter
 } from '../../typechain'
 import abi from '../../artifacts/contracts/incentiveFarming/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
 import { HelperTypes } from './types'
@@ -46,7 +46,7 @@ export class HelperCommands {
   router: ISwapRouter
   pool: IAlgebraPool
   testIncentiveId: TestIncentiveId
-  proxy: Proxy
+  farmingCenter: FarmingCenter
 
   DEFAULT_INCENTIVE_DURATION = 2_000
   DEFAULT_CLAIM_DURATION = 1_000
@@ -61,11 +61,11 @@ export class HelperCommands {
     pool,
     actors,
     testIncentiveId,
-    proxy
+    farmingCenter
   }: {
     provider: MockProvider
     farming: AlgebraIncentiveFarming | AlgebraEternalFarming
-    proxy: Proxy
+    farmingCenter: FarmingCenter
     nft: INonfungiblePositionManager
     router: ISwapRouter
     pool: IAlgebraPool
@@ -79,7 +79,7 @@ export class HelperCommands {
     this.router = router
     this.pool = pool
     this.testIncentiveId = testIncentiveId
-    this.proxy = proxy
+    this.farmingCenter = farmingCenter
   }
 
   static fromTestContext = (context: TestContext, actors: ActorFixture, provider: MockProvider): HelperCommands => {
@@ -91,7 +91,7 @@ export class HelperCommands {
       farming: context.farming,
       pool: context.poolObj,
       testIncentiveId: context.testIncentiveId,
-      proxy: context.proxy
+      farmingCenter: context.farmingCenter
     })
   }
 
@@ -210,21 +210,21 @@ export class HelperCommands {
     await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
 
     // The LP approves and farms their NFT
-    await this.nft.connect(params.lp).approve(this.proxy.address, tokenId)
+    await this.nft.connect(params.lp).approve(this.farmingCenter.address, tokenId)
     await this.nft
       .connect(params.lp)
-      ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.proxy.address, tokenId)
+      ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.farmingCenter.address, tokenId)
 
-    const l2tokenId = (await this.proxy.deposits(tokenId)).L2TokenId
+    const l2tokenId = (await this.farmingCenter.deposits(tokenId)).L2TokenId
     console.log("test",tokenId)
     console.log("test2", l2tokenId)
     console.log("nft address:",this.nft.address)
     if(params.eternal) {
-      await this.proxy
+      await this.farmingCenter
         .connect(params.lp)
         .enterEternalFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
     } else {
-      await this.proxy
+      await this.farmingCenter
         .connect(params.lp)
         .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
     }
@@ -239,11 +239,11 @@ export class HelperCommands {
   }
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approve(this.proxy  .address, params.tokenId)
+    await this.nft.connect(params.lp).approve(this.farmingCenter  .address, params.tokenId)
 
     await this.nft
       .connect(params.lp)
-      ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.proxy.address, params.tokenId)
+      ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.farmingCenter.address, params.tokenId)
   }
 
   mintFlow: HelperTypes.Mint.Command = async (params) => {
@@ -276,7 +276,7 @@ export class HelperCommands {
   }
 
   exitFarmingCollectBurnFlow: HelperTypes.exitFarmingCollectBurn.Command = async (params) => {
-    await this.proxy.connect(params.lp).exitFarming(
+    await this.farmingCenter.connect(params.lp).exitFarming(
       incentiveResultToFarmAdapter(params.createIncentiveResult),
       params.tokenId,
       maxGas
@@ -292,7 +292,7 @@ export class HelperCommands {
       .connect(params.lp)
       .claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
 
-    await this.proxy.connect(params.lp).withdrawToken(params.tokenId, params.lp.address, '0x', maxGas)
+    await this.farmingCenter.connect(params.lp).withdrawToken(params.tokenId, params.lp.address, '0x', maxGas)
 
     const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId)
 

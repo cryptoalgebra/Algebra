@@ -14,7 +14,7 @@ import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IIncentiveKey.sol';
 
-interface IProxy is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMulticall, IERC721Permit {
+interface IFarmingCenter is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMulticall, IERC721Permit {
     struct VirtualPoolAddresses {
         address virtualPool;
         address eternalVirtualPool;
@@ -53,7 +53,7 @@ interface IProxy is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMultic
             address owner
         );
 
-    function setProxyAddress(IAlgebraPool pool, address virtualPool) external;
+    function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
 
     function enterEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
 

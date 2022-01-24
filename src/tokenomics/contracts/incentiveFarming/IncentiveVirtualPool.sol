@@ -11,7 +11,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    address public immutable proxyAddress;
+    address public immutable farmingCenterAddress;
 
     address public immutable farmingAddress;
 
@@ -41,8 +41,8 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     mapping(int24 => TickManager.Tick) public override ticks;
     mapping(int16 => uint256) private tickTable;
 
-    modifier onlyProxy() {
-        require(msg.sender == proxyAddress, 'only the pool can call this function');
+    modifier onlyFarmingCenter() {
+        require(msg.sender == farmingCenterAddress, 'only the pool can call this function');
         _;
     }
 
@@ -52,12 +52,12 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     }
 
     constructor(
-        address _proxyAddress,
+        address _farmingCenterAddress,
         address _farmingAddress,
         uint32 _desiredStartTimestamp,
         uint32 _desiredEndTimestamp
     ) {
-        proxyAddress = _proxyAddress;
+        farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         desiredStartTimestamp = _desiredStartTimestamp;
         desiredEndTimestamp = _desiredEndTimestamp;
@@ -122,7 +122,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     }
 
     /// @inheritdoc IAlgebraVirtualPool
-    function cross(int24 nextTick, bool zeroForOne) external override onlyProxy {
+    function cross(int24 nextTick, bool zeroForOne) external override onlyFarmingCenter {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
 
@@ -133,7 +133,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     }
 
     /// @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyProxy returns (Status) {
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFarmingCenter returns (Status) {
         if (desiredStartTimestamp >= currentTimestamp) {
             return Status.NOT_STARTED;
         }
@@ -156,7 +156,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     }
 
     /// @inheritdoc IAlgebraVirtualPool
-    function processSwap() external override onlyProxy {
+    function processSwap() external override onlyFarmingCenter {
         prevLiquidity = currentLiquidity;
     }
 

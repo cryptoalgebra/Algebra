@@ -160,11 +160,11 @@ describe('unit/Incentives', async () => {
         await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
-        await context.proxy
+        await context.farmingCenter
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.proxy.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
+            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
           ])
         ;({ numberOfFarms } = await context.farming
           .connect(actors.lpUser0())

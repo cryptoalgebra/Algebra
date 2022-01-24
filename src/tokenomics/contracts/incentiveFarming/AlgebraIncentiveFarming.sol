@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import './interfaces/IAlgebraIncentiveFarming.sol';
 import './interfaces/IAlgebraIncentiveVirtualPool.sol';
-import '../interfaces/IProxy.sol';
+import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/RewardMath.sol';
 import '../libraries/NFTPositionInfo.sol';
@@ -47,7 +47,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     IAlgebraPoolDeployer public immutable override deployer;
 
     /// @inheritdoc IAlgebraFarming
-    IProxy public override proxy;
+    IFarmingCenter public override farmingCenter;
 
     /// @inheritdoc IAlgebraFarming
     uint256 public immutable override maxIncentiveStartLeadTime;
@@ -69,8 +69,8 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         incentiveMaker = _incentiveMaker;
     }
 
-    function setProxyAddress(address _proxy) external override onlyOwner {
-        proxy = IProxy(_proxy);
+    function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
+        farmingCenter = IFarmingCenter(_farmingCenter);
     }
 
     /// @dev rewards[rewardToken][owner] => uint256
@@ -87,8 +87,8 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         _;
     }
 
-    modifier onlyProxy() {
-        require(msg.sender == address(proxy));
+    modifier onlyFarmingCenter() {
+        require(msg.sender == address(farmingCenter));
         _;
     }
 
@@ -115,7 +115,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        (address _incentive, ) = proxy.virtualPoolAddresses(address(key.pool));
+        (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
             _activeEndTimestamp = IAlgebraIncentiveVirtualPool(_incentive).desiredEndTimestamp();
@@ -147,10 +147,10 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         incentives[incentiveId].bonusReward += bonusReward;
 
         virtualPool = address(
-            new IncentiveVirtualPool(address(proxy), address(this), uint32(key.startTime), uint32(key.endTime))
+            new IncentiveVirtualPool(address(farmingCenter), address(this), uint32(key.startTime), uint32(key.endTime))
         );
 
-        proxy.setProxyAddress(key.pool, virtualPool);
+        farmingCenter.setFarmingCenterAddress(key.pool, virtualPool);
 
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = address(virtualPool);
@@ -173,7 +173,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyProxy {
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
         require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
 
         bytes32 incentiveId = IncentiveId.compute(key);
@@ -211,7 +211,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external override onlyProxy {
+    ) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive memory incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive

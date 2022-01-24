@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 import './incentiveFarming/interfaces/IAlgebraIncentiveVirtualPool.sol';
 import './eternalFarming/interfaces/IAlgebraEternalVirtualPool.sol';
-import './interfaces/IProxy.sol';
+import './interfaces/IFarmingCenter.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 
@@ -11,7 +11,7 @@ import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
-contract Proxy is IProxy, ERC721Permit, Multicall {
+contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -155,7 +155,7 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
-    function setProxyAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
+    function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
         if (pool.activeIncentive() == address(0)) {
             pool.setIncentive(address(this));
         }
@@ -169,7 +169,7 @@ contract Proxy is IProxy, ERC721Permit, Multicall {
         }
     }
 
-    /// @inheritdoc IProxy
+    /// @inheritdoc IFarmingCenter
     function withdrawToken(
         uint256 tokenId,
         address to,
