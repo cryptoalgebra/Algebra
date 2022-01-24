@@ -106,13 +106,9 @@ describe('unit/Incentives', async () => {
       })
 
       it('adds to existing incentives', async () => {
-        console.log("incentive0")
         const params = makeTimestamps(await blockTimestamp())
-        console.log("incentive1")
         expect(subject(params)).to.emit(context.farming, 'IncentiveCreated')
-        console.log("incentive2")
         expect(subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
-        console.log("incentive3")
         const incentiveId = await context.testIncentiveId.compute({
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
@@ -121,7 +117,6 @@ describe('unit/Incentives', async () => {
           endTime: timestamps.endTime,
           refundee: incentiveCreator.address,
         })
-        console.log("incentive")
         const { numberOfFarms } = await context.farming.incentives(
           incentiveId
         )

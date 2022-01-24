@@ -290,7 +290,6 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   const pool12 = await factory.poolByPair(tokens[1].address, tokens[2].address)
 
   const poolObj = poolFactory.attach(pool01) as IAlgebraPool
-  console.log(100)
   return {
     nft,
     router,
@@ -342,37 +341,32 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
 
   const incentiveFarming = (await incentiveFarmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraIncentiveFarming
 
-  console.log(1)
   const farmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
-  console.log(2)
+
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
-  console.log(3)
+
   const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
-  console.log(4)
+
   const farmingCenter = (await farmingCenterFactory.deploy(incentiveFarming.address, farming.address, nft.address)) as FarmingCenter
-  console.log(5)
+
   await farming.setFarmingCenterAddress(farmingCenter.address)
-  console.log(6)
+
   await factory.setFarmingAddress(farmingCenter.address)
-  console.log(7)
+
   await farming.setIncentiveMaker(incentiveCreator.address)
-  console.log(8)
+
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
-  console.log(9)
 
   for (const token of tokens) {
     await token.approve(nft.address, constants.MaxUint256)
   }
-  console.log(10)
 
   const fee = FeeAmount.MEDIUM
 
   await nft.createAndInitializePoolIfNecessary(tokens[0].address ,tokens[1].address, encodePriceSqrt(1, 1))
-  console.log(11)
 
   await nft.createAndInitializePoolIfNecessary(tokens[1].address, tokens[2].address, encodePriceSqrt(1, 1))
-  console.log(12)
 
   const pool01 = await factory.poolByPair(tokens[0].address, tokens[1].address)
 

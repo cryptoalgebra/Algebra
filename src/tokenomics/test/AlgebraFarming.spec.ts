@@ -140,8 +140,7 @@ describe('AlgebraFarming', async ()=>{
 				expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(
 					createIncentiveResult.endTime
 				)
-				console.log(createIncentiveResult.endTime)
-				console.log(await blockTimestamp())
+
 				// Everyone pulls their liquidity at the same time
 				const exitFarmings = await Promise.all(
 					subject.farms.map(({ lp, tokenId }) =>
@@ -594,7 +593,6 @@ describe('AlgebraFarming', async ()=>{
 					})
 				)
 			)
-			console.log("cegergewrgr121")
 		    await Time.set(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
@@ -811,7 +809,6 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-				console.log("check");
 		    await Time.set(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
@@ -1612,9 +1609,6 @@ describe('AlgebraFarming', async ()=>{
 
 			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
 			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
-
-			console.log(reward3)
-			console.log(reward4)
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))

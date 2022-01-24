@@ -71,6 +71,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         incentiveMaker = _incentiveMaker;
     }
 
+    /// @inheritdoc IAlgebraFarming
     function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
         farmingCenter = IFarmingCenter(_farmingCenter);
     }
@@ -156,6 +157,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         );
     }
 
+    /// @inheritdoc IAlgebraEternalFarming
     function addRewards(
         IncentiveKey memory key,
         uint256 rewardAmount,
@@ -190,6 +192,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         virtualPool.addRewards(rewardAmount, bonusRewardAmount);
     }
 
+    /// @inheritdoc IAlgebraEternalFarming
     function setRates(
         IncentiveKey memory key,
         uint128 rewardRate,
@@ -356,6 +359,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         );
     }
 
+    /// @inheritdoc IAlgebraEternalFarming
     function collectRewards(
         IncentiveKey memory key,
         uint256 tokenId,

@@ -69,6 +69,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         incentiveMaker = _incentiveMaker;
     }
 
+    /// @inheritdoc IAlgebraFarming
     function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
         farmingCenter = IFarmingCenter(_farmingCenter);
     }

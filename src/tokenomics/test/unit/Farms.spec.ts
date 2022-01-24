@@ -46,9 +46,7 @@ describe('unit/Farms', () => {
 
   beforeEach('create fixture loader', async () => {
     context = await loadFixture(algebraFixture)
-    console.log("check687")
     helpers = HelperCommands.fromTestContext(context, actors, provider)
-    console.log("check869")
   })
 
   describe('#enterFarming', () => {
@@ -59,13 +57,10 @@ describe('unit/Farms', () => {
     beforeEach(async () => {
       
       context = await loadFixture(algebraFixture)
-      console.log("check12312321")
       helpers = HelperCommands.fromTestContext(context, actors, provider)
-      console.log("check2131231")
       /** We will be doing a lot of time-testing here, so leave some room between
         and when the incentive starts */
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
-      console.log("check1231313131231")
       await erc20Helper.ensureBalancesAndApprovals(
         lpUser0,
         [context.token0, context.token1],
@@ -500,14 +495,11 @@ describe('unit/Farms', () => {
     let incentiveId: string
     let subject: (actor: Wallet) => Promise<any>
     let createIncentiveResult: HelperTypes.CreateIncentive.Result
-    console.log("check13333")
     describe('before end time', () => {
     
       
       xit('cannot exitFarming', async() => {
-        console.log("check133")
         timestamps = makeTimestamps(await blockTimestamp())
-        console.log("check2")
         createIncentiveResult = await helpers.createIncentiveFlow({
           rewardToken: context.rewardToken,
           bonusRewardToken: context.bonusRewardToken,
@@ -516,14 +508,12 @@ describe('unit/Farms', () => {
           poolAddress: context.poolObj.address,
           ...timestamps,
         })
-        console.log("check3")
         await erc20Helper.ensureBalancesAndApprovals(
           lpUser0,
           [context.token0, context.token1],
           amountDesired,
           context.nft.address
         )
-        console.log("123123123")
         tokenId = await mintPosition(context.nft.connect(lpUser0), {
           token0: context.token0.address,
           token1: context.token1.address,
@@ -554,7 +544,7 @@ describe('unit/Farms', () => {
           },
           tokenId
         )
-        console.log("check")
+
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
         await expect(context.farmingCenter.connect(actors.lpUser0()).exitFarming(
@@ -572,7 +562,6 @@ describe('unit/Farms', () => {
 
     beforeEach('create the incentive and nft and farm it', async () => {
       timestamps = makeTimestamps(await blockTimestamp())
-      console.log("here")
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -581,7 +570,6 @@ describe('unit/Farms', () => {
         poolAddress: context.poolObj.address,
         ...timestamps,
       })
-      console.log("her1e")
       await erc20Helper.ensureBalancesAndApprovals(
         lpUser0,
         [context.token0, context.token1],
@@ -602,7 +590,7 @@ describe('unit/Farms', () => {
         amount1Min: 0,
         deadline: (await blockTimestamp()) + 1000,
       })
-      console.log("12here")
+
       await context.nft
         .connect(lpUser0)
         ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
@@ -619,7 +607,7 @@ describe('unit/Farms', () => {
         },
         tokenId
       )
-      console.log("herefsdfdsafas")
+
       await Time.setAndMine(timestamps.endTime + 10)
 
       incentiveId = await helpers.getIncentiveId(createIncentiveResult)

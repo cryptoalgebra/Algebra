@@ -128,9 +128,7 @@ describe('unit/Deposits', () => {
     it('allows depositing without staking', async () => {
       // Pass empty data
       await subject(ethers.utils.defaultAbiCoder.encode([], []))
-      console.log("check")
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
-      console.log("check")
       expect(deposit.L2TokenId).to.eq(BN('1'))
       expect(incentive.numberOfFarms).to.eq(BN('0'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).to.eq(BN('0'))
@@ -145,7 +143,6 @@ describe('unit/Deposits', () => {
       await subject(data, lpUser0)
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
       expect(deposit.L2TokenId).to.eq(BN('1'))
-      console.log(incentive)
       expect(incentive.numberOfFarms).to.eq(BN('1'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
     })
