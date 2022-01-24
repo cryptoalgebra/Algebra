@@ -123,9 +123,7 @@ export class HelperCommands {
 
     await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
     await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
-    console.log("rez")
     let txResult;
-    console.log("pool", params.poolAddress)
     if (params.eternal) {
       txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createIncentive(
         {
@@ -153,10 +151,8 @@ export class HelperCommands {
         params.bonusReward
       )
     }
-    console.log("rez")
     // @ts-ignore
     const virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
-    console.log("rez")
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       ...times,
@@ -216,9 +212,7 @@ export class HelperCommands {
       ['safeTransferFrom(address,address,uint256)'](params.lp.address, this.farmingCenter.address, tokenId)
 
     const l2tokenId = (await this.farmingCenter.deposits(tokenId)).L2TokenId
-    console.log("test",tokenId)
-    console.log("test2", l2tokenId)
-    console.log("nft address:",this.nft.address)
+
     if(params.eternal) {
       await this.farmingCenter
         .connect(params.lp)

@@ -46,9 +46,7 @@ describe('unit/EternalFarms', () => {
 
   beforeEach('create fixture loader', async () => {
     context = await loadFixture(algebraEternalFixture)
-    console.log('13')
     helpers = HelperCommands.fromTestContext(context, actors, provider)
-    console.log('14')
   })
 
   describe('#enterFarming', () => {
@@ -88,7 +86,6 @@ describe('unit/EternalFarms', () => {
       await context.nft
         .connect(lpUser0)
         ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
-      console.log('HERE15')
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -103,7 +100,7 @@ describe('unit/EternalFarms', () => {
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
-      console.log('HERE16')
+
       subject = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterEternalFarming(
           {
