@@ -89,7 +89,7 @@ describe('unit/Farms', () => {
 
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -103,7 +103,7 @@ describe('unit/Farms', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
 
       subject = (L2TokenId: string, _actor: Wallet) =>
-        context.proxy.connect(_actor).enterFarming(
+        context.farmingCenter.connect(_actor).enterFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -132,10 +132,10 @@ describe('unit/Farms', () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.proxy.deposits(tokenId)).numberOfFarms
+        const depositFarmsBefore = (await context.farmingCenter.deposits(tokenId)).numberOfFarms
         await subject(tokenId, lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.proxy.deposits(tokenId)).numberOfFarms
+        const depositFarmsAfter = (await context.farmingCenter.deposits(tokenId)).numberOfFarms
 
         expect(farmBefore.liquidity).to.eq(0)
         expect(depositFarmsBefore).to.eq(0)
@@ -144,10 +144,10 @@ describe('unit/Farms', () => {
       })
 
       it('increments the number of farms on the deposit', async () => {
-        const nFarmsBefore: number = (await context.proxy.deposits(tokenId)).numberOfFarms
+        const nFarmsBefore: number = (await context.farmingCenter.deposits(tokenId)).numberOfFarms
         await subject(tokenId, lpUser0)
 
-        expect((await context.proxy.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore + 1)
+        expect((await context.farmingCenter.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore + 1)
       })
 
       it('increments the number of farms on the incentive', async () => {
@@ -210,7 +210,7 @@ describe('unit/Farms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId2, {
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId2, {
             ...maxGas,
           })
 
@@ -237,7 +237,7 @@ describe('unit/Farms', () => {
         })
 
         await expect(
-          context.proxy.connect(lpUser0).enterFarming(
+          context.farmingCenter.connect(lpUser0).enterFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -254,7 +254,7 @@ describe('unit/Farms', () => {
         // await Time.setAndMine(timestamps.startTime + 20)
 
         await expect(
-          context.proxy.connect(lpUser0).enterFarming(
+          context.farmingCenter.connect(lpUser0).enterFarming(
             {
               refundee: incentiveCreator.address,
               pool: context.pool01,
@@ -298,7 +298,7 @@ describe('unit/Farms', () => {
 
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       farmIncentiveKey = {
         refundee: incentiveCreator.address,
@@ -320,7 +320,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.proxy.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
       await context.farming.farms(tokenId, incentiveId)
     })
 
@@ -402,7 +402,7 @@ describe('unit/Farms', () => {
       tokenId = mintResult.tokenId
 
       await Time.setAndMine(timestamps.endTime + 10)
-      await context.proxy.connect(lpUser0).exitFarming(
+      await context.farmingCenter.connect(lpUser0).exitFarming(
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
@@ -540,11 +540,11 @@ describe('unit/Farms', () => {
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
         // await Time.setAndMine(timestamps.startTime + 1)
 
-        await context.proxy.connect(lpUser0).enterFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             refundee: incentiveCreator.address,
             rewardToken: context.rewardToken.address,
@@ -557,7 +557,7 @@ describe('unit/Farms', () => {
         console.log("check")
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
-        await expect(context.proxy.connect(actors.lpUser0()).exitFarming(
+        await expect(context.farmingCenter.connect(actors.lpUser0()).exitFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -605,11 +605,11 @@ describe('unit/Farms', () => {
       console.log("12here")
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       // await Time.setAndMine(timestamps.startTime + 1)
 
-      await context.proxy.connect(lpUser0).enterFarming(
+      await context.farmingCenter.connect(lpUser0).enterFarming(
         {
           refundee: incentiveCreator.address,
           rewardToken: context.rewardToken.address,
@@ -625,7 +625,7 @@ describe('unit/Farms', () => {
       incentiveId = await helpers.getIncentiveId(createIncentiveResult)
 
       subject = (_actor: Wallet) =>
-        context.proxy.connect(_actor).exitFarming(
+        context.farmingCenter.connect(_actor).exitFarming(
           {
             refundee: incentiveCreator.address,
             pool: context.pool01,
@@ -639,9 +639,9 @@ describe('unit/Farms', () => {
 
     describe('works and', () => {
       it('decrements deposit numberOfFarms by 1', async () => {
-        const { L2TokenId: farmsPre } = await context.proxy.deposits(tokenId)
+        const { L2TokenId: farmsPre } = await context.farmingCenter.deposits(tokenId)
         await subject(lpUser0)
-        const { L2TokenId: farmsPost } = await context.proxy.deposits(tokenId)
+        const { L2TokenId: farmsPost } = await context.farmingCenter.deposits(tokenId)
         expect(farmsPre).to.not.equal(farmsPost.sub(1))
       })
 
@@ -747,7 +747,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.proxy.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
@@ -768,7 +768,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.proxy.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })

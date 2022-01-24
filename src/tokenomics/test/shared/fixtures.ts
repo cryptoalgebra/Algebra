@@ -21,7 +21,7 @@ import {
   IAlgebraPoolDeployer,
   IAlgebraPool,
   TestIncentiveId,
-  Proxy 
+  FarmingCenter 
 } from '../../typechain'
 import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
@@ -237,7 +237,7 @@ export type AlgebraFixtureType = {
   router: ISwapRouter
   farming: AlgebraIncentiveFarming
   eternalFarming: AlgebraEternalFarming
-  proxy: Proxy
+  farmingCenter: FarmingCenter
   testIncentiveId: TestIncentiveId
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
@@ -260,16 +260,16 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
 
   const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
 
-  const proxyFactory = await ethers.getContractFactory('Proxy', signer) 
+  const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
 
 
-  const proxy = (await proxyFactory.deploy(farming.address,eternalFarming.address, nft.address)) as Proxy
+  const farmingCenter = (await farmingCenterFactory.deploy(farming.address,eternalFarming.address, nft.address)) as FarmingCenter
   
-  await eternalFarming.setProxyAddress(proxy.address)
+  await eternalFarming.setFarmingCenterAddress(farmingCenter.address)
 
-  await farming.setProxyAddress(proxy.address)
+  await farming.setFarmingCenterAddress(farmingCenter.address)
 
-  await factory.setFarmingAddress(proxy.address)
+  await factory.setFarmingAddress(farmingCenter.address)
   
   await farming.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
@@ -297,7 +297,7 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
     tokens,
     farming,
     eternalFarming,
-    proxy,
+    farmingCenter,
     testIncentiveId,
     deployer,
     factory,
@@ -322,7 +322,7 @@ export type EternalAlgebraFixtureType = {
   poolObj: IAlgebraPool
   router: ISwapRouter
   farming: AlgebraEternalFarming
-  proxy: Proxy
+  farmingCenter: FarmingCenter
   testIncentiveId: TestIncentiveId
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
   token0: TestERC20
@@ -347,13 +347,13 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
   console.log(2)
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
   console.log(3)
-  const proxyFactory = await ethers.getContractFactory('Proxy', signer) 
+  const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
   console.log(4)
-  const proxy = (await proxyFactory.deploy(incentiveFarming.address, farming.address, nft.address)) as Proxy
+  const farmingCenter = (await farmingCenterFactory.deploy(incentiveFarming.address, farming.address, nft.address)) as FarmingCenter
   console.log(5)
-  await farming.setProxyAddress(proxy.address)
+  await farming.setFarmingCenterAddress(farmingCenter.address)
   console.log(6)
-  await factory.setFarmingAddress(proxy.address)
+  await factory.setFarmingAddress(farmingCenter.address)
   console.log(7)
   await farming.setIncentiveMaker(incentiveCreator.address)
   console.log(8)
@@ -385,7 +385,7 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
     router,
     tokens,
     farming,
-    proxy,
+    farmingCenter,
     testIncentiveId,
     deployer,
     factory,

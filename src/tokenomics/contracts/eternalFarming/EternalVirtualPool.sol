@@ -15,7 +15,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     using TickManager for mapping(int24 => TickManager.Tick);
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    address public immutable proxyAddress;
+    address public immutable farmingCenterAddress;
     // @inheritdoc IAlgebraEternalVirtualPool
     address public immutable farmingAddress;
 
@@ -44,8 +44,11 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
 
-    modifier onlyProxy() {
-        require(msg.sender == proxyAddress || msg.sender == farmingAddress, 'only the pool can call this function');
+    modifier onlyFarmingCenter() {
+        require(
+            msg.sender == farmingCenterAddress || msg.sender == farmingAddress,
+            'only the pool can call this function'
+        );
         _;
     }
 
@@ -54,8 +57,8 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
         _;
     }
 
-    constructor(address _proxyAddress, address _farmingAddress) {
-        proxyAddress = _proxyAddress;
+    constructor(address _farmingCenterAddress, address _farmingAddress) {
+        farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         prevTimestamp = uint32(block.timestamp);
     }
@@ -111,7 +114,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function cross(int24 nextTick, bool zeroForOne) external override onlyProxy {
+    function cross(int24 nextTick, bool zeroForOne) external override onlyFarmingCenter {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(
                 nextTick,
@@ -129,7 +132,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) public override onlyProxy returns (Status) {
+    function increaseCumulative(uint32 currentTimestamp) public override onlyFarmingCenter returns (Status) {
         uint32 previousTimestamp = prevTimestamp;
         if (currentTimestamp > previousTimestamp && prevLiquidity > 0) {
             uint32 delta = currentTimestamp - previousTimestamp;
@@ -164,7 +167,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function processSwap() external override onlyProxy {
+    function processSwap() external override onlyFarmingCenter {
         prevLiquidity = currentLiquidity;
     }
 

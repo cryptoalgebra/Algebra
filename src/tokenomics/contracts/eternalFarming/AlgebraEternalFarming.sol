@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
-import '../interfaces/IProxy.sol';
+import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/RewardMath.sol';
 import '../libraries/NFTPositionInfo.sol';
@@ -47,7 +47,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     uint256 public immutable override maxIncentiveDuration;
 
     /// @inheritdoc IAlgebraFarming
-    IProxy public override proxy;
+    IFarmingCenter public override farmingCenter;
 
     /// @dev bytes32 refers to the return value of IncentiveId.compute
     mapping(bytes32 => Incentive) public override incentives;
@@ -71,8 +71,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         incentiveMaker = _incentiveMaker;
     }
 
-    function setProxyAddress(address _proxy) external override onlyOwner {
-        proxy = IProxy(_proxy);
+    function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
+        farmingCenter = IFarmingCenter(_farmingCenter);
     }
 
     /// @dev rewards[rewardToken][owner] => uint256
@@ -89,8 +89,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         _;
     }
 
-    modifier onlyProxy() {
-        require(msg.sender == address(proxy));
+    modifier onlyFarmingCenter() {
+        require(msg.sender == address(farmingCenter));
         _;
     }
 
@@ -119,7 +119,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         uint128 rewardRate,
         uint128 bonusRewardRate
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        (, address _incentive) = proxy.virtualPoolAddresses(address(key.pool));
+        (, address _incentive) = farmingCenter.virtualPoolAddresses(address(key.pool));
 
         require(_incentive == address(0), 'Farming already exists');
 
@@ -129,9 +129,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
         incentives[incentiveId].bonusReward += bonusReward;
 
-        virtualPool = address(new EternalVirtualPool(address(proxy), address(this)));
+        virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this)));
 
-        proxy.setProxyAddress(key.pool, virtualPool);
+        farmingCenter.setFarmingCenterAddress(key.pool, virtualPool);
 
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = virtualPool;
@@ -201,7 +201,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function enterFarming(IncentiveKey calldata key, uint256 tokenId) external override onlyProxy {
+    function enterFarming(IncentiveKey calldata key, uint256 tokenId) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive'); // TOD
@@ -251,7 +251,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external override onlyProxy {
+    ) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive memory incentive = incentives[incentiveId];
 
@@ -360,7 +360,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external override onlyProxy {
+    ) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive memory incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'AlgebraFarming::collect: non-existent incentive');

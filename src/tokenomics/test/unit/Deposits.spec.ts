@@ -93,7 +93,7 @@ describe('unit/Deposits', () => {
       const incentiveId = await helpers.getIncentiveId(_createIncentiveResult)
 
       return {
-        deposit: await context.proxy.deposits(tokenId),
+        deposit: await context.farmingCenter.deposits(tokenId),
         incentive: await context.farming.incentives(incentiveId),
         farm: await context.farming.farms(tokenId, incentiveId),
       }
@@ -113,12 +113,12 @@ describe('unit/Deposits', () => {
       //await Time.setAndMine(startTime + 1)
 
       // Make sure we're starting from a clean slate
-      const depositBefore = await context.proxy.deposits(tokenId)
-      expect(depositBefore.L2TokenId).to.eq((await context.proxy.l2Nfts(depositBefore.L2TokenId)).tokenId)
+      const depositBefore = await context.farmingCenter.deposits(tokenId)
+      expect(depositBefore.L2TokenId).to.eq((await context.farmingCenter.l2Nfts(depositBefore.L2TokenId)).tokenId)
       subject = async (data: string, actor: Wallet = lpUser0) => {
         await context.nft
           .connect(actor)
-          [SAFE_TRANSFER_FROM_SIGNATURE](actor.address, context.proxy.address, tokenId, data, {
+          [SAFE_TRANSFER_FROM_SIGNATURE](actor.address, context.farmingCenter.address, tokenId, data, {
             ...maxGas,
             from: actor.address,
           })
@@ -240,15 +240,15 @@ describe('unit/Deposits', () => {
       // })
 
       it('deposits the token', async () => {
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.equal(0)
+        expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(0)
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId, {
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId, {
             ...maxGas,
             from: lpUser0.address,
           })
 
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.equal(1)
+        expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(1)
       })
 
       it('properly farms the deposit in the select incentive', async () => {
@@ -262,11 +262,11 @@ describe('unit/Deposits', () => {
         })
         //await Time.set(timestamps.startTime + 10)
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositBefore = await context.proxy.deposits(tokenId)
+        const depositBefore = await context.farmingCenter.deposits(tokenId)
 
         await context.nft
           .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256,bytes)'](lpUser0.address, context.proxy.address, tokenId, data, {
+          ['safeTransferFrom(address,address,uint256,bytes)'](lpUser0.address, context.farmingCenter.address, tokenId, data, {
             ...maxGas,
             from: lpUser0.address,
           })
@@ -274,7 +274,7 @@ describe('unit/Deposits', () => {
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
 
         expect(depositBefore.L2TokenId).to.equal(0)
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.equal(1)
+        expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(1)
         //expect(farmBefore.secondsPerLiquidityInsideInitialX128).to.equal(0)
         //expect(farmAfter.secondsPerLiquidityInsideInitialX128).to.be.gt(0)
       })
@@ -285,7 +285,7 @@ describe('unit/Deposits', () => {
             .connect(lpUser0)
             ['safeTransferFrom(address,address,uint256,bytes)'](
               lpUser0.address,
-              context.proxy.address,
+              context.farmingCenter.address,
               tokenId,
               data,
               {
@@ -300,7 +300,7 @@ describe('unit/Deposits', () => {
     xdescribe('on invalid call', async () => {
       it('reverts when called by contract other than Algebra nonfungiblePositionManager', async () => {
         await expect(
-          context.proxy.connect(lpUser0).onERC721Received(incentiveCreator.address, lpUser0.address, 1, data)
+          context.farmingCenter.connect(lpUser0).onERC721Received(incentiveCreator.address, lpUser0.address, 1, data)
         ).to.be.revertedWith('AlgebraFarming::onERC721Received: not an Algebra nft')
       })
 
@@ -320,7 +320,7 @@ describe('unit/Deposits', () => {
             .connect(lpUser0)
             ['safeTransferFrom(address,address,uint256,bytes)'](
               lpUser0.address,
-              context.proxy.address,
+              context.farmingCenter.address,
               tokenId,
               invalidData
             )
@@ -333,15 +333,15 @@ describe('unit/Deposits', () => {
     beforeEach(async () => {
       await context.nft
         .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
-      subject = (L2TokenId, _recipient) => context.proxy.connect(lpUser0).withdrawToken(L2TokenId, _recipient, '0x')
+      subject = (L2TokenId, _recipient) => context.farmingCenter.connect(lpUser0).withdrawToken(L2TokenId, _recipient, '0x')
     })
 
     describe('works and', () => {
       it('emits a DepositTransferred event', async () =>
         await expect(subject(tokenId, recipient))
-          .to.emit(context.proxy, 'DepositTransferred')
+          .to.emit(context.farmingCenter, 'DepositTransferred')
           .withArgs(tokenId, recipient, constants.AddressZero))
 
       it('transfers nft ownership', async () => {
@@ -356,9 +356,9 @@ describe('unit/Deposits', () => {
       })
 
       it('deletes deposit upon withdrawal', async () => {
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.equal(1)
+        expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(1)
         await subject(tokenId, recipient)
-        expect((await context.proxy.deposits(tokenId)).L2TokenId).to.equal(0)
+        expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(0)
       })
 
       it('has gas cost', async () => await snapshotGasCost(subject(tokenId, recipient)))
@@ -367,7 +367,7 @@ describe('unit/Deposits', () => {
     describe('fails if', () => {
       it('you are withdrawing a token that is not yours', async () => {
         const notOwner = actors.traderUser1()
-        await expect(context.proxy.connect(notOwner).withdrawToken(tokenId, notOwner.address, '0x')).to.revertedWith(
+        await expect(context.farmingCenter.connect(notOwner).withdrawToken(tokenId, notOwner.address, '0x')).to.revertedWith(
           'Not approved'
         )
       })
@@ -384,7 +384,7 @@ describe('unit/Deposits', () => {
         }
         const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-        await context.proxy.connect(lpUser0).enterFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -409,7 +409,7 @@ describe('unit/Deposits', () => {
 
         await context.nft.connect(lpUser0).approve(lpUser1.address,tokenId)
   
-        await context.nft.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.proxy.address, tokenId,{...maxGas,from: lpUser0.address,})      
+        await context.nft.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId,{...maxGas,from: lpUser0.address,})      
 
 
       })
@@ -431,7 +431,7 @@ describe('unit/Deposits', () => {
 
       const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-      await context.proxy.connect(lpUser0).enterFarming(
+      await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -440,10 +440,10 @@ describe('unit/Deposits', () => {
           },
           tokenId
       )   
-      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.proxy.deposits(tokenId)
-      await context.proxy.connect(lpUser0).approve(lpUser1.address, l2TokenId)
-      await expect(context.proxy.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId))
-        .to.emit(context.proxy, 'Transfer')
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
+      await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farmingCenter.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId))
+        .to.emit(context.farmingCenter, 'Transfer')
         .withArgs(lpUser0.address, lpUser1.address, tokenId)
     })
 
@@ -463,7 +463,7 @@ describe('unit/Deposits', () => {
 
       const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-      await context.proxy.connect(lpUser0).enterFarming(
+      await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -472,10 +472,10 @@ describe('unit/Deposits', () => {
           },
           tokenId
       )   
-      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.proxy.deposits(tokenId)
-      await context.proxy.connect(lpUser0).approve(lpUser1.address, l2TokenId)
-      await context.proxy.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId)
-      await context.proxy.connect(lpUser1).exitFarming(
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
+      await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await context.farmingCenter.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, lpUser1.address, l2TokenId)
+      await context.farmingCenter.connect(lpUser1).exitFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -484,7 +484,7 @@ describe('unit/Deposits', () => {
           },
           tokenId
         )
-      const { owner: ownerAfter } = await context.proxy.deposits(tokenId)
+      const { owner: ownerAfter } = await context.farmingCenter.deposits(tokenId)
       expect(ownerBefore).to.eq(lpUser0.address)
       expect(ownerAfter).to.eq(lpUser1.address)
 
@@ -506,7 +506,7 @@ describe('unit/Deposits', () => {
 
       const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-      await context.proxy.connect(lpUser0).enterFarming(
+      await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -515,9 +515,9 @@ describe('unit/Deposits', () => {
           },
           tokenId
       )   
-      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.proxy.deposits(tokenId)
-      await context.proxy.connect(lpUser0).approve(lpUser1.address, l2TokenId)
-      await expect(context.proxy.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, lpUser0.address, l2TokenId)).to.be.revertedWith(
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
+      await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farmingCenter.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, lpUser0.address, l2TokenId)).to.be.revertedWith(
         'ERC721: transfer of token that is not own')
     })
 
@@ -537,7 +537,7 @@ describe('unit/Deposits', () => {
 
       const incentive = await helpers.createIncentiveFlow(incentiveParams)
         //await Time.setAndMine(timestamps.startTime + 1)
-      await context.proxy.connect(lpUser0).enterFarming(
+      await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             ...incentive,
             pool: context.pool01,
@@ -546,9 +546,9 @@ describe('unit/Deposits', () => {
           },
           tokenId
       )   
-      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.proxy.deposits(tokenId)
-      await context.proxy.connect(lpUser0).approve(lpUser1.address, l2TokenId)
-      await expect(context.proxy.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, constants.AddressZero, l2TokenId)).to.be.revertedWith(
+      const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
+      await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
+      await expect(context.farmingCenter.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser1.address, constants.AddressZero, l2TokenId)).to.be.revertedWith(
         'ERC721: transfer of token that is not own')
     })
 
