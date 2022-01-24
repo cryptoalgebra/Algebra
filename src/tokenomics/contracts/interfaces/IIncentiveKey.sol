@@ -10,13 +10,11 @@ interface IIncentiveKey {
     /// @param pool The Algebra pool
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
-    /// @param refundee The address which receives any remaining reward tokens when the incentive is ended
     struct IncentiveKey {
         IERC20Minimal rewardToken;
         IERC20Minimal bonusRewardToken;
         IAlgebraPool pool;
         uint256 startTime;
         uint256 endTime;
-        address refundee;
     }
 }

@@ -104,7 +104,7 @@ describe('unit/EternalFarms', () => {
       subject = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterEternalFarming(
           {
-            refundee: incentiveCreator.address,
+            
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
@@ -238,7 +238,7 @@ describe('unit/EternalFarms', () => {
         await expect(
           context.farmingCenter.connect(lpUser0).enterEternalFarming(
             {
-              refundee: incentiveCreator.address,
+              
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
@@ -255,7 +255,7 @@ describe('unit/EternalFarms', () => {
         await expect(
           context.farmingCenter.connect(lpUser0).enterEternalFarming(
             {
-              refundee: incentiveCreator.address,
+              
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
@@ -287,7 +287,7 @@ describe('unit/EternalFarms', () => {
         ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       farmIncentiveKey = {
-        refundee: incentiveCreator.address,
+        
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
@@ -397,7 +397,7 @@ describe('unit/EternalFarms', () => {
       await Time.setAndMine(timestamps.endTime + 10)
       await context.farmingCenter.connect(lpUser0).exitEternalFarming(
         {
-          refundee: incentiveCreator.address,
+          
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
@@ -540,7 +540,7 @@ describe('unit/EternalFarms', () => {
 
         await context.farmingCenter.connect(lpUser0).enterEternalFarming(
           {
-            refundee: incentiveCreator.address,
+            
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
@@ -553,7 +553,7 @@ describe('unit/EternalFarms', () => {
 
         await expect(context.farmingCenter.connect(actors.lpUser0()).exitEternalFarming(
           {
-            refundee: incentiveCreator.address,
+            
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
@@ -609,7 +609,7 @@ describe('unit/EternalFarms', () => {
 
         await context.farmingCenter.connect(lpUser0).enterEternalFarming(
           {
-            refundee: incentiveCreator.address,
+            
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
@@ -625,7 +625,7 @@ describe('unit/EternalFarms', () => {
         subject = (_actor: Wallet) =>
           context.farmingCenter.connect(_actor).exitEternalFarming(
             {
-              refundee: incentiveCreator.address,
+              
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,

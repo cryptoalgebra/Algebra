@@ -100,7 +100,7 @@ describe('unit/Farms', () => {
       subject = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterFarming(
           {
-            refundee: incentiveCreator.address,
+            
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
@@ -234,7 +234,7 @@ describe('unit/Farms', () => {
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
             {
-              refundee: incentiveCreator.address,
+              
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
@@ -251,7 +251,7 @@ describe('unit/Farms', () => {
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
             {
-              refundee: incentiveCreator.address,
+              
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
@@ -296,7 +296,7 @@ describe('unit/Farms', () => {
         ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
 
       farmIncentiveKey = {
-        refundee: incentiveCreator.address,
+        
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
@@ -399,7 +399,7 @@ describe('unit/Farms', () => {
       await Time.setAndMine(timestamps.endTime + 10)
       await context.farmingCenter.connect(lpUser0).exitFarming(
         {
-          refundee: incentiveCreator.address,
+          
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
@@ -536,7 +536,7 @@ describe('unit/Farms', () => {
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
           {
-            refundee: incentiveCreator.address,
+            
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
@@ -549,7 +549,7 @@ describe('unit/Farms', () => {
 
         await expect(context.farmingCenter.connect(actors.lpUser0()).exitFarming(
           {
-            refundee: incentiveCreator.address,
+            
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
@@ -599,7 +599,7 @@ describe('unit/Farms', () => {
 
       await context.farmingCenter.connect(lpUser0).enterFarming(
         {
-          refundee: incentiveCreator.address,
+          
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
@@ -615,7 +615,7 @@ describe('unit/Farms', () => {
       subject = (_actor: Wallet) =>
         context.farmingCenter.connect(_actor).exitFarming(
           {
-            refundee: incentiveCreator.address,
+            
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,

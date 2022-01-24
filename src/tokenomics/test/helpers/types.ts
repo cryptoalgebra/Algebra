@@ -14,7 +14,7 @@ export module HelperTypes {
       endTime?: number
       totalReward: BigNumber
       bonusReward: BigNumber
-      refundee?: string
+      
       eternal? : boolean
       rewardRate?: BigNumber,
       bonusRewardRate?: BigNumber
@@ -27,7 +27,6 @@ export module HelperTypes {
       totalReward: BigNumber
       startTime: number
       endTime: number
-      refundee: string
       virtualPool: Contract
     }
 
