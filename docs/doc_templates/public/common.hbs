@@ -1,0 +1,34 @@
+{{h}} {{name}} {{stateMutability}} {{visibility}}
+
+{{#if withModifiers}}
+{{withModifiers}}
+{{/if}}
+
+{{#if signature}}
+`{{signature}}`
+{{/if}}
+
+{{natspec.notice}}
+
+{{#if natspec.dev}}
+*Developer note: {{natspec.dev}}*
+{{/if}}
+
+
+{{#if params}}
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+{{#each params}}
+| {{name}} | {{type}} | {{joinLines natspec}} |
+{{/each}}
+{{/if}}
+
+{{#if returns}}
+**Returns:**
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+{{#each returns}}
+| {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{joinLines natspec}} |
+{{/each}}
+{{/if}}
+
