@@ -3,8 +3,9 @@ import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-watcher'
-import "solidity-coverage"
-import baseConfig from "../../hardhat.base.config";
+import 'solidity-coverage'
+import 'solidity-docgen'
+import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.7.6',
@@ -65,4 +66,9 @@ export default {
       verbose: true,
     },
   },
+  docgen: {
+    output: '../../docs',
+    pages: () => 'periphery.md',
+    templates: '../../docs/doc_templates/public'
+  }
 }

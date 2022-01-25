@@ -40,10 +40,12 @@
     "lint": "prettier .",
     "bootstrap": "npm install && lerna bootstrap && npm install --prefix ./src/periphery && npm install --prefix ./src/tokenomics",
     "ci-install": "npm ci && lerna bootstrap",
-    "deploy": "node scripts/deployAll.js"
+    "deploy": "node scripts/deployAll.js",
+    "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../tokenomics && hardhat docgen"
   },
   "dependencies": {
-    "@ethersproject/solidity": "^5.4.0"
+    "@ethersproject/solidity": "^5.4.0",
+    "solidity-docgen": "git://github.com/cryptoalgebra/solidity-docgen#27e3069a97d5a81bddadbe5aca907509da6a6d42"
   },
   "engines": {
     "npm": ">=8.0.0",
