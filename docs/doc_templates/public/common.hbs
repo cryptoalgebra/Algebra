@@ -8,11 +8,15 @@
 `{{signature}}`
 {{/if}}
 
-{{natspec.notice}}
-
-{{#if natspec.dev}}
-*Developer note: {{natspec.dev}}*
+{{#with natspec}}
+{{notice}}
+{{#if dev}}
+{{#if isDevUnique}}
+*Developer note: {{dev}}*
 {{/if}}
+{{/if}}
+
+{{/with}}
 
 
 {{#if params}}

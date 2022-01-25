@@ -1,28 +1,32 @@
+{{#if notTest}}
+
+{{#if hasPublicMembers}}
+
 {{h 1}} {{name}}
 
 {{#if modifiers}}
-### Modifiers
+## Modifiers
 {{#each modifiers}}
 {{>item hlevel=4}}
 {{/each}}
 {{/if}}
 
 {{#if events}}
-### Events
+## Events
 {{#each events}}
 {{>item hlevel=4}}
 {{/each}}
 {{/if}}
 
-{{#if variables}}
-### Variables
-{{#each variables}}
+{{#if publicVariables}}
+## Variables
+{{#each publicVariables}}
 {{>item hlevel=4}}
 {{/each}}
 {{/if}}
 
 {{#if publicExternalFunctions}}
-### Functions
+## Functions
 {{#each publicExternalFunctions}}
 {{>item hlevel=4}}
 {{/each}}
@@ -31,3 +35,9 @@
 {{#each errors}}
 {{>item hlevel=4}}
 {{/each}}
+
+---
+
+{{/if}}
+
+{{/if}}

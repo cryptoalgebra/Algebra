@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.publicVariables = exports.publicExternalFunctions = exports.joinLines = exports.trim = exports.h = void 0;
-const utils_1 = require("solidity-ast/utils");
+exports.joinLines = exports.trim = exports.h = exports.devIsUnique = void 0;
 /**
  * Returns a Markdown heading marker. An optional `hlevel` context variable increases the heading level.
  *
@@ -29,14 +28,8 @@ function joinLines(text) {
     }
 }
 exports.joinLines = joinLines;
-function publicExternalFunctions(item) {
-    return [...(0, utils_1.findAll)('FunctionDefinition', item)].filter((x) => x.visibility == 'public' || x.visibility == 'external');
+function devIsUnique(natspec) {
+    return natspec && (natspec.dev != natspec.notice);
 }
-exports.publicExternalFunctions = publicExternalFunctions;
-function publicVariables(item) {
-    return (item.nodeType === 'ContractDefinition')
-        ? item.nodes.filter((0, utils_1.isNodeType)('VariableDeclaration')).filter(v => v.stateVariable).filter(v => v.visibility == 'public')
-        : undefined;
-}
-exports.publicVariables = publicVariables;
+exports.devIsUnique = devIsUnique;
 //# sourceMappingURL=helpers.js.map
