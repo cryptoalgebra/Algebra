@@ -80,7 +80,7 @@ contract AlgebraFarming is IAlgebraFarming, ERC721Permit, Multicall {
     address private incentiveMaker;
     address private owner;
 
-    /// @inheritdoc IAlgebraPoolDeployer
+    /// @inheritdoc IAlgebraFarming
     function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
         emit IncentiveMakerChanged(incentiveMaker, _incentiveMaker);
         incentiveMaker = _incentiveMaker;

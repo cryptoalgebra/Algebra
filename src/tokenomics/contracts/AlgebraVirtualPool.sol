@@ -11,9 +11,8 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
     address public immutable poolAddress;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+
     address public immutable farmingAddress;
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -122,7 +121,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         }
     }
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPool
     function cross(int24 nextTick, bool zeroForOne) external override onlyPool {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
@@ -133,7 +132,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         globalTick = zeroForOne ? nextTick - 1 : nextTick;
     }
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPool
     function increaseCumulative(uint32 currentTimestamp) external override onlyPool returns (Status) {
         if (desiredStartTimestamp >= currentTimestamp) {
             return Status.NOT_STARTED;
@@ -157,7 +156,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         return Status.ACTIVE;
     }
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPool
     function processSwap() external override onlyPool {
         prevLiquidity = currentLiquidity;
     }
