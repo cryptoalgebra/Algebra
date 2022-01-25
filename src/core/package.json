@@ -24,7 +24,7 @@
     "!artifacts/contracts/interfaces/**/*.dbg.json"
   ],
   "scripts": {
-    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js && hardhat docgen",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
