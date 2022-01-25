@@ -10,6 +10,7 @@
     "@types/chai": "^4.2.6",
     "@types/console-log-level": "^1.4.0",
     "@types/mocha": "^5.2.7",
+    "algebra-solidity-docgen": "^0.6.0-beta.1",
     "chai": "^4.2.0",
     "console-log-level": "^1.4.1",
     "decimal.js": "^10.2.1",
@@ -44,8 +45,7 @@
     "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../tokenomics && hardhat docgen"
   },
   "dependencies": {
-    "@ethersproject/solidity": "^5.4.0",
-    "solidity-docgen": "git://github.com/cryptoalgebra/solidity-docgen#7b111e2120159c7c32bff5a03df902c67aa8cfb1"
+    "@ethersproject/solidity": "^5.4.0"
   },
   "engines": {
     "npm": ">=8.0.0",

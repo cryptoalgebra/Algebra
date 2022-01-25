@@ -4,7 +4,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-contract-sizer'
 import 'solidity-coverage'
-import 'solidity-docgen'
+import 'algebra-solidity-docgen'
 
 import { HardhatUserConfig } from 'hardhat/config'
 import { SolcUserConfig } from 'hardhat/types'

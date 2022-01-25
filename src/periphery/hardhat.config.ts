@@ -4,7 +4,7 @@ import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-watcher'
 import 'solidity-coverage'
-import 'solidity-docgen'
+import 'algebra-solidity-docgen'
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
