@@ -11,34 +11,34 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     address public immutable poolAddress;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     address public immutable farmingAddress;
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredEndTimestamp;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredStartTimestamp;
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override initTimestamp;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override timeOutside;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint160 public override globalSecondsPerLiquidityCumulative;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override prevLiquidity;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override prevTimestamp;
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     int24 public override globalTick;
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     mapping(int24 => TickManager.Tick) public override ticks;
     mapping(int16 => uint256) private tickTable;
 
@@ -66,7 +66,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         prevTimestamp = _desiredStartTimestamp;
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function finish(uint32 _endTimestamp, uint32 startTime) external override onlyFarming {
         uint32 currentTimestamp = _endTimestamp;
         uint32 previousTimestamp = prevTimestamp;
@@ -87,7 +87,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         endTimestamp = _endTimestamp;
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external
         view
@@ -122,7 +122,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         }
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function cross(int24 nextTick, bool zeroForOne) external override onlyPool {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
@@ -133,7 +133,7 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         globalTick = zeroForOne ? nextTick - 1 : nextTick;
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function increaseCumulative(uint32 currentTimestamp) external override onlyPool returns (Status) {
         if (desiredStartTimestamp >= currentTimestamp) {
             return Status.NOT_STARTED;
@@ -157,12 +157,12 @@ contract AlgebraVirtualPool is IAlgebraIncentiveVirtualPool {
         return Status.ACTIVE;
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function processSwap() external override onlyPool {
         prevLiquidity = currentLiquidity;
     }
 
-    // @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
     function applyLiquidityDeltaToPosition(
         int24 bottomTick,
         int24 topTick,

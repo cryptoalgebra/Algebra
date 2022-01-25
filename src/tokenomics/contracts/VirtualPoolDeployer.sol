@@ -22,13 +22,13 @@ contract VirtualPoolDeployer is IVirtualPoolDeployer {
         owner = msg.sender;
     }
 
-    // @inheritdoc IVirtualPoolDeployer
+    /// @inheritdoc IVirtualPoolDeployer
     function setFarming(address _farming) external override onlyOwner {
         emit FarmingAddressChanged(farming, _farming);
         farming = _farming;
     }
 
-    // @inheritdoc IVirtualPoolDeployer
+    /// @inheritdoc IVirtualPoolDeployer
     function deploy(
         address poolAddress,
         address _farming,

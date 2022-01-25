@@ -19,13 +19,13 @@ contract AlgebraFactory is IAlgebraFactory {
     /// @inheritdoc IAlgebraFactory
     address public override owner;
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     address public override poolDeployer;
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     address public override farmingAddress;
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     address public override vaultAddress;
 
     AdaptiveFee.Configuration public baseFeeConfiguration =
@@ -46,7 +46,7 @@ contract AlgebraFactory is IAlgebraFactory {
         _;
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     mapping(address => mapping(address => address)) public override poolByPair;
 
     constructor(address _poolDeployer, address _vaultAddress) {
@@ -57,7 +57,7 @@ contract AlgebraFactory is IAlgebraFactory {
         vaultAddress = _vaultAddress;
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     function createPool(address tokenA, address tokenB) external override returns (address pool) {
         require(tokenA != tokenB);
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
@@ -90,25 +90,25 @@ contract AlgebraFactory is IAlgebraFactory {
         emit PoolCreated(token0, token1, pool);
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     function setOwner(address _owner) external override onlyOwner {
         emit OwnerChanged(owner, _owner);
         owner = _owner;
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     function setFarmingAddress(address _farmingAddress) external override onlyOwner {
         emit FarmingAddressChanged(farmingAddress, _farmingAddress);
         farmingAddress = _farmingAddress;
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     function setVaultAddress(address _vaultAddress) external override onlyOwner {
         emit VaultAddressChanged(vaultAddress, _vaultAddress);
         vaultAddress = _vaultAddress;
     }
 
-    // @inheritdoc IAlgebraFactory
+    /// @inheritdoc IAlgebraFactory
     function setBaseFeeConfiguration(
         uint32 alpha1,
         uint32 alpha2,

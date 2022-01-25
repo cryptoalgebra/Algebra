@@ -51,12 +51,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint128 fees1;
     }
 
-    // @inheritdoc IAlgebraPoolState
+    /// @inheritdoc IAlgebraPoolState
     mapping(bytes32 => Position) public override positions;
 
-    // @inheritdoc IAlgebraPoolState
+    /// @inheritdoc IAlgebraPoolState
     address public override activeIncentive;
-    // @inheritdoc IAlgebraPoolState
+    /// @inheritdoc IAlgebraPoolState
     uint32 public override liquidityCooldown;
 
     // @dev Restricts everyone calling a function except factory owner
@@ -82,7 +82,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         return IERC20Minimal(token1).balanceOf(address(this));
     }
 
-    // @inheritdoc IDataStorageOperator
+    /// @inheritdoc IAlgebraPoolState
     function timepoints(uint256 index)
         external
         view
@@ -112,7 +112,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint32 outerSecondsSpent;
     }
 
-    // @inheritdoc IAlgebraPoolDerivedState
+    /// @inheritdoc IAlgebraPoolDerivedState
     function getInnerCumulatives(int24 bottomTick, int24 topTick)
         external
         view
@@ -173,7 +173,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         }
     }
 
-    // @inheritdoc IAlgebraPoolDerivedState
+    /// @inheritdoc IAlgebraPoolDerivedState
     function getTimepoints(uint32[] calldata secondsAgos)
         external
         view
@@ -195,7 +195,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             );
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function initialize(uint160 initialPrice) external override {
         require(globalState.price == 0, 'AI');
 
@@ -447,7 +447,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         return positions[key];
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function mint(
         address sender,
         address recipient,
@@ -524,7 +524,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit Mint(msg.sender, recipient, bottomTick, topTick, _liquidity, amount0, amount1);
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function collect(
         address recipient,
         int24 bottomTick,
@@ -550,7 +550,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function burn(
         int24 bottomTick,
         int24 topTick,
@@ -586,7 +586,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit ChangeFee(newFee);
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function swap(
         address recipient,
         bool zeroForOne,
@@ -632,7 +632,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         globalState.unlocked = true;
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function swapSupportingFeeOnInputTokens(
         address sender,
         address recipient,
@@ -968,7 +968,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         }
     }
 
-    // @inheritdoc IAlgebraPoolActions
+    /// @inheritdoc IAlgebraPoolActions
     function flash(
         address recipient,
         uint256 amount0,
@@ -1033,7 +1033,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
     }
 
-    // @inheritdoc IAlgebraPoolPermissionedActions
+    /// @inheritdoc IAlgebraPoolPermissionedActions
     function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external override lock onlyFactoryOwner {
         require((communityFee0 < 26) && (communityFee1 < 26));
         (uint8 communityFeeOld0, uint8 communityFeeOld1) = (
@@ -1044,7 +1044,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit SetCommunityFee(communityFeeOld0, communityFeeOld1, communityFee0, communityFee1);
     }
 
-    // @inheritdoc IAlgebraPoolPermissionedActions
+    /// @inheritdoc IAlgebraPoolPermissionedActions
     function setIncentive(address virtualPoolAddress) external override {
         require(msg.sender == IAlgebraFactory(factory).farmingAddress());
         activeIncentive = virtualPoolAddress;
@@ -1052,7 +1052,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit IncentiveSet(virtualPoolAddress);
     }
 
-    // @inheritdoc IAlgebraPoolPermissionedActions
+    /// @inheritdoc IAlgebraPoolPermissionedActions
     function setLiquidityCooldown(uint32 newLiquidityCooldown) external override onlyFactoryOwner {
         require(newLiquidityCooldown <= 1 days);
         liquidityCooldown = newLiquidityCooldown;

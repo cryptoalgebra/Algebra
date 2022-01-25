@@ -12,7 +12,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
         address token1;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
+    /// @inheritdoc IAlgebraPoolDeployer
     Parameters public override parameters;
 
     address private factory;
@@ -32,14 +32,14 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
         owner = msg.sender;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
+    /// @inheritdoc IAlgebraPoolDeployer
     function setFactory(address _factory) external override onlyOwner {
         require(factory == address(0));
         emit FactoryChanged(factory, _factory);
         factory = _factory;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
+    /// @inheritdoc IAlgebraPoolDeployer
     function deploy(
         address dataStorage,
         address _factory,
