@@ -43,7 +43,7 @@
     "test": "hardhat test",
     "clear-cache": "rm -rf artifacts/ cache/ typechain/",
     "coverage": "hardhat coverage",
-    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat docgen"
+    "precommit": "pretty-quick --staged --pattern **/*.sol"
   },
   "engines": {
     "npm": ">=8.0.0",
