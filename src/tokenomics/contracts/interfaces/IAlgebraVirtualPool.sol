@@ -77,8 +77,8 @@ interface IAlgebraVirtualPool {
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-     * Returns initTime the #initTimestamp
-     * Returns endTime the #endTimestamp
+     * @return initTime the #initTimestamp
+     * @return endTime the #endTimestamp
      */
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external

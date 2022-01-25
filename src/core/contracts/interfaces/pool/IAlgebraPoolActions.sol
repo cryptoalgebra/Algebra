@@ -21,7 +21,7 @@ interface IAlgebraPoolActions {
      * @param amount The amount of liquidity to mint
      * @param data Any data that should be passed through to the callback
      * @return amount0 The amount of token0 that was paid to mint the given amount of liquidity. Matches the value in the callback
-     * amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback
+     * @return amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback
      */
     function mint(
         address sender,
