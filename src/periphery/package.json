@@ -36,7 +36,7 @@
   "scripts": {
     "compile": "npm --prefix ../core run compile && hardhat compile",
     "test": "hardhat test",
-    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat docgen",
+    "precommit": "pretty-quick --staged --pattern **/*.sol",
     "coverage": "hardhat coverage"
   },
   "engines": {
