@@ -154,16 +154,35 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
             reward,
             bonusReward
         );
+
+        emit RewardsAdded(reward, bonusReward, incentiveId);
+        emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
     function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (, address _incentive) = farmingCenter.virtualPoolAddresses(address(key.pool));
         require(_incentive != address(0), 'Farming do not exists');
+        bytes32 incentiveId = IncentiveId.compute(key);
 
+        require(incentives[incentiveId].virtualPoolAddress == _incentive, 'Another farming is active');
         farmingCenter.setFarmingCenterAddress(key.pool, address(0));
 
         emit IncentiveDetached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+        (, address _incentive) = farmingCenter.virtualPoolAddresses(address(key.pool));
+        require(_incentive == address(0), 'Farming already exists');
+
+        bytes32 incentiveId = IncentiveId.compute(key);
+
+        require(incentives[incentiveId].virtualPoolAddress != address(0), 'Invalid farming');
+
+        farmingCenter.setFarmingCenterAddress(key.pool, incentives[incentiveId].virtualPoolAddress);
+
+        emit IncentiveAttached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
     }
 
     /// @inheritdoc IAlgebraEternalFarming
@@ -173,7 +192,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         uint256 bonusRewardAmount
     ) external override {
         bytes32 incentiveId = IncentiveId.compute(key);
-        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::addRewards: non-existent incentive'); // TODO
+        require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::addRewards: non-existent incentive');
 
         if (rewardAmount > 0) {
             uint256 balanceBefore = key.rewardToken.balanceOf(address(this));
@@ -196,9 +215,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
             bonusRewardAmount = balanceAfter - balanceBefore;
         }
 
-        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
+        if (rewardAmount > 0 || bonusRewardAmount > 0) {
+            IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(
+                incentives[incentiveId].virtualPoolAddress
+            );
+            virtualPool.addRewards(rewardAmount, bonusRewardAmount);
 
-        virtualPool.addRewards(rewardAmount, bonusRewardAmount);
+            emit RewardsAdded(rewardAmount, bonusRewardAmount, incentiveId);
+        }
     }
 
     /// @inheritdoc IAlgebraEternalFarming
@@ -210,6 +234,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         bytes32 incentiveId = IncentiveId.compute(key);
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
         virtualPool.setRates(rewardRate, bonusRewardRate);
+
+        emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming

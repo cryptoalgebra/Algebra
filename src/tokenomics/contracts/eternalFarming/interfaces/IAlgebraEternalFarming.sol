@@ -6,6 +6,18 @@ import '../../interfaces/IAlgebraFarming.sol';
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraEternalFarming is IAlgebraFarming {
+    /// @notice Event emitted when reward rates were changed
+    /// @param rewardRate The new rate of main token distribution per sec
+    /// @param bonusRewardRate The new rate of bonus token distribution per sec
+    /// @param incentiveId The ID of the incentive for which rates were changed
+    event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
+
+    /// @notice Event emitted when rewards were added
+    /// @param rewardAmount The additional amount of main token
+    /// @param bonusRewardAmount The additional amount of bonus token
+    /// @param incentiveId The ID of the incentive for which rewards were added
+    event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
+
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
