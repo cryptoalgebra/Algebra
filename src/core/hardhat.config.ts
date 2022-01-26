@@ -45,8 +45,8 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
   docgen: {
-    output: '../../docs',
-    pages: () => 'core.md',
+    output: '../../docs/Contracts/Core',
+    pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public'
   }
 }

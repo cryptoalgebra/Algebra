@@ -1,12 +1,15 @@
-{{h}} {{name}} {{stateMutability}} {{visibility}}
+{{h}} {{name}}
 
 {{#if withModifiers}}
 {{withModifiers}}
 {{/if}}
 
 {{#if signature}}
-`{{signature}}`
+`{{signature}}` {{stateMutability}} {{visibility}}
 {{/if}}
+{{#else}}
+{{stateMutability}} {{visibility}}
+{{/else}}
 
 {{#with natspec}}
 {{notice}}
@@ -29,6 +32,7 @@
 
 {{#if returns}}
 **Returns:**
+
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {{#each returns}}

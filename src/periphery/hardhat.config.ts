@@ -67,8 +67,8 @@ export default {
     },
   },
   docgen: {
-    output: '../../docs',
-    pages: () => 'periphery.md',
+    output: '../../docs/Contracts/Periphery',
+    pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public'
   }
 }
