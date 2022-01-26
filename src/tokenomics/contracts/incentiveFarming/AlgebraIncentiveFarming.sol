@@ -176,10 +176,26 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
         require(_incentive != address(0), 'Farming do not exists');
+        bytes32 incentiveId = IncentiveId.compute(key);
 
+        require(incentives[incentiveId].virtualPoolAddress == _incentive, 'Another farming is active');
         farmingCenter.setFarmingCenterAddress(key.pool, address(0));
 
         emit IncentiveDetached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+        (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
+        require(_incentive == address(0), 'Farming already exists');
+
+        bytes32 incentiveId = IncentiveId.compute(key);
+
+        require(incentives[incentiveId].virtualPoolAddress != address(0), 'Invalid farming');
+
+        farmingCenter.setFarmingCenterAddress(key.pool, incentives[incentiveId].virtualPoolAddress);
+
+        emit IncentiveAttached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
     }
 
     /// @inheritdoc IAlgebraFarming
