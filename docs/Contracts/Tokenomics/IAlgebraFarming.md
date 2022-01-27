@@ -7,7 +7,7 @@
 ### IncentiveCreated
 
 
-`IncentiveCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,address,uint256,uint256)`  
+`IncentiveCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256)`  
 
 Event emitted when a liquidity mining incentive has been created
 
@@ -21,31 +21,52 @@ Event emitted when a liquidity mining incentive has been created
 | virtualPool | address | The virtual pool address |
 | startTime | uint256 | The time when the incentive program begins |
 | endTime | uint256 | The time when rewards stop accruing |
-| refundee | address | The address which receives any remaining reward tokens after the end time |
 | reward | uint256 | The amount of reward tokens to be distributed |
 | bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
 
 
-### DepositTransferred
+### IncentiveDetached
 
 
-`DepositTransferred(uint256,address,address)`  
+`IncentiveDetached(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256)`  
 
-Emitted when ownership of a deposit changes
+Event emitted when a liquidity mining incentive has been stopped from the outside
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | The ID of the deposit (and token) that is being transferred |
-| oldOwner | address | The owner before the deposit was transferred |
-| newOwner | address | The owner after the deposit was transferred |
+| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
+| bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
+| pool | contract IAlgebraPool | The Algebra pool |
+| virtualPool | address | The virtual pool address |
+| startTime | uint256 | The time when the incentive program begins |
+| endTime | uint256 | The time when rewards stop accruing |
+
+
+### IncentiveAttached
+
+
+`IncentiveAttached(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256)`  
+
+Event emitted when a liquidity mining incentive has been runned again from the outside
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
+| bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
+| pool | contract IAlgebraPool | The Algebra pool |
+| virtualPool | address | The virtual pool address |
+| startTime | uint256 | The time when the incentive program begins |
+| endTime | uint256 | The time when rewards stop accruing |
 
 
 ### FarmStarted
 
 
-`FarmStarted(uint256,uint256,bytes32,uint128)`  
+`FarmStarted(uint256,bytes32,uint128)`  
 
 Event emitted when a Algebra LP token has been farmd
 
@@ -54,7 +75,6 @@ Event emitted when a Algebra LP token has been farmd
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The unique identifier of an Algebra LP token |
-| L2tokenId | uint256 | The unique identifier of an Algebra Farming token |
 | incentiveId | bytes32 | The incentive in which the token is farming |
 | liquidity | uint128 | The amount of liquidity farmd |
 
@@ -114,22 +134,6 @@ Event emitted when a reward token has been claimed
 
 
 ## Functions
-### deployer
-
-
-`deployer()` view external
-
-The pool deployer with which this farming contract is compatible
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | contract IAlgebraPoolDeployer |  |
-
 ### nonfungiblePositionManager
 
 
@@ -145,22 +149,6 @@ The nonfungible position manager with which this farming contract is compatible
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
-
-### vdeployer
-
-
-`vdeployer()` view external
-
-The virtual pool deployer with which this farming contract is compatible
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | contract IVirtualPoolDeployer |  |
 
 ### maxIncentiveDuration
 
@@ -194,6 +182,22 @@ The max amount of seconds into the future the incentive startTime can be set
 | ---- | ---- | ----------- |
 | [0] | uint256 |  |
 
+### farmingCenter
+
+
+`farmingCenter()` view external
+
+FarmingCenter
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | contract IFarmingCenter |  |
+
 ### incentives
 
 
@@ -218,47 +222,21 @@ Represents a farming incentive
 | isPoolCreated | bool |  |
 | totalLiquidity | uint224 |  |
 
-### deposits
+### deployer
 
 
-`deposits(uint256)` view external
-
-Returns information about a deposited NFT
+`deployer()`  external
 
 
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 |  |
+
+
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| L2TokenId | uint256 |  |
-| owner | address |  |
-| tickLower | int24 |  |
-| tickUpper | int24 |  |
-
-### farms
-
-
-`farms(uint256,bytes32)` view external
-
-Returns information about a farmd liquidity NFT
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 | The ID of the farmd token |
-| incentiveId | bytes32 | The ID of the incentive for which the token is farmd |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| liquidity | uint128 |  |
+| [0] | contract IAlgebraPoolDeployer |  |
 
 ### setIncentiveMaker
 
@@ -272,6 +250,34 @@ Returns information about a farmd liquidity NFT
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _incentiveMaker | address |  |
+
+
+### detachIncentive
+
+
+`detachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+
+Detach incentive from the pool
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
+
+
+### attachIncentive
+
+
+`attachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+
+Attach incentive to the pool
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
 
 
 ### rewards
@@ -294,47 +300,10 @@ Returns amounts of reward tokens owed to a given address according to the last t
 | ---- | ---- | ----------- |
 | rewardsOwed | uint256 |  |
 
-### createIncentive
-
-
-`createIncentive(struct IAlgebraFarming.IncentiveKey,uint256,uint256)`  external
-
-Creates a new liquidity mining incentive program
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IAlgebraFarming.IncentiveKey | Details of the incentive to create |
-| reward | uint256 | The amount of reward tokens to be distributed |
-| bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| virtualPool | address |  |
-
-### withdrawToken
-
-
-`withdrawToken(uint256,address,bytes)`  external
-
-Withdraws a Algebra LP token &#x60;tokenId&#x60; from this contract to the recipient &#x60;to&#x60;
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 | The unique identifier of an Algebra LP token |
-| to | address | The address where the LP token will be sent |
-| data | bytes | An optional data array that will be passed along to the &#x60;to&#x60; address via the NFT safeTransferFrom |
-
-
 ### enterFarming
 
 
-`enterFarming(struct IAlgebraFarming.IncentiveKey,uint256)`  external
+`enterFarming(struct IIncentiveKey.IncentiveKey,uint256)`  external
 
 Farms a Algebra LP token
 
@@ -342,23 +311,38 @@ Farms a Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IAlgebraFarming.IncentiveKey | The key of the incentive for which to farm the NFT |
+| key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to farm the NFT |
 | tokenId | uint256 | The ID of the token to farm |
 
 
-### exitFarming
+### setFarmingCenterAddress
 
 
-`exitFarming(struct IAlgebraFarming.IncentiveKey,uint256)`  external
+`setFarmingCenterAddress(address)`  external
 
-exitFarmings a Algebra LP token
+@notice
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IAlgebraFarming.IncentiveKey | The key of the incentive for which to exitFarming the NFT |
+| _farmingCenter | address |  |
+
+
+### exitFarming
+
+
+`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+
+exitFarmings for Algebra LP token
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to exitFarming the NFT |
 | tokenId | uint256 | The ID of the token to exitFarming |
+| _owner | address |  |
 
 
 ### claimReward
@@ -382,10 +366,33 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 | ---- | ---- | ----------- |
 | reward | uint256 |  |
 
+### claimRewardFrom
+
+
+`claimRewardFrom(contract IERC20Minimal,address,address,uint256)`  external
+
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+only for FarmingCenter
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
+| from | address | The address of position owner |
+| to | address | The address where claimed rewards will be sent to |
+| amountRequested | uint256 | The amount of reward tokens to claim. Claims entire reward amount if set to 0. |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| reward | uint256 |  |
+
 ### getRewardInfo
 
 
-`getRewardInfo(struct IAlgebraFarming.IncentiveKey,uint256)`  external
+`getRewardInfo(struct IIncentiveKey.IncentiveKey,uint256)`  external
 
 Calculates the reward amount that will be received for the given farm
 
@@ -393,7 +400,7 @@ Calculates the reward amount that will be received for the given farm
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IAlgebraFarming.IncentiveKey | The key of the incentive |
+| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
 | tokenId | uint256 | The ID of the token |
 
 **Returns:**
