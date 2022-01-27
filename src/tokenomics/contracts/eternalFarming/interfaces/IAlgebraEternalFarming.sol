@@ -62,5 +62,5 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external;
+    ) external returns (uint256 reward, uint256 bonusReward);
 }

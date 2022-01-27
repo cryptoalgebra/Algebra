@@ -74,6 +74,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     function setRates(uint128 rate0, uint128 rate1) external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
         rewardRate0 = rate0;
         rewardRate1 = rate1;
     }
@@ -133,6 +134,10 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
 
     // @inheritdoc IAlgebraEternalVirtualPool
     function increaseCumulative(uint32 currentTimestamp) public override onlyFarmingCenter returns (Status) {
+        return _increaseCumulative(currentTimestamp);
+    }
+
+    function _increaseCumulative(uint32 currentTimestamp) private returns (Status) {
         uint32 previousTimestamp = prevTimestamp;
         if (currentTimestamp > previousTimestamp && prevLiquidity > 0) {
             uint32 delta = currentTimestamp - previousTimestamp;
