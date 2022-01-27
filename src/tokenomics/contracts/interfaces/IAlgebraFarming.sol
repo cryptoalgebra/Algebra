@@ -70,7 +70,7 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @notice
     function setFarmingCenterAddress(address _farmingCenter) external;
 
-    /// @notice exitFarmings a Algebra LP token
+    /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
     function exitFarming(
