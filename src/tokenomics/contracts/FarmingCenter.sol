@@ -151,8 +151,14 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
         external
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
+        returns (uint256 reward, uint256 bonusReward)
     {
-        eternalFarming.collectRewards(key, tokenId, msg.sender);
+        if (virtualPoolAddresses[address(key.pool)].virtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[address(key.pool)].virtualPool).increaseCumulative(
+                uint32(block.timestamp)
+            );
+        }
+        (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
     function claimReward(

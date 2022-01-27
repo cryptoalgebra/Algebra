@@ -418,7 +418,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external override onlyFarmingCenter {
+    ) external override onlyFarmingCenter returns (uint256, uint256) {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive memory incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'AlgebraFarming::collect: non-existent incentive');
@@ -447,5 +447,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         if (bonusReward != 0) {
             rewards[key.bonusRewardToken][_owner] += bonusReward;
         }
+        return (reward, bonusReward);
     }
 }
