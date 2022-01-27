@@ -52,7 +52,7 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @param key The key of the incentive
     function detachIncentive(IncentiveKey memory key) external;
 
-    /// @notice Detach incentive to the pool
+    /// @notice Attach incentive to the pool
     /// @param key The key of the incentive
     function attachIncentive(IncentiveKey memory key) external;
 
