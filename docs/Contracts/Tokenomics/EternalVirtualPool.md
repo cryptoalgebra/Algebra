@@ -196,7 +196,7 @@ onlyFarmingCenter
 
 onlyFarmingCenter
 
-`increaseCumulative(uint32)`  public
+`increaseCumulative(uint32)`  external
 
 
 
