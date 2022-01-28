@@ -153,8 +153,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
         returns (uint256 reward, uint256 bonusReward)
     {
-        if (virtualPoolAddresses[address(key.pool)].virtualPool != address(0)) {
-            IAlgebraVirtualPool(virtualPoolAddresses[address(key.pool)].virtualPool).increaseCumulative(
+        if (virtualPoolAddresses[address(key.pool)].eternalVirtualPool != address(0)) {
+            IAlgebraVirtualPool(virtualPoolAddresses[address(key.pool)].eternalVirtualPool).increaseCumulative(
                 uint32(block.timestamp)
             );
         }
@@ -182,9 +182,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
 
         if (msg.sender == address(eternalFarming)) {
             virtualPoolAddresses[address(pool)].eternalVirtualPool = virtualPool;
-        }
-
-        if (msg.sender == address(farming)) {
+        } else if (msg.sender == address(farming)) {
             virtualPoolAddresses[address(pool)].virtualPool = virtualPool;
         }
     }
