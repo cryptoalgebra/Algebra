@@ -6,8 +6,8 @@ exports[`unit/Farms #enterFarming works and has gas cost 1`] = `278687`;
 
 exports[`unit/Farms #exitFarming works and has gas cost 1`] = `147944`;
 
-exports[`unit/Farms swap gas 3 swaps 1`] = `228783`;
+exports[`unit/Farms swap gas 3 swaps 1`] = `219406`;
 
-exports[`unit/Farms swap gas 3 swaps 2`] = `213374`;
+exports[`unit/Farms swap gas 3 swaps 2`] = `203997`;
 
-exports[`unit/Farms swap gas 3 swaps 3`] = `213372`;
+exports[`unit/Farms swap gas 3 swaps 3`] = `203995`;

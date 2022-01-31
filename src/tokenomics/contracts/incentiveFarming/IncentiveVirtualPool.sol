@@ -15,6 +15,8 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
 
     address public immutable farmingAddress;
 
+    address public immutable pool;
+
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredEndTimestamp;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -42,7 +44,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     mapping(int16 => uint256) private tickTable;
 
     modifier onlyFarmingCenter() {
-        require(msg.sender == farmingCenterAddress, 'only the pool can call this function');
+        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only the pool can call this function');
         _;
     }
 
@@ -54,12 +56,14 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     constructor(
         address _farmingCenterAddress,
         address _farmingAddress,
+        address _pool,
         uint32 _desiredStartTimestamp,
         uint32 _desiredEndTimestamp
     ) {
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         desiredStartTimestamp = _desiredStartTimestamp;
+        pool = _pool;
         desiredEndTimestamp = _desiredEndTimestamp;
 
         prevTimestamp = _desiredStartTimestamp;

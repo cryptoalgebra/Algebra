@@ -18,6 +18,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     address public immutable farmingCenterAddress;
     // @inheritdoc IAlgebraEternalVirtualPool
     address public immutable farmingAddress;
+    address public immutable pool;
 
     // @inheritdoc IAlgebraEternalVirtualPool
     uint128 public override currentLiquidity;
@@ -49,7 +50,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
 
     modifier onlyFarmingCenter() {
         require(
-            msg.sender == farmingCenterAddress || msg.sender == farmingAddress,
+            msg.sender == farmingCenterAddress || msg.sender == farmingAddress || msg.sender == pool,
             'only the pool can call this function'
         );
         _;
@@ -60,9 +61,14 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
         _;
     }
 
-    constructor(address _farmingCenterAddress, address _farmingAddress) {
+    constructor(
+        address _farmingCenterAddress,
+        address _farmingAddress,
+        address _pool
+    ) {
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
+        pool = _pool;
         prevTimestamp = uint32(block.timestamp);
     }
 

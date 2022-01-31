@@ -148,7 +148,13 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         incentives[incentiveId].bonusReward += bonusReward;
 
         virtualPool = address(
-            new IncentiveVirtualPool(address(farmingCenter), address(this), uint32(key.startTime), uint32(key.endTime))
+            new IncentiveVirtualPool(
+                address(farmingCenter),
+                address(this),
+                address(key.pool),
+                uint32(key.startTime),
+                uint32(key.endTime)
+            )
         );
 
         farmingCenter.setFarmingCenterAddress(key.pool, virtualPool);

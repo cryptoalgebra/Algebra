@@ -1,27 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost 1`] = `278687`;
+exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost 1`] = `278675`;
 
-exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 1`] = `60631`;
+exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 1`] = `60619`;
 
-exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 2`] = `43575`;
+exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 2`] = `43563`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 1`] = `147944`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 1`] = `147932`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 2`] = `217266`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 2`] = `217344`;
 
-exports[`unit/FarmingCenter #ParallelFarmings works and has gas cost 1`] = `278687`;
+exports[`unit/FarmingCenter swap gas 3 swaps 1`] = `290500`;
 
-exports[`unit/FarmingCenter #claimReward when requesting the full amount has gas cost 1`] = `60631`;
+exports[`unit/FarmingCenter swap gas 3 swaps 2`] = `231926`;
 
-exports[`unit/FarmingCenter #claimReward when requesting the full amount has gas cost 2`] = `43575`;
-
-exports[`unit/FarmingCenter #exitFarming after end time works and has gas cost 1`] = `147944`;
-
-exports[`unit/FarmingCenter #exitFarming after end time works and has gas cost 2`] = `217266`;
-
-exports[`unit/FarmingCenter swap gas 3 swaps 1`] = `290432`;
-
-exports[`unit/FarmingCenter swap gas 3 swaps 2`] = `231858`;
-
-exports[`unit/FarmingCenter swap gas 3 swaps 3`] = `231856`;
+exports[`unit/FarmingCenter swap gas 3 swaps 3`] = `231924`;
