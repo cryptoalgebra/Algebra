@@ -228,23 +228,15 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
     }
 
     function processSwap() external override {
-        if (_virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).processSwap();
-        }
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).processSwap();
 
-        if (_virtualPoolAddresses[msg.sender].hasIncentive) {
-            IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).processSwap();
-        }
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).processSwap();
     }
 
     function cross(int24 nextTick, bool zeroForOne) external override {
-        if (_virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroForOne);
-        }
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroForOne);
 
-        if (_virtualPoolAddresses[msg.sender].hasIncentive) {
-            IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroForOne);
-        }
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroForOne);
     }
 
     function burn(uint256 tokenId) private isAuthorizedForToken(tokenId) {
@@ -277,18 +269,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
     }
 
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
-        Status incentiveStatus;
-        Status eternalStatus;
-        if (_virtualPoolAddresses[msg.sender].eternalVirtualPool != address(0)) {
-            eternalStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool)
-                .increaseCumulative(blockTimestamp);
-        }
+        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool)
+            .increaseCumulative(blockTimestamp);
 
-        if (_virtualPoolAddresses[msg.sender].hasIncentive) {
-            incentiveStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).increaseCumulative(
-                blockTimestamp
-            );
-        }
+        Status incentiveStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).increaseCumulative(
+            blockTimestamp
+        );
 
         if (eternalStatus == Status.ACTIVE || incentiveStatus == Status.ACTIVE) {
             return Status.ACTIVE;

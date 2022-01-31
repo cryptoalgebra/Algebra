@@ -275,6 +275,10 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
                     farm.tickLower,
                     farm.tickUpper
                 );
+                (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
+                if (address(virtualPool) == _incentive) {
+                    farmingCenter.setFarmingCenterAddress(key.pool, address(0));
+                }
             }
 
             reward = RewardMath.computeRewardAmount(
