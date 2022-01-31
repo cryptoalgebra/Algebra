@@ -130,7 +130,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
         incentives[incentiveId].bonusReward += bonusReward;
 
-        virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this)));
+        virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
 
         farmingCenter.setFarmingCenterAddress(key.pool, virtualPool);
 
