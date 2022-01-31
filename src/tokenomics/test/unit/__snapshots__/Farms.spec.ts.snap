@@ -4,7 +4,7 @@ exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`
 
 exports[`unit/Farms #enterFarming works and has gas cost 1`] = `278687`;
 
-exports[`unit/Farms #exitFarming works and has gas cost 1`] = `147944`;
+exports[`unit/Farms #exitFarming works and has gas cost 1`] = `163153`;
 
 exports[`unit/Farms swap gas 3 swaps 1`] = `219406`;
 
