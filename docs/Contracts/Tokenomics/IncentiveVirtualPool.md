@@ -54,15 +54,15 @@
 
 
 
-### uint160 globalSecondsPerLiquidityCumulative 
-
-
-
 ### uint128 prevLiquidity 
 
 
 
 ### uint128 currentLiquidity 
+
+
+
+### uint160 globalSecondsPerLiquidityCumulative 
 
 
 

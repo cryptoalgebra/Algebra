@@ -27,11 +27,11 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override timeOutside;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    uint160 public override globalSecondsPerLiquidityCumulative;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override prevLiquidity;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint128 public override currentLiquidity;
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    uint160 public override globalSecondsPerLiquidityCumulative;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override prevTimestamp;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -140,17 +140,24 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
         if (desiredEndTimestamp <= currentTimestamp) {
             return Status.NOT_EXIST;
         }
+        uint32 previousTimestamp;
+
         if (initTimestamp == 0) {
             initTimestamp = currentTimestamp;
             prevLiquidity = currentLiquidity;
+            previousTimestamp = currentTimestamp;
+        } else {
+            previousTimestamp = prevTimestamp;
         }
-        uint32 previousTimestamp = prevTimestamp < initTimestamp ? initTimestamp : prevTimestamp;
-        if (prevLiquidity > 0)
-            globalSecondsPerLiquidityCumulative =
-                globalSecondsPerLiquidityCumulative +
-                ((uint160(currentTimestamp - previousTimestamp) << 128) / (prevLiquidity));
-        else timeOutside += currentTimestamp - previousTimestamp;
-        prevTimestamp = currentTimestamp;
+
+        if (prevLiquidity > 0) {
+            globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
+                (prevLiquidity));
+            prevTimestamp = currentTimestamp;
+        } else {
+            timeOutside += currentTimestamp - previousTimestamp;
+            prevTimestamp = currentTimestamp;
+        }
 
         return Status.ACTIVE;
     }

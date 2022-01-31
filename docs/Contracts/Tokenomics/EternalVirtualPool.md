@@ -34,11 +34,15 @@
 
 
 
+### uint128 currentLiquidity 
+
+
+
+### int24 globalTick 
+
+
+
 ### uint32 timeOutside 
-
-
-
-### uint160 globalSecondsPerLiquidityCumulative 
 
 
 
@@ -46,15 +50,11 @@
 
 
 
-### uint128 currentLiquidity 
+### uint160 globalSecondsPerLiquidityCumulative 
 
 
 
 ### uint32 prevTimestamp 
-
-
-
-### int24 globalTick 
 
 
 

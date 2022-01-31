@@ -278,6 +278,66 @@ describe('unit/Farms', () => {
     })
   })
 
+  describe('swap gas', async () => {
+    it('3 swaps', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+      })
+      tokenId = mintResult.tokenId
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      let incentiveId = await helpers.getIncentiveId(
+        await helpers.createIncentiveFlow({
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+        })
+      )
+
+      // await Time.set(timestamps.startTime)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
+      await context.farming.farms(tokenId, incentiveId)
+
+      const pool = context.poolObj.connect(actors.lpUser0())
+
+      Time.set(timestamps.startTime + 10)
+      //await provider.send('evm_mine', [timestamps.startTime + 100])
+      const trader = actors.traderUser0()
+      await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 10,
+      }))
+      await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 10,
+      }))
+      await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 10,
+      }))
+    })
+  })
+
   describe('#getRewardInfo', () => {
     let incentiveId: string
     let farmIncentiveKey: ContractParams.IncentiveKey

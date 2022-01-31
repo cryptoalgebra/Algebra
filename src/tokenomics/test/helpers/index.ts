@@ -431,6 +431,59 @@ export class HelperCommands {
 
     return { currentTick }
   }
+
+  makeSwapGasCHeckFlow: HelperTypes.MakeSwapGasCheck.Command = async (params) => {
+    // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
+    // await tok0
+    //   .connect(trader0)
+    //   .approve(router.address, BNe18(2).mul(params.numberOfTrades))
+
+    const MAKE_TICK_GO_UP = params.direction === 'up'
+    const actor = params.trader || this.actors.traderUser0()
+
+    const isDone = (tick: number | undefined) => {
+      if (!params.desiredValue) {
+        return true
+      } else if (!tick) {
+        return false
+      } else if (MAKE_TICK_GO_UP) {
+        return tick > params.desiredValue
+      } else {
+        return tick < params.desiredValue
+      }
+    }
+
+    const [tok0Address, tok1Address] = await Promise.all([
+      this.pool.connect(actor).token0(),
+      this.pool.connect(actor).token1(),
+    ])
+    const erc20 = await ethers.getContractFactory('TestERC20')
+
+    const tok0 = erc20.attach(tok0Address) as TestERC20
+    const tok1 = erc20.attach(tok1Address) as TestERC20
+
+    /** If we want to push price down, we need to increase tok0.
+    If we want to push price up, we need to increase tok1 */
+
+    const amountIn = BNe18(1)
+
+    const erc20Helper = new ERC20Helper()
+    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
+
+    const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
+
+
+    return this.router.connect(actor).exactInput(
+      {
+        recipient: actor.address,
+        deadline: MaxUint256,
+        path,
+        amountIn: amountIn.div(10),
+        amountOutMinimum: 0,
+      },
+      maxGas
+    )
+  }
 }
 
 export class ERC20Helper {
