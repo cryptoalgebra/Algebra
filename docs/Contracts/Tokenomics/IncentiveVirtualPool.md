@@ -34,6 +34,10 @@
 
 
 
+### address pool immutable
+
+
+
 ### uint32 desiredEndTimestamp immutable
 
 
@@ -83,7 +87,7 @@
 ### constructor
 
 
-`constructor(address,address,uint32,uint32)`  public
+`constructor(address,address,address,uint32,uint32)`  public
 
 
 
@@ -93,6 +97,7 @@
 | ---- | ---- | ----------- |
 | _farmingCenterAddress | address |  |
 | _farmingAddress | address |  |
+| _pool | address |  |
 | _desiredStartTimestamp | uint32 |  |
 | _desiredEndTimestamp | uint32 |  |
 

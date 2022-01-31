@@ -34,6 +34,10 @@
 
 
 
+### address pool immutable
+
+
+
 ### uint128 currentLiquidity 
 
 
@@ -91,7 +95,7 @@
 ### constructor
 
 
-`constructor(address,address)`  public
+`constructor(address,address,address)`  public
 
 
 
@@ -101,6 +105,7 @@
 | ---- | ---- | ----------- |
 | _farmingCenterAddress | address |  |
 | _farmingAddress | address |  |
+| _pool | address |  |
 
 
 ### addRewards
