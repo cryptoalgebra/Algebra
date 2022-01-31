@@ -38,10 +38,6 @@
 
 
 
-### mapping(address &#x3D;&gt; struct IFarmingCenter.VirtualPoolAddresses) virtualPoolAddresses 
-
-
-
 ### mapping(uint256 &#x3D;&gt; struct FarmingCenter.Deposit) deposits 
 
 
@@ -280,6 +276,26 @@ isAuthorizedForToken
 | nextTick | int24 |  |
 | zeroForOne | bool |  |
 
+
+### virtualPoolAddresses
+
+
+`virtualPoolAddresses(address)` view public
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | address |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| incentiveVP | address |  |
+| eternalVP | address |  |
 
 ### getApproved
 

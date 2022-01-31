@@ -16,8 +16,10 @@ import './IIncentiveKey.sol';
 
 interface IFarmingCenter is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMulticall, IERC721Permit {
     struct VirtualPoolAddresses {
-        address virtualPool;
+        bool hasIncentive;
+        uint32 incentiveNonce;
         address eternalVirtualPool;
+        address virtualPool;
     }
 
     function virtualPoolAddresses(address) external view returns (address, address);

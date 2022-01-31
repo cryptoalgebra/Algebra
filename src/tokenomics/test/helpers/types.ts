@@ -1,4 +1,4 @@
-import { BigNumber, Wallet, Contract } from 'ethers'
+import { BigNumber, Wallet, Contract, ContractTransaction } from 'ethers'
 import { TestERC20 } from '../../typechain'
 import { FeeAmount } from '../shared'
 
@@ -113,6 +113,18 @@ export module HelperTypes {
     }
 
     type Result = { currentTick: number }
+
+    export type Command = CommandFunction<Args, Result>
+  }
+
+  export module MakeSwapGasCheck {
+    type Args = {
+      direction: 'up' | 'down'
+      desiredValue?: number
+      trader?: Wallet
+    }
+
+    type Result = ContractTransaction
 
     export type Command = CommandFunction<Args, Result>
   }

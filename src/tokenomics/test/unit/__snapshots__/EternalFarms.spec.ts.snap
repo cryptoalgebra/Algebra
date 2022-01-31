@@ -2,6 +2,12 @@
 
 exports[`unit/EternalFarms #claimReward when requesting the full amount has gas cost 1`] = `60675`;
 
-exports[`unit/EternalFarms #enterFarming works and has gas cost 1`] = `320132`;
+exports[`unit/EternalFarms #enterFarming works and has gas cost 1`] = `320066`;
 
-exports[`unit/EternalFarms #exitFarming after end time works and has gas cost 1`] = `218504`;
+exports[`unit/EternalFarms #exitFarming after end time works and has gas cost 1`] = `217266`;
+
+exports[`unit/EternalFarms swap gas 3 swaps 1`] = `253834`;
+
+exports[`unit/EternalFarms swap gas 3 swaps 2`] = `215418`;
+
+exports[`unit/EternalFarms swap gas 3 swaps 3`] = `215416`;

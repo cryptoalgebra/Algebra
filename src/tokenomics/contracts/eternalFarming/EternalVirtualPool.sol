@@ -20,16 +20,19 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     address public immutable farmingAddress;
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    uint32 public override timeOutside;
-    uint160 public override globalSecondsPerLiquidityCumulative;
-    // @inheritdoc IAlgebraEternalVirtualPool
-    uint128 public override prevLiquidity;
-    // @inheritdoc IAlgebraEternalVirtualPool
     uint128 public override currentLiquidity;
     // @inheritdoc IAlgebraEternalVirtualPool
-    uint32 public override prevTimestamp;
-    // @inheritdoc IAlgebraEternalVirtualPool
     int24 public override globalTick;
+    // @inheritdoc IAlgebraEternalVirtualPool
+    uint32 public override timeOutside;
+
+    // @inheritdoc IAlgebraEternalVirtualPool
+    uint128 public override prevLiquidity;
+
+    uint160 public override globalSecondsPerLiquidityCumulative;
+
+    // @inheritdoc IAlgebraEternalVirtualPool
+    uint32 public override prevTimestamp;
 
     // @inheritdoc IAlgebraEternalVirtualPool
     mapping(int24 => TickManager.Tick) public override ticks;
@@ -138,35 +141,40 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     function _increaseCumulative(uint32 currentTimestamp) private returns (Status) {
-        uint32 previousTimestamp = prevTimestamp;
-        if (currentTimestamp > previousTimestamp && prevLiquidity > 0) {
-            uint32 delta = currentTimestamp - previousTimestamp;
+        uint128 _prevLiquidity;
+        if ((_prevLiquidity = prevLiquidity) > 0) {
+            uint32 previousTimestamp = prevTimestamp;
+            if (currentTimestamp > previousTimestamp) {
+                uint32 delta = currentTimestamp - previousTimestamp;
 
-            if (rewardReserve0 > 0) {
-                uint256 reward0 = rewardRate0 * delta;
-                if (reward0 > rewardReserve0) {
-                    reward0 = rewardReserve0;
-                }
-                rewardReserve0 -= reward0;
-                totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, prevLiquidity);
-            }
-
-            if (rewardReserve1 > 0) {
-                uint256 reward1 = rewardRate1 * delta;
-                if (reward1 > rewardReserve1) {
-                    reward1 = rewardReserve1;
+                uint256 _rewardReserve0;
+                if ((_rewardReserve0 = rewardReserve0) > 0) {
+                    uint256 reward0 = rewardRate0 * delta;
+                    if (reward0 > _rewardReserve0) {
+                        reward0 = _rewardReserve0;
+                    }
+                    rewardReserve0 = _rewardReserve0 - reward0;
+                    totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _prevLiquidity);
                 }
 
-                rewardReserve1 -= reward1;
-                totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, prevLiquidity);
+                uint256 _rewardReserve1;
+                if ((_rewardReserve1 = rewardReserve1) > 0) {
+                    uint256 reward1 = rewardRate1 * delta;
+                    if (reward1 > _rewardReserve1) {
+                        reward1 = _rewardReserve1;
+                    }
+
+                    rewardReserve1 = _rewardReserve1 - reward1;
+                    totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _prevLiquidity);
+                }
             }
+            globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
+                (_prevLiquidity));
+            prevTimestamp = currentTimestamp;
+        } else {
+            timeOutside += currentTimestamp - prevTimestamp;
+            prevTimestamp = currentTimestamp;
         }
-        if (prevLiquidity > 0)
-            globalSecondsPerLiquidityCumulative =
-                globalSecondsPerLiquidityCumulative +
-                ((uint160(currentTimestamp - previousTimestamp) << 128) / (prevLiquidity));
-        else timeOutside += currentTimestamp - previousTimestamp;
-        prevTimestamp = currentTimestamp;
 
         return Status.ACTIVE;
     }
