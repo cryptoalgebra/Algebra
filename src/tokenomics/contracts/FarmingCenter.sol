@@ -11,7 +11,9 @@ import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
-contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
+import './base/PeripheryPayments.sol';
+
+contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -53,7 +55,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
         IAlgebraIncentiveFarming _farming,
         IAlgebraEternalFarming _eternalFarming,
         INonfungiblePositionManager _nonfungiblePositionManager
-    ) ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2') {
+    )
+        ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2')
+        PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken())
+    {
         farming = _farming;
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
@@ -144,6 +149,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall {
         isAuthorizedForToken(deposits[params.tokenId].L2TokenId)
         returns (uint256 amount0, uint256 amount1)
     {
+        if (params.recipient == address(0)) {
+            params.recipient == address(this);
+        }
         return nonfungiblePositionManager.collect(params);
     }
 

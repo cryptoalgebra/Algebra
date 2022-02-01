@@ -8,13 +8,22 @@ import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
 import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
+import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
+
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
 import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IIncentiveKey.sol';
 
-interface IFarmingCenter is IAlgebraVirtualPool, IERC721Receiver, IIncentiveKey, IMulticall, IERC721Permit {
+interface IFarmingCenter is
+    IAlgebraVirtualPool,
+    IERC721Receiver,
+    IIncentiveKey,
+    IMulticall,
+    IERC721Permit,
+    IPeripheryPayments
+{
     struct VirtualPoolAddresses {
         bool hasIncentive;
         uint32 incentiveNonce;

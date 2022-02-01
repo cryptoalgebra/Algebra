@@ -51,7 +51,7 @@
 ## Functions
 ### constructor
 
-ERC721Permit
+ERC721Permit, PeripheryPayments
 
 `constructor(contract IAlgebraIncentiveFarming,contract IAlgebraEternalFarming,contract INonfungiblePositionManager)`  public
 
