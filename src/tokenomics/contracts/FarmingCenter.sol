@@ -95,7 +95,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         l2Nfts[_nextId].tokenId = tokenId;
 
-        _mint(tx.origin, _nextId);
+        _mint(from, _nextId);
         _nextId++;
 
         emit DepositTransferred(tokenId, address(0), from);
