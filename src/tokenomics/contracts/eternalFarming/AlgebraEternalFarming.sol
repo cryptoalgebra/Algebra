@@ -447,6 +447,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         if (bonusReward != 0) {
             rewards[key.bonusRewardToken][_owner] += bonusReward;
         }
+
+        emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);
         return (reward, bonusReward);
     }
 }

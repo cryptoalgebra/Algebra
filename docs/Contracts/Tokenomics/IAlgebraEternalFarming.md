@@ -36,6 +36,23 @@ Event emitted when rewards were added
 | incentiveId | bytes32 | The ID of the incentive for which rewards were added |
 
 
+### RewardsCollected
+
+
+`RewardsCollected(uint256,bytes32,uint256,uint256)`  
+
+Event emitted when rewards were added
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 | The ID of the token for which rewards were collected |
+| incentiveId | bytes32 | The ID of the incentive for which rewards were collected |
+| rewardAmount | uint256 | Collected amount of reward |
+| bonusRewardAmount | uint256 | Collected amount of bonus reward |
+
+
 
 
 ## Functions

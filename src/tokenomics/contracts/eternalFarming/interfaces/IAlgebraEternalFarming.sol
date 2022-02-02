@@ -18,6 +18,13 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param incentiveId The ID of the incentive for which rewards were added
     event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
 
+    /// @notice Event emitted when rewards were added
+    /// @param tokenId The ID of the token for which rewards were collected
+    /// @param incentiveId The ID of the incentive for which rewards were collected
+    /// @param rewardAmount Collected amount of reward
+    /// @param bonusRewardAmount Collected amount of bonus reward
+    event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount);
+
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
