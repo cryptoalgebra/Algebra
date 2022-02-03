@@ -159,10 +159,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
         returns (uint256 reward, uint256 bonusReward)
     {
-        if (_virtualPoolAddresses[address(key.pool)].eternalVirtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPoolAddresses[address(key.pool)].eternalVirtualPool).increaseCumulative(
-                uint32(block.timestamp)
-            );
+        address _virtualPool = _virtualPoolAddresses[address(key.pool)].eternalVirtualPool;
+        if (_virtualPool != address(0)) {
+            IAlgebraVirtualPool(_virtualPool).increaseCumulative(uint32(block.timestamp));
         }
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
