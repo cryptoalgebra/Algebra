@@ -73,6 +73,8 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
+
         if (token0Amount > 0) {
             rewardReserve0 += token0Amount;
         }
