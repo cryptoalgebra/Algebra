@@ -180,10 +180,10 @@ Returns information about a deposited NFT
 | tokenId | uint256 |  |
 
 
-### collectFees
+### collect
 
 
-`collectFees(struct INonfungiblePositionManager.CollectParams)`  external
+`collect(struct INonfungiblePositionManager.CollectParams)`  external
 
 
 

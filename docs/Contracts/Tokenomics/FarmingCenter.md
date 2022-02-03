@@ -153,11 +153,11 @@ isAuthorizedForToken
 | tokenId | uint256 |  |
 
 
-### collectFees
+### collect
 
 isAuthorizedForToken
 
-`collectFees(struct INonfungiblePositionManager.CollectParams)`  external
+`collect(struct INonfungiblePositionManager.CollectParams)`  external
 
 
 

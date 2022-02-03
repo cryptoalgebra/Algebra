@@ -612,6 +612,13 @@ describe('unit/FarmingCenter', () => {
       })
       tokenIdEternal = mintResultEternal.tokenId
 
+      const trader = actors.traderUser0()
+      await helpers.makeTickGoFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 10,
+      })
+
       await Time.setAndMine(timestamps.endTime + 10)
       await context.farmingCenter.connect(lpUser0).exitFarming(
         {
@@ -646,6 +653,25 @@ describe('unit/FarmingCenter', () => {
     })
 
     describe('when requesting the full amount', () => {
+      it('collects fees', async () => {
+        const { rewardToken } = context
+        const balance0Before = await context.token0.balanceOf(lpUser0.address);
+        const balance1Before = await context.token1.balanceOf(lpUser0.address);
+
+         await context.farmingCenter.connect(lpUser0).collect({
+          tokenId: Number(tokenId),
+          recipient: lpUser0.address,
+          amount0Max: BN('10').pow(BN('18')),
+          amount1Max: BN('10').pow(BN('18'))
+        })
+
+        const balance0After = await context.token0.balanceOf(lpUser0.address);
+        const balance1After = await context.token1.balanceOf(lpUser0.address);
+
+        //expect(balance0After).to.be.gt(balance0Before);
+        expect(balance1After).to.be.gt(balance1Before);
+      })
+
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context
         claimableEternal = await context.farming.rewards(rewardToken.address, lpUser0.address)

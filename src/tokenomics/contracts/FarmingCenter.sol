@@ -141,8 +141,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         deposits[tokenId].owner = msg.sender;
     }
 
-    function collectFees(
-        INonfungiblePositionManager.CollectParams calldata params // TODO test
+    function collect(
+        INonfungiblePositionManager.CollectParams memory params // TODO test
     )
         external
         override
