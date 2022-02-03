@@ -70,7 +70,7 @@ interface IFarmingCenter is
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
 
-    function collectFees(INonfungiblePositionManager.CollectParams calldata params)
+    function collect(INonfungiblePositionManager.CollectParams calldata params)
         external
         returns (uint256 amount0, uint256 amount1);
 
