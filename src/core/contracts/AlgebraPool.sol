@@ -210,6 +210,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         globalState.unlocked = true;
         globalState.tick = tick;
 
+        blockStartPrice = initialPrice;
+        startPriceUpdated = _blockTimestamp();
+
         emit Initialize(initialPrice, tick);
     }
 
@@ -790,9 +793,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             cache.fee = _globalState.fee;
             cache.startFee = _globalState.fee;
             cache.startTick = _globalState.tick;
-            cache.startPrice = currentPrice;
+
 
             blockTimestamp = _blockTimestamp();
+            
+            if (blockTimestamp != startPriceUpdated) {
+                startPriceUpdated = blockTimestamp;
+                blockStartPrice = currentPrice;
+            }
+
+            cache.startPrice = blockStartPrice;
+
             if (activeIncentive != address(0)) {
                 IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(
                     blockTimestamp
