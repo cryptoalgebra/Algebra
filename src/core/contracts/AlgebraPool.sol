@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
-
+import 'hardhat/console.sol';
 import './interfaces/IAlgebraPool.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
@@ -842,8 +842,27 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroForOne);
 
             step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
+            
 
-
+            // increase fee for the first step, depending on estimated price
+            if(cache.fee == cache.startFee){
+                (currentPrice, , , ) = PriceMovementMath.movePriceTowardsTarget(
+                    zeroForOne,
+                    currentPrice,
+                    (zeroForOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
+                        ? limitSqrtPrice
+                        : step.nextTickPrice,
+                    currentLiquidity,
+                    amountRequired,
+                    cache.fee
+                );
+                console.log("startfee");
+                console.logInt(cache.fee);
+                cache.fee = PIFee.recalculateFee(zeroForOne, cache.startPrice, currentPrice, cache.startFee, cache.fee);
+                currentPrice = step.stepSqrtPrice;
+            }
+            console.log("fee");
+            console.logInt(cache.fee);
 
 
             // calculate the amounts needed to move the price to the next target if it is possible or as much
