@@ -67,14 +67,23 @@ describe('unit/Incentives', async () => {
         return await context.farming.connect(incentiveCreator).createIncentive(
           {
             rewardToken: params.rewardToken || context.rewardToken.address,
-            bonusRewardToken: params.bonusRewardToken || context.bonusRewardToken.address,
+            bonusRewardToken: params  .bonusRewardToken || context.bonusRewardToken.address,
             pool: context.pool01,
             startTime: params.startTime || startTime,
             endTime: params.endTime || endTime,
             
           },
           totalReward,
-          bonusReward
+          bonusReward,
+          {
+            algbAmountForLevel1: 0,
+            algbAmountForLevel2: 0,
+            algbAmountForLevel3: 0,
+            level1multiplier: 0,
+            level2multiplier: 0,
+            level3multiplier: 0
+          },
+          params.rewardToken || context.rewardToken.address
         )
       }
     })
@@ -134,9 +143,18 @@ describe('unit/Incentives', async () => {
           
           pool: context.pool01,
         }
+        const levels = {
+          algbAmountForLevel1: 0,
+          algbAmountForLevel2: 0,
+          algbAmountForLevel3: 0,
+          level1multiplier: 0,
+          level2multiplier: 0,
+          level3multiplier: 0,
+        }
+
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
-        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey, 100, 100)
+        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey, 100, 100,levels, rewardToken.address)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
         let { numberOfFarms } = await context.farming.incentives(
           incentiveId
@@ -159,7 +177,7 @@ describe('unit/Incentives', async () => {
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId]),
+            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0]),
           ])
         ;({ numberOfFarms } = await context.farming
           .connect(actors.lpUser0())
@@ -228,7 +246,16 @@ describe('unit/Incentives', async () => {
                 ...makeTimestamps(now, 1_000),
               },
               BNe18(0),
-              BNe18(0)
+              BNe18(0),
+              {
+                algbAmountForLevel1: 0,
+                algbAmountForLevel2: 0,
+                algbAmountForLevel3: 0,
+                level1multiplier: 0,
+                level2multiplier: 0,
+                level3multiplier: 0,
+              },
+              context.rewardToken.address
             )
           ).to.be.revertedWith('AlgebraFarming::createIncentive: reward must be positive')
         })
