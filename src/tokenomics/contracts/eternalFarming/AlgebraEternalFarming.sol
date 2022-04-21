@@ -238,7 +238,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
     }
 
-    /// @inheritdoc IAlgebraFarming
+    /// @inheritdoc IAlgebraEternalFarming
     function enterFarming(IncentiveKey calldata key, uint256 tokenId) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
 

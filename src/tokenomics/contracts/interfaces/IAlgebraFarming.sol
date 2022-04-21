@@ -30,20 +30,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @notice FarmingCenter
     function farmingCenter() external view returns (IFarmingCenter);
 
-    /// @notice Represents a farming incentive
-    /// @param incentiveId The ID of the incentive computed from its parameters
-    function incentives(bytes32 incentiveId)
-        external
-        view
-        returns (
-            uint256 totalReward,
-            uint256 bonusReward,
-            address virtualPoolAddress,
-            uint96 numberOfFarms,
-            bool isPoolCreated,
-            uint224 totalLiquidity
-        );
-
     function deployer() external returns (IAlgebraPoolDeployer);
 
     function setIncentiveMaker(address _incentiveMaker) external;
@@ -61,11 +47,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @param owner The owner for which the rewards owed are checked
     /// @return rewardsOwed The amount of the reward token claimable by the owner
     function rewards(IERC20Minimal rewardToken, address owner) external view returns (uint256 rewardsOwed);
-
-    /// @notice Farms a Algebra LP token
-    /// @param key The key of the incentive for which to farm the NFT
-    /// @param tokenId The ID of the token to farm
-    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice
     function setFarmingCenterAddress(address _farmingCenter) external;
@@ -113,25 +94,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         external
         returns (uint256 reward, uint256 bonusReward);
 
-    /// @notice Event emitted when a liquidity mining incentive has been created
-    /// @param rewardToken The token being distributed as a reward
-    /// @param bonusRewardToken The token being distributed as a bonus reward
-    /// @param pool The Algebra pool
-    /// @param virtualPool The virtual pool address
-    /// @param startTime The time when the incentive program begins
-    /// @param endTime The time when rewards stop accruing
-    /// @param reward The amount of reward tokens to be distributed
-    /// @param bonusReward The amount of bonus reward tokens to be distributed
-    event IncentiveCreated(
-        IERC20Minimal indexed rewardToken,
-        IERC20Minimal indexed bonusRewardToken,
-        IAlgebraPool indexed pool,
-        address virtualPool,
-        uint256 startTime,
-        uint256 endTime,
-        uint256 reward,
-        uint256 bonusReward
-    );
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
     /// @param rewardToken The token being distributed as a reward
@@ -165,12 +127,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         uint256 endTime
     );
 
-    /// @notice Event emitted when a Algebra LP token has been farmd
-    /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param liquidity The amount of liquidity farmd
-    /// @param incentiveId The incentive in which the token is farming
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
-
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param incentiveId The incentive in which the token is farming
@@ -193,6 +149,12 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @param incentiveMaker The incentive maker address before the address was changed
     /// @param _incentiveMaker The factorincentive maker address after the address was changed
     event IncentiveMakerChanged(address indexed incentiveMaker, address indexed _incentiveMaker);
+
+    /// @notice Event emitted when rewards were added
+    /// @param rewardAmount The additional amount of main token
+    /// @param bonusRewardAmount The additional amount of bonus token
+    /// @param incentiveId The ID of the incentive for which rewards were added
+    event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
 
     /// @notice Event emitted when a reward token has been claimed
     /// @param to The address where claimed rewards were sent to
