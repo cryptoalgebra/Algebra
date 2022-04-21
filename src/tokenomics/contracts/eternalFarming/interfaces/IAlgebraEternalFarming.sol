@@ -13,12 +13,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
 
     /// @notice Event emitted when rewards were added
-    /// @param rewardAmount The additional amount of main token
-    /// @param bonusRewardAmount The additional amount of bonus token
-    /// @param incentiveId The ID of the incentive for which rewards were added
-    event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
-
-    /// @notice Event emitted when rewards were added
     /// @param tokenId The ID of the token for which rewards were collected
     /// @param incentiveId The ID of the incentive for which rewards were collected
     /// @param rewardAmount Collected amount of reward
@@ -38,6 +32,20 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
             int24 tickUpper,
             uint256 innerRewardGrowth0,
             uint256 innerRewardGrowth1
+        );
+
+    /// @notice Represents a farming incentive
+    /// @param incentiveId The ID of the incentive computed from its parameters
+    function incentives(bytes32 incentiveId)
+        external
+        view
+        returns (
+            uint256 totalReward,
+            uint256 bonusReward,
+            address virtualPoolAddress,
+            uint96 numberOfFarms,
+            bool isPoolCreated,
+            uint224 totalLiquidity
         );
 
     /// @notice Creates a new liquidity mining incentive program
@@ -65,9 +73,38 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 bonusRewardRate
     ) external;
 
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+
     function collectRewards(
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
     ) external returns (uint256 reward, uint256 bonusReward);
+
+    /// @notice Event emitted when a Algebra LP token has been farmd
+    /// @param tokenId The unique identifier of an Algebra LP token
+    /// @param liquidity The amount of liquidity farmd
+    /// @param incentiveId The incentive in which the token is farming
+    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
+
+
+    /// @notice Event emitted when a liquidity mining incentive has been created
+    /// @param rewardToken The token being distributed as a reward
+    /// @param bonusRewardToken The token being distributed as a bonus reward
+    /// @param pool The Algebra pool
+    /// @param virtualPool The virtual pool address
+    /// @param startTime The time when the incentive program begins
+    /// @param endTime The time when rewards stop accruing
+    /// @param reward The amount of reward tokens to be distributed
+    /// @param bonusReward The amount of bonus reward tokens to be distributed
+    event IncentiveCreated(
+        IERC20Minimal indexed rewardToken,
+        IERC20Minimal indexed bonusRewardToken,
+        IAlgebraPool indexed pool,
+        address virtualPool,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 reward,
+        uint256 bonusReward
+    );
 }

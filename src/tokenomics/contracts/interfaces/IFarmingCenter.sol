@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
+import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
 import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
@@ -53,6 +54,10 @@ interface IFarmingCenter is
     /// @return L2TokenId The nft layer2 id
     /// @return tickLower The lower tick of the range
     /// @return tickUpper The upper tick of the range
+    /// @return numberOfFarms
+    /// @return owner
+    /// @return inLimitFarming 
+    /// @return tokensLocked
     function deposits(uint256 tokenId)
         external
         view
@@ -61,7 +66,9 @@ interface IFarmingCenter is
             int24 tickLower,
             int24 tickUpper,
             uint32 numberOfFarms,
-            address owner
+            address owner,
+            bool inLimitFarming,
+            uint256 tokensLocked
         );
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
@@ -85,7 +92,7 @@ interface IFarmingCenter is
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 algbLocked) external;
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 

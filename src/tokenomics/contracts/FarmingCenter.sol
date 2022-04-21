@@ -6,6 +6,7 @@ import './eternalFarming/interfaces/IAlgebraEternalVirtualPool.sol';
 import './interfaces/IFarmingCenter.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/base/Multicall.sol';
@@ -14,6 +15,7 @@ import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 import './base/PeripheryPayments.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
+
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -35,6 +37,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         int24 tickUpper;
         uint32 numberOfFarms;
         address owner;
+        bool inLimitFarming;
+        uint256 tokensLocked;
     }
 
     /// @notice Represents the nft layer 2
@@ -87,10 +91,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         deposits[tokenId] = Deposit({
             L2TokenId: _nextId,
+            inLimitFarming: false,
             tickLower: tickLower,
             tickUpper: tickUpper,
             numberOfFarms: 0,
-            owner: from
+            owner: from,
+            tokensLocked: 0
         });
 
         l2Nfts[_nextId].tokenId = tokenId;
@@ -122,23 +128,40 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         deposits[tokenId].owner = msg.sender;
     }
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId)
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked)
         external
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {
-        farming.enterFarming(key, tokenId);
-        deposits[tokenId].numberOfFarms += 1;
+    {   
+        Deposit storage deposit = deposits[tokenId];
+        require(!deposit.inLimitFarming, "token already farmed");
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
+        farming.enterFarming(key, tokenId, tokensLocked);
+        if (tokensLocked > 0) {
+            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(this), tokensLocked);
+        }
+        deposit.numberOfFarms += 1;
+        deposit.tokensLocked = tokensLocked;
+        deposit.inLimitFarming = true;
     }
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId)
         external
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {
+    {   
+        Deposit storage deposit = deposits[tokenId];
         farming.exitFarming(key, tokenId, msg.sender);
-        deposits[tokenId].numberOfFarms -= 1;
-        deposits[tokenId].owner = msg.sender;
+        deposit.numberOfFarms -= 1;
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
+        deposit.owner = msg.sender;
+        deposit.inLimitFarming = false;
+        if (deposit.tokensLocked > 0) {
+            TransferHelper.safeTransfer(multiplierToken, msg.sender, deposit.tokensLocked);
+            deposit.tokensLocked = 0;
+        }
     }
 
     function collect(INonfungiblePositionManager.CollectParams memory params)
@@ -274,6 +297,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
+        
         Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool)
             .increaseCumulative(blockTimestamp);
 
