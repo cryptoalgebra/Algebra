@@ -602,8 +602,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int24 currentTick;
         uint128 currentLiquidity;
         uint256 communityFee;
+        uint256 feeAmount;
 
-        (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(
+        (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(
             zeroForOne,
             amountRequired,
             limitSqrtPrice
@@ -611,11 +612,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
         if (zeroForOne) {
             // transfer to recipient
-            if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
+            if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient,  uint256(-amount1));
 
             uint256 balance0Before = balanceToken0();
             // callback to get tokens from the caller
-            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amount0, amount1, data);
+            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amount0, amount1, feeAmount, data);
             require(balance0Before.add(uint256(amount0)) <= balanceToken0(), 'IIA');
         } else {
             // transfer to recipient
@@ -623,9 +624,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
             uint256 balance1Before = balanceToken1();
             // callback to get tokens from the caller
-            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amount0, amount1, data);
+            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amount0, amount1, feeAmount, data);
             require(balance1Before.add(uint256(amount1)) <= balanceToken1(), 'IIA');
         }
+
+        communityFee = zeroForOne 
+            ? (feeAmount * globalState.communityFeeToken0) / 100 
+            : (feeAmount * globalState.communityFeeToken1) / 100 ; 
 
         if (communityFee > 0) {
             address vault = IAlgebraFactory(factory).vaultAddress();
@@ -649,20 +654,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         int24 currentTick;
         uint128 currentLiquidity;
         uint256 communityFee;
+        uint256 feeAmount;
 
         // Since the pool can get less tokens then sent, firstly we are getting tokens from the
         // original caller of the transaction. And change the _amountRequired_
         if (zeroForOne) {
             uint256 balance0Before = balanceToken0();
-            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amountRequired, 0, data);
+            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amountRequired, 0, 0, data);
             require((amountRequired = int256(balanceToken0().sub(balance0Before))) > 0, 'IIA');
         } else {
             uint256 balance1Before = balanceToken1();
-            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(0, amountRequired, data);
+            IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(0, amountRequired, 0, data);
             require((amountRequired = int256(balanceToken1().sub(balance1Before))) > 0, 'IIA');
         }
 
-        (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(
+        (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(
             zeroForOne,
             amountRequired,
             limitSqrtPrice
@@ -684,6 +690,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 TransferHelper.safeTransfer(token1, sender, uint256(amountRequired.sub(amount1)));
             }
         }
+
+        communityFee = zeroForOne 
+            ? (feeAmount * globalState.communityFeeToken0) / 100 
+            : (feeAmount * globalState.communityFeeToken1) / 100 ; 
 
         if (communityFee > 0) {
             address vault = IAlgebraFactory(factory).vaultAddress();
@@ -761,7 +771,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             uint160 currentPrice,
             int24 currentTick,
             uint128 currentLiquidity,
-            uint256 communityFeeAccumulated
+            uint256 feeAmount
         )
     {
         uint32 blockTimestamp;
@@ -872,6 +882,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 cache.fee
             );
 
+            feeAmount += step.feeAmount; 
 
             if (cache.exactInput) {
                 // decrease remaining input amount
@@ -888,7 +899,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             if (cache.communityFee > 0) {
                 uint256 delta = (step.feeAmount * cache.communityFee) / 100;
                 step.feeAmount -= delta;
-                communityFeeAccumulated += delta;
             }
 
             if (currentLiquidity > 0)
