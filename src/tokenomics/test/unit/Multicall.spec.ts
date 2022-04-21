@@ -80,7 +80,16 @@ describe('unit/Multicall', () => {
         ...makeTimestamps(currentTime + 100),
       },
       totalReward,
-      bonusReward
+      bonusReward,
+      {
+        algbAmountForLevel1: 0,
+        algbAmountForLevel2: 0,
+        algbAmountForLevel3: 0,
+        level1multiplier: 0,
+        level2multiplier: 0,
+        level3multiplier: 0,
+      },
+      context.rewardToken.address
     ])
     await context.farming.setIncentiveMaker(multicaller.address)
     await context.farming.connect(multicaller).multicall([createIncentiveTx], maxGas)

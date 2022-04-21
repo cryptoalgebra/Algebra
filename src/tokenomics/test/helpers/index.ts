@@ -162,7 +162,99 @@ export class HelperCommands {
           
         },
         params.totalReward,
-        params.bonusReward
+        params.bonusReward,
+        {
+          algbAmountForLevel1: 0,
+          algbAmountForLevel2: 0,
+          algbAmountForLevel3: 0,
+          level1multiplier: 0,
+          level2multiplier: 0,
+          level3multiplier: 0,
+        },
+        params.rewardToken.address
+      )
+      // @ts-ignore
+      virtualPoolAddress = (await txResult.wait(1))
+      if (virtualPoolAddress.events[2].args) {
+        virtualPoolAddress = virtualPoolAddress.events[2].args['virtualPool']
+      } else {
+        virtualPoolAddress = virtualPoolAddress.events[3].args['virtualPool']
+      }
+    }
+    
+    return {
+      ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
+      ...times,
+      
+      virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0())
+    }
+  }
+
+  createIncentiveWithMultiplierFlow: HelperTypes.CreateIncentive.Command = async (params) => {
+    const { startTime } = params
+    const endTime = params.endTime || startTime + this.DEFAULT_INCENTIVE_DURATION
+
+    const incentiveCreator = this.actors.incentiveCreator()
+    const times = {
+      startTime,
+      endTime,
+    }
+    const bal = await params.rewardToken.balanceOf(incentiveCreator.address)
+    const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address)
+
+    if (bal < params.totalReward) {
+      await params.rewardToken.transfer(incentiveCreator.address, params.totalReward)
+    }
+
+    if (bonusBal < params.bonusReward) {
+      await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward)
+    }
+
+
+    let txResult;
+    let virtualPoolAddress;
+    if (params.eternal) {
+      await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
+      await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
+
+      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createIncentive(
+        {
+          pool: params.poolAddress,
+          rewardToken: params.rewardToken.address,
+          bonusRewardToken: params.bonusRewardToken.address,
+          ...times,
+          
+        },
+        params.totalReward,
+        params.bonusReward,
+        params.rewardRate || 10,
+        params.bonusRewardRate || 10
+      )
+       // @ts-ignore
+       virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+    } else {
+      await params.rewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.totalReward)
+      await params.bonusRewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.bonusReward)
+
+      txResult = await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).createIncentive(
+        {
+          pool: params.poolAddress,
+          rewardToken: params.rewardToken.address,
+          bonusRewardToken: params.bonusRewardToken.address,
+          ...times,
+          
+        },
+        params.totalReward,
+        params.bonusReward,
+        {
+          algbAmountForLevel1: params.algbAmountForLevel1 || 1000,
+          algbAmountForLevel2: params.algbAmountForLevel2 || 5000,
+          algbAmountForLevel3: params.algbAmountForLevel3 || 10000,
+          level1multiplier: params.level1multiplier || 1000,
+          level2multiplier: params.level2multiplier || 5000,
+          level3multiplier: params.level3multiplier || 10000,
+        },
+        params.rewardToken.address
       )
       // @ts-ignore
       virtualPoolAddress = (await txResult.wait(1))
@@ -194,7 +286,7 @@ export class HelperCommands {
     if (bal0 < params.amountsToFarm[0])
       await params.tokensToFarm[0]
         // .connect(tokensOwner)
-        .transfer(params.lp.address, params.amountsToFarm[0])
+        .transfer(params.lp.address, params.amountsToFarm[0].mul(2))
 
     const bal1 = await params.tokensToFarm[1].balanceOf(params.lp.address)
     if (bal1 < params.amountsToFarm[1])
@@ -233,6 +325,13 @@ export class HelperCommands {
 
     const l2tokenId = (await this.farmingCenter.deposits(tokenId)).L2TokenId
 
+    if(params.tokensLocked){
+      await params.createIncentiveResult.rewardToken
+        // .connect(tokensOwner)
+        .transfer(params.lp.address, params.tokensLocked)
+      await params.createIncentiveResult.rewardToken.connect(params.lp).approve(this.farmingCenter.address, params.tokensLocked )
+    }
+
     if(params.eternal) {
       await this.farmingCenter
         .connect(params.lp)
@@ -240,7 +339,7 @@ export class HelperCommands {
     } else {
       await this.farmingCenter
         .connect(params.lp)
-        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0)
     }
 
     const farmdAt = await blockTimestamp()
@@ -253,7 +352,7 @@ export class HelperCommands {
   }
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approve(this.farmingCenter  .address, params.tokenId)
+    await this.nft.connect(params.lp).approve(this.farmingCenter.address, params.tokenId)
 
     await this.nft
       .connect(params.lp)

@@ -15,6 +15,14 @@ export module HelperTypes {
       totalReward: BigNumber
       bonusReward: BigNumber
       
+      algbAmountForLevel1?: BigNumber
+      algbAmountForLevel2?: BigNumber
+      algbAmountForLevel3?: BigNumber
+      level1multiplier?: BigNumber
+      level2multiplier?: BigNumber
+      level3multiplier?: BigNumber
+      multiplierToken?: string
+
       eternal? : boolean
       rewardRate?: BigNumber,
       bonusRewardRate?: BigNumber
@@ -30,6 +38,7 @@ export module HelperTypes {
       virtualPool: Contract
     }
 
+
     export type Command = CommandFunction<Args, Result>
   }
 
@@ -41,6 +50,7 @@ export module HelperTypes {
       ticks: [number, number]
       createIncentiveResult: CreateIncentive.Result
       eternal?: boolean
+      tokensLocked?: BigNumber
     }
 
     export type Result = {

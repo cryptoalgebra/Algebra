@@ -388,7 +388,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          0
         )
 
         await expect(subject(tokenId, lpUser0.address)).to.revertedWith(
@@ -435,7 +436,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          0
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -467,7 +469,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          0
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -510,7 +513,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          0
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -541,7 +545,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          0
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)

@@ -106,7 +106,8 @@ describe('unit/Farms', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          L2TokenId
+          L2TokenId,
+          0
         )
     })
 
@@ -120,7 +121,7 @@ describe('unit/Farms', () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
           .to.emit(context.farming, 'FarmStarted')
-          .withArgs(tokenId, incentiveId, liquidity)
+          .withArgs(tokenId, incentiveId, liquidity, 0)
       })
 
       it('sets the farm struct properly', async () => {
@@ -161,7 +162,7 @@ describe('unit/Farms', () => {
       it('deposit is already farmed in the incentive', async () => {
         //await Time.set(timestamps.startTime + 500)
         await subject(tokenId, lpUser0)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: token already farmed')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('token already farmed')
       })
 
       it('you are not the owner of the deposit', async () => {
@@ -240,7 +241,8 @@ describe('unit/Farms', () => {
               bonusRewardToken: context.bonusRewardToken.address,
               ...timestamps,
             },
-            otherTokenId
+            otherTokenId,
+            0
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: token pool is not the incentive pool')
       })
@@ -258,7 +260,8 @@ describe('unit/Farms', () => {
               ...timestamps,
               startTime: timestamps.startTime + 10,
             },
-            tokenId
+            tokenId,
+            0
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
       })
@@ -312,7 +315,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
       await context.farming.farms(tokenId, incentiveId)
 
       const pool = context.poolObj.connect(actors.lpUser0())
@@ -375,7 +378,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
       await context.farming.farms(tokenId, incentiveId)
     })
 
@@ -602,7 +605,8 @@ describe('unit/Farms', () => {
             pool: context.pool01,
             ...timestamps,
           },
-          tokenId
+          tokenId,
+          0
         )
 
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
@@ -665,7 +669,8 @@ describe('unit/Farms', () => {
           pool: context.pool01,
           ...timestamps,
         },
-        tokenId
+        tokenId,
+        0
       )
 
       await Time.setAndMine(timestamps.endTime + 10)
@@ -795,7 +800,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
@@ -816,7 +821,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })
