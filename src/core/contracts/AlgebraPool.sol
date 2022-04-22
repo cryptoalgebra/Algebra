@@ -853,7 +853,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
             step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
             
-            // increase fee, depending on estimated price
+            // estimated price after swap
             (currentPrice, , , ) = PriceMovementMath.movePriceTowardsTarget(
                     zeroForOne,
                     currentPrice,
@@ -864,10 +864,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                     amountRequired,
                     cache.fee
             );
-
+            // increase fee, depending on estimated price
             cache.fee = PIFee.recalculateFee(zeroForOne, cache.startPrice, currentPrice, cache.startFee, cache.fee);
             currentPrice = step.stepSqrtPrice;
-
 
             // calculate the amounts needed to move the price to the next target if it is possible or as much
             // as possible
@@ -975,6 +974,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
             }
 
+            
             // check stop condition
             if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
                 break;
