@@ -38,18 +38,28 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     function AlgebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
+        uint256 feeAmount,
         bytes memory path
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
-
+        
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta), uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
         (, , uint16 fee, , , , , ) = pool.globalState();
+
+        if (feeAmount != 0) {
+            if (feeAmount * 1e6 / amountToPay < 50000) {
+                fee = uint16(feeAmount * 1e6 / amountToPay);
+            }
+            else {
+                fee = 50000;
+            }
+        }
 
         if (isExactInput) {
             assembly {
@@ -102,6 +112,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
                 abi.encodePacked(tokenIn, tokenOut)
             )
         {} catch (bytes memory reason) {
+            console.logBytes(reason);
             (amountOut, fee) = parseRevertReason(reason);
         }
     }
