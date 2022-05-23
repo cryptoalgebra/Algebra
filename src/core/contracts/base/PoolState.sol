@@ -35,6 +35,10 @@ abstract contract PoolState is IAlgebraPoolState {
 
     uint160 internal blockStartPrice;
     uint32 internal startPriceUpdated;
+    /// @inheritdoc IAlgebraPoolState
+    uint32 public override liquidityCooldown;
+    /// @inheritdoc IAlgebraPoolState
+    address public override activeIncentive;
 
     /// @inheritdoc IAlgebraPoolState
     mapping(int24 => TickManager.Tick) public override ticks;
