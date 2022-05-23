@@ -20,7 +20,7 @@ contract AlgebraFactory is IAlgebraFactory {
     address public override owner;
 
     /// @inheritdoc IAlgebraFactory
-    address public override poolDeployer;
+    address public immutable override poolDeployer;
 
     /// @inheritdoc IAlgebraFactory
     address public override farmingAddress;
