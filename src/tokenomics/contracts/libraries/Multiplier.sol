@@ -4,15 +4,15 @@ import "../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol";
 
 library Multiplier{
 
-    function getMultiplier(uint256 algbAmount, IAlgebraIncentiveFarming.Levels memory levels) internal pure returns(uint32 multiplier){
+    function getMultiplier(uint256 tokenAmount, IAlgebraIncentiveFarming.Levels memory levels) internal pure returns(uint32 multiplier){
 
-        if (algbAmount >= levels.algbAmountForLevel3) {
+        if (tokenAmount >= levels.tokenAmountForLevel3) {
             multiplier = levels.level3multiplier;
         }
-        else if (algbAmount >= levels.algbAmountForLevel2) {
+        else if (tokenAmount >= levels.tokenAmountForLevel2) {
                  multiplier = levels.level2multiplier;
              }
-             else if (algbAmount >= levels.algbAmountForLevel1) {
+             else if (tokenAmount >= levels.tokenAmountForLevel1) {
                       multiplier = levels.level1multiplier;
                   }
     }

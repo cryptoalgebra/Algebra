@@ -34,6 +34,17 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
 
     function setIncentiveMaker(address _incentiveMaker) external;
 
+    struct Levels {
+        // amount of token to reach the level
+        uint tokenAmountForLevel1;
+        uint tokenAmountForLevel2;
+        uint tokenAmountForLevel3;
+        // 1 = 0.01%
+        uint32 level1multiplier;
+        uint32 level2multiplier;
+        uint32 level3multiplier;
+    }
+
     /// @notice Detach incentive from the pool
     /// @param key The key of the incentive
     function detachIncentive(IncentiveKey memory key) external;

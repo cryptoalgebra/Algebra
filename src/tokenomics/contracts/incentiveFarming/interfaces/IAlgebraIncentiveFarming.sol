@@ -8,15 +8,11 @@ import '../../interfaces/IAlgebraFarming.sol';
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraIncentiveFarming is IAlgebraFarming {
 
-    struct Levels {
-        // amount of token to reach the level
-        uint algbAmountForLevel1;
-        uint algbAmountForLevel2;
-        uint algbAmountForLevel3;
-        // 1 = 0.01%
-        uint32 level1multiplier;
-        uint32 level2multiplier;
-        uint32 level3multiplier;
+    struct IncentiveParams {
+        uint256 reward;
+        uint256 bonusReward;
+        address multiplierToken;
+        uint32 enterStartTime;
     }
     
     /// @notice Returns information about a farmd liquidity NFT
@@ -32,18 +28,17 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
             int24 tickUpper
         );
 
-    /// @notice Creates a new liquidity mining incentive program
-    /// @param key Details of the incentive to create
-    /// @param reward The amount of reward tokens to be distributed
-    /// @param bonusReward The amount of bonus reward tokens to be distributed
-    /// @return virtualPool The virtual pool
     function createIncentive(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
-        Levels memory levels,
-        address multiplierToken
+        Levels calldata levels,
+        IncentiveParams memory params
     ) external returns (address virtualPool);
+
+    function decreaseRewardsAmount(
+        IncentiveKey memory key,
+        uint256 rewards,
+        uint256 bonusRewards
+    ) external;
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
@@ -61,13 +56,12 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
                 Levels memory levels
         );
     
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 algbLocked) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
     /// @param bonusRewardToken The token being distributed as a bonus reward
     /// @param pool The Algebra pool
-    /// @param virtualPool The virtual pool address
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
     /// @param reward The amount of reward tokens to be distributed
@@ -76,17 +70,20 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
         IAlgebraPool indexed pool,
-        address virtualPool,
         uint256 startTime,
         uint256 endTime,
         uint256 reward,
         uint256 bonusReward,
         Levels levels,
-        address multiplierToken
+        address multiplierToken,
+        uint32 enterStartTime
     );
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 algbLocked);
+    /// @param tokensLocked The amount of tokens locked for multiplier 
+    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
+
+    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward,bytes32 incentiveId);
 }

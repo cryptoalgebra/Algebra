@@ -15,6 +15,7 @@ import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
 import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
+import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 
 interface IFarmingCenter is
@@ -40,6 +41,8 @@ interface IFarmingCenter is
     function farming() external view returns (IAlgebraIncentiveFarming);
 
     function eternalFarming() external view returns (IAlgebraEternalFarming);
+
+    function farmingCenterVault() external view returns (IFarmingCenterVault);
 
     function l2Nfts(uint256)
         external
@@ -73,7 +76,7 @@ interface IFarmingCenter is
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
 
-    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId,uint256 tokensLocked) external;
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
 
@@ -92,7 +95,7 @@ interface IFarmingCenter is
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 algbLocked) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 
