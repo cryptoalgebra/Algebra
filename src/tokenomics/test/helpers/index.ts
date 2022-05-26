@@ -145,7 +145,17 @@ export class HelperCommands {
         params.totalReward,
         params.bonusReward,
         params.rewardRate || 10,
-        params.bonusRewardRate || 10
+        params.bonusRewardRate || 10,
+        params.rewardToken.address,
+        {
+          tokenAmountForLevel1: 0,
+          tokenAmountForLevel2: 0,
+          tokenAmountForLevel3: 0,
+          level1multiplier: 0,
+          level2multiplier: 0,
+          level3multiplier: 0,
+        },
+        
       )
        // @ts-ignore
        virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
@@ -161,25 +171,31 @@ export class HelperCommands {
           ...times,
           
         },
-        params.totalReward,
-        params.bonusReward,
         {
-          algbAmountForLevel1: 0,
-          algbAmountForLevel2: 0,
-          algbAmountForLevel3: 0,
+          tokenAmountForLevel1: 0,
+          tokenAmountForLevel2: 0,
+          tokenAmountForLevel3: 0,
           level1multiplier: 0,
           level2multiplier: 0,
           level3multiplier: 0,
         },
-        params.rewardToken.address
+        {
+          reward: params.totalReward,
+          bonusReward: params.bonusReward,
+          multiplierToken: params.rewardToken.address,
+          enterStartTime: params.enterStartTime || 0,
+        }
       )
       // @ts-ignore
-      virtualPoolAddress = (await txResult.wait(1))
-      if (virtualPoolAddress.events[2].args) {
-        virtualPoolAddress = virtualPoolAddress.events[2].args['virtualPool']
-      } else {
-        virtualPoolAddress = virtualPoolAddress.events[3].args['virtualPool']
-      }
+      const incentiveId = await testIncentiveId.compute({
+        rewardToken: params.rewardToken.address,
+        bonusRewardToken: params.bonusRewardToken.address,
+        pool: params.poolAddress,
+        ...times,
+        
+      })
+      virtualPoolAddress = await await (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+
     }
     
     return {
@@ -228,10 +244,27 @@ export class HelperCommands {
         params.totalReward,
         params.bonusReward,
         params.rewardRate || 10,
-        params.bonusRewardRate || 10
+        params.bonusRewardRate || 10,
+        params.rewardToken.address,
+        {
+          tokenAmountForLevel1: 0,
+          tokenAmountForLevel2: 0,
+          tokenAmountForLevel3: 0,
+          level1multiplier: 0,
+          level2multiplier: 0,
+          level3multiplier: 0,
+        },
       )
        // @ts-ignore
-       virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+       const incentiveId = await testIncentiveId.compute({
+        rewardToken: params.rewardToken.address,
+        bonusRewardToken: params.bonusRewardToken.address,
+        pool: params.poolAddress,
+        ...times,
+        
+      })
+      virtualPoolAddress = (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.bonusReward)
@@ -244,25 +277,30 @@ export class HelperCommands {
           ...times,
           
         },
-        params.totalReward,
-        params.bonusReward,
         {
-          algbAmountForLevel1: params.algbAmountForLevel1 || 1000,
-          algbAmountForLevel2: params.algbAmountForLevel2 || 5000,
-          algbAmountForLevel3: params.algbAmountForLevel3 || 10000,
+          tokenAmountForLevel1: params.algbAmountForLevel1 || 1000,
+          tokenAmountForLevel2: params.algbAmountForLevel2 || 5000,
+          tokenAmountForLevel3: params.algbAmountForLevel3 || 10000,
           level1multiplier: params.level1multiplier || 1000,
           level2multiplier: params.level2multiplier || 5000,
           level3multiplier: params.level3multiplier || 10000,
         },
-        params.rewardToken.address
+        {
+          reward: params.totalReward,
+          bonusReward: params.bonusReward,
+          multiplierToken: params.rewardToken.address,
+          enterStartTime: params.enterStartTime || 0,
+        }
       )
-      // @ts-ignore
-      virtualPoolAddress = (await txResult.wait(1))
-      if (virtualPoolAddress.events[2].args) {
-        virtualPoolAddress = virtualPoolAddress.events[2].args['virtualPool']
-      } else {
-        virtualPoolAddress = virtualPoolAddress.events[3].args['virtualPool']
-      }
+      const incentiveId = await this.testIncentiveId.compute({
+        rewardToken: params.rewardToken.address,
+        bonusRewardToken: params.bonusRewardToken.address,
+        pool: params.poolAddress,
+        ...times,
+        
+      })
+      virtualPoolAddress = (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      
     }
     
     return {
@@ -335,7 +373,7 @@ export class HelperCommands {
     if(params.eternal) {
       await this.farmingCenter
         .connect(params.lp)
-        .enterEternalFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+        .enterEternalFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0)
     } else {
       await this.farmingCenter
         .connect(params.lp)

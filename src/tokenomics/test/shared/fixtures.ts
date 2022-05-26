@@ -270,7 +270,7 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   await farming.setFarmingCenterAddress(farmingCenter.address)
 
   await factory.setFarmingAddress(farmingCenter.address)
-  
+ 
   await farming.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId
@@ -278,18 +278,19 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
   for (const token of tokens) {
     await token.approve(nft.address, constants.MaxUint256)
   }
-
+  
   const fee = FeeAmount.MEDIUM
 
   await nft.createAndInitializePoolIfNecessary(tokens[0].address ,tokens[1].address, encodePriceSqrt(1, 1))
 
   await nft.createAndInitializePoolIfNecessary(tokens[1].address, tokens[2].address, encodePriceSqrt(1, 1))
-
+  
   const pool01 = await factory.poolByPair(tokens[0].address, tokens[1].address)
-
+  
   const pool12 = await factory.poolByPair(tokens[1].address, tokens[2].address)
-
+  
   const poolObj = poolFactory.attach(pool01) as IAlgebraPool
+
   return {
     nft,
     router,
@@ -332,6 +333,7 @@ export type EternalAlgebraFixtureType = {
 }
 
 export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (wallets, provider) => {
+  
   const { tokens, nft, factory, deployer, router } = await algebraFactoryFixture(wallets, provider)
 
   const signer = new ActorFixture(wallets, provider).farmingDeployer()

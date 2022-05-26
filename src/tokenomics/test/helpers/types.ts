@@ -14,6 +14,7 @@ export module HelperTypes {
       endTime?: number
       totalReward: BigNumber
       bonusReward: BigNumber
+      enterStartTime?: BigNumber
       
       algbAmountForLevel1?: BigNumber
       algbAmountForLevel2?: BigNumber

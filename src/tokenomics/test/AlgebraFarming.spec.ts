@@ -120,11 +120,14 @@ describe('AlgebraFarming', async ()=>{
 		}
 
 		beforeEach('load fixture', async () => {
+
 			subject = await loadFixture(scenario)
+
 		})
 
 		describe('who all farm the entire time ', () => {
 			it('allows them all to withdraw at the end', async () => {
+
 				const { helpers, createIncentiveResult } = subject
 
 				await Time.setAndMine(createIncentiveResult.endTime + 1)
@@ -135,7 +138,7 @@ describe('AlgebraFarming', async ()=>{
 					direction: 'up',
 					desiredValue: 20,
 				})
-				
+
 				// Sanity check: make sure we go past the incentive end time.
 				expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(
 					createIncentiveResult.endTime
@@ -1796,14 +1799,12 @@ describe('AlgebraFarming', async ()=>{
 			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
 			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
 
-			console.log(reward1)
-			console.log(reward2)
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
 
 	    })
 
-		it('same range and liquidity, multipliers: 20 and 50%', async () => {
+		it.only('same range and liquidity, multipliers: 20 and 50%', async () => {
 			const { helpers, context, createIncentiveResult } = subject
 			type Position = {
 				lp: Wallet
@@ -1896,7 +1897,8 @@ describe('AlgebraFarming', async ()=>{
 			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
 
 			
-
+			console.log(reward1.add(reward2))
+			console.log(reward3.add(reward4))
 			 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
