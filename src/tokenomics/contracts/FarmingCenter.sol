@@ -4,6 +4,7 @@ pragma abicoder v2;
 import './incentiveFarming/interfaces/IAlgebraIncentiveVirtualPool.sol';
 import './eternalFarming/interfaces/IAlgebraEternalVirtualPool.sol';
 import './interfaces/IFarmingCenter.sol';
+import './interfaces/IFarmingCenterVault.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
@@ -13,12 +14,14 @@ import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
 import './base/PeripheryPayments.sol';
+import './FarmingCenterVault.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
 
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
+    IFarmingCenterVault public immutable override farmingCenterVault;
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
@@ -66,6 +69,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         farming = _farming;
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+        farmingCenterVault = IFarmingCenterVault(new FarmingCenterVault());
     }
 
     modifier onlyFarming() {
@@ -109,13 +113,19 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
-    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId)
+    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked)
         external
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
-        eternalFarming.enterFarming(key, tokenId);
+        eternalFarming.enterFarming(key, tokenId, tokensLocked);
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
+        if (tokensLocked > 0) {
+            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
+        }
         deposits[tokenId].numberOfFarms += 1;
+        deposits[tokenId].tokensLocked = tokensLocked;
     }
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId)
@@ -124,8 +134,14 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
         eternalFarming.exitFarming(key, tokenId, msg.sender);
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
         deposits[tokenId].numberOfFarms -= 1;
         deposits[tokenId].owner = msg.sender;
+        if (deposits[tokenId].tokensLocked > 0) {
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposits[tokenId].tokensLocked);
+            deposits[tokenId].tokensLocked = 0;
+        }
     }
 
     function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked)
@@ -139,7 +155,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
         farming.enterFarming(key, tokenId, tokensLocked);
         if (tokensLocked > 0) {
-            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(this), tokensLocked);
+            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
         }
         deposit.numberOfFarms += 1;
         deposit.tokensLocked = tokensLocked;
@@ -159,7 +175,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         deposit.owner = msg.sender;
         deposit.inLimitFarming = false;
         if (deposit.tokensLocked > 0) {
-            TransferHelper.safeTransfer(multiplierToken, msg.sender, deposit.tokensLocked);
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
             deposit.tokensLocked = 0;
         }
     }

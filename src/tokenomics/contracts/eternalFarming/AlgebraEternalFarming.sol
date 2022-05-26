@@ -9,7 +9,7 @@ import '../libraries/IncentiveId.sol';
 import '../libraries/RewardMath.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/SafeCast.sol';
-
+import '../libraries/Multiplier.sol';
 import './EternalVirtualPool.sol';
 
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
@@ -33,6 +33,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         uint96 numberOfFarms;
         bool isPoolCreated;
         uint224 totalLiquidity;
+        address multiplierToken;
+        Levels levels;
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -118,7 +120,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         uint256 reward,
         uint256 bonusReward,
         uint128 rewardRate,
-        uint128 bonusRewardRate
+        uint128 bonusRewardRate,
+        address multiplierToken,
+        Levels calldata levels
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (, address _incentive) = farmingCenter.virtualPoolAddresses(address(key.pool));
 
@@ -136,9 +140,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = virtualPool;
+        incentives[incentiveId].levels = levels;
+        incentives[incentiveId].multiplierToken = multiplierToken;
 
         TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
-
         TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
 
         IAlgebraEternalVirtualPool(virtualPool).addRewards(reward, bonusReward);
@@ -152,7 +157,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
             key.startTime,
             key.endTime,
             reward,
-            bonusReward
+            bonusReward,
+            levels,
+            multiplierToken
         );
 
         emit RewardsAdded(reward, bonusReward, incentiveId);
@@ -239,7 +246,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraEternalFarming
-    function enterFarming(IncentiveKey calldata key, uint256 tokenId) external override onlyFarmingCenter {
+    function enterFarming(IncentiveKey calldata key, uint256 tokenId, uint256 tokensLocked) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive'); // TOD
@@ -253,6 +260,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
         require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
         require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
+
+        uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentives[incentiveId].levels);
+        liquidity += (liquidity * multiplier) / 10000;
 
         incentives[incentiveId].numberOfFarms++;
         (, int24 tick, , , , , , ) = pool.globalState();
@@ -281,7 +291,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
         incentives[incentiveId].totalLiquidity += liquidity;
 
-        emit FarmStarted(tokenId, incentiveId, liquidity);
+        emit FarmStarted(tokenId, incentiveId, liquidity, tokensLocked);
     }
 
     /// @inheritdoc IAlgebraFarming

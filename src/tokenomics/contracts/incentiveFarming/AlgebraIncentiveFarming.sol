@@ -117,10 +117,8 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     /// @inheritdoc IAlgebraIncentiveFarming
     function createIncentive(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
         Levels calldata levels,
-        address multiplierToken
+        IncentiveParams memory params
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
         address activeIncentive = key.pool.activeIncentive();
@@ -133,7 +131,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
             _activeEndTimestamp < block.timestamp && (activeIncentive != _incentive || _incentive == address(0)),
             'AlgebraFarming::createIncentive: there is already active incentive'
         );
-        require(reward > 0, 'AlgebraFarming::createIncentive: reward must be positive');
+        require(params.reward > 0, 'AlgebraFarming::createIncentive: reward must be positive');
         require(
             block.timestamp <= key.startTime,
             'AlgebraFarming::createIncentive: start time must be now or in the future'
@@ -150,13 +148,13 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
 
         bytes32 incentiveId = IncentiveId.compute(key);
 
-        incentives[incentiveId].totalReward += reward;
+        incentives[incentiveId].totalReward += params.reward;
 
-        incentives[incentiveId].bonusReward += bonusReward;
+        incentives[incentiveId].bonusReward += params.bonusReward;
 
         incentives[incentiveId].levels = levels;
 
-        incentives[incentiveId].multiplierToken = multiplierToken;
+        incentives[incentiveId].multiplierToken = params.multiplierToken;
 
         virtualPool = address(
             new IncentiveVirtualPool(
@@ -173,21 +171,21 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         incentives[incentiveId].isPoolCreated = true;
         incentives[incentiveId].virtualPoolAddress = address(virtualPool);
 
-        TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
+        TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), params.bonusReward);
 
-        TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
+        TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), params.reward);
 
         emit IncentiveCreated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
-            virtualPool,
             key.startTime,
             key.endTime,
-            reward,
-            bonusReward,
+            params.reward,
+            params.bonusReward,
             levels,
-            multiplierToken
+            params.multiplierToken,
+            params.enterStartTime
         );
     }
 
@@ -210,6 +208,26 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
         
         emit RewardsAdded(reward, bonusReward, incentiveId);
+    }
+
+    function decreaseRewardsAmount(
+        IncentiveKey memory key,
+        uint256 reward,
+        uint256 bonusReward
+    ) external override onlyIncentiveMaker {
+
+        require( block.timestamp < key.endTime, "AlgebraFarming::decreaseRewardAmount: cannot decrease rewards amounts after endTime");
+
+        bytes32 incentiveId = IncentiveId.compute(key);
+
+        incentives[incentiveId].totalReward -= reward;
+        incentives[incentiveId].bonusReward -= bonusReward;
+
+        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusReward);
+
+        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, reward);
+        
+        emit RewardAmountsDecreased(reward, bonusReward, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -239,7 +257,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraIncentiveFarming
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 algbLockedAmount) external override onlyFarmingCenter {
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external override onlyFarmingCenter {
         require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
 
         bytes32 incentiveId = IncentiveId.compute(key);
@@ -257,7 +275,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
         require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
     
-        uint32 multiplier = Multiplier.getMultiplier(algbLockedAmount, incentives[incentiveId].levels);
+        uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentives[incentiveId].levels);
         liquidity += (liquidity * multiplier) / 10000;
 
         incentives[incentiveId].numberOfFarms++;
@@ -273,7 +291,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
 
         incentives[incentiveId].totalLiquidity += liquidity;
 
-        emit FarmStarted(tokenId, incentiveId, liquidity, algbLockedAmount);
+        emit FarmStarted(tokenId, incentiveId, liquidity, tokensLocked);
     }
 
     /// @inheritdoc IAlgebraFarming

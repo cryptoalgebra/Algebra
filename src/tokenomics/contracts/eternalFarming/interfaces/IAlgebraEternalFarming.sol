@@ -45,7 +45,9 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
             address virtualPoolAddress,
             uint96 numberOfFarms,
             bool isPoolCreated,
-            uint224 totalLiquidity
+            uint224 totalLiquidity,
+            address multiplierToken,
+            Levels calldata levels
         );
 
     /// @notice Creates a new liquidity mining incentive program
@@ -58,7 +60,9 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         uint128 rewardRate,
-        uint128 bonusRewardRate
+        uint128 bonusRewardRate,
+        address multiplierToken,
+        Levels calldata levels
     ) external returns (address virtualPool);
 
     function addRewards(
@@ -73,7 +77,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 bonusRewardRate
     ) external;
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
 
     function collectRewards(
         IncentiveKey memory key,
@@ -85,7 +89,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
+    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
 
     /// @notice Event emitted when a liquidity mining incentive has been created
@@ -105,6 +109,8 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 startTime,
         uint256 endTime,
         uint256 reward,
-        uint256 bonusReward
+        uint256 bonusReward,
+        Levels levels,
+        address multiplierToken
     );
 }
