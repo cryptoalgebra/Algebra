@@ -49,7 +49,6 @@ describe('unit/Deposits', () => {
   let subject: (tokenId: string, recipient: string) => Promise<any>
   let tokenId: string
   let recipient = lpUser0.address
-
   const SAFE_TRANSFER_FROM_SIGNATURE = 'safeTransferFrom(address,address,uint256,bytes)'
   const INCENTIVE_KEY_ABI =
     'tuple(address rewardToken, address bonusRewardToken, address pool, uint256 startTime, uint256 endTime)'
@@ -91,7 +90,6 @@ describe('unit/Deposits', () => {
       _createIncentiveResult: HelperTypes.CreateIncentive.Result = createIncentiveResult
     ) {
       const incentiveId = await helpers.getIncentiveId(_createIncentiveResult)
-
       return {
         deposit: await context.farmingCenter.deposits(tokenId),
         incentive: await context.farming.incentives(incentiveId),
