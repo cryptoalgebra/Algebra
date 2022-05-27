@@ -90,8 +90,7 @@ contract SwapRouter is
         uint160 limitSqrtPrice,
         SwapCallbackData memory data
     ) private returns (uint256 amountOut) {
-        // allow swapping to the router address with address 0
-        if (recipient == address(0)) recipient = address(this);
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
 
@@ -202,8 +201,7 @@ contract SwapRouter is
         uint160 limitSqrtPrice,
         SwapCallbackData memory data
     ) private returns (uint256 amountIn) {
-        // allow swapping to the router address with address 0
-        if (recipient == address(0)) recipient = address(this);
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
         (address tokenOut, address tokenIn) = data.path.decodeFirstPool();
 
@@ -245,8 +243,7 @@ contract SwapRouter is
         );
 
         require(amountIn <= params.amountInMaximum, 'Too much requested');
-        // has to be reset even though we don't use it in the single hop case
-        amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+        amountInCached = DEFAULT_AMOUNT_IN_CACHED; // has to be reset even though we don't use it in the single hop case
     }
 
     /// @inheritdoc ISwapRouter

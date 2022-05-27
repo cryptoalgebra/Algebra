@@ -81,8 +81,7 @@ contract AlgebraFactory is IAlgebraFactory {
 
         pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
 
-        poolByPair[token0][token1] = pool;
-        // to avoid future addresses comparing we are populating the mapping twice
+        poolByPair[token0][token1] = pool; // to avoid future addresses comparing we are populating the mapping twice
         poolByPair[token1][token0] = pool;
         emit PoolCreated(token0, token1, pool);
     }

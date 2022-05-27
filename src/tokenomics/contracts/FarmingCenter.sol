@@ -17,7 +17,6 @@ import './base/PeripheryPayments.sol';
 import './FarmingCenterVault.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
-
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -46,10 +45,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
     /// @notice Represents the nft layer 2
     struct L2Nft {
-        // the nonce for permits
-        uint96 nonce;
-        // the address that is approved for spending this token
-        address operator;
+        uint96 nonce; // the nonce for permits
+        address operator; // the address that is approved for spending this token
         uint256 tokenId;
     }
 
@@ -113,11 +110,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
-    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked)
-        external
-        override
-        isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {
+    function enterEternalFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
         eternalFarming.enterFarming(key, tokenId, tokensLocked);
         bytes32 incentiveId = keccak256(abi.encode(key));
         (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
@@ -144,13 +141,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked)
-        external
-        override
-        isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {   
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
         Deposit storage deposit = deposits[tokenId];
-        require(!deposit.inLimitFarming, "token already farmed");
+        require(!deposit.inLimitFarming, 'token already farmed');
         bytes32 incentiveId = keccak256(abi.encode(key));
         (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
         farming.enterFarming(key, tokenId, tokensLocked);
@@ -166,7 +163,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         external
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {   
+    {
         Deposit storage deposit = deposits[tokenId];
         farming.exitFarming(key, tokenId, msg.sender);
         deposit.numberOfFarms -= 1;
@@ -221,12 +218,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
         if (pool.activeIncentive() == address(0)) {
-            // turn on pool directly
-            pool.setIncentive(virtualPool);
+            pool.setIncentive(virtualPool); // turn on pool directly
         } else {
             if (virtualPool != address(0)) {
-                // turn on proxy
-                pool.setIncentive(address(this));
+                pool.setIncentive(address(this)); // turn on proxy
             } else {
                 // turn off proxy
                 if (msg.sender == address(farming)) {
@@ -313,7 +308,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
-        
         Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool)
             .increaseCumulative(blockTimestamp);
 
