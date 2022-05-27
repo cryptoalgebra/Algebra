@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IDataStorageOperator.sol';
@@ -38,29 +39,9 @@ contract DataStorageOperator is IDataStorageOperator {
         return timepoints.initialize(time, tick);
     }
 
-    function changeFeeConfiguration(
-        uint32 alpha1,
-        uint32 alpha2,
-        uint32 beta1,
-        uint32 beta2,
-        uint16 gamma1,
-        uint16 gamma2,
-        uint32 volumeBeta,
-        uint32 volumeGamma,
-        uint16 baseFee
-    ) external override {
+    function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
         require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
-        feeConfig = AdaptiveFee.Configuration(
-            alpha1,
-            alpha2,
-            beta1,
-            beta2,
-            gamma1,
-            gamma2,
-            volumeBeta,
-            volumeGamma,
-            baseFee
-        );
+        feeConfig = _feeConfig;
     }
 
     function getSingleTimepoint(
@@ -87,14 +68,7 @@ contract DataStorageOperator is IDataStorageOperator {
             oldestIndex = uint16(addmod(index, 1, 65535));
         }
 
-        DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(
-            time,
-            secondsAgo,
-            tick,
-            index,
-            oldestIndex,
-            liquidity
-        );
+        DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
         (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative, volumePerAvgLiquidity) = (
             result.tickCumulative,
             result.secondsPerLiquidityCumulative,
@@ -166,12 +140,7 @@ contract DataStorageOperator is IDataStorageOperator {
         uint16 _index,
         uint128 _liquidity
     ) external view override onlyPool returns (uint16 fee) {
-        (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(
-            _time,
-            _tick,
-            _index,
-            _liquidity
-        );
+        (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
 
         return uint16(AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig));
     }

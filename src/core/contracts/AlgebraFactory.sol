@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
@@ -63,19 +64,7 @@ contract AlgebraFactory is IAlgebraFactory {
 
         IDataStorageOperator dataStorage = IDataStorageOperator(address(new DataStorageOperator(computeAddress(token0, token1))));
 
-        AdaptiveFee.Configuration memory _feeConfiguration = baseFeeConfiguration;
-
-        dataStorage.changeFeeConfiguration(
-            _feeConfiguration.alpha1,
-            _feeConfiguration.alpha2,
-            _feeConfiguration.beta1,
-            _feeConfiguration.beta2,
-            _feeConfiguration.gamma1,
-            _feeConfiguration.gamma2,
-            _feeConfiguration.volumeBeta,
-            _feeConfiguration.volumeGamma,
-            _feeConfiguration.baseFee
-        );
+        dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
         pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
 
@@ -122,7 +111,7 @@ contract AlgebraFactory is IAlgebraFactory {
     /// @notice Deterministically computes the pool address given the factory and PoolKey
     /// @param token0 first token
     /// @param token1 second token
-    /// @return pool The contract address of the V3 pool
+    /// @return pool The contract address of the Algebra pool
     function computeAddress(address token0, address token1) internal view returns (address pool) {
         pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
     }

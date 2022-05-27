@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
+pragma abicoder v2;
+
+import '../libraries/AdaptiveFee.sol';
 
 interface IDataStorageOperator {
     /**
@@ -75,17 +78,7 @@ interface IDataStorageOperator {
         uint128 volumePerLiquidity
     ) external returns (uint16 indexUpdated);
 
-    function changeFeeConfiguration(
-        uint32 alpha1,
-        uint32 alpha2,
-        uint32 beta1,
-        uint32 beta2,
-        uint16 gamma1,
-        uint16 gamma2,
-        uint32 volumeBeta,
-        uint32 volumeGamma,
-        uint16 baseFee
-    ) external;
+    function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external;
 
     function calculateVolumePerLiquidity(
         uint128 liquidity,

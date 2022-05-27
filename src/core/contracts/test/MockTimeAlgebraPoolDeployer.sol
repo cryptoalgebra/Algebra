@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import '../interfaces/IAlgebraPoolDeployer.sol';
 
@@ -39,17 +40,7 @@ contract MockTimeAlgebraPoolDeployer {
         bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
         DataStorageOperator dataStorage = (new DataStorageOperator(computeAddress(initCodeHash, token0, token1)));
 
-        dataStorage.changeFeeConfiguration(
-            baseFeeConfiguration.alpha1,
-            baseFeeConfiguration.alpha2,
-            baseFeeConfiguration.beta1,
-            baseFeeConfiguration.beta2,
-            baseFeeConfiguration.gamma1,
-            baseFeeConfiguration.gamma2,
-            baseFeeConfiguration.volumeBeta,
-            baseFeeConfiguration.volumeGamma,
-            baseFeeConfiguration.baseFee
-        );
+        dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
         parameters = Parameters({dataStorage: address(dataStorage), factory: factory, token0: token0, token1: token1});
         pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
@@ -65,10 +56,6 @@ contract MockTimeAlgebraPoolDeployer {
         address token0,
         address token1
     ) internal view returns (address pool) {
-        pool = address(
-            uint256(
-                keccak256(abi.encodePacked(hex'ff', address(this), keccak256(abi.encode(token0, token1)), initCodeHash))
-            )
-        );
+        pool = address(uint256(keccak256(abi.encodePacked(hex'ff', address(this), keccak256(abi.encode(token0, token1)), initCodeHash))));
     }
 }
