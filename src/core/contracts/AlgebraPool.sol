@@ -250,12 +250,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint256 _innerFeeGrowth0Token = _position.innerFeeGrowth0Token;
         uint256 _innerFeeGrowth1Token = _position.innerFeeGrowth1Token;
         uint128 fees0;
-        if (innerFeeGrowth0Token > _innerFeeGrowth0Token) {
+        if (innerFeeGrowth0Token != _innerFeeGrowth0Token) {
             _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
             fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, currentLiquidity, Constants.Q128));
         }
         uint128 fees1;
-        if (innerFeeGrowth1Token > _innerFeeGrowth1Token) {
+        if (innerFeeGrowth1Token != _innerFeeGrowth1Token) {
             _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
             fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, currentLiquidity, Constants.Q128));
         }
