@@ -13,7 +13,6 @@ import './DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract AlgebraFactory is IAlgebraFactory {
-    // TODO: REMOVE
     bool public override isPaused;
     bool public override isPauseForbidden;
     /// @inheritdoc IAlgebraFactory
@@ -64,9 +63,7 @@ contract AlgebraFactory is IAlgebraFactory {
         require(token0 != address(0));
         require(poolByPair[token0][token1] == address(0));
 
-        IDataStorageOperator dataStorage = IDataStorageOperator(
-            address(new DataStorageOperator(computeAddress(token0, token1)))
-        );
+        IDataStorageOperator dataStorage = IDataStorageOperator(address(new DataStorageOperator(computeAddress(token0, token1))));
 
         AdaptiveFee.Configuration memory _feeConfiguration = baseFeeConfiguration;
 
@@ -120,36 +117,19 @@ contract AlgebraFactory is IAlgebraFactory {
         uint32 volumeGamma,
         uint16 baseFee
     ) external override onlyOwner {
-        baseFeeConfiguration = AdaptiveFee.Configuration(
-            alpha1,
-            alpha2,
-            beta1,
-            beta2,
-            gamma1,
-            gamma2,
-            volumeBeta,
-            volumeGamma,
-            baseFee
-        );
+        baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
     }
 
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0x7d8b2143f019f4af70a44d65323a1374f1a9acc3dcc0f0a785f80d94fd2f94db;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0xa1a0532ae59973ca5795813e7864c02ea4f12fbb2ab85c8522b8d2df3c797637;
 
     /// @notice Deterministically computes the pool address given the factory and PoolKey
     /// @param token0 first token
     /// @param token1 second token
     /// @return pool The contract address of the V3 pool
     function computeAddress(address token0, address token1) internal view returns (address pool) {
-        pool = address(
-            uint256(
-                keccak256(
-                    abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)
-                )
-            )
-        );
+        pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
     }
 
-    // TODO: remove
     function pause() external onlyOwner {
         require(!isPauseForbidden, 'Forbidden');
         isPaused = true;

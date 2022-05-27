@@ -10,6 +10,8 @@ library PIFee {
         uint16 startFee,
         uint16 currentFee
     ) internal pure returns (uint16 fee) {
+        return currentFee; // MOCK, WIP
+
         if (currentFee == maxFee) {
             return maxFee;
         }
