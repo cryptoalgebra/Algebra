@@ -60,6 +60,7 @@ contract SwapRouter is
         uint256 feeAmount,
         bytes calldata _data
     ) external override {
+        feeAmount; // not used
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();

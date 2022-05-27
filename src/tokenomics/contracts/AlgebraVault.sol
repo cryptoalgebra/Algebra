@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
@@ -5,7 +6,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import 'algebra-periphery/contracts/interfaces/ISwapRouter.sol';
 
-contract AlgebraVault{
+contract AlgebraVault {
     using SafeERC20 for IERC20;
 
     address public stakingAddress;
@@ -16,20 +17,15 @@ contract AlgebraVault{
 
     ISwapRouter AlgebraRouter;
 
-    event Swap(
-        IERC20 swappedToken,
-        bytes path,
-        uint256 amountIn,
-        uint256 amountOut
-    );
+    event Swap(IERC20 swappedToken, bytes path, uint256 amountIn, uint256 amountOut);
 
-    modifier onlyOwner(){
-        require(msg.sender == owner, "only owner can call this");
+    modifier onlyOwner() {
+        require(msg.sender == owner, 'only owner can call this');
         _;
     }
 
-    modifier onlyRelayerOrOwner(){
-        require(msg.sender == relayer || msg.sender == owner, "only relayer or owner can call this");
+    modifier onlyRelayerOrOwner() {
+        require(msg.sender == relayer || msg.sender == owner, 'only relayer or owner can call this');
         _;
     }
 
@@ -37,7 +33,7 @@ contract AlgebraVault{
         address _ALGB,
         address _stakingAddress,
         ISwapRouter _AlgebraRouter
-    ){
+    ) {
         owner = msg.sender;
         ALGB = _ALGB;
         stakingAddress = _stakingAddress;
@@ -53,21 +49,19 @@ contract AlgebraVault{
         uint256 _allowance = tokenToSwap.allowance(address(this), address(AlgebraRouter));
         uint256 balance = tokenToSwap.balanceOf(address(this));
         uint256 amountOut;
-        if (_allowance < balance){
-            if (_allowance == 0){
+        if (_allowance < balance) {
+            if (_allowance == 0) {
                 tokenToSwap.safeApprove(address(AlgebraRouter), type(uint256).max);
-            }
-            else{
-                try tokenToSwap.approve(address(AlgebraRouter), type(uint256).max) returns (bool res){
+            } else {
+                try tokenToSwap.approve(address(AlgebraRouter), type(uint256).max) returns (bool res) {
                     require(res == true, 'Vault: approve failed');
-                }
-                catch {
+                } catch {
                     tokenToSwap.safeApprove(address(AlgebraRouter), 0);
                     tokenToSwap.safeApprove(address(AlgebraRouter), type(uint256).max);
                 }
             }
         }
-        if (withFee == 0){
+        if (withFee == 0) {
             ISwapRouter.ExactInputParams memory params = ISwapRouter.ExactInputParams(
                 path,
                 stakingAddress,
@@ -75,11 +69,8 @@ contract AlgebraVault{
                 balance,
                 amountOutMin
             );
-            amountOut = AlgebraRouter.exactInput(
-                params
-            );
-        }
-        else{
+            amountOut = AlgebraRouter.exactInput(params);
+        } else {
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams(
                 address(tokenToSwap),
                 ALGB,
@@ -89,17 +80,10 @@ contract AlgebraVault{
                 amountOutMin,
                 0
             );
-            amountOut = AlgebraRouter.exactInputSingleSupportingFeeOnTransferTokens(
-                params
-            );
+            amountOut = AlgebraRouter.exactInputSingleSupportingFeeOnTransferTokens(params);
         }
 
-        emit Swap(
-            tokenToSwap,
-            path,
-            balance,
-            amountOut
-        );
+        emit Swap(tokenToSwap, path, balance, amountOut);
     }
 
     function transferALGB() external onlyRelayerOrOwner {
@@ -107,12 +91,12 @@ contract AlgebraVault{
         ALGBToken.transfer(stakingAddress, ALGBToken.balanceOf(address(this)));
     }
 
-    function setRelayer(address _relayer) external onlyOwner{
+    function setRelayer(address _relayer) external onlyOwner {
         require(_relayer != address(0));
         relayer = _relayer;
     }
 
-    function transferOwner(address _newOwner) external onlyOwner{
+    function transferOwner(address _newOwner) external onlyOwner {
         require(_newOwner != address(0));
         owner = _newOwner;
     }

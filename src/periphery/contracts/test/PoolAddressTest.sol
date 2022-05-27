@@ -14,6 +14,7 @@ contract PoolAddressTest {
         address token1,
         uint24 fee
     ) external pure returns (address) {
+        fee;
         return PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1}));
     }
 
@@ -23,6 +24,7 @@ contract PoolAddressTest {
         address token1,
         uint24 fee
     ) external view returns (uint256) {
+        fee;
         uint256 gasBefore = gasleft();
         PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1}));
         return gasBefore - gasleft();

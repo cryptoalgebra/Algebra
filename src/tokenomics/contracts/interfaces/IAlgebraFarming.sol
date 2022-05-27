@@ -36,9 +36,9 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
 
     struct Levels {
         // amount of token to reach the level
-        uint tokenAmountForLevel1;
-        uint tokenAmountForLevel2;
-        uint tokenAmountForLevel3;
+        uint256 tokenAmountForLevel1;
+        uint256 tokenAmountForLevel2;
+        uint256 tokenAmountForLevel3;
         // 1 = 0.01%
         uint32 level1multiplier;
         uint32 level2multiplier;
@@ -104,7 +104,6 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
         external
         returns (uint256 reward, uint256 bonusReward);
-
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
     /// @param rewardToken The token being distributed as a reward

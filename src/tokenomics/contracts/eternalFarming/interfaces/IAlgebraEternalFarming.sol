@@ -77,7 +77,11 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 bonusRewardRate
     ) external;
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external;
 
     function collectRewards(
         IncentiveKey memory key,
@@ -90,7 +94,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
     event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
-
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward

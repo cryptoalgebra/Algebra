@@ -51,6 +51,7 @@ contract TestAlgebraCallee is IAlgebraSwapCallback {
         uint256 feeAmount,
         bytes calldata data
     ) external override {
+        feeAmount;
         address sender = abi.decode(data, (address));
 
         if (amount0Delta > 0) {
