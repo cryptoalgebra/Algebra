@@ -123,7 +123,8 @@ describe('Quoter', () => {
         await exactInput([tokens[0].address, tokens[1].address], 300000)
 
         await provider.send('evm_mine', [])
-        await provider.send('evm_increaseTime', [60*60*2])
+        await provider.send('evm_increaseTime', [60*60*3])
+        await provider.send('evm_mine', [])
         
         const {amountOut: amountOut2, fees: fees2} = await quoter.callStatic.quoteExactInput(
           encodePath([tokens[0].address, tokens[1].address]),

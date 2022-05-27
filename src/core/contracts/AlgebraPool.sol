@@ -50,7 +50,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     /// @inheritdoc IAlgebraPoolState
     mapping(bytes32 => Position) public override positions;
 
-    // @dev Restricts everyone calling a function except factory owner
+    /// @dev Restricts everyone calling a function except factory owner
     modifier onlyFactoryOwner() {
         require(msg.sender == IAlgebraFactory(factory).owner());
         _;
@@ -553,14 +553,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
 
-    // @dev Changes fee according combination of sigmoids
+    /// @dev Changes fee according combination of sigmoids
     function _changeFee(
         uint32 _time,
         int24 _tick,
         uint16 _index,
         uint128 _liquidity
-    ) private {
-        uint16 newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
+    ) private returns (uint16 newFee) {
+        newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
         globalState.fee = newFee;
         emit ChangeFee(newFee);
     }
@@ -827,7 +827,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             if (newTimepointIndex != cache.timepointIndex) {
                 cache.timepointIndex = newTimepointIndex;
                 cache.volumePerLiquidityInBlock = 0;
-                _changeFee(blockTimestamp, currentTick, cache.timepointIndex, currentLiquidity);
+                cache.fee = _changeFee(blockTimestamp, currentTick, cache.timepointIndex, currentLiquidity);
+                cache.startFee = cache.fee;
             }
         }
 

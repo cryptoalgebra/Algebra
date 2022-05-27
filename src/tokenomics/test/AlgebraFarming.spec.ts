@@ -1804,7 +1804,7 @@ describe('AlgebraFarming', async ()=>{
 
 	    })
 
-		it.only('same range and liquidity, multipliers: 20 and 50%', async () => {
+		it('same range and liquidity, multipliers: 20 and 50%', async () => {
 			const { helpers, context, createIncentiveResult } = subject
 			type Position = {
 				lp: Wallet
@@ -1896,10 +1896,6 @@ describe('AlgebraFarming', async ()=>{
 			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
 			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
 
-			
-			console.log(reward1.add(reward2))
-			console.log(reward3.add(reward4))
-			 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
 

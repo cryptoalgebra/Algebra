@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/EternalFarms #claimReward when requesting the full amount has gas cost 1`] = `60771`;
+exports[`unit/EternalFarms #claimReward when requesting the full amount has gas cost 1`] = `60675`;
 
-exports[`unit/EternalFarms #enterFarming works and has gas cost 1`] = `356492`;
+exports[`unit/EternalFarms #enterFarming works and has gas cost 1`] = `356132`;
 
-exports[`unit/EternalFarms #exitFarming after end time works and has gas cost 1`] = `255125`;
+exports[`unit/EternalFarms #exitFarming after end time works and has gas cost 1`] = `254690`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 1`] = `246522`;
+exports[`unit/EternalFarms swap gas 3 swaps 1`] = `249486`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 2`] = `208106`;
+exports[`unit/EternalFarms swap gas 3 swaps 2`] = `211070`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 3`] = `208104`;
+exports[`unit/EternalFarms swap gas 3 swaps 3`] = `211068`;
