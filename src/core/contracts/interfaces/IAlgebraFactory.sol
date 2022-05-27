@@ -93,11 +93,6 @@ interface IAlgebraFactory {
     // TODO: doc
     function setVaultAddress(address _vaultAddress) external;
 
-    // TODO: remove
-    function isPaused() external returns (bool);
-
-    function isPauseForbidden() external returns (bool);
-
     function setBaseFeeConfiguration(
         uint32 alpha1,
         uint32 alpha2,

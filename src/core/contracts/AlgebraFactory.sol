@@ -13,8 +13,6 @@ import './DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract AlgebraFactory is IAlgebraFactory {
-    bool public override isPaused;
-    bool public override isPauseForbidden;
     /// @inheritdoc IAlgebraFactory
     address public override owner;
 
@@ -127,20 +125,5 @@ contract AlgebraFactory is IAlgebraFactory {
     /// @return pool The contract address of the V3 pool
     function computeAddress(address token0, address token1) internal view returns (address pool) {
         pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
-    }
-
-    function pause() external onlyOwner {
-        require(!isPauseForbidden, 'Forbidden');
-        isPaused = true;
-    }
-
-    function unpause() external onlyOwner {
-        isPaused = false;
-    }
-
-    function forbidPause() external onlyOwner {
-        require(!isPauseForbidden, 'Already forbidden');
-        isPauseForbidden = true;
-        isPaused = false;
     }
 }
