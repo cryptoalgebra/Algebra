@@ -8,50 +8,50 @@ pragma solidity >=0.5.0;
  * of the pool being constant allowing the CREATE2 address of the pool to be cheaply computed on-chain
  */
 interface IAlgebraPoolDeployer {
-    /**
-     *  @notice Emitted when the factory address is changed
-     *  @param factory The factory address before the address was changed
-     *  @param _factory The factory address after the address was changed
-     */
-    event FactoryChanged(address indexed factory, address indexed _factory);
+  /**
+   *  @notice Emitted when the factory address is changed
+   *  @param factory The factory address before the address was changed
+   *  @param _factory The factory address after the address was changed
+   */
+  event FactoryChanged(address indexed factory, address indexed _factory);
 
-    /**
-     * @notice Get the parameters to be used in constructing the pool, set transiently during pool creation.
-     * @dev Called by the pool constructor to fetch the parameters of the pool
-     * Returns dataStorage The pools associated dataStorage
-     * Returns factory The factory address
-     * Returns token0 The first token of the pool by address sort order
-     * Returns token1 The second token of the pool by address sort order
-     */
-    function parameters()
-        external
-        view
-        returns (
-            address dataStorage,
-            address factory,
-            address token0,
-            address token1
-        );
+  /**
+   * @notice Get the parameters to be used in constructing the pool, set transiently during pool creation.
+   * @dev Called by the pool constructor to fetch the parameters of the pool
+   * Returns dataStorage The pools associated dataStorage
+   * Returns factory The factory address
+   * Returns token0 The first token of the pool by address sort order
+   * Returns token1 The second token of the pool by address sort order
+   */
+  function parameters()
+    external
+    view
+    returns (
+      address dataStorage,
+      address factory,
+      address token0,
+      address token1
+    );
 
-    /**
-     * @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
-     * clearing it after deploying the pool.
-     * @param dataStorage The pools associated dataStorage
-     * @param factory The contract address of the Algebra factory
-     * @param token0 The first token of the pool by address sort order
-     * @param token1 The second token of the pool by address sort order
-     * @return pool The deployed pool's address
-     */
-    function deploy(
-        address dataStorage,
-        address factory,
-        address token0,
-        address token1
-    ) external returns (address pool);
+  /**
+   * @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
+   * clearing it after deploying the pool.
+   * @param dataStorage The pools associated dataStorage
+   * @param factory The contract address of the Algebra factory
+   * @param token0 The first token of the pool by address sort order
+   * @param token1 The second token of the pool by address sort order
+   * @return pool The deployed pool's address
+   */
+  function deploy(
+    address dataStorage,
+    address factory,
+    address token0,
+    address token1
+  ) external returns (address pool);
 
-    /**
-     * @dev Sets the factory address to the poolDeployer for permissioned actions
-     * @param factory The address of the Algebra factory
-     */
-    function setFactory(address factory) external;
+  /**
+   * @dev Sets the factory address to the poolDeployer for permissioned actions
+   * @param factory The address of the Algebra factory
+   */
+  function setFactory(address factory) external;
 }

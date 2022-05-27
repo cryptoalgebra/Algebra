@@ -246,7 +246,11 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     }
 
     /// @inheritdoc IAlgebraEternalFarming
-    function enterFarming(IncentiveKey calldata key, uint256 tokenId, uint256 tokensLocked) external override onlyFarmingCenter {
+    function enterFarming(
+        IncentiveKey calldata key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         require(incentives[incentiveId].totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive'); // TOD

@@ -59,7 +59,7 @@ interface IFarmingCenter is
     /// @return tickUpper The upper tick of the range
     /// @return numberOfFarms
     /// @return owner
-    /// @return inLimitFarming 
+    /// @return inLimitFarming
     /// @return tokensLocked
     function deposits(uint256 tokenId)
         external
@@ -76,7 +76,11 @@ interface IFarmingCenter is
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
 
-    function enterEternalFarming(IncentiveKey memory key, uint256 tokenId,uint256 tokensLocked) external;
+    function enterEternalFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external;
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
 
@@ -95,7 +99,11 @@ interface IFarmingCenter is
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external;
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 

@@ -2,27 +2,27 @@
 pragma solidity =0.7.6;
 
 interface IAlgebraVirtualPool {
-    enum Status {
-        NOT_EXIST,
-        ACTIVE,
-        NOT_STARTED
-    }
+  enum Status {
+    NOT_EXIST,
+    ACTIVE,
+    NOT_STARTED
+  }
 
-    /**
-     * @dev This function is called by the main pool when an initialized tick is crossed there.
-     * If the tick is also initialized in a virtual pool it should ne crossed too
-     * @param nextTick The crossed tick
-     * @param zeroForOne The direction
-     */
-    function cross(int24 nextTick, bool zeroForOne) external;
+  /**
+   * @dev This function is called by the main pool when an initialized tick is crossed there.
+   * If the tick is also initialized in a virtual pool it should ne crossed too
+   * @param nextTick The crossed tick
+   * @param zeroForOne The direction
+   */
+  function cross(int24 nextTick, bool zeroForOne) external;
 
-    // This function updates the #prevLiquidity
-    function processSwap() external;
+  // This function updates the #prevLiquidity
+  function processSwap() external;
 
-    /**
-     * @dev This function is called from the main pool before every swap To increase seconds per liquidity
-     * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
-     * @param currentTimestamp The timestamp of the current swap
-     */
-    function increaseCumulative(uint32 currentTimestamp) external returns (Status);
+  /**
+   * @dev This function is called from the main pool before every swap To increase seconds per liquidity
+   * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
+   * @param currentTimestamp The timestamp of the current swap
+   */
+  function increaseCumulative(uint32 currentTimestamp) external returns (Status);
 }

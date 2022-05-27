@@ -7,14 +7,13 @@ import '../../interfaces/IAlgebraFarming.sol';
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraIncentiveFarming is IAlgebraFarming {
-
     struct IncentiveParams {
         uint256 reward;
         uint256 bonusReward;
         address multiplierToken;
         uint32 enterStartTime;
     }
-    
+
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
@@ -46,17 +45,21 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         external
         view
         returns (
-                uint256 totalReward,
-                uint256 bonusReward,
-                address virtualPoolAddress,
-                uint96 numberOfFarms,
-                bool isPoolCreated,
-                uint224 totalLiquidity,
-                address multiplierToken,
-                Levels memory levels
+            uint256 totalReward,
+            uint256 bonusReward,
+            address virtualPoolAddress,
+            uint96 numberOfFarms,
+            bool isPoolCreated,
+            uint224 totalLiquidity,
+            address multiplierToken,
+            Levels memory levels
         );
-    
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
+
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external;
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
@@ -82,8 +85,8 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
-    /// @param tokensLocked The amount of tokens locked for multiplier 
+    /// @param tokensLocked The amount of tokens locked for multiplier
     event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
-    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward,bytes32 incentiveId);
+    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId);
 }
