@@ -906,10 +906,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                     }
                     int128 liquidityDelta;
                     if (zeroForOne) {
-                        // <-----------------------
-                        //    delta=-x  delta=x
-                        //         ________
-                        // _______|        |________
                         liquidityDelta = -ticks.cross(
                             step.nextTick,
                             cache.totalFeeGrowth, // A == 0
@@ -919,11 +915,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                             blockTimestamp
                         );
                     } else {
-                        // ----------------------->
-                        //    delta=x  delta=-x
-                        //         ________
-                        // _______|        |________
-                        //
                         liquidityDelta = ticks.cross(
                             step.nextTick,
                             cache.totalFeeGrowthB, // B == 0
@@ -936,16 +927,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
                     currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
                 }
-                //                          nextTick=x+1
-                //      currentTick=x<------------------
-                //          tick=x  |    tick=x+1
-                // ___________|_____|_______|___________
-                //
-                //
-                //  nextTick=x
-                //  ---------------> currentTick=x
-                //          tick=x  |    tick=x+1
-                // ___________|_____|_______|___________
 
                 currentTick = zeroForOne ? step.nextTick - 1 : step.nextTick;
             } else if (currentPrice != step.stepSqrtPrice) {
