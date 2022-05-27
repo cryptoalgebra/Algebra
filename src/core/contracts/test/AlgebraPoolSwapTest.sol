@@ -23,13 +23,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
             uint160 nextSqrtRatio
         )
     {
-        (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(
-            address(0),
-            zeroForOne,
-            amountSpecified,
-            limitSqrtPrice,
-            abi.encode(msg.sender)
-        );
+        (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(address(0), zeroForOne, amountSpecified, limitSqrtPrice, abi.encode(msg.sender));
 
         (nextSqrtRatio, , , , , , , ) = IAlgebraPool(pool).globalState();
     }
@@ -40,6 +34,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
         uint256 feeAmount,
         bytes calldata data
     ) external override {
+        feeAmount;
         address sender = abi.decode(data, (address));
 
         if (amount0Delta > 0) {

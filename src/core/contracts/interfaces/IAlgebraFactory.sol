@@ -54,7 +54,6 @@ interface IAlgebraFactory {
      */
     function farmingAddress() external view returns (address);
 
-    // TODO: documentation
     function vaultAddress() external view returns (address);
 
     /**
@@ -90,7 +89,10 @@ interface IAlgebraFactory {
      */
     function setFarmingAddress(address _farmingAddress) external;
 
-    // TODO: doc
+    /**
+     * @dev updates vault address on the factory
+     * @param _vaultAddress The new vault contract address
+     */
     function setVaultAddress(address _vaultAddress) external;
 
     function setBaseFeeConfiguration(

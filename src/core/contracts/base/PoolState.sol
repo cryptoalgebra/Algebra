@@ -39,7 +39,7 @@ abstract contract PoolState is IAlgebraPoolState {
     /// @inheritdoc IAlgebraPoolState
     mapping(int16 => uint256) public override tickTable;
 
-    // @dev Reentrancy protection. Implemented in every function of the contract since there are checks of balances.
+    /// @dev Reentrancy protection. Implemented in every function of the contract since there are checks of balances.
     modifier lock() {
         require(globalState.unlocked, 'LOK');
         globalState.unlocked = false;
@@ -47,10 +47,8 @@ abstract contract PoolState is IAlgebraPoolState {
         globalState.unlocked = true;
     }
 
-    /**
-     * @dev This function is created for testing by overriding it.
-     * @return A timestamp converted to uint32
-     */
+    /// @dev This function is created for testing by overriding it.
+    /// @return A timestamp converted to uint32
     function _blockTimestamp() internal view virtual returns (uint32) {
         return uint32(block.timestamp); // truncation is desired
     }

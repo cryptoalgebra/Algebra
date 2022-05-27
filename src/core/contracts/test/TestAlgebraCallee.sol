@@ -32,14 +32,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
         address recipient,
         uint160 limitSqrtPrice
     ) external {
-        IAlgebraPool(pool).swapSupportingFeeOnInputTokens(
-            msg.sender,
-            recipient,
-            true,
-            amount0In.toInt256(),
-            limitSqrtPrice,
-            abi.encode(msg.sender)
-        );
+        IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, amount0In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
     }
 
     function swap0ForExact1(
@@ -66,14 +59,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
         address recipient,
         uint160 limitSqrtPrice
     ) external {
-        IAlgebraPool(pool).swapSupportingFeeOnInputTokens(
-            msg.sender,
-            recipient,
-            false,
-            amount1In.toInt256(),
-            limitSqrtPrice,
-            abi.encode(msg.sender)
-        );
+        IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, amount1In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
     }
 
     function swap1ForExact0(
@@ -109,6 +95,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
         uint256 feeAmount,
         bytes calldata data
     ) external override {
+        feeAmount;
         address sender = abi.decode(data, (address));
 
         emit SwapCallback(amount0Delta, amount1Delta);
@@ -159,10 +146,8 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     ) external override {
         address sender = abi.decode(data, (address));
 
-        if (amount0Owed > 0)
-            IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, amount0Owed);
-        if (amount1Owed > 0)
-            IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, amount1Owed);
+        if (amount0Owed > 0) IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, amount0Owed);
+        if (amount1Owed > 0) IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, amount1Owed);
 
         emit MintCallback(amount0Owed, amount1Owed);
     }

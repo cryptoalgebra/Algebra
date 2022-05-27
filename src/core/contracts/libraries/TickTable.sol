@@ -26,34 +26,13 @@ library TickTable {
     function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
         assembly {
             singleBitPos := gt(and(word, 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA), 0)
-            singleBitPos := or(
-                singleBitPos,
-                shl(7, gt(and(word, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(6, gt(and(word, 0xFFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(5, gt(and(word, 0xFFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(4, gt(and(word, 0xFFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(3, gt(and(word, 0xFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(2, gt(and(word, 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0), 0))
-            )
-            singleBitPos := or(
-                singleBitPos,
-                shl(1, gt(and(word, 0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC), 0))
-            )
+            singleBitPos := or(singleBitPos, shl(7, gt(and(word, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000), 0)))
+            singleBitPos := or(singleBitPos, shl(6, gt(and(word, 0xFFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000), 0)))
+            singleBitPos := or(singleBitPos, shl(5, gt(and(word, 0xFFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000), 0)))
+            singleBitPos := or(singleBitPos, shl(4, gt(and(word, 0xFFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000), 0)))
+            singleBitPos := or(singleBitPos, shl(3, gt(and(word, 0xFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00), 0)))
+            singleBitPos := or(singleBitPos, shl(2, gt(and(word, 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0), 0)))
+            singleBitPos := or(singleBitPos, shl(1, gt(and(word, 0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC), 0)))
         }
     }
 
@@ -97,8 +76,7 @@ library TickTable {
                 bitNumber := and(tick, 0xFF)
                 rowNumber := shr(8, tick)
             }
-            // all the 1s at or to the right of the current bitNumber
-            uint256 _row = self[rowNumber] << (255 - bitNumber);
+            uint256 _row = self[rowNumber] << (255 - bitNumber); // all the 1s at or to the right of the current bitNumber
 
             if (_row != 0) {
                 tick -= int24(255 - getMostSignificantBit(_row));

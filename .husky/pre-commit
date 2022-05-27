@@ -3,6 +3,4 @@
 
 npx lerna run precommit --concurrency 1 --stream --since HEAD
 
-npm run docgen
-
 git add docs
