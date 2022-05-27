@@ -24,9 +24,7 @@ library AdaptiveFee {
         uint256 sigm1 = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1);
         uint256 sigm2 = sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
-        fee =
-            uint256(config.baseFee) +
-            sigmoid(volumePerLiquidity, config.volumeGamma, sigm1 + sigm2, config.volumeBeta);
+        fee = uint256(config.baseFee) + sigmoid(volumePerLiquidity, config.volumeGamma, sigm1 + sigm2, config.volumeBeta);
     }
 
     function sigmoid(
@@ -49,21 +47,7 @@ library AdaptiveFee {
     }
 
     function exp(uint256 x, uint256 g) internal pure returns (uint256 res) {
-        return
-            g**7 +
-            x *
-            g**6 +
-            (x**2 * g**5) /
-            2 +
-            (x**3 * g**4) /
-            6 +
-            (x**4 * g**3) /
-            24 +
-            (x**5 * g**2) /
-            120 +
-            (x**6 * g) /
-            720 +
-            x**7 /
-            (720 * 7);
+        return g**7 + x * g**6 + (x**2 * g**5) / 2 + (x**3 * g**4) / 6 + (x**4 * g**3) /
+            24 + (x**5 * g**2) / 120 + (x**6 * g) / 720 + x**7 /(720 * 7);
     }
 }
