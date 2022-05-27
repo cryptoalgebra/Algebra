@@ -61,18 +61,14 @@ library PriceMovementMath {
                 uint256 product;
                 if ((product = amount * price) / amount == price) {
                     uint256 denominator = liquidityShifted + product;
-                    if (denominator >= liquidityShifted)
-                        // always fits in 160 bits
-                        return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator));
+                    if (denominator >= liquidityShifted) return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator)); // always fits in 160 bits
                 }
 
                 return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
             } else {
                 uint256 product;
-                // if the product overflows, we know the denominator underflows
-                // in addition, we must check that the denominator does not underflow
-                require((product = amount * price) / amount == price);
-                require(liquidityShifted > product);
+                require((product = amount * price) / amount == price); // if the product overflows, we know the denominator underflows
+                require(liquidityShifted > product); // in addition, we must check that the denominator does not underflow
                 return FullMath.mulDivRoundingUp(liquidityShifted, price, liquidityShifted - product).toUint160();
             }
         } else {
@@ -93,8 +89,7 @@ library PriceMovementMath {
                     : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
 
                 require(price > quotient);
-                // always fits 160 bits
-                return uint160(price - quotient);
+                return uint160(price - quotient); // always fits 160 bits
             }
         }
     }
@@ -159,9 +154,7 @@ library PriceMovementMath {
             uint256 feeAmount
         )
     {
-        function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroForOne
-            ? getTokenADelta01
-            : getTokenADelta10;
+        function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroForOne ? getTokenADelta01 : getTokenADelta10;
 
         if (amountAvailable >= 0) {
             // exactIn or not
@@ -173,7 +166,6 @@ library PriceMovementMath {
             } else {
                 resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroForOne);
                 if (targetPrice != resultPrice) {
-                    // != MAX
                     input = getAmountA(resultPrice, currentPrice, liquidity);
 
                     // we didn't reach the target, so take the remainder of the maximum input as fee
@@ -185,9 +177,7 @@ library PriceMovementMath {
 
             output = (zeroForOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
         } else {
-            function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroForOne
-                ? getTokenBDelta01
-                : getTokenBDelta10;
+            function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroForOne ? getTokenBDelta01 : getTokenBDelta10;
 
             output = getAmountB(targetPrice, currentPrice, liquidity);
             if (uint256(-amountAvailable) >= output) resultPrice = targetPrice;
@@ -195,7 +185,6 @@ library PriceMovementMath {
                 resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(-amountAvailable), zeroForOne);
 
                 if (targetPrice != resultPrice) {
-                    // != MAX
                     output = getAmountB(resultPrice, currentPrice, liquidity);
                 }
 
