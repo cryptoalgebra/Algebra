@@ -1,169 +1,169 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AlgebraPool gas tests fee is off #burn above current price burn entire position after some time passes 1`] = `106747`;
+exports[`AlgebraPool gas tests fee is off #burn above current price burn entire position after some time passes 1`] = `106573`;
 
-exports[`AlgebraPool gas tests fee is off #burn above current price burn when only position using ticks 1`] = `106747`;
+exports[`AlgebraPool gas tests fee is off #burn above current price burn when only position using ticks 1`] = `106573`;
 
-exports[`AlgebraPool gas tests fee is off #burn above current price entire position burn but other positions are using the ticks 1`] = `109187`;
+exports[`AlgebraPool gas tests fee is off #burn above current price entire position burn but other positions are using the ticks 1`] = `108970`;
 
-exports[`AlgebraPool gas tests fee is off #burn above current price partial position burn 1`] = `114018`;
+exports[`AlgebraPool gas tests fee is off #burn above current price partial position burn 1`] = `113801`;
 
-exports[`AlgebraPool gas tests fee is off #burn around current price burn entire position after some time passes 1`] = `165728`;
+exports[`AlgebraPool gas tests fee is off #burn around current price burn entire position after some time passes 1`] = `166180`;
 
-exports[`AlgebraPool gas tests fee is off #burn around current price burn when only position using ticks 1`] = `114341`;
+exports[`AlgebraPool gas tests fee is off #burn around current price burn when only position using ticks 1`] = `114513`;
 
-exports[`AlgebraPool gas tests fee is off #burn around current price entire position burn but other positions are using the ticks 1`] = `108280`;
+exports[`AlgebraPool gas tests fee is off #burn around current price entire position burn but other positions are using the ticks 1`] = `108495`;
 
-exports[`AlgebraPool gas tests fee is off #burn around current price partial position burn 1`] = `113111`;
+exports[`AlgebraPool gas tests fee is off #burn around current price partial position burn 1`] = `113326`;
 
-exports[`AlgebraPool gas tests fee is off #burn below current price burn entire position after some time passes 1`] = `116141`;
+exports[`AlgebraPool gas tests fee is off #burn below current price burn entire position after some time passes 1`] = `115960`;
 
-exports[`AlgebraPool gas tests fee is off #burn below current price burn when only position using ticks 1`] = `116141`;
+exports[`AlgebraPool gas tests fee is off #burn below current price burn when only position using ticks 1`] = `115960`;
 
-exports[`AlgebraPool gas tests fee is off #burn below current price entire position burn but other positions are using the ticks 1`] = `109730`;
+exports[`AlgebraPool gas tests fee is off #burn below current price entire position burn but other positions are using the ticks 1`] = `109504`;
 
-exports[`AlgebraPool gas tests fee is off #burn below current price partial position burn 1`] = `114561`;
+exports[`AlgebraPool gas tests fee is off #burn below current price partial position burn 1`] = `114335`;
 
 exports[`AlgebraPool gas tests fee is off #collect close to worst case 1`] = `47868`;
 
-exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick above 1`] = `30386`;
+exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick above 1`] = `30010`;
 
-exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick below 1`] = `30345`;
+exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick below 1`] = `29978`;
 
-exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick inside 1`] = `52350`;
+exports[`AlgebraPool gas tests fee is off #getInnerCumulatives tick inside 1`] = `52493`;
 
-exports[`AlgebraPool gas tests fee is off #mint above current price add to position after some time passes 1`] = `133591`;
+exports[`AlgebraPool gas tests fee is off #mint above current price add to position after some time passes 1`] = `127583`;
 
-exports[`AlgebraPool gas tests fee is off #mint above current price add to position existing 1`] = `133591`;
+exports[`AlgebraPool gas tests fee is off #mint above current price add to position existing 1`] = `127583`;
 
-exports[`AlgebraPool gas tests fee is off #mint above current price new position mint first in range 1`] = `252149`;
+exports[`AlgebraPool gas tests fee is off #mint above current price new position mint first in range 1`] = `246141`;
 
-exports[`AlgebraPool gas tests fee is off #mint above current price second position in same range 1`] = `150691`;
+exports[`AlgebraPool gas tests fee is off #mint above current price second position in same range 1`] = `144683`;
 
-exports[`AlgebraPool gas tests fee is off #mint around current price add to position after some time passes 1`] = `226483`;
+exports[`AlgebraPool gas tests fee is off #mint around current price add to position after some time passes 1`] = `221240`;
 
-exports[`AlgebraPool gas tests fee is off #mint around current price add to position existing 1`] = `159450`;
+exports[`AlgebraPool gas tests fee is off #mint around current price add to position existing 1`] = `153856`;
 
-exports[`AlgebraPool gas tests fee is off #mint around current price new position mint first in range 1`] = `408220`;
+exports[`AlgebraPool gas tests fee is off #mint around current price new position mint first in range 1`] = `402977`;
 
-exports[`AlgebraPool gas tests fee is off #mint around current price second position in same range 1`] = `176550`;
+exports[`AlgebraPool gas tests fee is off #mint around current price second position in same range 1`] = `170956`;
 
-exports[`AlgebraPool gas tests fee is off #mint below current price add to position after some time passes 1`] = `134526`;
+exports[`AlgebraPool gas tests fee is off #mint below current price add to position after some time passes 1`] = `128500`;
 
-exports[`AlgebraPool gas tests fee is off #mint below current price add to position existing 1`] = `134526`;
+exports[`AlgebraPool gas tests fee is off #mint below current price add to position existing 1`] = `128500`;
 
-exports[`AlgebraPool gas tests fee is off #mint below current price new position mint first in range 1`] = `335642`;
+exports[`AlgebraPool gas tests fee is off #mint below current price new position mint first in range 1`] = `329616`;
 
-exports[`AlgebraPool gas tests fee is off #mint below current price second position in same range 1`] = `151626`;
+exports[`AlgebraPool gas tests fee is off #mint below current price second position in same range 1`] = `145600`;
 
-exports[`AlgebraPool gas tests fee is off #poke best case 1`] = `49576`;
+exports[`AlgebraPool gas tests fee is off #poke best case 1`] = `48916`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `192158`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `198232`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block with no tick movement 1`] = `185938`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block with no tick movement 1`] = `190122`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `214614`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `223085`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `267824`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `281975`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `204542`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `214386`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `267834`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `281975`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `287034`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `301175`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `127253`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `129846`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block with no tick movement 1`] = `121083`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block with no tick movement 1`] = `121786`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `147673`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `150783`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `200885`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `209655`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 several large swaps with pauses 1`] = `312313`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 several large swaps with pauses 1`] = `326464`;
 
-exports[`AlgebraPool gas tests fee is off #swapExact0For1 small swap after several large swaps with pauses 1`] = `211772`;
+exports[`AlgebraPool gas tests fee is off #swapExact0For1 small swap after several large swaps with pauses 1`] = `215956`;
 
-exports[`AlgebraPool gas tests fee is on #burn above current price burn entire position after some time passes 1`] = `106747`;
+exports[`AlgebraPool gas tests fee is on #burn above current price burn entire position after some time passes 1`] = `106573`;
 
-exports[`AlgebraPool gas tests fee is on #burn above current price burn when only position using ticks 1`] = `106747`;
+exports[`AlgebraPool gas tests fee is on #burn above current price burn when only position using ticks 1`] = `106573`;
 
-exports[`AlgebraPool gas tests fee is on #burn above current price entire position burn but other positions are using the ticks 1`] = `109187`;
+exports[`AlgebraPool gas tests fee is on #burn above current price entire position burn but other positions are using the ticks 1`] = `108970`;
 
-exports[`AlgebraPool gas tests fee is on #burn above current price partial position burn 1`] = `114018`;
+exports[`AlgebraPool gas tests fee is on #burn above current price partial position burn 1`] = `113801`;
 
-exports[`AlgebraPool gas tests fee is on #burn around current price burn entire position after some time passes 1`] = `165728`;
+exports[`AlgebraPool gas tests fee is on #burn around current price burn entire position after some time passes 1`] = `166180`;
 
-exports[`AlgebraPool gas tests fee is on #burn around current price burn when only position using ticks 1`] = `114341`;
+exports[`AlgebraPool gas tests fee is on #burn around current price burn when only position using ticks 1`] = `114513`;
 
-exports[`AlgebraPool gas tests fee is on #burn around current price entire position burn but other positions are using the ticks 1`] = `108280`;
+exports[`AlgebraPool gas tests fee is on #burn around current price entire position burn but other positions are using the ticks 1`] = `108495`;
 
-exports[`AlgebraPool gas tests fee is on #burn around current price partial position burn 1`] = `113111`;
+exports[`AlgebraPool gas tests fee is on #burn around current price partial position burn 1`] = `113326`;
 
-exports[`AlgebraPool gas tests fee is on #burn below current price burn entire position after some time passes 1`] = `116141`;
+exports[`AlgebraPool gas tests fee is on #burn below current price burn entire position after some time passes 1`] = `115960`;
 
-exports[`AlgebraPool gas tests fee is on #burn below current price burn when only position using ticks 1`] = `116141`;
+exports[`AlgebraPool gas tests fee is on #burn below current price burn when only position using ticks 1`] = `115960`;
 
-exports[`AlgebraPool gas tests fee is on #burn below current price entire position burn but other positions are using the ticks 1`] = `109730`;
+exports[`AlgebraPool gas tests fee is on #burn below current price entire position burn but other positions are using the ticks 1`] = `109504`;
 
-exports[`AlgebraPool gas tests fee is on #burn below current price partial position burn 1`] = `114561`;
+exports[`AlgebraPool gas tests fee is on #burn below current price partial position burn 1`] = `114335`;
 
 exports[`AlgebraPool gas tests fee is on #collect close to worst case 1`] = `47868`;
 
-exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick above 1`] = `30386`;
+exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick above 1`] = `30010`;
 
-exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick below 1`] = `30345`;
+exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick below 1`] = `29978`;
 
-exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick inside 1`] = `52350`;
+exports[`AlgebraPool gas tests fee is on #getInnerCumulatives tick inside 1`] = `52493`;
 
-exports[`AlgebraPool gas tests fee is on #mint above current price add to position after some time passes 1`] = `133591`;
+exports[`AlgebraPool gas tests fee is on #mint above current price add to position after some time passes 1`] = `127583`;
 
-exports[`AlgebraPool gas tests fee is on #mint above current price add to position existing 1`] = `133591`;
+exports[`AlgebraPool gas tests fee is on #mint above current price add to position existing 1`] = `127583`;
 
-exports[`AlgebraPool gas tests fee is on #mint above current price new position mint first in range 1`] = `252149`;
+exports[`AlgebraPool gas tests fee is on #mint above current price new position mint first in range 1`] = `246141`;
 
-exports[`AlgebraPool gas tests fee is on #mint above current price second position in same range 1`] = `150691`;
+exports[`AlgebraPool gas tests fee is on #mint above current price second position in same range 1`] = `144683`;
 
-exports[`AlgebraPool gas tests fee is on #mint around current price add to position after some time passes 1`] = `226483`;
+exports[`AlgebraPool gas tests fee is on #mint around current price add to position after some time passes 1`] = `221240`;
 
-exports[`AlgebraPool gas tests fee is on #mint around current price add to position existing 1`] = `159450`;
+exports[`AlgebraPool gas tests fee is on #mint around current price add to position existing 1`] = `153856`;
 
-exports[`AlgebraPool gas tests fee is on #mint around current price new position mint first in range 1`] = `408220`;
+exports[`AlgebraPool gas tests fee is on #mint around current price new position mint first in range 1`] = `402977`;
 
-exports[`AlgebraPool gas tests fee is on #mint around current price second position in same range 1`] = `176550`;
+exports[`AlgebraPool gas tests fee is on #mint around current price second position in same range 1`] = `170956`;
 
-exports[`AlgebraPool gas tests fee is on #mint below current price add to position after some time passes 1`] = `134526`;
+exports[`AlgebraPool gas tests fee is on #mint below current price add to position after some time passes 1`] = `128500`;
 
-exports[`AlgebraPool gas tests fee is on #mint below current price add to position existing 1`] = `134526`;
+exports[`AlgebraPool gas tests fee is on #mint below current price add to position existing 1`] = `128500`;
 
-exports[`AlgebraPool gas tests fee is on #mint below current price new position mint first in range 1`] = `335642`;
+exports[`AlgebraPool gas tests fee is on #mint below current price new position mint first in range 1`] = `329616`;
 
-exports[`AlgebraPool gas tests fee is on #mint below current price second position in same range 1`] = `151626`;
+exports[`AlgebraPool gas tests fee is on #mint below current price second position in same range 1`] = `145600`;
 
-exports[`AlgebraPool gas tests fee is on #poke best case 1`] = `49576`;
+exports[`AlgebraPool gas tests fee is on #poke best case 1`] = `48916`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `204178`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `212757`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block with no tick movement 1`] = `186060`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block with no tick movement 1`] = `190226`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `226756`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `237714`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `280332`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `296916`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `216806`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `229119`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `280342`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `296916`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `299542`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `316116`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `139273`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `144371`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block with no tick movement 1`] = `121205`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block with no tick movement 1`] = `121890`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `159693`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `165308`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `213271`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `224492`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 several large swaps with pauses 1`] = `324821`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 several large swaps with pauses 1`] = `341405`;
 
-exports[`AlgebraPool gas tests fee is on #swapExact0For1 small swap after several large swaps with pauses 1`] = `211894`;
+exports[`AlgebraPool gas tests fee is on #swapExact0For1 small swap after several large swaps with pauses 1`] = `216060`;

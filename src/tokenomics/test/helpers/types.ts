@@ -1,4 +1,4 @@
-import { BigNumber, Wallet, Contract } from 'ethers'
+import { BigNumber, Wallet, Contract, ContractTransaction } from 'ethers'
 import { TestERC20 } from '../../typechain'
 import { FeeAmount } from '../shared'
 
@@ -14,7 +14,19 @@ export module HelperTypes {
       endTime?: number
       totalReward: BigNumber
       bonusReward: BigNumber
-      refundee?: string
+      enterStartTime?: BigNumber
+      
+      algbAmountForLevel1?: BigNumber
+      algbAmountForLevel2?: BigNumber
+      algbAmountForLevel3?: BigNumber
+      level1multiplier?: BigNumber
+      level2multiplier?: BigNumber
+      level3multiplier?: BigNumber
+      multiplierToken?: string
+
+      eternal? : boolean
+      rewardRate?: BigNumber,
+      bonusRewardRate?: BigNumber
     }
     export type Result = {
       poolAddress: string
@@ -24,9 +36,9 @@ export module HelperTypes {
       totalReward: BigNumber
       startTime: number
       endTime: number
-      refundee: string
       virtualPool: Contract
     }
+
 
     export type Command = CommandFunction<Args, Result>
   }
@@ -38,6 +50,8 @@ export module HelperTypes {
       amountsToFarm: [BigNumber, BigNumber]
       ticks: [number, number]
       createIncentiveResult: CreateIncentive.Result
+      eternal?: boolean
+      tokensLocked?: BigNumber
     }
 
     export type Result = {
@@ -110,6 +124,18 @@ export module HelperTypes {
     }
 
     type Result = { currentTick: number }
+
+    export type Command = CommandFunction<Args, Result>
+  }
+
+  export module MakeSwapGasCheck {
+    type Args = {
+      direction: 'up' | 'down'
+      desiredValue?: number
+      trader?: Wallet
+    }
+
+    type Result = ContractTransaction
 
     export type Command = CommandFunction<Args, Result>
   }

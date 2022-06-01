@@ -2,7 +2,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-interface IAlgebraVirtualPool {
+import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
+
+interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPool {
+    // The timestamp when the active incentive is finished
+    function desiredEndTimestamp() external returns (uint32);
+
+    // The first swap after this timestamp is going to initialize the virtual pool
+    function desiredStartTimestamp() external returns (uint32);
+
     // returns the timestamp of the first swap after start timestamp
     function initTimestamp() external returns (uint32);
 
@@ -15,17 +23,17 @@ interface IAlgebraVirtualPool {
     // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
     function globalSecondsPerLiquidityCumulative() external returns (uint160);
 
-    // returns the current liquidity in virtual pool
-    function currentLiquidity() external returns (uint128);
-
-    // returns the current tick in virtual pool
-    function globalTick() external returns (int24);
-
     // returns the liquidity after previous swap (like the last timepoint in a default pool)
     function prevLiquidity() external returns (uint128);
 
+    // returns the current liquidity in virtual pool
+    function currentLiquidity() external returns (uint128);
+
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
-    function _prevTimestamp() external returns (uint32);
+    function prevTimestamp() external returns (uint32);
+
+    // returns the current tick in virtual pool
+    function globalTick() external returns (int24);
 
     // returns data associated with a tick
     function ticks(int24 tickId)
@@ -57,14 +65,6 @@ interface IAlgebraVirtualPool {
     ) external;
 
     /**
-     * @dev This function is called by the main pool when an initialized tick is crossed there.
-     * If the tick is also initialized in a virtual pool it should ne crossed too
-     * @param nextTick The crossed tick
-     * @param zeroForOne The direction
-     */
-    function cross(int24 nextTick, bool zeroForOne) external;
-
-    /**
      * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestamp
      * @param _endTimestamp The timestamp of the exitFarming
      * @param startTime The timestamp of planned start of the incentive. Used as initTimestamp
@@ -77,8 +77,8 @@ interface IAlgebraVirtualPool {
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-     * Returns initTime the #initTimestamp
-     * Returns endTime the #endTimestamp
+     * @return initTime the #initTimestamp
+     * @return endTime the #endTimestamp
      */
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external
@@ -88,15 +88,4 @@ interface IAlgebraVirtualPool {
             uint32 initTime,
             uint32 endTime
         );
-
-    // This function updates the #prevLiquidity
-    function processSwap() external;
-
-    /**
-     * @dev This function is called from the main pool before every swap To increase seconds per liquidity
-     * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
-     * @param previousTimestamp The timestamp of the previous swap
-     * @param currentTimestamp The timestamp of the current swap
-     */
-    function increaseCumulative(uint32 previousTimestamp, uint32 currentTimestamp) external;
 }

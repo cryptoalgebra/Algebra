@@ -7,44 +7,40 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 
 contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
-    int256 private _amount0Delta;
-    int256 private _amount1Delta;
+  int256 private _amount0Delta;
+  int256 private _amount1Delta;
 
-    function getSwapResult(
-        address pool,
-        bool zeroForOne,
-        int256 amountSpecified,
-        uint160 limitSqrtPrice
+  function getSwapResult(
+    address pool,
+    bool zeroForOne,
+    int256 amountSpecified,
+    uint160 limitSqrtPrice
+  )
+    external
+    returns (
+      int256 amount0Delta,
+      int256 amount1Delta,
+      uint160 nextSqrtRatio
     )
-        external
-        returns (
-            int256 amount0Delta,
-            int256 amount1Delta,
-            uint160 nextSqrtRatio
-        )
-    {
-        (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(
-            address(0),
-            zeroForOne,
-            amountSpecified,
-            limitSqrtPrice,
-            abi.encode(msg.sender)
-        );
+  {
+    (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(address(0), zeroForOne, amountSpecified, limitSqrtPrice, abi.encode(msg.sender));
 
-        (nextSqrtRatio, , , , , , , ) = IAlgebraPool(pool).globalState();
+    (nextSqrtRatio, , , , , , , ) = IAlgebraPool(pool).globalState();
+  }
+
+  function AlgebraSwapCallback(
+    int256 amount0Delta,
+    int256 amount1Delta,
+    uint256 feeAmount,
+    bytes calldata data
+  ) external override {
+    feeAmount;
+    address sender = abi.decode(data, (address));
+
+    if (amount0Delta > 0) {
+      IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, uint256(amount0Delta));
+    } else if (amount1Delta > 0) {
+      IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, uint256(amount1Delta));
     }
-
-    function AlgebraSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        address sender = abi.decode(data, (address));
-
-        if (amount0Delta > 0) {
-            IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, uint256(amount0Delta));
-        } else if (amount1Delta > 0) {
-            IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, uint256(amount1Delta));
-        }
-    }
+  }
 }

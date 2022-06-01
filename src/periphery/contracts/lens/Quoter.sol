@@ -4,6 +4,8 @@ pragma abicoder v2;
 
 import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra/contracts/libraries/TickMath.sol';
+
+import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
@@ -38,6 +40,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     function AlgebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
+        uint256 feeAmount,
         bytes memory path
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
@@ -50,6 +53,16 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
         (, , uint16 fee, , , , , ) = pool.globalState();
+
+        uint256 expectedFee = FullMath.mulDivRoundingUp(fee, amountToPay, 1e6);
+        if (feeAmount != 0 && (expectedFee != feeAmount)) {
+            uint256 actualFee = FullMath.mulDiv(feeAmount, 1e6, amountToPay);
+            if (actualFee < 50000) {
+                fee = uint16(actualFee);
+            } else {
+                fee = 50000;
+            }
+        }
 
         if (isExactInput) {
             assembly {

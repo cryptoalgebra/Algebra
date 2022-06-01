@@ -1,7 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`] = `60933`;
+exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`] = `60675`;
 
-exports[`unit/Farms #enterFarming works and has gas cost 1`] = `470227`;
+exports[`unit/Farms #enterFarming works and has gas cost 1`] = `298473`;
 
-exports[`unit/Farms #exitFarming works and has gas cost 1`] = `157373`;
+exports[`unit/Farms #exitFarming works and has gas cost 1`] = `180295`;
+
+exports[`unit/Farms swap gas 3 swaps 1`] = `223280`;
+
+exports[`unit/Farms swap gas 3 swaps 2`] = `207871`;
+
+exports[`unit/Farms swap gas 3 swaps 3`] = `207869`;

@@ -31,6 +31,8 @@ contract AlgebraTokenStaking is FreezableToken {
         address to,
         uint256 amount
     ) internal override {
+        to;
+        amount; // not used
         (uint64 release, uint256 balance) = getFreezing(from, 0);
         if (release < block.timestamp && balance > 0) {
             releaseAll(from);

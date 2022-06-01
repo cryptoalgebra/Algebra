@@ -1,10 +1,10 @@
 /// <reference path="./matchers/beWithin.ts"/>
 
 import { createFixtureLoader } from './shared/provider'
-import { AlgebraFixtureType } from './shared/fixtures'
+import { AlgebraFixtureType, EternalAlgebraFixtureType } from './shared/fixtures'
 
 export type LoadFixtureFunction = ReturnType<typeof createFixtureLoader>
 
-export type TestContext = AlgebraFixtureType & {
+export type TestContext = AlgebraFixtureType | EternalAlgebraFixtureType & {
   subject?: Function
 }

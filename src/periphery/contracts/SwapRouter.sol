@@ -57,8 +57,10 @@ contract SwapRouter is
     function AlgebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
+        uint256 feeAmount,
         bytes calldata _data
     ) external override {
+        feeAmount; // not used
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
@@ -89,8 +91,7 @@ contract SwapRouter is
         uint160 limitSqrtPrice,
         SwapCallbackData memory data
     ) private returns (uint256 amountOut) {
-        // allow swapping to the router address with address 0
-        if (recipient == address(0)) recipient = address(this);
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
 
@@ -201,8 +202,7 @@ contract SwapRouter is
         uint160 limitSqrtPrice,
         SwapCallbackData memory data
     ) private returns (uint256 amountIn) {
-        // allow swapping to the router address with address 0
-        if (recipient == address(0)) recipient = address(this);
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
         (address tokenOut, address tokenIn) = data.path.decodeFirstPool();
 
@@ -244,8 +244,7 @@ contract SwapRouter is
         );
 
         require(amountIn <= params.amountInMaximum, 'Too much requested');
-        // has to be reset even though we don't use it in the single hop case
-        amountInCached = DEFAULT_AMOUNT_IN_CACHED;
+        amountInCached = DEFAULT_AMOUNT_IN_CACHED; // has to be reset even though we don't use it in the single hop case
     }
 
     /// @inheritdoc ISwapRouter

@@ -2,10 +2,11 @@ import '@typechain/hardhat'
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
-import "hardhat-contract-sizer";
-import "solidity-coverage"
+import 'hardhat-contract-sizer';
+import 'solidity-coverage'
+import 'algebra-solidity-docgen'
 import { SolcUserConfig } from 'hardhat/types'
-import baseConfig from "../../hardhat.base.config";
+import baseConfig from '../../hardhat.base.config';
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.7.6',
@@ -43,4 +44,9 @@ export default {
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
+  docgen: {
+    output: '../../docs/Contracts/Core',
+    pages: (x: any) => x.name.toString() + '.md',
+    templates: '../../docs/doc_templates/public'
+  }
 }

@@ -13,12 +13,12 @@ import './pool/IAlgebraPoolEvents.sol';
  * @dev The pool interface is broken up into many smaller pieces
  */
 interface IAlgebraPool is
-    IAlgebraPoolImmutables,
-    IAlgebraPoolState,
-    IAlgebraPoolDerivedState,
-    IAlgebraPoolActions,
-    IAlgebraPoolPermissionedActions,
-    IAlgebraPoolEvents
+  IAlgebraPoolImmutables,
+  IAlgebraPoolState,
+  IAlgebraPoolDerivedState,
+  IAlgebraPoolActions,
+  IAlgebraPoolPermissionedActions,
+  IAlgebraPoolEvents
 {
 
 }

@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
-
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
 
@@ -13,155 +13,105 @@ import './DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract AlgebraFactory is IAlgebraFactory {
-    // TODO: REMOVE
-    bool public override isPaused;
-    bool public override isPauseForbidden;
-    /// @inheritdoc IAlgebraFactory
-    address public override owner;
+  /// @inheritdoc IAlgebraFactory
+  address public override owner;
 
-    // @inheritdoc IAlgebraFactory
-    address public override poolDeployer;
+  /// @inheritdoc IAlgebraFactory
+  address public immutable override poolDeployer;
 
-    // @inheritdoc IAlgebraFactory
-    address public override farmingAddress;
+  /// @inheritdoc IAlgebraFactory
+  address public override farmingAddress;
 
-    // @inheritdoc IAlgebraFactory
-    address public override vaultAddress;
+  /// @inheritdoc IAlgebraFactory
+  address public override vaultAddress;
 
-    AdaptiveFee.Configuration public baseFeeConfiguration =
-        AdaptiveFee.Configuration(
-            3000 - Constants.BASE_FEE, // alpha1
-            15000 - 3000, // alpha2
-            360, // beta1
-            60000, // beta2
-            59, // gamma1
-            8500, // gamma2
-            0, // volumeBeta
-            10, // volumeGamma
-            Constants.BASE_FEE // baseFee
-        );
+  AdaptiveFee.Configuration public baseFeeConfiguration =
+    AdaptiveFee.Configuration(
+      3000 - Constants.BASE_FEE, // alpha1
+      15000 - 3000, // alpha2
+      360, // beta1
+      60000, // beta2
+      59, // gamma1
+      8500, // gamma2
+      0, // volumeBeta
+      10, // volumeGamma
+      Constants.BASE_FEE // baseFee
+    );
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
 
-    // @inheritdoc IAlgebraFactory
-    mapping(address => mapping(address => address)) public override poolByPair;
+  /// @inheritdoc IAlgebraFactory
+  mapping(address => mapping(address => address)) public override poolByPair;
 
-    constructor(address _poolDeployer, address _vaultAddress) {
-        owner = msg.sender;
-        emit OwnerChanged(address(0), msg.sender);
+  constructor(address _poolDeployer, address _vaultAddress) {
+    owner = msg.sender;
+    emit OwnerChanged(address(0), msg.sender);
 
-        poolDeployer = _poolDeployer;
-        vaultAddress = _vaultAddress;
-    }
+    poolDeployer = _poolDeployer;
+    vaultAddress = _vaultAddress;
+  }
 
-    // @inheritdoc IAlgebraFactory
-    function createPool(address tokenA, address tokenB) external override returns (address pool) {
-        require(tokenA != tokenB);
-        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0));
-        require(poolByPair[token0][token1] == address(0));
+  /// @inheritdoc IAlgebraFactory
+  function createPool(address tokenA, address tokenB) external override returns (address pool) {
+    require(tokenA != tokenB);
+    (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+    require(token0 != address(0));
+    require(poolByPair[token0][token1] == address(0));
 
-        IDataStorageOperator dataStorage = IDataStorageOperator(
-            address(new DataStorageOperator(computeAddress(token0, token1)))
-        );
+    IDataStorageOperator dataStorage = IDataStorageOperator(address(new DataStorageOperator(computeAddress(token0, token1))));
 
-        AdaptiveFee.Configuration memory _feeConfiguration = baseFeeConfiguration;
+    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
-        dataStorage.changeFeeConfiguration(
-            _feeConfiguration.alpha1,
-            _feeConfiguration.alpha2,
-            _feeConfiguration.beta1,
-            _feeConfiguration.beta2,
-            _feeConfiguration.gamma1,
-            _feeConfiguration.gamma2,
-            _feeConfiguration.volumeBeta,
-            _feeConfiguration.volumeGamma,
-            _feeConfiguration.baseFee
-        );
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
 
-        pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
+    poolByPair[token0][token1] = pool; // to avoid future addresses comparing we are populating the mapping twice
+    poolByPair[token1][token0] = pool;
+    emit PoolCreated(token0, token1, pool);
+  }
 
-        poolByPair[token0][token1] = pool;
-        // to avoid future addresses comparing we are populating the mapping twice
-        poolByPair[token1][token0] = pool;
-        emit PoolCreated(token0, token1, pool);
-    }
+  /// @inheritdoc IAlgebraFactory
+  function setOwner(address _owner) external override onlyOwner {
+    emit OwnerChanged(owner, _owner);
+    owner = _owner;
+  }
 
-    // @inheritdoc IAlgebraFactory
-    function setOwner(address _owner) external override onlyOwner {
-        emit OwnerChanged(owner, _owner);
-        owner = _owner;
-    }
+  /// @inheritdoc IAlgebraFactory
+  function setFarmingAddress(address _farmingAddress) external override onlyOwner {
+    emit FarmingAddressChanged(farmingAddress, _farmingAddress);
+    farmingAddress = _farmingAddress;
+  }
 
-    // @inheritdoc IAlgebraFactory
-    function setFarmingAddress(address _farmingAddress) external override onlyOwner {
-        emit FarmingAddressChanged(farmingAddress, _farmingAddress);
-        farmingAddress = _farmingAddress;
-    }
+  /// @inheritdoc IAlgebraFactory
+  function setVaultAddress(address _vaultAddress) external override onlyOwner {
+    emit VaultAddressChanged(vaultAddress, _vaultAddress);
+    vaultAddress = _vaultAddress;
+  }
 
-    // @inheritdoc IAlgebraFactory
-    function setVaultAddress(address _vaultAddress) external override onlyOwner {
-        emit VaultAddressChanged(vaultAddress, _vaultAddress);
-        vaultAddress = _vaultAddress;
-    }
+  /// @inheritdoc IAlgebraFactory
+  function setBaseFeeConfiguration(
+    uint32 alpha1,
+    uint32 alpha2,
+    uint32 beta1,
+    uint32 beta2,
+    uint16 gamma1,
+    uint16 gamma2,
+    uint32 volumeBeta,
+    uint32 volumeGamma,
+    uint16 baseFee
+  ) external override onlyOwner {
+    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
+  }
 
-    // @inheritdoc IAlgebraFactory
-    function setBaseFeeConfiguration(
-        uint32 alpha1,
-        uint32 alpha2,
-        uint32 beta1,
-        uint32 beta2,
-        uint16 gamma1,
-        uint16 gamma2,
-        uint32 volumeBeta,
-        uint32 volumeGamma,
-        uint16 baseFee
-    ) external override onlyOwner {
-        baseFeeConfiguration = AdaptiveFee.Configuration(
-            alpha1,
-            alpha2,
-            beta1,
-            beta2,
-            gamma1,
-            gamma2,
-            volumeBeta,
-            volumeGamma,
-            baseFee
-        );
-    }
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xf2fb0dfbb88642c429660d73b8c1a79b60705a52a7bf09efb56675a8156d6b5b;
 
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0x6f8da21644d39435fbc8337b1031e14292c1d5a0042041eb303b6145c64c0a16;
-
-    /// @notice Deterministically computes the pool address given the factory and PoolKey
-    /// @param token0 first token
-    /// @param token1 second token
-    /// @return pool The contract address of the V3 pool
-    function computeAddress(address token0, address token1) internal view returns (address pool) {
-        pool = address(
-            uint256(
-                keccak256(
-                    abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)
-                )
-            )
-        );
-    }
-
-    // TODO: remove
-    function pause() external onlyOwner {
-        require(!isPauseForbidden, 'Forbidden');
-        isPaused = true;
-    }
-
-    function unpause() external onlyOwner {
-        isPaused = false;
-    }
-
-    function forbidPause() external onlyOwner {
-        require(!isPauseForbidden, 'Already forbidden');
-        isPauseForbidden = true;
-        isPaused = false;
-    }
+  /// @notice Deterministically computes the pool address given the factory and PoolKey
+  /// @param token0 first token
+  /// @param token1 second token
+  /// @return pool The contract address of the Algebra pool
+  function computeAddress(address token0, address token1) internal view returns (address pool) {
+    pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
+  }
 }

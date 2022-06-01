@@ -76,11 +76,23 @@ describe('unit/Multicall', () => {
         pool: context.pool01,
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
-        refundee: incentiveCreator.address,
+        
         ...makeTimestamps(currentTime + 100),
       },
-      totalReward,
-      bonusReward
+      {
+        tokenAmountForLevel1: 0,
+        tokenAmountForLevel2: 0,
+        tokenAmountForLevel3: 0,
+        level1multiplier: 0,
+        level2multiplier: 0,
+        level3multiplier: 0,
+      },
+      {
+        reward: totalReward,
+        bonusReward: bonusReward,
+        multiplierToken: context.rewardToken.address,
+        enterStartTime: 0,
+      }
     ])
     await context.farming.setIncentiveMaker(multicaller.address)
     await context.farming.connect(multicaller).multicall([createIncentiveTx], maxGas)

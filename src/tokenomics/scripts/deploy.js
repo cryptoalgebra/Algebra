@@ -8,20 +8,39 @@ async function main() {
 
   const maxIncentiveStartLeadTime = 2592000;
   const maxIncentiveDuration = 63072000;
+  const incentiveMaker = "0xDeaD1F5aF792afc125812E875A891b038f888258";
 
-  const VirtualPoolDeployerFactory = await hre.ethers.getContractFactory("VirtualPoolDeployer");
-  const VirtualPoolDeployer = await VirtualPoolDeployerFactory.deploy();
+  const AlgebraIncentiveFarmingFactory = await hre.ethers.getContractFactory("AlgebraIncentiveFarming");
+  const AlgebraIncentiveFarming = await AlgebraIncentiveFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
-  await VirtualPoolDeployer.deployed();
+  await AlgebraIncentiveFarming.deployed();
 
-  const AlgebraFarmingFactory = await hre.ethers.getContractFactory("AlgebraFarming");
-  const AlgebraFarming = await AlgebraFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, VirtualPoolDeployer.address, maxIncentiveStartLeadTime, maxIncentiveDuration);
+  const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory("AlgebraEternalFarming");
+  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
-  await AlgebraFarming.deployed();
+  await AlgebraEternalFarming.deployed();
 
-  await VirtualPoolDeployer.setFarming(AlgebraFarming.address);
+  const FarmingCenterFactory = await hre.ethers.getContractFactory("FarmingCenter");
+  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager);
 
-  console.log("AlgebraFarming deployed to:", AlgebraFarming.address);
+  await FarmingCenter.deployed();
+
+  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.address)
+  await AlgebraIncentiveFarming.setFarmingCenterAddress(FarmingCenter.address)
+
+  await AlgebraEternalFarming.setIncentiveMaker(incentiveMaker)
+  await AlgebraIncentiveFarming.setIncentiveMaker(incentiveMaker)
+
+  // const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
+  // const factory = await AlgebraFactory.attach(deploysData.factory);
+
+  // await factory.setFarmingAddress(FarmingCenter.address);
+
+  console.log("AlgebraIncentiveFarming deployed to:", AlgebraIncentiveFarming.address);
+  console.log("AlgebraEternalFarming deployed to:", AlgebraEternalFarming.address);
+  console.log("FarmingCenter deployed to:", FarmingCenter.address);
+
+  
 
   // await hre.run("verify:verify", {
   //   address: AlgebraFarming.address,

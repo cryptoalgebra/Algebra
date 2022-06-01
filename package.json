@@ -10,6 +10,7 @@
     "@types/chai": "^4.2.6",
     "@types/console-log-level": "^1.4.0",
     "@types/mocha": "^5.2.7",
+    "algebra-solidity-docgen": "^0.6.0-beta.1",
     "chai": "^4.2.0",
     "console-log-level": "^1.4.1",
     "decimal.js": "^10.2.1",
@@ -40,7 +41,8 @@
     "lint": "prettier .",
     "bootstrap": "npm install && lerna bootstrap && npm install --prefix ./src/periphery && npm install --prefix ./src/tokenomics",
     "ci-install": "npm ci && lerna bootstrap",
-    "deploy": "node scripts/deployAll.js"
+    "deploy": "node scripts/deployAll.js",
+    "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../tokenomics && hardhat docgen && node ../../docs/cleanup.js"
   },
   "dependencies": {
     "@ethersproject/solidity": "^5.4.0"
