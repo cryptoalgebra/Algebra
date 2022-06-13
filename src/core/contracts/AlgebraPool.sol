@@ -659,6 +659,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
+    globalState.unlocked = false;
     if (zeroForOne) {
       uint256 balance0Before = balanceToken0();
       _swapCallback(amountRequired, 0, 0, data);
@@ -668,6 +669,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       _swapCallback(0, amountRequired, 0, data);
       require((amountRequired = int256(balanceToken1().sub(balance1Before))) > 0, 'IIA');
     }
+    globalState.unlocked = true;
 
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroForOne, amountRequired, limitSqrtPrice);
 
