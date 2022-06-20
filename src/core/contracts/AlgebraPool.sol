@@ -256,7 +256,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     // To avoid overflow owner has to collect fee before it
-    if (!(fees0 == 0 && fees1 == 0)) {
+    if (fees0 | fees1 != 0) {
       _position.fees0 += fees0;
       _position.fees1 += fees1;
     }
@@ -540,7 +540,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     amount0 = uint256(-amount0Int);
     amount1 = uint256(-amount1Int);
 
-    if (amount0 > 0 || amount1 > 0) {
+    if (amount0 | amount1 != 0) {
       (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
     }
 
