@@ -6,6 +6,7 @@ import './SafeCast.sol';
 
 import './TickMath.sol';
 import './LiquidityMath.sol';
+import './Constants.sol';
 
 /// @title TickManager
 /// @notice Contains functions for managing tick processes and relevant calculations
@@ -92,7 +93,7 @@ library TickManager {
     uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-    require(liquidityTotalAfter <= 11505743598341114571880798222544994, 'LO');
+    require(liquidityTotalAfter <= Constants.MAX_LIQUIDITY_PER_TICK, 'LO');
     flipped = (liquidityTotalAfter == 0);
 
     data.liquidityTotal = liquidityTotalAfter;

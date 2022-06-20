@@ -22,7 +22,9 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   }
 
   /// @inheritdoc IAlgebraPoolImmutables
-  uint128 public constant override maxLiquidityPerTick = 11505743598341114571880798222544994;
+  function maxLiquidityPerTick() external pure override returns (uint128) {
+    return Constants.MAX_LIQUIDITY_PER_TICK;
+  }
 
   constructor(address deployer) {
     (dataStorageOperator, factory, token0, token1) = IAlgebraPoolDeployer(deployer).parameters();
