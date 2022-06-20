@@ -50,7 +50,7 @@ library TokenDeltaMath {
   ) internal pure returns (uint256 token1Delta) {
     require(priceUpper >= priceLower);
     uint256 priceDelta = priceUpper - priceLower;
-    token1Delta = roundUp ? FullMath.mulDivRoundingUp(priceDelta, liquidity, Constants.Q96) : FullMath.mulDiv(priceDelta, liquidity, Constants.Q96);
+    token1Delta = roundUp ? FullMath.mulShiftRoundingUp(priceDelta, liquidity, 96) : FullMath.mulShift(priceDelta, liquidity, 96);
   }
 
   /// @notice Helper that gets signed token0 delta

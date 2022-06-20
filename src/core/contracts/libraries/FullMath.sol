@@ -134,4 +134,56 @@ library FullMath {
       z := add(div(x, y), gt(mod(x, y), 0))
     }
   }
+
+  function mulShift(
+    uint256 a,
+    uint256 b,
+    uint8 denominator
+  ) internal pure returns (uint256 result) {
+    // 512-bit multiply [prod1 prod0] = a * b
+    // Compute the product mod 2**256 and mod 2**256 - 1
+    // then use the Chinese Remainder Theorem to reconstruct
+    // the 512 bit result. The result is stored in two 256
+    // variables such that product = prod1 * 2**256 + prod0
+    result = a * b; // Least significant 256 bits of the product
+    uint256 prod1; // Most significant 256 bits of the product
+    assembly {
+      let mm := mulmod(a, b, not(0))
+      prod1 := sub(sub(mm, result), lt(mm, result))
+    }
+
+    // Make sure the result is less than 2**256.
+    // Also prevents denominator == 0
+
+    // Handle non-overflow cases, 256 by 256 division
+    if (prod1 == 0) {
+      assembly {
+        result := shr(denominator, result)
+      }
+    } else {
+      assembly {
+        result := or(shr(denominator, result), shl(sub(256, denominator), prod1))
+      }
+    }
+
+    return result;
+  }
+
+  function mulShiftRoundingUp(
+    uint256 a,
+    uint256 b,
+    uint8 denominator
+  ) internal pure returns (uint256 result) {
+    if (a == 0 || ((result = a * b) / a == b)) {
+      assembly {
+        result := add(shr(denominator, result), gt(shl(sub(256, denominator), result), 0))
+      }
+    } else {
+      result = mulShift(a, b, denominator);
+      if ((a * b) << (256 - denominator) > 0) {
+        require(result < type(uint256).max);
+        result++;
+      }
+    }
+  }
 }

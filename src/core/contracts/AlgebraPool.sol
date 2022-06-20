@@ -244,12 +244,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 fees0;
     if (innerFeeGrowth0Token != _innerFeeGrowth0Token) {
       _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
-      fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, currentLiquidity, Constants.Q128));
+      fees0 = uint128(FullMath.mulShift(innerFeeGrowth0Token - _innerFeeGrowth0Token, currentLiquidity, 128));
     }
     uint128 fees1;
     if (innerFeeGrowth1Token != _innerFeeGrowth1Token) {
       _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
-      fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, currentLiquidity, Constants.Q128));
+      fees1 = uint128(FullMath.mulShift(innerFeeGrowth1Token - _innerFeeGrowth1Token, currentLiquidity, 128));
     }
 
     // To avoid overflow owner has to collect fee before it
