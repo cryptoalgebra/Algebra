@@ -115,13 +115,12 @@ library FullMath {
       assembly {
         result := add(div(result, denominator), gt(mod(result, denominator), 0))
       }
-      return result;
-    }
-
-    result = mulDiv(a, b, denominator);
-    if (mulmod(a, b, denominator) > 0) {
-      require(result < type(uint256).max);
-      result++;
+    } else {
+      result = mulDiv(a, b, denominator);
+      if (mulmod(a, b, denominator) > 0) {
+        require(result < type(uint256).max);
+        result++;
+      }
     }
   }
 
