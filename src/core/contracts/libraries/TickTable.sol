@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.5.0;
 
+import './Constants.sol';
+import './TickMath.sol';
+
 /// @title Packed tick initialized state library
 /// @notice Stores a packed mapping of tick index to its initialized state
 /// @dev The mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
@@ -9,8 +12,8 @@ library TickTable {
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
   function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
-    require(tick % 60 == 0, 'tick is not spaced'); // ensure that the tick is spaced
-    tick /= 60; // compress tick
+    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
+    tick /= Constants.TICK_SPACING; // compress tick
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -63,9 +66,12 @@ library TickTable {
     int24 tick,
     bool lte
   ) internal view returns (int24, bool) {
-    // compress and round towards negative infinity if negative
-    assembly {
-      tick := sub(sdiv(tick, 60), and(slt(tick, 0), not(iszero(smod(tick, 60)))))
+    {
+      uint24 tickSpacing = Constants.TICK_SPACING;
+      // compress and round towards negative infinity if negative
+      assembly {
+        tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))
+      }
     }
 
     if (lte) {
@@ -109,7 +115,7 @@ library TickTable {
   }
 
   function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
-    boundedTick = tick * 60;
+    boundedTick = tick * Constants.TICK_SPACING;
     if (boundedTick < -887272) {
       boundedTick = -887272;
     } else if (boundedTick > 887272) {
