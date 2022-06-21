@@ -116,10 +116,10 @@ library TickTable {
 
   function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
     boundedTick = tick * Constants.TICK_SPACING;
-    if (boundedTick < -887272) {
-      boundedTick = -887272;
-    } else if (boundedTick > 887272) {
-      boundedTick = 887272;
+    if (boundedTick < TickMath.MIN_TICK) {
+      boundedTick = TickMath.MIN_TICK;
+    } else if (boundedTick > TickMath.MAX_TICK) {
+      boundedTick = TickMath.MAX_TICK;
     }
   }
 }
