@@ -61,7 +61,7 @@ contract AlgebraFactory is IAlgebraFactory {
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = IDataStorageOperator(address(new DataStorageOperator(computeAddress(token0, token1))));
+    IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
