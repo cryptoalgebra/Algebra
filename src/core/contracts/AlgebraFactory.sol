@@ -48,7 +48,7 @@ contract AlgebraFactory is IAlgebraFactory {
 
   constructor(address _poolDeployer, address _vaultAddress) {
     owner = msg.sender;
-    emit OwnerChanged(msg.sender);
+    emit Owner(msg.sender);
 
     poolDeployer = _poolDeployer;
     vaultAddress = _vaultAddress;
@@ -69,24 +69,24 @@ contract AlgebraFactory is IAlgebraFactory {
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparing we are populating the mapping twice
     poolByPair[token1][token0] = pool;
-    emit PoolCreated(token0, token1, pool);
+    emit Pool(token0, token1, pool);
   }
 
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
-    emit OwnerChanged(_owner);
+    emit Owner(_owner);
     owner = _owner;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setFarmingAddress(address _farmingAddress) external override onlyOwner {
-    emit FarmingAddressChanged(_farmingAddress);
+    emit FarmingAddress(_farmingAddress);
     farmingAddress = _farmingAddress;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
-    emit VaultAddressChanged(_vaultAddress);
+    emit VaultAddress(_vaultAddress);
     vaultAddress = _vaultAddress;
   }
 
