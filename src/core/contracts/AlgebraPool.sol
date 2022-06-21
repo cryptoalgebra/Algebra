@@ -605,7 +605,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   /// @inheritdoc IAlgebraPoolActions
   function swap(
     address recipient,
-    bool zeroForOne,
+    bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
@@ -616,9 +616,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 communityFee;
     uint256 feeAmount;
 
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroForOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
-    if (zeroForOne) {
+    if (zeroToOne) {
       if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1)); // transfer to recipient
 
       uint256 balance0Before = balanceToken0();
@@ -632,12 +632,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(balance1Before.add(uint256(amount1)) <= balanceToken1(), 'IIA');
     }
 
-    communityFee = zeroForOne
+    communityFee = zeroToOne
       ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
       : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
-      _payCommunityFee(zeroForOne ? token0 : token1, communityFee);
+      _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -648,7 +648,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function swapSupportingFeeOnInputTokens(
     address sender,
     address recipient,
-    bool zeroForOne,
+    bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
@@ -662,7 +662,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
     globalState.unlocked = false;
-    if (zeroForOne) {
+    if (zeroToOne) {
       uint256 balance0Before = balanceToken0();
       _swapCallback(amountRequired, 0, 0, data);
       require((amountRequired = int256(balanceToken0().sub(balance0Before))) > 0, 'IIA');
@@ -673,10 +673,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
     globalState.unlocked = true;
 
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroForOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     // only transfer to the recipient
-    if (zeroForOne) {
+    if (zeroToOne) {
       if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
       // return the leftovers
       if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired.sub(amount0)));
@@ -686,12 +686,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired.sub(amount1)));
     }
 
-    communityFee = zeroForOne
+    communityFee = zeroToOne
       ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
       : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
-      _payCommunityFee(zeroForOne ? token0 : token1, communityFee);
+      _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -730,7 +730,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function _calculateSwap(
-    bool zeroForOne,
+    bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
   )
@@ -776,7 +776,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (currentLiquidity, cache.volumePerLiquidityInBlock) = (liquidity, volumePerLiquidityInBlock);
       cache.liquidityStart = currentLiquidity;
 
-      if (zeroForOne) {
+      if (zeroToOne) {
         require(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO, 'SPL');
         cache.totalFeeGrowth = totalFeeGrowth0Token;
         cache.communityFee = _globalState.communityFeeToken0;
@@ -831,15 +831,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     while (true) {
       step.stepSqrtPrice = currentPrice;
 
-      (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroForOne);
+      (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroToOne);
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // estimated price after swap
       (currentPrice, , , ) = PriceMovementMath.movePriceTowardsTarget(
-        zeroForOne,
+        zeroToOne,
         currentPrice,
-        (zeroForOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
+        (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
           ? limitSqrtPrice
           : step.nextTickPrice,
         currentLiquidity,
@@ -847,14 +847,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.fee
       );
       // increase fee, depending on estimated price
-      cache.fee = PIFee.recalculateFee(zeroForOne, cache.startPrice, currentPrice, cache.startFee, cache.fee);
+      cache.fee = PIFee.recalculateFee(zeroToOne, cache.startPrice, currentPrice, cache.startFee, cache.fee);
       currentPrice = step.stepSqrtPrice;
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
-        zeroForOne,
+        zeroToOne,
         currentPrice,
-        (zeroForOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
+        (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
           ? limitSqrtPrice
           : step.nextTickPrice,
         currentLiquidity,
@@ -892,14 +892,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.liquidityStart
             );
             cache.computedLatestTimepoint = true;
-            cache.totalFeeGrowthB = zeroForOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
+            cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
           // every tick cross is needed to be duplicated in a virtual pool
           if (cache.incentiveStatus != IAlgebraVirtualPool.Status.NOT_EXIST) {
-            IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroForOne);
+            IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroToOne);
           }
           int128 liquidityDelta;
-          if (zeroForOne) {
+          if (zeroToOne) {
             liquidityDelta = -ticks.cross(
               step.nextTick,
               cache.totalFeeGrowth, // A == 0
@@ -922,7 +922,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         }
 
-        currentTick = zeroForOne ? step.nextTick - 1 : step.nextTick;
+        currentTick = zeroToOne ? step.nextTick - 1 : step.nextTick;
       } else if (currentPrice != step.stepSqrtPrice) {
         // if the price has changed but hasn't reached the target
         currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
@@ -935,7 +935,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
     }
 
-    (amount0, amount1) = zeroForOne == cache.exactInput // the amount to provide could be less then initially specified (e.g. reached limit)
+    (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less then initially specified (e.g. reached limit)
       ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less then initially specified (e.g. reached limit)
       : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
 
@@ -956,7 +956,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       cache.volumePerLiquidityInBlock + IDataStorageOperator(dataStorageOperator).calculateVolumePerLiquidity(currentLiquidity, amount0, amount1)
     );
 
-    if (zeroForOne) {
+    if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowth;

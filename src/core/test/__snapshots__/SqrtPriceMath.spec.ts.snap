@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TokenDeltaMath #getNewPriceAfterInput zeroForOne = false gas 1`] = `541`;
+exports[`TokenDeltaMath #getNewPriceAfterInput zeroToOne = false gas 1`] = `541`;
 
-exports[`TokenDeltaMath #getNewPriceAfterInput zeroForOne = true gas 1`] = `672`;
+exports[`TokenDeltaMath #getNewPriceAfterInput zeroToOne = true gas 1`] = `672`;
 
-exports[`TokenDeltaMath #getNewPriceAfterOutput zeroForOne = false gas 1`] = `743`;
+exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = false gas 1`] = `743`;
 
-exports[`TokenDeltaMath #getNewPriceAfterOutput zeroForOne = true gas 1`] = `466`;
+exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = true gas 1`] = `466`;
 
 exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = true 1`] = `488`;
 

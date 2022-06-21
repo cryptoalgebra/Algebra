@@ -126,14 +126,14 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     }
 
     /// @inheritdoc IAlgebraVirtualPool
-    function cross(int24 nextTick, bool zeroForOne) external override onlyFarmingCenter {
+    function cross(int24 nextTick, bool zeroToOne) external override onlyFarmingCenter {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
 
-            if (zeroForOne) liquidityDelta = -liquidityDelta;
+            if (zeroToOne) liquidityDelta = -liquidityDelta;
             currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         }
-        globalTick = zeroForOne ? nextTick - 1 : nextTick;
+        globalTick = zeroToOne ? nextTick - 1 : nextTick;
     }
 
     /// @inheritdoc IAlgebraVirtualPool

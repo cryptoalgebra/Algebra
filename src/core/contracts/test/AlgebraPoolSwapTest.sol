@@ -12,7 +12,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
 
   function getSwapResult(
     address pool,
-    bool zeroForOne,
+    bool zeroToOne,
     int256 amountSpecified,
     uint160 limitSqrtPrice
   )
@@ -23,7 +23,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
       uint160 nextSqrtRatio
     )
   {
-    (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(address(0), zeroForOne, amountSpecified, limitSqrtPrice, abi.encode(msg.sender));
+    (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(address(0), zeroToOne, amountSpecified, limitSqrtPrice, abi.encode(msg.sender));
 
     (nextSqrtRatio, , , , , , , ) = IAlgebraPool(pool).globalState();
   }

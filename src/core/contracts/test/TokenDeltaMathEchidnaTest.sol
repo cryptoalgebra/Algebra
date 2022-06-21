@@ -28,11 +28,11 @@ contract TokenDeltaMathEchidnaTest {
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountIn,
-    bool zeroForOne
+    bool zeroToOne
   ) external pure {
-    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroForOne);
+    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroToOne);
 
-    if (zeroForOne) {
+    if (zeroToOne) {
       assert(sqrtQ <= sqrtP);
       assert(amountIn >= TokenDeltaMath.getToken0Delta(sqrtQ, sqrtP, liquidity, true));
     } else {
@@ -45,11 +45,11 @@ contract TokenDeltaMathEchidnaTest {
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountOut,
-    bool zeroForOne
+    bool zeroToOne
   ) external pure {
-    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroForOne);
+    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroToOne);
 
-    if (zeroForOne) {
+    if (zeroToOne) {
       assert(sqrtQ <= sqrtP);
       assert(amountOut <= TokenDeltaMath.getToken1Delta(sqrtQ, sqrtP, liquidity, false));
     } else {

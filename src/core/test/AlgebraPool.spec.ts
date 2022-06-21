@@ -1049,14 +1049,14 @@ describe('AlgebraPool', () => {
 
     async function swapAndGetFeesOwed({
       amount,
-      zeroForOne,
+      zeroToOne,
       poke,
     }: {
       amount: BigNumberish
-      zeroForOne: boolean
+      zeroToOne: boolean
       poke: boolean
     }) {
-      await (zeroForOne ? swapExact0For1(amount, wallet.address) : swapExact1For0(amount, wallet.address))
+      await (zeroToOne ? swapExact0For1(amount, wallet.address) : swapExact1For0(amount, wallet.address))
 
       if (poke) await pool.burn(minTick, maxTick, 0)
 
@@ -1077,7 +1077,7 @@ describe('AlgebraPool', () => {
     it('position owner gets full fees when community fee is off', async () => {
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
 
@@ -1091,21 +1091,21 @@ describe('AlgebraPool', () => {
       let token1Fees
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       }))
       expect(token0Fees).to.eq('99999999999999')
       expect(token1Fees).to.eq(0)
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       }))
       expect(token0Fees).to.eq('199999999999998')
       expect(token1Fees).to.eq(0)
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       }))
       expect(token0Fees).to.eq('299999999999997')
@@ -1117,21 +1117,21 @@ describe('AlgebraPool', () => {
       let token1Fees
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: false,
+        zeroToOne: false,
         poke: true,
       }))
       expect(token0Fees).to.eq(0)
       expect(token1Fees).to.eq('99999999999999')
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: false,
+        zeroToOne: false,
         poke: true,
       }))
       expect(token0Fees).to.eq(0)
       expect(token1Fees).to.eq('199999999999998')
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: false,
+        zeroToOne: false,
         poke: true,
       }))
       expect(token0Fees).to.eq(0)
@@ -1143,7 +1143,7 @@ describe('AlgebraPool', () => {
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
 
@@ -1154,12 +1154,12 @@ describe('AlgebraPool', () => {
     it('fees collected by lp after two swaps should be double one swap', async () => {
       await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
 
@@ -1171,7 +1171,7 @@ describe('AlgebraPool', () => {
     it('fees collected after two swaps with fee turned on in middle are fees from last swap (not confiscatory)', async () => {
       await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: false,
       })
 
@@ -1179,7 +1179,7 @@ describe('AlgebraPool', () => {
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
 
@@ -1192,7 +1192,7 @@ describe('AlgebraPool', () => {
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: true,
       })
 
@@ -1204,7 +1204,7 @@ describe('AlgebraPool', () => {
 
       const { token0Fees: token0FeesNext, token1Fees: token1FeesNext } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
-        zeroForOne: true,
+        zeroToOne: true,
         poke: false,
       })
 

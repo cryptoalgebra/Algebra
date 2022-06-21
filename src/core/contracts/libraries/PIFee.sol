@@ -5,7 +5,7 @@ library PIFee {
   uint16 internal constant maxFee = 50000;
 
   function recalculateFee(
-    bool zeroForOne,
+    bool zeroToOne,
     uint160 startPrice,
     uint160 currentPrice,
     uint16 startFee,
@@ -20,7 +20,7 @@ library PIFee {
     // price deviation percent, 1 = 0.0001%
     uint256 deviationPercent;
 
-    if (zeroForOne) {
+    if (zeroToOne) {
       deviationPercent = (((startPrice * 1e3) / currentPrice)**2 - 1e6);
     } else {
       deviationPercent = (((currentPrice * 1e3) / startPrice)**2 - 1e6);

@@ -95,19 +95,19 @@ contract SwapRouter is
 
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
 
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut).swap(
             recipient,
-            zeroForOne,
+            zeroToOne,
             amountIn.toInt256(),
             limitSqrtPrice == 0
-                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                 : limitSqrtPrice,
             abi.encode(data)
         );
 
-        return uint256(-(zeroForOne ? amount1 : amount0));
+        return uint256(-(zeroToOne ? amount1 : amount0));
     }
 
     /// @inheritdoc ISwapRouter
@@ -177,20 +177,20 @@ contract SwapRouter is
         });
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;
 
-        bool zeroForOne = params.tokenIn < params.tokenOut;
+        bool zeroToOne = params.tokenIn < params.tokenOut;
 
         (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut).swapSupportingFeeOnInputTokens(
             msg.sender,
             recipient,
-            zeroForOne,
+            zeroToOne,
             params.amountIn.toInt256(),
             params.limitSqrtPrice == 0
-                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                 : params.limitSqrtPrice,
             abi.encode(data)
         );
 
-        amountOut = uint256(-(zeroForOne ? amount1 : amount0));
+        amountOut = uint256(-(zeroToOne ? amount1 : amount0));
 
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }
@@ -206,20 +206,20 @@ contract SwapRouter is
 
         (address tokenOut, address tokenIn) = data.path.decodeFirstPool();
 
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut).swap(
             recipient,
-            zeroForOne,
+            zeroToOne,
             -amountOut.toInt256(),
             limitSqrtPrice == 0
-                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                 : limitSqrtPrice,
             abi.encode(data)
         );
 
         uint256 amountOutReceived;
-        (amountIn, amountOutReceived) = zeroForOne
+        (amountIn, amountOutReceived) = zeroToOne
             ? (uint256(amount0Delta), uint256(-amount1Delta))
             : (uint256(amount1Delta), uint256(-amount0Delta));
         // it's technically possible to not receive the full output amount,

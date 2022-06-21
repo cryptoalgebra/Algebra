@@ -24,7 +24,7 @@ describe('PriceMovementMath', () => {
       const liquidity = expandTo18Decimals(2)
       const amount = expandTo18Decimals(1)
       const fee = 600
-      const zeroForOne = false
+      const zeroToOne = false
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -43,7 +43,7 @@ describe('PriceMovementMath', () => {
         price,
         liquidity,
         amount,
-        zeroForOne
+        zeroToOne
       )
 
       expect(sqrtQ, 'price is capped at price target').to.eq(priceTarget)
@@ -56,7 +56,7 @@ describe('PriceMovementMath', () => {
       const liquidity = expandTo18Decimals(2)
       const amount = expandTo18Decimals(1).mul(-1)
       const fee = 600
-      const zeroForOne = false
+      const zeroToOne = false
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -75,7 +75,7 @@ describe('PriceMovementMath', () => {
         price,
         liquidity,
         amount.mul(-1),
-        zeroForOne
+        zeroToOne
       )
 
       expect(sqrtQ, 'price is capped at price target').to.eq(priceTarget)
@@ -88,7 +88,7 @@ describe('PriceMovementMath', () => {
       const liquidity = expandTo18Decimals(2)
       const amount = expandTo18Decimals(1)
       const fee = 600
-      const zeroForOne = false
+      const zeroToOne = false
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -107,7 +107,7 @@ describe('PriceMovementMath', () => {
         price,
         liquidity,
         amount.sub(feeAmount),
-        zeroForOne
+        zeroToOne
       )
 
       expect(sqrtQ, 'price does not reach price target').to.be.lt(priceTarget)
@@ -120,7 +120,7 @@ describe('PriceMovementMath', () => {
       const liquidity = expandTo18Decimals(2)
       const amount = expandTo18Decimals(1).mul(-1)
       const fee = 600
-      const zeroForOne = false
+      const zeroToOne = false
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -138,7 +138,7 @@ describe('PriceMovementMath', () => {
         price,
         liquidity,
         amount.mul(-1),
-        zeroForOne
+        zeroToOne
       )
 
       expect(sqrtQ, 'price does not reach price target').to.be.lt(priceTarget)

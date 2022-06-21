@@ -102,15 +102,15 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         uint256 amountIn,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountOut, uint16 fee) {
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         try
             getPool(tokenIn, tokenOut).swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 amountIn.toInt256(),
                 limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
                 abi.encodePacked(tokenIn, tokenOut)
             )
@@ -152,17 +152,17 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         uint256 amountOut,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountIn, uint16 fee) {
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (limitSqrtPrice == 0) amountOutCached = amountOut;
         try
             getPool(tokenIn, tokenOut).swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 -amountOut.toInt256(),
                 limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
                 abi.encodePacked(tokenOut, tokenIn)
             )

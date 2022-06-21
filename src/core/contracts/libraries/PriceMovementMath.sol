@@ -15,15 +15,15 @@ library PriceMovementMath {
   /// @param price The starting price, i.e., before accounting for the input amount
   /// @param liquidity The amount of usable liquidity
   /// @param input How much of token0, or token1, is being swapped in
-  /// @param zeroForOne Whether the amount in is token0 or token1
+  /// @param zeroToOne Whether the amount in is token0 or token1
   /// @return resultPrice The price after adding the input amount to token0 or token1
   function getNewPriceAfterInput(
     uint160 price,
     uint128 liquidity,
     uint256 input,
-    bool zeroForOne
+    bool zeroToOne
   ) internal pure returns (uint160 resultPrice) {
-    return getNewPrice(price, liquidity, input, zeroForOne, true);
+    return getNewPrice(price, liquidity, input, zeroToOne, true);
   }
 
   /// @notice Gets the next sqrt price given an output amount of token0 or token1
@@ -31,28 +31,28 @@ library PriceMovementMath {
   /// @param price The starting price before accounting for the output amount
   /// @param liquidity The amount of usable liquidity
   /// @param output How much of token0, or token1, is being swapped out
-  /// @param zeroForOne Whether the amount out is token0 or token1
+  /// @param zeroToOne Whether the amount out is token0 or token1
   /// @return resultPrice The price after removing the output amount of token0 or token1
   function getNewPriceAfterOutput(
     uint160 price,
     uint128 liquidity,
     uint256 output,
-    bool zeroForOne
+    bool zeroToOne
   ) internal pure returns (uint160 resultPrice) {
-    return getNewPrice(price, liquidity, output, zeroForOne, false);
+    return getNewPrice(price, liquidity, output, zeroToOne, false);
   }
 
   function getNewPrice(
     uint160 price,
     uint128 liquidity,
     uint256 amount,
-    bool zeroForOne,
+    bool zeroToOne,
     bool fromInput
   ) internal pure returns (uint160 resultPrice) {
     require(price > 0);
     require(liquidity > 0);
 
-    if (zeroForOne == fromInput) {
+    if (zeroToOne == fromInput) {
       // rounding up or down
       if (amount == 0) return price;
       uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
@@ -134,7 +134,7 @@ library PriceMovementMath {
   /// @return output The amount to be received, of either token0 or token1, based on the direction of the swap
   /// @return feeAmount The amount of input that will be taken as a fee
   function movePriceTowardsTarget(
-    bool zeroForOne,
+    bool zeroToOne,
     uint160 currentPrice,
     uint160 targetPrice,
     uint128 liquidity,
@@ -150,7 +150,7 @@ library PriceMovementMath {
       uint256 feeAmount
     )
   {
-    function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroForOne ? getTokenADelta01 : getTokenADelta10;
+    function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
 
     if (amountAvailable >= 0) {
       // exactIn or not
@@ -160,7 +160,7 @@ library PriceMovementMath {
         resultPrice = targetPrice;
         feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
       } else {
-        resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroForOne);
+        resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
         if (targetPrice != resultPrice) {
           input = getAmountA(resultPrice, currentPrice, liquidity);
 
@@ -171,15 +171,15 @@ library PriceMovementMath {
         }
       }
 
-      output = (zeroForOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
+      output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
     } else {
-      function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroForOne ? getTokenBDelta01 : getTokenBDelta10;
+      function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
 
       output = getAmountB(targetPrice, currentPrice, liquidity);
       amountAvailable = -amountAvailable;
       if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
       else {
-        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroForOne);
+        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
         if (targetPrice != resultPrice) {
           output = getAmountB(resultPrice, currentPrice, liquidity);

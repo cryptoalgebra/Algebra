@@ -12,9 +12,9 @@ interface IAlgebraVirtualPool {
    * @dev This function is called by the main pool when an initialized tick is crossed there.
    * If the tick is also initialized in a virtual pool it should ne crossed too
    * @param nextTick The crossed tick
-   * @param zeroForOne The direction
+   * @param zeroToOne The direction
    */
-  function cross(int24 nextTick, bool zeroForOne) external;
+  function cross(int24 nextTick, bool zeroToOne) external;
 
   // This function updates the #prevLiquidity
   function processSwap() external;

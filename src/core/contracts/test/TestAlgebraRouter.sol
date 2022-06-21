@@ -53,12 +53,12 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
       address tokenToBePaid = amount0Delta > 0 ? IAlgebraPool(msg.sender).token0() : IAlgebraPool(msg.sender).token1();
       int256 amountToBePaid = amount0Delta > 0 ? amount0Delta : amount1Delta;
 
-      bool zeroForOne = tokenToBePaid == IAlgebraPool(pools[0]).token1();
+      bool zeroToOne = tokenToBePaid == IAlgebraPool(pools[0]).token1();
       IAlgebraPool(pools[0]).swap(
         msg.sender,
-        zeroForOne,
+        zeroToOne,
         -amountToBePaid,
-        zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
+        zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
         abi.encode(new address[](0), payer)
       );
     } else {

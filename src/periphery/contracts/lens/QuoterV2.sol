@@ -131,17 +131,17 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             uint256 gasEstimate
         )
     {
-        bool zeroForOne = params.tokenIn < params.tokenOut;
+        bool zeroToOne = params.tokenIn < params.tokenOut;
         IAlgebraPool pool = getPool(params.tokenIn, params.tokenOut);
 
         uint256 gasBefore = gasleft();
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 params.amountIn.toInt256(),
                 params.limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : params.limitSqrtPrice,
                 abi.encodePacked(params.tokenIn, params.tokenOut)
             )
@@ -208,7 +208,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             uint256 gasEstimate
         )
     {
-        bool zeroForOne = params.tokenIn < params.tokenOut;
+        bool zeroToOne = params.tokenIn < params.tokenOut;
         IAlgebraPool pool = getPool(params.tokenIn, params.tokenOut);
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
@@ -217,10 +217,10 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 -params.amount.toInt256(),
                 params.limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : params.limitSqrtPrice,
                 abi.encodePacked(params.tokenOut, params.tokenIn)
             )

@@ -27,41 +27,41 @@ const createFixtureLoader = waffle.createFixtureLoader
 const { constants } = ethers
 
 interface BaseSwapTestCase {
-  zeroForOne: boolean
+  zeroToOne: boolean
   sqrtPriceLimit?: BigNumber
 }
 interface SwapExact0For1TestCase extends BaseSwapTestCase {
-  zeroForOne: true
+  zeroToOne: true
   exactOut: false
   amount0: BigNumberish
   sqrtPriceLimit?: BigNumber
   comissionOnTransaction: boolean
 }
 interface SwapExact1For0TestCase extends BaseSwapTestCase {
-  zeroForOne: false
+  zeroToOne: false
   exactOut: false
   amount1: BigNumberish
   sqrtPriceLimit?: BigNumber
   comissionOnTransaction: boolean
 }
 interface Swap0ForExact1TestCase extends BaseSwapTestCase {
-  zeroForOne: true
+  zeroToOne: true
   exactOut: true
   amount1: BigNumberish
   sqrtPriceLimit?: BigNumber
 }
 interface Swap1ForExact0TestCase extends BaseSwapTestCase {
-  zeroForOne: false
+  zeroToOne: false
   exactOut: true
   amount0: BigNumberish
   sqrtPriceLimit?: BigNumber
 }
 interface SwapToHigherPrice extends BaseSwapTestCase {
-  zeroForOne: false
+  zeroToOne: false
   sqrtPriceLimit: BigNumber
 }
 interface SwapToLowerPrice extends BaseSwapTestCase {
-  zeroForOne: true
+  zeroToOne: true
   sqrtPriceLimit: BigNumber
 }
 type SwapTestCase =
@@ -76,7 +76,7 @@ function swapCaseToDescription(testCase: SwapTestCase): string {
   const priceClause = testCase?.sqrtPriceLimit ? ` to price ${formatPrice(testCase.sqrtPriceLimit)}` : ''
   if ('exactOut' in testCase) {
     if (testCase.exactOut) {
-      if (testCase.zeroForOne) {
+      if (testCase.zeroToOne) {
         return `swap token0 for exactly ${formatTokenAmount(testCase.amount1)} token1${priceClause}`
       } else {
         return `swap token1 for exactly ${formatTokenAmount(testCase.amount0)} token0${priceClause}`
@@ -86,14 +86,14 @@ function swapCaseToDescription(testCase: SwapTestCase): string {
       if (testCase.comissionOnTransaction) {
         title = "Token with comission "
       }
-      if (testCase.zeroForOne) {
+      if (testCase.zeroToOne) {
         return `${title}swap exactly ${formatTokenAmount(testCase.amount0)} token0 for token1${priceClause}`
       } else {
         return `${title}swap exactly ${formatTokenAmount(testCase.amount1)} token1 for token0${priceClause}`
       }
     }
   } else {
-    if (testCase.zeroForOne) {
+    if (testCase.zeroToOne) {
       return `swap token0 for token1${priceClause}`
     } else {
       return `swap token1 for token0${priceClause}`
@@ -115,13 +115,13 @@ async function executeSwap(
   let swap: ContractTransaction
   if ('exactOut' in testCase) {
     if (testCase.exactOut) {
-      if (testCase.zeroForOne) {
+      if (testCase.zeroToOne) {
         swap = await poolFunctions.swap0ForExact1(testCase.amount1, SWAP_RECIPIENT_ADDRESS, testCase.sqrtPriceLimit)
       } else {
         swap = await poolFunctions.swap1ForExact0(testCase.amount0, SWAP_RECIPIENT_ADDRESS, testCase.sqrtPriceLimit)
       }
     } else {
-      if (testCase.zeroForOne) {
+      if (testCase.zeroToOne) {
         if (testCase.comissionOnTransaction) {
           swap = await poolFunctions.swapExact0For1SupportingFee(testCase.amount0, SWAP_RECIPIENT_ADDRESS, testCase.sqrtPriceLimit)
         } else {
@@ -136,7 +136,7 @@ async function executeSwap(
       }
     }
   } else {
-    if (testCase.zeroForOne) {
+    if (testCase.zeroToOne) {
       swap = await poolFunctions.swapToLowerPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
     } else {
       swap = await poolFunctions.swapToHigherPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
@@ -148,115 +148,115 @@ async function executeSwap(
 const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
   // swap large amounts in/out
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: false,
     amount0: expandTo18Decimals(1),
     comissionOnTransaction: false
   },
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: false,
     amount0: expandTo18Decimals(1),
     comissionOnTransaction: true
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: false,
     amount1: expandTo18Decimals(1),
     comissionOnTransaction: false
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: false,
     amount1: expandTo18Decimals(1),
     comissionOnTransaction: true
   },
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: true,
     amount1: expandTo18Decimals(1),
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: true,
     amount0: expandTo18Decimals(1),
   },
   // swap large amounts in/out with a price limit
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: false,
     amount0: expandTo18Decimals(1),
     sqrtPriceLimit: encodePriceSqrt(50, 100),
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: false,
     amount1: expandTo18Decimals(1),
     sqrtPriceLimit: encodePriceSqrt(200, 100),
   },
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: true,
     amount1: expandTo18Decimals(1),
     sqrtPriceLimit: encodePriceSqrt(50, 100),
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: true,
     amount0: expandTo18Decimals(1),
     sqrtPriceLimit: encodePriceSqrt(200, 100),
   },
   // swap small amounts in/out
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: false,
     amount0: 1000,
     comissionOnTransaction: false
   },
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: false,
     amount0: 1000,
     comissionOnTransaction: true
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: false,
     amount1: 1000,
     comissionOnTransaction: false
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: false,
     amount1: 1000,
     comissionOnTransaction: true
   },
   {
-    zeroForOne: true,
+    zeroToOne: true,
     exactOut: true,
     amount1: 1000,
   },
   {
-    zeroForOne: false,
+    zeroToOne: false,
     exactOut: true,
     amount0: 1000,
   },
   // swap arbitrary input to price
   {
     sqrtPriceLimit: encodePriceSqrt(5, 2),
-    zeroForOne: false,
+    zeroToOne: false,
   },
   {
     sqrtPriceLimit: encodePriceSqrt(2, 5),
-    zeroForOne: true,
+    zeroToOne: true,
   },
   {
     sqrtPriceLimit: encodePriceSqrt(5, 2),
-    zeroForOne: true,
+    zeroToOne: true,
   },
   {
     sqrtPriceLimit: encodePriceSqrt(2, 5),
-    zeroForOne: false,
+    zeroToOne: false,
   },
 ]
 
@@ -501,7 +501,7 @@ describe('AlgebraPool swap tests', () => {
 
   for (const poolCase of TEST_POOLS) {
     describe(poolCase.description, () => {
-      const poolCaseFixture = async (isDefl : boolean, zeroForOne : boolean) => {
+      const poolCaseFixture = async (isDefl : boolean, zeroToOne : boolean) => {
         const { createPool, token0, token1, swapTargetCallee: swapTarget } = await poolFixture(
           [wallet],
           waffle.provider
@@ -511,7 +511,7 @@ describe('AlgebraPool swap tests', () => {
         await pool.initialize(poolCase.startingPrice)
         // mint all positions
         if (isDefl) {
-          if (zeroForOne)
+          if (zeroToOne)
             await token0.setDefl();
           else
             await token1.setDefl();
@@ -569,7 +569,7 @@ describe('AlgebraPool swap tests', () => {
 
           let withComission = 'comissionOnTransaction' in testCase && testCase.comissionOnTransaction;
           ;({ token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions } = await 
-            poolCaseFixture(withComission, testCase.zeroForOne)
+            poolCaseFixture(withComission, testCase.zeroToOne)
           )
 
           const globalState = await pool.globalState()
