@@ -131,7 +131,7 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   function window() external pure override returns (uint32) {
-    return DataStorage.window;
+    return DataStorage.WINDOW;
   }
 
   function getFee(
