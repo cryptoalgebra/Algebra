@@ -36,17 +36,51 @@ library AdaptiveFee {
     if (x > beta) {
       x = x - beta;
       if (x >= 6 * g) return alpha;
-      uint256 ex = exp(x, g);
-      res = ((10 * alpha * (ex)) / (g**7 + ex)) / 10;
+      uint256 g7 = g**7;
+      uint256 ex = exp(x, g, g7);
+      res = ((10 * alpha * (ex)) / (g7 + ex)) / 10;
     } else {
       x = beta - x;
       if (x >= 6 * g) return 0;
-      uint256 ex = g**7 + exp(x, g);
-      res = ((10 * alpha * g**7) / (ex)) / 10;
+      uint256 g7 = g**7;
+      uint256 ex = g7 + exp(x, g, g7);
+      res = ((10 * alpha * g7) / (ex)) / 10;
     }
   }
 
-  function exp(uint256 x, uint256 g) internal pure returns (uint256 res) {
-    return g**7 + x * g**6 + (x**2 * g**5) / 2 + (x**3 * g**4) / 6 + (x**4 * g**3) / 24 + (x**5 * g**2) / 120 + (x**6 * g) / 720 + x**7 / (720 * 7);
+  function exp(
+    uint256 x,
+    uint256 g,
+    uint256 gHighestDegree
+  ) internal pure returns (uint256 res) {
+    // calculating:
+    // g**7 + x * g**6 + (x**2 * g**5) / 2 + (x**3 * g**4) / 6 + (x**4 * g**3) / 24 + (x**5 * g**2) / 120 + (x**6 * g) / 720 + x**7 / (720 * 7)
+    uint256 xLowestDegree = x;
+    res = gHighestDegree; // g**7
+
+    gHighestDegree /= g; // g**6
+    res += xLowestDegree * gHighestDegree;
+
+    gHighestDegree /= g; // g**5
+    xLowestDegree *= x; // x**2
+    res += (xLowestDegree * gHighestDegree) / 2;
+
+    gHighestDegree /= g; // g**4
+    xLowestDegree *= x; // x**3
+    res += (xLowestDegree * gHighestDegree) / 6;
+
+    gHighestDegree /= g; // g**3
+    xLowestDegree *= x; // x**4
+    res += (xLowestDegree * gHighestDegree) / 24;
+
+    gHighestDegree /= g; // g**2
+    xLowestDegree *= x; // x**5
+    res += (xLowestDegree * gHighestDegree) / 120;
+
+    xLowestDegree *= x; // x**6
+    res += (xLowestDegree * g) / 720;
+
+    xLowestDegree *= x; // x**7
+    res += xLowestDegree / 5040;
   }
 }
