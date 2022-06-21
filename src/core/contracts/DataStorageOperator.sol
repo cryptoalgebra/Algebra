@@ -65,8 +65,9 @@ contract DataStorageOperator is IDataStorageOperator {
   {
     uint16 oldestIndex;
     // check if we have overflow in the past
-    if (timepoints[addmod(index, 1, MAX_UINT16)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, MAX_UINT16));
+    uint256 nextIndex = addmod(index, 1, MAX_UINT16);
+    if (timepoints[nextIndex].initialized) {
+      oldestIndex = uint16(nextIndex);
     }
 
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
