@@ -88,9 +88,8 @@ library DataStorage {
     uint32 b,
     uint32 currentTime
   ) private pure returns (bool res) {
-    res = (a > currentTime);
-    if (res == (b > currentTime)) return a <= b; // if both are on the same side
-    // otherwise need to return (a > currentTime)
+    res = a > currentTime;
+    if (res == b > currentTime) res = a <= b; // if both are on the same side
   }
 
   function _getAverageTick(
