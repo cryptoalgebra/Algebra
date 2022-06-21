@@ -10,6 +10,7 @@ import './FullMath.sol';
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint()
 library DataStorage {
   uint32 public constant WINDOW = 1 days;
+  uint16 private constant MAX_UINT16 = 65535;
   struct Timepoint {
     bool initialized; // whether or not the timepoint is initialized
     uint32 blockTimestamp; // the block timestamp of the timepoint
@@ -93,7 +94,7 @@ library DataStorage {
   }
 
   function _getAverageTick(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     int24 tick,
     uint16 index,
@@ -106,7 +107,8 @@ library DataStorage {
 
     if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       if (lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
-        Timepoint storage startTimepoint = self[uint32(index + 65534)]; // overflow is desired
+        index += MAX_UINT16 - 1; // overflow is desired
+        Timepoint storage startTimepoint = self[index];
         avgTick = startTimepoint.initialized
           ? int24((lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp))
           : tick;
@@ -135,22 +137,22 @@ library DataStorage {
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   function binarySearch(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     uint32 target,
     uint16 lastIndex,
     uint16 oldestIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) {
     uint256 left = oldestIndex; // oldest timepoint
-    uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + 65535; // newest timepoint considering overflow
+    uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + MAX_UINT16; // newest timepoint considering overflow
     uint256 current = (left + right) / 2;
 
     do {
-      beforeOrAt = self[current % 65535];
+      beforeOrAt = self[current % MAX_UINT16];
       if (beforeOrAt.initialized) {
         // check if we've found the answer!
         if (lteConsideringOverflow(beforeOrAt.blockTimestamp, target, time)) {
-          atOrAfter = self[addmod(current, 1, 65535)];
+          atOrAfter = self[addmod(current, 1, MAX_UINT16)];
           if (lteConsideringOverflow(target, atOrAfter.blockTimestamp, time)) {
             return (beforeOrAt, atOrAfter); // the only correct way to finish
           }
@@ -181,7 +183,7 @@ library DataStorage {
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
   function getSingleTimepoint(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     uint32 secondsAgo,
     int24 tick,
@@ -203,8 +205,8 @@ library DataStorage {
         {
           if (index != oldestIndex) {
             Timepoint memory prevLast;
-            prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
-            prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
+            prevLast.blockTimestamp = self[(index - 1) % MAX_UINT16].blockTimestamp;
+            prevLast.tickCumulative = self[(index - 1) % MAX_UINT16].tickCumulative;
             prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
           }
         }
@@ -249,7 +251,7 @@ library DataStorage {
   /// @return tickCumulatives The tick * time elapsed since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     uint32[] memory secondsAgos,
     int24 tick,
@@ -272,8 +274,8 @@ library DataStorage {
 
     uint16 oldestIndex;
     // check if we have overflow in the past
-    if (self[addmod(index, 1, 65535)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, 65535));
+    if (self[addmod(index, 1, MAX_UINT16)].initialized) {
+      oldestIndex = uint16(addmod(index, 1, MAX_UINT16));
     }
 
     Timepoint memory current;
@@ -297,7 +299,7 @@ library DataStorage {
   /// @return volatilityAverage The average volatility in the recent range
   /// volumePerLiqAverage The average volume per liquidity in the recent range
   function getAverages(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     int24 tick,
     uint16 index,
@@ -305,8 +307,8 @@ library DataStorage {
   ) internal view returns (uint88 volatilityAverage, uint256 volumePerLiqAverage) {
     uint16 oldestIndex;
     Timepoint storage oldest = self[0];
-    if (self[addmod(index, 1, 65535)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, 65535));
+    if (self[addmod(index, 1, MAX_UINT16)].initialized) {
+      oldestIndex = uint16(addmod(index, 1, MAX_UINT16));
       oldest = self[oldestIndex];
     }
 
@@ -328,7 +330,7 @@ library DataStorage {
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
   /// @param tick Initial tick
   function initialize(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint32 time,
     int24 tick
   ) internal {
@@ -347,7 +349,7 @@ library DataStorage {
   /// @param volumePerLiquidity The gmean(volumes)/liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
   function write(
-    Timepoint[65535] storage self,
+    Timepoint[MAX_UINT16] storage self,
     uint16 index,
     uint32 blockTimestamp,
     int24 tick,
@@ -361,7 +363,7 @@ library DataStorage {
     Timepoint memory last = self[index];
 
     // get next index considering overflow
-    indexUpdated = uint16(addmod(index, 1, 65535));
+    indexUpdated = uint16(addmod(index, 1, MAX_UINT16));
 
     uint16 oldestIndex;
     // check if we have overflow in the past
@@ -374,8 +376,8 @@ library DataStorage {
     {
       if (index != oldestIndex) {
         Timepoint memory prevLast;
-        prevLast.blockTimestamp = self[(index - 1) % 65535].blockTimestamp;
-        prevLast.tickCumulative = self[(index - 1) % 65535].tickCumulative;
+        prevLast.blockTimestamp = self[(index - 1) % MAX_UINT16].blockTimestamp;
+        prevLast.tickCumulative = self[(index - 1) % MAX_UINT16].tickCumulative;
         prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
       }
     }
