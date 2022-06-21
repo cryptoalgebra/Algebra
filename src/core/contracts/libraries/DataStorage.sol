@@ -334,6 +334,7 @@ library DataStorage {
     uint32 time,
     int24 tick
   ) internal {
+    require(!self[0].initialized);
     self[0].initialized = true;
     self[0].blockTimestamp = time;
     self[0].averageTick = tick;
