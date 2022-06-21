@@ -89,7 +89,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
     uint256 feeAmount,

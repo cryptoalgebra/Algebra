@@ -19,7 +19,7 @@ contract TestAlgebraSwapPay is IAlgebraSwapCallback {
     IAlgebraPool(pool).swap(recipient, zeroForOne, amountSpecified, price, abi.encode(msg.sender, pay0, pay1));
   }
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256,
     int256,
     uint256,

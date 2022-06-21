@@ -14,7 +14,7 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     IAlgebraPool(pool).swap(address(0), false, 1, TickMath.MAX_SQRT_RATIO - 1, new bytes(0));
   }
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256,
     int256,
     uint256,

@@ -14,7 +14,7 @@ interface IAlgebraSwapCallback {
   /// the end of the swap. If positive, the callback must send that amount of token1 to the pool.
   /// @param data Any data passed through by the caller via the IAlgebraPoolActions#swap call
   /// @param feeAmount fee amount
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
     uint256 feeAmount,

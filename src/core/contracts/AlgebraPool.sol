@@ -599,7 +599,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 feeAmount,
     bytes calldata data
   ) private {
-    IAlgebraSwapCallback(msg.sender).AlgebraSwapCallback(amount0, amount1, feeAmount, data);
+    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions

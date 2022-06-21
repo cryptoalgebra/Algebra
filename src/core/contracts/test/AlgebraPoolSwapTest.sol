@@ -28,7 +28,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
     (nextSqrtRatio, , , , , , , ) = IAlgebraPool(pool).globalState();
   }
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
     uint256 feeAmount,
