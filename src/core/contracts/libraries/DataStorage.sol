@@ -145,16 +145,14 @@ library DataStorage {
     uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + 65535; // newest timepoint considering overflow
     uint256 current = (left + right) / 2;
 
-    beforeOrAt = self[current % 65535];
-    atOrAfter = beforeOrAt; // will override in cycle
-
-    while (true) {
+    do {
+      beforeOrAt = self[current % 65535];
       if (beforeOrAt.initialized) {
         // check if we've found the answer!
         if (lteConsideringOverflow(beforeOrAt.blockTimestamp, target, time)) {
           atOrAfter = self[addmod(current, 1, 65535)];
           if (lteConsideringOverflow(target, atOrAfter.blockTimestamp, time)) {
-            break;
+            return (beforeOrAt, atOrAfter); // the only correct way to finish
           }
           left = current + 1;
         } else {
@@ -165,8 +163,10 @@ library DataStorage {
         left = current + 1;
       }
       current = (left + right) / 2;
-      beforeOrAt = self[current % 65535];
-    }
+    } while (true);
+
+    atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
+    assert(false);
   }
 
   /// @dev Reverts if an timepoint at or before the desired timepoint timestamp does not exist.
