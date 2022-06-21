@@ -25,6 +25,7 @@ library TickTable {
   }
 
   /// @notice get position of single 1-bit
+  /// @dev it is assumed that word contains exactly one 1-bit, otherwise the result will be incorrect
   /// @param word The word containing only one 1-bit
   function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
     assembly {
