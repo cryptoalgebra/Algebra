@@ -15,7 +15,6 @@ library TokenDeltaMath {
 
   /// @notice Gets the token0 delta between two prices
   /// @dev Calculates liquidity / sqrt(lower) - liquidity / sqrt(upper),
-  /// i.e. liquidity * (sqrt(upper) - sqrt(lower)) / (sqrt(upper) * sqrt(lower))
   /// @param priceLower A sqrt price
   /// @param priceUpper Another sqrt price
   /// @param liquidity The amount of usable liquidity
