@@ -984,7 +984,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       TransferHelper.safeTransfer(token1, recipient, amount1);
     }
 
-    IAlgebraFlashCallback(msg.sender).AlgebraFlashCallback(fee0, fee1, data);
+    IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
 
     address vault = IAlgebraFactory(factory).vaultAddress();
 

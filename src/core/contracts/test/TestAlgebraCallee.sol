@@ -158,7 +158,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     IAlgebraPool(pool).flash(recipient, amount0, amount1, abi.encode(msg.sender, pay0, pay1));
   }
 
-  function AlgebraFlashCallback(
+  function algebraFlashCallback(
     uint256 fee0,
     uint256 fee1,
     bytes calldata data
