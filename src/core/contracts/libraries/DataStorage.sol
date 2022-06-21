@@ -205,8 +205,9 @@ library DataStorage {
         {
           if (index != oldestIndex) {
             Timepoint memory prevLast;
-            prevLast.blockTimestamp = self[(index - 1) % MAX_UINT16].blockTimestamp;
-            prevLast.tickCumulative = self[(index - 1) % MAX_UINT16].tickCumulative;
+            Timepoint storage _prevLast = self[(index - 1) % MAX_UINT16];
+            prevLast.blockTimestamp = _prevLast.blockTimestamp;
+            prevLast.tickCumulative = _prevLast.tickCumulative;
             prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
           }
         }
