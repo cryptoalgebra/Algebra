@@ -71,7 +71,7 @@ library TickTable {
     bool lte
   ) internal view returns (int24 nextTick, bool initialized) {
     {
-      uint24 tickSpacing = Constants.TICK_SPACING;
+      int24 tickSpacing = Constants.TICK_SPACING;
       // compress and round towards negative infinity if negative
       assembly {
         tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))

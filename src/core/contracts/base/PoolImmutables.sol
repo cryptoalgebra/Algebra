@@ -17,7 +17,7 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   address public immutable override token1;
 
   /// @inheritdoc IAlgebraPoolImmutables
-  function tickSpacing() external pure override returns (uint8) {
+  function tickSpacing() external pure override returns (int24) {
     return Constants.TICK_SPACING;
   }
 

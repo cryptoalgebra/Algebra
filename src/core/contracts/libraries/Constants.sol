@@ -6,7 +6,7 @@ library Constants {
   uint256 internal constant Q96 = 0x1000000000000000000000000;
   uint256 internal constant Q128 = 0x100000000000000000000000000000000;
   uint16 internal constant BASE_FEE = 100;
-  uint8 internal constant TICK_SPACING = 60;
+  int24 internal constant TICK_SPACING = 60;
 
   // max(uint128) / ( (MAX_TICK - MIN_TICK) / TICK_SPACING )
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 11505743598341114571880798222544994;
