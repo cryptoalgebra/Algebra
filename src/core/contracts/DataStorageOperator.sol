@@ -13,6 +13,8 @@ import './libraries/Constants.sol';
 
 contract DataStorageOperator is IDataStorageOperator {
   uint16 constant MAX_UINT16 = 65535;
+  uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
+
   using DataStorage for DataStorage.Timepoint[MAX_UINT16];
 
   DataStorage.Timepoint[MAX_UINT16] public override timepoints;
@@ -128,8 +130,8 @@ contract DataStorageOperator is IDataStorageOperator {
     uint256 volumeShifted;
     if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
     else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
-    if (volumeShifted >= 100000 << 64) return 100000 << 64;
-    volumePerLiquidity = uint128(volumeShifted);
+    if (volumeShifted >= MAX_VOLUME_PER_LIQUIDITY) return MAX_VOLUME_PER_LIQUIDITY;
+    else return uint128(volumeShifted);
   }
 
   function window() external pure override returns (uint32) {
