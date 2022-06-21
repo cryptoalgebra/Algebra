@@ -9,12 +9,13 @@ interface IDataStorageOperator {
    * @notice Returns data belonging to a certain timepoint
    * @param index The index of timepoint in the array
    * @dev There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds
-   * @return initialized whether the timepoint has been initialized and the values are safe to use
+   * @return initialized Whether the timepoint has been initialized and the values are safe to use,
    * blockTimestamp The timestamp of the observation,
-   * tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
-   * secondsPerLiquidityCumulative the seconds per in range liquidity for the life of the pool as of the timepoint timestamp,
-   * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
-   * volumePerAvgLiquidity Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
+   * tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
+   * secondsPerLiquidityCumulative The seconds per in range liquidity for the life of the pool as of the timepoint timestamp,
+   * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
+   * averageTick Time-weighted average tick,
+   * volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
    */
   function timepoints(uint256 index)
     external
