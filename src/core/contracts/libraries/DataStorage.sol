@@ -226,6 +226,7 @@ library DataStorage {
       uint32 timepointTimeDelta = atOrAfter.blockTimestamp - beforeOrAt.blockTimestamp;
       uint32 targetDelta = target - beforeOrAt.blockTimestamp;
 
+      // For gas savings the resulting point is written to beforeAt
       beforeOrAt.tickCumulative += ((atOrAfter.tickCumulative - beforeOrAt.tickCumulative) / timepointTimeDelta) * targetDelta;
       beforeOrAt.secondsPerLiquidityCumulative += uint160(
         (uint256(atOrAfter.secondsPerLiquidityCumulative - beforeOrAt.secondsPerLiquidityCumulative) * targetDelta) / timepointTimeDelta
