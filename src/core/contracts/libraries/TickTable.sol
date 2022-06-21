@@ -65,7 +65,7 @@ library TickTable {
     mapping(int16 => uint256) storage self,
     int24 tick,
     bool lte
-  ) internal view returns (int24, bool) {
+  ) internal view returns (int24 nextTick, bool initialized) {
     {
       uint24 tickSpacing = Constants.TICK_SPACING;
       // compress and round towards negative infinity if negative
