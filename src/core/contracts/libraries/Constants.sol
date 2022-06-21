@@ -10,4 +10,6 @@ library Constants {
 
   // max(uint128) / ( (MAX_TICK - MIN_TICK) / TICK_SPACING )
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 11505743598341114571880798222544994;
+
+  uint32 internal constant MAX_LIQUIDITY_COOLDOWN = 1 days;
 }

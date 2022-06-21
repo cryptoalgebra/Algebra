@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 
 /// @title Provides functions for deriving a pool address from the factory, tokens, and the fee
 library PoolAddress {
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0x750f834184dde8f26d1ebd8a957ffb748eed62708d7002f525530d4e174b9a67;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0xc155222c0099f809104482c2b9dbcffeac95f2a5501c2b6a93eb607f3f62aa48;
 
     /// @notice The identifying key of the pool
     struct PoolKey {

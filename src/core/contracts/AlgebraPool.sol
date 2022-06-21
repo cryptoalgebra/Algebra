@@ -1041,7 +1041,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setLiquidityCooldown(uint32 newLiquidityCooldown) external override onlyFactoryOwner {
-    require(newLiquidityCooldown <= 1 days);
+    require(newLiquidityCooldown <= Constants.MAX_LIQUIDITY_COOLDOWN);
     liquidityCooldown = newLiquidityCooldown;
   }
 }
