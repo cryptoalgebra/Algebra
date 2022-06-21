@@ -12,9 +12,10 @@ import './libraries/AdaptiveFee.sol';
 import './libraries/Constants.sol';
 
 contract DataStorageOperator is IDataStorageOperator {
-  using DataStorage for DataStorage.Timepoint[65535];
+  uint16 constant MAX_UINT16 = 65535;
+  using DataStorage for DataStorage.Timepoint[MAX_UINT16];
 
-  DataStorage.Timepoint[65535] public override timepoints;
+  DataStorage.Timepoint[MAX_UINT16] public override timepoints;
   AdaptiveFee.Configuration public feeConfig;
 
   address private immutable pool;
@@ -64,8 +65,8 @@ contract DataStorageOperator is IDataStorageOperator {
   {
     uint16 oldestIndex;
     // check if we have overflow in the past
-    if (timepoints[addmod(index, 1, 65535)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, 65535));
+    if (timepoints[addmod(index, 1, MAX_UINT16)].initialized) {
+      oldestIndex = uint16(addmod(index, 1, MAX_UINT16));
     }
 
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
