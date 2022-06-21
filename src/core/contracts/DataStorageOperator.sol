@@ -130,8 +130,8 @@ contract DataStorageOperator is IDataStorageOperator {
     volumePerLiquidity = uint128(volumeShifted);
   }
 
-  function WINDOW() external pure override returns (uint32) {
-    return DataStorage.WINDOW;
+  function window() external pure override returns (uint32) {
+    return DataStorage.window;
   }
 
   function getFee(

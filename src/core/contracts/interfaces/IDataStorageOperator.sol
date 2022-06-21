@@ -87,7 +87,7 @@ interface IDataStorageOperator {
     int256 amount1
   ) external pure returns (uint128 volumePerLiquidity);
 
-  function WINDOW() external view returns (uint32);
+  function window() external view returns (uint32);
 
   function getFee(
     uint32 time,

@@ -9,7 +9,7 @@ import './FullMath.sol';
 /// Timepoints are overwritten when the full length of the dataStorage array is populated.
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint()
 library DataStorage {
-  uint32 public constant WINDOW = 1 days;
+  uint32 public constant window = 1 days;
   uint16 private constant MAX_UINT16 = 65535;
   struct Timepoint {
     bool initialized; // whether or not the timepoint is initialized
@@ -105,20 +105,20 @@ library DataStorage {
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
     int56 oldestTickCumulative = self[oldestIndex].tickCumulative;
 
-    if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
-      if (lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
+    if (lteConsideringOverflow(oldestTimestamp, time - window, time)) {
+      if (lteConsideringOverflow(lastTimestamp, time - window, time)) {
         index += MAX_UINT16 - 1; // overflow is desired
         Timepoint storage startTimepoint = self[index];
         avgTick = startTimepoint.initialized
           ? int24((lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp))
           : tick;
       } else {
-        Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
+        Timepoint memory startOfWindow = getSingleTimepoint(self, time, window, tick, index, oldestIndex, 0);
 
-        //    current-WINDOW  last   current
+        //    current-window  last   current
         // _________*____________*_______*_
         //           ||||||||||||
-        avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW));
+        avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + window));
       }
     } else {
       avgTick = (lastTimestamp == oldestTimestamp) ? tick : int24((lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp));
@@ -293,7 +293,7 @@ library DataStorage {
     }
   }
 
-  /// @notice Returns average volatility in the range from time-WINDOW to time
+  /// @notice Returns average volatility in the range from time-window to time
   /// @param self The stored dataStorage array
   /// @param time The current block.timestamp
   /// @param tick The current tick
@@ -318,14 +318,14 @@ library DataStorage {
 
     Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
 
-    if (lteConsideringOverflow(oldest.blockTimestamp, time - WINDOW, time)) {
-      Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
+    if (lteConsideringOverflow(oldest.blockTimestamp, time - window, time)) {
+      Timepoint memory startOfWindow = getSingleTimepoint(self, time, window, tick, index, oldestIndex, liquidity);
       return (
-        (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
+        (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / window,
         uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative)) >> 57
       );
     } else {
-      return ((endOfWindow.volatilityCumulative) / WINDOW, uint256((endOfWindow.volumePerLiquidityCumulative)) >> 57);
+      return ((endOfWindow.volatilityCumulative) / window, uint256((endOfWindow.volumePerLiquidityCumulative)) >> 57);
     }
   }
 
