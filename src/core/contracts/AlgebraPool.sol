@@ -632,7 +632,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(balance1Before.add(uint256(amount1)) <= balanceToken1(), 'IIA');
     }
 
-    communityFee = zeroForOne ? (feeAmount * globalState.communityFeeToken0) / 100 : (feeAmount * globalState.communityFeeToken1) / 100;
+    communityFee = zeroForOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
       _payCommunityFee(zeroForOne ? token0 : token1, communityFee);
@@ -684,7 +686,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired.sub(amount1)));
     }
 
-    communityFee = zeroForOne ? (feeAmount * globalState.communityFeeToken0) / 100 : (feeAmount * globalState.communityFeeToken1) / 100;
+    communityFee = zeroForOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
       _payCommunityFee(zeroForOne ? token0 : token1, communityFee);
@@ -869,7 +873,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
 
       if (cache.communityFee > 0) {
-        uint256 delta = (step.feeAmount * cache.communityFee) / 100;
+        uint256 delta = (step.feeAmount * cache.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
       }
 
@@ -998,7 +1002,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint256 fees0;
       if (_communityFeeToken0 > 0) {
         if (paid0 > 0) {
-          fees0 = (paid0 * _communityFeeToken0) / 100;
+          fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
           TransferHelper.safeTransfer(token0, vault, fees0);
         }
       }
@@ -1014,7 +1018,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint256 fees1;
       if (_communityFeeToken1 > 0) {
         if (paid1 > 0) {
-          fees1 = (paid1 * _communityFeeToken1) / 100;
+          fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
           TransferHelper.safeTransfer(token1, vault, fees1);
         }
       }

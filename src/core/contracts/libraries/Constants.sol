@@ -13,4 +13,5 @@ library Constants {
 
   uint32 internal constant MAX_LIQUIDITY_COOLDOWN = 1 days;
   uint8 internal constant MAX_COMMUNITY_FEE = 25;
+  uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 100;
 }
