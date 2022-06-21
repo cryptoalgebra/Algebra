@@ -176,17 +176,18 @@ library PriceMovementMath {
       function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroForOne ? getTokenBDelta01 : getTokenBDelta10;
 
       output = getAmountB(targetPrice, currentPrice, liquidity);
-      if (uint256(-amountAvailable) >= output) resultPrice = targetPrice;
+      amountAvailable = -amountAvailable;
+      if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
       else {
-        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(-amountAvailable), zeroForOne);
+        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroForOne);
 
         if (targetPrice != resultPrice) {
           output = getAmountB(resultPrice, currentPrice, liquidity);
         }
 
         // cap the output amount to not exceed the remaining output amount
-        if (output > uint256(-amountAvailable)) {
-          output = uint256(-amountAvailable);
+        if (output > uint256(amountAvailable)) {
+          output = uint256(amountAvailable);
         }
       }
 
