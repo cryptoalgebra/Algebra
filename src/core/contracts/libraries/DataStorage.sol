@@ -307,9 +307,10 @@ library DataStorage {
   ) internal view returns (uint88 volatilityAverage, uint256 volumePerLiqAverage) {
     uint16 oldestIndex;
     Timepoint storage oldest = self[0];
-    if (self[addmod(index, 1, MAX_UINT16)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, MAX_UINT16));
-      oldest = self[oldestIndex];
+    uint256 nextIndex = addmod(index, 1, MAX_UINT16);
+    if (self[nextIndex].initialized) {
+      oldest = self[nextIndex];
+      oldestIndex = uint16(nextIndex);
     }
 
     Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
