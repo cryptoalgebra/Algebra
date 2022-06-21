@@ -34,6 +34,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
 
   /// @inheritdoc IAlgebraPoolDeployer
   function setFactory(address _factory) external override onlyOwner {
+    require(_factory != address(0));
     require(factory == address(0));
     emit FactoryChanged(factory, _factory);
     factory = _factory;
