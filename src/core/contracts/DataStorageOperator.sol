@@ -122,7 +122,7 @@ contract DataStorageOperator is IDataStorageOperator {
     int256 amount0,
     int256 amount1
   ) external pure override returns (uint128 volumePerLiquidity) {
-    uint256 volume = Sqrt.sqrt(amount0) * Sqrt.sqrt(amount1);
+    uint256 volume = Sqrt.sqrtAbs(amount0) * Sqrt.sqrtAbs(amount1);
     uint256 volumeShifted;
     if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
     else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
