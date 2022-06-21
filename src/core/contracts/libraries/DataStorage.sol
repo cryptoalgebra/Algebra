@@ -106,9 +106,9 @@ library DataStorage {
 
     if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       if (lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
-        index = index == 0 ? 65535 - 1 : index - 1;
-        avgTick = self[index].initialized
-          ? int24((lastTickCumulative - self[index].tickCumulative) / (lastTimestamp - self[index].blockTimestamp))
+        Timepoint storage startTimepoint = self[uint32(index + 65534)]; // overflow is desired
+        avgTick = startTimepoint.initialized
+          ? int24((lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp))
           : tick;
       } else {
         Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
