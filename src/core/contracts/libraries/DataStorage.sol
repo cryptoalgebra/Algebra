@@ -356,11 +356,12 @@ library DataStorage {
     uint128 liquidity,
     uint128 volumePerLiquidity
   ) internal returns (uint16 indexUpdated) {
+    Timepoint storage _last = self[index];
     // early return if we've already written an timepoint this block
-    if (self[index].blockTimestamp == blockTimestamp) {
+    if (_last.blockTimestamp == blockTimestamp) {
       return index;
     }
-    Timepoint memory last = self[index];
+    Timepoint memory last = _last;
 
     // get next index considering overflow
     indexUpdated = uint16(addmod(index, 1, MAX_UINT16));
