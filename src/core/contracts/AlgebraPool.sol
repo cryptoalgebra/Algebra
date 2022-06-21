@@ -922,6 +922,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       } else if (currentPrice != step.stepSqrtPrice) {
         // if the price has changed but hasn't reached the target
         currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
+        break; // since the ptice hasn't reached the target, amountRequired should be 0
       }
 
       // check stop condition
