@@ -72,6 +72,7 @@ library TickManager {
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
   /// @param secondsPerLiquidityCumulative The all-time seconds per max(1, liquidity) of the pool
+  /// @param tickCumulative The all-time global cumulative tick
   /// @param time The current block timestamp cast to a uint32
   /// @param upper true for updating a position's upper tick, or false for updating a position's lower tick
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
@@ -122,6 +123,7 @@ library TickManager {
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
   /// @param secondsPerLiquidityCumulative The current seconds per liquidity
+  /// @param tickCumulative The all-time global cumulative tick
   /// @param time The current block.timestamp
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
   function cross(
