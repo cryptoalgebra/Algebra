@@ -7,17 +7,15 @@ pragma solidity >=0.5.0;
 interface IAlgebraFactory {
   /**
    *  @notice Emitted when the owner of the factory is changed
-   *  @param oldOwner The owner before the owner was changed
    *  @param newOwner The owner after the owner was changed
    */
-  event OwnerChanged(address indexed oldOwner, address indexed newOwner);
+  event OwnerChanged(address indexed newOwner);
 
   /**
    *  @notice Emitted when the vault address is changed
-   *  @param vaultAddress The vault address before the address was changed
-   *  @param _vaultAddress The vault address after the address was changed
+   *  @param newVaultAddress The vault address after the address was changed
    */
-  event VaultAddressChanged(address indexed vaultAddress, address indexed _vaultAddress);
+  event VaultAddressChanged(address indexed newVaultAddress);
 
   /**
    *  @notice Emitted when a pool is created
@@ -29,10 +27,9 @@ interface IAlgebraFactory {
 
   /**
    *  @notice Emitted when the farming address is changed
-   *  @param farmingAddress The farming address before the address was changed
-   *  @param _farmingAddress The farming address after the address was changed
+   *  @param newFarmingAddress The farming address after the address was changed
    */
-  event FarmingAddressChanged(address indexed farmingAddress, address indexed _farmingAddress);
+  event FarmingAddressChanged(address indexed newFarmingAddress);
 
   /**
    *  @notice Returns the current owner of the factory

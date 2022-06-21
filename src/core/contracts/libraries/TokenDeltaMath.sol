@@ -14,7 +14,7 @@ library TokenDeltaMath {
   using SafeCast for uint256;
 
   /// @notice Gets the token0 delta between two prices
-  /// @dev Calculates liquidity / sqrt(lower) - liquidity / sqrt(upper),
+  /// @dev Calculates liquidity / sqrt(lower) - liquidity / sqrt(upper)
   /// @param priceLower A sqrt price
   /// @param priceUpper Another sqrt price
   /// @param liquidity The amount of usable liquidity
