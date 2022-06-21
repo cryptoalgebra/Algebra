@@ -21,7 +21,6 @@ import './libraries/Constants.sol';
 import './libraries/TransferHelper.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
-import './libraries/PIFee.sol';
 
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IAlgebraFactory.sol';
@@ -201,9 +200,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     globalState.price = initialPrice;
     globalState.unlocked = true;
     globalState.tick = tick;
-
-    blockStartPrice = initialPrice;
-    startPriceUpdated = timestamp;
 
     emit Initialize(initialPrice, tick);
   }
@@ -700,8 +696,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCache {
     uint8 communityFee; // The community fee of the selling token
-    uint160 startPrice; // Price at the beginning of the block
-    uint16 startFee; // Fee at the beginning of the block
     uint128 liquidityStart; // The liquidity at the start of a swap
     uint128 volumePerLiquidityInBlock;
     int56 tickCumulative; // The global tickCumulative at the moment
@@ -786,17 +780,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.communityFee = _globalState.communityFeeToken1;
       }
 
-      cache.startFee = cache.fee;
       cache.startTick = currentTick;
 
       blockTimestamp = _blockTimestamp();
-
-      if (blockTimestamp != startPriceUpdated) {
-        startPriceUpdated = blockTimestamp;
-        blockStartPrice = currentPrice;
-      }
-
-      cache.startPrice = blockStartPrice;
 
       if (activeIncentive != address(0)) {
         IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
@@ -822,7 +808,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.timepointIndex = newTimepointIndex;
         cache.volumePerLiquidityInBlock = 0;
         cache.fee = _changeFee(blockTimestamp, currentTick, cache.timepointIndex, currentLiquidity);
-        cache.startFee = cache.fee;
       }
     }
 
@@ -834,21 +819,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroToOne);
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
-
-      // estimated price after swap
-      (currentPrice, , , ) = PriceMovementMath.movePriceTowardsTarget(
-        zeroToOne,
-        currentPrice,
-        (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
-          ? limitSqrtPrice
-          : step.nextTickPrice,
-        currentLiquidity,
-        amountRequired,
-        cache.fee
-      );
-      // increase fee, depending on estimated price
-      cache.fee = PIFee.recalculateFee(zeroToOne, cache.startPrice, currentPrice, cache.startFee, cache.fee);
-      currentPrice = step.stepSqrtPrice;
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
