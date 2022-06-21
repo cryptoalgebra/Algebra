@@ -78,7 +78,7 @@ interface IDataStorageOperator {
     uint128 volumePerLiquidity
   ) external returns (uint16 indexUpdated);
 
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external;
+  function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
 
   function calculateVolumePerLiquidity(
     uint128 liquidity,
@@ -89,9 +89,9 @@ interface IDataStorageOperator {
   function WINDOW() external view returns (uint32);
 
   function getFee(
-    uint32 _time,
-    int24 _tick,
-    uint16 _index,
-    uint128 _liquidity
+    uint32 time,
+    int24 tick,
+    uint16 index,
+    uint128 liquidity
   ) external view returns (uint16 fee);
 }
