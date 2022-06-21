@@ -570,7 +570,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     uint128 liquidity,
     uint128 volumePerLiquidityInBlock
-  ) private returns (uint16) {
+  ) private returns (uint16 newTimepointIndex) {
     return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity, volumePerLiquidityInBlock);
   }
 
