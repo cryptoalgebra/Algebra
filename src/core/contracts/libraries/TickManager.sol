@@ -111,10 +111,8 @@ library TickManager {
         data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
         data.outerTickCumulative = tickCumulative;
         data.outerSecondsSpent = time;
-        data.initialized = true;
-      } else {
-        data.initialized = true;
       }
+      data.initialized = true;
     }
   }
 
