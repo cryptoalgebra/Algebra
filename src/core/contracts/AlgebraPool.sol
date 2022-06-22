@@ -305,7 +305,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           secondsPerLiquidityCumulative,
           tickCumulative,
           time,
-          false
+          false // isTopTick
         )
       ) {
         toggledBottom = true;
@@ -322,7 +322,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           secondsPerLiquidityCumulative,
           tickCumulative,
           time,
-          true
+          true // isTopTick
         )
       ) {
         toggledTop = true;
