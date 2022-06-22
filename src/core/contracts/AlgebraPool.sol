@@ -848,7 +848,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
 
       if (cache.communityFee > 0) {
-        uint256 delta = (step.feeAmount * cache.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
+        uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
       }
 
