@@ -659,6 +659,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
+    require(globalState.unlocked, 'LOK');
     globalState.unlocked = false;
     if (zeroToOne) {
       uint256 balance0Before = balanceToken0();
