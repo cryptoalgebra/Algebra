@@ -51,7 +51,7 @@ interface IAlgebraPoolActions {
    * @param amount0Requested How much token0 should be withdrawn from the fees owed
    * @param amount1Requested How much token1 should be withdrawn from the fees owed
    * @return amount0 The amount of fees collected in token0
-   * amount1 The amount of fees collected in token1
+   * @return amount1 The amount of fees collected in token1
    */
   function collect(
     address recipient,
@@ -69,7 +69,7 @@ interface IAlgebraPoolActions {
    * @param topTick The upper tick of the position for which to burn liquidity
    * @param amount How much liquidity to burn
    * @return amount0 The amount of token0 sent to the recipient
-   * amount1 The amount of token1 sent to the recipient
+   * @return amount1 The amount of token1 sent to the recipient
    */
   function burn(
     int24 bottomTick,
@@ -88,7 +88,7 @@ interface IAlgebraPoolActions {
    * @param data Any data to be passed through to the callback. If using the Router it should contain
    * SwapRouter#SwapCallbackData
    * @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-   * amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+   * @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
    */
   function swap(
     address recipient,
@@ -110,7 +110,7 @@ interface IAlgebraPoolActions {
    * @param data Any data to be passed through to the callback. If using the Router it should contain
    * SwapRouter#SwapCallbackData
    * @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-   * amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+   * @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
    */
   function swapSupportingFeeOnInputTokens(
     address sender,
