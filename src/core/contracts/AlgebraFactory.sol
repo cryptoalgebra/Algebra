@@ -105,7 +105,7 @@ contract AlgebraFactory is IAlgebraFactory {
     baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x952c6248aeeb4c9f5bc7366d4b5c01ce6ef8aed925df4ec24c6b9434a1081ba4;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xf88a4b6c5fff7525c8e482dd576365690a13fd659ed1a342e8488708531bc79d;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

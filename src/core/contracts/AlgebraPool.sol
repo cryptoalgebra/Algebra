@@ -33,6 +33,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
+  using LowGasSafeMath for uint128;
   using SafeCast for uint256;
   using SafeCast for int256;
   using TickTable for mapping(int16 => uint256);
@@ -541,7 +542,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     amount1 = uint256(-amount1Int);
 
     if (amount0 | amount1 != 0) {
-      (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
+      (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
 
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
