@@ -18,10 +18,11 @@ interface IAlgebraPoolActions {
    * @param recipient The address for which the liquidity will be created
    * @param bottomTick The lower tick of the position in which to add liquidity
    * @param topTick The upper tick of the position in which to add liquidity
-   * @param amount The amount of liquidity to mint
+   * @param amount The desired amount of liquidity to mint
    * @param data Any data that should be passed through to the callback
    * @return amount0 The amount of token0 that was paid to mint the given amount of liquidity. Matches the value in the callback
    * @return amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback
+   * @return liquidityActual The actual minted amount of liquidity
    */
   function mint(
     address sender,
@@ -35,7 +36,7 @@ interface IAlgebraPoolActions {
     returns (
       uint256 amount0,
       uint256 amount1,
-      uint256 liquidityAmount
+      uint128 liquidityActual
     );
 
   /**

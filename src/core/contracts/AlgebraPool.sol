@@ -427,7 +427,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     address recipient,
     int24 bottomTick,
     int24 topTick,
-    uint128 _liquidity,
+    uint128 liquidityDesired,
     bytes calldata data
   )
     external
@@ -436,16 +436,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     returns (
       uint256 amount0,
       uint256 amount1,
-      uint256 liquidityAmount
+      uint128 liquidityActual
     )
   {
-    require(_liquidity > 0, 'IL');
+    require(liquidityDesired > 0, 'IL');
+
     tickValidation(bottomTick, topTick);
     {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
         topTick,
-        int256(_liquidity).toInt128(),
+        int256(liquidityDesired).toInt128(),
         globalState.tick,
         globalState.price
       );
@@ -464,20 +465,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 > 0) require((receivedAmount1 = balanceToken1() - receivedAmount1) > 0, 'IIAM');
     }
 
+    liquidityActual = liquidityDesired;
     if (receivedAmount0 < amount0) {
-      _liquidity = uint128(FullMath.mulDiv(uint256(_liquidity), receivedAmount0, amount0));
+      liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
     }
     if (receivedAmount1 < amount1) {
-      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(_liquidity), receivedAmount1, amount1));
-      if (liquidityForRA1 < _liquidity) {
-        _liquidity = liquidityForRA1;
+      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+      if (liquidityForRA1 < liquidityActual) {
+        liquidityActual = liquidityForRA1;
       }
     }
 
-    require(_liquidity > 0, 'IIL2');
+    require(liquidityActual > 0, 'IIL2');
 
     {
-      (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(_liquidity).toInt128());
+      (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
 
       require((amount0 = uint256(amount0Int)) <= receivedAmount0, 'IIAM2');
       require((amount1 = uint256(amount1Int)) <= receivedAmount1, 'IIAM2');
@@ -489,8 +491,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (receivedAmount1 > amount1) {
       TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
     }
-    liquidityAmount = _liquidity;
-    emit Mint(msg.sender, recipient, bottomTick, topTick, _liquidity, amount0, amount1);
+    emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
   /// @inheritdoc IAlgebraPoolActions
