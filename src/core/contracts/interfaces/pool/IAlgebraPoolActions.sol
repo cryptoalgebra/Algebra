@@ -15,6 +15,7 @@ interface IAlgebraPoolActions {
    * @dev The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
    * in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
    * on bottomTick, topTick, the amount of liquidity, and the current price.
+   * @param sender The address which will receive potential surplus of paid tokens
    * @param recipient The address for which the liquidity will be created
    * @param bottomTick The lower tick of the position in which to add liquidity
    * @param topTick The upper tick of the position in which to add liquidity
