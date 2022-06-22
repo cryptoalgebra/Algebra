@@ -84,17 +84,18 @@ interface IAlgebraPoolState {
    * @notice Returns the information about a position by the position's key
    * @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
    * @return liquidityAmount The amount of liquidity in the position,
-   * innerFeeGrowth0Token fee growth of token0 inside the tick range as of the last mint/burn/poke,
-   * innerFeeGrowth1Token fee growth of token1 inside the tick range as of the last mint/burn/poke,
-   * fees0 the computed amount of token0 owed to the position as of the last mint/burn/poke,
-   * fees1 the computed amount of token1 owed to the position as of the last mint/burn/poke
+   * lastLiquidityAddTimestamp Timestamp of last adding of liquidity
+   * innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke,
+   * innerFeeGrowth1Token Fee growth of token1 inside the tick range as of the last mint/burn/poke,
+   * fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke,
+   * fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
   function positions(bytes32 key)
     external
     view
     returns (
       uint128 liquidityAmount,
-      uint32 lastModificationTimestamp,
+      uint32 lastLiquidityAddTimestamp,
       uint256 innerFeeGrowth0Token,
       uint256 innerFeeGrowth1Token,
       uint128 fees0,
