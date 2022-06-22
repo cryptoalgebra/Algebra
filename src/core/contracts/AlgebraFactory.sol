@@ -74,18 +74,21 @@ contract AlgebraFactory is IAlgebraFactory {
 
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
+    require(owner != _owner);
     emit Owner(_owner);
     owner = _owner;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setFarmingAddress(address _farmingAddress) external override onlyOwner {
+    require(farmingAddress != _farmingAddress);
     emit FarmingAddress(_farmingAddress);
     farmingAddress = _farmingAddress;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
+    require(vaultAddress != vaultAddress);
     emit VaultAddress(_vaultAddress);
     vaultAddress = _vaultAddress;
   }
