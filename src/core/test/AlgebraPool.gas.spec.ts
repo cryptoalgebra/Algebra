@@ -40,7 +40,7 @@ describe('AlgebraPool gas tests', () => {
     loadFixture = createFixtureLoader([wallet, other])
   })
 
-  for (const communityFee of [0, 6]) {
+  for (const communityFee of [0, 60]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
       const startingPrice = encodePriceSqrt(100001, 100000)
       const startingTick = 0

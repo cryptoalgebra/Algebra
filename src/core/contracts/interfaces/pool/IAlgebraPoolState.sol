@@ -13,8 +13,8 @@ interface IAlgebraPoolState {
    * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
    * @return timepointIndex The index of the last written timepoint
    * @return timepointIndexSwap The index of the last written (on swap) timepoint
-   * @return communityFeeToken0 The community fee value for token0
-   * @return communityFeeToken1 The community fee value for token1
+   * @return communityFeeToken0 The community fee value for token0 in thousandths (1e-3)
+   * @return communityFeeToken1 The community fee value for token1 in thousandths (1e-3)
    * @return unlocked Whether the pool is currently locked to reentrancy
    */
   function globalState()

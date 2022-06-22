@@ -57,7 +57,7 @@ describe('AlgebraPool arbitrage tests', () => {
     loadFixture = createFixtureLoader([wallet, arbitrageur])
   })
 
-  for (const communityFee of [0, 17]) {
+  for (const communityFee of [0, 170]) {
     describe(`community fee = ${communityFee};`, () => {
       const startingPrice = encodePriceSqrt(1, 1)
       const startingTick = 0

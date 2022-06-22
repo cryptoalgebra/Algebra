@@ -8,8 +8,8 @@ pragma solidity >=0.5.0;
 interface IAlgebraPoolPermissionedActions {
   /**
    * @notice Set the community's % share of the fees
-   * @param communityFee0 new community fee percent for token0 of the pool
-   * @param communityFee1 new community fee percent for token1 of the pool
+   * @param communityFee0 new community fee percent for token0 of the pool in thousandths (1e-3)
+   * @param communityFee1 new community fee percent for token1 of the pool in thousandths (1e-3)
    */
   function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external;
 

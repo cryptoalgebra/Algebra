@@ -12,6 +12,6 @@ library Constants {
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 11505743598341114571880798222544994;
 
   uint32 internal constant MAX_LIQUIDITY_COOLDOWN = 1 days;
-  uint8 internal constant MAX_COMMUNITY_FEE = 25;
-  uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 100;
+  uint8 internal constant MAX_COMMUNITY_FEE = 250;
+  uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1000;
 }

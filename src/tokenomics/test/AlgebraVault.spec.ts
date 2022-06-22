@@ -85,7 +85,7 @@ describe('AlgebraVault', async ()=> {
       await context.factory.setVaultAddress(vault.address)
 
       ALGBPool = poolFactory.attach(context.pool12) as IAlgebraPool
-      await ALGBPool.connect(wallets[0]).setCommunityFee(25,25)
+      await ALGBPool.connect(wallets[0]).setCommunityFee(250,250)
 
       await ALGB.connect(wallets[0]).approve(context.router.address, constants.MaxUint256)
       await tokens[1].connect(wallets[0]).approve(context.router.address, constants.MaxUint256)

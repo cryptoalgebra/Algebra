@@ -11,7 +11,7 @@ abstract contract PoolState is IAlgebraPoolState {
     uint16 fee; // The index of the last written timepoint
     uint16 timepointIndex; // The index of the last written (on swap) timepoint
     uint16 timepointIndexSwap;
-    uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee
+    uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     uint8 communityFeeToken1;
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
