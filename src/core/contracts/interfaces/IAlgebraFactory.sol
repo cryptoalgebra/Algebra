@@ -31,6 +31,18 @@ interface IAlgebraFactory {
    */
   event FarmingAddress(address indexed newFarmingAddress);
 
+  event FeeConfiguration(
+    uint32 alpha1,
+    uint32 alpha2,
+    uint32 beta1,
+    uint32 beta2,
+    uint16 gamma1,
+    uint16 gamma2,
+    uint32 volumeBeta,
+    uint32 volumeGamma,
+    uint16 baseFee
+  );
+
   /**
    *  @notice Returns the current owner of the factory
    *  @dev Can be changed by the current owner via setOwner
