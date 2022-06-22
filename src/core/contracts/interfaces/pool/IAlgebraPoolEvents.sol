@@ -17,7 +17,7 @@ interface IAlgebraPoolEvents {
    * @param owner The owner of the position and recipient of any minted liquidity
    * @param bottomTick The lower tick of the position
    * @param topTick The upper tick of the position
-   * @param amount The amount of liquidity minted to the position range
+   * @param liquidityAmount The amount of liquidity minted to the position range
    * @param amount0 How much token0 was required for the minted liquidity
    * @param amount1 How much token1 was required for the minted liquidity
    */
@@ -26,7 +26,7 @@ interface IAlgebraPoolEvents {
     address indexed owner,
     int24 indexed bottomTick,
     int24 indexed topTick,
-    uint128 amount,
+    uint128 liquidityAmount,
     uint256 amount0,
     uint256 amount1
   );
@@ -48,11 +48,11 @@ interface IAlgebraPoolEvents {
    * @param owner The owner of the position for which liquidity is removed
    * @param bottomTick The lower tick of the position
    * @param topTick The upper tick of the position
-   * @param amount The amount of liquidity to remove
+   * @param liquidityAmount The amount of liquidity to remove
    * @param amount0 The amount of token0 withdrawn
    * @param amount1 The amount of token1 withdrawn
    */
-  event Burn(address indexed owner, int24 indexed bottomTick, int24 indexed topTick, uint128 amount, uint256 amount0, uint256 amount1);
+  event Burn(address indexed owner, int24 indexed bottomTick, int24 indexed topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1);
 
   /**
    * @notice Emitted by the pool for any swaps between token0 and token1
