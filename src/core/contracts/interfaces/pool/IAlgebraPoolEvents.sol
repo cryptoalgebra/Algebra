@@ -100,9 +100,16 @@ interface IAlgebraPoolEvents {
    * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
    */
   event IncentiveSet(address virtualPoolAddress);
+
   /**
    * @notice Emitted when the fee changes
    * @param Fee The value of the token fee
    */
   event ChangeFee(uint16 Fee);
+
+  /**
+   * @notice Emitted when the LiquidityCooldown changes
+   * @param LiquidityCooldown The value of locktime for added liquidity
+   */
+  event LiquidityCooldown(uint32 LiquidityCooldown);
 }
