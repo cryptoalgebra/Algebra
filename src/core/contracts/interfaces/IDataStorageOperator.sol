@@ -5,6 +5,8 @@ pragma abicoder v2;
 import '../libraries/AdaptiveFee.sol';
 
 interface IDataStorageOperator {
+  event FeeConfiguration(AdaptiveFee.Configuration feeConfig);
+
   /**
    * @notice Returns data belonging to a certain timepoint
    * @param index The index of timepoint in the array

@@ -45,6 +45,7 @@ contract DataStorageOperator is IDataStorageOperator {
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
     feeConfig = _feeConfig;
+    emit FeeConfiguration(_feeConfig);
   }
 
   function getSingleTimepoint(
