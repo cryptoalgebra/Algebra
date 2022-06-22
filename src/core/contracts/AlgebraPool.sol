@@ -1006,9 +1006,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external override lock onlyFactoryOwner {
     require((communityFee0 <= Constants.MAX_COMMUNITY_FEE) && (communityFee1 <= Constants.MAX_COMMUNITY_FEE));
-    (uint8 communityFeeOld0, uint8 communityFeeOld1) = (globalState.communityFeeToken0, globalState.communityFeeToken1);
     (globalState.communityFeeToken0, globalState.communityFeeToken1) = (communityFee0, communityFee1);
-    emit SetCommunityFee(communityFeeOld0, communityFeeOld1, communityFee0, communityFee1);
+    emit CommunityFee(communityFee0, communityFee1);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

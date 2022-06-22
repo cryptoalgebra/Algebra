@@ -80,12 +80,10 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when the community fee is changed by the pool
-   * @param communityFee0Old The previous value of the token0 community fee percent
-   * @param communityFee1Old The previous value of the token1 community fee percent
    * @param communityFee0New The updated value of the token0 community fee percent
    * @param communityFee1New The updated value of the token1 community fee percent
    */
-  event SetCommunityFee(uint8 communityFee0Old, uint8 communityFee1Old, uint8 communityFee0New, uint8 communityFee1New);
+  event CommunityFee(uint8 communityFee0New, uint8 communityFee1New);
 
   /**
    * @notice Emitted when the collected community fees are withdrawn by the factory owner
