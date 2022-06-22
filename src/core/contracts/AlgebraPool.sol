@@ -191,7 +191,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     require(globalState.price == 0, 'AI');
-
+    // getTickAtSqrtRatio checks validity of initialPrice inside
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice);
 
     uint32 timestamp = _blockTimestamp();
