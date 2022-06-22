@@ -613,8 +613,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 currentLiquidity;
     uint256 communityFee;
     uint256 feeAmount;
-
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+    // function _calculateSwapAndLock locks globalState.unlocked and does not release
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     if (zeroToOne) {
       if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1)); // transfer to recipient
@@ -639,7 +639,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
-    globalState.unlocked = true;
+    globalState.unlocked = true; // release after lock in _calculateSwapAndLock
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -672,7 +672,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
     globalState.unlocked = true;
 
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+    // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     // only transfer to the recipient
     if (zeroToOne) {
@@ -694,7 +695,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
-    globalState.unlocked = true;
+    globalState.unlocked = true; // release after lock in _calculateSwapAndLock
   }
 
   struct SwapCache {
@@ -726,7 +727,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 feeAmount; // The total amount of fee earned within a current step
   }
 
-  function _calculateSwap(
+  /// @notice For gas optimization, locks 'globalState.unlocked' and does not release.
+  function _calculateSwapAndLock(
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
@@ -763,7 +765,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         globalState.unlocked
       );
 
-      globalState.unlocked = false;
+      globalState.unlocked = false; // lock will not be released in this function
       require(_globalState.unlocked, 'LOK');
 
       require(amountRequired != 0, 'AS');
