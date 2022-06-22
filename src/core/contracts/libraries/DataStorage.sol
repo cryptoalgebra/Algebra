@@ -52,6 +52,7 @@ library DataStorage {
   /// @param last The specified timepoint to be used in creation of new timepoint
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
+  /// @param prevTick The active tick at the time of the last timepoint
   /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @param averageTick The average tick at the time of the new timepoint
   /// @param volumePerLiquidity The gmean(volumes)/liquidity at the time of the new timepoint
@@ -176,12 +177,13 @@ library DataStorage {
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
   /// @param self The stored dataStorage array
-  /// @param self The oldest timepoint
   /// @param time The current block timestamp
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return an timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
+  /// @param oldestIndex The index of the oldest timepoint
   /// @param liquidity The current in-range pool liquidity
+  /// @return targetTimepoint desired timepoint or it's approximation
   function getSingleTimepoint(
     Timepoint[MAX_UINT16] storage self,
     uint32 time,
@@ -190,7 +192,7 @@ library DataStorage {
     uint16 index,
     uint16 oldestIndex,
     uint128 liquidity
-  ) internal view returns (Timepoint memory) {
+  ) internal view returns (Timepoint memory targetTimepoint) {
     uint32 target = time - secondsAgo;
 
     // if target is newer than last timepoint
@@ -252,6 +254,8 @@ library DataStorage {
   /// @param liquidity The current in-range pool liquidity
   /// @return tickCumulatives The tick * time elapsed since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
+  /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
+  /// @return volumePerAvgLiquiditys The cumulative volume per liquidity values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
     Timepoint[MAX_UINT16] storage self,
     uint32 time,
@@ -300,7 +304,7 @@ library DataStorage {
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
   /// @return volatilityAverage The average volatility in the recent range
-  /// volumePerLiqAverage The average volume per liquidity in the recent range
+  /// @return volumePerLiqAverage The average volume per liquidity in the recent range
   function getAverages(
     Timepoint[MAX_UINT16] storage self,
     uint32 time,
