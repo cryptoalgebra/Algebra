@@ -1034,8 +1034,8 @@ describe('AlgebraPool', () => {
 
     it('can be changed by the owner', async () => {
       await pool.setCommunityFee(170, 170)
-      expect((await pool.globalState()).communityFeeToken0).to.eq(17)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(17)
+      expect((await pool.globalState()).communityFeeToken0).to.eq(170)
+      expect((await pool.globalState()).communityFeeToken1).to.eq(170)
     })
 
     it('cannot be changed out of bounds', async () => {
@@ -1724,19 +1724,19 @@ describe('AlgebraPool', () => {
       expect((await pool.globalState()).communityFeeToken1).to.eq(0)
     })
     it('emits an event when turned on', async () => {
-      await expect(pool.setCommunityFee(140, 140)).to.be.emit(pool, 'SetCommunityFee').withArgs(0, 0, 140, 140)
+      await expect(pool.setCommunityFee(140, 140)).to.be.emit(pool, 'CommunityFee').withArgs(140, 140)
     })
     it('emits an event when turned off', async () => {
       await pool.setCommunityFee(140, 200)
-      await expect(pool.setCommunityFee(0, 0)).to.be.emit(pool, 'SetCommunityFee').withArgs(140, 200, 0, 0)
+      await expect(pool.setCommunityFee(0, 0)).to.be.emit(pool, 'CommunityFee').withArgs(0, 0)
     })
     it('emits an event when changed', async () => {
       await pool.setCommunityFee(250, 100)
-      await expect(pool.setCommunityFee(170, 120)).to.be.emit(pool, 'SetCommunityFee').withArgs(250, 100, 170, 120)
+      await expect(pool.setCommunityFee(170, 120)).to.be.emit(pool, 'CommunityFee').withArgs(170, 120)
     })
     it('emits an event when unchanged', async () => {
       await pool.setCommunityFee(200, 110)
-      await expect(pool.setCommunityFee(200, 110)).to.be.emit(pool, 'SetCommunityFee').withArgs(200, 110, 200, 110)
+      await expect(pool.setCommunityFee(200, 110)).to.be.emit(pool, 'CommunityFee').withArgs( 200, 110)
     })
   })
 

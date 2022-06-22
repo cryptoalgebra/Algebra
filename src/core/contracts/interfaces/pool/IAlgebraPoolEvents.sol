@@ -86,29 +86,20 @@ interface IAlgebraPoolEvents {
   event CommunityFee(uint8 communityFee0New, uint8 communityFee1New);
 
   /**
-   * @notice Emitted when the collected community fees are withdrawn by the factory owner
-   * @param sender The address that collects the community fees
-   * @param recipient The address that receives the collected community fees
-   * @param amount0 The amount of token0 community fees that is withdrawn
-   * @param amount0 The amount of token1 community fees that is withdrawn
-   */
-  event CollectCommunityFee(address indexed sender, address indexed recipient, uint128 amount0, uint128 amount1);
-
-  /**
    * @notice Emitted when new activeIncentive is set
    * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
    */
-  event IncentiveSet(address virtualPoolAddress);
+  event Incentive(address indexed virtualPoolAddress);
 
   /**
    * @notice Emitted when the fee changes
-   * @param Fee The value of the token fee
+   * @param fee The value of the token fee
    */
-  event ChangeFee(uint16 Fee);
+  event Fee(uint16 fee);
 
   /**
    * @notice Emitted when the LiquidityCooldown changes
-   * @param LiquidityCooldown The value of locktime for added liquidity
+   * @param liquidityCooldown The value of locktime for added liquidity
    */
-  event LiquidityCooldown(uint32 LiquidityCooldown);
+  event LiquidityCooldown(uint32 liquidityCooldown);
 }

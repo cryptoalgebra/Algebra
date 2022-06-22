@@ -554,7 +554,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   ) private returns (uint16 newFee) {
     newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
     globalState.fee = newFee;
-    emit ChangeFee(newFee);
+    emit Fee(newFee);
   }
 
   function _payCommunityFee(address token, uint256 amount) private {
@@ -1015,7 +1015,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(msg.sender == IAlgebraFactory(factory).farmingAddress());
     activeIncentive = virtualPoolAddress;
 
-    emit IncentiveSet(virtualPoolAddress);
+    emit Incentive(virtualPoolAddress);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
