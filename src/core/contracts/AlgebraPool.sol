@@ -39,7 +39,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
-    uint32 lastModificationTimestamp; // Timestamp of last adding of liquidity
+    uint32 lastLiquidityAddTimestamp; // Timestamp of last adding of liquidity
     uint256 innerFeeGrowth0Token; // The last updated fee growth per unit of liquidity
     uint256 innerFeeGrowth1Token;
     uint128 fees0; // The amount of token0 owed to a LP
@@ -217,7 +217,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
-    (uint128 currentLiquidity, uint32 lastModificationTimestamp) = (_position.liquidity, _position.lastModificationTimestamp);
+    (uint128 currentLiquidity, uint32 lastLiquidityAddTimestamp) = (_position.liquidity, _position.lastLiquidityAddTimestamp);
 
     if (liquidityDelta == 0) {
       require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
@@ -225,15 +225,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (liquidityDelta < 0) {
         uint32 _liquidityCooldown = liquidityCooldown;
         if (_liquidityCooldown > 0) {
-          require((_blockTimestamp() - lastModificationTimestamp) >= _liquidityCooldown);
+          require((_blockTimestamp() - lastLiquidityAddTimestamp) >= _liquidityCooldown);
         }
       }
 
       // change position liquidity
       uint128 liquidityNext = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-      (_position.liquidity, _position.lastModificationTimestamp) = (
+      (_position.liquidity, _position.lastLiquidityAddTimestamp) = (
         liquidityNext,
-        liquidityNext > 0 ? (liquidityDelta > 0 ? _blockTimestamp() : lastModificationTimestamp) : 0
+        liquidityNext > 0 ? (liquidityDelta > 0 ? _blockTimestamp() : lastLiquidityAddTimestamp) : 0
       );
     }
 
