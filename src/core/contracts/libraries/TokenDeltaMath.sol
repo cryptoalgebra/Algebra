@@ -26,8 +26,8 @@ library TokenDeltaMath {
     uint128 liquidity,
     bool roundUp
   ) internal pure returns (uint256 token0Delta) {
-    require(priceLower > 0);
-    uint256 priceDelta = uint256(priceUpper).sub(uint256(priceLower));
+    uint256 priceDelta = priceUpper - priceLower;
+    require(priceDelta < priceUpper); // forbids underflow and 0 priceLower
     uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
     token0Delta = roundUp
@@ -48,6 +48,7 @@ library TokenDeltaMath {
     uint128 liquidity,
     bool roundUp
   ) internal pure returns (uint256 token1Delta) {
+    require(priceUpper >= priceLower);
     uint256 priceDelta = priceUpper - priceLower;
     token1Delta = roundUp ? FullMath.mulDivRoundingUp(priceDelta, liquidity, Constants.Q96) : FullMath.mulDiv(priceDelta, liquidity, Constants.Q96);
   }
