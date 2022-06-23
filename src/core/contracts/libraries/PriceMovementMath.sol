@@ -139,7 +139,7 @@ library PriceMovementMath {
     uint160 targetPrice,
     uint128 liquidity,
     int256 amountAvailable,
-    uint24 fee
+    uint16 fee
   )
     internal
     pure

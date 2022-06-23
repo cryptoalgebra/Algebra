@@ -9,7 +9,7 @@ contract PriceMovementMathTest {
     uint160 sqrtPTarget,
     uint128 liquidity,
     int256 amountRemaining,
-    uint24 feePips
+    uint16 feePips
   )
     external
     pure
@@ -28,7 +28,7 @@ contract PriceMovementMathTest {
     uint160 sqrtPTarget,
     uint128 liquidity,
     int256 amountRemaining,
-    uint24 feePips
+    uint16 feePips
   ) external view returns (uint256) {
     uint256 gasBefore = gasleft();
     PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
