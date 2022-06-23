@@ -150,14 +150,20 @@ library DataStorage {
 
     do {
       beforeOrAt = self[current % MAX_UINT16];
-      if (beforeOrAt.initialized) {
+      (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
+      if (initializedBefore) {
         // check if we've found the answer!
-        if (lteConsideringOverflow(beforeOrAt.blockTimestamp, target, time)) {
+        if (lteConsideringOverflow(timestampBefore, target, time)) {
           atOrAfter = self[addmod(current, 1, MAX_UINT16)];
-          if (lteConsideringOverflow(target, atOrAfter.blockTimestamp, time)) {
-            return (beforeOrAt, atOrAfter); // the only correct way to finish
+          (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
+          if (initializedAfter) {
+            if (lteConsideringOverflow(target, timestampAfter, time)) {
+              return (beforeOrAt, atOrAfter); // the only fully correct way to finish
+            }
+            left = current + 1;
+          } else {
+            return (beforeOrAt, beforeOrAt); // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
           }
-          left = current + 1;
         } else {
           right = current - 1;
         }
