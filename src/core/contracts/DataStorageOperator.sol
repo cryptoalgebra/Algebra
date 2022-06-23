@@ -44,6 +44,10 @@ contract DataStorageOperator is IDataStorageOperator {
 
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
+
+    require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0 && _feeConfig.volumeGamma != 0, 'Gammas must be > 0');
+
     feeConfig = _feeConfig;
     emit FeeConfiguration(_feeConfig);
   }
@@ -147,6 +151,6 @@ contract DataStorageOperator is IDataStorageOperator {
   ) external view override onlyPool returns (uint16 fee) {
     (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
 
-    return uint16(AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig));
+    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig);
   }
 }

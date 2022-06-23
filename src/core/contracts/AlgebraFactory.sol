@@ -95,21 +95,24 @@ contract AlgebraFactory is IAlgebraFactory {
 
   /// @inheritdoc IAlgebraFactory
   function setBaseFeeConfiguration(
-    uint32 alpha1,
-    uint32 alpha2,
+    uint16 alpha1,
+    uint16 alpha2,
     uint32 beta1,
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
     uint32 volumeBeta,
-    uint32 volumeGamma,
+    uint16 volumeGamma,
     uint16 baseFee
   ) external override onlyOwner {
+    require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(gamma1 != 0 && gamma2 != 0 && volumeGamma != 0, 'Gammas must be > 0');
+
     baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x5db82fc8931d126a87370c2fb7c324b31254a4a4f781db73d1bee9db5dde2915;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xfe837c8887c1538f1bbfdf19817859a122204a77dd02807eaf7d7813c21b4758;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
