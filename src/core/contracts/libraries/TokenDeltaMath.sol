@@ -27,7 +27,7 @@ library TokenDeltaMath {
     bool roundUp
   ) internal pure returns (uint256 token0Delta) {
     require(priceLower > 0);
-    uint256 priceDelta = priceUpper - priceLower;
+    uint256 priceDelta = uint256(priceUpper).sub(uint256(priceLower));
     uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
     token0Delta = roundUp
