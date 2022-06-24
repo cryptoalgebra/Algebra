@@ -12,11 +12,11 @@ library PriceMovementMath {
 
   /// @notice Gets the next sqrt price given an input amount of token0 or token1
   /// @dev Throws if price or liquidity are 0, or if the next price is out of bounds
-  /// @param price The starting price, i.e., before accounting for the input amount
+  /// @param price The starting Q64.96 sqrt price, i.e., before accounting for the input amount
   /// @param liquidity The amount of usable liquidity
   /// @param input How much of token0, or token1, is being swapped in
   /// @param zeroToOne Whether the amount in is token0 or token1
-  /// @return resultPrice The price after adding the input amount to token0 or token1
+  /// @return resultPrice The Q64.96 sqrt price after adding the input amount to token0 or token1
   function getNewPriceAfterInput(
     uint160 price,
     uint128 liquidity,
@@ -28,11 +28,11 @@ library PriceMovementMath {
 
   /// @notice Gets the next sqrt price given an output amount of token0 or token1
   /// @dev Throws if price or liquidity are 0 or the next price is out of bounds
-  /// @param price The starting price before accounting for the output amount
+  /// @param price The starting Q64.96 sqrt price before accounting for the output amount
   /// @param liquidity The amount of usable liquidity
   /// @param output How much of token0, or token1, is being swapped out
   /// @param zeroToOne Whether the amount out is token0 or token1
-  /// @return resultPrice The price after removing the output amount of token0 or token1
+  /// @return resultPrice The Q64.96 sqrt price after removing the output amount of token0 or token1
   function getNewPriceAfterOutput(
     uint160 price,
     uint128 liquidity,
@@ -124,12 +124,12 @@ library PriceMovementMath {
 
   /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
   /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
-  /// @param currentPrice The current sqrt price of the pool
-  /// @param targetPrice The price that cannot be exceeded, from which the direction of the swap is inferred
+  /// @param currentPrice The current Q64.96 sqrt price of the pool
+  /// @param targetPrice The Q64.96 sqrt price that cannot be exceeded, from which the direction of the swap is inferred
   /// @param liquidity The usable liquidity
   /// @param amountAvailable How much input or output amount is remaining to be swapped in/out
   /// @param fee The fee taken from the input amount, expressed in hundredths of a bip
-  /// @return resultPrice The price after swapping the amount in/out, not to exceed the price target
+  /// @return resultPrice The Q64.96 sqrt price after swapping the amount in/out, not to exceed the price target
   /// @return input The amount to be swapped in, of either token0 or token1, based on the direction of the swap
   /// @return output The amount to be received, of either token0 or token1, based on the direction of the swap
   /// @return feeAmount The amount of input that will be taken as a fee
