@@ -25,6 +25,7 @@ contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override vaultAddress;
 
+  // values of constants for sigmoids in fee calculation formula
   AdaptiveFee.Configuration public baseFeeConfiguration =
     AdaptiveFee.Configuration(
       3000 - Constants.BASE_FEE, // alpha1
