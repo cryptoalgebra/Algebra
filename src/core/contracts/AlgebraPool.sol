@@ -718,10 +718,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   struct StepComputations {
-    uint160 stepSqrtPrice; // The sqrt of the price at the start
+    uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start
     int24 nextTick; // The tick till the current step goes
     bool initialized; // True if the _nextTick is initialized
-    uint160 nextTickPrice; // The sqrt of the price calculated from the _nextTick
+    uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
