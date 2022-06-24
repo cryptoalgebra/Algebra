@@ -84,12 +84,12 @@ exports[`AdaptiveFee #getFee fee grid snapshot 1`] = `
 "
 `;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `5453`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `4454`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `4308`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `3835`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `5453`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `4454`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `4308`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `3835`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `4258`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `3854`;

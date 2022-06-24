@@ -4,10 +4,10 @@ exports[`unit/Farms #claimReward when requesting the full amount has gas cost 1`
 
 exports[`unit/Farms #enterFarming works and has gas cost 1`] = `298473`;
 
-exports[`unit/Farms #exitFarming works and has gas cost 1`] = `180295`;
+exports[`unit/Farms #exitFarming works and has gas cost 1`] = `180430`;
 
-exports[`unit/Farms swap gas 3 swaps 1`] = `223280`;
+exports[`unit/Farms swap gas 3 swaps 1`] = `214624`;
 
-exports[`unit/Farms swap gas 3 swaps 2`] = `207871`;
+exports[`unit/Farms swap gas 3 swaps 2`] = `199278`;
 
-exports[`unit/Farms swap gas 3 swaps 3`] = `207869`;
+exports[`unit/Farms swap gas 3 swaps 3`] = `199276`;

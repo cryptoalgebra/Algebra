@@ -1,19 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost for entire word 1`] = `2575`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost for entire word 1`] = `2591`;
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost just below boundary 1`] = `2575`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost just below boundary 1`] = `2591`;
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost on boundary 1`] = `2575`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost on boundary 1`] = `2591`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost for entire word 1`] = `2565`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost for entire word 1`] = `2581`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary 1`] = `3030`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary 1`] = `3010`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost on boundary 1`] = `2565`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost on boundary 1`] = `2581`;
 
-exports[`TickTable #toggleTick gas cost of flipping a tick that results in deleting a word 1`] = `22030`;
+exports[`TickTable #toggleTick gas cost of flipping a tick that results in deleting a word 1`] = `22000`;
 
-exports[`TickTable #toggleTick gas cost of flipping first tick in word to initialized 1`] = `43942`;
+exports[`TickTable #toggleTick gas cost of flipping first tick in word to initialized 1`] = `43912`;
 
-exports[`TickTable #toggleTick gas cost of flipping second tick in word to initialized 1`] = `26842`;
+exports[`TickTable #toggleTick gas cost of flipping second tick in word to initialized 1`] = `26812`;
