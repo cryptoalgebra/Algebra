@@ -130,7 +130,7 @@ interface IDataStorageOperator {
   /// @param liquidity The current in-range pool liquidity
   /// @param amount0 Total amount of swapped token0
   /// @param amount1 Total amount of swapped token1
-  /// @return volumePerLiquidity gmean(volume/liquidity) for block
+  /// @return volumePerLiquidity gmean(volume/liquidity) capped by 100000 << 64
   function calculateVolumePerLiquidity(
     uint128 liquidity,
     int256 amount0,
