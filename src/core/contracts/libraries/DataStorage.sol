@@ -22,7 +22,7 @@ library DataStorage {
   }
 
   /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
-  /// @param dt Timedelta between timepoint
+  /// @param dt Timedelta between timepoints
   /// @param tick0 The tick at the left timepoint
   /// @param tick1 The tick at the right timepoint
   /// @param avgTick0 The average tick at the left timepoint
@@ -35,13 +35,18 @@ library DataStorage {
     int256 avgTick0,
     int256 avgTick1
   ) private pure returns (uint256 volatility) {
-    // On the interval from the previous timpoint to the current
-    // tick and the and tick are straight lines that satisfy the equations
-    // yt = k*x + b   and  yat = p*x + q
-    // so: ((k*x + b) - (p*x + q))^2 = ((k-p)*x + (b-q))^2 = (k-p)^2 * x^2 + 2(k-p)(b-q)x + (b-q)^2
-    // sum from 0 to N require to use arithmetic and squares progressions
-    int256 K = (tick1 - tick0) - (avgTick1 - avgTick0);
-    int256 B = (tick0 - avgTick0) * dt;
+    // On the time interval from the previous timepoint to the current
+    // we can represent tick and average tick change as two straight lines:
+    // tick = k*t + b, where k and b are some constants
+    // avgTick = p*t + q, where p and q are some constants
+    // we want to get sum of (tick(t) - avgTick(t))^2 for every t in the interval (0; dt]
+    // so: (tick(t) - avgTick(t))^2 = ((k*t + b) - (p*t + q))^2 = (k-p)^2 * t^2 + 2(k-p)(b-q)t + (b-q)^2
+    // since everything except t is a constant, we need to use progressions for t and t^2:
+    // sum(t) for t from 1 to dt = dt*(dt + 1)/2 = sumOfSequence
+    // sum(t^2) for t from 1 to dt = dt*(dt+1)*(2dt + 1)/6 = sumOfSquares
+    // so result will be: (k-p)^2 * sumOfSquares + 2(k-p)(b-q)*sumOfSequence + dt*(b-q)^2
+    int256 K = (tick1 - tick0) - (avgTick1 - avgTick0); // (k - p)*dt
+    int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
     int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)) / 6;
     int256 sumOfSequence = (dt * (dt + 1)) / 2;
     volatility = uint256((K**2 * sumOfSquares + 2 * B * K * sumOfSequence + (dt) * B**2) / dt**2);
