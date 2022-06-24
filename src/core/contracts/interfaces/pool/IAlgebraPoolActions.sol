@@ -125,8 +125,9 @@ interface IAlgebraPoolActions {
   /**
    * @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
    * @dev The caller of this method receives a callback in the form of IAlgebraFlashCallback# AlgebraFlashCallback
-   * @dev Can be used to donate underlying tokens pro-rata to currently in-range liquidity providers by calling
-   * with 0 amount{0,1} and sending the donation amount(s) from the callback
+   * @dev All excess tokens paid in the callback are distributed to liquidity providers as an additional fee. So this method can be used
+   * to donate underlying tokens to currently in-range liquidity providers by calling with 0 amount{0,1} and sending
+   * the donation amount(s) from the callback
    * @param recipient The address which will receive the token0 and token1 amounts
    * @param amount0 The amount of token0 to send
    * @param amount1 The amount of token1 to send
