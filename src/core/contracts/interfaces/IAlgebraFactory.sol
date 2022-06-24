@@ -104,6 +104,21 @@ interface IAlgebraFactory {
    */
   function setVaultAddress(address _vaultAddress) external;
 
+  /**
+   * @notice Changes initial fee configuration for new pools
+   * @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+   * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max
+   * gammas must be > 0
+   * @param alpha1 max value of the first sigmoid
+   * @param alpha2 max value of the second sigmoid
+   * @param beta1 shift along the x-axis for the first sigmoid
+   * @param beta2 shift along the x-axis for the second sigmoid
+   * @param gamma1 horizontal stretch factor for the first sigmoid
+   * @param gamma2 horizontal stretch factor for the second sigmoid
+   * @param volumeBeta shift along the x-axis for the outer volume-sigmoid
+   * @param volumeGamma horizontal stretch factor the outer volume-sigmoid
+   * @param baseFee minimum possible fee
+   */
   function setBaseFeeConfiguration(
     uint16 alpha1,
     uint16 alpha2,
