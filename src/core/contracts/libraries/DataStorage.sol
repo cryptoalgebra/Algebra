@@ -76,7 +76,7 @@ library DataStorage {
     last.initialized = true;
     last.blockTimestamp = blockTimestamp;
     last.tickCumulative += int56(tick) * delta;
-    last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1));
+    last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1)); // just timedelta if liquidity == 0
     last.volatilityCumulative += uint88(_volatilityOnRange(delta, prevTick, tick, last.averageTick, averageTick));
     last.averageTick = averageTick;
     last.volumePerLiquidityCumulative += volumePerLiquidity;
