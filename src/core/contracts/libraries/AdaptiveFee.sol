@@ -3,19 +3,25 @@ pragma solidity =0.7.6;
 
 import './Constants.sol';
 
+/// @title AdaptiveFee
+/// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
+  // alpha1 + alpha2 + baseFee must be <= type(uint16).max
   struct Configuration {
-    uint16 alpha1; // alpha1 + alpha2 + baseFee must be <= type(uint16).max
-    uint16 alpha2;
-    uint32 beta1;
-    uint32 beta2;
-    uint16 gamma1;
-    uint16 gamma2;
-    uint32 volumeBeta;
-    uint16 volumeGamma;
-    uint16 baseFee;
+    uint16 alpha1; // max value of the first sigmoid
+    uint16 alpha2; // max value of the second sigmoid
+    uint32 beta1; // shift along the x-axis for the first sigmoid
+    uint32 beta2; // shift along the x-axis for the second sigmoid
+    uint16 gamma1; // horizontal stretch factor for the first sigmoid
+    uint16 gamma2; // horizontal stretch factor for the second sigmoid
+    uint32 volumeBeta; // shift along the x-axis for the outer volume-sigmoid
+    uint16 volumeGamma; // horizontal stretch factor the outer volume-sigmoid
+    uint16 baseFee; // minimum possible fee
   }
 
+  /// @notice Calculates fee based on formula:
+  /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
+  /// maximum value capped by baseFee + alpha1 + alpha2
   function getFee(
     uint88 volatility,
     uint256 volumePerLiquidity,
@@ -38,7 +44,9 @@ library AdaptiveFee {
     }
   }
 
-  /// @notice returns uint256 for fuzzy testing. Guaranteed that the result is not greater than alpha
+  /// @notice calculates α / (1 + e^( (β-x) / γ))
+  /// that is a sigmoid with a maximum value of α, x-shifted by β, and stretched by γ
+  /// @dev returns uint256 for fuzzy testing. Guaranteed that the result is not greater than alpha
   function sigmoid(
     uint256 x,
     uint16 g,
@@ -62,6 +70,9 @@ library AdaptiveFee {
     }
   }
 
+  /// @notice calculates e^(x/g) * g^7 in a series, since (around zero):
+  /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
+  /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
   function exp(
     uint256 x,
     uint16 g,
