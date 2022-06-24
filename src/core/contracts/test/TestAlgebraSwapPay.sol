@@ -22,7 +22,6 @@ contract TestAlgebraSwapPay is IAlgebraSwapCallback {
   function algebraSwapCallback(
     int256,
     int256,
-    uint256,
     bytes calldata data
   ) external override {
     (address sender, uint256 pay0, uint256 pay1) = abi.decode(data, (address, uint256, uint256));

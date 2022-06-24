@@ -17,7 +17,6 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
   function algebraSwapCallback(
     int256,
     int256,
-    uint256,
     bytes calldata
   ) external override {
     // try to reenter swap

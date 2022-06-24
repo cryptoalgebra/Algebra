@@ -40,10 +40,8 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
   function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
-    uint256 feeAmount,
     bytes calldata data
   ) public override {
-    feeAmount;
     emit SwapCallback(amount0Delta, amount1Delta);
 
     (address[] memory pools, address payer) = abi.decode(data, (address[], address));
