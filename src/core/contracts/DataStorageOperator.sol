@@ -38,10 +38,12 @@ contract DataStorageOperator is IDataStorageOperator {
     pool = _pool;
   }
 
+  /// @inheritdoc IDataStorageOperator
   function initialize(uint32 time, int24 tick) external override onlyPool {
     return timepoints.initialize(time, tick);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
 
@@ -52,6 +54,7 @@ contract DataStorageOperator is IDataStorageOperator {
     emit FeeConfiguration(_feeConfig);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getSingleTimepoint(
     uint32 time,
     uint32 secondsAgo,
@@ -86,6 +89,7 @@ contract DataStorageOperator is IDataStorageOperator {
     );
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getTimepoints(
     uint32 time,
     uint32[] memory secondsAgos,
@@ -107,6 +111,7 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getAverages(
     uint32 time,
     int24 tick,
@@ -116,6 +121,7 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.getAverages(time, tick, index, liquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function write(
     uint16 index,
     uint32 blockTimestamp,
@@ -126,6 +132,7 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.write(index, blockTimestamp, tick, liquidity, volumePerLiquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function calculateVolumePerLiquidity(
     uint128 liquidity,
     int256 amount0,
@@ -139,10 +146,12 @@ contract DataStorageOperator is IDataStorageOperator {
     else return uint128(volumeShifted);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function window() external pure override returns (uint32) {
     return DataStorage.WINDOW;
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getFee(
     uint32 _time,
     int24 _tick,
