@@ -10,19 +10,20 @@ interface IAlgebraVirtualPool {
 
   /**
    * @dev This function is called by the main pool when an initialized tick is crossed there.
-   * If the tick is also initialized in a virtual pool it should ne crossed too
+   * If the tick is also initialized in a virtual pool it should be crossed too
    * @param nextTick The crossed tick
    * @param zeroToOne The direction
    */
   function cross(int24 nextTick, bool zeroToOne) external;
 
-  // This function updates the #prevLiquidity
+  // This function is called by the main pool at the end of the swap to update virtual pool state.
   function processSwap() external;
 
   /**
    * @dev This function is called from the main pool before every swap To increase seconds per liquidity
    * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
    * @param currentTimestamp The timestamp of the current swap
+   * @return Status The status of virtual pool
    */
   function increaseCumulative(uint32 currentTimestamp) external returns (Status);
 }
