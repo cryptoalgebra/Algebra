@@ -6,7 +6,7 @@ import '../libraries/TickManager.sol';
 
 abstract contract PoolState is IAlgebraPoolState {
   struct GlobalState {
-    uint160 price; // The square root of the current price
+    uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
     uint16 fee; // The index of the last written timepoint
     uint16 timepointIndex; // The index of the last written (on swap) timepoint
