@@ -15,8 +15,8 @@ library TokenDeltaMath {
 
   /// @notice Gets the token0 delta between two prices
   /// @dev Calculates liquidity / sqrt(lower) - liquidity / sqrt(upper)
-  /// @param priceLower A sqrt price
-  /// @param priceUpper Another sqrt price
+  /// @param priceLower A Q64.96 sqrt price
+  /// @param priceUpper Another Q64.96 sqrt price
   /// @param liquidity The amount of usable liquidity
   /// @param roundUp Whether to round the amount up or down
   /// @return token0Delta Amount of token0 required to cover a position of size liquidity between the two passed prices
@@ -37,8 +37,8 @@ library TokenDeltaMath {
 
   /// @notice Gets the token1 delta between two prices
   /// @dev Calculates liquidity * (sqrt(upper) - sqrt(lower))
-  /// @param priceLower A sqrt price
-  /// @param priceUpper Another sqrt price
+  /// @param priceLower A Q64.96 sqrt price
+  /// @param priceUpper Another Q64.96 sqrt price
   /// @param liquidity The amount of usable liquidity
   /// @param roundUp Whether to round the amount up, or down
   /// @return token1Delta Amount of token1 required to cover a position of size liquidity between the two passed prices
@@ -54,8 +54,8 @@ library TokenDeltaMath {
   }
 
   /// @notice Helper that gets signed token0 delta
-  /// @param priceLower A sqrt price
-  /// @param priceUpper Another sqrt price
+  /// @param priceLower A Q64.96 sqrt price
+  /// @param priceUpper Another Q64.96 sqrt price
   /// @param liquidity The change in liquidity for which to compute the token0 delta
   /// @return token0Delta Amount of token0 corresponding to the passed liquidityDelta between the two prices
   function getToken0Delta(
@@ -69,8 +69,8 @@ library TokenDeltaMath {
   }
 
   /// @notice Helper that gets signed token1 delta
-  /// @param priceLower A sqrt price
-  /// @param priceUpper Another sqrt price
+  /// @param priceLower A Q64.96 sqrt price
+  /// @param priceUpper Another Q64.96 sqrt price
   /// @param liquidity The change in liquidity for which to compute the token1 delta
   /// @return token1Delta Amount of token1 corresponding to the passed liquidityDelta between the two prices
   function getToken1Delta(
