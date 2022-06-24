@@ -49,6 +49,6 @@ library LowGasSafeMath {
   /// @param y The addend
   /// @return z The sum of x and y
   function add128(uint128 x, uint128 y) internal pure returns (uint128 z) {
-    require((z = x + y) >= x == (y >= 0));
+    require((z = x + y) >= x);
   }
 }
