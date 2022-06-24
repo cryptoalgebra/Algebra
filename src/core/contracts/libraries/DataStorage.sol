@@ -21,13 +21,14 @@ library DataStorage {
     uint144 volumePerLiquidityCumulative; // the gmean(volumes)/liquidity accumulator
   }
 
-  /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
-  /// @param dt Timedelta between timepoints
-  /// @param tick0 The tick at the left timepoint
-  /// @param tick1 The tick at the right timepoint
-  /// @param avgTick0 The average tick at the left timepoint
-  /// @param avgTick1 The average tick at the right timepoint
-  /// @return volatility
+  /// @notice Calculates between two sequential timepoints timepoints with resampling to 1 sec frequency
+  /// @param dt Timedelta between timepoints, must be within uint32 range
+  /// @param tick0 The tick at the left timepoint, must be within int24 range
+  /// @param tick1 The tick at the right timepoint, must be within int24 range
+  /// @param avgTick0 The average tick at the left timepoint, must be within int24 range
+  /// @param avgTick1 The average tick at the right timepoint, must be within int24 range
+  /// @return volatility The volatility between two sequential timepoints
+  /// If the requirements for the parameters are met, it always fits 88 bits
   function _volatilityOnRange(
     int256 dt,
     int256 tick0,
@@ -77,7 +78,7 @@ library DataStorage {
     last.blockTimestamp = blockTimestamp;
     last.tickCumulative += int56(tick) * delta;
     last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1)); // just timedelta if liquidity == 0
-    last.volatilityCumulative += uint88(_volatilityOnRange(delta, prevTick, tick, last.averageTick, averageTick));
+    last.volatilityCumulative += uint88(_volatilityOnRange(delta, prevTick, tick, last.averageTick, averageTick)); // always fits 88 bits
     last.averageTick = averageTick;
     last.volumePerLiquidityCumulative += volumePerLiquidity;
 
