@@ -55,8 +55,6 @@ interface IFarmingCenter is
 
     /// @notice Returns information about a deposited NFT
     /// @return L2TokenId The nft layer2 id
-    /// @return tickLower The lower tick of the range
-    /// @return tickUpper The upper tick of the range
     /// @return numberOfFarms
     /// @return owner
     /// @return inLimitFarming
@@ -66,8 +64,6 @@ interface IFarmingCenter is
         view
         returns (
             uint256 L2TokenId,
-            int24 tickLower,
-            int24 tickUpper,
             uint32 numberOfFarms,
             address owner,
             bool inLimitFarming,

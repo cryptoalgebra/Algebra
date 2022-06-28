@@ -35,8 +35,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     /// @notice Represents the deposit of a liquidity NFT
     struct Deposit {
         uint256 L2TokenId;
-        int24 tickLower;
-        int24 tickUpper;
         uint32 numberOfFarms;
         address owner;
         bool inLimitFarming;
@@ -88,17 +86,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
             'AlgebraFarming::onERC721Received: not an Algebra nft'
         );
 
-        (, , , , int24 tickLower, int24 tickUpper, , , , , ) = nonfungiblePositionManager.positions(tokenId);
-
-        deposits[tokenId] = Deposit({
-            L2TokenId: _nextId,
-            inLimitFarming: false,
-            tickLower: tickLower,
-            tickUpper: tickUpper,
-            numberOfFarms: 0,
-            owner: from,
-            tokensLocked: 0
-        });
+        (deposits[tokenId].L2TokenId, deposits[tokenId].owner) = (_nextId, from);
 
         l2Nfts[_nextId].tokenId = tokenId;
 
@@ -166,7 +154,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         if (isLimit) {
             deposit.inLimitFarming = false;
         }
-        if (deposit.tokensLocked > 0) {
+
+        uint256 _tokensLocked = deposit.tokensLocked;
+        if (_tokensLocked > 0) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
             deposit.tokensLocked = 0;
         }
@@ -286,7 +276,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).processSwap();
-
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).processSwap();
     }
 
@@ -294,7 +283,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
-
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).cross(nextTick, zeroToOne);
     }
 
