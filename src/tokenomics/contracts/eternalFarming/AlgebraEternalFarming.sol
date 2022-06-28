@@ -257,7 +257,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
-        require(incentive.totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive'); // TOD
+        require(incentive.totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
         require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
 
         (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) = NFTPositionInfo.getPositionInfo(

@@ -312,7 +312,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return l2Nfts[tokenId].operator;
     }
 
-    /// @dev Overrides _approve to use the operator in the position, which is packed with the position pxermit nonce
+    /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
     function _approve(address to, uint256 tokenId) internal override(ERC721) {
         l2Nfts[tokenId].operator = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
