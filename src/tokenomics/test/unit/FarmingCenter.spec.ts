@@ -312,7 +312,7 @@ describe('unit/FarmingCenter', () => {
             otherTokenId,
             0
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: token pool is not the incentive pool')
+        ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
 
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
@@ -326,7 +326,7 @@ describe('unit/FarmingCenter', () => {
             otherTokenId,
             0
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: token pool is not the incentive pool')
+        ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
       })
 
       it('incentive key does not exist', async () => {

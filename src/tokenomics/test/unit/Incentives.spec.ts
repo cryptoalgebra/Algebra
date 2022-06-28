@@ -212,7 +212,7 @@ describe('unit/Incentives', async () => {
           expect(now).to.be.lessThan(params.endTime, 'test setup: after end time')
 
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time must be now or in the future'
+            'AlgebraFarming::createIncentive: start time too low'
           )
         })
 
@@ -220,7 +220,7 @@ describe('unit/Incentives', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime - 10
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time must be before end time'
+            'AlgebraFarming::createIncentive: start must be before end time'
           )
         })
 
