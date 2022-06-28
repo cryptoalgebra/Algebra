@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-import '../libraries/TickManager.sol';
-import '../libraries/TickTable.sol';
-import '../libraries/LiquidityMath.sol';
+import 'algebra/contracts/libraries/TickManager.sol';
+import 'algebra/contracts/libraries/TickTable.sol';
+import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
@@ -242,10 +242,10 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
         // clear any tick data that is no longer needed
         if (liquidityDelta < 0) {
             if (flippedBottom) {
-                ticks.clear(bottomTick);
+                delete ticks[bottomTick];
             }
             if (flippedTop) {
-                ticks.clear(topTick);
+                delete ticks[topTick];
             }
         }
     }
