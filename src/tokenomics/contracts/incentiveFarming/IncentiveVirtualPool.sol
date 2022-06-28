@@ -44,7 +44,7 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     mapping(int16 => uint256) private tickTable;
 
     modifier onlyFarmingCenter() {
-        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only the pool can call this function');
+        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool can call this function');
         _;
     }
 

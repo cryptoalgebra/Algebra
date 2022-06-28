@@ -237,7 +237,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
     /// @inheritdoc IAlgebraFarming
     function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
-        require(_incentive != address(0), 'Farming do not exists');
+        require(_incentive != address(0), 'Farming do not exist');
         bytes32 incentiveId = IncentiveId.compute(key);
 
         require(incentives[incentiveId].virtualPoolAddress == _incentive, 'Another farming is active');
@@ -280,7 +280,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
             tokenId
         );
 
-        require(pool == key.pool, 'AlgebraFarming::enterFarming: token pool is not the incentive pool');
+        require(pool == key.pool, 'AlgebraFarming::enterFarming: invalid pool for token');
         require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
 
         uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentive.levels);

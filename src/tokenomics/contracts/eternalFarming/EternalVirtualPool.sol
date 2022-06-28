@@ -51,7 +51,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     modifier onlyFarmingCenter() {
         require(
             msg.sender == farmingCenterAddress || msg.sender == farmingAddress || msg.sender == pool,
-            'only the pool can call this function'
+            'only pool can call this function'
         );
         _;
     }
