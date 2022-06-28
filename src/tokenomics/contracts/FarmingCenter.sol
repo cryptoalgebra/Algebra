@@ -117,30 +117,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
         eternalFarming.enterFarming(key, tokenId, tokensLocked);
         bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
+        (, , , , , , address multiplierToken, ) = eternalFarming.incentives(incentiveId);
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
         }
         Deposit storage _deposit = deposits[tokenId];
         _deposit.numberOfFarms += 1;
         _deposit.tokensLocked = tokensLocked;
-    }
-
-    function exitEternalFarming(IncentiveKey memory key, uint256 tokenId)
-        external
-        override
-        isAuthorizedForToken(deposits[tokenId].L2TokenId)
-    {
-        eternalFarming.exitFarming(key, tokenId, msg.sender);
-        bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
-        Deposit storage deposit = deposits[tokenId];
-        deposit.numberOfFarms -= 1;
-        deposit.owner = msg.sender;
-        if (deposit.tokensLocked > 0) {
-            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
-            deposit.tokensLocked = 0;
-        }
     }
 
     function enterFarming(
@@ -159,6 +142,23 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         deposit.numberOfFarms += 1;
         deposit.tokensLocked = tokensLocked;
         deposit.inLimitFarming = true;
+    }
+
+    function exitEternalFarming(IncentiveKey memory key, uint256 tokenId)
+        external
+        override
+        isAuthorizedForToken(deposits[tokenId].L2TokenId)
+    {
+        eternalFarming.exitFarming(key, tokenId, msg.sender);
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = eternalFarming.incentives(incentiveId);
+        Deposit storage deposit = deposits[tokenId];
+        deposit.numberOfFarms -= 1;
+        deposit.owner = msg.sender;
+        if (deposit.tokensLocked > 0) {
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
+            deposit.tokensLocked = 0;
+        }
     }
 
     function exitFarming(IncentiveKey memory key, uint256 tokenId)
