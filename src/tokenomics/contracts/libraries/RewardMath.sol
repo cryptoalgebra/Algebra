@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/FullMath.sol';
-import '@openzeppelin/contracts/math/Math.sol';
 
 /// @title Math for computing rewards
 /// @notice Allows computing rewards given some parameters of farms and incentives
