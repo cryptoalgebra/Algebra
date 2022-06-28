@@ -4,6 +4,10 @@ pragma solidity =0.7.6;
 import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 
 library Multiplier {
+    /// @notice Get the multiplier by tokens locked amount
+    /// @param tokenAmount The amount of locked tokens
+    /// @param levels The structure showing the dependence of the multiplier on the amount of locked tokens
+    /// @return multiplier The value represent persent of liquidity in ten thoushands(1 = 0.01%)
     function getMultiplier(uint256 tokenAmount, IAlgebraIncentiveFarming.Levels memory levels)
         internal
         pure
