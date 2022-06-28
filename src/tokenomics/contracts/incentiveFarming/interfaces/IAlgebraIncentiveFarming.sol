@@ -39,22 +39,6 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         uint256 bonusRewards
     ) external;
 
-    /// @notice Represents a farming incentive
-    /// @param incentiveId The ID of the incentive computed from its parameters
-    function incentives(bytes32 incentiveId)
-        external
-        view
-        returns (
-            uint256 totalReward,
-            uint256 bonusReward,
-            address virtualPoolAddress,
-            uint96 numberOfFarms,
-            bool isPoolCreated,
-            uint224 totalLiquidity,
-            address multiplierToken,
-            Levels memory levels
-        );
-
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,

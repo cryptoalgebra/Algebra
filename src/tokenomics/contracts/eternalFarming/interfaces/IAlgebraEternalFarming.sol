@@ -34,22 +34,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
             uint256 innerRewardGrowth1
         );
 
-    /// @notice Represents a farming incentive
-    /// @param incentiveId The ID of the incentive computed from its parameters
-    function incentives(bytes32 incentiveId)
-        external
-        view
-        returns (
-            uint256 totalReward,
-            uint256 bonusReward,
-            address virtualPoolAddress,
-            uint96 numberOfFarms,
-            bool isPoolCreated,
-            uint224 totalLiquidity,
-            address multiplierToken,
-            Levels calldata levels
-        );
-
     /// @notice Creates a new liquidity mining incentive program
     /// @param key Details of the incentive to create
     /// @param reward The amount of reward tokens to be distributed
