@@ -128,18 +128,15 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
 
         require(
             _activeEndTimestamp < block.timestamp && (activeIncentive != _incentive || _incentive == address(0)),
-            'AlgebraFarming::createIncentive: there is already active incentive'
+            'AlgebraFarming::createIncentive: already has active incentive'
         );
         require(params.reward > 0, 'AlgebraFarming::createIncentive: reward must be positive');
-        require(
-            block.timestamp <= key.startTime,
-            'AlgebraFarming::createIncentive: start time must be now or in the future'
-        );
+        require(block.timestamp <= key.startTime, 'AlgebraFarming::createIncentive: start time too low');
         require(
             key.startTime - block.timestamp <= maxIncentiveStartLeadTime,
             'AlgebraFarming::createIncentive: start time too far into future'
         );
-        require(key.startTime < key.endTime, 'AlgebraFarming::createIncentive: start time must be before end time');
+        require(key.startTime < key.endTime, 'AlgebraFarming::createIncentive: start must be before end time');
         require(
             key.endTime - key.startTime <= maxIncentiveDuration,
             'AlgebraFarming::createIncentive: incentive duration is too long'
@@ -216,10 +213,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker {
-        require(
-            block.timestamp < key.endTime,
-            'AlgebraFarming::decreaseRewardAmount: cannot decrease rewards amounts after endTime'
-        );
+        require(block.timestamp < key.endTime, 'AlgebraFarming::decreaseRewardAmount: incentive finished');
 
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
