@@ -254,7 +254,7 @@ contract AlgebraIncentiveFarming is IAlgebraIncentiveFarming, Multicall {
         emit IncentiveAttached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
     }
 
-    /// @inheritdoc IAlgebraIncentiveFarming
+    /// @inheritdoc IAlgebraFarming
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,

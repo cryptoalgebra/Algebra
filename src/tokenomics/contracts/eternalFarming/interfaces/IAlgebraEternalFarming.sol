@@ -61,12 +61,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 bonusRewardRate
     ) external;
 
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
-
     function collectRewards(
         IncentiveKey memory key,
         uint256 tokenId,

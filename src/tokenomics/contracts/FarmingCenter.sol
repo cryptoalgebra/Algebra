@@ -110,20 +110,36 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
+    function _enterFarming(
+        IAlgebraFarming _farming,
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked,
+        bool isLimit
+    ) private {
+        Deposit storage _deposit = deposits[tokenId];
+        _deposit.numberOfFarms += 1;
+        _deposit.tokensLocked = tokensLocked;
+        if (isLimit) {
+            require(!_deposit.inLimitFarming, 'token already farmed');
+            _deposit.inLimitFarming = true;
+        }
+
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        if (tokensLocked > 0) {
+            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
+        }
+
+        _farming.enterFarming(key, tokenId, tokensLocked);
+    }
+
     function enterEternalFarming(
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked
     ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
-        eternalFarming.enterFarming(key, tokenId, tokensLocked);
-        bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = eternalFarming.incentives(incentiveId);
-        if (tokensLocked > 0) {
-            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
-        }
-        Deposit storage _deposit = deposits[tokenId];
-        _deposit.numberOfFarms += 1;
-        _deposit.tokensLocked = tokensLocked;
+        _enterFarming(eternalFarming, key, tokenId, tokensLocked, false);
     }
 
     function enterFarming(
@@ -131,17 +147,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 tokenId,
         uint256 tokensLocked
     ) external override isAuthorizedForToken(deposits[tokenId].L2TokenId) {
-        Deposit storage deposit = deposits[tokenId];
-        require(!deposit.inLimitFarming, 'token already farmed');
-        bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
-        farming.enterFarming(key, tokenId, tokensLocked);
-        if (tokensLocked > 0) {
-            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
-        }
-        deposit.numberOfFarms += 1;
-        deposit.tokensLocked = tokensLocked;
-        deposit.inLimitFarming = true;
+        _enterFarming(farming, key, tokenId, tokensLocked, true);
     }
 
     function _exitFarming(

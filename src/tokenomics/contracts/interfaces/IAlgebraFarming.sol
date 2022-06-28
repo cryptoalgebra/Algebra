@@ -78,6 +78,16 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
     /// @notice
     function setFarmingCenterAddress(address _farmingCenter) external;
 
+    /// @notice enter farming for Algebra LP token
+    /// @param key The key of the incentive for which to enterFarming the NFT
+    /// @param tokenId The ID of the token to exitFarming
+    /// @param tokensLocked The amount of tokens locked for boost
+    function enterFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        uint256 tokensLocked
+    ) external;
+
     /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming

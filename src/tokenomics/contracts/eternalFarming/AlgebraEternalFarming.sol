@@ -248,7 +248,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
     }
 
-    /// @inheritdoc IAlgebraEternalFarming
+    /// @inheritdoc IAlgebraFarming
     function enterFarming(
         IncentiveKey calldata key,
         uint256 tokenId,

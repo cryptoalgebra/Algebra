@@ -39,12 +39,6 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         uint256 bonusRewards
     ) external;
 
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
-
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
     /// @param bonusRewardToken The token being distributed as a bonus reward
