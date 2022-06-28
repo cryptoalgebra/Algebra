@@ -56,8 +56,8 @@ interface IFarmingCenter is
     /// @notice Returns information about a deposited NFT
     /// @return L2TokenId The nft layer2 id
     /// @return numberOfFarms
-    /// @return owner
     /// @return inLimitFarming
+    /// @return owner
     /// @return tokensLocked
     function deposits(uint256 tokenId)
         external
@@ -65,8 +65,8 @@ interface IFarmingCenter is
         returns (
             uint256 L2TokenId,
             uint32 numberOfFarms,
-            address owner,
             bool inLimitFarming,
+            address owner,
             uint256 tokensLocked
         );
 

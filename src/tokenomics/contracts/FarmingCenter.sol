@@ -36,8 +36,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     struct Deposit {
         uint256 L2TokenId;
         uint32 numberOfFarms;
-        address owner;
         bool inLimitFarming;
+        address owner;
         uint256 tokensLocked;
     }
 
@@ -106,15 +106,16 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         bool isLimit
     ) private {
         Deposit storage _deposit = deposits[tokenId];
-        _deposit.numberOfFarms += 1;
-        _deposit.tokensLocked = tokensLocked;
+        (uint32 numberOfFarms, bool inLimitFarming) = (_deposit.numberOfFarms, _deposit.inLimitFarming);
+        numberOfFarms++;
         if (isLimit) {
-            require(!_deposit.inLimitFarming, 'token already farmed');
-            _deposit.inLimitFarming = true;
+            require(!inLimitFarming, 'token already farmed');
+            inLimitFarming = true;
         }
 
-        bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
+        _deposit.tokensLocked = tokensLocked;
+        (, , , , , , address multiplierToken, ) = _farming.incentives(keccak256(abi.encode(key)));
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
         }
@@ -145,8 +146,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         bool isLimit
     ) private {
         _farming.exitFarming(key, tokenId, msg.sender);
-        bytes32 incentiveId = keccak256(abi.encode(key));
-        (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (, , , , , , address multiplierToken, ) = _farming.incentives(keccak256(abi.encode(key)));
 
         Deposit storage deposit = deposits[tokenId];
         deposit.numberOfFarms -= 1;
@@ -157,7 +157,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         uint256 _tokensLocked = deposit.tokensLocked;
         if (_tokensLocked > 0) {
-            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, _tokensLocked);
             deposit.tokensLocked = 0;
         }
     }
