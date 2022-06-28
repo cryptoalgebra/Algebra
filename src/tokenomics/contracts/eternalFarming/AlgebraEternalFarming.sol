@@ -44,9 +44,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     IAlgebraPoolDeployer public immutable override deployer;
 
     /// @inheritdoc IAlgebraFarming
-    uint256 public immutable override maxIncentiveStartLeadTime;
+    uint256 public override maxIncentiveStartLeadTime; // unused
     /// @inheritdoc IAlgebraFarming
-    uint256 public immutable override maxIncentiveDuration;
+    uint256 public override maxIncentiveDuration; // unused
 
     /// @inheritdoc IAlgebraFarming
     IFarmingCenter public override farmingCenter;
@@ -66,7 +66,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
     mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
     address private incentiveMaker;
-    address private owner;
+    address private immutable owner;
 
     // @inheritdoc IAlgebraPoolDeployer
     function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
@@ -99,8 +99,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
 
     /// @param _deployer pool deployer contract address
     /// @param _nonfungiblePositionManager the NFT position manager contract address
-    /// @param _maxIncentiveStartLeadTime the max duration of an incentive in seconds
-    /// @param _maxIncentiveDuration the max amount of seconds into the future the incentive startTime can be set
+    /// @param _maxIncentiveStartLeadTime ignored
+    /// @param _maxIncentiveDuration ignored
     constructor(
         IAlgebraPoolDeployer _deployer,
         INonfungiblePositionManager _nonfungiblePositionManager,
@@ -110,8 +110,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming, Multicall {
         owner = msg.sender;
         deployer = _deployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
-        maxIncentiveStartLeadTime = _maxIncentiveStartLeadTime;
-        maxIncentiveDuration = _maxIncentiveDuration;
+        _maxIncentiveStartLeadTime; // unused
+        _maxIncentiveDuration; // unused
     }
 
     /// @inheritdoc IAlgebraEternalFarming
