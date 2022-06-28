@@ -17,7 +17,7 @@ import './libraries/TokenRatioSortOrder.sol';
 /// @notice Produces a string containing the data URI for a JSON metadata string
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
     // Polygon addresses
-    address private constant DAI = 0x8f3cf7ad23cd3cadbd9735aff958023239c6a063;
+    address private constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
     address private constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address private constant USDT = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
     address private constant WETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
