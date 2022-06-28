@@ -121,8 +121,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
         }
-        deposits[tokenId].numberOfFarms += 1;
-        deposits[tokenId].tokensLocked = tokensLocked;
+        Deposit storage _deposit = deposits[tokenId];
+        _deposit.numberOfFarms += 1;
+        _deposit.tokensLocked = tokensLocked;
     }
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId)
@@ -133,11 +134,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         eternalFarming.exitFarming(key, tokenId, msg.sender);
         bytes32 incentiveId = keccak256(abi.encode(key));
         (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
-        deposits[tokenId].numberOfFarms -= 1;
-        deposits[tokenId].owner = msg.sender;
-        if (deposits[tokenId].tokensLocked > 0) {
-            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposits[tokenId].tokensLocked);
-            deposits[tokenId].tokensLocked = 0;
+        Deposit storage deposit = deposits[tokenId];
+        deposit.numberOfFarms -= 1;
+        deposit.owner = msg.sender;
+        if (deposit.tokensLocked > 0) {
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, deposit.tokensLocked);
+            deposit.tokensLocked = 0;
         }
     }
 
@@ -164,11 +166,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         override
         isAuthorizedForToken(deposits[tokenId].L2TokenId)
     {
-        Deposit storage deposit = deposits[tokenId];
         farming.exitFarming(key, tokenId, msg.sender);
-        deposit.numberOfFarms -= 1;
         bytes32 incentiveId = keccak256(abi.encode(key));
         (, , , , , , address multiplierToken, ) = farming.incentives(incentiveId);
+        Deposit storage deposit = deposits[tokenId];
+        deposit.numberOfFarms -= 1;
         deposit.owner = msg.sender;
         deposit.inLimitFarming = false;
         if (deposit.tokensLocked > 0) {
@@ -217,6 +219,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
+        VirtualPoolAddresses storage virtualPoolAddresses = _virtualPoolAddresses[address(pool)];
         if (pool.activeIncentive() == address(0)) {
             pool.setIncentive(virtualPool); // turn on pool directly
         } else {
@@ -225,14 +228,14 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
             } else {
                 // turn off proxy
                 if (msg.sender == address(farming)) {
-                    if (_virtualPoolAddresses[address(pool)].eternalVirtualPool != address(0)) {
-                        pool.setIncentive(_virtualPoolAddresses[address(pool)].eternalVirtualPool);
+                    if (virtualPoolAddresses.eternalVirtualPool != address(0)) {
+                        pool.setIncentive(virtualPoolAddresses.eternalVirtualPool);
                     } else {
                         pool.setIncentive(address(0)); // turn off completely
                     }
                 } else {
-                    if (_virtualPoolAddresses[address(pool)].hasIncentive) {
-                        pool.setIncentive(_virtualPoolAddresses[address(pool)].virtualPool);
+                    if (virtualPoolAddresses.hasIncentive) {
+                        pool.setIncentive(virtualPoolAddresses.virtualPool);
                     } else {
                         pool.setIncentive(address(0)); // turn off completely
                     }
@@ -241,10 +244,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
 
         if (msg.sender == address(eternalFarming)) {
-            _virtualPoolAddresses[address(pool)].eternalVirtualPool = virtualPool;
+            virtualPoolAddresses.eternalVirtualPool = virtualPool;
         } else if (msg.sender == address(farming)) {
-            _virtualPoolAddresses[address(pool)].hasIncentive = virtualPool != address(0);
-            _virtualPoolAddresses[address(pool)].virtualPool = virtualPool;
+            virtualPoolAddresses.hasIncentive = virtualPool != address(0);
+            virtualPoolAddresses.virtualPool = virtualPool;
         }
     }
 
@@ -267,15 +270,19 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     function processSwap() external override {
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).processSwap();
+        VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).processSwap();
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).processSwap();
+
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).processSwap();
     }
 
     function cross(int24 nextTick, bool zeroToOne) external override {
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroToOne);
+        VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroToOne);
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
+
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).cross(nextTick, zeroToOne);
     }
 
     function burn(uint256 tokenId) private isAuthorizedForToken(tokenId) {
@@ -308,10 +315,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
-        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool)
-            .increaseCumulative(blockTimestamp);
+        VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
+        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).increaseCumulative(
+            blockTimestamp
+        );
 
-        Status incentiveStatus = IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).increaseCumulative(
+        Status incentiveStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).increaseCumulative(
             blockTimestamp
         );
 
