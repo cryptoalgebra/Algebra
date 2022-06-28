@@ -6,7 +6,7 @@ import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import './interfaces/IFarmingCenterVault.sol';
 
 contract FarmingCenterVault is IFarmingCenterVault {
-    address public owner;
+    address public immutable owner;
 
     constructor() {
         owner = msg.sender;
