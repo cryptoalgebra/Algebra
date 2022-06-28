@@ -218,26 +218,30 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
+    function _setIncentive(IAlgebraPool pool, address newIncentive) private {
+        pool.setIncentive(newIncentive);
+    }
+
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override onlyFarming {
         VirtualPoolAddresses storage virtualPoolAddresses = _virtualPoolAddresses[address(pool)];
         if (pool.activeIncentive() == address(0)) {
-            pool.setIncentive(virtualPool); // turn on pool directly
+            _setIncentive(pool, virtualPool); // turn on pool directly
         } else {
             if (virtualPool != address(0)) {
-                pool.setIncentive(address(this)); // turn on proxy
+                _setIncentive(pool, address(this)); // turn on proxy
             } else {
                 // turn off proxy
                 if (msg.sender == address(farming)) {
                     if (virtualPoolAddresses.eternalVirtualPool != address(0)) {
-                        pool.setIncentive(virtualPoolAddresses.eternalVirtualPool);
+                        _setIncentive(pool, virtualPoolAddresses.eternalVirtualPool);
                     } else {
-                        pool.setIncentive(address(0)); // turn off completely
+                        _setIncentive(pool, address(0)); // turn off completely
                     }
                 } else {
                     if (virtualPoolAddresses.hasIncentive) {
-                        pool.setIncentive(virtualPoolAddresses.virtualPool);
+                        _setIncentive(pool, virtualPoolAddresses.virtualPool);
                     } else {
-                        pool.setIncentive(address(0)); // turn off completely
+                        _setIncentive(pool, address(0)); // turn off completely
                     }
                 }
             }
