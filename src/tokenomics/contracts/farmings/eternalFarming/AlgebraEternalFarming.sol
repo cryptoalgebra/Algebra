@@ -88,14 +88,14 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @inheritdoc IAlgebraFarming
     function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (, address _incentive) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentive);
+        (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
+        _detachIncentive(key, _eternalVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
     function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (, address _incentive) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentive);
+        (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
+        _attachIncentive(key, _eternalVirtualPool);
     }
 
     /// @inheritdoc IAlgebraEternalFarming

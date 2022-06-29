@@ -148,14 +148,14 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
     /// @inheritdoc IAlgebraFarming
     function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentive);
+        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
+        _detachIncentive(key, _incentiveVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
     function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentive);
+        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
+        _attachIncentive(key, _incentiveVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -224,7 +224,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                     farm.tickLower,
                     farm.tickUpper
                 );
-                (address _incentive, ) = farmingCenter.virtualPoolAddresses(address(key.pool));
+                (address _incentive, ) = _getCurrentVirtualPools(key.pool);
                 if (address(virtualPool) == _incentive) {
                     farmingCenter.setFarmingCenterAddress(key.pool, address(0));
                 }
