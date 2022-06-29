@@ -3,8 +3,8 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 import '../../../interfaces/IAlgebraFarming.sol';
 
-/// @title Algebra Farming Interface
-/// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
+/// @title Algebra Eternal Farming Interface
+/// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
 interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @notice Event emitted when reward rates were changed
     /// @param rewardRate The new rate of main token distribution per sec

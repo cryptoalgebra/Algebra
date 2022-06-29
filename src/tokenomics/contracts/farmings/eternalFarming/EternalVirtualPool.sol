@@ -14,25 +14,24 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    // @inheritdoc IAlgebraEternalVirtualPool
     address public immutable farmingCenterAddress;
-    // @inheritdoc IAlgebraEternalVirtualPool
     address public immutable farmingAddress;
     address public immutable pool;
 
-    // @inheritdoc IAlgebraEternalVirtualPool
+    // @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraEternalVirtualPool
+    // @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
-    // @inheritdoc IAlgebraEternalVirtualPool
+    // @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override timeOutside;
 
-    // @inheritdoc IAlgebraEternalVirtualPool
+    // @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override prevLiquidity;
 
+    // @inheritdoc IAlgebraVirtualPoolBase
     uint160 public override globalSecondsPerLiquidityCumulative;
 
-    // @inheritdoc IAlgebraEternalVirtualPool
+    // @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
 
     // @inheritdoc IAlgebraEternalVirtualPool

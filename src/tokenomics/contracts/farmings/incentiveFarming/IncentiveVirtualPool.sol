@@ -12,34 +12,32 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
     using TickManager for mapping(int24 => TickManager.Tick);
 
     address public immutable farmingCenterAddress;
-
     address public immutable farmingAddress;
-
     address public immutable pool;
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredEndTimestamp;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredStartTimestamp;
-
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override initTimestamp;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override timeOutside;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override prevLiquidity;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint160 public override globalSecondsPerLiquidityCumulative;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraVirtualPoolBase
     mapping(int24 => TickManager.Tick) public override ticks;
     mapping(int16 => uint256) private tickTable;
 

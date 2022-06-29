@@ -2,41 +2,9 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
+import '../../IAlgebraVirtualPoolBase.sol';
 
-interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
-    // returns how much time the price was out of any farmd liquidity
-    function timeOutside() external returns (uint32);
-
-    // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
-    function globalSecondsPerLiquidityCumulative() external returns (uint160);
-
-    // returns the current liquidity in virtual pool
-    function currentLiquidity() external returns (uint128);
-
-    // returns the current tick in virtual pool
-    function globalTick() external returns (int24);
-
-    // returns the liquidity after previous swap (like the last timepoint in a default pool)
-    function prevLiquidity() external returns (uint128);
-
-    // returns the timestamp after previous swap (like the last timepoint in a default pool)
-    function prevTimestamp() external returns (uint32);
-
-    // returns data associated with a tick
-    function ticks(int24 tickId)
-        external
-        returns (
-            uint128 liquidityTotal,
-            int128 liquidityDelta,
-            uint256 outerFeeGrowth0Token,
-            uint256 outerFeeGrowth1Token,
-            int56 outerTickCumulative,
-            uint160 outerSecondsPerLiquidity,
-            uint32 outerSecondsSpent,
-            bool initialized
-        );
-
+interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
     function setRates(uint128 rate0, uint128 rate1) external;
 
     function addRewards(uint256 token0Amount, uint256 token1Amount) external;
@@ -67,8 +35,6 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-     * Returns initTime the #initTimestamp
-     * Returns endTime the #endTimestamp
      */
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external
