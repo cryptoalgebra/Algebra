@@ -4,6 +4,8 @@ pragma solidity =0.7.6;
 import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 
 library Multiplier {
+    uint128 constant DENOMINATOR = 10000;
+
     /// @notice Get the multiplier by tokens locked amount
     /// @param tokenAmount The amount of locked tokens
     /// @param levels The structure showing the dependence of the multiplier on the amount of locked tokens

@@ -183,16 +183,15 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'AlgebraFarming::enterFarming: invalid pool for token');
         require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
-
-        uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentive.levels);
-        liquidity += (liquidity * multiplier) / 10000;
-
-        incentive.numberOfFarms++;
         (, tick, , , , , , ) = pool.globalState();
 
-        incentive.totalLiquidity += liquidity;
+        uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentive.levels);
+        liquidity += (liquidity * multiplier) / Multiplier.DENOMINATOR;
 
+        incentive.numberOfFarms++;
         virtualPool = incentive.virtualPoolAddress;
+
+        incentive.totalLiquidity += liquidity;
     }
 
     function _claimReward(
