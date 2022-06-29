@@ -187,6 +187,15 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
+    function _claimRewardFromFarming(
+        IAlgebraFarming _farming,
+        IERC20Minimal rewardToken,
+        address to,
+        uint256 amountRequested
+    ) internal returns (uint256 reward) {
+        return _farming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
+    }
+
     function claimReward(
         IERC20Minimal rewardToken,
         address to,
@@ -194,10 +203,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 amountRequestedEternal
     ) external override returns (uint256 reward) {
         if (amountRequestedIncentive != 0) {
-            reward = farming.claimRewardFrom(rewardToken, msg.sender, to, amountRequestedIncentive);
+            reward = _claimRewardFromFarming(farming, rewardToken, to, amountRequestedIncentive);
         }
         if (amountRequestedEternal != 0) {
-            reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequestedEternal);
+            reward += _claimRewardFromFarming(eternalFarming, rewardToken, to, amountRequestedEternal);
         }
     }
 
