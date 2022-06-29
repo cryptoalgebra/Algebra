@@ -151,33 +151,37 @@ library DataStorage {
     uint16 oldestIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) {
     uint256 left = oldestIndex; // oldest timepoint
-    uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + UINT16_MODULO; // newest timepoint considering overflow
-    uint256 current = (left + right) / 2;
+    uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + UINT16_MODULO; // newest timepoint considering one index overflow
+    uint256 current = (left + right) / 2; // "middle" point between the boundaries
 
     do {
-      beforeOrAt = self[current % UINT16_MODULO];
+      beforeOrAt = self[current % UINT16_MODULO]; // checking the "middle" point between the boundaries
       (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
       if (initializedBefore) {
-        // check if we've found the answer!
         if (lteConsideringOverflow(timestampBefore, target, time)) {
-          atOrAfter = self[addmod(current, 1, UINT16_MODULO)];
+          // is current point before or at `target`?
+          atOrAfter = self[addmod(current, 1, UINT16_MODULO)]; // checking the next point after "middle"
           (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
           if (initializedAfter) {
             if (lteConsideringOverflow(target, timestampAfter, time)) {
+              // is the "next" point after or at `target`?
               return (beforeOrAt, atOrAfter); // the only fully correct way to finish
             }
-            left = current + 1;
+            left = current + 1; // "next" point is before the `target`, so looking in the right half
           } else {
-            return (beforeOrAt, beforeOrAt); // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
+            // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
+            // should be impossible if initial boundaries and `target` are correct
+            return (beforeOrAt, beforeOrAt);
           }
         } else {
-          right = current - 1;
+          right = current - 1; // current point is after the `target`, so looking in the left half
         }
       } else {
-        // we've landed on an uninitialized timepoint, keep searching higher (more recently)
+        // we've landed on an uninitialized timepoint, keep searching higher
+        // should be impossible if initial boundaries and `target` are correct
         left = current + 1;
       }
-      current = (left + right) / 2;
+      current = (left + right) / 2; // calculating the new "middle" point index after updating the bounds
     } while (true);
 
     atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
