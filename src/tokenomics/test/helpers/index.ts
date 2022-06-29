@@ -23,7 +23,7 @@ import {
   TestIncentiveId,
   FarmingCenter
 } from '../../typechain'
-import abi from '../../artifacts/contracts/incentiveFarming/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
+import abi from '../../artifacts/contracts/farmings/incentiveFarming/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition, EternalAlgebraFixtureType } from '../shared/fixtures'

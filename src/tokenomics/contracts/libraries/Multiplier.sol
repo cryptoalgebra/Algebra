@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
+import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 
 library Multiplier {
     /// @notice Get the multiplier by tokens locked amount

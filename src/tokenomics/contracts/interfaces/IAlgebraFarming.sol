@@ -2,8 +2,6 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
@@ -13,11 +11,10 @@ import './IIncentiveKey.sol';
 
 import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
-import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming is IIncentiveKey, IMulticall {
+interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
@@ -162,6 +159,13 @@ interface IAlgebraFarming is IIncentiveKey, IMulticall {
         uint256 startTime,
         uint256 endTime
     );
+
+    /// @notice Event emitted when a Algebra LP token has been farmd
+    /// @param tokenId The unique identifier of an Algebra LP token
+    /// @param liquidity The amount of liquidity farmd
+    /// @param incentiveId The incentive in which the token is farming
+    /// @param tokensLocked The amount of tokens locked for multiplier
+    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token

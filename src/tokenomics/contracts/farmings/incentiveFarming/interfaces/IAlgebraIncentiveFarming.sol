@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '../../interfaces/IAlgebraFarming.sol';
+import '../../../interfaces/IAlgebraFarming.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
@@ -59,12 +59,6 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         address multiplierToken,
         uint32 enterStartTime
     );
-    /// @notice Event emitted when a Algebra LP token has been farmd
-    /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param liquidity The amount of liquidity farmd
-    /// @param incentiveId The incentive in which the token is farming
-    /// @param tokensLocked The amount of tokens locked for multiplier
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
     event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId);
 }

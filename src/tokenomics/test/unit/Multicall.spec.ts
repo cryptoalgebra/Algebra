@@ -35,6 +35,7 @@ describe('unit/Multicall', () => {
   let context: AlgebraFixtureType
   const multicaller = actors.traderUser2()
 
+  /*
   before('loader', async () => {
     loadFixture = createFixtureLoader(provider.getWallets(), provider)
   })
@@ -44,7 +45,7 @@ describe('unit/Multicall', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
-  it('is implemented', async () => {
+  it.skip('is implemented', async () => {
     const currentTime = await blockTimestamp()
 
     await erc20Helper.ensureBalancesAndApprovals(
@@ -138,4 +139,6 @@ describe('unit/Multicall', () => {
   //   const { numberOfFarms: n2 } = await context.tokenomics.deposits(tokenId2)
   //   expect(n2).to.eq(BN('0'))
   // })
+
+  */
 })

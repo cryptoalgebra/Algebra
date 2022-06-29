@@ -13,8 +13,8 @@ import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
 
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
-import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
-import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
+import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
+import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 

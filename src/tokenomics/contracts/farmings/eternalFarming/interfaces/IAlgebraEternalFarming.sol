@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 pragma abicoder v2;
-import '../../interfaces/IAlgebraFarming.sol';
+import '../../../interfaces/IAlgebraFarming.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
@@ -66,12 +66,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 tokenId,
         address _owner
     ) external returns (uint256 reward, uint256 bonusReward);
-
-    /// @notice Event emitted when a Algebra LP token has been farmd
-    /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param liquidity The amount of liquidity farmd
-    /// @param incentiveId The incentive in which the token is farming
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
