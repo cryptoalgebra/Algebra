@@ -136,9 +136,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _detachIncentive(IncentiveKey memory key, address _incentive) internal {
         require(_incentive != address(0), 'Farming do not exist');
-        bytes32 incentiveId = IncentiveId.compute(key);
 
-        require(incentives[incentiveId].virtualPoolAddress == _incentive, 'Another farming is active');
+        require(incentives[IncentiveId.compute(key)].virtualPoolAddress == _incentive, 'Another farming is active');
         _connectPoolToVirtualPool(key.pool, address(0));
 
         emit IncentiveDetached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
@@ -146,9 +145,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _attachIncentive(IncentiveKey memory key, address _incentive) internal {
         require(_incentive == address(0), 'Farming already exists');
-        bytes32 incentiveId = IncentiveId.compute(key);
 
-        address virtualPoolAddress = incentives[incentiveId].virtualPoolAddress;
+        address virtualPoolAddress = incentives[IncentiveId.compute(key)].virtualPoolAddress;
         require(virtualPoolAddress != address(0), 'Invalid farming');
 
         _connectPoolToVirtualPool(key.pool, virtualPoolAddress);
