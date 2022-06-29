@@ -14,31 +14,39 @@ async function main() {
   const AlgebraIncentiveFarming = await AlgebraIncentiveFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
   await AlgebraIncentiveFarming.deployed();
+  console.log("AlgebraIncentiveFarming deployed to:", AlgebraIncentiveFarming.address);
 
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory("AlgebraEternalFarming");
   const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
   await AlgebraEternalFarming.deployed();
+  console.log("AlgebraEternalFarming deployed to:", AlgebraEternalFarming.address);
+
+  const FarmingCenterVaultFactory = await hre.ethers.getContractFactory("FarmingCenterVault")
+  const FarmingCenterVault = await FarmingCenterVaultFactory.deploy()
 
   const FarmingCenterFactory = await hre.ethers.getContractFactory("FarmingCenter");
-  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager);
+  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManage, FarmingCenterVault.address);
 
   await FarmingCenter.deployed();
+  console.log("FarmingCenter deployed to:", FarmingCenter.address);
 
   await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.address)
   await AlgebraIncentiveFarming.setFarmingCenterAddress(FarmingCenter.address)
+  console.log("Updated farming center address in eternal(incentive) farming");
 
   await AlgebraEternalFarming.setIncentiveMaker(incentiveMaker)
   await AlgebraIncentiveFarming.setIncentiveMaker(incentiveMaker)
+  console.log("Updated incentive maker");
 
-  // const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-  // const factory = await AlgebraFactory.attach(deploysData.factory);
+  await FarmingCenterVault.setFarming(FarmingCenter.address)
+  console.log("Updated farming center address in farming center vault")
 
-  // await factory.setFarmingAddress(FarmingCenter.address);
+  const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
+  const factory = await AlgebraFactory.attach(deploysData.factory);
 
-  console.log("AlgebraIncentiveFarming deployed to:", AlgebraIncentiveFarming.address);
-  console.log("AlgebraEternalFarming deployed to:", AlgebraEternalFarming.address);
-  console.log("FarmingCenter deployed to:", FarmingCenter.address);
+  await factory.setFarmingAddress(FarmingCenter.address);
+  console.log("Update farming center address in factory")
 
   
 

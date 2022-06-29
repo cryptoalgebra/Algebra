@@ -260,16 +260,21 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
 
   const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
 
+  const farmingCenterVaultFactory = await ethers.getContractFactory('FarmingCenterVault', signer) 
+
+  const farmingCenterVault = await farmingCenterVaultFactory.deploy()
+
   const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
 
-
-  const farmingCenter = (await farmingCenterFactory.deploy(farming.address,eternalFarming.address, nft.address)) as FarmingCenter
+  const farmingCenter = (await farmingCenterFactory.deploy(farming.address,eternalFarming.address, nft.address, farmingCenterVault.address)) as FarmingCenter
   
   await eternalFarming.setFarmingCenterAddress(farmingCenter.address)
 
   await farming.setFarmingCenterAddress(farmingCenter.address)
 
   await factory.setFarmingAddress(farmingCenter.address)
+
+  await farmingCenterVault.setFarming(farmingCenter.address)
  
   await farming.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
@@ -348,14 +353,19 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
 
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
 
+  const farmingCenterVaultFactory = await ethers.getContractFactory('FarmingCenterVault', signer) 
+
+  const farmingCenterVault = await farmingCenterVaultFactory.deploy()
+
   const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
 
-  const farmingCenter = (await farmingCenterFactory.deploy(incentiveFarming.address, farming.address, nft.address)) as FarmingCenter
+  const farmingCenter = (await farmingCenterFactory.deploy(incentiveFarming.address, farming.address, nft.address, farmingCenterVault.address)) as FarmingCenter
 
   await farming.setFarmingCenterAddress(farmingCenter.address)
   await incentiveFarming.setFarmingCenterAddress(farmingCenter.address)
 
   await factory.setFarmingAddress(farmingCenter.address)
+  await farmingCenterVault.setFarming(farmingCenter.address)
 
   await farming.setIncentiveMaker(incentiveCreator.address)
   await incentiveFarming.setIncentiveMaker(incentiveCreator.address)
