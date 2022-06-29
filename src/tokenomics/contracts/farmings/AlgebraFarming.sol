@@ -202,13 +202,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     ) internal returns (uint256 reward) {
         reward = rewards[rewardToken][from];
 
-        if (amountRequested != 0 && amountRequested < reward) {
-            reward = amountRequested;
+        if (amountRequested == 0 || amountRequested > reward) {
+            amountRequested = reward;
         }
 
-        rewards[rewardToken][from] -= reward;
-        TransferHelper.safeTransfer(address(rewardToken), to, reward);
+        rewards[rewardToken][from] = reward - amountRequested;
+        TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
-        emit RewardClaimed(to, reward, address(rewardToken), from);
+        emit RewardClaimed(to, amountRequested, address(rewardToken), from);
     }
 }
