@@ -58,7 +58,6 @@ interface IFarmingCenter is
     /// @return numberOfFarms
     /// @return inLimitFarming
     /// @return owner
-    /// @return tokensLocked
     function deposits(uint256 tokenId)
         external
         view
@@ -66,8 +65,7 @@ interface IFarmingCenter is
             uint256 L2TokenId,
             uint32 numberOfFarms,
             bool inLimitFarming,
-            address owner,
-            uint256 tokensLocked
+            address owner
         );
 
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;

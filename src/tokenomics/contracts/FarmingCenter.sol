@@ -14,7 +14,7 @@ import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
 import './base/PeripheryPayments.sol';
-import './FarmingCenterVault.sol';
+import './interfaces/IFarmingCenterVault.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
@@ -38,7 +38,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint32 numberOfFarms;
         bool inLimitFarming;
         address owner;
-        uint256 tokensLocked;
     }
 
     /// @notice Represents the nft layer 2
@@ -51,7 +50,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     constructor(
         IAlgebraIncentiveFarming _farming,
         IAlgebraEternalFarming _eternalFarming,
-        INonfungiblePositionManager _nonfungiblePositionManager
+        INonfungiblePositionManager _nonfungiblePositionManager,
+        IFarmingCenterVault _farmingCenterVault
     )
         ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2')
         PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken())
@@ -59,7 +59,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         farming = _farming;
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
-        farmingCenterVault = IFarmingCenterVault(new FarmingCenterVault());
+        farmingCenterVault = _farmingCenterVault;
     }
 
     function checkAuthorizationForToken(uint256 tokenId) private view {
@@ -109,7 +109,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
-        _deposit.tokensLocked = tokensLocked;
         (, , , , , , address multiplierToken, ) = _farming.incentives(keccak256(abi.encode(key)));
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
@@ -150,12 +149,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         _farming.exitFarming(key, tokenId, msg.sender);
 
-        uint256 _tokensLocked = deposit.tokensLocked;
-        if (_tokensLocked > 0) {
-            (, , , , , , address multiplierToken, ) = _farming.incentives(keccak256(abi.encode(key)));
-            farmingCenterVault.claimTokens(multiplierToken, msg.sender, _tokensLocked);
-            deposit.tokensLocked = 0;
-        }
+        bytes32 incentiveId = keccak256(abi.encode(key));
+        (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
     }
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external override {
