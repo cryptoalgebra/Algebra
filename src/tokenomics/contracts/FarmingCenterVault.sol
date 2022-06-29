@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
-import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import './interfaces/IFarmingCenterVault.sol';
 
 contract FarmingCenterVault is IFarmingCenterVault {
@@ -11,22 +10,13 @@ contract FarmingCenterVault is IFarmingCenterVault {
     // tokenId => IncentiveId => TokenAmount
     mapping(uint256 => mapping(bytes32 => uint256)) public override balances;
 
-    function setFarming(address _farmingCenter) external override onlyOwner {
-        farmingCenter = _farmingCenter;
-    }
-
     constructor() {
         owner = msg.sender;
     }
 
-    modifier onlyOwner() {
+    function setFarming(address _farmingCenter) external override {
         require(msg.sender == owner, 'onlyOwner');
-        _;
-    }
-
-    modifier onlyFarming() {
-        require(msg.sender == farmingCenter, 'onlyFarming');
-        _;
+        farmingCenter = _farmingCenter;
     }
 
     function claimTokens(
@@ -34,7 +24,9 @@ contract FarmingCenterVault is IFarmingCenterVault {
         address to,
         uint256 tokenId,
         bytes32 incentiveId
-    ) external override onlyFarming {
+    ) external override {
+        require(msg.sender == farmingCenter, 'onlyFarming');
+
         uint256 balance = balances[tokenId][incentiveId];
         if (balance > 0) {
             TransferHelper.safeTransfer(multiplierToken, to, balance);
