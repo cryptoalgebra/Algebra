@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
 import 'algebra/contracts/libraries/TickTable.sol';
-import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
@@ -52,16 +51,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         override
         returns (uint160 innerSecondsSpentPerLiquidity)
     {
-        uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
-        uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
-
-        if (globalTick < bottomTick) {
-            return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else if (globalTick < topTick) {
-            return (globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else {
-            return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
-        }
+        return _getInnerSecondsPerLiquidity(bottomTick, topTick);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
@@ -80,30 +70,11 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         );
     }
 
-    // @inheritdoc IAlgebraEternalVirtualPool
-    function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
-        if (ticks[nextTick].initialized) {
-            int128 liquidityDelta = ticks.cross(
-                nextTick,
-                totalRewardGrowth0,
-                totalRewardGrowth1,
-                globalSecondsPerLiquidityCumulative,
-                0,
-                0
-            );
-
-            if (zeroToOne) liquidityDelta = -liquidityDelta;
-            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-        }
-        globalTick = zeroToOne ? nextTick - 1 : nextTick;
+    function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
+        return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, globalSecondsPerLiquidityCumulative, 0, 0);
     }
 
-    // @inheritdoc IAlgebraEternalVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
-        return _increaseCumulative(currentTimestamp);
-    }
-
-    function _increaseCumulative(uint32 currentTimestamp) private returns (Status) {
+    function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
         uint128 _prevLiquidity;
         if ((_prevLiquidity = prevLiquidity) > 0) {
             uint32 previousTimestamp = prevTimestamp;
@@ -142,61 +113,23 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         return Status.ACTIVE;
     }
 
-    // @inheritdoc IAlgebraEternalVirtualPool
-    function applyLiquidityDeltaToPosition(
-        uint32 currentTimestamp,
-        int24 bottomTick,
-        int24 topTick,
+    function _updateTick(
+        int24 tick,
+        int24 currentTick,
         int128 liquidityDelta,
-        int24 tick
-    ) external override onlyFarming {
-        // if we need to update the ticks, do it
-        bool flippedBottom;
-        bool flippedTop;
-        globalTick = tick;
-        prevLiquidity = currentLiquidity;
-        if (currentTimestamp > prevTimestamp) {
-            _increaseCumulative(currentTimestamp);
-        }
-        if (liquidityDelta != 0) {
-            if (
-                ticks.update(
-                    bottomTick,
-                    globalTick,
-                    liquidityDelta,
-                    totalRewardGrowth0,
-                    totalRewardGrowth1,
-                    0,
-                    0,
-                    0,
-                    false
-                )
-            ) {
-                flippedBottom = true;
-                tickTable.toggleTick(bottomTick);
-            }
-
-            if (
-                ticks.update(topTick, globalTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, 0, 0, true)
-            ) {
-                flippedTop = true;
-                tickTable.toggleTick(topTick);
-            }
-
-            if (globalTick >= bottomTick && globalTick < topTick) {
-                currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-                prevLiquidity = currentLiquidity;
-            }
-        }
-
-        // clear any tick data that is no longer needed
-        if (liquidityDelta < 0) {
-            if (flippedBottom) {
-                delete ticks[bottomTick];
-            }
-            if (flippedTop) {
-                delete ticks[topTick];
-            }
-        }
+        bool isBottomTick
+    ) internal override returns (bool updated) {
+        return
+            ticks.update(
+                tick,
+                currentTick,
+                liquidityDelta,
+                totalRewardGrowth0,
+                totalRewardGrowth1,
+                0,
+                0,
+                0,
+                isBottomTick
+            );
     }
 }

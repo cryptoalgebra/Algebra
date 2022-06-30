@@ -2,10 +2,14 @@
 pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
+import 'algebra/contracts/libraries/TickTable.sol';
+import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import './IAlgebraVirtualPoolBase.sol';
 
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
+    using TickTable for mapping(int16 => uint256);
+
     address public immutable farmingCenterAddress;
     address public immutable farmingAddress;
     address public immutable pool;
@@ -51,8 +55,95 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         pool = _pool;
     }
 
+    function _getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
+        internal
+        view
+        returns (uint160 innerSecondsSpentPerLiquidity)
+    {
+        uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
+        uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
+
+        if (globalTick < bottomTick) {
+            return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
+        } else if (globalTick < topTick) {
+            return (globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
+        } else {
+            return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
+        }
+    }
+
     // @inheritdoc IAlgebraVirtualPool
     function processSwap() external override onlyFromPool {
         prevLiquidity = currentLiquidity;
+    }
+
+    function _crossTick(int24 nextTick) internal virtual returns (int128 liquidityDelta);
+
+    // @inheritdoc IAlgebraVirtualPool
+    function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
+        if (ticks[nextTick].initialized) {
+            int128 liquidityDelta = _crossTick(nextTick);
+            if (zeroToOne) liquidityDelta = -liquidityDelta;
+            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+        }
+        globalTick = zeroToOne ? nextTick - 1 : nextTick;
+    }
+
+    function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (Status);
+
+    // @inheritdoc IAlgebraVirtualPool
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
+        return _increaseCumulative(currentTimestamp);
+    }
+
+    function _updateTick(
+        int24 tick,
+        int24 currentTick,
+        int128 liquidityDelta,
+        bool isBottomTick
+    ) internal virtual returns (bool updated);
+
+    // @inheritdoc IAlgebraVirtualPoolBase
+    function applyLiquidityDeltaToPosition(
+        uint32 currentTimestamp,
+        int24 bottomTick,
+        int24 topTick,
+        int128 liquidityDelta,
+        int24 currentTick
+    ) external override onlyFarming {
+        // if we need to update the ticks, do it
+        bool flippedBottom;
+        bool flippedTop;
+        globalTick = currentTick;
+        prevLiquidity = currentLiquidity;
+        if (currentTimestamp > prevTimestamp) {
+            _increaseCumulative(currentTimestamp);
+        }
+        if (liquidityDelta != 0) {
+            if (_updateTick(bottomTick, currentTick, liquidityDelta, false)) {
+                flippedBottom = true;
+                tickTable.toggleTick(bottomTick);
+            }
+
+            if (_updateTick(topTick, currentTick, liquidityDelta, false)) {
+                flippedTop = true;
+                tickTable.toggleTick(topTick);
+            }
+
+            if (currentTick >= bottomTick && currentTick < topTick) {
+                currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+                prevLiquidity = currentLiquidity;
+            }
+        }
+
+        // clear any tick data that is no longer needed
+        if (liquidityDelta < 0) {
+            if (flippedBottom) {
+                delete ticks[bottomTick];
+            }
+            if (flippedTop) {
+                delete ticks[topTick];
+            }
+        }
     }
 }

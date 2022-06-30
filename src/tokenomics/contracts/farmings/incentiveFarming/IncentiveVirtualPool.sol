@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
 import 'algebra/contracts/libraries/TickTable.sol';
-import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 
@@ -67,37 +66,16 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
             uint32 endTime
         )
     {
-        uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
-        uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
-
-        if (globalTick < bottomTick) {
-            innerSecondsSpentPerLiquidity = lowerSecondsPerLiquidity - upperSecondsPerLiquidity;
-        } else if (globalTick < topTick) {
-            innerSecondsSpentPerLiquidity =
-                globalSecondsPerLiquidityCumulative -
-                lowerSecondsPerLiquidity -
-                upperSecondsPerLiquidity;
-        } else {
-            innerSecondsSpentPerLiquidity = upperSecondsPerLiquidity - lowerSecondsPerLiquidity;
-        }
-
+        innerSecondsSpentPerLiquidity = _getInnerSecondsPerLiquidity(bottomTick, topTick);
         initTime = initTimestamp;
         endTime = endTimestamp == 0 ? 0 : endTimestamp - timeOutside;
     }
 
-    /// @inheritdoc IAlgebraVirtualPool
-    function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
-        if (ticks[nextTick].initialized) {
-            int128 liquidityDelta = ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
-
-            if (zeroToOne) liquidityDelta = -liquidityDelta;
-            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-        }
-        globalTick = zeroToOne ? nextTick - 1 : nextTick;
+    function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
+        return ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
     }
 
-    /// @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
+    function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
         if (desiredStartTimestamp >= currentTimestamp) {
             return Status.NOT_STARTED;
         }
@@ -126,41 +104,12 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         return Status.ACTIVE;
     }
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
-    function applyLiquidityDeltaToPosition(
-        int24 bottomTick,
-        int24 topTick,
+    function _updateTick(
+        int24 tick,
+        int24 currentTick,
         int128 liquidityDelta,
-        int24 tick
-    ) external override onlyFarming {
-        // if we need to update the ticks, do it
-        bool flippedBottom;
-        bool flippedTop;
-        globalTick = tick;
-        if (liquidityDelta != 0) {
-            if (globalTick >= bottomTick && globalTick < topTick) {
-                currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-            }
-
-            if (ticks.update(bottomTick, globalTick, liquidityDelta, 0, 0, 0, 0, 0, false)) {
-                flippedBottom = true;
-                tickTable.toggleTick(bottomTick);
-            }
-
-            if (ticks.update(topTick, globalTick, liquidityDelta, 0, 0, 0, 0, 0, true)) {
-                flippedTop = true;
-                tickTable.toggleTick(topTick);
-            }
-        }
-
-        // clear any tick data that is no longer needed
-        if (liquidityDelta < 0) {
-            if (flippedBottom) {
-                delete ticks[bottomTick];
-            }
-            if (flippedTop) {
-                delete ticks[topTick];
-            }
-        }
+        bool isBottomTick
+    ) internal override returns (bool updated) {
+        return ticks.update(tick, currentTick, liquidityDelta, 0, 0, 0, 0, 0, isBottomTick);
     }
 }

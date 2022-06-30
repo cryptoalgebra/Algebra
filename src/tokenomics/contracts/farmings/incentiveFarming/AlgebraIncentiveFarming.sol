@@ -171,6 +171,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
 
         IAlgebraIncentiveVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
+            uint32(block.timestamp),
             tickLower,
             tickUpper,
             int256(liquidity).toInt128(),
@@ -252,6 +253,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
             (, int24 tick, , , , , , ) = pool.globalState();
 
             virtualPool.applyLiquidityDeltaToPosition(
+                uint32(block.timestamp),
                 farm.tickLower,
                 farm.tickUpper,
                 -int256(farm.liquidity).toInt128(),
