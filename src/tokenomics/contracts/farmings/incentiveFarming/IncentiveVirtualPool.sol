@@ -103,24 +103,18 @@ contract IncentiveVirtualPool is IAlgebraIncentiveVirtualPool {
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
 
         if (globalTick < bottomTick) {
-            return (
-                lowerSecondsPerLiquidity - upperSecondsPerLiquidity,
-                initTimestamp,
-                endTimestamp == 0 ? 0 : endTimestamp - timeOutside
-            );
+            innerSecondsSpentPerLiquidity = lowerSecondsPerLiquidity - upperSecondsPerLiquidity;
         } else if (globalTick < topTick) {
-            return (
-                globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity,
-                initTimestamp,
-                endTimestamp == 0 ? 0 : endTimestamp - timeOutside
-            );
+            innerSecondsSpentPerLiquidity =
+                globalSecondsPerLiquidityCumulative -
+                lowerSecondsPerLiquidity -
+                upperSecondsPerLiquidity;
         } else {
-            return (
-                upperSecondsPerLiquidity - lowerSecondsPerLiquidity,
-                initTimestamp,
-                endTimestamp == 0 ? 0 : endTimestamp - timeOutside
-            );
+            innerSecondsSpentPerLiquidity = upperSecondsPerLiquidity - lowerSecondsPerLiquidity;
         }
+
+        initTime = initTimestamp;
+        endTime = endTimestamp == 0 ? 0 : endTimestamp - timeOutside;
     }
 
     /// @inheritdoc IAlgebraVirtualPool
