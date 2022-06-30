@@ -10,33 +10,11 @@ import 'algebra/contracts/libraries/Constants.sol';
 
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 
-contract EternalVirtualPool is IAlgebraEternalVirtualPool {
+import '../AlgebraVirtualPoolBase.sol';
+
+contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPool {
     using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
-
-    address public immutable farmingCenterAddress;
-    address public immutable farmingAddress;
-    address public immutable pool;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraVirtualPoolBase
-    int24 public override globalTick;
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint32 public override timeOutside;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint128 public override prevLiquidity;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint160 public override globalSecondsPerLiquidityCumulative;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint32 public override prevTimestamp;
-
-    // @inheritdoc IAlgebraEternalVirtualPool
-    mapping(int24 => TickManager.Tick) public override ticks;
-    mapping(int16 => uint256) private tickTable;
 
     uint128 public rewardRate0;
     uint128 public rewardRate1;
@@ -47,25 +25,11 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
 
-    /// @notice only pool (or FarmingCenter as "proxy") can call
-    modifier onlyFromPool() {
-        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool can call this function');
-        _;
-    }
-
-    modifier onlyFarming() {
-        require(msg.sender == farmingAddress, 'only farming can call this function');
-        _;
-    }
-
     constructor(
         address _farmingCenterAddress,
         address _farmingAddress,
         address _pool
-    ) {
-        farmingCenterAddress = _farmingCenterAddress;
-        farmingAddress = _farmingAddress;
-        pool = _pool;
+    ) AlgebraVirtualPoolBase(_farmingCenterAddress, _farmingAddress, _pool) {
         prevTimestamp = uint32(block.timestamp);
     }
 
@@ -182,11 +146,6 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
         }
 
         return Status.ACTIVE;
-    }
-
-    // @inheritdoc IAlgebraEternalVirtualPool
-    function processSwap() external override onlyFromPool {
-        prevLiquidity = currentLiquidity;
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
