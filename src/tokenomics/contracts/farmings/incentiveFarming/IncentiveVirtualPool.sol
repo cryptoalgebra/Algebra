@@ -67,7 +67,8 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     {
         innerSecondsSpentPerLiquidity = _getInnerSecondsPerLiquidity(bottomTick, topTick);
         initTime = initTimestamp;
-        endTime = endTimestamp == 0 ? 0 : endTimestamp - timeOutside;
+        endTime = endTimestamp;
+        if (endTime != 0) endTime -= timeOutside;
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
@@ -81,19 +82,19 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         if (desiredEndTimestamp <= currentTimestamp) {
             return Status.NOT_EXIST;
         }
-        uint32 previousTimestamp;
 
         if (initTimestamp == 0) {
             initTimestamp = currentTimestamp;
-            previousTimestamp = currentTimestamp;
-        } else {
-            previousTimestamp = prevTimestamp;
+            return Status.ACTIVE;
         }
 
+        uint32 previousTimestamp = prevTimestamp;
+
         if (currentTimestamp > previousTimestamp) {
-            if (currentLiquidity > 0) {
+            uint128 _currentLiquidity = currentLiquidity;
+            if (_currentLiquidity > 0) {
                 globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
-                    (currentLiquidity));
+                    (_currentLiquidity));
                 prevTimestamp = currentTimestamp;
             } else {
                 timeOutside += currentTimestamp - previousTimestamp;
