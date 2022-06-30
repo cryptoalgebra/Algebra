@@ -102,7 +102,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     }
 
     function _connectPoolToVirtualPool(IAlgebraPool pool, address virtualPool) private {
-        farmingCenter.setFarmingCenterAddress(pool, virtualPool);
+        farmingCenter.connectVirtualPool(pool, virtualPool);
     }
 
     function _getCurrentVirtualPools(IAlgebraPool pool) internal view returns (address incentive, address eternal) {

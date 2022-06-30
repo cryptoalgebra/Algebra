@@ -219,7 +219,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 );
                 (address _incentive, ) = _getCurrentVirtualPools(key.pool);
                 if (address(virtualPool) == _incentive) {
-                    farmingCenter.setFarmingCenterAddress(key.pool, address(0));
+                    farmingCenter.connectVirtualPool(key.pool, address(0));
                 }
             }
 

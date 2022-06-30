@@ -66,7 +66,11 @@ interface IFarmingCenter is
             address owner
         );
 
-    function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
+    /// @notice Updates activeIncentive in AlgebraPool
+    /// @dev only farming can do it
+    /// @param pool The AlgebraPool for which farming was created
+    /// @param virtualPool The virtual pool to be connected
+    function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
 
     function enterEternalFarming(
         IncentiveKey memory key,

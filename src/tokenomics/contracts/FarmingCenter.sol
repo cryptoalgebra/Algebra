@@ -213,28 +213,30 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
-    function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override {
+    /// @inheritdoc IFarmingCenter
+    function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
         bool isIncentiveFarming = msg.sender == address(farming);
         require(isIncentiveFarming || msg.sender == address(eternalFarming), 'only farming can call this');
 
         VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
         address newIncentive;
         if (pool.activeIncentive() == address(0)) {
-            newIncentive = virtualPool; // turn on pool directly
+            newIncentive = newVirtualPool; // turn on pool directly
         } else {
-            if (virtualPool == address(0)) {
+            if (newVirtualPool == address(0)) {
+                // turn on directly another pool if it exists
                 newIncentive = isIncentiveFarming ? virtualPools.eternalVirtualPool : virtualPools.virtualPool;
             } else {
-                newIncentive = address(this); // turn on via proxy
+                newIncentive = address(this); // turn on via "proxy"
             }
         }
 
         pool.setIncentive(newIncentive);
 
         if (isIncentiveFarming) {
-            virtualPools.virtualPool = virtualPool;
+            virtualPools.virtualPool = newVirtualPool;
         } else {
-            virtualPools.eternalVirtualPool = virtualPool;
+            virtualPools.eternalVirtualPool = newVirtualPool;
         }
     }
 
