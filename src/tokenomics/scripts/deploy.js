@@ -25,8 +25,10 @@ async function main() {
   const FarmingCenterVaultFactory = await hre.ethers.getContractFactory("FarmingCenterVault")
   const FarmingCenterVault = await FarmingCenterVaultFactory.deploy()
 
+  await FarmingCenterVault.deployed()
+
   const FarmingCenterFactory = await hre.ethers.getContractFactory("FarmingCenter");
-  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManage, FarmingCenterVault.address);
+  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager, FarmingCenterVault.address);
 
   await FarmingCenter.deployed();
   console.log("FarmingCenter deployed to:", FarmingCenter.address);
@@ -42,11 +44,10 @@ async function main() {
   await FarmingCenterVault.setFarming(FarmingCenter.address)
   console.log("Updated farming center address in farming center vault")
 
-  const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-  const factory = await AlgebraFactory.attach(deploysData.factory);
+  const factory = await hre.ethers.getContractAt("IAlgebraFactory",deploysData.factory);
 
   await factory.setFarmingAddress(FarmingCenter.address);
-  console.log("Update farming center address in factory")
+  console.log("Updated farming center address in factory")
 
   
 
