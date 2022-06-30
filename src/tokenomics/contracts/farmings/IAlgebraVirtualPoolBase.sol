@@ -9,21 +9,6 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     // returns how much time the price was out of any farmd liquidity
     function timeOutside() external returns (uint32);
 
-    // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
-    function globalSecondsPerLiquidityCumulative() external returns (uint160);
-
-    // returns the current liquidity in virtual pool
-    function currentLiquidity() external returns (uint128);
-
-    // returns the current tick in virtual pool
-    function globalTick() external returns (int24);
-
-    // returns the liquidity after previous swap (like the last timepoint in a default pool)
-    function prevLiquidity() external returns (uint128);
-
-    // returns the timestamp after previous swap (like the last timepoint in a default pool)
-    function prevTimestamp() external returns (uint32);
-
     // returns data associated with a tick
     function ticks(int24 tickId)
         external
@@ -37,4 +22,19 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
             uint32 outerSecondsSpent,
             bool initialized
         );
+
+    // returns the liquidity after previous swap (like the last timepoint in a default pool)
+    function prevLiquidity() external returns (uint128);
+
+    // returns the current liquidity in virtual pool
+    function currentLiquidity() external returns (uint128);
+
+    // returns the current tick in virtual pool
+    function globalTick() external returns (int24);
+
+    // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
+    function globalSecondsPerLiquidityCumulative() external returns (uint160);
+
+    // returns the timestamp after previous swap (like the last timepoint in a default pool)
+    function prevTimestamp() external returns (uint32);
 }

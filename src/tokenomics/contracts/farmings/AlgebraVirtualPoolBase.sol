@@ -11,25 +11,24 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     address public immutable pool;
 
     // @inheritdoc IAlgebraVirtualPoolBase
-    uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraVirtualPoolBase
-    int24 public override globalTick;
-    // @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override timeOutside;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint128 public override prevLiquidity;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint160 public override globalSecondsPerLiquidityCumulative;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
-    uint32 public override prevTimestamp;
 
     // @inheritdoc IAlgebraVirtualPoolBase
     mapping(int24 => TickManager.Tick) public override ticks;
 
     mapping(int16 => uint256) internal tickTable;
+
+    // @inheritdoc IAlgebraVirtualPoolBase
+    uint128 public override prevLiquidity;
+    // @inheritdoc IAlgebraVirtualPoolBase
+    uint128 public override currentLiquidity;
+    // @inheritdoc IAlgebraVirtualPoolBase
+    int24 public override globalTick;
+
+    // @inheritdoc IAlgebraVirtualPoolBase
+    uint160 public override globalSecondsPerLiquidityCumulative;
+    // @inheritdoc IAlgebraVirtualPoolBase
+    uint32 public override prevTimestamp;
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
     modifier onlyFromPool() {

@@ -14,13 +14,14 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     using TickManager for mapping(int24 => TickManager.Tick);
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public immutable override desiredEndTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public immutable override desiredStartTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override initTimestamp;
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
+
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public immutable override desiredEndTimestamp;
+    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    uint32 public immutable override desiredStartTimestamp;
 
     constructor(
         address _farmingCenterAddress,
