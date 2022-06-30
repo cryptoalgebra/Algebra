@@ -14,6 +14,7 @@ import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
 import './base/PeripheryPayments.sol';
+import './libraries/IncentiveId.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
@@ -109,7 +110,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
-        (, , , , , , address multiplierToken, ) = _farming.incentives(keccak256(abi.encode(key)));
+        (, , , , , , address multiplierToken, ) = _farming.incentives(IncentiveId.compute(key));
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
         }
@@ -149,7 +150,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         _farming.exitFarming(key, tokenId, msg.sender);
 
-        bytes32 incentiveId = keccak256(abi.encode(key));
+        bytes32 incentiveId = IncentiveId.compute(key);
         (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
