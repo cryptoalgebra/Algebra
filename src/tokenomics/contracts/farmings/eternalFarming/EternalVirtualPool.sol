@@ -101,10 +101,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
                     rewardReserve1 = _rewardReserve1 - reward1;
                     totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _prevLiquidity);
                 }
+                globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
+                    (_prevLiquidity));
+                prevTimestamp = currentTimestamp;
             }
-            globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
-                (_prevLiquidity));
-            prevTimestamp = currentTimestamp;
         } else {
             timeOutside += currentTimestamp - prevTimestamp;
             prevTimestamp = currentTimestamp;
