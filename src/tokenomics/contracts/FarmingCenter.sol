@@ -213,41 +213,28 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
-    function _setIncentive(IAlgebraPool pool, address newIncentive) private {
-        pool.setIncentive(newIncentive);
-    }
-
     function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external override {
-        require(msg.sender == address(farming) || msg.sender == address(eternalFarming), 'only farming can call this');
+        bool isIncentiveFarming = msg.sender == address(farming);
+        require(isIncentiveFarming || msg.sender == address(eternalFarming), 'only farming can call this');
 
-        VirtualPoolAddresses storage virtualPoolAddresses = _virtualPoolAddresses[address(pool)];
+        VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
+        address newIncentive;
         if (pool.activeIncentive() == address(0)) {
-            _setIncentive(pool, virtualPool); // turn on pool directly
+            newIncentive = virtualPool; // turn on pool directly
         } else {
-            if (virtualPool != address(0)) {
-                _setIncentive(pool, address(this)); // turn on proxy
+            if (virtualPool == address(0)) {
+                newIncentive = isIncentiveFarming ? virtualPools.eternalVirtualPool : virtualPools.virtualPool;
             } else {
-                // turn off proxy
-                if (msg.sender == address(farming)) {
-                    if (virtualPoolAddresses.eternalVirtualPool != address(0)) {
-                        _setIncentive(pool, virtualPoolAddresses.eternalVirtualPool);
-                    } else {
-                        _setIncentive(pool, address(0)); // turn off completely
-                    }
-                } else {
-                    if (virtualPoolAddresses.virtualPool != address(0)) {
-                        _setIncentive(pool, virtualPoolAddresses.virtualPool);
-                    } else {
-                        _setIncentive(pool, address(0)); // turn off completely
-                    }
-                }
+                newIncentive = address(this); // turn on via proxy
             }
         }
 
-        if (msg.sender == address(eternalFarming)) {
-            virtualPoolAddresses.eternalVirtualPool = virtualPool;
-        } else if (msg.sender == address(farming)) {
-            virtualPoolAddresses.virtualPool = virtualPool;
+        pool.setIncentive(newIncentive);
+
+        if (isIncentiveFarming) {
+            virtualPools.virtualPool = virtualPool;
+        } else {
+            virtualPools.eternalVirtualPool = virtualPool;
         }
     }
 
