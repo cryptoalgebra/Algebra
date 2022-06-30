@@ -85,14 +85,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 uint32(key.endTime)
             )
         );
-        bytes32 incentiveId = _createIncentive(
-            virtualPool,
-            key,
-            params.reward,
-            params.bonusReward,
-            params.multiplierToken,
-            levels
-        );
+        _createIncentive(virtualPool, key, params.reward, params.bonusReward, params.multiplierToken, levels);
 
         emit IncentiveCreated(
             key.rewardToken,

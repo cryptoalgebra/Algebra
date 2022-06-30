@@ -151,7 +151,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         bytes32 incentiveId = keccak256(abi.encode(key));
         (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
-        farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
+        if (multiplierToken != address(0)) {
+            farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
+        }
     }
 
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external override {
