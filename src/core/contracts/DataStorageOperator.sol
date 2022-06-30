@@ -28,11 +28,6 @@ contract DataStorageOperator is IDataStorageOperator {
     _;
   }
 
-  modifier onlyFactory() {
-    require(msg.sender == factory, 'only factory can call this');
-    _;
-  }
-
   constructor(address _pool) {
     factory = msg.sender;
     pool = _pool;
