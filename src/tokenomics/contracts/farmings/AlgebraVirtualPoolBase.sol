@@ -15,9 +15,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     address public immutable pool;
 
     // @inheritdoc IAlgebraVirtualPoolBase
-    uint32 public override timeOutside;
-
-    // @inheritdoc IAlgebraVirtualPoolBase
     mapping(int24 => TickManager.Tick) public override ticks;
 
     mapping(int16 => uint256) internal tickTable;
@@ -26,6 +23,8 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     uint128 public override currentLiquidity;
     // @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
+    // @inheritdoc IAlgebraVirtualPoolBase
+    uint32 public override timeOutside;
 
     // @inheritdoc IAlgebraVirtualPoolBase
     uint160 public override globalSecondsPerLiquidityCumulative;
