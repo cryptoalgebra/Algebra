@@ -14,7 +14,6 @@ import 'algebra-periphery/contracts/base/Multicall.sol';
 import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 
 import './base/PeripheryPayments.sol';
-import './interfaces/IFarmingCenterVault.sol';
 
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
