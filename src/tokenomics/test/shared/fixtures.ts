@@ -258,7 +258,7 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
 
   const eternalFarmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
 
-  const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
+  const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address)) as AlgebraEternalFarming
 
   const farmingCenterVaultFactory = await ethers.getContractFactory('FarmingCenterVault', signer) 
 
@@ -351,7 +351,7 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
 
   const farmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
 
-  const farming = (await farmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraEternalFarming
+  const farming = (await farmingFactory.deploy(deployer.address, nft.address)) as AlgebraEternalFarming
 
   const farmingCenterVaultFactory = await ethers.getContractFactory('FarmingCenterVault', signer) 
 

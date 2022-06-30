@@ -18,12 +18,6 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    /// @notice The max duration of an incentive in seconds
-    function maxIncentiveDuration() external view returns (uint256);
-
-    /// @notice The max amount of seconds into the future the incentive startTime can be set
-    function maxIncentiveStartLeadTime() external view returns (uint256);
-
     /// @notice FarmingCenter
     function farmingCenter() external view returns (IFarmingCenter);
 

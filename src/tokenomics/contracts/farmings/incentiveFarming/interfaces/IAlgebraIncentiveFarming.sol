@@ -14,6 +14,12 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         uint32 enterStartTime;
     }
 
+    /// @notice The max duration of an incentive in seconds
+    function maxIncentiveDuration() external view returns (uint256);
+
+    /// @notice The max amount of seconds into the future the incentive startTime can be set
+    function maxIncentiveStartLeadTime() external view returns (uint256);
+
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd

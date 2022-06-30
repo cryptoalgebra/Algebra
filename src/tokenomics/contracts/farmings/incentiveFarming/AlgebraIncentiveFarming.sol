@@ -25,9 +25,9 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         int24 tickLower;
         int24 tickUpper;
     }
-    /// @inheritdoc IAlgebraFarming
+    /// @inheritdoc IAlgebraIncentiveFarming
     uint256 public immutable override maxIncentiveStartLeadTime;
-    /// @inheritdoc IAlgebraFarming
+    /// @inheritdoc IAlgebraIncentiveFarming
     uint256 public immutable override maxIncentiveDuration;
 
     /// @dev farms[tokenId][incentiveHash] => Farm

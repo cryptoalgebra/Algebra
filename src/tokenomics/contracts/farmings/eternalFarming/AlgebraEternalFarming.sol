@@ -31,23 +31,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @dev farms[tokenId][incentiveHash] => Farm
     mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
-    /// @inheritdoc IAlgebraFarming
-    uint256 public override maxIncentiveStartLeadTime; // unused
-    /// @inheritdoc IAlgebraFarming
-    uint256 public override maxIncentiveDuration; // unused
-
     /// @param _deployer pool deployer contract address
     /// @param _nonfungiblePositionManager the NFT position manager contract address
-    /// @param _maxIncentiveStartLeadTime ignored
-    /// @param _maxIncentiveDuration ignored
-    constructor(
-        IAlgebraPoolDeployer _deployer,
-        INonfungiblePositionManager _nonfungiblePositionManager,
-        uint256 _maxIncentiveStartLeadTime,
-        uint256 _maxIncentiveDuration
-    ) AlgebraFarming(_deployer, _nonfungiblePositionManager) {
-        _maxIncentiveStartLeadTime; // unused
-        _maxIncentiveDuration; // unused
+    constructor(IAlgebraPoolDeployer _deployer, INonfungiblePositionManager _nonfungiblePositionManager)
+        AlgebraFarming(_deployer, _nonfungiblePositionManager)
+    {
+        // just initialize AlgebraFarming
     }
 
     /// @inheritdoc IAlgebraEternalFarming
@@ -196,18 +185,16 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         address _owner
     ) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
 
         Farm memory farm = farms[tokenId][incentiveId];
-
         require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
 
+        Incentive storage incentive = incentives[incentiveId];
         incentive.numberOfFarms--;
-
-        uint256 reward = 0;
-        uint256 bonusReward = 0;
-
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+
+        uint256 reward;
+        uint256 bonusReward;
 
         {
             (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);

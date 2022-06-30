@@ -17,7 +17,7 @@ async function main() {
   console.log("AlgebraIncentiveFarming deployed to:", AlgebraIncentiveFarming.address);
 
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory("AlgebraEternalFarming");
-  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
+  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager);
 
   await AlgebraEternalFarming.deployed();
   console.log("AlgebraEternalFarming deployed to:", AlgebraEternalFarming.address);
