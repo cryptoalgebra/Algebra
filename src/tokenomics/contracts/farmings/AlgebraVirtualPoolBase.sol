@@ -23,8 +23,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     mapping(int16 => uint256) internal tickTable;
 
     // @inheritdoc IAlgebraVirtualPoolBase
-    uint128 public override prevLiquidity;
-    // @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
     // @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
@@ -72,11 +70,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         }
     }
 
-    // @inheritdoc IAlgebraVirtualPool
-    function processSwap() external override onlyFromPool {
-        prevLiquidity = currentLiquidity;
-    }
-
     function _crossTick(int24 nextTick) internal virtual returns (int128 liquidityDelta);
 
     // @inheritdoc IAlgebraVirtualPool
@@ -114,7 +107,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         globalTick = currentTick;
 
         if (currentTimestamp > prevTimestamp) {
-            prevLiquidity = currentLiquidity;
             _increaseCumulative(currentTimestamp);
         }
 
@@ -134,9 +126,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
             }
 
             if (currentTick >= bottomTick && currentTick < topTick) {
-                uint128 newLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-                currentLiquidity = newLiquidity;
-                prevLiquidity = newLiquidity;
+                currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
             }
 
             // clear any tick data that is no longer needed

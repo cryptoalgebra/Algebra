@@ -909,11 +909,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       cache.timepointIndex
     );
 
-    // the swap results should be provided to a virtual pool
-    if (cache.incentiveStatus == IAlgebraVirtualPool.Status.ACTIVE) {
-      IAlgebraVirtualPool(activeIncentive).processSwap();
-    }
-
     (liquidity, volumePerLiquidityInBlock) = (
       currentLiquidity,
       cache.volumePerLiquidityInBlock + IDataStorageOperator(dataStorageOperator).calculateVolumePerLiquidity(currentLiquidity, amount0, amount1)

@@ -23,9 +23,6 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
             bool initialized
         );
 
-    // returns the liquidity after previous swap (like the last timepoint in a default pool)
-    function prevLiquidity() external returns (uint128);
-
     // returns the current liquidity in virtual pool
     function currentLiquidity() external returns (uint128);
 

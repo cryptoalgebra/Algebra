@@ -16,9 +16,6 @@ interface IAlgebraVirtualPool {
    */
   function cross(int24 nextTick, bool zeroToOne) external;
 
-  // This function is called by the main pool at the end of the swap to update virtual pool state.
-  function processSwap() external;
-
   /**
    * @dev This function is called from the main pool before every swap To increase seconds per liquidity
    * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool

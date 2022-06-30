@@ -75,8 +75,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
-        uint128 _prevLiquidity;
-        if ((_prevLiquidity = prevLiquidity) > 0) {
+        uint128 _currentLiquidity = currentLiquidity;
+        if (_currentLiquidity > 0) {
             uint32 previousTimestamp = prevTimestamp;
             if (currentTimestamp > previousTimestamp) {
                 uint32 delta = currentTimestamp - previousTimestamp;
@@ -88,7 +88,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
                         reward0 = _rewardReserve0;
                     }
                     rewardReserve0 = _rewardReserve0 - reward0;
-                    totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _prevLiquidity);
+                    totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
                 }
 
                 uint256 _rewardReserve1;
@@ -99,10 +99,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
                     }
 
                     rewardReserve1 = _rewardReserve1 - reward1;
-                    totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _prevLiquidity);
+                    totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
                 }
                 globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
-                    (_prevLiquidity));
+                    (_currentLiquidity));
                 prevTimestamp = currentTimestamp;
             }
         } else {

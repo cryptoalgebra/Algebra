@@ -41,15 +41,14 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
 
         if (initTimestamp == 0) {
             initTimestamp = startTime;
-            prevLiquidity = currentLiquidity;
             previousTimestamp = startTime;
         }
 
         previousTimestamp = previousTimestamp < initTimestamp ? initTimestamp : previousTimestamp;
-        if (prevLiquidity > 0)
+        if (currentLiquidity > 0)
             globalSecondsPerLiquidityCumulative =
                 globalSecondsPerLiquidityCumulative +
-                ((uint160(currentTimestamp - previousTimestamp) << 128) / (prevLiquidity));
+                ((uint160(currentTimestamp - previousTimestamp) << 128) / (currentLiquidity));
         else timeOutside += currentTimestamp - previousTimestamp;
 
         endTimestamp = _endTimestamp;
@@ -86,16 +85,15 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
 
         if (initTimestamp == 0) {
             initTimestamp = currentTimestamp;
-            prevLiquidity = currentLiquidity;
             previousTimestamp = currentTimestamp;
         } else {
             previousTimestamp = prevTimestamp;
         }
 
         if (currentTimestamp > previousTimestamp) {
-            if (prevLiquidity > 0) {
+            if (currentLiquidity > 0) {
                 globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
-                    (prevLiquidity));
+                    (currentLiquidity));
                 prevTimestamp = currentTimestamp;
             } else {
                 timeOutside += currentTimestamp - previousTimestamp;
