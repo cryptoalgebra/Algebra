@@ -27,8 +27,6 @@ interface IFarmingCenter is
     IPeripheryPayments
 {
     struct VirtualPoolAddresses {
-        bool hasIncentive;
-        uint32 incentiveNonce;
         address eternalVirtualPool;
         address virtualPool;
     }

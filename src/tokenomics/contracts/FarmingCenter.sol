@@ -235,7 +235,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
                         _setIncentive(pool, address(0)); // turn off completely
                     }
                 } else {
-                    if (virtualPoolAddresses.hasIncentive) {
+                    if (virtualPoolAddresses.virtualPool != address(0)) {
                         _setIncentive(pool, virtualPoolAddresses.virtualPool);
                     } else {
                         _setIncentive(pool, address(0)); // turn off completely
@@ -247,7 +247,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         if (msg.sender == address(eternalFarming)) {
             virtualPoolAddresses.eternalVirtualPool = virtualPool;
         } else if (msg.sender == address(farming)) {
-            virtualPoolAddresses.hasIncentive = virtualPool != address(0);
             virtualPoolAddresses.virtualPool = virtualPool;
         }
     }
