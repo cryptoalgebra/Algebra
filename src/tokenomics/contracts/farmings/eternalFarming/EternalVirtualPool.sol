@@ -47,11 +47,9 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
 
-    modifier onlyFarmingCenter() {
-        require(
-            msg.sender == farmingCenterAddress || msg.sender == farmingAddress || msg.sender == pool,
-            'only pool can call this function'
-        );
+    /// @notice only pool (or FarmingCenter as "proxy") can call
+    modifier onlyFromPool() {
+        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool can call this function');
         _;
     }
 
@@ -125,7 +123,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function cross(int24 nextTick, bool zeroToOne) external override onlyFarmingCenter {
+    function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = ticks.cross(
                 nextTick,
@@ -143,7 +141,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFarmingCenter returns (Status) {
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
         return _increaseCumulative(currentTimestamp);
     }
 
@@ -187,7 +185,7 @@ contract EternalVirtualPool is IAlgebraEternalVirtualPool {
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function processSwap() external override onlyFarmingCenter {
+    function processSwap() external override onlyFromPool {
         prevLiquidity = currentLiquidity;
     }
 
