@@ -117,19 +117,9 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         int24 tick,
         int24 currentTick,
         int128 liquidityDelta,
-        bool isBottomTick
+        bool isTopTick
     ) internal override returns (bool updated) {
         return
-            ticks.update(
-                tick,
-                currentTick,
-                liquidityDelta,
-                totalRewardGrowth0,
-                totalRewardGrowth1,
-                0,
-                0,
-                0,
-                isBottomTick
-            );
+            ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, 0, 0, isTopTick);
     }
 }

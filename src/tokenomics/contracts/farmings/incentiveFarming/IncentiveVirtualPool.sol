@@ -108,8 +108,8 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         int24 tick,
         int24 currentTick,
         int128 liquidityDelta,
-        bool isBottomTick
+        bool isTopTick
     ) internal override returns (bool updated) {
-        return ticks.update(tick, currentTick, liquidityDelta, 0, 0, 0, 0, 0, isBottomTick);
+        return ticks.update(tick, currentTick, liquidityDelta, 0, 0, 0, 0, 0, isTopTick);
     }
 }

@@ -100,7 +100,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         int24 tick,
         int24 currentTick,
         int128 liquidityDelta,
-        bool isBottomTick
+        bool isTopTick
     ) internal virtual returns (bool updated);
 
     // @inheritdoc IAlgebraVirtualPoolBase
@@ -111,38 +111,42 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         int128 liquidityDelta,
         int24 currentTick
     ) external override onlyFarming {
-        // if we need to update the ticks, do it
-        bool flippedBottom;
-        bool flippedTop;
         globalTick = currentTick;
-        prevLiquidity = currentLiquidity;
+
         if (currentTimestamp > prevTimestamp) {
+            prevLiquidity = currentLiquidity;
             _increaseCumulative(currentTimestamp);
         }
+
         if (liquidityDelta != 0) {
+            // if we need to update the ticks, do it
+            bool flippedBottom;
+            bool flippedTop;
+
             if (_updateTick(bottomTick, currentTick, liquidityDelta, false)) {
                 flippedBottom = true;
                 tickTable.toggleTick(bottomTick);
             }
 
-            if (_updateTick(topTick, currentTick, liquidityDelta, false)) {
+            if (_updateTick(topTick, currentTick, liquidityDelta, true)) {
                 flippedTop = true;
                 tickTable.toggleTick(topTick);
             }
 
             if (currentTick >= bottomTick && currentTick < topTick) {
-                currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-                prevLiquidity = currentLiquidity;
+                uint128 newLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+                currentLiquidity = newLiquidity;
+                prevLiquidity = newLiquidity;
             }
-        }
 
-        // clear any tick data that is no longer needed
-        if (liquidityDelta < 0) {
-            if (flippedBottom) {
-                delete ticks[bottomTick];
-            }
-            if (flippedTop) {
-                delete ticks[topTick];
+            // clear any tick data that is no longer needed
+            if (liquidityDelta < 0) {
+                if (flippedBottom) {
+                    delete ticks[bottomTick];
+                }
+                if (flippedTop) {
+                    delete ticks[topTick];
+                }
             }
         }
     }
