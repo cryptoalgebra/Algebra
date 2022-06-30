@@ -65,26 +65,27 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
     }
 
-    /// @notice Upon receiving a Algebra ERC721, creates the token deposit setting owner to `from`. Also farms token
-    /// in one or more incentives if properly formatted `data` has a length > 0.
+    /// @notice Upon receiving a Algebra ERC721, creates the token deposit setting owner to `from`.
     /// @inheritdoc IERC721Receiver
     function onERC721Received(
         address,
         address from,
         uint256 tokenId,
-        bytes calldata //data
+        bytes calldata
     ) external override returns (bytes4) {
         require(
             msg.sender == address(nonfungiblePositionManager),
             'AlgebraFarming::onERC721Received: not an Algebra nft'
         );
 
-        (deposits[tokenId].L2TokenId, deposits[tokenId].owner) = (_nextId, from);
+        uint256 id = _nextId;
+        Deposit storage newDeposit = deposits[tokenId];
+        (newDeposit.L2TokenId, newDeposit.owner) = (id, from);
 
-        l2Nfts[_nextId].tokenId = tokenId;
+        l2Nfts[id].tokenId = tokenId;
 
-        _mint(from, _nextId);
-        _nextId++;
+        _mint(from, id);
+        _nextId = id + 1;
 
         emit DepositTransferred(tokenId, address(0), from);
 
