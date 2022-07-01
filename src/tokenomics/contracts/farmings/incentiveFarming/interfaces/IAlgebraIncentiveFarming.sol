@@ -35,7 +35,7 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
 
     function createIncentive(
         IncentiveKey memory key,
-        Levels calldata levels,
+        Tiers calldata tiers,
         IncentiveParams memory params
     ) external returns (address virtualPool);
 
@@ -61,7 +61,7 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
         uint256 endTime,
         uint256 reward,
         uint256 bonusReward,
-        Levels levels,
+        Tiers tiers,
         address multiplierToken,
         uint32 enterStartTime
     );

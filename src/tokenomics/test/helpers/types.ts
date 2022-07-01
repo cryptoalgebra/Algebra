@@ -16,12 +16,12 @@ export module HelperTypes {
       bonusReward: BigNumber
       enterStartTime?: BigNumber
       
-      algbAmountForLevel1?: BigNumber
-      algbAmountForLevel2?: BigNumber
-      algbAmountForLevel3?: BigNumber
-      level1multiplier?: BigNumber
-      level2multiplier?: BigNumber
-      level3multiplier?: BigNumber
+      algbAmountForTier1?: BigNumber
+      algbAmountForTier2?: BigNumber
+      algbAmountForTier3?: BigNumber
+      tier1multiplier?: BigNumber
+      tier2multiplier?: BigNumber
+      tier3multiplier?: BigNumber
       multiplierToken?: string
 
       eternal? : boolean

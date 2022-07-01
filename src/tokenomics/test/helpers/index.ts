@@ -34,7 +34,7 @@ import { TestContext } from '../types'
 import { AlgebraIncentiveFarmingInterface } from '../../typechain/AlgebraIncentiveFarming'
 
 /***
- * HelperCommands is a utility that abstracts away lower-level ethereum details
+ * HelperCommands is a utility that abstracts away lower-tier ethereum details
  * so that we can focus on core business logic.
  *
  * Each helper function should be a `HelperTypes.CommandFunction`
@@ -148,12 +148,12 @@ export class HelperCommands {
         params.bonusRewardRate || 10,
         params.rewardToken.address,
         {
-          tokenAmountForLevel1: 0,
-          tokenAmountForLevel2: 0,
-          tokenAmountForLevel3: 0,
-          level1multiplier: 0,
-          level2multiplier: 0,
-          level3multiplier: 0,
+          tokenAmountForTier1: 0,
+          tokenAmountForTier2: 0,
+          tokenAmountForTier3: 0,
+          tier1multiplier: 0,
+          tier2multiplier: 0,
+          tier3multiplier: 0,
         },
         
       )
@@ -172,12 +172,12 @@ export class HelperCommands {
           
         },
         {
-          tokenAmountForLevel1: 0,
-          tokenAmountForLevel2: 0,
-          tokenAmountForLevel3: 0,
-          level1multiplier: 0,
-          level2multiplier: 0,
-          level3multiplier: 0,
+          tokenAmountForTier1: 0,
+          tokenAmountForTier2: 0,
+          tokenAmountForTier3: 0,
+          tier1multiplier: 0,
+          tier2multiplier: 0,
+          tier3multiplier: 0,
         },
         {
           reward: params.totalReward,
@@ -247,12 +247,12 @@ export class HelperCommands {
         params.bonusRewardRate || 10,
         params.rewardToken.address,
         {
-          tokenAmountForLevel1: 0,
-          tokenAmountForLevel2: 0,
-          tokenAmountForLevel3: 0,
-          level1multiplier: 0,
-          level2multiplier: 0,
-          level3multiplier: 0,
+          tokenAmountForTier1: 0,
+          tokenAmountForTier2: 0,
+          tokenAmountForTier3: 0,
+          tier1multiplier: 0,
+          tier2multiplier: 0,
+          tier3multiplier: 0,
         },
       )
        // @ts-ignore
@@ -278,12 +278,12 @@ export class HelperCommands {
           
         },
         {
-          tokenAmountForLevel1: params.algbAmountForLevel1 || 1000,
-          tokenAmountForLevel2: params.algbAmountForLevel2 || 5000,
-          tokenAmountForLevel3: params.algbAmountForLevel3 || 10000,
-          level1multiplier: params.level1multiplier || 1000,
-          level2multiplier: params.level2multiplier || 5000,
-          level3multiplier: params.level3multiplier || 10000,
+          tokenAmountForTier1: params.algbAmountForTier1 || 1000,
+          tokenAmountForTier2: params.algbAmountForTier2 || 5000,
+          tokenAmountForTier3: params.algbAmountForTier3 || 10000,
+          tier1multiplier: params.tier1multiplier || 1000,
+          tier2multiplier: params.tier2multiplier || 5000,
+          tier3multiplier: params.tier3multiplier || 10000,
         },
         {
           reward: params.totalReward,

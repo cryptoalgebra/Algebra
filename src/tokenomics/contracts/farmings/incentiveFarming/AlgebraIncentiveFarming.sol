@@ -50,7 +50,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
     /// @inheritdoc IAlgebraIncentiveFarming
     function createIncentive(
         IncentiveKey memory key,
-        Levels calldata levels,
+        Tiers calldata tiers,
         IncentiveParams memory params
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (address _incentive, ) = _getCurrentVirtualPools(key.pool);
@@ -85,7 +85,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 uint32(key.endTime)
             )
         );
-        _createIncentive(virtualPool, key, params.reward, params.bonusReward, params.multiplierToken, levels);
+        _createIncentive(virtualPool, key, params.reward, params.bonusReward, params.multiplierToken, tiers);
 
         emit IncentiveCreated(
             key.rewardToken,
@@ -95,7 +95,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
             key.endTime,
             params.reward,
             params.bonusReward,
-            levels,
+            tiers,
             params.multiplierToken,
             params.enterStartTime
         );

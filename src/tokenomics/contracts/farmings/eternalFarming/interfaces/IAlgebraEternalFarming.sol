@@ -46,7 +46,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 rewardRate,
         uint128 bonusRewardRate,
         address multiplierToken,
-        Levels calldata levels
+        Tiers calldata tiers
     ) external returns (address virtualPool);
 
     function addRewards(
@@ -85,7 +85,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 endTime,
         uint256 reward,
         uint256 bonusReward,
-        Levels levels,
+        Tiers tiers,
         address multiplierToken
     );
 }

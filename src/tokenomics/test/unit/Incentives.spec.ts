@@ -74,12 +74,12 @@ describe('unit/Incentives', async () => {
             
           },
           {
-            tokenAmountForLevel1: 0,
-            tokenAmountForLevel2: 0,
-            tokenAmountForLevel3: 0,
-            level1multiplier: 0,
-            level2multiplier: 0,
-            level3multiplier: 0
+            tokenAmountForTier1: 0,
+            tokenAmountForTier2: 0,
+            tokenAmountForTier3: 0,
+            tier1multiplier: 0,
+            tier2multiplier: 0,
+            tier3multiplier: 0
           },
           {
             reward: params.reward || 100,
@@ -145,13 +145,13 @@ describe('unit/Incentives', async () => {
           
           pool: context.pool01,
         }
-        const levels = {
-          tokenAmountForLevel1: 0,
-          tokenAmountForLevel2: 0,
-          tokenAmountForLevel3: 0,
-          level1multiplier: 0,
-          level2multiplier: 0,
-          level3multiplier: 0,
+        const tiers = {
+          tokenAmountForTier1: 0,
+          tokenAmountForTier2: 0,
+          tokenAmountForTier3: 0,
+          tier1multiplier: 0,
+          tier2multiplier: 0,
+          tier3multiplier: 0,
         }
         const incentiveParams = {
           reward: BN(100),
@@ -162,7 +162,7 @@ describe('unit/Incentives', async () => {
 
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
-        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey,levels, incentiveParams)
+        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey,tiers, incentiveParams)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
         let { numberOfFarms } = await context.farming.incentives(
           incentiveId
@@ -254,12 +254,12 @@ describe('unit/Incentives', async () => {
                 ...makeTimestamps(now, 1_000),
               },
               {
-                tokenAmountForLevel1: 0,
-                tokenAmountForLevel2: 0,
-                tokenAmountForLevel3: 0,
-                level1multiplier: 0,
-                level2multiplier: 0,
-                level3multiplier: 0,
+                tokenAmountForTier1: 0,
+                tokenAmountForTier2: 0,
+                tokenAmountForTier3: 0,
+                tier1multiplier: 0,
+                tier2multiplier: 0,
+                tier3multiplier: 0,
               },
               {
                 reward: BNe18(0),

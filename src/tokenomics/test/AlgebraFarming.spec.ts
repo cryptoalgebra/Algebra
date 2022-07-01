@@ -1688,12 +1688,12 @@ describe('AlgebraFarming', async ()=>{
 				poolAddress: context.pool01,
 				totalReward,
 				bonusReward,
-				level1multiplier: BN(1000),
-				level2multiplier: BN(2000),
-				level3multiplier: BN(5000),
-				algbAmountForLevel1: BN(1000),
-				algbAmountForLevel2: BN(2000),
-				algbAmountForLevel3: BN(4000)
+				tier1multiplier: BN(1000),
+				tier2multiplier: BN(2000),
+				tier3multiplier: BN(5000),
+				algbAmountForTier1: BN(1000),
+				algbAmountForTier2: BN(2000),
+				algbAmountForTier3: BN(4000)
 
 			})
 			return {

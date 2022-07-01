@@ -81,12 +81,12 @@ describe('unit/Multicall', () => {
         ...makeTimestamps(currentTime + 100),
       },
       {
-        tokenAmountForLevel1: 0,
-        tokenAmountForLevel2: 0,
-        tokenAmountForLevel3: 0,
-        level1multiplier: 0,
-        level2multiplier: 0,
-        level3multiplier: 0,
+        tokenAmountForTier1: 0,
+        tokenAmountForTier2: 0,
+        tokenAmountForTier3: 0,
+        tier1multiplier: 0,
+        tier2multiplier: 0,
+        tier3multiplier: 0,
       },
       {
         reward: totalReward,

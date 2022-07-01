@@ -6,7 +6,7 @@ import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
-import '../libraries/Multiplier.sol';
+import '../libraries/LiquidityTier.sol';
 
 import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
@@ -27,7 +27,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         bool isPoolCreated;
         uint224 totalLiquidity;
         address multiplierToken;
-        Levels levels;
+        Tiers tiers;
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -115,7 +115,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         address multiplierToken,
-        Levels calldata levels
+        Tiers calldata tiers
     ) internal returns (bytes32 incentiveId) {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
@@ -127,7 +127,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         newIncentive.isPoolCreated = true;
         newIncentive.virtualPoolAddress = virtualPool;
-        newIncentive.levels = levels;
+        newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
 
         TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
@@ -185,8 +185,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
         (, tick, , , , , , ) = pool.globalState();
 
-        uint32 multiplier = Multiplier.getMultiplier(tokensLocked, incentive.levels);
-        liquidity += (liquidity * multiplier) / Multiplier.DENOMINATOR;
+        uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
+        liquidity += (liquidity * multiplier) / LiquidityTier.DENOMINATOR;
 
         incentive.numberOfFarms++;
         virtualPool = incentive.virtualPoolAddress;

@@ -25,15 +25,15 @@ interface IAlgebraFarming is IIncentiveKey {
 
     function setIncentiveMaker(address _incentiveMaker) external;
 
-    struct Levels {
-        // amount of token to reach the level
-        uint256 tokenAmountForLevel1;
-        uint256 tokenAmountForLevel2;
-        uint256 tokenAmountForLevel3;
+    struct Tiers {
+        // amount of token to reach the tier
+        uint256 tokenAmountForTier1;
+        uint256 tokenAmountForTier2;
+        uint256 tokenAmountForTier3;
         // 1 = 0.01%
-        uint32 level1multiplier;
-        uint32 level2multiplier;
-        uint32 level3multiplier;
+        uint32 tier1multiplier;
+        uint32 tier2multiplier;
+        uint32 tier3multiplier;
     }
 
     /// @notice Represents a farming incentive
@@ -49,7 +49,7 @@ interface IAlgebraFarming is IIncentiveKey {
             bool isPoolCreated,
             uint224 totalLiquidity,
             address multiplierToken,
-            Levels memory levels
+            Tiers memory tiers
         );
 
     /// @notice Detach incentive from the pool

@@ -47,13 +47,13 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint128 rewardRate,
         uint128 bonusRewardRate,
         address multiplierToken,
-        Levels calldata levels
+        Tiers calldata tiers
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (, address _incentive) = _getCurrentVirtualPools(key.pool);
         require(_incentive == address(0), 'Farming already exists');
 
         virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
-        bytes32 incentiveId = _createIncentive(virtualPool, key, reward, bonusReward, multiplierToken, levels);
+        bytes32 incentiveId = _createIncentive(virtualPool, key, reward, bonusReward, multiplierToken, tiers);
 
         emit IncentiveCreated(
             key.rewardToken,
@@ -64,7 +64,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             key.endTime,
             reward,
             bonusReward,
-            levels,
+            tiers,
             multiplierToken
         );
 
