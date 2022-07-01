@@ -119,7 +119,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             bonusRewardAmount = balanceAfter - balanceBefore;
         }
 
-        if (rewardAmount > 0 || bonusRewardAmount > 0) {
+        if (rewardAmount | bonusRewardAmount > 0) {
             IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
             virtualPool.addRewards(rewardAmount, bonusRewardAmount);
 
@@ -217,8 +217,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             );
 
             (reward, bonusReward) = (
-                uint128(FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128)),
-                uint128(FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128))
+                FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
+                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
             );
         }
 
@@ -272,7 +272,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         IncentiveKey memory key,
         uint256 tokenId,
         address _owner
-    ) external override onlyFarmingCenter returns (uint256, uint256) {
+    ) external override onlyFarmingCenter returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'AlgebraFarming::collect: non-existent incentive');
@@ -287,9 +287,9 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             farm.tickUpper
         );
 
-        (uint128 reward, uint128 bonusReward) = (
-            uint128(FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128)),
-            uint128(FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128))
+        (reward, bonusReward) = (
+            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
+            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
         );
 
         farms[tokenId][incentiveId].innerRewardGrowth0 = innerRewardGrowth0;
@@ -303,6 +303,5 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         }
 
         emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);
-        return (reward, bonusReward);
     }
 }

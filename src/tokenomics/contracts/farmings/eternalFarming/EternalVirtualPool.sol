@@ -60,13 +60,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         override
         returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)
     {
-        (rewardGrowthInside0, rewardGrowthInside1) = ticks.getInnerFeeGrowth(
-            bottomTick,
-            topTick,
-            globalTick,
-            totalRewardGrowth0,
-            totalRewardGrowth1
-        );
+        return ticks.getInnerFeeGrowth(bottomTick, topTick, globalTick, totalRewardGrowth0, totalRewardGrowth1);
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
