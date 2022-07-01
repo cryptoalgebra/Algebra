@@ -5,7 +5,6 @@ pragma abicoder v2;
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
-import '../../libraries/NFTPositionInfo.sol';
 import './EternalVirtualPool.sol';
 
 import 'algebra/contracts/libraries/SafeCast.sol';
@@ -198,8 +197,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 bonusReward;
 
         {
-            (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
-            (, int24 tick, , , , , , ) = pool.globalState();
+            (, int24 tick, , , , , , ) = key.pool.globalState();
 
             virtualPool.applyLiquidityDeltaToPosition(uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
 

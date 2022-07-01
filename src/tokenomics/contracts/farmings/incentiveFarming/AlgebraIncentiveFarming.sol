@@ -6,11 +6,9 @@ import './interfaces/IAlgebraIncentiveFarming.sol';
 import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 import '../../libraries/RewardMath.sol';
-import '../../libraries/NFTPositionInfo.sol';
 
 import './IncentiveVirtualPool.sol';
 import 'algebra/contracts/libraries/SafeCast.sol';
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 import '../AlgebraFarming.sol';
@@ -204,8 +202,8 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         incentive.numberOfFarms--;
 
-        uint256 reward = 0;
-        uint256 bonusReward = 0;
+        uint256 reward;
+        uint256 bonusReward;
 
         IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
 
@@ -250,8 +248,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 rewards[key.bonusRewardToken][_owner] += bonusReward;
             }
         } else {
-            (IAlgebraPool pool, , , ) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
-            (, int24 tick, , , , , , ) = pool.globalState();
+            (, int24 tick, , , , , , ) = key.pool.globalState();
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),
