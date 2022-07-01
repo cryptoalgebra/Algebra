@@ -26,8 +26,7 @@ library RewardMath {
         uint256 secondsInsideX128 = secondsPerLiquidityInsideX128 * liquidity;
 
         if (endTime - initTime == 0) {
-            // liquidity <= totalLiquidity
-            reward = FullMath.mulDiv(totalReward, liquidity, totalLiquidity);
+            reward = FullMath.mulDiv(totalReward, liquidity, totalLiquidity); // liquidity <= totalLiquidity
         } else {
             // reward less than uint256, as secondsInsideX128 cannot be greater (than endTime - initTime) << 128
             reward = FullMath.mulDiv(totalReward, secondsInsideX128, (endTime - initTime) << 128);

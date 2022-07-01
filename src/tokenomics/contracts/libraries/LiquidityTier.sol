@@ -3,6 +3,8 @@ pragma solidity =0.7.6;
 
 import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
 
+/// @title Functions for liquidity attraction programs with liquidity multipliers
+/// @notice Allows computing liquidity multiplier based on locked tokens amount
 library LiquidityTier {
     uint128 constant DENOMINATOR = 10000;
 

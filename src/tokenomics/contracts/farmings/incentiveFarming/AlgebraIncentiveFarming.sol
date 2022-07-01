@@ -31,6 +31,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
     uint256 public immutable override maxIncentiveDuration;
 
     /// @dev farms[tokenId][incentiveHash] => Farm
+    /// @inheritdoc IAlgebraIncentiveFarming
     mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
     /// @param _deployer pool deployer contract address

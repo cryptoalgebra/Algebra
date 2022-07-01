@@ -142,7 +142,7 @@ Returns information about a deposited NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 |  |
+| tokenId | uint256 | The ID of the deposit (and token) that is being transferred |
 
 **Returns:**
 

@@ -42,13 +42,13 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @param liquidityDelta The amount of liquidity in a position
-     * @param tick The current tick in the main pool
+     * @param currentTick The current tick in the main pool
      */
     function applyLiquidityDeltaToPosition(
         uint32 currentTimestamp,
         int24 bottomTick,
         int24 topTick,
         int128 liquidityDelta,
-        int24 tick
+        int24 currentTick
     ) external;
 }

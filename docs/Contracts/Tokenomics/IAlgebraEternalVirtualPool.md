@@ -65,7 +65,7 @@
 
 `getInnerSecondsPerLiquidity(int24,int24)` view external
 
-
+This function is used to calculate the seconds per liquidity inside a certain position
 
 
 

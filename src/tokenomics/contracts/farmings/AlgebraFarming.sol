@@ -16,9 +16,11 @@ import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
+/// @title Abstract base contract for Algebra farmings
 abstract contract AlgebraFarming is IAlgebraFarming {
     using SafeCast for int256;
-    /// @notice Represents a staking incentive
+
+    /// @notice Represents a farming incentive
     struct Incentive {
         uint256 totalReward;
         uint256 bonusReward;
@@ -40,6 +42,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     IFarmingCenter public override farmingCenter;
 
     /// @dev bytes32 refers to the return value of IncentiveId.compute
+    /// @inheritdoc IAlgebraFarming
     mapping(bytes32 => Incentive) public override incentives;
 
     address internal incentiveMaker;
@@ -72,7 +75,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         nonfungiblePositionManager = _nonfungiblePositionManager;
     }
 
-    // @inheritdoc IAlgebraPoolDeployer
+    /// @inheritdoc IAlgebraFarming
     function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
         require(incentiveMaker != _incentiveMaker);
         incentiveMaker = _incentiveMaker;

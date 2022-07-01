@@ -82,10 +82,10 @@ Event emitted when a Algebra LP token has been exitFarmingd
 | bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
 
 
-### IncentiveMakerChanged
+### IncentiveMaker
 
 
-`IncentiveMakerChanged(address,address)`  
+`IncentiveMaker(address)`  
 
 Emitted when the incentive maker is changed
 
@@ -93,8 +93,21 @@ Emitted when the incentive maker is changed
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| incentiveMaker | address | The incentive maker address before the address was changed |
-| _incentiveMaker | address | The factorincentive maker address after the address was changed |
+| incentiveMaker | address | The incentive maker after the address was changed |
+
+
+### FarmingCenter
+
+
+`FarmingCenter(address)`  
+
+Emitted when the farming center is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| farmingCenter | address | The farming center after the address was changed |
 
 
 ### RewardsAdded
@@ -154,7 +167,7 @@ The nonfungible position manager with which this farming contract is compatible
 
 `farmingCenter()` view external
 
-
+The farming Center
 
 
 
@@ -170,7 +183,7 @@ The nonfungible position manager with which this farming contract is compatible
 
 `deployer()`  external
 
-
+The pool deployer
 
 
 
@@ -186,13 +199,13 @@ The nonfungible position manager with which this farming contract is compatible
 
 `setIncentiveMaker(address)`  external
 
-
+Updates the incentive maker
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _incentiveMaker | address |  |
+| _incentiveMaker | address | The new incentive maker address |
 
 
 ### incentives
@@ -274,13 +287,13 @@ Returns amounts of reward tokens owed to a given address according to the last t
 
 `setFarmingCenterAddress(address)`  external
 
-set new farmingCenter address
+Updates farming center address
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _farmingCenter | address |  |
+| _farmingCenter | address | The new farming center contract address |
 
 
 ### enterFarming
@@ -312,7 +325,7 @@ exitFarmings for Algebra LP token
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to exitFarming the NFT |
 | tokenId | uint256 | The ID of the token to exitFarming |
-| _owner | address |  |
+| _owner | address | Owner of the token |
 
 
 ### claimReward

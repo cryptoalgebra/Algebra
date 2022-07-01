@@ -7,6 +7,7 @@ import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import './IAlgebraVirtualPoolBase.sol';
 
+/// @title Abstract base contract for Algebra virual pools
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     using TickTable for mapping(int16 => uint256);
 
@@ -14,21 +15,21 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     address public immutable farmingAddress;
     address public immutable pool;
 
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     mapping(int24 => TickManager.Tick) public override ticks;
 
     mapping(int16 => uint256) internal tickTable;
 
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override timeOutside;
 
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint160 public override globalSecondsPerLiquidityCumulative;
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
@@ -52,6 +53,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         pool = _pool;
     }
 
+    /// @notice get seconds per liquidity inside range
     function _getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         internal
         view
@@ -69,9 +71,10 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         }
     }
 
+    /// @dev logic of tick crossing differs in virtual pools
     function _crossTick(int24 nextTick) internal virtual returns (int128 liquidityDelta);
 
-    // @inheritdoc IAlgebraVirtualPool
+    /// @inheritdoc IAlgebraVirtualPool
     function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = _crossTick(nextTick);
@@ -81,13 +84,15 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         globalTick = zeroToOne ? nextTick - 1 : nextTick;
     }
 
+    /// @dev logic of cumulatives differs in virtual pools
     function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (Status);
 
-    // @inheritdoc IAlgebraVirtualPool
+    /// @inheritdoc IAlgebraVirtualPool
     function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
         return _increaseCumulative(currentTimestamp);
     }
 
+    /// @dev logic of tick updating differs in virtual pools
     function _updateTick(
         int24 tick,
         int24 currentTick,
@@ -95,7 +100,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         bool isTopTick
     ) internal virtual returns (bool updated);
 
-    // @inheritdoc IAlgebraVirtualPoolBase
+    /// @inheritdoc IAlgebraVirtualPoolBase
     function applyLiquidityDeltaToPosition(
         uint32 currentTimestamp,
         int24 bottomTick,

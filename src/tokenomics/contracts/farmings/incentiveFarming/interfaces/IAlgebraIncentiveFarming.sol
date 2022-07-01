@@ -23,9 +23,9 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
-    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
-    /// @return tickLower The lower end of the tick range for the position
-    /// @return tickUpper The upper end of the tick range for the position
+    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
+    /// tickLower The lower end of the tick range for the position,
+    /// tickUpper The upper end of the tick range for the position
     function farms(uint256 tokenId, bytes32 incentiveId)
         external
         view

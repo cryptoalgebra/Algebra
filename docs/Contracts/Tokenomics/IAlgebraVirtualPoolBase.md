@@ -126,11 +126,11 @@ Base interface for virtual pools
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| currentTimestamp | uint32 |  |
+| currentTimestamp | uint32 | The timestamp of current block |
 | bottomTick | int24 | The bottom tick of a position |
 | topTick | int24 | The top tick of a position |
 | liquidityDelta | int128 | The amount of liquidity in a position |
-| tick | int24 | The current tick in the main pool |
+| currentTick | int24 | The current tick in the main pool |
 
 
 

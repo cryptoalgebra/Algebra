@@ -22,11 +22,11 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
-    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
-    /// @return tickLower The lower tick of position
-    /// @return tickUpper The upper tick of position
-    /// @return innerRewardGrowth0 The last saved reward0 growth inside position
-    /// @return innerRewardGrowth1 The last saved reward1 growth inside position
+    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
+    /// tickLower The lower tick of position,
+    /// tickUpper The upper tick of position,
+    /// innerRewardGrowth0 The last saved reward0 growth inside position,
+    /// innerRewardGrowth1 The last saved reward1 growth inside position
     function farms(uint256 tokenId, bytes32 incentiveId)
         external
         view

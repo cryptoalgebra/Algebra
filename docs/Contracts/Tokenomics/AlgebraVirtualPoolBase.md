@@ -2,7 +2,7 @@
 
 # AlgebraVirtualPoolBase
 
-
+Abstract base contract for Algebra virual pools
 
 
 ## Modifiers
@@ -79,8 +79,8 @@ onlyFromPool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| nextTick | int24 |  |
-| zeroToOne | bool |  |
+| nextTick | int24 | The crossed tick |
+| zeroToOne | bool | The direction |
 
 
 ### increaseCumulative
@@ -95,7 +95,7 @@ onlyFromPool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| currentTimestamp | uint32 |  |
+| currentTimestamp | uint32 | The timestamp of the current swap |
 
 **Returns:**
 
@@ -115,11 +115,11 @@ onlyFarming
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| currentTimestamp | uint32 |  |
-| bottomTick | int24 |  |
-| topTick | int24 |  |
-| liquidityDelta | int128 |  |
-| currentTick | int24 |  |
+| currentTimestamp | uint32 | The timestamp of current block |
+| bottomTick | int24 | The bottom tick of a position |
+| topTick | int24 | The top tick of a position |
+| liquidityDelta | int128 | The amount of liquidity in a position |
+| currentTick | int24 | The current tick in the main pool |
 
 
 

@@ -29,6 +29,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 innerRewardGrowth1;
     }
     /// @dev farms[tokenId][incentiveHash] => Farm
+    /// @inheritdoc IAlgebraEternalFarming
     mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
     /// @param _deployer pool deployer contract address

@@ -10,7 +10,7 @@ Algebra eternal (v2-like) farming
 ## Variables
 ### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
 
-
+Returns information about a farmd liquidity NFT
 
 *Developer note: farms[tokenId][incentiveHash] &#x3D;&gt; Farm*
 
@@ -151,7 +151,7 @@ exitFarmings for Algebra LP token
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to exitFarming the NFT |
 | tokenId | uint256 | The ID of the token to exitFarming |
-| _owner | address |  |
+| _owner | address | Owner of the token |
 
 
 ### getRewardInfo

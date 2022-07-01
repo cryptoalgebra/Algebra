@@ -2,7 +2,7 @@
 
 # AlgebraFarming
 
-
+Abstract base contract for Algebra farmings
 
 
 ## Modifiers
@@ -45,15 +45,15 @@ The nonfungible position manager with which this farming contract is compatible
 
 ### contract IAlgebraPoolDeployer deployer immutable
 
-
+The pool deployer
 
 ### contract IFarmingCenter farmingCenter 
 
-
+The farming Center
 
 ### mapping(bytes32 &#x3D;&gt; struct AlgebraFarming.Incentive) incentives 
 
-
+Represents a farming incentive
 
 *Developer note: bytes32 refers to the return value of IncentiveId.compute*
 ### mapping(contract IERC20Minimal &#x3D;&gt; mapping(address &#x3D;&gt; uint256)) rewards 
@@ -69,13 +69,13 @@ onlyOwner
 
 `setIncentiveMaker(address)`  external
 
-
+Updates the incentive maker
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _incentiveMaker | address |  |
+| _incentiveMaker | address | The new incentive maker address |
 
 
 ### setFarmingCenterAddress
@@ -84,13 +84,13 @@ onlyOwner
 
 `setFarmingCenterAddress(address)`  external
 
-set new farmingCenter address
+Updates farming center address
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _farmingCenter | address |  |
+| _farmingCenter | address | The new farming center contract address |
 
 
 ### claimReward
