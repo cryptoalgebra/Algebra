@@ -22,7 +22,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @inheritdoc IAlgebraMintCallback
-    function AlgebraMintCallback(
+    function algebraMintCallback(
         uint256 amount0Owed,
         uint256 amount1Owed,
         bytes calldata data

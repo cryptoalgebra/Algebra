@@ -89,13 +89,11 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
-    uint256 feeAmount,
     bytes calldata data
   ) external override {
-    feeAmount;
     address sender = abi.decode(data, (address));
 
     emit SwapCallback(amount0Delta, amount1Delta);
@@ -132,7 +130,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
   event MintCallback(uint256 amount0Owed, uint256 amount1Owed);
 
-  function AlgebraMintCallback(
+  function algebraMintCallback(
     uint256 amount0Owed,
     uint256 amount1Owed,
     bytes calldata data
@@ -158,7 +156,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     IAlgebraPool(pool).flash(recipient, amount0, amount1, abi.encode(msg.sender, pay0, pay1));
   }
 
-  function AlgebraFlashCallback(
+  function algebraFlashCallback(
     uint256 fee0,
     uint256 fee1,
     bytes calldata data

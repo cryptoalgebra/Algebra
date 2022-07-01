@@ -9,19 +9,19 @@ contract TokenDeltaMathTest {
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountIn,
-    bool zeroForOne
+    bool zeroToOne
   ) external pure returns (uint160 sqrtQ) {
-    return PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroForOne);
+    return PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroToOne);
   }
 
   function getGasCostOfGetNewPriceAfterInput(
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountIn,
-    bool zeroForOne
+    bool zeroToOne
   ) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroForOne);
+    PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroToOne);
     return gasBefore - gasleft();
   }
 
@@ -29,19 +29,19 @@ contract TokenDeltaMathTest {
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountOut,
-    bool zeroForOne
+    bool zeroToOne
   ) external pure returns (uint160 sqrtQ) {
-    return PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroForOne);
+    return PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroToOne);
   }
 
   function getGasCostOfGetNewPriceAfterOutput(
     uint160 sqrtP,
     uint128 liquidity,
     uint256 amountOut,
-    bool zeroForOne
+    bool zeroToOne
   ) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroForOne);
+    PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroToOne);
     return gasBefore - gasleft();
   }
 

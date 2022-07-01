@@ -20,5 +20,5 @@ interface IAlgebraPool is
   IAlgebraPoolPermissionedActions,
   IAlgebraPoolEvents
 {
-
+  // used only for combining interfaces
 }

@@ -12,9 +12,12 @@ import './libraries/AdaptiveFee.sol';
 import './libraries/Constants.sol';
 
 contract DataStorageOperator is IDataStorageOperator {
-  using DataStorage for DataStorage.Timepoint[65535];
+  uint256 constant UINT16_MODULO = 65536;
+  uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
 
-  DataStorage.Timepoint[65535] public override timepoints;
+  using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
+
+  DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
   AdaptiveFee.Configuration public feeConfig;
 
   address private immutable pool;
@@ -25,25 +28,28 @@ contract DataStorageOperator is IDataStorageOperator {
     _;
   }
 
-  modifier onlyFactory() {
-    require(msg.sender == factory, 'only factory can call this');
-    _;
-  }
-
   constructor(address _pool) {
     factory = msg.sender;
     pool = _pool;
   }
 
+  /// @inheritdoc IDataStorageOperator
   function initialize(uint32 time, int24 tick) external override onlyPool {
     return timepoints.initialize(time, tick);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
+
+    require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0 && _feeConfig.volumeGamma != 0, 'Gammas must be > 0');
+
     feeConfig = _feeConfig;
+    emit FeeConfiguration(_feeConfig);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getSingleTimepoint(
     uint32 time,
     uint32 secondsAgo,
@@ -64,8 +70,9 @@ contract DataStorageOperator is IDataStorageOperator {
   {
     uint16 oldestIndex;
     // check if we have overflow in the past
-    if (timepoints[addmod(index, 1, 65535)].initialized) {
-      oldestIndex = uint16(addmod(index, 1, 65535));
+    uint16 nextIndex = index + 1; // considering overflow
+    if (timepoints[nextIndex].initialized) {
+      oldestIndex = nextIndex;
     }
 
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
@@ -77,6 +84,7 @@ contract DataStorageOperator is IDataStorageOperator {
     );
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getTimepoints(
     uint32 time,
     uint32[] memory secondsAgos,
@@ -98,6 +106,7 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getAverages(
     uint32 time,
     int24 tick,
@@ -107,6 +116,7 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.getAverages(time, tick, index, liquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function write(
     uint16 index,
     uint32 blockTimestamp,
@@ -117,23 +127,26 @@ contract DataStorageOperator is IDataStorageOperator {
     return timepoints.write(index, blockTimestamp, tick, liquidity, volumePerLiquidity);
   }
 
+  /// @inheritdoc IDataStorageOperator
   function calculateVolumePerLiquidity(
     uint128 liquidity,
     int256 amount0,
     int256 amount1
   ) external pure override returns (uint128 volumePerLiquidity) {
-    uint256 volume = Sqrt.sqrt(amount0) * Sqrt.sqrt(amount1);
+    uint256 volume = Sqrt.sqrtAbs(amount0) * Sqrt.sqrtAbs(amount1);
     uint256 volumeShifted;
     if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
     else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
-    if (volumeShifted >= 100000 << 64) return 100000 << 64;
-    volumePerLiquidity = uint128(volumeShifted);
+    if (volumeShifted >= MAX_VOLUME_PER_LIQUIDITY) return MAX_VOLUME_PER_LIQUIDITY;
+    else return uint128(volumeShifted);
   }
 
-  function WINDOW() external pure override returns (uint32) {
+  /// @inheritdoc IDataStorageOperator
+  function window() external pure override returns (uint32) {
     return DataStorage.WINDOW;
   }
 
+  /// @inheritdoc IDataStorageOperator
   function getFee(
     uint32 _time,
     int24 _tick,
@@ -142,6 +155,6 @@ contract DataStorageOperator is IDataStorageOperator {
   ) external view override onlyPool returns (uint16 fee) {
     (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
 
-    return uint16(AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig));
+    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig);
   }
 }

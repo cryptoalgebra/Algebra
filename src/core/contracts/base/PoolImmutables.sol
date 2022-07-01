@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 
 import '../interfaces/pool/IAlgebraPoolImmutables.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
+import '../libraries/Constants.sol';
 
 abstract contract PoolImmutables is IAlgebraPoolImmutables {
   /// @inheritdoc IAlgebraPoolImmutables
@@ -16,10 +17,14 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   address public immutable override token1;
 
   /// @inheritdoc IAlgebraPoolImmutables
-  uint8 public constant override tickSpacing = 60;
+  function tickSpacing() external pure override returns (int24) {
+    return Constants.TICK_SPACING;
+  }
 
   /// @inheritdoc IAlgebraPoolImmutables
-  uint128 public constant override maxLiquidityPerTick = 11505743598341114571880798222544994;
+  function maxLiquidityPerTick() external pure override returns (uint128) {
+    return Constants.MAX_LIQUIDITY_PER_TICK;
+  }
 
   constructor(address deployer) {
     (dataStorageOperator, factory, token0, token1) = IAlgebraPoolDeployer(deployer).parameters();

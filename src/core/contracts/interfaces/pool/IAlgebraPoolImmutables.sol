@@ -36,7 +36,7 @@ interface IAlgebraPoolImmutables {
    * This value is an int24 to avoid casting even though it is always positive.
    * @return The tick spacing
    */
-  function tickSpacing() external view returns (uint8);
+  function tickSpacing() external view returns (int24);
 
   /**
    * @notice The maximum amount of position liquidity that can use any tick in the range

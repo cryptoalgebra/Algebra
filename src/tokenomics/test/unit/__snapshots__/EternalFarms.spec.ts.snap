@@ -6,8 +6,8 @@ exports[`unit/EternalFarms #enterFarming works and has gas cost 1`] = `356132`;
 
 exports[`unit/EternalFarms #exitFarming after end time works and has gas cost 1`] = `254690`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 1`] = `250396`;
+exports[`unit/EternalFarms swap gas 3 swaps 1`] = `241740`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 2`] = `211980`;
+exports[`unit/EternalFarms swap gas 3 swaps 2`] = `203387`;
 
-exports[`unit/EternalFarms swap gas 3 swaps 3`] = `211978`;
+exports[`unit/EternalFarms swap gas 3 swaps 3`] = `203385`;

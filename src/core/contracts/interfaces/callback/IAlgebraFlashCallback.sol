@@ -14,7 +14,7 @@ interface IAlgebraFlashCallback {
    *  @param fee1 The fee amount in token1 due to the pool by the end of the flash
    *  @param data Any data passed through by the caller via the IAlgebraPoolActions#flash call
    */
-  function AlgebraFlashCallback(
+  function algebraFlashCallback(
     uint256 fee0,
     uint256 fee1,
     bytes calldata data

@@ -10,10 +10,12 @@ interface IAlgebraPoolState {
    * @return tick The current tick of the pool, i.e. according to the last tick transition that was run.
    * This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
    * boundary.
-   * timepointIndex The index of the last written timepoint
-   * timepointIndexSwap The index of the last written (on swap) timepoint
-   * communityFeeToken0, communityFeeToken1 The community fee for both tokens of the pool.
-   * unlocked Whether the pool is currently locked to reentrancy
+   * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
+   * @return timepointIndex The index of the last written timepoint
+   * @return timepointIndexSwap The index of the last written (on swap) timepoint
+   * @return communityFeeToken0 The community fee percentage of the swap fee in thousandths (1e-3) for token0
+   * @return communityFeeToken1 The community fee percentage of the swap fee in thousandths (1e-3) for token1
+   * @return unlocked Whether the pool is currently locked to reentrancy
    */
   function globalState()
     external
@@ -43,7 +45,8 @@ interface IAlgebraPoolState {
 
   /**
    * @notice The currently in range liquidity available to the pool
-   * @dev This value has no relationship to the total liquidity across all ticks
+   * @dev This value has no relationship to the total liquidity across all ticks.
+   * Returned value cannot exceed type(uint128).max
    */
   function liquidity() external view returns (uint128);
 
@@ -51,14 +54,14 @@ interface IAlgebraPoolState {
    * @notice Look up information about a specific tick in the pool
    * @param tick The tick to look up
    * @return liquidityTotal the total amount of position liquidity that uses the pool either as tick lower or
-   * tick upper,
-   * @return liquidityDelta how much liquidity changes when the pool price crosses the tick,
-   * outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0,
-   * outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1,
-   * outerTickCumulative the cumulative tick value on the other side of the tick from the current tick
-   * outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick,
-   * outerSecondsSpent the seconds spent on the other side of the tick from the current tick,
-   * initialized Set to true if the tick is initialized, i.e. liquidityTotal is greater than 0,
+   * tick upper
+   * @return liquidityDelta how much liquidity changes when the pool price crosses the tick
+   * @return outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0
+   * @return outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1
+   * @return outerTickCumulative the cumulative tick value on the other side of the tick from the current tick
+   * @return outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick
+   * @return outerSecondsSpent the seconds spent on the other side of the tick from the current tick
+   * @return initialized Set to true if the tick is initialized, i.e. liquidityTotal is greater than 0
    * otherwise equal to false. Outside values can only be used if the tick is initialized.
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
@@ -83,18 +86,19 @@ interface IAlgebraPoolState {
   /**
    * @notice Returns the information about a position by the position's key
    * @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
-   * @return  _liquidity The amount of liquidity in the position,
-   * innerFeeGrowth0Token fee growth of token0 inside the tick range as of the last mint/burn/poke,
-   * innerFeeGrowth1Token fee growth of token1 inside the tick range as of the last mint/burn/poke,
-   * fees0 the computed amount of token0 owed to the position as of the last mint/burn/poke,
-   * fees1 the computed amount of token1 owed to the position as of the last mint/burn/poke
+   * @return liquidityAmount The amount of liquidity in the position,
+   * lastLiquidityAddTimestamp Timestamp of last adding of liquidity,
+   * innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke,
+   * innerFeeGrowth1Token Fee growth of token1 inside the tick range as of the last mint/burn/poke,
+   * fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke,
+   * fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
   function positions(bytes32 key)
     external
     view
     returns (
-      uint128 _liquidity,
-      uint32 lastModificationTimestamp,
+      uint128 liquidityAmount,
+      uint32 lastLiquidityAddTimestamp,
       uint256 innerFeeGrowth0Token,
       uint256 innerFeeGrowth1Token,
       uint128 fees0,
@@ -107,11 +111,12 @@ interface IAlgebraPoolState {
    * @dev You most likely want to use #getTimepoints() instead of this method to get an timepoint as of some amount of time
    * ago, rather than at a specific index in the array.
    * @return initialized whether the timepoint has been initialized and the values are safe to use
-   * blockTimestamp The timestamp of the timepoint,
-   * tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
-   * secondsPerLiquidityCumulative the seconds per in range liquidity for the life of the pool as of the timepoint timestamp,
-   * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
-   * volumePerAvgLiquidity Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
+   * @return blockTimestamp The timestamp of the timepoint
+   * @return tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp
+   * @return secondsPerLiquidityCumulative the seconds per in range liquidity for the life of the pool as of the timepoint timestamp
+   * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
+   * @return averageTick Time-weighted average tick
+   * @return volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
    */
   function timepoints(uint256 index)
     external
@@ -130,8 +135,6 @@ interface IAlgebraPoolState {
    * @notice Returns the information about active incentive
    * @dev if there is no active incentive at the moment, virtualPool,endTimestamp,startTimestamp would be equal to 0
    * @return virtualPool The address of a virtual pool associated with the current active incentive
-   * endTimestamp The timestamp when the active incentive is finished
-   * startTimestamp The first swap after this timestamp is going to initialize the virtual pool
    */
   function activeIncentive() external view returns (address virtualPool);
 

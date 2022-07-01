@@ -272,10 +272,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).processSwap();
     }
 
-    function cross(int24 nextTick, bool zeroForOne) external override {
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroForOne);
+    function cross(int24 nextTick, bool zeroToOne) external override {
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].eternalVirtualPool).cross(nextTick, zeroToOne);
 
-        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroForOne);
+        IAlgebraVirtualPool(_virtualPoolAddresses[msg.sender].virtualPool).cross(nextTick, zeroToOne);
     }
 
     function burn(uint256 tokenId) private isAuthorizedForToken(tokenId) {

@@ -488,7 +488,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "9.9989",
   "arbBalanceDelta1": "-0.0098756",
@@ -504,7 +504,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
@@ -513,7 +513,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "9.9997",
   "arbBalanceDelta1": "-0.0099056",
@@ -549,7 +549,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "9.9990",
   "arbBalanceDelta1": "-0.010026",
@@ -565,7 +565,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
@@ -574,7 +574,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "9.9998",
   "arbBalanceDelta1": "-0.010056",
@@ -610,7 +610,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "9.9873",
   "arbBalanceDelta1": "-0.89764",
@@ -626,7 +626,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.90908",
@@ -635,7 +635,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "9.9879",
   "arbBalanceDelta1": "-0.90119",
@@ -671,7 +671,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "10.002",
   "arbBalanceDelta1": "-0.91265",
@@ -687,7 +687,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.90908",
@@ -696,7 +696,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "10.003",
   "arbBalanceDelta1": "-0.91621",
@@ -732,7 +732,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "9.8823",
   "arbBalanceDelta1": "-4.8849",
@@ -748,7 +748,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-4.9997",
@@ -757,7 +757,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "9.8827",
   "arbBalanceDelta1": "-4.9003",
@@ -793,7 +793,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "10.034",
   "arbBalanceDelta1": "-5.0350",
@@ -809,7 +809,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-4.9997",
@@ -818,7 +818,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "10.034",
   "arbBalanceDelta1": "-5.0505",
@@ -854,7 +854,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "8.8319",
   "arbBalanceDelta1": "-7.9372",
@@ -870,7 +870,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-9.0901",
@@ -879,7 +879,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "8.8323",
   "arbBalanceDelta1": "-7.9851",
@@ -915,7 +915,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
   "arbBalanceDelta0": "10.346",
   "arbBalanceDelta1": "-9.4389",
@@ -931,7 +931,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-9.0901",
@@ -940,7 +940,7 @@ Object {
 }
 `;
 
-exports[`AlgebraPool arbitrage tests community fee = 17; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
+exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
   "arbBalanceDelta0": "10.346",
   "arbBalanceDelta1": "-9.4868",

@@ -70,7 +70,7 @@ describe('AlgebraFactory', () => {
     const create = factory.createPool(tokens[0], tokens[1])
 
     await expect(create)
-      .to.emit(factory, 'PoolCreated')
+      .to.emit(factory, 'Pool')
 
     await expect(factory.createPool(tokens[0], tokens[1])).to.be.reverted
     await expect(factory.createPool(tokens[1], tokens[0])).to.be.reverted
@@ -129,8 +129,8 @@ describe('AlgebraFactory', () => {
 
     it('emits event', async () => {
       await expect(factory.setOwner(other.address))
-        .to.emit(factory, 'OwnerChanged')
-        .withArgs(wallet.address, other.address)
+        .to.emit(factory, 'Owner')
+        .withArgs(other.address)
     })
 
     it('cannot be called by original owner', async () => {

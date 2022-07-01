@@ -17,7 +17,7 @@ interface IAlgebraPoolEvents {
    * @param owner The owner of the position and recipient of any minted liquidity
    * @param bottomTick The lower tick of the position
    * @param topTick The upper tick of the position
-   * @param amount The amount of liquidity minted to the position range
+   * @param liquidityAmount The amount of liquidity minted to the position range
    * @param amount0 How much token0 was required for the minted liquidity
    * @param amount1 How much token1 was required for the minted liquidity
    */
@@ -26,7 +26,7 @@ interface IAlgebraPoolEvents {
     address indexed owner,
     int24 indexed bottomTick,
     int24 indexed topTick,
-    uint128 amount,
+    uint128 liquidityAmount,
     uint256 amount0,
     uint256 amount1
   );
@@ -35,6 +35,7 @@ interface IAlgebraPoolEvents {
    * @notice Emitted when fees are collected by the owner of a position
    * @dev Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees
    * @param owner The owner of the position for which fees are collected
+   * @param recipient The address that received fees
    * @param bottomTick The lower tick of the position
    * @param topTick The upper tick of the position
    * @param amount0 The amount of token0 fees collected
@@ -48,11 +49,11 @@ interface IAlgebraPoolEvents {
    * @param owner The owner of the position for which liquidity is removed
    * @param bottomTick The lower tick of the position
    * @param topTick The upper tick of the position
-   * @param amount The amount of liquidity to remove
+   * @param liquidityAmount The amount of liquidity to remove
    * @param amount0 The amount of token0 withdrawn
    * @param amount1 The amount of token1 withdrawn
    */
-  event Burn(address indexed owner, int24 indexed bottomTick, int24 indexed topTick, uint128 amount, uint256 amount0, uint256 amount1);
+  event Burn(address indexed owner, int24 indexed bottomTick, int24 indexed topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1);
 
   /**
    * @notice Emitted by the pool for any swaps between token0 and token1
@@ -79,30 +80,26 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when the community fee is changed by the pool
-   * @param communityFee0Old The previous value of the token0 community fee percent
-   * @param communityFee1Old The previous value of the token1 community fee percent
    * @param communityFee0New The updated value of the token0 community fee percent
    * @param communityFee1New The updated value of the token1 community fee percent
    */
-  event SetCommunityFee(uint8 communityFee0Old, uint8 communityFee1Old, uint8 communityFee0New, uint8 communityFee1New);
-
-  /**
-   * @notice Emitted when the collected community fees are withdrawn by the factory owner
-   * @param sender The address that collects the community fees
-   * @param recipient The address that receives the collected community fees
-   * @param amount0 The amount of token0 community fees that is withdrawn
-   * @param amount0 The amount of token1 community fees that is withdrawn
-   */
-  event CollectCommunityFee(address indexed sender, address indexed recipient, uint128 amount0, uint128 amount1);
+  event CommunityFee(uint8 communityFee0New, uint8 communityFee1New);
 
   /**
    * @notice Emitted when new activeIncentive is set
    * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
    */
-  event IncentiveSet(address virtualPoolAddress);
+  event Incentive(address indexed virtualPoolAddress);
+
   /**
    * @notice Emitted when the fee changes
-   * @param Fee The value of the token fee
+   * @param fee The value of the token fee
    */
-  event ChangeFee(uint16 Fee);
+  event Fee(uint16 fee);
+
+  /**
+   * @notice Emitted when the LiquidityCooldown changes
+   * @param liquidityCooldown The value of locktime for added liquidity
+   */
+  event LiquidityCooldown(uint32 liquidityCooldown);
 }

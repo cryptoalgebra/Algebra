@@ -45,13 +45,11 @@ contract TestAlgebraCallee is IAlgebraSwapCallback {
         IAlgebraPool(pool).swap(recipient, false, -amount0Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
     }
 
-    function AlgebraSwapCallback(
+    function algebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
-        uint256 feeAmount,
         bytes calldata data
     ) external override {
-        feeAmount;
         address sender = abi.decode(data, (address));
 
         if (amount0Delta > 0) {

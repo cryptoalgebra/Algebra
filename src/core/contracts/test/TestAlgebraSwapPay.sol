@@ -10,19 +10,18 @@ contract TestAlgebraSwapPay is IAlgebraSwapCallback {
   function swap(
     address pool,
     address recipient,
-    bool zeroForOne,
+    bool zeroToOne,
     uint160 price,
     int256 amountSpecified,
     uint256 pay0,
     uint256 pay1
   ) external {
-    IAlgebraPool(pool).swap(recipient, zeroForOne, amountSpecified, price, abi.encode(msg.sender, pay0, pay1));
+    IAlgebraPool(pool).swap(recipient, zeroToOne, amountSpecified, price, abi.encode(msg.sender, pay0, pay1));
   }
 
-  function AlgebraSwapCallback(
+  function algebraSwapCallback(
     int256,
     int256,
-    uint256,
     bytes calldata data
   ) external override {
     (address sender, uint256 pay0, uint256 pay1) = abi.decode(data, (address, uint256, uint256));

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.0;
+pragma solidity ^0.4.0 || ^0.5.0 || ^0.6.0 || ^0.7.0;
 
 /// @title Contains 512-bit math functions
 /// @notice Facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision
@@ -115,13 +115,12 @@ library FullMath {
       assembly {
         result := add(div(result, denominator), gt(mod(result, denominator), 0))
       }
-      return result;
-    }
-
-    result = mulDiv(a, b, denominator);
-    if (mulmod(a, b, denominator) > 0) {
-      require(result < type(uint256).max);
-      result++;
+    } else {
+      result = mulDiv(a, b, denominator);
+      if (mulmod(a, b, denominator) > 0) {
+        require(result < type(uint256).max);
+        result++;
+      }
     }
   }
 

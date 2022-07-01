@@ -37,10 +37,9 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function AlgebraSwapCallback(
+    function algebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
-        uint256 feeAmount,
         bytes memory path
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
@@ -53,16 +52,6 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
         (, , uint16 fee, , , , , ) = pool.globalState();
-
-        uint256 expectedFee = FullMath.mulDivRoundingUp(fee, amountToPay, 1e6);
-        if (feeAmount != 0 && (expectedFee != feeAmount)) {
-            uint256 actualFee = FullMath.mulDiv(feeAmount, 1e6, amountToPay);
-            if (actualFee < 50000) {
-                fee = uint16(actualFee);
-            } else {
-                fee = 50000;
-            }
-        }
 
         if (isExactInput) {
             assembly {
@@ -102,15 +91,15 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         uint256 amountIn,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountOut, uint16 fee) {
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         try
             getPool(tokenIn, tokenOut).swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 amountIn.toInt256(),
                 limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
                 abi.encodePacked(tokenIn, tokenOut)
             )
@@ -152,17 +141,17 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         uint256 amountOut,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountIn, uint16 fee) {
-        bool zeroForOne = tokenIn < tokenOut;
+        bool zeroToOne = tokenIn < tokenOut;
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (limitSqrtPrice == 0) amountOutCached = amountOut;
         try
             getPool(tokenIn, tokenOut).swap(
                 address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
+                zeroToOne,
                 -amountOut.toInt256(),
                 limitSqrtPrice == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
                 abi.encodePacked(tokenOut, tokenIn)
             )

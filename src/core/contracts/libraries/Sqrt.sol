@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity >=0.5.0;
+pragma solidity ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0;
 
 library Sqrt {
-  function sqrt(int256 _x) internal pure returns (uint256 result) {
+  /// @notice Gets the square root of the absolute value of the parameter
+  function sqrtAbs(int256 _x) internal pure returns (uint256 result) {
     // get abs value
     int256 mask = _x >> (256 - 1);
     uint256 x = uint256((_x ^ mask) - mask);

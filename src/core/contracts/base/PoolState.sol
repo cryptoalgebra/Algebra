@@ -6,12 +6,12 @@ import '../libraries/TickManager.sol';
 
 abstract contract PoolState is IAlgebraPoolState {
   struct GlobalState {
-    uint160 price; // The square root of the current price
+    uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
     uint16 fee; // The index of the last written timepoint
     uint16 timepointIndex; // The index of the last written (on swap) timepoint
     uint16 timepointIndexSwap;
-    uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee
+    uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     uint8 communityFeeToken1;
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
@@ -27,8 +27,6 @@ abstract contract PoolState is IAlgebraPoolState {
   uint128 public override liquidity;
   uint128 internal volumePerLiquidityInBlock;
 
-  uint160 internal blockStartPrice;
-  uint32 internal startPriceUpdated;
   /// @inheritdoc IAlgebraPoolState
   uint32 public override liquidityCooldown;
   /// @inheritdoc IAlgebraPoolState

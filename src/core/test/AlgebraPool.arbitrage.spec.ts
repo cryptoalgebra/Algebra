@@ -57,7 +57,7 @@ describe('AlgebraPool arbitrage tests', () => {
     loadFixture = createFixtureLoader([wallet, arbitrageur])
   })
 
-  for (const communityFee of [0, 17]) {
+  for (const communityFee of [0, 170]) {
     describe(`community fee = ${communityFee};`, () => {
       const startingPrice = encodePriceSqrt(1, 1)
       const startingTick = 0
@@ -136,7 +136,7 @@ describe('AlgebraPool arbitrage tests', () => {
           })
 
           async function simulateSwap(
-            zeroForOne: boolean,
+            zeroToOne: boolean,
             amountSpecified: BigNumberish,
             limitSqrtPrice?: BigNumber
           ): Promise<{
@@ -147,28 +147,28 @@ describe('AlgebraPool arbitrage tests', () => {
           }> {
             const { amount0Delta, amount1Delta, nextSqrtRatio } = await tester.callStatic.getSwapResult(
               pool.address,
-              zeroForOne,
+              zeroToOne,
               amountSpecified,
-              limitSqrtPrice ?? (zeroForOne ? MIN_SQRT_RATIO.add(1) : MAX_SQRT_RATIO.sub(1))
+              limitSqrtPrice ?? (zeroToOne ? MIN_SQRT_RATIO.add(1) : MAX_SQRT_RATIO.sub(1))
             )
 
-            const executionPrice = zeroForOne
+            const executionPrice = zeroToOne
               ? encodePriceSqrt(amount1Delta, amount0Delta.mul(-1))
               : encodePriceSqrt(amount1Delta.mul(-1), amount0Delta)
 
             return { executionPrice, nextSqrtRatio, amount0Delta, amount1Delta }
           }
 
-          for (const { zeroForOne, assumedTruePriceAfterSwap, inputAmount, description } of [
+          for (const { zeroToOne, assumedTruePriceAfterSwap, inputAmount, description } of [
             {
               description: 'exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98',
-              zeroForOne: true,
+              zeroToOne: true,
               inputAmount: expandTo18Decimals(10),
               assumedTruePriceAfterSwap: encodePriceSqrt(98, 100),
             },
             {
               description: 'exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01',
-              zeroForOne: true,
+              zeroToOne: true,
               inputAmount: expandTo18Decimals(10),
               assumedTruePriceAfterSwap: encodePriceSqrt(101, 100),
             },
@@ -183,8 +183,8 @@ describe('AlgebraPool arbitrage tests', () => {
               }
 
               it('not sandwiched', async () => {
-                const { executionPrice, amount1Delta, amount0Delta } = await simulateSwap(zeroForOne, inputAmount)
-                zeroForOne
+                const { executionPrice, amount1Delta, amount0Delta } = await simulateSwap(zeroToOne, inputAmount)
+                zeroToOne
                   ? await swapExact0For1(inputAmount, wallet.address)
                   : await swapExact1For0(inputAmount, wallet.address)
 
@@ -197,9 +197,9 @@ describe('AlgebraPool arbitrage tests', () => {
               })
 
               it('sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity', async () => {
-                const { executionPrice } = await simulateSwap(zeroForOne, inputAmount)
+                const { executionPrice } = await simulateSwap(zeroToOne, inputAmount)
 
-                const firstTickAboveMarginalPrice = zeroForOne
+                const firstTickAboveMarginalPrice = zeroToOne
                   ? Math.ceil(
                       (await tickMath.getTickAtSqrtRatio(
                         applySqrtRatioBipsHundredthsDelta(executionPrice, feeAmount)
@@ -210,7 +210,7 @@ describe('AlgebraPool arbitrage tests', () => {
                         applySqrtRatioBipsHundredthsDelta(executionPrice, -feeAmount)
                       )) / tickSpacing
                     ) * tickSpacing
-                const tickAfterFirstTickAboveMarginPrice = zeroForOne
+                const tickAfterFirstTickAboveMarginPrice = zeroToOne
                   ? firstTickAboveMarginalPrice - tickSpacing
                   : firstTickAboveMarginalPrice + tickSpacing
 
@@ -224,17 +224,17 @@ describe('AlgebraPool arbitrage tests', () => {
                   amount0Delta: frontrunDelta0,
                   amount1Delta: frontrunDelta1,
                   executionPrice: frontrunExecutionPrice,
-                } = await simulateSwap(zeroForOne, MaxUint256.div(2), priceSwapStart)
+                } = await simulateSwap(zeroToOne, MaxUint256.div(2), priceSwapStart)
                 arbBalance0 = arbBalance0.sub(frontrunDelta0)
                 arbBalance1 = arbBalance1.sub(frontrunDelta1)
-                zeroForOne
+                zeroToOne
                   ? await swapToLowerPrice(priceSwapStart, arbitrageur.address)
                   : await swapToHigherPrice(priceSwapStart, arbitrageur.address)
 
                 const profitToken1AfterFrontRun = valueToken1(arbBalance0, arbBalance1)
 
-                const bottomTick = zeroForOne ? tickAfterFirstTickAboveMarginPrice : firstTickAboveMarginalPrice
-                const topTick = zeroForOne ? firstTickAboveMarginalPrice : tickAfterFirstTickAboveMarginPrice
+                const bottomTick = zeroToOne ? tickAfterFirstTickAboveMarginPrice : firstTickAboveMarginalPrice
+                const topTick = zeroToOne ? firstTickAboveMarginalPrice : tickAfterFirstTickAboveMarginPrice
 
                 // deposit max liquidity at the tick
                 const mintReceipt = await (
@@ -249,8 +249,8 @@ describe('AlgebraPool arbitrage tests', () => {
                 arbBalance1 = arbBalance1.sub(amount1Mint)
 
                 // execute the user's swap
-                const { executionPrice: executionPriceAfterFrontrun } = await simulateSwap(zeroForOne, inputAmount)
-                zeroForOne
+                const { executionPrice: executionPriceAfterFrontrun } = await simulateSwap(zeroToOne, inputAmount)
+                zeroToOne
                   ? await swapExact0For1(inputAmount, wallet.address)
                   : await swapExact1For0(inputAmount, wallet.address)
 
@@ -279,14 +279,14 @@ describe('AlgebraPool arbitrage tests', () => {
                 const profitToken1AfterSandwich = valueToken1(arbBalance0, arbBalance1)
 
                 // backrun the swap to true price, i.e. swap to the marginal price = true price
-                const priceToSwapTo = zeroForOne
+                const priceToSwapTo = zeroToOne
                   ? applySqrtRatioBipsHundredthsDelta(assumedTruePriceAfterSwap, -feeAmount)
                   : applySqrtRatioBipsHundredthsDelta(assumedTruePriceAfterSwap, feeAmount)
                 const {
                   amount0Delta: backrunDelta0,
                   amount1Delta: backrunDelta1,
                   executionPrice: backrunExecutionPrice,
-                } = await simulateSwap(!zeroForOne, MaxUint256.div(2), priceToSwapTo)
+                } = await simulateSwap(!zeroToOne, MaxUint256.div(2), priceToSwapTo)
                 await swapToHigherPrice(priceToSwapTo, wallet.address)
                 arbBalance0 = arbBalance0.sub(backrunDelta0)
                 arbBalance1 = arbBalance1.sub(backrunDelta1)
@@ -330,20 +330,20 @@ describe('AlgebraPool arbitrage tests', () => {
                 let arbBalance0 = BigNumber.from(0)
                 let arbBalance1 = BigNumber.from(0)
 
-                zeroForOne
+                zeroToOne
                   ? await swapExact0For1(inputAmount, wallet.address)
                   : await swapExact1For0(inputAmount, wallet.address)
 
                 // swap to the marginal price = true price
-                const priceToSwapTo = zeroForOne
+                const priceToSwapTo = zeroToOne
                   ? applySqrtRatioBipsHundredthsDelta(assumedTruePriceAfterSwap, -feeAmount)
                   : applySqrtRatioBipsHundredthsDelta(assumedTruePriceAfterSwap, feeAmount)
                 const {
                   amount0Delta: backrunDelta0,
                   amount1Delta: backrunDelta1,
                   executionPrice: backrunExecutionPrice,
-                } = await simulateSwap(!zeroForOne, MaxUint256.div(2), priceToSwapTo)
-                zeroForOne
+                } = await simulateSwap(!zeroToOne, MaxUint256.div(2), priceToSwapTo)
+                zeroToOne
                   ? await swapToHigherPrice(priceToSwapTo, wallet.address)
                   : await swapToLowerPrice(priceToSwapTo, wallet.address)
                 arbBalance0 = arbBalance0.sub(backrunDelta0)

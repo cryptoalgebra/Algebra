@@ -7,17 +7,15 @@ pragma solidity >=0.5.0;
 interface IAlgebraFactory {
   /**
    *  @notice Emitted when the owner of the factory is changed
-   *  @param oldOwner The owner before the owner was changed
    *  @param newOwner The owner after the owner was changed
    */
-  event OwnerChanged(address indexed oldOwner, address indexed newOwner);
+  event Owner(address indexed newOwner);
 
   /**
    *  @notice Emitted when the vault address is changed
-   *  @param vaultAddress The vault address before the address was changed
-   *  @param _vaultAddress The vault address after the address was changed
+   *  @param newVaultAddress The vault address after the address was changed
    */
-  event VaultAddressChanged(address indexed vaultAddress, address indexed _vaultAddress);
+  event VaultAddress(address indexed newVaultAddress);
 
   /**
    *  @notice Emitted when a pool is created
@@ -25,14 +23,25 @@ interface IAlgebraFactory {
    *  @param token1 The second token of the pool by address sort order
    *  @param pool The address of the created pool
    */
-  event PoolCreated(address indexed token0, address indexed token1, address pool);
+  event Pool(address indexed token0, address indexed token1, address pool);
 
   /**
    *  @notice Emitted when the farming address is changed
-   *  @param farmingAddress The farming address before the address was changed
-   *  @param _farmingAddress The farming address after the address was changed
+   *  @param newFarmingAddress The farming address after the address was changed
    */
-  event FarmingAddressChanged(address indexed farmingAddress, address indexed _farmingAddress);
+  event FarmingAddress(address indexed newFarmingAddress);
+
+  event FeeConfiguration(
+    uint16 alpha1,
+    uint16 alpha2,
+    uint32 beta1,
+    uint32 beta2,
+    uint16 gamma1,
+    uint16 gamma2,
+    uint32 volumeBeta,
+    uint16 volumeGamma,
+    uint16 baseFee
+  );
 
   /**
    *  @notice Returns the current owner of the factory
@@ -95,15 +104,30 @@ interface IAlgebraFactory {
    */
   function setVaultAddress(address _vaultAddress) external;
 
+  /**
+   * @notice Changes initial fee configuration for new pools
+   * @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+   * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max
+   * gammas must be > 0
+   * @param alpha1 max value of the first sigmoid
+   * @param alpha2 max value of the second sigmoid
+   * @param beta1 shift along the x-axis for the first sigmoid
+   * @param beta2 shift along the x-axis for the second sigmoid
+   * @param gamma1 horizontal stretch factor for the first sigmoid
+   * @param gamma2 horizontal stretch factor for the second sigmoid
+   * @param volumeBeta shift along the x-axis for the outer volume-sigmoid
+   * @param volumeGamma horizontal stretch factor the outer volume-sigmoid
+   * @param baseFee minimum possible fee
+   */
   function setBaseFeeConfiguration(
-    uint32 alpha1,
-    uint32 alpha2,
+    uint16 alpha1,
+    uint16 alpha2,
     uint32 beta1,
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
     uint32 volumeBeta,
-    uint32 volumeGamma,
+    uint16 volumeGamma,
     uint16 baseFee
   ) external;
 }

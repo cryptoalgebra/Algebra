@@ -43,4 +43,12 @@ library LowGasSafeMath {
   function sub(int256 x, int256 y) internal pure returns (int256 z) {
     require((z = x - y) <= x == (y >= 0));
   }
+
+  /// @notice Returns x + y, reverts if overflows or underflows
+  /// @param x The augend
+  /// @param y The addend
+  /// @return z The sum of x and y
+  function add128(uint128 x, uint128 y) internal pure returns (uint128 z) {
+    require((z = x + y) >= x);
+  }
 }

@@ -25,6 +25,7 @@ contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override vaultAddress;
 
+  // values of constants for sigmoids in fee calculation formula
   AdaptiveFee.Configuration public baseFeeConfiguration =
     AdaptiveFee.Configuration(
       3000 - Constants.BASE_FEE, // alpha1
@@ -48,7 +49,7 @@ contract AlgebraFactory is IAlgebraFactory {
 
   constructor(address _poolDeployer, address _vaultAddress) {
     owner = msg.sender;
-    emit OwnerChanged(address(0), msg.sender);
+    emit Owner(msg.sender);
 
     poolDeployer = _poolDeployer;
     vaultAddress = _vaultAddress;
@@ -61,7 +62,7 @@ contract AlgebraFactory is IAlgebraFactory {
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = IDataStorageOperator(address(new DataStorageOperator(computeAddress(token0, token1))));
+    IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
@@ -69,43 +70,50 @@ contract AlgebraFactory is IAlgebraFactory {
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparing we are populating the mapping twice
     poolByPair[token1][token0] = pool;
-    emit PoolCreated(token0, token1, pool);
+    emit Pool(token0, token1, pool);
   }
 
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
-    emit OwnerChanged(owner, _owner);
+    require(owner != _owner);
+    emit Owner(_owner);
     owner = _owner;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setFarmingAddress(address _farmingAddress) external override onlyOwner {
-    emit FarmingAddressChanged(farmingAddress, _farmingAddress);
+    require(farmingAddress != _farmingAddress);
+    emit FarmingAddress(_farmingAddress);
     farmingAddress = _farmingAddress;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
-    emit VaultAddressChanged(vaultAddress, _vaultAddress);
+    require(vaultAddress != _vaultAddress);
+    emit VaultAddress(_vaultAddress);
     vaultAddress = _vaultAddress;
   }
 
   /// @inheritdoc IAlgebraFactory
   function setBaseFeeConfiguration(
-    uint32 alpha1,
-    uint32 alpha2,
+    uint16 alpha1,
+    uint16 alpha2,
     uint32 beta1,
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
     uint32 volumeBeta,
-    uint32 volumeGamma,
+    uint16 volumeGamma,
     uint16 baseFee
   ) external override onlyOwner {
+    require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(gamma1 != 0 && gamma2 != 0 && volumeGamma != 0, 'Gammas must be > 0');
+
     baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
+    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6e0f8b63235738ed424fb3425f73ea630346493dd3942d3dc9b8204a6ef8894f;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xdf99854ac80e6369ce6e429ce320107a101056bd3565faf337abfd2a1f419d28;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

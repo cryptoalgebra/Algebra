@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.5.0;
+pragma solidity =0.7.6;
+
+import './Constants.sol';
+import './TickMath.sol';
 
 /// @title Packed tick initialized state library
 /// @notice Stores a packed mapping of tick index to its initialized state
@@ -9,8 +12,8 @@ library TickTable {
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
   function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
-    require(tick % 60 == 0, 'tick is not spaced'); // ensure that the tick is spaced
-    tick /= 60; // compress tick
+    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
+    tick /= Constants.TICK_SPACING; // compress tick
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -22,20 +25,24 @@ library TickTable {
   }
 
   /// @notice get position of single 1-bit
+  /// @dev it is assumed that word contains exactly one 1-bit, otherwise the result will be incorrect
   /// @param word The word containing only one 1-bit
   function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
     assembly {
-      singleBitPos := gt(and(word, 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA), 0)
-      singleBitPos := or(singleBitPos, shl(7, gt(and(word, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000000000000000), 0)))
-      singleBitPos := or(singleBitPos, shl(6, gt(and(word, 0xFFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF0000000000000000), 0)))
-      singleBitPos := or(singleBitPos, shl(5, gt(and(word, 0xFFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000), 0)))
-      singleBitPos := or(singleBitPos, shl(4, gt(and(word, 0xFFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000), 0)))
-      singleBitPos := or(singleBitPos, shl(3, gt(and(word, 0xFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00), 0)))
-      singleBitPos := or(singleBitPos, shl(2, gt(and(word, 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0), 0)))
-      singleBitPos := or(singleBitPos, shl(1, gt(and(word, 0xCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC), 0)))
+      singleBitPos := iszero(and(word, 0x5555555555555555555555555555555555555555555555555555555555555555))
+      singleBitPos := or(singleBitPos, shl(7, iszero(and(word, 0x00000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(6, iszero(and(word, 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(5, iszero(and(word, 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(4, iszero(and(word, 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF))))
+      singleBitPos := or(singleBitPos, shl(3, iszero(and(word, 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF))))
+      singleBitPos := or(singleBitPos, shl(2, iszero(and(word, 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F))))
+      singleBitPos := or(singleBitPos, shl(1, iszero(and(word, 0x3333333333333333333333333333333333333333333333333333333333333333))))
     }
   }
 
+  /// @notice get position of most significant 1-bit (leftmost)
+  /// @dev it is assumed that before the call, a check will be made that the argument (word) is not equal to zero
+  /// @param word The word containing at least one 1-bit
   function getMostSignificantBit(uint256 word) internal pure returns (uint8 mostBitPos) {
     assembly {
       word := or(word, shr(1, word))
@@ -62,10 +69,13 @@ library TickTable {
     mapping(int16 => uint256) storage self,
     int24 tick,
     bool lte
-  ) internal view returns (int24, bool) {
-    // compress and round towards negative infinity if negative
-    assembly {
-      tick := sub(sdiv(tick, 60), and(slt(tick, 0), not(iszero(smod(tick, 60)))))
+  ) internal view returns (int24 nextTick, bool initialized) {
+    {
+      int24 tickSpacing = Constants.TICK_SPACING;
+      // compress and round towards negative infinity if negative
+      assembly {
+        tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))
+      }
     }
 
     if (lte) {
@@ -109,11 +119,11 @@ library TickTable {
   }
 
   function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
-    boundedTick = tick * 60;
-    if (boundedTick < -887272) {
-      boundedTick = -887272;
-    } else if (boundedTick > 887272) {
-      boundedTick = 887272;
+    boundedTick = tick * Constants.TICK_SPACING;
+    if (boundedTick < TickMath.MIN_TICK) {
+      boundedTick = TickMath.MIN_TICK;
+    } else if (boundedTick > TickMath.MAX_TICK) {
+      boundedTick = TickMath.MAX_TICK;
     }
   }
 }

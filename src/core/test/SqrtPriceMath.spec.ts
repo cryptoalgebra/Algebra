@@ -40,12 +40,12 @@ describe('TokenDeltaMath', () => {
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, true)).to.eq(1)
     })
 
-    it('returns input price if amount in is zero and zeroForOne = true', async () => {
+    it('returns input price if amount in is zero and zeroToOne = true', async () => {
       const price = encodePriceSqrt(1, 1)
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1).div(10), 0, true)).to.eq(price)
     })
 
-    it('returns input price if amount in is zero and zeroForOne = false', async () => {
+    it('returns input price if amount in is zero and zeroToOne = false', async () => {
       const price = encodePriceSqrt(1, 1)
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1).div(10), 0, false)).to.eq(price)
     })
@@ -77,7 +77,7 @@ describe('TokenDeltaMath', () => {
       expect(sqrtQ).to.eq('72025602285694852357767227579')
     })
 
-    it('amountIn > type(uint96).max and zeroForOne = true', async () => {
+    it('amountIn > type(uint96).max and zeroToOne = true', async () => {
       expect(
         await sqrtPriceMath.getNewPriceAfterInput(
           encodePriceSqrt(1, 1),
@@ -90,13 +90,13 @@ describe('TokenDeltaMath', () => {
       ).to.eq('624999999995069620')
     })
 
-    it('can return 1 with enough amountIn and zeroForOne = true', async () => {
+    it('can return 1 with enough amountIn and zeroToOne = true', async () => {
       expect(
         await sqrtPriceMath.getNewPriceAfterInput(encodePriceSqrt(1, 1), 1, constants.MaxUint256.div(2), true)
       ).to.eq(1)
     })
 
-    it('zeroForOne = true gas', async () => {
+    it('zeroToOne = true gas', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
@@ -107,7 +107,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it('zeroForOne = false gas', async () => {
+    it('zeroToOne = false gas', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
@@ -172,12 +172,12 @@ describe('TokenDeltaMath', () => {
       await expect(sqrtPriceMath.getNewPriceAfterOutput(price, liquidity, amountOut, false)).to.be.reverted
     })
 
-    it('returns input price if amount in is zero and zeroForOne = true', async () => {
+    it('returns input price if amount in is zero and zeroToOne = true', async () => {
       const price = encodePriceSqrt(1, 1)
       expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1).div(10), 0, true)).to.eq(price)
     })
 
-    it('returns input price if amount in is zero and zeroForOne = false', async () => {
+    it('returns input price if amount in is zero and zeroToOne = false', async () => {
       const price = encodePriceSqrt(1, 1)
       expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1).div(10), 0, false)).to.eq(
         price
@@ -214,7 +214,7 @@ describe('TokenDeltaMath', () => {
         .be.reverted
     })
 
-    it('zeroForOne = true gas', async () => {
+    it('zeroToOne = true gas', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
@@ -225,7 +225,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it('zeroForOne = false gas', async () => {
+    it('zeroToOne = false gas', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
@@ -366,10 +366,10 @@ describe('TokenDeltaMath', () => {
       // getNextSqrtPriceInvariants(1025574284609383690408304870162715216695788925244,50015962439936049619261659728067971248,406,true)
       const sqrtP = '1025574284609383690408304870162715216695788925244'
       const liquidity = '50015962439936049619261659728067971248'
-      const zeroForOne = true
+      const zeroToOne = true
       const amountIn = '406'
 
-      const sqrtQ = await sqrtPriceMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroForOne)
+      const sqrtQ = await sqrtPriceMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroToOne)
       expect(sqrtQ).to.eq('1025574284609383582644711336373707553698163132913')
 
       const amount0Delta = await sqrtPriceMath.getToken0Delta(sqrtQ, sqrtP, liquidity, true)
