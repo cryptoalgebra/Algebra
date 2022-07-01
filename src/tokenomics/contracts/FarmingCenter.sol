@@ -96,6 +96,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
+    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
+        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
+    }
+
     function _enterFarming(
         IAlgebraFarming _farming,
         IncentiveKey memory key,
@@ -116,7 +120,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         bytes32 incentiveId = IncentiveId.compute(key);
         (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
         if (tokensLocked > 0) {
+            uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
+            uint256 balanceAfter = _getTokenBalanceOfVault(multiplierToken);
+            require(balanceAfter > balanceBefore, 'Insufficient tokens locked');
+            tokensLocked = balanceAfter - balanceBefore;
             farmingCenterVault.lockTokens(tokenId, incentiveId, tokensLocked);
         }
 
