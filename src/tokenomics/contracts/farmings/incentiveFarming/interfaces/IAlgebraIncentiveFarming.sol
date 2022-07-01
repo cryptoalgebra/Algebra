@@ -24,6 +24,8 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
+    /// @return tickLower The lower tick of position
+    /// @return tickUpper The upper tick of position
     function farms(uint256 tokenId, bytes32 incentiveId)
         external
         view
@@ -53,6 +55,9 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
     /// @param endTime The time when rewards stop accruing
     /// @param reward The amount of reward tokens to be distributed
     /// @param bonusReward The amount of bonus reward tokens to be distributed
+    /// @param tiers The amounts of locked token for liquidity multipliers
+    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param enterStartTime The time when enter becomes possible
     event IncentiveCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,

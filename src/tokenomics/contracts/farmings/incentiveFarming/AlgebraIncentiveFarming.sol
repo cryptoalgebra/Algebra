@@ -15,7 +15,7 @@ import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 import '../AlgebraFarming.sol';
 
-/// @title Algebra canonical staking interface
+/// @title Algebra incentive (time-limited) farming
 contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
     using SafeCast for int256;
 

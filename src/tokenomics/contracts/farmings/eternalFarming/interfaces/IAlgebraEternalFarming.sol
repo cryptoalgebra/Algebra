@@ -23,6 +23,10 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param tokenId The ID of the farmd token
     /// @param incentiveId The ID of the incentive for which the token is farmd
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed
+    /// @return tickLower The lower tick of position
+    /// @return tickUpper The upper tick of position
+    /// @return innerRewardGrowth0 The last saved reward0 growth inside position
+    /// @return innerRewardGrowth1 The last saved reward1 growth inside position
     function farms(uint256 tokenId, bytes32 incentiveId)
         external
         view
@@ -38,6 +42,10 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param key Details of the incentive to create
     /// @param reward The amount of reward tokens to be distributed
     /// @param bonusReward The amount of bonus reward tokens to be distributed
+    /// @param rewardRate The rate of reward distribution per second
+    /// @param bonusRewardRate The rate of bonus reward distribution per second
+    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param tiers The amounts of locked token for liquidity multipliers
     /// @return virtualPool The virtual pool
     function createIncentive(
         IncentiveKey memory key,
@@ -76,6 +84,8 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param endTime The time when rewards stop accruing
     /// @param reward The amount of reward tokens to be distributed
     /// @param bonusReward The amount of bonus reward tokens to be distributed
+    /// @param tiers The amounts of locked token for liquidity multipliers
+    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
     event IncentiveCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,

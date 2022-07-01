@@ -17,7 +17,7 @@ import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 import '../AlgebraFarming.sol';
 
-/// @title Algebra canonical staking interface
+/// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     using SafeCast for int256;
     /// @notice Represents the farm for nft
