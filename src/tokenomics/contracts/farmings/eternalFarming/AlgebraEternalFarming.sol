@@ -53,7 +53,15 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         require(_incentive == address(0), 'Farming already exists');
 
         virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
-        bytes32 incentiveId = _createIncentive(virtualPool, key, reward, bonusReward, multiplierToken, tiers);
+        bytes32 incentiveId;
+        (incentiveId, reward, bonusReward) = _createIncentive(
+            virtualPool,
+            key,
+            reward,
+            bonusReward,
+            multiplierToken,
+            tiers
+        );
 
         emit IncentiveCreated(
             key.rewardToken,
@@ -97,26 +105,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         Incentive storage incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'AlgebraFarming::addRewards: non-existent incentive');
 
-        if (rewardAmount > 0) {
-            uint256 balanceBefore = key.rewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), rewardAmount);
-            uint256 balanceAfter;
-            require((balanceAfter = key.rewardToken.balanceOf(address(this))) >= balanceBefore);
-            rewardAmount = balanceAfter - balanceBefore;
-        }
-
-        if (bonusRewardAmount > 0) {
-            uint256 balanceBefore = key.bonusRewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(
-                address(key.bonusRewardToken),
-                msg.sender,
-                address(this),
-                bonusRewardAmount
-            );
-            uint256 balanceAfter;
-            require((balanceAfter = key.bonusRewardToken.balanceOf(address(this))) >= balanceBefore);
-            bonusRewardAmount = balanceAfter - balanceBefore;
-        }
+        (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
 
         if (rewardAmount | bonusRewardAmount > 0) {
             IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);

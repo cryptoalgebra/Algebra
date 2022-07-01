@@ -84,7 +84,14 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 uint32(key.endTime)
             )
         );
-        _createIncentive(virtualPool, key, params.reward, params.bonusReward, params.multiplierToken, tiers);
+        (, params.reward, params.bonusReward) = _createIncentive(
+            virtualPool,
+            key,
+            params.reward,
+            params.bonusReward,
+            params.multiplierToken,
+            tiers
+        );
 
         emit IncentiveCreated(
             key.rewardToken,
@@ -109,13 +116,11 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        incentive.totalReward += reward;
-        incentive.bonusReward += bonusReward;
+        (reward, bonusReward) = _receiveRewards(key, reward, bonusReward, incentive);
 
-        TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
-        TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
-
-        emit RewardsAdded(reward, bonusReward, incentiveId);
+        if (reward | bonusReward > 0) {
+            emit RewardsAdded(reward, bonusReward, incentiveId);
+        }
     }
 
     function decreaseRewardsAmount(
@@ -132,7 +137,6 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         incentive.bonusReward -= bonusReward;
 
         TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusReward);
-
         TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, reward);
 
         emit RewardAmountsDecreased(reward, bonusReward, incentiveId);

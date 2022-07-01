@@ -116,6 +116,30 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         return farmingCenter.virtualPoolAddresses(address(pool));
     }
 
+    function _receiveRewards(
+        IncentiveKey memory key,
+        uint256 reward,
+        uint256 bonusReward,
+        Incentive storage incentive
+    ) internal returns (uint256 receivedReward, uint256 receivedBonusReward) {
+        if (reward > 0) {
+            IERC20Minimal rewardToken = key.rewardToken;
+            uint256 balanceBefore = rewardToken.balanceOf(address(this));
+            TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
+            require((receivedReward = rewardToken.balanceOf(address(this))) > balanceBefore);
+            receivedReward -= balanceBefore;
+            incentive.totalReward += receivedReward;
+        }
+        if (bonusReward > 0) {
+            IERC20Minimal bonusRewardToken = key.bonusRewardToken;
+            uint256 balanceBefore = bonusRewardToken.balanceOf(address(this));
+            TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
+            require((receivedBonusReward = bonusRewardToken.balanceOf(address(this))) > balanceBefore);
+            receivedBonusReward -= balanceBefore;
+            incentive.bonusReward += receivedBonusReward;
+        }
+    }
+
     function _createIncentive(
         address virtualPool,
         IncentiveKey memory key,
@@ -123,22 +147,26 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 bonusReward,
         address multiplierToken,
         Tiers calldata tiers
-    ) internal returns (bytes32 incentiveId) {
+    )
+        internal
+        returns (
+            bytes32 incentiveId,
+            uint256 receivedReward,
+            uint256 receivedBonusReward
+        )
+    {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
         incentiveId = IncentiveId.compute(key);
 
         Incentive storage newIncentive = incentives[incentiveId];
-        newIncentive.totalReward += reward;
-        newIncentive.bonusReward += bonusReward;
+
+        (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
         newIncentive.isPoolCreated = true;
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
-
-        TransferHelper.safeTransferFrom(address(key.bonusRewardToken), msg.sender, address(this), bonusReward);
-        TransferHelper.safeTransferFrom(address(key.rewardToken), msg.sender, address(this), reward);
     }
 
     function _detachIncentive(IncentiveKey memory key, address _incentive) internal {
