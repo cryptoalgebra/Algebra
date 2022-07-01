@@ -38,6 +38,7 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     /**
      * @dev This function is called when anyone farms their liquidity. The position in a virtual pool
      * should be changed accordingly
+     * @param currentTimestamp The timestamp of current block
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @param liquidityDelta The amount of liquidity in a position

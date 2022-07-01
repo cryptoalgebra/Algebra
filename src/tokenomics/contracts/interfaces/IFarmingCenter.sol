@@ -52,10 +52,11 @@ interface IFarmingCenter is
         );
 
     /// @notice Returns information about a deposited NFT
+    /// @param tokenId The ID of the deposit (and token) that is being transferred
     /// @return L2TokenId The nft layer2 id
-    /// @return numberOfFarms
-    /// @return inLimitFarming
-    /// @return owner
+    /// @return numberOfFarms The number of farms
+    /// @return inLimitFarming The parameter showing if the token is in the limit farm
+    /// @return owner The owner of deposit
     function deposits(uint256 tokenId)
         external
         view

@@ -74,12 +74,16 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     // @inheritdoc IAlgebraPoolDeployer
     function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
+        require(incentiveMaker != _incentiveMaker);
         incentiveMaker = _incentiveMaker;
+        emit IncentiveMaker(_incentiveMaker);
     }
 
     /// @inheritdoc IAlgebraFarming
     function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
+        require(_farmingCenter != address(farmingCenter));
         farmingCenter = IFarmingCenter(_farmingCenter);
+        emit FarmingCenter(_farmingCenter);
     }
 
     /// @inheritdoc IAlgebraFarming

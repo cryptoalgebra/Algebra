@@ -18,10 +18,14 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
+    /// @notice The farming Center
     function farmingCenter() external view returns (IFarmingCenter);
 
+    /// @notice The pool deployer
     function deployer() external returns (IAlgebraPoolDeployer);
 
+    /// @notice Updates the incentive maker
+    /// @param _incentiveMaker The new incentive maker address
     function setIncentiveMaker(address _incentiveMaker) external;
 
     struct Tiers {
@@ -65,7 +69,8 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @return rewardsOwed The amount of the reward token claimable by the owner
     function rewards(IERC20Minimal rewardToken, address owner) external view returns (uint256 rewardsOwed);
 
-    /// @notice set new farmingCenter address
+    /// @notice Updates farming center address
+    /// @param _farmingCenter The new farming center contract address
     function setFarmingCenterAddress(address _farmingCenter) external;
 
     /// @notice enter farming for Algebra LP token
@@ -81,6 +86,7 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
+    /// @param _owner Owner of the token
     function exitFarming(
         IncentiveKey memory key,
         uint256 tokenId,
@@ -155,8 +161,8 @@ interface IAlgebraFarming is IIncentiveKey {
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
-    /// @param liquidity The amount of liquidity farmd
     /// @param incentiveId The incentive in which the token is farming
+    /// @param liquidity The amount of liquidity farmd
     /// @param tokensLocked The amount of tokens locked for multiplier
     event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
@@ -179,9 +185,12 @@ interface IAlgebraFarming is IIncentiveKey {
     );
 
     /// @notice Emitted when the incentive maker is changed
-    /// @param incentiveMaker The incentive maker address before the address was changed
-    /// @param _incentiveMaker The factorincentive maker address after the address was changed
-    event IncentiveMakerChanged(address indexed incentiveMaker, address indexed _incentiveMaker);
+    /// @param incentiveMaker The incentive maker after the address was changed
+    event IncentiveMaker(address indexed incentiveMaker);
+
+    /// @notice Emitted when the farming center is changed
+    /// @param farmingCenter The farming center after the address was changed
+    event FarmingCenter(address indexed farmingCenter);
 
     /// @notice Event emitted when rewards were added
     /// @param rewardAmount The additional amount of main token
