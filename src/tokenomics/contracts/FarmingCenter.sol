@@ -113,9 +113,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
-        (, , , , , , address multiplierToken, ) = _farming.incentives(IncentiveId.compute(key));
+        bytes32 incentiveId = IncentiveId.compute(key);
+        (, , , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
         if (tokensLocked > 0) {
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
+            farmingCenterVault.lockTokens(tokenId, incentiveId, tokensLocked);
         }
 
         _farming.enterFarming(key, tokenId, tokensLocked);
