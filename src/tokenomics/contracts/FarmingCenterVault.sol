@@ -19,6 +19,7 @@ contract FarmingCenterVault is IFarmingCenterVault {
         bytes32 incentiveId,
         uint256 tokenAmount
     ) external override {
+        require(msg.sender == farmingCenter, 'onlyFarming');
         balances[tokenId][incentiveId] = tokenAmount;
     }
 
