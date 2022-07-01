@@ -77,10 +77,10 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     }
 
     function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
-        if (desiredStartTimestamp >= currentTimestamp) {
+        if (currentTimestamp <= desiredStartTimestamp) {
             return Status.NOT_STARTED;
         }
-        if (desiredEndTimestamp <= currentTimestamp) {
+        if (currentTimestamp >= desiredEndTimestamp) {
             return Status.NOT_EXIST;
         }
 
@@ -89,16 +89,16 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
             return Status.ACTIVE;
         }
 
-        uint32 previousTimestamp = prevTimestamp;
-
-        if (currentTimestamp > previousTimestamp) {
+        uint32 _previousTimestamp = prevTimestamp;
+        if (currentTimestamp > _previousTimestamp) {
             uint128 _currentLiquidity = currentLiquidity;
             if (_currentLiquidity > 0) {
-                globalSecondsPerLiquidityCumulative += ((uint160(currentTimestamp - previousTimestamp) << 128) /
-                    (_currentLiquidity));
+                globalSecondsPerLiquidityCumulative +=
+                    (uint160(currentTimestamp - _previousTimestamp) << 128) /
+                    _currentLiquidity;
                 prevTimestamp = currentTimestamp;
             } else {
-                timeOutside += currentTimestamp - previousTimestamp;
+                timeOutside += currentTimestamp - _previousTimestamp;
                 prevTimestamp = currentTimestamp;
             }
         }
