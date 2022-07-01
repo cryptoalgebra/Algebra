@@ -17,7 +17,7 @@ import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 
 /// @title Algebra main farming contract
-/// @dev Manages farmingы and performs entry, exit and other actions.
+/// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
