@@ -18,7 +18,6 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    /// @notice FarmingCenter
     function farmingCenter() external view returns (IFarmingCenter);
 
     function deployer() external returns (IAlgebraPoolDeployer);
@@ -66,7 +65,7 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @return rewardsOwed The amount of the reward token claimable by the owner
     function rewards(IERC20Minimal rewardToken, address owner) external view returns (uint256 rewardsOwed);
 
-    /// @notice
+    /// @notice set new farmingCenter address
     function setFarmingCenterAddress(address _farmingCenter) external;
 
     /// @notice enter farming for Algebra LP token
