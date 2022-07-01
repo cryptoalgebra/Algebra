@@ -16,6 +16,8 @@ import 'algebra-periphery/contracts/base/ERC721Permit.sol';
 import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 
+/// @title Algebra main farming contract
+/// @dev Manages farmingы and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
     IAlgebraIncentiveFarming public immutable override farming;
     IAlgebraEternalFarming public immutable override eternalFarming;
@@ -25,6 +27,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
 
+    /// @dev saves adresses of virtual pools for pool
     mapping(address => VirtualPoolAddresses) private _virtualPoolAddresses;
 
     /// @dev deposits[tokenId] => Deposit
@@ -118,6 +121,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _farming.enterFarming(key, tokenId, tokensLocked);
     }
 
+    /// @inheritdoc IFarmingCenter
     function enterEternalFarming(
         IncentiveKey memory key,
         uint256 tokenId,
@@ -126,6 +130,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _enterFarming(eternalFarming, key, tokenId, tokensLocked, false);
     }
 
+    /// @inheritdoc IFarmingCenter
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
@@ -157,14 +162,17 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
+    /// @inheritdoc IFarmingCenter
     function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external override {
         _exitFarming(eternalFarming, key, tokenId, false);
     }
 
+    /// @inheritdoc IFarmingCenter
     function exitFarming(IncentiveKey memory key, uint256 tokenId) external override {
         _exitFarming(farming, key, tokenId, true);
     }
 
+    /// @inheritdoc IFarmingCenter
     function collect(INonfungiblePositionManager.CollectParams memory params)
         external
         override
@@ -177,6 +185,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return nonfungiblePositionManager.collect(params);
     }
 
+    /// @inheritdoc IFarmingCenter
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
         external
         override
@@ -199,6 +208,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return _farming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
     }
 
+    /// @inheritdoc IFarmingCenter
     function claimReward(
         IERC20Minimal rewardToken,
         address to,
@@ -265,6 +275,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _burn(tokenId);
     }
 
+    /**
+     * @dev This function is called by the main pool when an initialized tick is crossed and two farmings are active at same time.
+     * @param nextTick The crossed tick
+     * @param zeroToOne The direction
+     */
     function cross(int24 nextTick, bool zeroToOne) external override {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
@@ -272,31 +287,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.virtualPool).cross(nextTick, zeroToOne);
     }
 
-    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
-        return uint256(l2Nfts[tokenId].nonce++);
-    }
-
-    function virtualPoolAddresses(address pool) public view override returns (address incentiveVP, address eternalVP) {
-        (incentiveVP, eternalVP) = (
-            _virtualPoolAddresses[pool].virtualPool,
-            _virtualPoolAddresses[pool].eternalVirtualPool
-        );
-    }
-
-    /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
-
-        return l2Nfts[tokenId].operator;
-    }
-
-    /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-    function _approve(address to, uint256 tokenId) internal override(ERC721) {
-        l2Nfts[tokenId].operator = to;
-        emit Approval(ownerOf(tokenId), to, tokenId);
-    }
-
-    function increaseCumulative(uint32 blockTimestamp) external override returns (Status) {
+    /**
+     * @dev This function is called by the main pool at start of the swap if two farmings are active at same time.
+     * @param blockTimestamp The current block timestamp, truncated
+     * @return status The current farming(s) status
+     */
+    function increaseCumulative(uint32 blockTimestamp) external override returns (Status status) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
         Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).increaseCumulative(
             blockTimestamp
@@ -313,5 +309,29 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
 
         return Status.NOT_EXIST;
+    }
+
+    function virtualPoolAddresses(address pool) public view override returns (address incentiveVP, address eternalVP) {
+        (incentiveVP, eternalVP) = (
+            _virtualPoolAddresses[pool].virtualPool,
+            _virtualPoolAddresses[pool].eternalVirtualPool
+        );
+    }
+
+    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
+        return uint256(l2Nfts[tokenId].nonce++);
+    }
+
+    /// @inheritdoc IERC721
+    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
+        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+
+        return l2Nfts[tokenId].operator;
+    }
+
+    /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
+    function _approve(address to, uint256 tokenId) internal override(ERC721) {
+        l2Nfts[tokenId].operator = to;
+        emit Approval(ownerOf(tokenId), to, tokenId);
     }
 }
