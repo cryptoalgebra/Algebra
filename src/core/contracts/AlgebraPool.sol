@@ -412,6 +412,24 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return positions[key];
   }
 
+  function _syncBalances() internal returns (uint256 balance0, uint256 balance1) {
+    balance0 = balanceToken0();
+    balance1 = balanceToken1();
+    uint128 _liquidity = liquidity;
+    if (_liquidity == 0) return (balance0, balance1);
+
+    uint256 _reserve0 = reserve0;
+    if (balance0 > _reserve0) {
+      totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
+      reserve0 = balance0;
+    }
+    uint256 _reserve1 = reserve1;
+    if (balance1 > _reserve1) {
+      totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
+      reserve1 = balance1;
+    }
+  }
+
   /// @inheritdoc IAlgebraPoolActions
   function mint(
     address sender,
@@ -432,6 +450,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     require(liquidityDesired > 0, 'IL');
+    _syncBalances();
     {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
@@ -481,7 +500,22 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (receivedAmount1 > amount1) {
       TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
     }
+    if (amount0 > 0) reserve0 += amount0;
+    if (amount1 > 0) reserve1 += amount1;
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
+  }
+
+  function _payFromReserve(
+    address token,
+    address recipient,
+    uint256 amount
+  ) internal {
+    TransferHelper.safeTransfer(token, recipient, amount);
+    if (token == token0) {
+      reserve0 -= amount;
+    } else {
+      reserve1 -= amount;
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -502,8 +536,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       position.fees0 = positionFees0 - amount0;
       position.fees1 = positionFees1 - amount1;
 
-      if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
-      if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
+      if (amount0 > 0) _payFromReserve(token0, recipient, amount0);
+      if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
     }
 
     emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
@@ -515,6 +549,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 amount
   ) external override lock onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
+    _syncBalances();
     (Position storage position, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(
       msg.sender,
       bottomTick,
@@ -528,7 +563,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amount0 | amount1 != 0) {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
-
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
@@ -597,26 +631,35 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 communityFee;
+    uint256 balanceBefore;
+    if (zeroToOne)
+      (balanceBefore, ) = _syncBalances(); // TODO check
+    else (, balanceBefore) = _syncBalances();
     // function _calculateSwapAndLock locks globalState.unlocked and does not release
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
+    uint256 balanceAfter;
     if (zeroToOne) {
-      if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1)); // transfer to recipient
-
-      uint256 balance0Before = balanceToken0();
+      if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
+      balanceBefore = balanceToken0();
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-      require(balance0Before.add(uint256(amount0)) <= balanceToken0(), 'IIA');
+      balanceAfter = balanceToken0();
+      require(balanceBefore.add(uint256(amount0)) <= balanceAfter, 'IIA');
     } else {
-      if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0)); // transfer to recipient
-
-      uint256 balance1Before = balanceToken1();
+      if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
+      balanceBefore = balanceToken1();
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-      require(balance1Before.add(uint256(amount1)) <= balanceToken1(), 'IIA');
+      balanceAfter = balanceToken1();
+      require(balanceBefore.add(uint256(amount1)) <= balanceAfter, 'IIA');
     }
 
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
+      balanceAfter -= communityFee;
     }
+
+    if (zeroToOne) reserve0 += balanceAfter - balanceBefore;
+    else reserve1 += balanceAfter - balanceBefore;
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     globalState.unlocked = true; // release after lock in _calculateSwapAndLock
@@ -636,11 +679,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(globalState.unlocked, 'LOK');
     globalState.unlocked = false;
     if (zeroToOne) {
-      uint256 balance0Before = balanceToken0();
+      (uint256 balance0Before, ) = _syncBalances();
       _swapCallback(amountRequired, 0, data);
       require((amountRequired = int256(balanceToken0().sub(balance0Before))) > 0, 'IIA');
     } else {
-      uint256 balance1Before = balanceToken1();
+      (, uint256 balance1Before) = _syncBalances();
       _swapCallback(0, amountRequired, data);
       require((amountRequired = int256(balanceToken1().sub(balance1Before))) > 0, 'IIA');
     }
@@ -655,18 +698,28 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     // only transfer to the recipient
     if (zeroToOne) {
-      if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
+      if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1));
       // return the leftovers
-      if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired.sub(amount0)));
+      if (amount0 < amountRequired) {
+        TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
+        amountRequired = int256(amount0);
+      }
     } else {
-      if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
+      if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0));
       // return the leftovers
-      if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired.sub(amount1)));
+      if (amount1 < amountRequired) {
+        TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
+        amountRequired = int256(amount1);
+      }
     }
 
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
+      amountRequired -= int256(communityFee);
     }
+
+    if (zeroToOne) reserve0 += uint256(amountRequired);
+    else reserve1 += uint256(amountRequired);
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     globalState.unlocked = true; // release after lock in _calculateSwapAndLock
@@ -924,6 +977,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         TransferHelper.safeTransfer(token0, vault, fees0);
       }
       totalFeeGrowth0Token += FullMath.mulDiv(paid0 - fees0, Constants.Q128, _liquidity);
+      reserve0 += paid0 - fees0;
     }
 
     uint256 paid1 = balanceToken1();
@@ -938,6 +992,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         TransferHelper.safeTransfer(token1, vault, fees1);
       }
       totalFeeGrowth1Token += FullMath.mulDiv(paid1 - fees1, Constants.Q128, _liquidity);
+      reserve1 += paid1 - fees1;
     }
 
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
