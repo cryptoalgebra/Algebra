@@ -688,7 +688,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   struct SwapCache {
-    uint8 communityFee; // The community fee of the selling token
+    uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
     uint128 liquidityStart; // The liquidity at the start of a swap
     uint128 volumePerLiquidityInBlock;
     int56 tickCumulative; // The global tickCumulative at the moment
