@@ -734,31 +734,20 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint32 blockTimestamp;
     SwapCache memory cache;
     {
-      GlobalState memory _globalState;
-      (
-        currentPrice,
-        currentTick,
-        cache.timepointIndex, // The index of the last written timepoint
-        cache.fee,
-        _globalState.communityFeeToken0,
-        _globalState.communityFeeToken1,
-        _globalState.unlocked
-      ) = (
-        globalState.price,
-        globalState.tick,
-        globalState.timepointIndex,
-        globalState.fee,
-        globalState.communityFeeToken0,
-        globalState.communityFeeToken1,
-        globalState.unlocked
-      );
+      // load from one storage slot
+      currentPrice = globalState.price;
+      currentTick = globalState.tick;
+      cache.fee = globalState.fee;
+      cache.timepointIndex = globalState.timepointIndex;
+      uint256 _communityFeeToken0 = globalState.communityFeeToken0;
+      uint256 _communityFeeToken1 = globalState.communityFeeToken1;
+      bool unlocked = globalState.unlocked;
 
       globalState.unlocked = false; // lock will not be released in this function
-      require(_globalState.unlocked, 'LOK');
+      require(unlocked, 'LOK');
 
       require(amountRequired != 0, 'AS');
-      cache.amountRequiredInitial = amountRequired;
-      cache.exactInput = amountRequired > 0;
+      (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       (currentLiquidity, cache.volumePerLiquidityInBlock) = (liquidity, volumePerLiquidityInBlock);
       cache.liquidityStart = currentLiquidity;
@@ -766,11 +755,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (zeroToOne) {
         require(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO, 'SPL');
         cache.totalFeeGrowth = totalFeeGrowth0Token;
-        cache.communityFee = _globalState.communityFeeToken0;
+        cache.communityFee = _communityFeeToken0;
       } else {
         require(limitSqrtPrice > currentPrice && limitSqrtPrice < TickMath.MAX_SQRT_RATIO, 'SPL');
         cache.totalFeeGrowth = totalFeeGrowth1Token;
-        cache.communityFee = _globalState.communityFeeToken1;
+        cache.communityFee = _communityFeeToken1;
       }
 
       cache.startTick = currentTick;
