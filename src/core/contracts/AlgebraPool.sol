@@ -509,13 +509,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     amount0 = amount0Requested > positionFees0 ? positionFees0 : amount0Requested;
     amount1 = amount1Requested > positionFees1 ? positionFees1 : amount1Requested;
 
-    if (amount0 > 0) {
+    if (amount0 | amount1 != 0) {
       position.fees0 = positionFees0 - amount0;
-      TransferHelper.safeTransfer(token0, recipient, amount0);
-    }
-    if (amount1 > 0) {
       position.fees1 = positionFees1 - amount1;
-      TransferHelper.safeTransfer(token1, recipient, amount1);
+
+      if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
+      if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
     }
 
     emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
