@@ -698,7 +698,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    uint256 communityFeeAccumulated; // The accumulator of the community fee earned during a swap
     IAlgebraVirtualPool.Status incentiveStatus; // True if there is an active incentive at the moment
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
