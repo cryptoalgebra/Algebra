@@ -87,9 +87,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function tickValidation(int24 bottomTick, int24 topTick) private pure {
-    require(bottomTick < topTick, 'TLU');
-    require(bottomTick >= TickMath.MIN_TICK, 'TLM');
-    require(topTick <= TickMath.MAX_TICK, 'TUM');
+    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
+    require(topTick > bottomTick, 'TLU');
+    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
   }
 
   struct Cumulatives {
