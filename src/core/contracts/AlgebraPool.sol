@@ -946,10 +946,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint8 _communityFeeToken0 = globalState.communityFeeToken0;
       uint256 fees0;
       if (_communityFeeToken0 > 0) {
-        if (paid0 > 0) {
-          fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
-          TransferHelper.safeTransfer(token0, vault, fees0);
-        }
+        fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
+        TransferHelper.safeTransfer(token0, vault, fees0);
       }
       totalFeeGrowth0Token += FullMath.mulDiv(paid0 - fees0, Constants.Q128, _liquidity);
     }
@@ -962,10 +960,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint8 _communityFeeToken1 = globalState.communityFeeToken1;
       uint256 fees1;
       if (_communityFeeToken1 > 0) {
-        if (paid1 > 0) {
-          fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
-          TransferHelper.safeTransfer(token1, vault, fees1);
-        }
+        fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
+        TransferHelper.safeTransfer(token1, vault, fees1);
       }
       totalFeeGrowth1Token += FullMath.mulDiv(paid1 - fees1, Constants.Q128, _liquidity);
     }
