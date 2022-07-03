@@ -942,10 +942,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 amount1,
     bytes calldata data
   ) external override lock {
-    uint128 _liquidity = liquidity;
-    require(_liquidity > 0, 'L');
+    require(liquidity > 0, 'L'); // TODO can be removed!
 
     uint16 _fee = globalState.fee;
+    uint8 _communityFeeToken0 = globalState.communityFeeToken0;
+    uint8 _communityFeeToken1 = globalState.communityFeeToken1;
 
     uint256 fee0;
     uint256 balance0Before = balanceToken0();
@@ -963,27 +964,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
 
-    address vault = IAlgebraFactory(factory).vaultAddress();
-
     uint256 paid0 = balanceToken0();
     require(balance0Before.add(fee0) <= paid0, 'F0');
     paid0 -= balance0Before;
-
-    if (paid0 > 0) {
-      uint8 _communityFeeToken0 = globalState.communityFeeToken0;
-      if (_communityFeeToken0 > 0) {
-        uint256 fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
-        TransferHelper.safeTransfer(token0, vault, fees0);
-      }
-    }
-
     uint256 paid1 = balanceToken1();
     require(balance1Before.add(fee1) <= paid1, 'F1');
     paid1 -= balance1Before;
 
-    if (paid1 > 0) {
-      uint8 _communityFeeToken1 = globalState.communityFeeToken1;
-      if (_communityFeeToken1 > 0) {
+    if (_communityFeeToken0 | _communityFeeToken1 != 0) {
+      address vault = IAlgebraFactory(factory).vaultAddress();
+      if (paid0 > 0 && _communityFeeToken0 > 0) {
+        uint256 fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
+        TransferHelper.safeTransfer(token0, vault, fees0);
+      }
+
+      if (paid1 > 0 && _communityFeeToken1 > 0) {
         uint256 fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token1, vault, fees1);
       }
