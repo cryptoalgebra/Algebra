@@ -1060,6 +1060,49 @@ describe('AlgebraPool', () => {
         expect(amount0).to.be.eq('99999999999999')
         expect(amount1).to.be.eq(0)
       })
+
+      it('unexpected donation', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1999999999999999999')
+        expect(amount1).to.be.eq('999999999999999999')
+      })
+      it('token0 with unexpected donation before burn', async () => {
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await token0.transfer(pool.address, expandTo18Decimals(1))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1000099999999999999')
+        expect(amount1).to.be.eq(0)
+      })
+      it('token0 with unexpected donation before swap', async () => {
+        await token0.transfer(pool.address, expandTo18Decimals(1))
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1000099999999999999')
+        expect(amount1).to.be.eq(0)
+      })
       it('token1', async () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
         await pool.burn(minTick, maxTick, 0)
@@ -1072,6 +1115,34 @@ describe('AlgebraPool', () => {
         )
         expect(amount0).to.be.eq(0)
         expect(amount1).to.be.eq('99999999999999')
+      })
+      it('token1 with unexpected donation before burn', async () => {
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq(0)
+        expect(amount1).to.be.eq('1000099999999999999')
+      })
+      it('token1 with unexpected donation before swap', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq(0)
+        expect(amount1).to.be.eq('1000099999999999999')
       })
       it('token0 and token1', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
@@ -1086,6 +1157,38 @@ describe('AlgebraPool', () => {
         )
         expect(amount0).to.be.eq('99999999999999')
         expect(amount1).to.be.eq('100000000000000')
+      })
+      it('token0 and token1 with unexpected donation before burn', async () => {
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('2000099999999999999')
+        expect(amount1).to.be.eq('1000100000000000000')
+      })
+      it('token0 and token1 with unexpected donation before swaps', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('2000099999999999999')
+        expect(amount1).to.be.eq('1000100000000000000')
       })
     })
   })
@@ -1800,6 +1903,37 @@ describe('AlgebraPool', () => {
           )
           expect(await pool.totalFeeGrowth1Token()).to.eq(
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
+        it('increases the fee growth by the expected amount after unexpected donation of token0', async () => {
+          await token0.transfer(pool.address, expandTo18Decimals(2))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
+        it.only('increases the fee growth by the expected amount after unexpected donation of token1', async () => {
+          await token1.transfer(pool.address, expandTo18Decimals(1))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(1).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
+        it('increases the fee growth by the expected amount after unexpected donation', async () => {
+          await token0.transfer(pool.address, expandTo18Decimals(2))
+          await token1.transfer(pool.address, expandTo18Decimals(1))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(1).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
         })
         it('fails if original balance not returned in either token', async () => {
