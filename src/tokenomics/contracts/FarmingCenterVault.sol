@@ -23,8 +23,9 @@ contract FarmingCenterVault is IFarmingCenterVault {
         balances[tokenId][incentiveId] = tokenAmount;
     }
 
-    function setFarming(address _farmingCenter) external override {
+    function setFarmingCenter(address _farmingCenter) external override {
         require(msg.sender == owner, 'onlyOwner');
+        require(farmingCenter == address(0), 'Already initialized');
         farmingCenter = _farmingCenter;
     }
 

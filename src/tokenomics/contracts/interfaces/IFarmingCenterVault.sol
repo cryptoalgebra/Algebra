@@ -9,7 +9,7 @@ interface IFarmingCenterVault {
         bytes32 incentiveId
     ) external;
 
-    function setFarming(address farming) external;
+    function setFarmingCenter(address farming) external;
 
     function lockTokens(
         uint256 tokenId,

@@ -41,7 +41,7 @@ async function main() {
   await AlgebraIncentiveFarming.setIncentiveMaker(incentiveMaker)
   console.log("Updated incentive maker");
 
-  await FarmingCenterVault.setFarming(FarmingCenter.address)
+  await FarmingCenterVault.setFarmingCenter(FarmingCenter.address)
   console.log("Updated farming center address in farming center vault")
 
   const factory = await hre.ethers.getContractAt("IAlgebraFactory",deploysData.factory);
