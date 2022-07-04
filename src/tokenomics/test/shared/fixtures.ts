@@ -274,7 +274,7 @@ export const algebraFixture: Fixture<AlgebraFixtureType> = async (wallets, provi
 
   await factory.setFarmingAddress(farmingCenter.address)
 
-  await farmingCenterVault.setFarming(farmingCenter.address)
+  await farmingCenterVault.setFarmingCenter(farmingCenter.address)
  
   await farming.setIncentiveMaker(incentiveCreator.address)
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
@@ -365,7 +365,7 @@ export const algebraEternalFixture: Fixture<EternalAlgebraFixtureType> = async (
   await incentiveFarming.setFarmingCenterAddress(farmingCenter.address)
 
   await factory.setFarmingAddress(farmingCenter.address)
-  await farmingCenterVault.setFarming(farmingCenter.address)
+  await farmingCenterVault.setFarmingCenter(farmingCenter.address)
 
   await farming.setIncentiveMaker(incentiveCreator.address)
   await incentiveFarming.setIncentiveMaker(incentiveCreator.address)
