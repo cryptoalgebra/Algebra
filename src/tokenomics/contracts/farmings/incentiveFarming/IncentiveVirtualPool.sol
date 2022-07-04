@@ -39,15 +39,8 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint160 innerSecondsSpentPerLiquidity, uint32 endTime)
-    {
-        innerSecondsSpentPerLiquidity = _getInnerSecondsPerLiquidity(bottomTick, topTick);
-        endTime = endTimestamp;
-        if (endTime != 0) endTime -= timeOutside;
+    function getFinalStats() external view override returns (uint32 endTime, uint32 secondsOutside) {
+        return (endTimestamp, timeOutside);
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {

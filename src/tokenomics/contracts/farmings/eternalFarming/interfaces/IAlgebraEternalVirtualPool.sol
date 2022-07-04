@@ -13,13 +13,4 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
         external
         view
         returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1);
-
-    /// @notice This function is used to calculate the seconds per liquidity inside a certain position
-    /// @param bottomTick The bottom tick of a position
-    /// @param topTick The top tick of a position
-    /// @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        returns (uint160 innerSecondsSpentPerLiquidity);
 }
