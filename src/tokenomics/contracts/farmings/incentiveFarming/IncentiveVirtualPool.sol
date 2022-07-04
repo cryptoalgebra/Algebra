@@ -31,7 +31,6 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     ) AlgebraVirtualPoolBase(_farmingCenterAddress, _farmingAddress, _pool) {
         desiredStartTimestamp = _desiredStartTimestamp;
         desiredEndTimestamp = _desiredEndTimestamp;
-        prevTimestamp = _desiredStartTimestamp;
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -84,12 +83,13 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
             return Status.NOT_EXIST;
         }
 
-        if (initTimestamp == 0) {
+        uint32 _previousTimestamp = prevTimestamp;
+        if (_previousTimestamp == 0) {
             initTimestamp = currentTimestamp;
+            prevTimestamp = currentTimestamp;
             return Status.ACTIVE;
         }
 
-        uint32 _previousTimestamp = prevTimestamp;
         if (currentTimestamp > _previousTimestamp) {
             uint128 _currentLiquidity = currentLiquidity;
             if (_currentLiquidity > 0) {
