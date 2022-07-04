@@ -13,7 +13,7 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     using TickManager for mapping(int24 => TickManager.Tick);
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public override endTimestamp;
+    bool public override isFinished;
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public immutable override desiredEndTimestamp;
@@ -34,13 +34,13 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     function finish() external override onlyFarming {
-        endTimestamp = desiredEndTimestamp;
+        isFinished = true;
         _increaseCumulative(desiredEndTimestamp);
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    function getFinalStats() external view override returns (uint32 endTime, uint32 secondsOutside) {
-        return (endTimestamp, timeOutside);
+    function getFinalStats() external view override returns (bool _isFinished, uint32 _timeOutside) {
+        return (isFinished, timeOutside);
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
