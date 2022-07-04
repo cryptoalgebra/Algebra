@@ -245,21 +245,17 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     ) external override {
         require(to != address(this), 'AlgebraFarming::withdrawToken: cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
-        checkAuthorizationForToken(deposit.L2TokenId);
+        uint256 l2TokenId = deposit.L2TokenId;
 
+        checkAuthorizationForToken(l2TokenId);
         require(deposit.numberOfFarms == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmd');
 
-        burn(deposit.L2TokenId);
+        delete l2Nfts[l2TokenId];
+        _burn(l2TokenId);
         delete deposits[tokenId];
+
         emit DepositTransferred(tokenId, msg.sender, address(0));
-
         nonfungiblePositionManager.safeTransferFrom(address(this), to, tokenId, data);
-    }
-
-    function burn(uint256 tokenId) private {
-        checkAuthorizationForToken(tokenId);
-        delete l2Nfts[tokenId];
-        _burn(tokenId);
     }
 
     /**
