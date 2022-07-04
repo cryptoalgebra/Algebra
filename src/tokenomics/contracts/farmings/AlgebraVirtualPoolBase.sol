@@ -54,9 +54,10 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     }
 
     /// @notice get seconds per liquidity inside range
-    function _getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        internal
+    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
+        external
         view
+        override
         returns (uint160 innerSecondsSpentPerLiquidity)
     {
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;

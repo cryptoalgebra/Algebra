@@ -44,16 +44,6 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint160 innerSecondsSpentPerLiquidity)
-    {
-        return _getInnerSecondsPerLiquidity(bottomTick, topTick);
-    }
-
-    // @inheritdoc IAlgebraEternalVirtualPool
     function getInnerRewardsGrowth(int24 bottomTick, int24 topTick)
         external
         view

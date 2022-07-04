@@ -14,21 +14,11 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
     // returns the timestamp when the incentive was actually finished
     function endTimestamp() external returns (uint32);
 
+    function getFinalStats() external view returns (uint32 endTime, uint32 secondsOutside);
+
     /**
      * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestampю
      * desiredStartTimestamp will be used as initTimestamp if there were no swaps through the entire incentive
      */
     function finish() external;
-
-    /**
-     * @dev This function is used to calculate the seconds per liquidity inside a certain position
-     * @param bottomTick The bottom tick of a position
-     * @param topTick The top tick of a position
-     * @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-     * @return endTime the #endTimestamp
-     */
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        returns (uint160 innerSecondsSpentPerLiquidity, uint32 endTime);
 }

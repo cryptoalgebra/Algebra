@@ -35,6 +35,15 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
     function prevTimestamp() external returns (uint32);
 
+    /// @notice This function is used to calculate the seconds per liquidity inside a certain position
+    /// @param bottomTick The bottom tick of a position
+    /// @param topTick The top tick of a position
+    /// @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
+    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
+        external
+        view
+        returns (uint160 innerSecondsSpentPerLiquidity);
+
     /**
      * @dev This function is called when anyone farms their liquidity. The position in a virtual pool
      * should be changed accordingly

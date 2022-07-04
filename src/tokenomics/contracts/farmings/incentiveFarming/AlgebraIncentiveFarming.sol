@@ -211,22 +211,26 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         if (block.timestamp > key.endTime) {
             uint256 initTimestamp = key.startTime;
-            (uint160 secondsPerLiquidityInsideX128, uint256 endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
+            uint256 endTimestamp;
+            {
+                uint256 timeOutside;
+                (endTimestamp, timeOutside) = virtualPool.getFinalStats();
+
+                if (endTimestamp == 0) {
+                    virtualPool.finish();
+                    (endTimestamp, timeOutside) = virtualPool.getFinalStats();
+                    (address _incentive, ) = _getCurrentVirtualPools(key.pool);
+                    if (address(virtualPool) == _incentive) {
+                        farmingCenter.connectVirtualPool(key.pool, address(0));
+                    }
+                }
+                endTimestamp -= timeOutside;
+            }
+
+            uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(
                 farm.tickLower,
                 farm.tickUpper
             );
-
-            if (endTimestamp == 0) {
-                virtualPool.finish();
-                (secondsPerLiquidityInsideX128, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
-                    farm.tickLower,
-                    farm.tickUpper
-                );
-                (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-                if (address(virtualPool) == _incentive) {
-                    farmingCenter.connectVirtualPool(key.pool, address(0));
-                }
-            }
 
             uint224 _totalLiquidity = incentive.totalLiquidity;
             reward = RewardMath.computeRewardAmount(
@@ -292,13 +296,13 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         Incentive storage incentive = incentives[incentiveId];
 
         uint256 initTimestamp = key.startTime;
-        (uint160 secondsPerLiquidityInsideX128, uint256 endTimestamp) = IAlgebraIncentiveVirtualPool(
-            incentive.virtualPoolAddress
-        ).getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
+        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
+        (uint256 endTimestamp, uint256 timeOutside) = virtualPool.getFinalStats();
+        uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
         if (endTimestamp == 0) {
-            endTimestamp = key.endTime;
-        }
+            endTimestamp = key.endTime - timeOutside;
+        } else endTimestamp -= timeOutside;
 
         uint224 _totalLiquidity = incentive.totalLiquidity;
         reward = RewardMath.computeRewardAmount(
