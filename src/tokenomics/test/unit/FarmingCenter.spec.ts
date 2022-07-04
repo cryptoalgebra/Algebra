@@ -201,19 +201,6 @@ describe('unit/FarmingCenter', () => {
         expect((await context.farmingCenter.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore.add(2))
       })
 
-      it('increments the number of farms on the incentive', async () => {
-        const { numberOfFarms: farmsBefore } = await context.farming.incentives(incentiveIdEternal)
-        const { numberOfFarms: farmsBeforeIncentive } = await context.incentiveFarming.incentives(incentiveId)
-
-        await subject(tokenId, lpUser0)
-        await subjectEternal(tokenId, lpUser0)
-
-        const { numberOfFarms: farmsAfter } = await context.farming.incentives(incentiveIdEternal)
-        const { numberOfFarms: farmsAfterIncentive } = await context.incentiveFarming.incentives(incentiveId)
-        expect(farmsAfter.sub(farmsBefore)).to.eq(BN('1'))
-        expect(farmsAfterIncentive.sub(farmsBeforeIncentive)).to.eq(BN('1'))
-      })
-
       it('has gas cost', async () => await snapshotGasCost(subject(tokenId, lpUser0)))
     })
 
@@ -1042,17 +1029,6 @@ describe('unit/FarmingCenter', () => {
           await subjectEternal(lpUser0)
           const { numberOfFarms: farmsPost2 } = await context.farmingCenter.deposits(tokenId)
           expect(farmsPost2).to.equal(farmsPre - 2)
-        })
-
-        it('decrements incentive numberOfFarms by 1', async () => {
-          const { numberOfFarms: farmsPre } = await context.incentiveFarming.incentives(incentiveId)
-          await subject(lpUser0)
-          const { numberOfFarms: farmsPost } = await context.incentiveFarming.incentives(incentiveId)
-          expect(farmsPost).to.equal(farmsPre.sub(1))
-          const { numberOfFarms: farmsPre2 } = await context.farming.incentives(incentiveIdEternal)
-          await subjectEternal(lpUser0)
-          const { numberOfFarms: farmsPost2 } = await context.farming.incentives(incentiveIdEternal)
-          expect(farmsPost2).to.equal(farmsPre2.sub(1))
         })
 
         it('emits an exitFarmingd event', async () => {

@@ -131,7 +131,7 @@ describe('unit/Deposits', () => {
       await subject(ethers.utils.defaultAbiCoder.encode([], []))
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
       expect(deposit.L2TokenId).to.eq(BN('1'))
-      expect(incentive.numberOfFarms).to.eq(BN('0'))
+      expect(deposit.numberOfFarms).to.eq(BN('0'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).to.eq(BN('0'))
     })
 
@@ -144,7 +144,7 @@ describe('unit/Deposits', () => {
       await subject(data, lpUser0)
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
       expect(deposit.L2TokenId).to.eq(BN('1'))
-      expect(incentive.numberOfFarms).to.eq(BN('1'))
+      expect(deposit.numberOfFarms).to.eq(BN('1'))
       //expect(farm.secondsPerLiquidityInsideInitialX128).not.to.eq(BN('0'))
     })
 

@@ -118,24 +118,6 @@ describe('unit/Incentives', async () => {
         const incentive = await context.farming.incentives(incentiveId)
       })
 
-      it('adds to existing incentives', async () => {
-        const params = makeTimestamps(await blockTimestamp())
-        expect(subject(params)).to.emit(context.farming, 'IncentiveCreated')
-        expect(subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
-        const incentiveId = await context.testIncentiveId.compute({
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
-          pool: context.pool01,
-          startTime: timestamps.startTime,
-          endTime: timestamps.endTime,
-          
-        })
-        const { numberOfFarms } = await context.farming.incentives(
-          incentiveId
-        )
-        expect(numberOfFarms).to.equal(0)
-      })
-
       it('does not override the existing numberOfFarms', async () => {
         const testTimestamps = makeTimestamps(await blockTimestamp() + 100)
         const rewardToken = context.token0
@@ -166,10 +148,6 @@ describe('unit/Incentives', async () => {
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
         await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey,tiers, incentiveParams)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
-        let { numberOfFarms } = await context.farming.incentives(
-          incentiveId
-        )
-        expect(numberOfFarms).to.equal(0)
         expect(await rewardToken.balanceOf(context.farming.address)).to.eq(100)
         const { tokenId } = await helpers.mintFlow({
           lp: actors.lpUser0(),
@@ -180,6 +158,11 @@ describe('unit/Incentives', async () => {
           tokenId,
         })
 
+        let { numberOfFarms } = await context.farmingCenter.deposits(
+          tokenId
+        )
+        expect(numberOfFarms).to.equal(0)
+
         await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
@@ -189,9 +172,9 @@ describe('unit/Incentives', async () => {
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
             context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
           ])
-        ;({ numberOfFarms } = await context.farming
+        ;({ numberOfFarms } = await context.farmingCenter
           .connect(actors.lpUser0())
-          .incentives(incentiveId))
+          .deposits(tokenId))
         expect(numberOfFarms).to.equal(1)
       })
 

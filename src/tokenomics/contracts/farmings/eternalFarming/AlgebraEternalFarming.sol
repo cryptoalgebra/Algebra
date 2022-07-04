@@ -179,7 +179,6 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
 
         Incentive storage incentive = incentives[incentiveId];
-        incentive.numberOfFarms--;
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
         uint256 reward;

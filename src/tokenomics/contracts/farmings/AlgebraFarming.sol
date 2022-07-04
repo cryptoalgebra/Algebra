@@ -25,8 +25,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 totalReward;
         uint256 bonusReward;
         address virtualPoolAddress;
-        uint96 numberOfFarms;
-        bool isPoolCreated;
         uint224 totalLiquidity;
         address multiplierToken;
         Tiers tiers;
@@ -163,7 +161,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
-        newIncentive.isPoolCreated = true;
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
@@ -223,7 +220,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         liquidity += (liquidity * multiplier) / LiquidityTier.DENOMINATOR;
 
-        incentive.numberOfFarms++;
         virtualPool = incentive.virtualPoolAddress;
 
         incentive.totalLiquidity += liquidity;

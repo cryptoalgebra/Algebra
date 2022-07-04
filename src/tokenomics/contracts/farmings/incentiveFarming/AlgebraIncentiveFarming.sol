@@ -204,8 +204,6 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
 
-        incentive.numberOfFarms--;
-
         uint256 reward;
         uint256 bonusReward;
 
