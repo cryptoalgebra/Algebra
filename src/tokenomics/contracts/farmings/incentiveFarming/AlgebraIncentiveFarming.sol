@@ -210,12 +210,15 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
 
         if (block.timestamp > key.endTime) {
-            (uint160 secondsPerLiquidityInsideX128, uint256 initTimestamp, uint256 endTimestamp) = virtualPool
-                .getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
+            uint256 initTimestamp = key.startTime;
+            (uint160 secondsPerLiquidityInsideX128, uint256 endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
+                farm.tickLower,
+                farm.tickUpper
+            );
 
             if (endTimestamp == 0) {
                 virtualPool.finish();
-                (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
+                (secondsPerLiquidityInsideX128, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
                     farm.tickLower,
                     farm.tickUpper
                 );
@@ -288,19 +291,11 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         Incentive storage incentive = incentives[incentiveId];
 
-        (
-            uint160 secondsPerLiquidityInsideX128,
-            uint256 initTimestamp,
-            uint256 endTimestamp
-        ) = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress).getInnerSecondsPerLiquidity(
-                farm.tickLower,
-                farm.tickUpper
-            );
+        uint256 initTimestamp = key.startTime;
+        (uint160 secondsPerLiquidityInsideX128, uint256 endTimestamp) = IAlgebraIncentiveVirtualPool(
+            incentive.virtualPoolAddress
+        ).getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
-        if (initTimestamp == 0) {
-            initTimestamp = key.startTime;
-            endTimestamp = key.endTime;
-        }
         if (endTimestamp == 0) {
             endTimestamp = key.endTime;
         }
