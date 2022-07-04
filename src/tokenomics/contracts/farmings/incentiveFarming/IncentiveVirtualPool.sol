@@ -35,14 +35,14 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    function finish(uint32 _endTimestamp, uint32 startTime) external override onlyFarming {
+    function finish(uint32 _endTimestamp) external override onlyFarming {
         uint32 previousTimestamp;
         uint32 _initTimestamp = initTimestamp;
         endTimestamp = _endTimestamp;
 
         if (_initTimestamp == 0) {
-            initTimestamp = startTime;
-            previousTimestamp = startTime;
+            initTimestamp = desiredStartTimestamp;
+            previousTimestamp = desiredStartTimestamp;
         } else {
             previousTimestamp = prevTimestamp;
             if (previousTimestamp < _initTimestamp) previousTimestamp = _initTimestamp;

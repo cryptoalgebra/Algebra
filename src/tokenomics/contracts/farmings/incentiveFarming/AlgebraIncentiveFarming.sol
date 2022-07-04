@@ -214,7 +214,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 .getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
             if (endTimestamp == 0) {
-                virtualPool.finish(uint32(block.timestamp), uint32(key.startTime));
+                virtualPool.finish(uint32(block.timestamp));
                 (secondsPerLiquidityInsideX128, initTimestamp, endTimestamp) = virtualPool.getInnerSecondsPerLiquidity(
                     farm.tickLower,
                     farm.tickUpper
