@@ -2,14 +2,12 @@
 pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
-import 'algebra/contracts/libraries/TickTable.sol';
 
 import './interfaces/IAlgebraIncentiveVirtualPool.sol';
 
 import '../AlgebraVirtualPoolBase.sol';
 
 contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtualPool {
-    using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool

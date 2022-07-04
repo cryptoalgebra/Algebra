@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
-import 'algebra/contracts/libraries/TickTable.sol';
 
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
@@ -12,7 +11,6 @@ import './interfaces/IAlgebraEternalVirtualPool.sol';
 import '../AlgebraVirtualPoolBase.sol';
 
 contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPool {
-    using TickTable for mapping(int16 => uint256);
     using TickManager for mapping(int24 => TickManager.Tick);
 
     uint128 public rewardRate0;
