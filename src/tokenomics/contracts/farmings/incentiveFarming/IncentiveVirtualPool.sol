@@ -34,16 +34,8 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     function finish() external override onlyFarming {
-        uint32 previousTimestamp = prevTimestamp;
         endTimestamp = desiredEndTimestamp;
-
-        if (previousTimestamp >= desiredEndTimestamp) return;
-
-        if (currentLiquidity > 0)
-            globalSecondsPerLiquidityCumulative +=
-                (uint160(desiredEndTimestamp - previousTimestamp) << 128) /
-                currentLiquidity;
-        else timeOutside += desiredEndTimestamp - previousTimestamp;
+        _increaseCumulative(desiredEndTimestamp);
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -66,7 +58,7 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         if (currentTimestamp <= desiredStartTimestamp) {
             return Status.NOT_STARTED;
         }
-        if (currentTimestamp >= desiredEndTimestamp) {
+        if (currentTimestamp > desiredEndTimestamp) {
             return Status.NOT_EXIST;
         }
 
