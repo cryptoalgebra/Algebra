@@ -11,9 +11,6 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
     // The first swap after this timestamp is going to initialize the virtual pool
     function desiredStartTimestamp() external returns (uint32);
 
-    // returns the timestamp of the first swap after start timestamp
-    function initTimestamp() external returns (uint32);
-
     // returns the timestamp when the incentive was actually finished
     function endTimestamp() external returns (uint32);
 
@@ -28,15 +25,10 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
      * @param bottomTick The bottom tick of a position
      * @param topTick The top tick of a position
      * @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-     * @return initTime the #initTimestamp
      * @return endTime the #endTimestamp
      */
     function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
         external
         view
-        returns (
-            uint160 innerSecondsSpentPerLiquidity,
-            uint32 initTime,
-            uint32 endTime
-        );
+        returns (uint160 innerSecondsSpentPerLiquidity, uint32 endTime);
 }

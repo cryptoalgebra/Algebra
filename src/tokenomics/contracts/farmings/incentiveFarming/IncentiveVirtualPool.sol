@@ -13,8 +13,6 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     using TickManager for mapping(int24 => TickManager.Tick);
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    uint32 public override initTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
     uint32 public override endTimestamp;
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
@@ -31,21 +29,15 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     ) AlgebraVirtualPoolBase(_farmingCenterAddress, _farmingAddress, _pool) {
         desiredStartTimestamp = _desiredStartTimestamp;
         desiredEndTimestamp = _desiredEndTimestamp;
+        prevTimestamp = _desiredStartTimestamp;
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
     function finish() external override onlyFarming {
-        uint32 previousTimestamp;
-        uint32 _initTimestamp = initTimestamp;
+        uint32 previousTimestamp = prevTimestamp;
         endTimestamp = desiredEndTimestamp;
 
-        if (_initTimestamp == 0) {
-            initTimestamp = desiredStartTimestamp;
-            previousTimestamp = desiredStartTimestamp;
-        } else {
-            previousTimestamp = prevTimestamp;
-            if (previousTimestamp < _initTimestamp) previousTimestamp = _initTimestamp;
-        }
+        if (previousTimestamp >= desiredEndTimestamp) return;
 
         if (currentLiquidity > 0)
             globalSecondsPerLiquidityCumulative +=
@@ -59,14 +51,9 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         external
         view
         override
-        returns (
-            uint160 innerSecondsSpentPerLiquidity,
-            uint32 initTime,
-            uint32 endTime
-        )
+        returns (uint160 innerSecondsSpentPerLiquidity, uint32 endTime)
     {
         innerSecondsSpentPerLiquidity = _getInnerSecondsPerLiquidity(bottomTick, topTick);
-        initTime = initTimestamp;
         endTime = endTimestamp;
         if (endTime != 0) endTime -= timeOutside;
     }
@@ -84,12 +71,6 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         }
 
         uint32 _previousTimestamp = prevTimestamp;
-        if (_previousTimestamp == 0) {
-            initTimestamp = currentTimestamp;
-            prevTimestamp = currentTimestamp;
-            return Status.ACTIVE;
-        }
-
         if (currentTimestamp > _previousTimestamp) {
             uint128 _currentLiquidity = currentLiquidity;
             if (_currentLiquidity > 0) {
