@@ -40,6 +40,7 @@ contract FarmingCenterVault is IFarmingCenterVault {
         uint256 balance = balances[tokenId][incentiveId];
         if (balance > 0) {
             TransferHelper.safeTransfer(multiplierToken, to, balance);
+            balances[tokenId][incentiveId] = 0;
         }
     }
 }
