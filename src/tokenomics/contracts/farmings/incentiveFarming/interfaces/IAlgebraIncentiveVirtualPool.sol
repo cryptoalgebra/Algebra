@@ -20,9 +20,8 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
     /**
      * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestampю
      * desiredStartTimestamp will be used as initTimestamp if there were no swaps through the entire incentive
-     * @param _endTimestamp The timestamp of the exitFarming
      */
-    function finish(uint32 _endTimestamp) external;
+    function finish() external;
 
     /**
      * @dev This function is used to calculate the seconds per liquidity inside a certain position
