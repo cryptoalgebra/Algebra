@@ -6,15 +6,15 @@ import '../../IAlgebraVirtualPoolBase.sol';
 
 interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
     // The timestamp when the active incentive is finished
-    function desiredEndTimestamp() external returns (uint32);
+    function desiredEndTimestamp() external view returns (uint32);
 
     // The first swap after this timestamp is going to initialize the virtual pool
-    function desiredStartTimestamp() external returns (uint32);
+    function desiredStartTimestamp() external view returns (uint32);
 
-    // returns the timestamp when the incentive was actually finished
-    function endTimestamp() external returns (uint32);
+    // Is incentive already finished or not
+    function isFinished() external view returns (bool);
 
-    function getFinalStats() external view returns (uint32 endTime, uint32 secondsOutside);
+    function getFinalStats() external view returns (bool _isFinished, uint32 _timeOutside);
 
     /**
      * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestampю

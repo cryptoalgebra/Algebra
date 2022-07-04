@@ -18,8 +18,7 @@ contract TestRewardMath {
     ) public pure returns (uint256 reward) {
         reward = RewardMath.computeRewardAmount(
             totalReward,
-            startTime,
-            endTime,
+            endTime - startTime,
             liquidity,
             totalLiquidity,
             secondsPerLiquidityInsideX128
