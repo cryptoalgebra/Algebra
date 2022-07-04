@@ -33,6 +33,9 @@ import { ContractParams } from '../../types/contractParams'
 import { TestContext } from '../types'
 import { AlgebraIncentiveFarmingInterface } from '../../typechain/AlgebraIncentiveFarming'
 
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
+
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
  * so that we can focus on core business logic.
@@ -373,11 +376,11 @@ export class HelperCommands {
     if(params.eternal) {
       await this.farmingCenter
         .connect(params.lp)
-        .enterEternalFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0)
+        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0, ETERNAL_FARMING)
     } else {
       await this.farmingCenter
         .connect(params.lp)
-        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0)
+        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0, LIMIT_FARMING)
     }
 
     const farmdAt = await blockTimestamp()
@@ -430,6 +433,7 @@ export class HelperCommands {
     await this.farmingCenter.connect(params.lp).exitFarming(
       incentiveResultToFarmAdapter(params.createIncentiveResult),
       params.tokenId,
+      LIMIT_FARMING,
       maxGas
     )
 

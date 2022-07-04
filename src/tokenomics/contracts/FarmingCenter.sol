@@ -100,21 +100,23 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
     }
 
-    function _enterFarming(
-        IAlgebraFarming _farming,
+    /// @inheritdoc IFarmingCenter
+    function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked,
         bool isLimit
-    ) private {
+    ) external override {
         Deposit storage _deposit = deposits[tokenId];
         checkAuthorizationForToken(_deposit.L2TokenId);
         (uint32 numberOfFarms, bool inLimitFarming) = (_deposit.numberOfFarms, _deposit.inLimitFarming);
         numberOfFarms++;
+        IAlgebraFarming _farming;
         if (isLimit) {
             require(!inLimitFarming, 'token already farmed');
             inLimitFarming = true;
-        }
+            _farming = IAlgebraFarming(farming);
+        } else _farming = IAlgebraFarming(eternalFarming);
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
         bytes32 incentiveId = IncentiveId.compute(key);
@@ -132,36 +134,21 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function enterEternalFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external override {
-        _enterFarming(eternalFarming, key, tokenId, tokensLocked, false);
-    }
-
-    /// @inheritdoc IFarmingCenter
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external override {
-        _enterFarming(farming, key, tokenId, tokensLocked, true);
-    }
-
-    function _exitFarming(
-        IAlgebraFarming _farming,
+    function exitFarming(
         IncentiveKey memory key,
         uint256 tokenId,
         bool isLimit
-    ) private {
+    ) external override {
         Deposit storage deposit = deposits[tokenId];
         checkAuthorizationForToken(deposit.L2TokenId);
+        IAlgebraFarming _farming;
+
         deposit.numberOfFarms -= 1;
         deposit.owner = msg.sender;
         if (isLimit) {
             deposit.inLimitFarming = false;
-        }
+            _farming = IAlgebraFarming(farming);
+        } else _farming = IAlgebraFarming(eternalFarming);
 
         _farming.exitFarming(key, tokenId, msg.sender);
 
@@ -170,16 +157,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
         }
-    }
-
-    /// @inheritdoc IFarmingCenter
-    function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external override {
-        _exitFarming(eternalFarming, key, tokenId, false);
-    }
-
-    /// @inheritdoc IFarmingCenter
-    function exitFarming(IncentiveKey memory key, uint256 tokenId) external override {
-        _exitFarming(farming, key, tokenId, true);
     }
 
     /// @inheritdoc IFarmingCenter

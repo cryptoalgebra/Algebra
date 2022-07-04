@@ -25,6 +25,9 @@ import { HelperTypes } from '../helpers/types'
 
 let loadFixture: LoadFixtureFunction
 
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
+
 describe('unit/FarmingCenter', () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
   const incentiveCreator = actors.incentiveCreator()
@@ -117,7 +120,7 @@ describe('unit/FarmingCenter', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
 
       subjectEternal = (L2TokenId: string, _actor: Wallet) =>
-        context.farmingCenter.connect(_actor).enterEternalFarming(
+        context.farmingCenter.connect(_actor).enterFarming(
           {
             
             pool: context.pool01,
@@ -126,7 +129,8 @@ describe('unit/FarmingCenter', () => {
             ...timestamps,
           },
           L2TokenId,
-          0
+          0,
+          ETERNAL_FARMING
         )
 
       subject = (L2TokenId: string, _actor: Wallet) =>
@@ -138,7 +142,8 @@ describe('unit/FarmingCenter', () => {
             ...timestamps,
           },
           L2TokenId,
-          0
+          0,
+          LIMIT_FARMING
         )
     })
 
@@ -301,7 +306,7 @@ describe('unit/FarmingCenter', () => {
         })
 
         await expect(
-          context.farmingCenter.connect(lpUser0).enterEternalFarming(
+          context.farmingCenter.connect(lpUser0).enterFarming(
             {
               
               pool: context.pool01,
@@ -310,7 +315,8 @@ describe('unit/FarmingCenter', () => {
               ...timestamps,
             },
             otherTokenId,
-            0
+            0,
+            ETERNAL_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
 
@@ -324,7 +330,8 @@ describe('unit/FarmingCenter', () => {
               ...timestamps,
             },
             otherTokenId,
-            0
+            0,
+            LIMIT_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
       })
@@ -333,7 +340,7 @@ describe('unit/FarmingCenter', () => {
         // await Time.setAndMine(timestamps.startTime + 20)
 
         await expect(
-          context.farmingCenter.connect(lpUser0).enterEternalFarming(
+          context.farmingCenter.connect(lpUser0).enterFarming(
             {
               
               pool: context.pool01,
@@ -343,7 +350,8 @@ describe('unit/FarmingCenter', () => {
               startTime: timestamps.startTime + 10,
             },
             tokenId,
-            0
+            0,
+            ETERNAL_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
 
@@ -358,7 +366,8 @@ describe('unit/FarmingCenter', () => {
               startTime: timestamps.startTime + 10,
             },
             tokenId,
-            0
+            0,
+            LIMIT_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
       })
@@ -412,8 +421,8 @@ describe('unit/FarmingCenter', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterEternalFarming(farmIncentiveKey, tokenId, 0)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)
       await context.farming.farms(tokenId, incentiveId)
 
       const pool = context.poolObj.connect(actors.lpUser0())
@@ -491,8 +500,8 @@ describe('unit/FarmingCenter', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterEternalFarming(farmIncentiveKey, tokenId, 0)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)
       await context.farming.farms(tokenId, incentiveIdEternal)
       await context.incentiveFarming.farms(tokenId, incentiveId)
     })
@@ -634,10 +643,11 @@ describe('unit/FarmingCenter', () => {
           pool: context.pool01,
           ...timestamps,
         },
-        tokenId
+        tokenId,
+        LIMIT_FARMING
       )
 
-      await context.farmingCenter.connect(lpUser0).exitEternalFarming(
+      await context.farmingCenter.connect(lpUser0).exitFarming(
         {
           
           rewardToken: context.rewardToken.address,
@@ -645,7 +655,8 @@ describe('unit/FarmingCenter', () => {
           pool: context.pool01,
           ...timestamps,
         },
-        tokenIdEternal
+        tokenIdEternal,
+        ETERNAL_FARMING
       )
 
       claimable = await context.incentiveFarming.rewards(context.rewardToken.address, lpUser0.address)
@@ -856,7 +867,7 @@ describe('unit/FarmingCenter', () => {
 
         
 
-        await context.farmingCenter.connect(lpUser0).enterEternalFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             
             rewardToken: context.rewardToken.address,
@@ -865,7 +876,8 @@ describe('unit/FarmingCenter', () => {
             ...timestamps,
           },
           tokenId,
-          0
+          0,
+          ETERNAL_FARMING
         )
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -877,12 +889,13 @@ describe('unit/FarmingCenter', () => {
             ...timestamps,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
         )
         await Time.setAndMine(timestamps.startTime + 1)
         incentiveIdEternal = await helpers.getIncentiveId(createIncentiveResultEternal)
 
-        await expect(context.farmingCenter.connect(actors.lpUser0()).exitEternalFarming(
+        await expect(context.farmingCenter.connect(actors.lpUser0()).exitFarming(
           {
             
             pool: context.pool01,
@@ -890,7 +903,8 @@ describe('unit/FarmingCenter', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          tokenId
+          tokenId,
+          ETERNAL_FARMING
         )).to.be.emit(context.farming, 'FarmEnded')
 
         await expect(context.farmingCenter.connect(actors.lpUser0()).exitFarming(
@@ -901,7 +915,8 @@ describe('unit/FarmingCenter', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          tokenId
+          tokenId,
+          LIMIT_FARMING
         )).to.revertedWith('AlgebraFarming::exitFarming: cannot exitFarming before end time')
       })
     })
@@ -965,12 +980,13 @@ describe('unit/FarmingCenter', () => {
               ...timestamps,
             },
             tokenId,
-            0
+            0,
+            LIMIT_FARMING
         )
 
         await Time.setAndMine(timestamps.startTime + 1)
 
-        await context.farmingCenter.connect(lpUser0).enterEternalFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             
             rewardToken: context.rewardToken.address,
@@ -979,7 +995,8 @@ describe('unit/FarmingCenter', () => {
             ...timestamps,
           },
           tokenId,
-          0
+          0,
+          ETERNAL_FARMING
         )
 
 
@@ -990,7 +1007,7 @@ describe('unit/FarmingCenter', () => {
         incentiveIdEternal = await helpers.getIncentiveId(createIncentiveResultEternal)
 
         subjectEternal = (_actor: Wallet) =>
-          context.farmingCenter.connect(_actor).exitEternalFarming(
+          context.farmingCenter.connect(_actor).exitFarming(
             {
               
               pool: context.pool01,
@@ -998,7 +1015,8 @@ describe('unit/FarmingCenter', () => {
               bonusRewardToken: context.bonusRewardToken.address,
               ...timestamps,
             },
-            tokenId
+            tokenId,
+            ETERNAL_FARMING
           )
 
         subject = (_actor: Wallet) =>
@@ -1010,7 +1028,8 @@ describe('unit/FarmingCenter', () => {
               bonusRewardToken: context.bonusRewardToken.address,
               ...timestamps,
             },
-            tokenId
+            tokenId,
+            LIMIT_FARMING
           )
       })
 

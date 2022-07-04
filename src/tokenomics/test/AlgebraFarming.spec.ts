@@ -32,6 +32,8 @@ import { Wallet } from '@ethersproject/wallet'
 import './matchers/beWithin'
 
 let loadFixture: LoadFixtureFunction
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
 
 describe('AlgebraFarming', async ()=>{
     const wallets = provider.getWallets()
@@ -497,7 +499,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },		
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -508,7 +511,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
@@ -713,7 +717,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
@@ -725,7 +730,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 			const reward1 = BN(await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address))
@@ -885,7 +891,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -896,7 +903,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 
@@ -1051,7 +1059,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -1062,7 +1071,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 
@@ -1224,7 +1234,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
@@ -1236,7 +1247,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 
@@ -1364,7 +1376,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    1
+			    1,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -1375,7 +1388,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
@@ -1437,7 +1451,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 		    await Time.set(createIncentiveResult.startTime + 1)
@@ -1470,7 +1485,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    1
+			    1,
+				LIMIT_FARMING
 			);
 
 
@@ -1629,7 +1645,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
@@ -1641,7 +1658,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    3
+			    3,
+				LIMIT_FARMING
 			);
 
 
@@ -1778,7 +1796,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    1
+			    1,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -1789,7 +1808,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
@@ -1875,7 +1895,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    1
+			    1,
+				LIMIT_FARMING
 			);
 			await context.farmingCenter.connect(actors.lpUser1()).exitFarming(
 			    {
@@ -1886,7 +1907,8 @@ describe('AlgebraFarming', async ()=>{
 				    endTime: createIncentiveResult.endTime,
 				    
 			    },
-			    2
+			    2,
+				LIMIT_FARMING
 			);
 
 			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)

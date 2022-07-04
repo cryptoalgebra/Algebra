@@ -73,37 +73,28 @@ interface IFarmingCenter is
     /// @param virtualPool The virtual pool to be connected
     function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
 
-    /// @notice Enters in eternal farming with NFT-position token
+    /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
     /// @dev token must be deposited in FarmingCenter
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
     /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
-    function enterEternalFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
-
-    /// @notice Enters in incentive (time-limited) farming with NFT-position token
-    /// @dev token must be deposited in FarmingCenter
-    /// @param key The incentive event key
-    /// @param tokenId The id of position NFT
-    /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
+    /// @param isLimit Is incetive time-limited or eternal
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
-        uint256 tokensLocked
+        uint256 tokensLocked,
+        bool isLimit
     ) external;
 
-    /// @notice Exits from eternal farming with NFT-position token
+    /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
-    function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
-
-    /// @notice Exits from incentive (time-limited) farming with NFT-position token
-    /// @param key The incentive event key
-    /// @param tokenId The id of position NFT
-    function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
+    /// @param isLimit Is incetive time-limited or eternal
+    function exitFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        bool isLimit
+    ) external;
 
     /// @notice Collects up to a maximum amount of fees owed to a specific position to the recipient
     /// @dev "proxies" to NonfungiblePositionManager

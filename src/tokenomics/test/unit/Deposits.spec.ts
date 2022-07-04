@@ -25,6 +25,9 @@ import { HelperTypes } from '../helpers/types'
 
 let loadFixture: LoadFixtureFunction
 
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
+
 describe('unit/Deposits', () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
   const lpUser0 = actors.lpUser0()
@@ -387,7 +390,8 @@ describe('unit/Deposits', () => {
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
         )
 
         await expect(subject(tokenId, lpUser0.address)).to.revertedWith(
@@ -435,7 +439,8 @@ describe('unit/Deposits', () => {
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -468,7 +473,8 @@ describe('unit/Deposits', () => {
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -480,7 +486,8 @@ describe('unit/Deposits', () => {
             rewardToken: incentive.rewardToken.address,
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
-          tokenId
+          tokenId,
+          LIMIT_FARMING
         )
       const { owner: ownerAfter } = await context.farmingCenter.deposits(tokenId)
       expect(ownerBefore).to.eq(lpUser0.address)
@@ -512,7 +519,8 @@ describe('unit/Deposits', () => {
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)
@@ -544,7 +552,8 @@ describe('unit/Deposits', () => {
             bonusRewardToken: incentive.bonusRewardToken.address,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
       )   
       const { owner: ownerBefore, L2TokenId: l2TokenId} = await context.farmingCenter.deposits(tokenId)
       await context.farmingCenter.connect(lpUser0).approve(lpUser1.address, l2TokenId)

@@ -24,6 +24,8 @@ import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
 let loadFixture: LoadFixtureFunction
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
 
 describe('unit/Farms', () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
@@ -107,7 +109,8 @@ describe('unit/Farms', () => {
             ...timestamps,
           },
           L2TokenId,
-          0
+          0,
+          LIMIT_FARMING
         )
     })
 
@@ -242,7 +245,8 @@ describe('unit/Farms', () => {
               ...timestamps,
             },
             otherTokenId,
-            0
+            0,
+            LIMIT_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
       })
@@ -261,7 +265,8 @@ describe('unit/Farms', () => {
               startTime: timestamps.startTime + 10,
             },
             tokenId,
-            0
+            0,
+            LIMIT_FARMING
           )
         ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
       })
@@ -315,7 +320,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)
       await context.farming.farms(tokenId, incentiveId)
 
       const pool = context.poolObj.connect(actors.lpUser0())
@@ -378,7 +383,7 @@ describe('unit/Farms', () => {
       )
 
       // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)
       await context.farming.farms(tokenId, incentiveId)
     })
 
@@ -468,7 +473,8 @@ describe('unit/Farms', () => {
           pool: context.pool01,
           ...timestamps,
         },
-        tokenId
+        tokenId,
+        LIMIT_FARMING
       )
 
       claimable = await context.farming.rewards(context.rewardToken.address, lpUser0.address)
@@ -606,7 +612,8 @@ describe('unit/Farms', () => {
             ...timestamps,
           },
           tokenId,
-          0
+          0,
+          LIMIT_FARMING
         )
 
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
@@ -619,7 +626,8 @@ describe('unit/Farms', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          tokenId
+          tokenId,
+          LIMIT_FARMING
         )).to.be.emit(context.farming, 'FarmEnded')
       })
     })
@@ -670,7 +678,8 @@ describe('unit/Farms', () => {
           ...timestamps,
         },
         tokenId,
-        0
+        0,
+        LIMIT_FARMING
       )
 
       await Time.setAndMine(timestamps.endTime + 10)
@@ -686,7 +695,8 @@ describe('unit/Farms', () => {
             bonusRewardToken: context.bonusRewardToken.address,
             ...timestamps,
           },
-          tokenId
+          tokenId,
+          LIMIT_FARMING
         )
     })
 
@@ -800,7 +810,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0, LIMIT_FARMING)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
@@ -821,7 +831,7 @@ describe('unit/Farms', () => {
         tokenId,
       })
 
-      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0)
+      await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0, LIMIT_FARMING)
       const farm = await context.farming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })

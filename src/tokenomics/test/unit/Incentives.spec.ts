@@ -21,6 +21,8 @@ import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
 let loadFixture: LoadFixtureFunction
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
 
 describe('unit/Incentives', async () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
@@ -185,7 +187,7 @@ describe('unit/Incentives', async () => {
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0]),
+            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
           ])
         ;({ numberOfFarms } = await context.farming
           .connect(actors.lpUser0())
