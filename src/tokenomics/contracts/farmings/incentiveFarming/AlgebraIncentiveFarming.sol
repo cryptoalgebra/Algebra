@@ -231,7 +231,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 farm.tickUpper
             );
 
-            uint224 _totalLiquidity = incentive.totalLiquidity;
+            uint224 _totalLiquidity = activeTime > 0 ? 0 : incentive.totalLiquidity; // used only if no one was active in incentive
             reward = RewardMath.computeRewardAmount(
                 incentive.totalReward,
                 activeTime,
@@ -298,7 +298,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         uint256 timeOutside = virtualPool.timeOutside();
         uint256 activeTime = key.endTime - timeOutside - key.startTime;
 
-        uint224 _totalLiquidity = incentive.totalLiquidity;
+        uint224 _totalLiquidity = activeTime > 0 ? 0 : incentive.totalLiquidity; // used only if no one was active in incentive
         reward = RewardMath.computeRewardAmount(
             incentive.totalReward,
             activeTime,
