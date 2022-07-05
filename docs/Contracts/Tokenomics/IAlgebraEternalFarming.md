@@ -40,10 +40,10 @@ Event emitted when rewards were added
 | bonusRewardAmount | uint256 | Collected amount of bonus reward |
 
 
-### IncentiveCreated
+### EternalFarming
 
 
-`IncentiveCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address)`  
+`EternalFarming(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address)`  
 
 Event emitted when a liquidity mining incentive has been created
 
@@ -90,10 +90,10 @@ Returns information about a farmd liquidity NFT
 | innerRewardGrowth0 | uint256 |  |
 | innerRewardGrowth1 | uint256 |  |
 
-### createIncentive
+### createEternalFarming
 
 
-`createIncentive(struct IIncentiveKey.IncentiveKey,uint256,uint256,uint128,uint128,address,struct IAlgebraFarming.Tiers)`  external
+`createEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,uint128,uint128,address,struct IAlgebraFarming.Tiers)`  external
 
 Creates a new liquidity mining incentive program
 

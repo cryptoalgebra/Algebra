@@ -33,10 +33,26 @@
 
 
 
-### setFarming
+### lockTokens
 
 
-`setFarming(address)`  external
+`lockTokens(uint256,bytes32,uint256)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 |  |
+| incentiveId | bytes32 |  |
+| tokenAmount | uint256 |  |
+
+
+### setFarmingCenter
+
+
+`setFarmingCenter(address)`  external
 
 
 

@@ -228,8 +228,6 @@ Represents a farming incentive
 | totalReward | uint256 |  |
 | bonusReward | uint256 |  |
 | virtualPoolAddress | address |  |
-| numberOfFarms | uint96 |  |
-| isPoolCreated | bool |  |
 | totalLiquidity | uint224 |  |
 | multiplierToken | address |  |
 | tiers | struct IAlgebraFarming.Tiers |  |

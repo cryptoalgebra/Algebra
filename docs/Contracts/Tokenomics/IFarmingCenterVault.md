@@ -26,10 +26,10 @@
 | incentiveId | bytes32 |  |
 
 
-### setFarming
+### setFarmingCenter
 
 
-`setFarming(address)`  external
+`setFarmingCenter(address)`  external
 
 
 
@@ -38,6 +38,22 @@
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | farming | address |  |
+
+
+### lockTokens
+
+
+`lockTokens(uint256,bytes32,uint256)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 |  |
+| incentiveId | bytes32 |  |
+| tokenAmount | uint256 |  |
 
 
 ### balances

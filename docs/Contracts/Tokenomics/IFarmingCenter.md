@@ -62,10 +62,10 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
 
-### farming
+### limitFarming
 
 
-`farming()` view external
+`limitFarming()` view external
 
 
 
@@ -76,7 +76,7 @@ The nonfungible position manager with which this farming contract is compatible
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | contract IAlgebraIncentiveFarming |  |
+| [0] | contract IAlgebraLimitFarming |  |
 
 ### eternalFarming
 
@@ -168,28 +168,12 @@ Updates activeIncentive in AlgebraPool
 | virtualPool | address | The virtual pool to be connected |
 
 
-### enterEternalFarming
-
-
-`enterEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
-
-Enters in eternal farming with NFT-position token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
-| tokenId | uint256 | The id of position NFT |
-| tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-
-
 ### enterFarming
 
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,bool)`  external
 
-Enters in incentive (time-limited) farming with NFT-position token
+Enters in incentive (time-limited or eternal farming) with NFT-position token
 
 
 
@@ -198,29 +182,15 @@ Enters in incentive (time-limited) farming with NFT-position token
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
 | tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-
-
-### exitEternalFarming
-
-
-`exitEternalFarming(struct IIncentiveKey.IncentiveKey,uint256)`  external
-
-Exits from eternal farming with NFT-position token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
-| tokenId | uint256 | The id of position NFT |
+| isLimit | bool | Is incetive time-limited or eternal |
 
 
 ### exitFarming
 
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256)`  external
+`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,bool)`  external
 
-Exits from incentive (time-limited) farming with NFT-position token
+Exits from incentive (time-limited or eternal farming) with NFT-position token
 
 
 
@@ -228,6 +198,7 @@ Exits from incentive (time-limited) farming with NFT-position token
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
+| isLimit | bool | Is incetive time-limited or eternal |
 
 
 ### collect
