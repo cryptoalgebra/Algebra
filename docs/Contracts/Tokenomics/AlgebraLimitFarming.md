@@ -1,14 +1,22 @@
 
 
-# AlgebraEternalFarming
+# AlgebraLimitFarming
 
-Algebra eternal (v2-like) farming
+Algebra incentive (time-limited) farming
 
 
 
 
 ## Variables
-### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
+### uint256 maxIncentiveStartLeadTime immutable
+
+The max amount of seconds into the future the incentive startTime can be set
+
+### uint256 maxIncentiveDuration immutable
+
+The max duration of an incentive in seconds
+
+### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraLimitFarming.Farm)) farms 
 
 Returns information about a farmd liquidity NFT
 
@@ -19,7 +27,7 @@ Returns information about a farmd liquidity NFT
 
 AlgebraFarming
 
-`constructor(contract IAlgebraPoolDeployer,contract INonfungiblePositionManager)`  public
+`constructor(contract IAlgebraPoolDeployer,contract INonfungiblePositionManager,uint256,uint256)`  public
 
 
 
@@ -29,33 +37,65 @@ AlgebraFarming
 | ---- | ---- | ----------- |
 | _deployer | contract IAlgebraPoolDeployer | pool deployer contract address |
 | _nonfungiblePositionManager | contract INonfungiblePositionManager | the NFT position manager contract address |
+| _maxIncentiveStartLeadTime | uint256 | the max duration of an incentive in seconds |
+| _maxIncentiveDuration | uint256 | the max amount of seconds into the future the incentive startTime can be set |
 
 
-### createEternalFarming
+### createLimitFarming
 
 onlyIncentiveMaker
 
-`createEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,uint128,uint128,address,struct IAlgebraFarming.Tiers)`  external
+`createLimitFarming(struct IIncentiveKey.IncentiveKey,struct IAlgebraFarming.Tiers,struct IAlgebraLimitFarming.IncentiveParams)`  external
 
-Creates a new liquidity mining incentive program
+
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | Details of the incentive to create |
-| reward | uint256 | The amount of reward tokens to be distributed |
-| bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
-| rewardRate | uint128 | The rate of reward distribution per second |
-| bonusRewardRate | uint128 | The rate of bonus reward distribution per second |
-| multiplierToken | address | The address of token which can be locked to get liquidity multiplier |
-| tiers | struct IAlgebraFarming.Tiers | The amounts of locked token for liquidity multipliers |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| tiers | struct IAlgebraFarming.Tiers |  |
+| params | struct IAlgebraLimitFarming.IncentiveParams |  |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | virtualPool | address |  |
+
+### addRewards
+
+onlyIncentiveMaker
+
+`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| reward | uint256 |  |
+| bonusReward | uint256 |  |
+
+
+### decreaseRewardsAmount
+
+onlyIncentiveMaker
+
+`decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| reward | uint256 |  |
+| bonusReward | uint256 |  |
+
 
 ### detachIncentive
 
@@ -85,39 +125,6 @@ Attach incentive to the pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
-
-
-### addRewards
-
-
-`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| rewardAmount | uint256 |  |
-| bonusRewardAmount | uint256 |  |
-
-
-### setRates
-
-onlyIncentiveMaker
-
-`setRates(struct IIncentiveKey.IncentiveKey,uint128,uint128)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| rewardRate | uint128 |  |
-| bonusRewardRate | uint128 |  |
 
 
 ### enterFarming
@@ -167,29 +174,6 @@ Calculates the reward amount that will be received for the given farm
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
 | tokenId | uint256 | The ID of the token |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-
-### collectRewards
-
-onlyFarmingCenter
-
-`collectRewards(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| tokenId | uint256 |  |
-| _owner | address |  |
 
 **Returns:**
 

@@ -12,7 +12,7 @@ Base interface for virtual pools
 ### timeOutside
 
 
-`timeOutside()`  external
+`timeOutside()` view external
 
 
 
@@ -28,7 +28,7 @@ Base interface for virtual pools
 ### ticks
 
 
-`ticks(int24)`  external
+`ticks(int24)` view external
 
 
 
@@ -54,7 +54,7 @@ Base interface for virtual pools
 ### currentLiquidity
 
 
-`currentLiquidity()`  external
+`currentLiquidity()` view external
 
 
 
@@ -70,7 +70,7 @@ Base interface for virtual pools
 ### globalTick
 
 
-`globalTick()`  external
+`globalTick()` view external
 
 
 
@@ -86,7 +86,7 @@ Base interface for virtual pools
 ### globalSecondsPerLiquidityCumulative
 
 
-`globalSecondsPerLiquidityCumulative()`  external
+`globalSecondsPerLiquidityCumulative()` view external
 
 
 
@@ -102,7 +102,7 @@ Base interface for virtual pools
 ### prevTimestamp
 
 
-`prevTimestamp()`  external
+`prevTimestamp()` view external
 
 
 
@@ -114,6 +114,26 @@ Base interface for virtual pools
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32 |  |
+
+### getInnerSecondsPerLiquidity
+
+
+`getInnerSecondsPerLiquidity(int24,int24)` view external
+
+This function is used to calculate the seconds per liquidity inside a certain position
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| bottomTick | int24 | The bottom tick of a position |
+| topTick | int24 | The top tick of a position |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| innerSecondsSpentPerLiquidity | uint160 |  |
 
 ### applyLiquidityDeltaToPosition
 

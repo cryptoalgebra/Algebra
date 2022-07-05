@@ -142,59 +142,6 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-### mintAndFreeze
-
-
-`mintAndFreeze(address,uint256,uint64)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _to | address | Address to which token will be freeze. |
-| _amount | uint256 | Amount of token to mint and freeze. |
-| _until | uint64 | Release date, must be in future. |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool |  |
-
-### releaseOnce
-
-
-`releaseOnce()`  external
-
-
-
-
-
-
-
-### getFreezing
-
-
-`getFreezing(address,uint256)` view external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _addr | address | Address of freeze tokens owner. |
-| _index | uint256 | Freezing portion index. It ordered by release date descending. |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _release | uint64 |  |
-| _balance | uint256 |  |
-
 
 
 ---
@@ -343,6 +290,59 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool |  |
+
+### mintAndFreeze
+
+
+`mintAndFreeze(address,uint256,uint64)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | Address to which token will be freeze. |
+| _amount | uint256 | Amount of token to mint and freeze. |
+| _until | uint64 | Release date, must be in future. |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
+
+### releaseOnce
+
+
+`releaseOnce()`  external
+
+
+
+
+
+
+
+### getFreezing
+
+
+`getFreezing(address,uint256)` view external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _addr | address | Address of freeze tokens owner. |
+| _index | uint256 | Freezing portion index. It ordered by release date descending. |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _release | uint64 |  |
+| _balance | uint256 |  |
 
 
 

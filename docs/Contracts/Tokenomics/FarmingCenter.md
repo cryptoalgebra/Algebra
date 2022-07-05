@@ -9,7 +9,7 @@ Algebra main farming contract
 
 
 ## Variables
-### contract IAlgebraIncentiveFarming farming immutable
+### contract IAlgebraLimitFarming limitFarming immutable
 
 
 
@@ -40,7 +40,7 @@ Algebra main farming contract
 
 ERC721Permit, PeripheryPayments
 
-`constructor(contract IAlgebraIncentiveFarming,contract IAlgebraEternalFarming,contract INonfungiblePositionManager,contract IFarmingCenterVault)`  public
+`constructor(contract IAlgebraLimitFarming,contract IAlgebraEternalFarming,contract INonfungiblePositionManager,contract IFarmingCenterVault)`  public
 
 
 
@@ -48,7 +48,7 @@ ERC721Permit, PeripheryPayments
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _farming | contract IAlgebraIncentiveFarming |  |
+| _limitFarming | contract IAlgebraLimitFarming |  |
 | _eternalFarming | contract IAlgebraEternalFarming |  |
 | _nonfungiblePositionManager | contract INonfungiblePositionManager |  |
 | _farmingCenterVault | contract IFarmingCenterVault |  |
@@ -76,28 +76,12 @@ Upon receiving a Algebra ERC721, creates the token deposit setting owner to &#x6
 | ---- | ---- | ----------- |
 | [0] | bytes4 |  |
 
-### enterEternalFarming
-
-
-`enterEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
-
-Enters in eternal farming with NFT-position token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
-| tokenId | uint256 | The id of position NFT |
-| tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-
-
 ### enterFarming
 
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,bool)`  external
 
-Enters in incentive (time-limited) farming with NFT-position token
+Enters in incentive (time-limited or eternal farming) with NFT-position token
 
 
 
@@ -106,29 +90,15 @@ Enters in incentive (time-limited) farming with NFT-position token
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
 | tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-
-
-### exitEternalFarming
-
-
-`exitEternalFarming(struct IIncentiveKey.IncentiveKey,uint256)`  external
-
-Exits from eternal farming with NFT-position token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
-| tokenId | uint256 | The id of position NFT |
+| isLimit | bool | Is incetive time-limited or eternal |
 
 
 ### exitFarming
 
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256)`  external
+`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,bool)`  external
 
-Exits from incentive (time-limited) farming with NFT-position token
+Exits from incentive (time-limited or eternal farming) with NFT-position token
 
 
 
@@ -136,6 +106,7 @@ Exits from incentive (time-limited) farming with NFT-position token
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
+| isLimit | bool | Is incetive time-limited or eternal |
 
 
 ### collect
@@ -269,7 +240,7 @@ Withdraw Algebra NFT-position token
 ### virtualPoolAddresses
 
 
-`virtualPoolAddresses(address)` view public
+`virtualPoolAddresses(address)` view external
 
 
 
@@ -283,7 +254,7 @@ Withdraw Algebra NFT-position token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| incentiveVP | address |  |
+| limitVP | address |  |
 | eternalVP | address |  |
 
 ### getApproved

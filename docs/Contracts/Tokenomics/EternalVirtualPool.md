@@ -83,26 +83,6 @@ onlyFarming
 | rate1 | uint128 |  |
 
 
-### getInnerSecondsPerLiquidity
-
-
-`getInnerSecondsPerLiquidity(int24,int24)` view external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| bottomTick | int24 |  |
-| topTick | int24 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| innerSecondsSpentPerLiquidity | uint160 |  |
-
 ### getInnerRewardsGrowth
 
 

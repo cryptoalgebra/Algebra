@@ -67,6 +67,26 @@ only pool (or FarmingCenter as &quot;proxy&quot;) can call
 
 
 ## Functions
+### getInnerSecondsPerLiquidity
+
+
+`getInnerSecondsPerLiquidity(int24,int24)` view external
+
+get seconds per liquidity inside range
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| bottomTick | int24 |  |
+| topTick | int24 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| innerSecondsSpentPerLiquidity | uint160 |  |
+
 ### cross
 
 onlyFromPool
