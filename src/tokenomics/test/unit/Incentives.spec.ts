@@ -66,7 +66,7 @@ describe('unit/Incentives', async () => {
 
         const { startTime, endTime } = makeTimestamps(await blockTimestamp())
 
-        return await context.farming.connect(incentiveCreator).createIncentive(
+        return await context.farming.connect(incentiveCreator).createLimitFarming(
           {
             rewardToken: params.rewardToken || context.rewardToken.address,
             bonusRewardToken: params.bonusRewardToken || context.bonusRewardToken.address,
@@ -146,7 +146,7 @@ describe('unit/Incentives', async () => {
 
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
-        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey,tiers, incentiveParams)
+        await context.farming.connect(actors.incentiveCreator()).createLimitFarming(incentiveKey,tiers, incentiveParams)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
         expect(await rewardToken.balanceOf(context.farming.address)).to.eq(100)
         const { tokenId } = await helpers.mintFlow({
@@ -230,7 +230,7 @@ describe('unit/Incentives', async () => {
           const now = await blockTimestamp()
 
           await expect(
-            context.farming.connect(incentiveCreator).createIncentive(
+            context.farming.connect(incentiveCreator).createLimitFarming(
               {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,

@@ -10,11 +10,11 @@ async function main() {
   const maxIncentiveDuration = 63072000;
   const incentiveMaker = "0xDeaD1F5aF792afc125812E875A891b038f888258";
 
-  const AlgebraIncentiveFarmingFactory = await hre.ethers.getContractFactory("AlgebraIncentiveFarming");
-  const AlgebraIncentiveFarming = await AlgebraIncentiveFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
+  const AlgebraLimitFarmingFactory = await hre.ethers.getContractFactory("AlgebraLimitFarming");
+  const AlgebraLimitFarming = await AlgebraLimitFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);
 
-  await AlgebraIncentiveFarming.deployed();
-  console.log("AlgebraIncentiveFarming deployed to:", AlgebraIncentiveFarming.address);
+  await AlgebraLimitFarming.deployed();
+  console.log("AlgebraLimitFarming deployed to:", AlgebraLimitFarming.address);
 
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory("AlgebraEternalFarming");
   const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager);
@@ -28,17 +28,17 @@ async function main() {
   await FarmingCenterVault.deployed()
 
   const FarmingCenterFactory = await hre.ethers.getContractFactory("FarmingCenter");
-  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraIncentiveFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager, FarmingCenterVault.address);
+  const FarmingCenter =  await FarmingCenterFactory.deploy(AlgebraLimitFarming.address, AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager, FarmingCenterVault.address);
 
   await FarmingCenter.deployed();
   console.log("FarmingCenter deployed to:", FarmingCenter.address);
 
   await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.address)
-  await AlgebraIncentiveFarming.setFarmingCenterAddress(FarmingCenter.address)
+  await AlgebraLimitFarming.setFarmingCenterAddress(FarmingCenter.address)
   console.log("Updated farming center address in eternal(incentive) farming");
 
   await AlgebraEternalFarming.setIncentiveMaker(incentiveMaker)
-  await AlgebraIncentiveFarming.setIncentiveMaker(incentiveMaker)
+  await AlgebraLimitFarming.setIncentiveMaker(incentiveMaker)
   console.log("Updated incentive maker");
 
   await FarmingCenterVault.setFarmingCenter(FarmingCenter.address)

@@ -1,6 +1,6 @@
 import { LoadFixtureFunction } from '../types'
 import { ethers } from 'hardhat'
-import { AlgebraIncentiveFarming } from '../../typechain'
+import { AlgebraLimitFarming } from '../../typechain'
 import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
 import { expect } from '../shared'
 import { createFixtureLoader, provider } from '../shared/provider'
@@ -19,24 +19,24 @@ describe('unit/Deployment', () => {
   })
 
   it('deploys and has an address', async () => {
-    const farmingFactory = await ethers.getContractFactory('AlgebraIncentiveFarming')
+    const farmingFactory = await ethers.getContractFactory('AlgebraLimitFarming')
     const farming = (await farmingFactory.deploy(
       context.deployer.address,
       context.nft.address,
       2 ** 32,
       2 ** 32
-    )) as AlgebraIncentiveFarming
+    )) as AlgebraLimitFarming
     expect(farming.address).to.be.a.string
   })
 
   it('sets immutable variables', async () => {
-    const farmingFactory = await ethers.getContractFactory('AlgebraIncentiveFarming')
+    const farmingFactory = await ethers.getContractFactory('AlgebraLimitFarming')
     const farming = (await farmingFactory.deploy(
       context.deployer.address,
       context.nft.address,
       2 ** 32,
       2 ** 32
-    )) as AlgebraIncentiveFarming
+    )) as AlgebraLimitFarming
 
     expect(await farming.deployer()).to.equal(context.deployer.address)
     expect(await farming.nonfungiblePositionManager()).to.equal(context.nft.address)
