@@ -31,13 +31,13 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
     }
 
     /// @inheritdoc IAlgebraIncentiveVirtualPool
-    function finish() external override onlyFarming returns (bool wasFinished, uint32 secondsOutside) {
+    function finish() external override onlyFarming returns (bool wasFinished, uint32 activeTime) {
         wasFinished = isFinished;
         if (!wasFinished) {
             isFinished = true;
             _increaseCumulative(desiredEndTimestamp);
         }
-        secondsOutside = timeOutside;
+        activeTime = desiredEndTimestamp - timeOutside - desiredStartTimestamp;
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
