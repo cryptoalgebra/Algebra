@@ -7,8 +7,6 @@ import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
-
-import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
@@ -18,8 +16,6 @@ import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 /// @title Abstract base contract for Algebra farmings
 abstract contract AlgebraFarming is IAlgebraFarming {
-    using SafeCast for int256;
-
     /// @notice Represents a farming incentive
     struct Incentive {
         uint256 totalReward;
