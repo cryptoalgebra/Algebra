@@ -344,12 +344,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (liquidityDelta < 0) {
-        if (toggledBottom) {
-          delete ticks[bottomTick];
-        }
-        if (toggledTop) {
-          delete ticks[topTick];
-        }
+        if (toggledBottom) delete ticks[bottomTick];
+        if (toggledTop) delete ticks[topTick];
       }
 
       int128 globalLiquidityDelta;
