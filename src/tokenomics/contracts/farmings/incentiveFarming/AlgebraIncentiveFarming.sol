@@ -210,19 +210,14 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
 
         if (block.timestamp > key.endTime) {
-            uint256 secondsOutside;
-            {
-                bool wasFinished; // was incentive finished before the call or not
-                (wasFinished, secondsOutside) = virtualPool.finish();
+            (bool wasFinished, uint256 activeTime) = virtualPool.finish();
 
-                if (!wasFinished) {
-                    (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-                    if (address(virtualPool) == _incentive) {
-                        farmingCenter.connectVirtualPool(key.pool, address(0));
-                    }
+            if (!wasFinished) {
+                (address _incentive, ) = _getCurrentVirtualPools(key.pool);
+                if (address(virtualPool) == _incentive) {
+                    farmingCenter.connectVirtualPool(key.pool, address(0));
                 }
             }
-            uint256 activeTime = key.endTime - secondsOutside - key.startTime;
 
             uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(
                 farm.tickLower,

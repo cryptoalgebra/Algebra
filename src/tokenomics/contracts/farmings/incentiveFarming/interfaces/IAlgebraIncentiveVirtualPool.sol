@@ -18,7 +18,7 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
      * @notice Finishes incentive if it wasn't
      * @dev This function is called by a AlgebraIncentiveFarming when someone calls #exitFarming() after the end timestamp
      * @return wasFinished Was incentive finished before this call or not
-     * @return secondsOutside The summary amount of seconds outside active positions
+     * @return activeTime The summary amount of seconds inside active positions
      */
-    function finish() external returns (bool wasFinished, uint32 secondsOutside);
+    function finish() external returns (bool wasFinished, uint32 activeTime);
 }
