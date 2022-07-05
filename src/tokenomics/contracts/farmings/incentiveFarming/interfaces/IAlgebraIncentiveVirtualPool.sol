@@ -14,11 +14,11 @@ interface IAlgebraIncentiveVirtualPool is IAlgebraVirtualPoolBase {
     // Is incentive already finished or not
     function isFinished() external view returns (bool);
 
-    function getFinalStats() external view returns (bool _isFinished, uint32 _timeOutside);
-
     /**
-     * @dev This function is called by a tokenomics when someone calls #exitFarming() after the end timestampю
-     * desiredStartTimestamp will be used as initTimestamp if there were no swaps through the entire incentive
+     * @notice Finishes incentive if it wasn't
+     * @dev This function is called by a AlgebraIncentiveFarming when someone calls #exitFarming() after the end timestamp
+     * @return wasFinished Was incentive finished before this call or not
+     * @return secondsOutside The summary amount of seconds outside active positions
      */
-    function finish() external;
+    function finish() external returns (bool wasFinished, uint32 secondsOutside);
 }
