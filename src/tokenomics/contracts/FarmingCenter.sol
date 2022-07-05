@@ -75,10 +75,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 tokenId,
         bytes calldata
     ) external override returns (bytes4) {
-        require(
-            msg.sender == address(nonfungiblePositionManager),
-            'AlgebraFarming::onERC721Received: not an Algebra nft'
-        );
+        require(msg.sender == address(nonfungiblePositionManager), 'not an Algebra nft');
 
         uint256 id = _nextId;
         Deposit storage newDeposit = deposits[tokenId];
@@ -241,12 +238,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         address to,
         bytes memory data
     ) external override {
-        require(to != address(this), 'AlgebraFarming::withdrawToken: cannot withdraw to farming');
+        require(to != address(this), 'cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
         uint256 l2TokenId = deposit.L2TokenId;
 
         checkAuthorizationForToken(l2TokenId);
-        require(deposit.numberOfFarms == 0, 'AlgebraFarming::withdrawToken: cannot withdraw token while farmd');
+        require(deposit.numberOfFarms == 0, 'cannot withdraw token while farmd');
 
         delete l2Nfts[l2TokenId];
         _burn(l2TokenId);

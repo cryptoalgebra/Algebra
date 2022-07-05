@@ -101,7 +101,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     ) external override {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        require(incentive.totalReward > 0, 'AlgebraFarming::addRewards: non-existent incentive');
+        require(incentive.totalReward > 0, 'non-existent incentive');
 
         (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
 
@@ -141,7 +141,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             address virtualPoolAddress
         ) = _enterFarming(key, tokenId, tokensLocked);
 
-        require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
+        require(farms[tokenId][incentiveId].liquidity == 0, 'token already farmed');
 
         IAlgebraEternalVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
             uint32(block.timestamp),
@@ -174,7 +174,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
+        require(farm.liquidity != 0, 'farm does not exist');
 
         Incentive storage incentive = incentives[incentiveId];
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
@@ -236,7 +236,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity > 0, 'AlgebraFarming::getRewardInfo: farm does not exist');
+        require(farm.liquidity > 0, 'farm does not exist');
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
 
@@ -259,12 +259,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     ) external override onlyFarmingCenter returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        require(incentive.totalReward > 0, 'AlgebraFarming::collect: non-existent incentive');
+        require(incentive.totalReward > 0, 'non-existent incentive');
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity != 0, 'AlgebraFarming::collect: farm does not exist');
+        require(farm.liquidity != 0, 'farm does not exist');
 
         (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = virtualPool.getInnerRewardsGrowth(
             farm.tickLower,

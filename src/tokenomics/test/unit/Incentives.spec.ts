@@ -197,7 +197,7 @@ describe('unit/Incentives', async () => {
           expect(now).to.be.lessThan(params.endTime, 'test setup: after end time')
 
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time too low'
+            'start time too low'
           )
         })
 
@@ -205,14 +205,14 @@ describe('unit/Incentives', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime - 10
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start must be before end time'
+            'start must be before end time'
           )
         })
 
         it('start time is too far into the future', async () => {
           const params = makeTimestamps((await blockTimestamp()) + 2 ** 32 + 1)
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time too far into future'
+            'start time too far into future'
           )
         })
 
@@ -220,7 +220,7 @@ describe('unit/Incentives', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime + 2 ** 32 + 1
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: incentive duration is too long'
+            'incentive duration is too long'
           )
         })
       })
@@ -254,7 +254,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('AlgebraFarming::createIncentive: reward must be positive')
+          ).to.be.revertedWith('reward must be positive')
         })
       })
     })
@@ -320,7 +320,7 @@ describe('unit/Incentives', async () => {
   //     it('block.timestamp <= end time', async () => {
   //       await Time.set(timestamps.endTime - 10)
   //       await expect(subject({})).to.be.revertedWith(
-  //         'AlgebraFarming::endIncentive: cannot end incentive before end time'
+  //         'cannot end incentive before end time'
   //       )
   //     })
   //
@@ -331,7 +331,7 @@ describe('unit/Incentives', async () => {
   //         subject({
   //           startTime: (await blockTimestamp()) + 1000,
   //         })
-  //       ).to.be.revertedWith('AlgebraFarming::endIncentive: no refund available')
+  //       ).to.be.revertedWith('no refund available')
   //     })
   //
   //     it('incentive has farms', async () => {
@@ -349,7 +349,7 @@ describe('unit/Incentives', async () => {
   //       // Adjust the block.timestamp so it is after the claim deadline
   //       await Time.set(timestamps.endTime + 1)
   //       await expect(subject({})).to.be.revertedWith(
-  //         'AlgebraFarming::endIncentive: cannot end incentive while deposits are farmd'
+  //         'cannot end incentive while deposits are farmd'
   //       )
   //     })
   //   })
