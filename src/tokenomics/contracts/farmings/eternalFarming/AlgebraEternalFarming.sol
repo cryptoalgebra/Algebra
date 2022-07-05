@@ -38,7 +38,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     }
 
     /// @inheritdoc IAlgebraEternalFarming
-    function createIncentive(
+    function createEternalFarming(
         IncentiveKey memory key,
         uint256 reward,
         uint256 bonusReward,
@@ -52,7 +52,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
         bytes32 incentiveId;
-        (incentiveId, reward, bonusReward) = _createIncentive(
+        (incentiveId, reward, bonusReward) = _createFarming(
             virtualPool,
             key,
             reward,
@@ -61,7 +61,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             tiers
         );
 
-        emit IncentiveCreated(
+        emit EternalFarming(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,

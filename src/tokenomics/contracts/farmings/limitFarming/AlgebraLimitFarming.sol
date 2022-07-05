@@ -2,19 +2,19 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import './interfaces/IAlgebraIncentiveFarming.sol';
-import './interfaces/IAlgebraIncentiveVirtualPool.sol';
+import './interfaces/IAlgebraLimitFarming.sol';
+import './interfaces/IAlgebraLimitVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 import '../../libraries/RewardMath.sol';
 
-import './IncentiveVirtualPool.sol';
+import './LimitVirtualPool.sol';
 import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 import '../AlgebraFarming.sol';
 
 /// @title Algebra incentive (time-limited) farming
-contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
+contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     using SafeCast for int256;
 
     /// @notice Represents the farm for nft
@@ -23,13 +23,13 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         int24 tickLower;
         int24 tickUpper;
     }
-    /// @inheritdoc IAlgebraIncentiveFarming
+    /// @inheritdoc IAlgebraLimitFarming
     uint256 public immutable override maxIncentiveStartLeadTime;
-    /// @inheritdoc IAlgebraIncentiveFarming
+    /// @inheritdoc IAlgebraLimitFarming
     uint256 public immutable override maxIncentiveDuration;
 
     /// @dev farms[tokenId][incentiveHash] => Farm
-    /// @inheritdoc IAlgebraIncentiveFarming
+    /// @inheritdoc IAlgebraLimitFarming
     mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
     /// @param _deployer pool deployer contract address
@@ -46,8 +46,8 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         maxIncentiveDuration = _maxIncentiveDuration;
     }
 
-    /// @inheritdoc IAlgebraIncentiveFarming
-    function createIncentive(
+    /// @inheritdoc IAlgebraLimitFarming
+    function createLimitFarming(
         IncentiveKey memory key,
         Tiers calldata tiers,
         IncentiveParams memory params
@@ -56,7 +56,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         address activeIncentive = key.pool.activeIncentive();
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
-            _activeEndTimestamp = IAlgebraIncentiveVirtualPool(_incentive).desiredEndTimestamp();
+            _activeEndTimestamp = IAlgebraLimitVirtualPool(_incentive).desiredEndTimestamp();
         }
 
         require(
@@ -76,7 +76,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         );
 
         virtualPool = address(
-            new IncentiveVirtualPool(
+            new LimitVirtualPool(
                 address(farmingCenter),
                 address(this),
                 address(key.pool),
@@ -84,7 +84,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 uint32(key.endTime)
             )
         );
-        (, params.reward, params.bonusReward) = _createIncentive(
+        (, params.reward, params.bonusReward) = _createFarming(
             virtualPool,
             key,
             params.reward,
@@ -93,7 +93,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
             tiers
         );
 
-        emit IncentiveCreated(
+        emit LimitFarming(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
@@ -173,7 +173,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
 
-        IAlgebraIncentiveVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
+        IAlgebraLimitVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
             uint32(block.timestamp),
             tickLower,
             tickUpper,
@@ -207,7 +207,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         uint256 reward;
         uint256 bonusReward;
 
-        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
+        IAlgebraLimitVirtualPool virtualPool = IAlgebraLimitVirtualPool(incentive.virtualPoolAddress);
 
         if (block.timestamp > key.endTime) {
             (bool wasFinished, uint256 activeTime) = virtualPool.finish();
@@ -286,7 +286,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
 
         Incentive storage incentive = incentives[incentiveId];
 
-        IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
+        IAlgebraLimitVirtualPool virtualPool = IAlgebraLimitVirtualPool(incentive.virtualPoolAddress);
         uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
         uint256 activeTime = key.endTime - virtualPool.timeOutside() - key.startTime;

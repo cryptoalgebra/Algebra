@@ -6,7 +6,7 @@ import '../../../interfaces/IAlgebraFarming.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraIncentiveFarming is IAlgebraFarming {
+interface IAlgebraLimitFarming is IAlgebraFarming {
     struct IncentiveParams {
         uint256 reward;
         uint256 bonusReward;
@@ -35,7 +35,7 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
             int24 tickUpper
         );
 
-    function createIncentive(
+    function createLimitFarming(
         IncentiveKey memory key,
         Tiers calldata tiers,
         IncentiveParams memory params
@@ -58,7 +58,7 @@ interface IAlgebraIncentiveFarming is IAlgebraFarming {
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
     /// @param enterStartTime The time when enter becomes possible
-    event IncentiveCreated(
+    event LimitFarming(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
         IAlgebraPool indexed pool,
