@@ -292,7 +292,12 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return Status.NOT_EXIST;
     }
 
-    function virtualPoolAddresses(address pool) public view override returns (address incentiveVP, address eternalVP) {
+    function virtualPoolAddresses(address pool)
+        external
+        view
+        override
+        returns (address incentiveVP, address eternalVP)
+    {
         (incentiveVP, eternalVP) = (
             _virtualPoolAddresses[pool].virtualPool,
             _virtualPoolAddresses[pool].eternalVirtualPool
