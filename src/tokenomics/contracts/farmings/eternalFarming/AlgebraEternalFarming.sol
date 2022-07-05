@@ -12,8 +12,6 @@ import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
 
-import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
-
 import '../AlgebraFarming.sol';
 
 /// @title Algebra eternal (v2-like) farming
