@@ -8,9 +8,8 @@ abstract contract PoolState is IAlgebraPoolState {
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
-    uint16 fee; // The index of the last written timepoint
-    uint16 timepointIndex; // The index of the last written (on swap) timepoint
-    uint16 timepointIndexSwap;
+    uint16 fee; // The current fee in in hundredths of a bip, i.e. 1e-6
+    uint16 timepointIndex; // The index of the last written timepoint
     uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     uint8 communityFeeToken1;
     bool unlocked; // True if the contract is unlocked, otherwise - false
