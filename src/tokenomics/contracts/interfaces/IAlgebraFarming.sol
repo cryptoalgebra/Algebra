@@ -5,12 +5,10 @@ pragma abicoder v2;
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
+import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';
-
-import 'algebra-periphery/contracts/interfaces/IERC721Permit.sol';
-import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
