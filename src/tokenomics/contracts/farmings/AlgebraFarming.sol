@@ -4,18 +4,22 @@ pragma abicoder v2;
 
 import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
+import './IAlgebraVirtualPoolBase.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
+
 import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
+import 'algebra/contracts/libraries/SafeCast.sol';
 
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 
 /// @title Abstract base contract for Algebra farmings
 abstract contract AlgebraFarming is IAlgebraFarming {
+    using SafeCast for int256;
     /// @notice Represents a farming incentive
     struct Incentive {
         uint256 totalReward;
@@ -193,7 +197,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
-            int24 tick,
             address virtualPool
         )
     {
@@ -211,14 +214,20 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'invalid pool for token');
         require(liquidity > 0, 'cannot farm token with 0 liquidity');
-        (, tick, , , , , , ) = pool.globalState();
+        (, int24 tick, , , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         liquidity += (liquidity * multiplier) / LiquidityTier.DENOMINATOR;
 
         virtualPool = incentive.virtualPoolAddress;
 
-        incentive.totalLiquidity += liquidity;
+        IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
+            uint32(block.timestamp),
+            tickLower,
+            tickUpper,
+            int256(liquidity).toInt128(),
+            tick
+        );
     }
 
     function _claimReward(

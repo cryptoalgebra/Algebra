@@ -137,19 +137,10 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
-            int24 currentTickInPool,
             address virtualPoolAddress
         ) = _enterFarming(key, tokenId, tokensLocked);
 
         require(farms[tokenId][incentiveId].liquidity == 0, 'token already farmed');
-
-        IAlgebraEternalVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
-            uint32(block.timestamp),
-            tickLower,
-            tickUpper,
-            int256(liquidity).toInt128(),
-            currentTickInPool
-        );
 
         (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = IAlgebraEternalVirtualPool(virtualPoolAddress)
             .getInnerRewardsGrowth(tickLower, tickUpper);
