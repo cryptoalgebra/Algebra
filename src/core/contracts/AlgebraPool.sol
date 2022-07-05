@@ -56,6 +56,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     _;
   }
 
+  modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
+    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
+    require(topTick > bottomTick, 'TLU');
+    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
+    _;
+  }
+
   constructor() PoolImmutables(msg.sender) {
     globalState.fee = Constants.BASE_FEE;
   }
@@ -86,12 +93,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IDataStorageOperator(dataStorageOperator).timepoints(index);
   }
 
-  function tickValidation(int24 bottomTick, int24 topTick) private pure {
-    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
-    require(topTick > bottomTick, 'TLU');
-    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
-  }
-
   struct Cumulatives {
     int56 tickCumulative;
     uint160 outerSecondPerLiquidity;
@@ -103,14 +104,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     external
     view
     override
+    onlyValidTicks(bottomTick, topTick)
     returns (
       int56 innerTickCumulative,
       uint160 innerSecondsSpentPerLiquidity,
       uint32 innerSecondsSpent
     )
   {
-    tickValidation(bottomTick, topTick);
-
     Cumulatives memory lower;
     {
       TickManager.Tick storage _lower = ticks[bottomTick];
@@ -434,6 +434,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     external
     override
     lock
+    onlyValidTicks(bottomTick, topTick)
     returns (
       uint256 amount0,
       uint256 amount1,
@@ -441,8 +442,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     require(liquidityDesired > 0, 'IL');
-
-    tickValidation(bottomTick, topTick);
     {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
@@ -525,8 +524,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 bottomTick,
     int24 topTick,
     uint128 amount
-  ) external override lock returns (uint256 amount0, uint256 amount1) {
-    tickValidation(bottomTick, topTick);
+  ) external override lock onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     (Position storage position, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(
       msg.sender,
       bottomTick,
