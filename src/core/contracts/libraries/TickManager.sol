@@ -137,11 +137,13 @@ library TickManager {
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
 
-    data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
-    data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+    data.outerSecondsSpent = time - data.outerSecondsSpent;
     data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
     data.outerTickCumulative = tickCumulative - data.outerTickCumulative;
-    data.outerSecondsSpent = time - data.outerSecondsSpent;
-    liquidityDelta = data.liquidityDelta;
+
+    data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+    data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
+
+    return data.liquidityDelta;
   }
 }
