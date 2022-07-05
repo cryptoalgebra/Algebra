@@ -13,7 +13,7 @@ import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
 
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
-import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
+import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
 import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
@@ -28,7 +28,7 @@ interface IFarmingCenter is
 {
     struct VirtualPoolAddresses {
         address eternalVirtualPool;
-        address virtualPool;
+        address limitVirtualPool;
     }
 
     function virtualPoolAddresses(address) external view returns (address, address);
@@ -36,7 +36,7 @@ interface IFarmingCenter is
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    function farming() external view returns (IAlgebraIncentiveFarming);
+    function limitFarming() external view returns (IAlgebraLimitFarming);
 
     function eternalFarming() external view returns (IAlgebraEternalFarming);
 
@@ -54,9 +54,9 @@ interface IFarmingCenter is
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
     /// @return L2TokenId The nft layer2 id,
-    /// numberOfFarms The number of farms,
-    /// inLimitFarming The parameter showing if the token is in the limit farm,
-    /// owner The owner of deposit
+    /// @return numberOfFarms The number of farms,
+    /// @return inLimitFarming The parameter showing if the token is in the limit farm,
+    /// @return owner The owner of deposit
     function deposits(uint256 tokenId)
         external
         view

@@ -134,7 +134,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         }
     }
 
-    function _createIncentive(
+    function _createFarming(
         address virtualPool,
         IncentiveKey memory key,
         uint256 reward,

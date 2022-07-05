@@ -3,19 +3,19 @@ pragma solidity =0.7.6;
 
 import 'algebra/contracts/libraries/TickManager.sol';
 
-import './interfaces/IAlgebraIncentiveVirtualPool.sol';
+import './interfaces/IAlgebraLimitVirtualPool.sol';
 
 import '../AlgebraVirtualPoolBase.sol';
 
-contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtualPool {
+contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
     using TickManager for mapping(int24 => TickManager.Tick);
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraLimitVirtualPool
     bool public override isFinished;
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraLimitVirtualPool
     uint32 public immutable override desiredEndTimestamp;
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraLimitVirtualPool
     uint32 public immutable override desiredStartTimestamp;
 
     constructor(
@@ -30,7 +30,7 @@ contract IncentiveVirtualPool is AlgebraVirtualPoolBase, IAlgebraIncentiveVirtua
         prevTimestamp = _desiredStartTimestamp;
     }
 
-    /// @inheritdoc IAlgebraIncentiveVirtualPool
+    /// @inheritdoc IAlgebraLimitVirtualPool
     function finish() external override onlyFarming returns (bool wasFinished, uint32 activeTime) {
         wasFinished = isFinished;
         if (!wasFinished) {
