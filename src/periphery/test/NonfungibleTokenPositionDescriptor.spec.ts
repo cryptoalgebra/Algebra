@@ -135,9 +135,9 @@ describe('NonfungibleTokenPositionDescriptor', () => {
       })
 
       const metadata = extractJSONFromURI(await nft.tokenURI(1))
-      expect(metadata.name).to.match(/(\sETH\/TEST|TEST\/ETH)/)
-      expect(metadata.description).to.match(/(TEST-ETH|\sETH-TEST)/)
-      expect(metadata.description).to.match(/(\nETH\sAddress)/)
+      expect(metadata.name).to.match(/(\sMATIC\/TEST|TEST\/MATIC)/)
+      expect(metadata.description).to.match(/(TEST-MATIC|\sMATIC-TEST)/)
+      expect(metadata.description).to.match(/(\nMATIC\sAddress)/)
     })
 
     it('displays returned token symbols when neither token is WNativeToken ', async () => {
