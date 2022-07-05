@@ -17,13 +17,13 @@ import _ from 'lodash'
 import {
   TestERC20,
   INonfungiblePositionManager,
-  AlgebraIncentiveFarming,
+  AlgebraLimitFarming,
   AlgebraEternalFarming,
   IAlgebraPool,
   TestIncentiveId,
   FarmingCenter
 } from '../../typechain'
-import abi from '../../artifacts/contracts/farmings/incentiveFarming/IncentiveVirtualPool.sol/IncentiveVirtualPool.json';
+import abi from '../../artifacts/contracts/farmings/limitFarming/LimitVirtualPool.sol/LimitVirtualPool.json';
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition, EternalAlgebraFixtureType } from '../shared/fixtures'
@@ -31,7 +31,7 @@ import { ISwapRouter } from 'algebra-periphery/typechain'
 import { ethers } from 'hardhat'
 import { ContractParams } from '../../types/contractParams'
 import { TestContext } from '../types'
-import { AlgebraIncentiveFarmingInterface } from '../../typechain/AlgebraIncentiveFarming'
+import { AlgebraLimitFarmingInterface } from '../../typechain/AlgebraLimitFarming'
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
@@ -45,8 +45,8 @@ const ETERNAL_FARMING = false;
 export class HelperCommands {
   actors: ActorFixture
   provider: MockProvider
-  farming: AlgebraIncentiveFarming | AlgebraEternalFarming
-  incentiveFarming: AlgebraIncentiveFarming
+  farming: AlgebraLimitFarming | AlgebraEternalFarming
+  incentiveFarming: AlgebraLimitFarming
   nft: INonfungiblePositionManager
   router: ISwapRouter
   pool: IAlgebraPool
@@ -70,8 +70,8 @@ export class HelperCommands {
     farmingCenter
   }: {
     provider: MockProvider
-    farming: AlgebraIncentiveFarming | AlgebraEternalFarming
-    incentiveFarming: AlgebraIncentiveFarming
+    farming: AlgebraLimitFarming | AlgebraEternalFarming
+    incentiveFarming: AlgebraLimitFarming
     farmingCenter: FarmingCenter
     nft: INonfungiblePositionManager
     router: ISwapRouter
@@ -137,7 +137,7 @@ export class HelperCommands {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
 
-      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createIncentive(
+      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
         {
           pool: params.poolAddress,
           rewardToken: params.rewardToken.address,
@@ -166,7 +166,7 @@ export class HelperCommands {
       await params.rewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.bonusReward)
 
-      txResult = await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).createIncentive(
+      txResult = await (this.incentiveFarming as AlgebraLimitFarming).connect(incentiveCreator).createLimitFarming(
         {
           pool: params.poolAddress,
           rewardToken: params.rewardToken.address,
@@ -197,7 +197,7 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = await await (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      virtualPoolAddress = await await (await (this.incentiveFarming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
 
     }
     
@@ -236,7 +236,7 @@ export class HelperCommands {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
 
-      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createIncentive(
+      txResult = await (this.farming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
         {
           pool: params.poolAddress,
           rewardToken: params.rewardToken.address,
@@ -266,13 +266,13 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      virtualPoolAddress = (await (this.incentiveFarming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
       
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.incentiveFarming.address, params.bonusReward)
 
-      txResult = await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).createIncentive(
+      txResult = await (this.incentiveFarming as AlgebraLimitFarming).connect(incentiveCreator).createLimitFarming(
         {
           pool: params.poolAddress,
           rewardToken: params.rewardToken.address,
@@ -302,7 +302,7 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = (await (this.incentiveFarming as AlgebraIncentiveFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      virtualPoolAddress = (await (this.incentiveFarming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
       
     }
     
