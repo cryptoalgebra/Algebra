@@ -256,6 +256,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
                 -int256(farm.liquidity).toInt128(),
                 tick
             );
+            incentive.totalLiquidity -= farm.liquidity;
         }
 
         delete farms[tokenId][incentiveId];
