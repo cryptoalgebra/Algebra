@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import '../farmings/incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
+import '../interfaces/IAlgebraFarming.sol';
 
 /// @title Functions for liquidity attraction programs with liquidity multipliers
 /// @notice Allows computing liquidity multiplier based on locked tokens amount
@@ -12,7 +12,7 @@ library LiquidityTier {
     /// @param tokenAmount The amount of locked tokens
     /// @param tiers The structure showing the dependence of the multiplier on the amount of locked tokens
     /// @return multiplier The value represent persent of liquidity in ten thoushands(1 = 0.01%)
-    function getLiquidityMultiplier(uint256 tokenAmount, IAlgebraIncentiveFarming.Tiers memory tiers)
+    function getLiquidityMultiplier(uint256 tokenAmount, IAlgebraFarming.Tiers memory tiers)
         internal
         pure
         returns (uint32 multiplier)
