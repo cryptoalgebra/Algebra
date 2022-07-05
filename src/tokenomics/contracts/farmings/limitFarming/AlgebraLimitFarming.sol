@@ -156,24 +156,15 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     ) external override onlyFarmingCenter {
         require(block.timestamp < key.startTime, 'incentive has already started');
 
-        (
-            bytes32 incentiveId,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            int24 currentTickInPool,
-            address virtualPoolAddress
-        ) = _enterFarming(key, tokenId, tokensLocked);
+        (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, ) = _enterFarming(
+            key,
+            tokenId,
+            tokensLocked
+        );
 
         require(farms[tokenId][incentiveId].liquidity == 0, 'token already farmed');
 
-        IAlgebraLimitVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
-            uint32(block.timestamp),
-            tickLower,
-            tickUpper,
-            int256(liquidity).toInt128(),
-            currentTickInPool
-        );
+        incentives[incentiveId].totalLiquidity += liquidity;
 
         farms[tokenId][incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
 
