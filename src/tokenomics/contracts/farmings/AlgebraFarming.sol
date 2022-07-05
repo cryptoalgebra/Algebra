@@ -200,7 +200,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
-        require(incentive.totalReward > 0, 'AlgebraFarming::enterFarming: non-existent incentive');
+        require(incentive.totalReward > 0, 'non-existent incentive');
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -209,8 +209,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             tokenId
         );
 
-        require(pool == key.pool, 'AlgebraFarming::enterFarming: invalid pool for token');
-        require(liquidity > 0, 'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity');
+        require(pool == key.pool, 'invalid pool for token');
+        require(liquidity > 0, 'cannot farm token with 0 liquidity');
         (, tick, , , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);

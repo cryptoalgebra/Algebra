@@ -210,7 +210,7 @@ describe('unit/FarmingCenter', () => {
         await subject(tokenId, lpUser0)
         await expect(subject(tokenId, lpUser0)).to.be.revertedWith('token already farmed')
         await subjectEternal(tokenId, lpUser0)
-        await expect(subjectEternal(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: token already farmed')
+        await expect(subjectEternal(tokenId, lpUser0)).to.be.revertedWith('token already farmed')
       })
 
       it('you are not the owner of the deposit', async () => {
@@ -262,12 +262,12 @@ describe('unit/FarmingCenter', () => {
           })
 
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity'
+          'cannot farm token with 0 liquidity'
         )
 
         
         await expect(subjectEternal(tokenId2, lpUser0)).to.be.revertedWith(
-          'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity'
+          'cannot farm token with 0 liquidity'
         )
       })
 
@@ -305,7 +305,7 @@ describe('unit/FarmingCenter', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
+        ).to.be.revertedWith('invalid pool for token')
 
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
@@ -320,7 +320,7 @@ describe('unit/FarmingCenter', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
+        ).to.be.revertedWith('invalid pool for token')
       })
 
       it('incentive key does not exist', async () => {
@@ -340,7 +340,7 @@ describe('unit/FarmingCenter', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
+        ).to.be.revertedWith('non-existent incentive')
 
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
@@ -356,7 +356,7 @@ describe('unit/FarmingCenter', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
+        ).to.be.revertedWith('non-existent incentive')
       })
     })
   })
@@ -546,11 +546,11 @@ describe('unit/FarmingCenter', () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
       await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'AlgebraFarming::getRewardInfo: farm does not exist'
+        'farm does not exist'
       )
 
       await expect(context.incentiveFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'AlgebraFarming::getRewardInfo: farm does not exist'
+        'farm does not exist'
       )
     })
   })
@@ -904,7 +904,7 @@ describe('unit/FarmingCenter', () => {
           },
           tokenId,
           LIMIT_FARMING
-        )).to.revertedWith('AlgebraFarming::exitFarming: cannot exitFarming before end time')
+        )).to.revertedWith('cannot exitFarming before end time')
       })
     })
 

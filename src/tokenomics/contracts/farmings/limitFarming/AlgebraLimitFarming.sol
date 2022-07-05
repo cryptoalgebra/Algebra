@@ -61,19 +61,13 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
         require(
             _activeEndTimestamp < block.timestamp && (activeIncentive != _incentive || _incentive == address(0)),
-            'AlgebraFarming::createIncentive: already has active incentive'
+            'already has active incentive'
         );
-        require(params.reward > 0, 'AlgebraFarming::createIncentive: reward must be positive');
-        require(block.timestamp <= key.startTime, 'AlgebraFarming::createIncentive: start time too low');
-        require(
-            key.startTime - block.timestamp <= maxIncentiveStartLeadTime,
-            'AlgebraFarming::createIncentive: start time too far into future'
-        );
-        require(key.startTime < key.endTime, 'AlgebraFarming::createIncentive: start must be before end time');
-        require(
-            key.endTime - key.startTime <= maxIncentiveDuration,
-            'AlgebraFarming::createIncentive: incentive duration is too long'
-        );
+        require(params.reward > 0, 'reward must be positive');
+        require(block.timestamp <= key.startTime, 'start time too low');
+        require(key.startTime - block.timestamp <= maxIncentiveStartLeadTime, 'start time too far into future');
+        require(key.startTime < key.endTime, 'start must be before end time');
+        require(key.endTime - key.startTime <= maxIncentiveDuration, 'incentive duration is too long');
 
         virtualPool = address(
             new LimitVirtualPool(
@@ -112,7 +106,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 reward,
         uint256 bonusReward
     ) external onlyIncentiveMaker {
-        require(block.timestamp < key.endTime, 'AlgebraFarming::addRewards: cannot add rewards after endTime');
+        require(block.timestamp < key.endTime, 'cannot add rewards after endTime');
 
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
@@ -128,7 +122,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 reward,
         uint256 bonusReward
     ) external override onlyIncentiveMaker {
-        require(block.timestamp < key.endTime, 'AlgebraFarming::decreaseRewardAmount: incentive finished');
+        require(block.timestamp < key.endTime, 'incentive finished');
 
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
@@ -160,7 +154,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 tokenId,
         uint256 tokensLocked
     ) external override onlyFarmingCenter {
-        require(block.timestamp < key.startTime, 'AlgebraFarming::enterFarming: incentive has already started');
+        require(block.timestamp < key.startTime, 'incentive has already started');
 
         (
             bytes32 incentiveId,
@@ -171,7 +165,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             address virtualPoolAddress
         ) = _enterFarming(key, tokenId, tokensLocked);
 
-        require(farms[tokenId][incentiveId].liquidity == 0, 'AlgebraFarming::enterFarming: token already farmed');
+        require(farms[tokenId][incentiveId].liquidity == 0, 'token already farmed');
 
         IAlgebraLimitVirtualPool(virtualPoolAddress).applyLiquidityDeltaToPosition(
             uint32(block.timestamp),
@@ -195,14 +189,11 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive
-        require(
-            block.timestamp > key.endTime || block.timestamp < key.startTime,
-            'AlgebraFarming::exitFarming: cannot exitFarming before end time'
-        );
+        require(block.timestamp > key.endTime || block.timestamp < key.startTime, 'cannot exitFarming before end time');
 
         Farm memory farm = farms[tokenId][incentiveId];
 
-        require(farm.liquidity != 0, 'AlgebraFarming::exitFarming: farm does not exist');
+        require(farm.liquidity != 0, 'farm does not exist');
 
         uint256 reward;
         uint256 bonusReward;
@@ -282,7 +273,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity > 0, 'AlgebraFarming::getRewardInfo: farm does not exist');
+        require(farm.liquidity > 0, 'farm does not exist');
 
         Incentive storage incentive = incentives[incentiveId];
 

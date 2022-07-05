@@ -299,7 +299,7 @@ describe('unit/Deposits', () => {
       it('reverts when called by contract other than Algebra nonfungiblePositionManager', async () => {
         await expect(
           context.farmingCenter.connect(lpUser0).onERC721Received(incentiveCreator.address, lpUser0.address, 1, data)
-        ).to.be.revertedWith('AlgebraFarming::onERC721Received: not an Algebra nft')
+        ).to.be.revertedWith('not an Algebra nft')
       })
 
       it('reverts when staking on invalid incentive', async () => {
@@ -322,7 +322,7 @@ describe('unit/Deposits', () => {
               tokenId,
               invalidData
             )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
+        ).to.be.revertedWith('non-existent incentive')
       })
     })
   })
@@ -395,7 +395,7 @@ describe('unit/Deposits', () => {
         )
 
         await expect(subject(tokenId, lpUser0.address)).to.revertedWith(
-          'AlgebraFarming::withdrawToken: cannot withdraw token while farmd'
+          'cannot withdraw token while farmd'
         )
       })
     })

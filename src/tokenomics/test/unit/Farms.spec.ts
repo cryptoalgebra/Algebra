@@ -205,7 +205,7 @@ describe('unit/Farms', () => {
           })
 
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'AlgebraFarming::enterFarming: cannot farm token with 0 liquidity'
+          'cannot farm token with 0 liquidity'
         )
       })
 
@@ -239,7 +239,7 @@ describe('unit/Farms', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: invalid pool for token')
+        ).to.be.revertedWith('invalid pool for token')
       })
 
       it('incentive key does not exist', async () => {
@@ -259,12 +259,12 @@ describe('unit/Farms', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('AlgebraFarming::enterFarming: non-existent incentive')
+        ).to.be.revertedWith('non-existent incentive')
       })
 
       it('is past the end time', async () => {
         await Time.set(timestamps.endTime + 100)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: incentive has already started')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('incentive has already started')
       })
 
       it('is after the start time', async () => {
@@ -272,7 +272,7 @@ describe('unit/Farms', () => {
           throw new Error('no good')
         }
         await Time.set(timestamps.startTime + 2)
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('AlgebraFarming::enterFarming: incentive has already started')
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('incentive has already started')
       })
     })
   })
@@ -418,7 +418,7 @@ describe('unit/Farms', () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
       await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'AlgebraFarming::getRewardInfo: farm does not exist'
+        'farm does not exist'
       )
     })
   })
@@ -752,7 +752,7 @@ describe('unit/Farms', () => {
       it('farm has already been exitFarming', async () => {
         // await Time.setAndMine(timestamps.endTime + 1)
         await subject(lpUser0)
-        await expect(subject(lpUser0)).to.revertedWith('AlgebraFarming::exitFarming: farm does not exist')
+        await expect(subject(lpUser0)).to.revertedWith('farm does not exist')
       })
     })
   })
