@@ -289,8 +289,7 @@ contract AlgebraIncentiveFarming is AlgebraFarming, IAlgebraIncentiveFarming {
         IAlgebraIncentiveVirtualPool virtualPool = IAlgebraIncentiveVirtualPool(incentive.virtualPoolAddress);
         uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
-        uint256 timeOutside = virtualPool.timeOutside();
-        uint256 activeTime = key.endTime - timeOutside - key.startTime;
+        uint256 activeTime = key.endTime - virtualPool.timeOutside() - key.startTime;
 
         uint224 _totalLiquidity = activeTime > 0 ? 0 : incentive.totalLiquidity; // used only if no one was active in incentive
         reward = RewardMath.computeRewardAmount(
