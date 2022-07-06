@@ -259,6 +259,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
   }
 
+  struct UpdatePositionCache {
+    uint160 price; // The square root of the current price in Q64.96 format
+    int24 tick; // The current tick
+    uint16 timepointIndex; // The index of the last written timepoint
+  }
+
   /**
    * @dev Updates position's ticks and its fees
    * @return position The Position object to operate with
@@ -278,7 +284,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       int256 amount1
     )
   {
-    GlobalState memory _globalState = globalState;
+    UpdatePositionCache memory cache = UpdatePositionCache(globalState.price, globalState.tick, globalState.timepointIndex);
 
     position = getOrCreatePosition(owner, bottomTick, topTick);
 
@@ -288,18 +294,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool toggledTop;
     if (liquidityDelta != 0) {
       uint32 time = _blockTimestamp();
-      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(
-        time,
-        0,
-        _globalState.tick,
-        _globalState.timepointIndex,
-        liquidity
-      );
+      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
 
       if (
         ticks.update(
           bottomTick,
-          _globalState.tick,
+          cache.tick,
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
@@ -316,7 +316,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (
         ticks.update(
           topTick,
-          _globalState.tick,
+          cache.tick,
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
@@ -334,7 +334,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
       bottomTick,
       topTick,
-      _globalState.tick,
+      cache.tick,
       _totalFeeGrowth0Token,
       _totalFeeGrowth1Token
     );
@@ -349,18 +349,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
 
       int128 globalLiquidityDelta;
-      (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, _globalState.tick, _globalState.price);
+      (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        uint16 newTimepointIndex = _writeTimepoint(
-          _globalState.timepointIndex,
-          _blockTimestamp(),
-          _globalState.tick,
-          liquidityBefore,
-          volumePerLiquidityInBlock
-        );
-        if (_globalState.timepointIndex != newTimepointIndex) {
-          globalState.fee = _getNewFee(_blockTimestamp(), _globalState.tick, newTimepointIndex, liquidityBefore);
+        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore, volumePerLiquidityInBlock);
+        if (cache.timepointIndex != newTimepointIndex) {
+          globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
           globalState.timepointIndex = newTimepointIndex;
           volumePerLiquidityInBlock = 0;
         }
