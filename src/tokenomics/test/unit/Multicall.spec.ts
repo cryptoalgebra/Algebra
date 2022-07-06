@@ -84,9 +84,9 @@ describe('unit/Multicall', () => {
         tokenAmountForTier1: 0,
         tokenAmountForTier2: 0,
         tokenAmountForTier3: 0,
-        tier1multiplier: 0,
-        tier2multiplier: 0,
-        tier3multiplier: 0,
+        tier1Multiplier: 10000,
+        tier2Multiplier: 10000,
+        tier3Multiplier: 10000,
       },
       {
         reward: totalReward,

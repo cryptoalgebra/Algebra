@@ -154,9 +154,9 @@ export class HelperCommands {
           tokenAmountForTier1: 0,
           tokenAmountForTier2: 0,
           tokenAmountForTier3: 0,
-          tier1multiplier: 0,
-          tier2multiplier: 0,
-          tier3multiplier: 0,
+          tier1Multiplier: 10000,
+          tier2Multiplier: 10000,
+          tier3Multiplier: 10000,
         },
         
       )
@@ -178,9 +178,9 @@ export class HelperCommands {
           tokenAmountForTier1: 0,
           tokenAmountForTier2: 0,
           tokenAmountForTier3: 0,
-          tier1multiplier: 0,
-          tier2multiplier: 0,
-          tier3multiplier: 0,
+          tier1Multiplier: 10000,
+          tier2Multiplier: 10000,
+          tier3Multiplier: 10000,
         },
         {
           reward: params.totalReward,
@@ -253,9 +253,9 @@ export class HelperCommands {
           tokenAmountForTier1: 0,
           tokenAmountForTier2: 0,
           tokenAmountForTier3: 0,
-          tier1multiplier: 0,
-          tier2multiplier: 0,
-          tier3multiplier: 0,
+          tier1Multiplier: 10000,
+          tier2Multiplier: 10000,
+          tier3Multiplier: 10000,
         },
       )
        // @ts-ignore
@@ -284,9 +284,9 @@ export class HelperCommands {
           tokenAmountForTier1: params.algbAmountForTier1 || 1000,
           tokenAmountForTier2: params.algbAmountForTier2 || 5000,
           tokenAmountForTier3: params.algbAmountForTier3 || 10000,
-          tier1multiplier: params.tier1multiplier || 1000,
-          tier2multiplier: params.tier2multiplier || 5000,
-          tier3multiplier: params.tier3multiplier || 10000,
+          tier1Multiplier: params.tier1Multiplier || 1000,
+          tier2Multiplier: params.tier2Multiplier || 5000,
+          tier3Multiplier: params.tier3Multiplier || 10000,
         },
         {
           reward: params.totalReward,

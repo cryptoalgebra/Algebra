@@ -1706,9 +1706,9 @@ describe('AlgebraFarming', async ()=>{
 				poolAddress: context.pool01,
 				totalReward,
 				bonusReward,
-				tier1multiplier: BN(1000),
-				tier2multiplier: BN(2000),
-				tier3multiplier: BN(5000),
+				tier1Multiplier: BN(10000),
+				tier2Multiplier: BN(12000),
+				tier3Multiplier: BN(15000),
 				algbAmountForTier1: BN(1000),
 				algbAmountForTier2: BN(2000),
 				algbAmountForTier3: BN(4000)

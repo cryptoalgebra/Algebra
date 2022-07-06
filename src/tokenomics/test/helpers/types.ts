@@ -19,9 +19,9 @@ export module HelperTypes {
       algbAmountForTier1?: BigNumber
       algbAmountForTier2?: BigNumber
       algbAmountForTier3?: BigNumber
-      tier1multiplier?: BigNumber
-      tier2multiplier?: BigNumber
-      tier3multiplier?: BigNumber
+      tier1Multiplier?: BigNumber
+      tier2Multiplier?: BigNumber
+      tier3Multiplier?: BigNumber
       multiplierToken?: string
 
       eternal? : boolean
