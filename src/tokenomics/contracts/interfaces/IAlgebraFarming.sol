@@ -32,9 +32,9 @@ interface IAlgebraFarming is IIncentiveKey {
         uint256 tokenAmountForTier2;
         uint256 tokenAmountForTier3;
         // 1 = 0.01%
-        uint32 tier1multiplier;
-        uint32 tier2multiplier;
-        uint32 tier3multiplier;
+        uint32 tier1Multiplier;
+        uint32 tier2Multiplier;
+        uint32 tier3Multiplier;
     }
 
     /// @notice Represents a farming incentive

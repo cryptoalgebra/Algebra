@@ -6,7 +6,8 @@ import '../interfaces/IAlgebraFarming.sol';
 /// @title Functions for liquidity attraction programs with liquidity multipliers
 /// @notice Allows computing liquidity multiplier based on locked tokens amount
 library LiquidityTier {
-    uint128 constant DENOMINATOR = 10000;
+    uint32 constant DENOMINATOR = 10000;
+    uint32 constant MAX_MULTIPLIER = 50000;
 
     /// @notice Get the multiplier by tokens locked amount
     /// @param tokenAmount The amount of locked tokens
@@ -18,11 +19,13 @@ library LiquidityTier {
         returns (uint32 multiplier)
     {
         if (tokenAmount >= tiers.tokenAmountForTier3) {
-            multiplier = tiers.tier3multiplier;
+            return tiers.tier3Multiplier;
         } else if (tokenAmount >= tiers.tokenAmountForTier2) {
-            multiplier = tiers.tier2multiplier;
+            return tiers.tier2Multiplier;
         } else if (tokenAmount >= tiers.tokenAmountForTier1) {
-            multiplier = tiers.tier1multiplier;
+            return tiers.tier1Multiplier;
+        } else {
+            return DENOMINATOR;
         }
     }
 }
