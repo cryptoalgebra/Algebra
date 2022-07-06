@@ -169,24 +169,41 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         newIncentive.multiplierToken = multiplierToken;
     }
 
-    function _detachIncentive(IncentiveKey memory key, address _incentive) internal {
-        require(_incentive != address(0), 'Farming do not exist');
+    function _detachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
+        require(currentVirtualPool != address(0), 'Farming do not exist');
 
-        require(incentives[IncentiveId.compute(key)].virtualPoolAddress == _incentive, 'Another farming is active');
+        require(
+            incentives[IncentiveId.compute(key)].virtualPoolAddress == currentVirtualPool,
+            'Another farming is active'
+        );
         _connectPoolToVirtualPool(key.pool, address(0));
 
-        emit IncentiveDetached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
+        emit IncentiveDetached(
+            key.rewardToken,
+            key.bonusRewardToken,
+            key.pool,
+            currentVirtualPool,
+            key.startTime,
+            key.endTime
+        );
     }
 
-    function _attachIncentive(IncentiveKey memory key, address _incentive) internal {
-        require(_incentive == address(0), 'Farming already exists');
+    function _attachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
+        require(currentVirtualPool == address(0), 'Farming already exists');
 
         address virtualPoolAddress = incentives[IncentiveId.compute(key)].virtualPoolAddress;
         require(virtualPoolAddress != address(0), 'Invalid farming');
 
         _connectPoolToVirtualPool(key.pool, virtualPoolAddress);
 
-        emit IncentiveAttached(key.rewardToken, key.bonusRewardToken, key.pool, _incentive, key.startTime, key.endTime);
+        emit IncentiveAttached(
+            key.rewardToken,
+            key.bonusRewardToken,
+            key.pool,
+            currentVirtualPool,
+            key.startTime,
+            key.endTime
+        );
     }
 
     function _enterFarming(
