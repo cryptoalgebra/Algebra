@@ -675,7 +675,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint128 liquidityStart; // The liquidity at the start of a swap
     uint128 volumePerLiquidityInBlock;
     int56 tickCumulative; // The global tickCumulative at the moment
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
@@ -684,11 +683,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    IAlgebraVirtualPool.Status incentiveStatus; // True if there is an active incentive at the moment
+    IAlgebraVirtualPool.Status incentiveStatus; // If there is an active incentive at the moment
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 startTick; // The tick at the start of a swap
-    uint16 timepointIndex; // The idex of last timepoint
+    uint16 timepointIndex; // The index of last written timepoint
   }
 
   struct PriceMovementCache {
@@ -736,7 +735,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       (currentLiquidity, cache.volumePerLiquidityInBlock) = (liquidity, volumePerLiquidityInBlock);
-      cache.liquidityStart = currentLiquidity;
 
       if (zeroToOne) {
         require(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO, 'SPL');
@@ -767,7 +765,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.timepointIndex,
         blockTimestamp,
         cache.startTick,
-        cache.liquidityStart,
+        currentLiquidity,
         cache.volumePerLiquidityInBlock
       );
 
@@ -826,7 +824,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               0,
               cache.startTick,
               cache.timepointIndex,
-              cache.liquidityStart
+              currentLiquidity // currentLiquidity can be changed only after computedLatestTimepoint
             );
             cache.computedLatestTimepoint = true;
             cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
