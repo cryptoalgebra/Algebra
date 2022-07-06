@@ -85,4 +85,14 @@ contract DataStorageTest {
     timepoints.getTimepoints(_time, secondsAgos, _tick, _index, _liquidity);
     return gasBefore - gasleft();
   }
+
+  function volatilityOnRange(
+    uint32 dt,
+    int24 tick0,
+    int24 tick1,
+    int24 avgTick0,
+    int24 avgTick1
+  ) external pure returns (uint256) {
+    return DataStorage._volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
+  }
 }
