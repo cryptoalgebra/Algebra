@@ -673,7 +673,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     globalState.unlocked = true; // release after lock in _calculateSwapAndLock
   }
 
-  struct SwapCache {
+  struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
     uint128 liquidityStart; // The liquidity at the start of a swap
     uint128 volumePerLiquidityInBlock;
@@ -691,8 +691,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint16 timepointIndex; // The idex of last timepoint
   }
 
-  struct StepComputations {
-    uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start
+  struct PriceMovementCache {
+    uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
     int24 nextTick; // The tick till the current step goes
     bool initialized; // True if the _nextTick is initialized
     uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick
@@ -718,7 +718,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     uint32 blockTimestamp;
-    SwapCache memory cache;
+    SwapCalculationCache memory cache;
     {
       // load from one storage slot
       currentPrice = globalState.price;
@@ -779,7 +779,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
     }
 
-    StepComputations memory step;
+    PriceMovementCache memory step;
     // swap until there is remaining input or output tokens or we reach the price limit
     while (true) {
       step.stepSqrtPrice = currentPrice;
