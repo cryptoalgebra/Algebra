@@ -58,7 +58,7 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
     /// @param enterStartTime The time when enter becomes possible
-    event LimitFarming(
+    event LimitFarmingCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
         IAlgebraPool indexed pool,

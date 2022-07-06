@@ -61,7 +61,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             tiers
         );
 
-        emit EternalFarming(
+        emit EternalFarmingCreated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
