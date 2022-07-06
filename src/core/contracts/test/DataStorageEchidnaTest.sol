@@ -84,6 +84,17 @@ contract DataStorageEchidnaTest {
     return success;
   }
 
+  function checkVolatilityOnRangeNotOverflowUint88(
+    uint32 dt,
+    int24 tick0,
+    int24 tick1,
+    int24 avgTick0,
+    int24 avgTick1
+  ) external view {
+    uint256 res = dataStorage.volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
+    assert(res <= type(uint88).max);
+  }
+
   function checkTwoAdjacentTimepointsTickCumulativeModTimeElapsedAlways0(uint16 index) external view {
     // check that the timepoints are initialized, and that the index is not the oldest timepoint
     require(index < 65535 && index != (dataStorage.index() + 1) % 65535);

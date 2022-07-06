@@ -21,7 +21,7 @@ library DataStorage {
     uint144 volumePerLiquidityCumulative; // the gmean(volumes)/liquidity accumulator
   }
 
-  /// @notice Calculates between two sequential timepoints timepoints with resampling to 1 sec frequency
+  /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
   /// @param dt Timedelta between timepoints, must be within uint32 range
   /// @param tick0 The tick at the left timepoint, must be within int24 range
   /// @param tick1 The tick at the right timepoint, must be within int24 range
@@ -35,7 +35,7 @@ library DataStorage {
     int256 tick1,
     int256 avgTick0,
     int256 avgTick1
-  ) private pure returns (uint256 volatility) {
+  ) internal pure returns (uint256 volatility) {
     // On the time interval from the previous timepoint to the current
     // we can represent tick and average tick change as two straight lines:
     // tick = k*t + b, where k and b are some constants
@@ -48,9 +48,9 @@ library DataStorage {
     // so result will be: (k-p)^2 * sumOfSquares + 2(k-p)(b-q)*sumOfSequence + dt*(b-q)^2
     int256 K = (tick1 - tick0) - (avgTick1 - avgTick0); // (k - p)*dt
     int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
-    int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)) / 6;
-    int256 sumOfSequence = (dt * (dt + 1)) / 2;
-    volatility = uint256((K**2 * sumOfSquares + 2 * B * K * sumOfSequence + (dt) * B**2) / dt**2);
+    int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)); // sumOfSquares * 6
+    int256 sumOfSequence = (dt * (dt + 1)); // sumOfSequence * 2
+    volatility = uint256((K**2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * (dt) * B**2) / (6 * dt**2));
   }
 
   /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
