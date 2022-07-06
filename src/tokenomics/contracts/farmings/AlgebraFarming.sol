@@ -13,6 +13,7 @@ import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import 'algebra/contracts/libraries/SafeCast.sol';
+import 'algebra/contracts/libraries/LowGasSafeMath.sol';
 
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
@@ -20,6 +21,8 @@ import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
 /// @title Abstract base contract for Algebra farmings
 abstract contract AlgebraFarming is IAlgebraFarming {
     using SafeCast for int256;
+    using LowGasSafeMath for uint256;
+
     /// @notice Represents a farming incentive
     struct Incentive {
         uint256 totalReward;
@@ -126,7 +129,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
             require((receivedReward = rewardToken.balanceOf(address(this))) > balanceBefore);
             receivedReward -= balanceBefore;
-            incentive.totalReward += receivedReward;
+            incentive.totalReward = incentive.totalReward.add(receivedReward);
         }
         if (bonusReward > 0) {
             IERC20Minimal bonusRewardToken = key.bonusRewardToken;
@@ -134,7 +137,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
             require((receivedBonusReward = bonusRewardToken.balanceOf(address(this))) > balanceBefore);
             receivedBonusReward -= balanceBefore;
-            incentive.bonusReward += receivedBonusReward;
+            incentive.bonusReward = incentive.bonusReward.add(receivedBonusReward);
         }
     }
 
