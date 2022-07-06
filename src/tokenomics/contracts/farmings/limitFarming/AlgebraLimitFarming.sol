@@ -122,10 +122,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 rewardAmount,
         uint256 bonusRewardAmount
     ) external override onlyIncentiveMaker {
-        require(block.timestamp < key.endTime, 'incentive finished');
-
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
+
+        require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
         uint256 _totalReward = incentive.totalReward;
         if (rewardAmount > _totalReward) rewardAmount = _totalReward;
