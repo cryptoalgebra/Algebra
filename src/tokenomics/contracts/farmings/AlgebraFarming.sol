@@ -14,6 +14,7 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import 'algebra/contracts/libraries/SafeCast.sol';
 import 'algebra/contracts/libraries/LowGasSafeMath.sol';
+import 'algebra/contracts/libraries/FullMath.sol';
 
 import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
@@ -165,6 +166,21 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
         newIncentive.virtualPoolAddress = virtualPool;
+
+        require(
+            tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
+                tiers.tier2Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
+                tiers.tier3Multiplier <= LiquidityTier.MAX_MULTIPLIER,
+            'Multiplier cant be grater than MAX_MULTIPLIER'
+        );
+
+        require(
+            tiers.tier1Multiplier >= LiquidityTier.DENOMINATOR &&
+                tiers.tier2Multiplier >= LiquidityTier.DENOMINATOR &&
+                tiers.tier3Multiplier >= LiquidityTier.DENOMINATOR,
+            'Multiplier cant be less than DENOMINATOR'
+        );
+
         newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
     }
@@ -237,7 +253,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         (, int24 tick, , , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
-        liquidity += (liquidity * multiplier) / LiquidityTier.DENOMINATOR;
+        uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
+        require(liquidityAmountWithMultiplier <= type(uint128).max);
+        liquidity = uint128(liquidityAmountWithMultiplier);
 
         virtualPool = incentive.virtualPoolAddress;
 
