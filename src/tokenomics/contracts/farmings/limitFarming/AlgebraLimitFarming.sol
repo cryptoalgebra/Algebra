@@ -87,7 +87,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             tiers
         );
 
-        emit LimitFarming(
+        emit LimitFarmingCreated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
