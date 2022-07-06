@@ -59,14 +59,21 @@ describe('AdaptiveFee', () => {
       let res = '';
       for (let vol of volumes) {
         let meanError = 0;
+        let maxError = 0
+        let prev = 0;
         for (let volat of volats) {
           let fee = getFee(vol, volat);
           let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat), BigNumber.from(vol))).toString())
-          res += '[Volm: ' + vol + 'Volt: ' + volat + '] Fee:' + cFee + ' Correct: ' + fee + ' Error: ' + ((cFee - fee) * 100 / fee).toFixed(2) +'% \n';
-          meanError += (cFee - fee) * 100 / fee;
+          expect(cFee).to.be.gte(prev);
+          prev = cFee;
+          let error = (cFee - fee) * 100 / fee;
+          res += '[Volm: ' + vol + 'Volt: ' + volat + '] Fee:' + cFee + ' Correct: ' + fee + ' Error: ' + (error).toFixed(2) +'% \n';
+          meanError += error;
+          if (Math.abs(error) > maxError) maxError = error;
         }
         meanError /= volats.length;
         res += 'Mean error: ' + meanError.toFixed(2) + '%\n';
+        res += 'Max error: ' + maxError.toFixed(2) + '%\n';
         res +='\n======================================\n'
       }
       expect(res).to.matchSnapshot('fee grid snapshot')

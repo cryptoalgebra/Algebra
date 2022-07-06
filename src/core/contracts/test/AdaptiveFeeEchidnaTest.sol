@@ -7,8 +7,8 @@ contract AdaptiveFeeEchidnaTest {
   function expInvariants(uint256 x, uint16 gamma) external pure {
     require(gamma != 0);
     if (x >= 6 * gamma) return;
-    uint256 g7 = uint256(gamma)**7;
-    uint256 exp = AdaptiveFee.exp(x, gamma, g7);
+    uint256 g8 = uint256(gamma)**8;
+    uint256 exp = AdaptiveFee.exp(x, gamma, g8);
     assert(exp < 2**137);
   }
 
