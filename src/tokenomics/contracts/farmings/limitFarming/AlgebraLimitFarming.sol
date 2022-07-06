@@ -119,21 +119,26 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
     function decreaseRewardsAmount(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward
+        uint256 rewardAmount,
+        uint256 bonusRewardAmount
     ) external override onlyIncentiveMaker {
         require(block.timestamp < key.endTime, 'incentive finished');
 
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
-        incentive.totalReward -= reward;
-        incentive.bonusReward -= bonusReward;
+        uint256 _totalReward = incentive.totalReward;
+        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
+        incentive.totalReward = _totalReward - rewardAmount;
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusReward);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, reward);
+        uint256 _bonusReward = incentive.bonusReward;
+        if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
+        incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
-        emit RewardAmountsDecreased(reward, bonusReward, incentiveId);
+        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
+        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+
+        emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming

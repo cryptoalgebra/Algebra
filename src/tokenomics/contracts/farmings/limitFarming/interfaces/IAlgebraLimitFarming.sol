@@ -49,8 +49,8 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
 
     function decreaseRewardsAmount(
         IncentiveKey memory key,
-        uint256 rewards,
-        uint256 bonusRewards
+        uint256 rewardAmount,
+        uint256 bonusRewardAmount
     ) external;
 
     /// @notice Event emitted when a liquidity mining incentive has been created
