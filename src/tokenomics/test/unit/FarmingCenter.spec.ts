@@ -157,11 +157,11 @@ describe('unit/FarmingCenter', () => {
         const { liquidity } = await context.nft.positions(tokenId)
 
         await expect(subject(tokenId, lpUser0))
-        .to.emit(context.incentiveFarming, 'FarmStarted')
+        .to.emit(context.incentiveFarming, 'FarmEntered')
         .withArgs(tokenId, incentiveId, liquidity, 0)
 
         await expect(subjectEternal(tokenId, lpUser0))
-          .to.emit(context.farming, 'FarmStarted')
+          .to.emit(context.farming, 'FarmEntered')
           .withArgs(tokenId, incentiveIdEternal, liquidity, 0)
       })
 

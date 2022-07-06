@@ -153,7 +153,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             innerRewardGrowth1: innerRewardGrowth1
         });
 
-        emit FarmStarted(tokenId, incentiveId, liquidity, tokensLocked);
+        emit FarmEntered(tokenId, incentiveId, liquidity, tokensLocked);
     }
 
     /// @inheritdoc IAlgebraFarming

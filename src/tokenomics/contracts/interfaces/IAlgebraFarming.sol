@@ -160,7 +160,7 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param incentiveId The incentive in which the token is farming
     /// @param liquidity The amount of liquidity farmd
     /// @param tokensLocked The amount of tokens locked for multiplier
-    event FarmStarted(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
+    event FarmEntered(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
 
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token
