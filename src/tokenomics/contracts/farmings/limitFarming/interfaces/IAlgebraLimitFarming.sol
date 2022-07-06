@@ -41,6 +41,12 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         IncentiveParams memory params
     ) external returns (address virtualPool);
 
+    function addRewards(
+        IncentiveKey memory key,
+        uint256 reward,
+        uint256 bonusReward
+    ) external;
+
     function decreaseRewardsAmount(
         IncentiveKey memory key,
         uint256 rewards,
