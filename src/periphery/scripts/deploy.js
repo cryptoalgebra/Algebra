@@ -39,32 +39,34 @@ async function main() {
 
   await NFTDescriptor.deployed()
 
+    // arg1 wnative address
+    const NonfungibleTokenPositionDescriptorFactory = await hre.ethers.getContractFactory(
+      'NonfungibleTokenPositionDescriptor',
+      {
+        libraries: {
+          NFTDescriptor: NFTDescriptor.address,
+        },
+      }
+    )
+    const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(WNativeTokenAddress)
+  
+    await NonfungibleTokenPositionDescriptor.deployed()
+  
+    console.log('NonfungibleTokenPositionDescriptor deployed to:', NonfungibleTokenPositionDescriptor.address)
+
   //console.log('NFTDescriptor deployed to:', NFTDescriptor.address)
 
   // // arg1 factory address
   // // arg2 wnative address
   // // arg3 tokenDescriptor address
   const NonfungiblePositionManagerFactory = await hre.ethers.getContractFactory("NonfungiblePositionManager");
-  const NonfungiblePositionManager = await NonfungiblePositionManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, NFTDescriptor.address, deploysData.poolDeployer);
+  const NonfungiblePositionManager = await NonfungiblePositionManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, NonfungibleTokenPositionDescriptor.address, deploysData.poolDeployer);
 
   await NonfungiblePositionManager.deployed()
   deploysData.nonfungiblePositionManager = NonfungiblePositionManager.address;
   console.log('NonfungiblePositionManager deployed to:', NonfungiblePositionManager.address)
 
-  // arg1 wnative address
-  const NonfungibleTokenPositionDescriptorFactory = await hre.ethers.getContractFactory(
-    'NonfungibleTokenPositionDescriptor',
-    {
-      libraries: {
-        NFTDescriptor: NFTDescriptor.address,
-      },
-    }
-  )
-  const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(WNativeTokenAddress)
 
-  await NonfungibleTokenPositionDescriptor.deployed()
-
-  console.log('NonfungibleTokenPositionDescriptor deployed to:', NonfungibleTokenPositionDescriptor.address)
 
   // // arg1 factory address
   // // arg2 wnative address
