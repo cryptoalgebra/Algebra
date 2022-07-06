@@ -173,7 +173,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
         farms[tokenId][incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
 
-        emit FarmStarted(tokenId, incentiveId, liquidity, tokensLocked);
+        emit FarmEntered(tokenId, incentiveId, liquidity, tokensLocked);
     }
 
     /// @inheritdoc IAlgebraFarming

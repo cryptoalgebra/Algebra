@@ -127,7 +127,7 @@ describe('unit/EternalFarms', () => {
       it('emits the farm event', async () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
-          .to.emit(context.farming, 'FarmStarted')
+          .to.emit(context.farming, 'FarmEntered')
           .withArgs(tokenId, incentiveId, liquidity, 0)
       })
 
