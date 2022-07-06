@@ -269,7 +269,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity > 0, 'farm does not exist');
+        require(farm.liquidity != 0, 'farm does not exist');
 
         Incentive storage incentive = incentives[incentiveId];
 
