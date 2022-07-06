@@ -143,7 +143,7 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param rewardToken The token being distributed as a reward
     /// @param bonusRewardToken The token being distributed as a bonus reward
     /// @param pool The Algebra pool
-    /// @param virtualPool The virtual pool address
+    /// @param virtualPool The attached virtual pool address
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
     event IncentiveAttached(

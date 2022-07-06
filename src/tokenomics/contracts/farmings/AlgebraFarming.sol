@@ -200,7 +200,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
-            currentVirtualPool,
+            virtualPoolAddress,
             key.startTime,
             key.endTime
         );
