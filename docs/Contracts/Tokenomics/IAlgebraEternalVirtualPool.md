@@ -14,14 +14,14 @@
 
 `setRates(uint128,uint128)`  external
 
-
+Change reward rates
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rate0 | uint128 |  |
-| rate1 | uint128 |  |
+| rate0 | uint128 | The new rate of main token distribution per sec |
+| rate1 | uint128 | The new rate of bonus token distribution per sec |
 
 
 ### addRewards

@@ -56,11 +56,11 @@ The farming Center
 Represents a farming incentive
 
 *Developer note: bytes32 refers to the return value of IncentiveId.compute*
-### mapping(contract IERC20Minimal &#x3D;&gt; mapping(address &#x3D;&gt; uint256)) rewards 
+### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
-*Developer note: rewards[rewardToken][owner] &#x3D;&gt; uint256*
+*Developer note: rewards[owner][rewardToken] &#x3D;&gt; uint256*
 
 ## Functions
 ### setIncentiveMaker

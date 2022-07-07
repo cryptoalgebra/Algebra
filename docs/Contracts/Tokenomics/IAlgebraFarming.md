@@ -21,7 +21,7 @@ Event emitted when a liquidity mining incentive has been stopped from the outsid
 | rewardToken | contract IERC20Minimal | The token being distributed as a reward |
 | bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
 | pool | contract IAlgebraPool | The Algebra pool |
-| virtualPool | address | The virtual pool address |
+| virtualPool | address | The detached virtual pool address |
 | startTime | uint256 | The time when the incentive program begins |
 | endTime | uint256 | The time when rewards stop accruing |
 
@@ -40,15 +40,15 @@ Event emitted when a liquidity mining incentive has been runned again from the o
 | rewardToken | contract IERC20Minimal | The token being distributed as a reward |
 | bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
 | pool | contract IAlgebraPool | The Algebra pool |
-| virtualPool | address | The virtual pool address |
+| virtualPool | address | The attached virtual pool address |
 | startTime | uint256 | The time when the incentive program begins |
 | endTime | uint256 | The time when rewards stop accruing |
 
 
-### FarmStarted
+### FarmEntered
 
 
-`FarmStarted(uint256,bytes32,uint128,uint256)`  
+`FarmEntered(uint256,bytes32,uint128,uint256)`  
 
 Event emitted when a Algebra LP token has been farmd
 
@@ -263,7 +263,7 @@ Attach incentive to the pool
 ### rewards
 
 
-`rewards(contract IERC20Minimal,address)` view external
+`rewards(address,contract IERC20Minimal)` view external
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
@@ -271,8 +271,8 @@ Returns amounts of reward tokens owed to a given address according to the last t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rewardToken | contract IERC20Minimal | The token for which to check rewards |
 | owner | address | The owner for which the rewards owed are checked |
+| rewardToken | contract IERC20Minimal | The token for which to check rewards |
 
 **Returns:**
 

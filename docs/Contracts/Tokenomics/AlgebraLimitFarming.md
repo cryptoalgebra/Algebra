@@ -93,8 +93,8 @@ onlyIncentiveMaker
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey |  |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| rewardAmount | uint256 |  |
+| bonusRewardAmount | uint256 |  |
 
 
 ### detachIncentive

@@ -159,7 +159,7 @@ exitFarmings for Algebra LP token
 
 `getRewardInfo(struct IIncentiveKey.IncentiveKey,uint256)` view external
 
-Calculates the reward amount that will be received for the given farm
+reward amounts can be outdated, actual amounts could be obtained via static call of &#x60;collectRewards&#x60; in FarmingCenter
 
 
 
@@ -181,7 +181,7 @@ onlyFarmingCenter
 
 `collectRewards(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
 
-
+reward amounts should be updated before calling this method
 
 
 

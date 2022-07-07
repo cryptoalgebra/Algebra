@@ -40,10 +40,10 @@ Event emitted when rewards were added
 | bonusRewardAmount | uint256 | Collected amount of bonus reward |
 
 
-### EternalFarming
+### EternalFarmingCreated
 
 
-`EternalFarming(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address)`  
+`EternalFarmingCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address)`  
 
 Event emitted when a liquidity mining incentive has been created
 

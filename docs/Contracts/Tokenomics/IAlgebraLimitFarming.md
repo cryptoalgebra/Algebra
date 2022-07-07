@@ -7,10 +7,10 @@ Allows farming nonfungible liquidity tokens in exchange for reward tokens
 
 
 ## Events
-### LimitFarming
+### LimitFarmingCreated
 
 
-`LimitFarming(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address,uint32)`  
+`LimitFarmingCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address,uint32)`  
 
 Event emitted when a liquidity mining incentive has been created
 
@@ -124,6 +124,22 @@ Returns information about a farmd liquidity NFT
 | ---- | ---- | ----------- |
 | virtualPool | address |  |
 
+### addRewards
+
+
+`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| reward | uint256 |  |
+| bonusReward | uint256 |  |
+
+
 ### decreaseRewardsAmount
 
 
@@ -136,8 +152,8 @@ Returns information about a farmd liquidity NFT
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey |  |
-| rewards | uint256 |  |
-| bonusRewards | uint256 |  |
+| rewardAmount | uint256 |  |
+| bonusRewardAmount | uint256 |  |
 
 
 
