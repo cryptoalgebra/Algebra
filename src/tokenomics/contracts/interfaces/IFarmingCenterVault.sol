@@ -5,6 +5,17 @@ interface IFarmingCenterVault {
     function claimTokens(
         address token,
         address to,
-        uint256 amount
+        uint256 tokenId,
+        bytes32 incentiveId
     ) external;
+
+    function setFarmingCenter(address farming) external;
+
+    function lockTokens(
+        uint256 tokenId,
+        bytes32 incentiveId,
+        uint256 tokenAmount
+    ) external;
+
+    function balances(uint256 tokenId, bytes32 incentiveId) external view returns (uint256 balance);
 }

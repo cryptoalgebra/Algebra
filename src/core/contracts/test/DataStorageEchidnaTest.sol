@@ -40,6 +40,7 @@ contract DataStorageEchidnaTest {
     int24 tick,
     uint128 liquidity
   ) external {
+    require(initialized);
     limitTimePassed(advanceTimeBy);
     dataStorage.update(DataStorageTest.UpdateParams({advanceTimeBy: advanceTimeBy, tick: tick, liquidity: liquidity}));
   }
@@ -71,7 +72,7 @@ contract DataStorageEchidnaTest {
   }
 
   function echidna_indexAlwaysLtCardinality() external view returns (bool) {
-    return dataStorage.index() < 65535 || !initialized;
+    return dataStorage.index() < 65536 || !initialized;
   }
 
   function echidna_canAlwaysGetPoints0IfInitialized() external view returns (bool) {
@@ -84,11 +85,22 @@ contract DataStorageEchidnaTest {
     return success;
   }
 
+  function checkVolatilityOnRangeNotOverflowUint88(
+    uint32 dt,
+    int24 tick0,
+    int24 tick1,
+    int24 avgTick0,
+    int24 avgTick1
+  ) external view {
+    uint256 res = dataStorage.volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
+    assert(res <= type(uint88).max);
+  }
+
   function checkTwoAdjacentTimepointsTickCumulativeModTimeElapsedAlways0(uint16 index) external view {
     // check that the timepoints are initialized, and that the index is not the oldest timepoint
-    require(index < 65535 && index != (dataStorage.index() + 1) % 65535);
+    require(index < 65536 && index != (dataStorage.index() + 1) % 65536);
 
-    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , , , ) = dataStorage.timepoints(index == 0 ? 65535 - 1 : index - 1);
+    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , , , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
     (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , , , ) = dataStorage.timepoints(index);
 
     require(initialized0);

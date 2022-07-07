@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent 1`] = `11118`;
+exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent 1`] = `11090`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time 1`] = `8891`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time 1`] = `8875`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed 1`] = `10821`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed 1`] = `10793`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
 Object {
@@ -29,17 +29,17 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds 1`] = `156070`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds 1`] = `155880`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1 1`] = `24954`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1 1`] = `24938`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal 1`] = `8891`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal 1`] = `8875`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform 1`] = `15463`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform 1`] = `15418`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle 1`] = `24529`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle 1`] = `24513`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest 1`] = `23408`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest 1`] = `23392`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 fetch many values 1`] = `
 Object {
@@ -64,16 +64,16 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds 1`] = `155722`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds 1`] = `155532`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1 1`] = `24896`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1 1`] = `24880`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal 1`] = `8891`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal 1`] = `8875`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform 1`] = `15492`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform 1`] = `15447`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle 1`] = `24500`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle 1`] = `24484`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest 1`] = `23350`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest 1`] = `23334`;
 
-exports[`DataStorage #initialize gas 1`] = `89820`;
+exports[`DataStorage #initialize gas 1`] = `89950`;

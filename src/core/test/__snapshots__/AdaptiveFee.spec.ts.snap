@@ -1,95 +1,170 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AdaptiveFee #getFee fee grid snapshot 1`] = `
-"[Volm: 0Volt: 0]100
-[Volm: 0Volt: 50]104
-[Volm: 0Volt: 100]119
-[Volm: 0Volt: 150]159
-[Volm: 0Volt: 200]200
-[Volm: 0Volt: 250]215
-[Volm: 0Volt: 300]218
-[Volm: 0Volt: 350]219
-[Volm: 0Volt: 400]219
-[Volm: 0Volt: 500]219
-[Volm: 0Volt: 800]219
-[Volm: 0Volt: 1000]222
-[Volm: 0Volt: 1500]387
-[Volm: 0Volt: 2000]553
+"[Volm: 0Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volm: 0Volt: 25] Fee:105 Correct: 104.94283010058368 Error: 0.05% 
+[Volm: 0Volt: 50] Fee:108 Correct: 107.5373436715926 Error: 0.43% 
+[Volm: 0Volt: 75] Fee:112 Correct: 111.4829071028563 Error: 0.46% 
+[Volm: 0Volt: 100] Fee:118 Correct: 117.4688368437442 Error: 0.45% 
+[Volm: 0Volt: 125] Fee:127 Correct: 126.51765289337163 Error: 0.38% 
+[Volm: 0Volt: 150] Fee:140 Correct: 140.12245287529106 Error: -0.09% 
+[Volm: 0Volt: 175] Fee:160 Correct: 160.41093464019735 Error: -0.26% 
+[Volm: 0Volt: 200] Fee:190 Correct: 190.3014817617739 Error: -0.16% 
+[Volm: 0Volt: 250] Fee:294 Correct: 294.57583679273756 Error: -0.20% 
+[Volm: 0Volt: 300] Fee:485 Correct: 485.152037008578 Error: -0.03% 
+[Volm: 0Volt: 350] Fee:763 Correct: 763.7059865139498 Error: -0.09% 
+[Volm: 0Volt: 400] Fee:1061 Correct: 1061.762671893443 Error: -0.07% 
+[Volm: 0Volt: 500] Fee:1426 Correct: 1426.366994448641 Error: -0.03% 
+[Volm: 0Volt: 800] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 1000] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 1500] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 2000] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 3000] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 5000] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 8000] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volm: 0Volt: 10000] Fee:1569 Correct: 1566.6827870092818 Error: 0.15% 
+[Volm: 0Volt: 20000] Fee:1606 Correct: 1603.7654515431468 Error: 0.14% 
+[Volm: 0Volt: 50000] Fee:2964 Correct: 2964.1243230695172 Error: -0.00% 
+[Volm: 0Volt: 60000] Fee:4550 Correct: 4550 Error: 0.00% 
+[Volm: 0Volt: 80000] Fee:7028 Correct: 7029.006345024327 Error: -0.01% 
+[Volm: 0Volt: 100000] Fee:7493 Correct: 7496.234548456853 Error: -0.04% 
+Mean error: 0.04%
+Max error: 0.46%
 
 ======================================
-[Volm: 15Volt: 0]103
-[Volm: 15Volt: 50]115
-[Volm: 15Volt: 100]172
-[Volm: 15Volt: 150]328
-[Volm: 15Volt: 200]483
-[Volm: 15Volt: 250]540
-[Volm: 15Volt: 300]552
-[Volm: 15Volt: 350]556
-[Volm: 15Volt: 400]556
-[Volm: 15Volt: 500]556
-[Volm: 15Volt: 800]556
-[Volm: 15Volt: 1000]565
-[Volm: 15Volt: 1500]1194
-[Volm: 15Volt: 2000]1823
+[Volm: 15Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volm: 15Volt: 25] Fee:108 Correct: 108.08226346079775 Error: -0.08% 
+[Volm: 15Volt: 50] Fee:113 Correct: 112.32467960838758 Error: 0.60% 
+[Volm: 15Volt: 75] Fee:119 Correct: 118.77626351959601 Error: 0.19% 
+[Volm: 15Volt: 100] Fee:129 Correct: 128.56415026447277 Error: 0.34% 
+[Volm: 15Volt: 125] Fee:144 Correct: 143.36031234836634 Error: 0.45% 
+[Volm: 15Volt: 150] Fee:166 Correct: 165.6061867862405 Error: 0.24% 
+[Volm: 15Volt: 175] Fee:198 Correct: 198.78087648965555 Error: -0.39% 
+[Volm: 15Volt: 200] Fee:247 Correct: 247.65637330178436 Error: -0.27% 
+[Volm: 15Volt: 250] Fee:418 Correct: 418.1604756915246 Error: -0.04% 
+[Volm: 15Volt: 300] Fee:729 Correct: 729.780949824406 Error: -0.11% 
+[Volm: 15Volt: 350] Fee:1184 Correct: 1185.258148541456 Error: -0.11% 
+[Volm: 15Volt: 400] Fee:1672 Correct: 1672.6252253917614 Error: -0.04% 
+[Volm: 15Volt: 500] Fee:2268 Correct: 2268.80760145377 Error: -0.04% 
+[Volm: 15Volt: 800] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 1000] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 1500] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 2000] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 3000] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 5000] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 8000] Fee:2470 Correct: 2470.9659809615664 Error: -0.04% 
+[Volm: 15Volt: 10000] Fee:2502 Correct: 2498.244822662694 Error: 0.15% 
+[Volm: 15Volt: 20000] Fee:2563 Correct: 2558.8805027269723 Error: 0.16% 
+[Volm: 15Volt: 50000] Fee:4783 Correct: 4783.269886374069 Error: -0.01% 
+[Volm: 15Volt: 60000] Fee:7376 Correct: 7376.412838123428 Error: -0.01% 
+[Volm: 15Volt: 80000] Fee:11429 Correct: 11429.957466151394 Error: -0.01% 
+[Volm: 15Volt: 100000] Fee:12188 Correct: 12193.945173519884 Error: -0.05% 
+Mean error: 0.03%
+Max error: 0.60%
 
 ======================================
-[Volm: 30Volt: 0]109
-[Volm: 30Volt: 50]143
-[Volm: 30Volt: 100]298
-[Volm: 30Volt: 150]725
-[Volm: 30Volt: 200]1151
-[Volm: 30Volt: 250]1306
-[Volm: 30Volt: 300]1340
-[Volm: 30Volt: 350]1350
-[Volm: 30Volt: 400]1350
-[Volm: 30Volt: 500]1350
-[Volm: 30Volt: 800]1350
-[Volm: 30Volt: 1000]1377
-[Volm: 30Volt: 1500]3100
-[Volm: 30Volt: 2000]4822
+[Volm: 30Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volm: 30Volt: 25] Fee:110 Correct: 109.41682413419026 Error: 0.53% 
+[Volm: 30Volt: 50] Fee:115 Correct: 114.35975713305582 Error: 0.56% 
+[Volm: 30Volt: 75] Fee:122 Correct: 121.87664041377292 Error: 0.10% 
+[Volm: 30Volt: 100] Fee:134 Correct: 133.28072400606638 Error: 0.54% 
+[Volm: 30Volt: 125] Fee:151 Correct: 150.52006010056772 Error: 0.32% 
+[Volm: 30Volt: 150] Fee:177 Correct: 176.43922102730926 Error: 0.32% 
+[Volm: 30Volt: 175] Fee:215 Correct: 215.09178663082614 Error: -0.04% 
+[Volm: 30Volt: 200] Fee:271 Correct: 272.0377102799874 Error: -0.38% 
+[Volm: 30Volt: 250] Fee:470 Correct: 470.69581566717255 Error: -0.15% 
+[Volm: 30Volt: 300] Fee:833 Correct: 833.7717306946555 Error: -0.09% 
+[Volm: 30Volt: 350] Fee:1363 Correct: 1364.4583011406949 Error: -0.11% 
+[Volm: 30Volt: 400] Fee:1931 Correct: 1932.3004747786138 Error: -0.07% 
+[Volm: 30Volt: 500] Fee:2625 Correct: 2626.925763166019 Error: -0.07% 
+[Volm: 30Volt: 800] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 1000] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 1500] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 2000] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 3000] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 5000] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 8000] Fee:2861 Correct: 2862.4649677850566 Error: -0.05% 
+[Volm: 30Volt: 10000] Fee:2898 Correct: 2894.248150321719 Error: 0.13% 
+[Volm: 30Volt: 20000] Fee:2969 Correct: 2964.8961238989104 Error: 0.14% 
+[Volm: 30Volt: 50000] Fee:5555 Correct: 5556.581452317677 Error: -0.03% 
+[Volm: 30Volt: 60000] Fee:8576 Correct: 8577.909728719656 Error: -0.02% 
+[Volm: 30Volt: 80000] Fee:13297 Correct: 13300.784337717296 Error: -0.03% 
+[Volm: 30Volt: 100000] Fee:14182 Correct: 14190.923333540402 Error: -0.06% 
+Mean error: 0.05%
+Max error: 0.56%
 
 ======================================
-[Volm: 45Volt: 0]115
-[Volm: 45Volt: 50]171
-[Volm: 45Volt: 100]424
-[Volm: 45Volt: 150]1121
-[Volm: 45Volt: 200]1818
-[Volm: 45Volt: 250]2071
-[Volm: 45Volt: 300]2127
-[Volm: 45Volt: 350]2143
-[Volm: 45Volt: 400]2143
-[Volm: 45Volt: 500]2143
-[Volm: 45Volt: 800]2143
-[Volm: 45Volt: 1000]2188
-[Volm: 45Volt: 1500]5005
-[Volm: 45Volt: 2000]7821
+[Volm: 45Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volm: 45Volt: 25] Fee:110 Correct: 109.77704701967158 Error: 0.20% 
+[Volm: 45Volt: 50] Fee:115 Correct: 114.90906261817149 Error: 0.08% 
+[Volm: 45Volt: 75] Fee:123 Correct: 122.71349012256957 Error: 0.23% 
+[Volm: 45Volt: 100] Fee:135 Correct: 134.55381547103758 Error: 0.33% 
+[Volm: 45Volt: 125] Fee:153 Correct: 152.45260992466837 Error: 0.36% 
+[Volm: 45Volt: 150] Fee:180 Correct: 179.36325957470314 Error: 0.36% 
+[Volm: 45Volt: 175] Fee:219 Correct: 219.49440633408994 Error: -0.23% 
+[Volm: 45Volt: 200] Fee:277 Correct: 278.61868912439957 Error: -0.58% 
+[Volm: 45Volt: 250] Fee:484 Correct: 484.8760864731922 Error: -0.18% 
+[Volm: 45Volt: 300] Fee:861 Correct: 861.8407873478174 Error: -0.10% 
+[Volm: 45Volt: 350] Fee:1411 Correct: 1412.8277738330796 Error: -0.13% 
+[Volm: 45Volt: 400] Fee:2000 Correct: 2002.3916811862075 Error: -0.12% 
+[Volm: 45Volt: 500] Fee:2721 Correct: 2723.588552747043 Error: -0.10% 
+[Volm: 45Volt: 800] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 1000] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 1500] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 2000] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 3000] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 5000] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 8000] Fee:2966 Correct: 2968.13786637128 Error: -0.07% 
+[Volm: 45Volt: 10000] Fee:3004 Correct: 3001.136854742265 Error: 0.10% 
+[Volm: 45Volt: 20000] Fee:3078 Correct: 3074.4873335943485 Error: 0.11% 
+[Volm: 45Volt: 50000] Fee:5762 Correct: 5765.312706890132 Error: -0.06% 
+[Volm: 45Volt: 60000] Fee:8898 Correct: 8902.216210587721 Error: -0.05% 
+[Volm: 45Volt: 80000] Fee:13798 Correct: 13805.755499649058 Error: -0.06% 
+[Volm: 45Volt: 100000] Fee:14716 Correct: 14729.945087581094 Error: -0.09% 
+Mean error: -0.02%
+Max error: 0.11%
 
 ======================================
-[Volm: 60Volt: 0]118
-[Volm: 60Volt: 50]182
-[Volm: 60Volt: 100]477
-[Volm: 60Volt: 150]1290
-[Volm: 60Volt: 200]2101
-[Volm: 60Volt: 250]2396
-[Volm: 60Volt: 300]2461
-[Volm: 60Volt: 350]2480
-[Volm: 60Volt: 400]2480
-[Volm: 60Volt: 500]2480
-[Volm: 60Volt: 800]2480
-[Volm: 60Volt: 1000]2531
-[Volm: 60Volt: 1500]5812
-[Volm: 60Volt: 2000]9091
+[Volm: 60Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volm: 60Volt: 25] Fee:111 Correct: 109.88566020116735 Error: 1.01% 
+[Volm: 60Volt: 50] Fee:116 Correct: 115.07468734318519 Error: 0.80% 
+[Volm: 60Volt: 75] Fee:124 Correct: 122.9658142057126 Error: 0.84% 
+[Volm: 60Volt: 100] Fee:136 Correct: 134.9376736874884 Error: 0.79% 
+[Volm: 60Volt: 125] Fee:154 Correct: 153.03530578674327 Error: 0.63% 
+[Volm: 60Volt: 150] Fee:181 Correct: 180.24490575058215 Error: 0.42% 
+[Volm: 60Volt: 175] Fee:221 Correct: 220.82186928039468 Error: 0.08% 
+[Volm: 60Volt: 200] Fee:280 Correct: 280.6029635235478 Error: -0.21% 
+[Volm: 60Volt: 250] Fee:489 Correct: 489.1516735854751 Error: -0.03% 
+[Volm: 60Volt: 300] Fee:870 Correct: 870.304074017156 Error: -0.03% 
+[Volm: 60Volt: 350] Fee:1427 Correct: 1427.4119730278996 Error: -0.03% 
+[Volm: 60Volt: 400] Fee:2023 Correct: 2023.525343786886 Error: -0.03% 
+[Volm: 60Volt: 500] Fee:2752 Correct: 2752.733988897282 Error: -0.03% 
+[Volm: 60Volt: 800] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 1000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 1500] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 2000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 3000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 5000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 8000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volm: 60Volt: 10000] Fee:3038 Correct: 3033.3655740185636 Error: 0.15% 
+[Volm: 60Volt: 20000] Fee:3113 Correct: 3107.5309030862936 Error: 0.18% 
+[Volm: 60Volt: 50000] Fee:5828 Correct: 5828.2486461390345 Error: -0.00% 
+[Volm: 60Volt: 60000] Fee:9000 Correct: 9000 Error: 0.00% 
+[Volm: 60Volt: 80000] Fee:13957 Correct: 13958.012690048654 Error: -0.01% 
+[Volm: 60Volt: 100000] Fee:14886 Correct: 14892.469096913706 Error: -0.04% 
+Mean error: 0.17%
+Max error: 1.01%
 
 ======================================
 "
 `;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `4454`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `3893`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `3835`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `3209`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `4454`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `4584`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `3835`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `3900`;
 
-exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `3854`;
+exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `3216`;

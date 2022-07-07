@@ -55,22 +55,22 @@ library AdaptiveFee {
   ) internal pure returns (uint256 res) {
     if (x > beta) {
       x = x - beta;
-      if (x >= 6 * g) return alpha; // so x < 19 bits
-      uint256 g7 = uint256(g)**7; // < 112 bits (7*16)
-      uint256 ex = exp(x, g, g7); // < 137 bits
-      res = (alpha * (ex)) / (g7 + ex); // in worst case: (16 + 137 bits) / 138 bits
+      if (x >= 6 * uint256(g)) return alpha; // so x < 19 bits
+      uint256 g8 = uint256(g)**8; // < 128 bits (8*16)
+      uint256 ex = exp(x, g, g8); // < 155 bits
+      res = (alpha * (ex)) / (g8 + ex); // in worst case: (16 + 155 bits) / 155 bits
       // so res <= alpha
     } else {
       x = beta - x;
-      if (x >= 6 * g) return 0; // so x < 19 bits
-      uint256 g7 = uint256(g)**7; // < 112 bits (7*16)
-      uint256 ex = g7 + exp(x, g, g7); // < 138 bits
-      res = (alpha * g7) / (ex); // in worst case: (16 + 112 bits) / 138 bits
-      // g7 <= ex, so res <= alpha
+      if (x >= 6 * uint256(g)) return 0; // so x < 19 bits
+      uint256 g8 = uint256(g)**8; // < 128 bits (8*16)
+      uint256 ex = g8 + exp(x, g, g8); // < 156 bits
+      res = (alpha * g8) / (ex); // in worst case: (16 + 128 bits) / 156 bits
+      // g8 <= ex, so res <= alpha
     }
   }
 
-  /// @notice calculates e^(x/g) * g^7 in a series, since (around zero):
+  /// @notice calculates e^(x/g) * g^8 in a series, since (around zero):
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
   function exp(
@@ -79,36 +79,37 @@ library AdaptiveFee {
     uint256 gHighestDegree
   ) internal pure returns (uint256 res) {
     // calculating:
-    // g**7 + x * g**6 + (x**2 * g**5) / 2 + (x**3 * g**4) / 6 + (x**4 * g**3) / 24 + (x**5 * g**2) / 120 + (x**6 * g) / 720 + x**7 / (720 * 7)
+    // g**8 + x * g**7 + (x**2 * g**6) / 2 + (x**3 * g**5) / 6 + (x**4 * g**4) / 24 + (x**5 * g**3) / 120 + (x**6 * g^2) / 720 + x**7 * g / 5040 + x**8 / 40320
 
-    // x**7 < 133 bits (19*7) and g**7 < 112 bits (7*16)
-    // so each summand < 133 bits and res < 137 bits
+    // x**8 < 152 bits (19*8) and g**8 < 128 bits (8*16)
+    // so each summand < 152 bits and res < 155 bits
     uint256 xLowestDegree = x;
-    res = gHighestDegree; // g**7
+    res = gHighestDegree; // g**8
 
-    gHighestDegree /= g; // g**6
+    gHighestDegree /= g; // g**7
     res += xLowestDegree * gHighestDegree;
 
-    gHighestDegree /= g; // g**5
+    gHighestDegree /= g; // g**6
     xLowestDegree *= x; // x**2
     res += (xLowestDegree * gHighestDegree) / 2;
 
-    gHighestDegree /= g; // g**4
+    gHighestDegree /= g; // g**5
     xLowestDegree *= x; // x**3
     res += (xLowestDegree * gHighestDegree) / 6;
 
-    gHighestDegree /= g; // g**3
+    gHighestDegree /= g; // g**4
     xLowestDegree *= x; // x**4
     res += (xLowestDegree * gHighestDegree) / 24;
 
-    gHighestDegree /= g; // g**2
+    gHighestDegree /= g; // g**3
     xLowestDegree *= x; // x**5
     res += (xLowestDegree * gHighestDegree) / 120;
 
+    gHighestDegree /= g; // g**2
     xLowestDegree *= x; // x**6
-    res += (xLowestDegree * g) / 720;
+    res += (xLowestDegree * gHighestDegree) / 720;
 
     xLowestDegree *= x; // x**7
-    res += xLowestDegree / 5040;
+    res += (xLowestDegree * g) / 5040 + (xLowestDegree * x) / (40320);
   }
 }

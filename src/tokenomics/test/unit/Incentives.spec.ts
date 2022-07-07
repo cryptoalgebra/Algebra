@@ -21,6 +21,8 @@ import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
 let loadFixture: LoadFixtureFunction
+const LIMIT_FARMING = true;
+const ETERNAL_FARMING = false;
 
 describe('unit/Incentives', async () => {
   const actors = new ActorFixture(provider.getWallets(), provider)
@@ -64,7 +66,7 @@ describe('unit/Incentives', async () => {
 
         const { startTime, endTime } = makeTimestamps(await blockTimestamp())
 
-        return await context.farming.connect(incentiveCreator).createIncentive(
+        return await context.farming.connect(incentiveCreator).createLimitFarming(
           {
             rewardToken: params.rewardToken || context.rewardToken.address,
             bonusRewardToken: params.bonusRewardToken || context.bonusRewardToken.address,
@@ -74,12 +76,12 @@ describe('unit/Incentives', async () => {
             
           },
           {
-            tokenAmountForLevel1: 0,
-            tokenAmountForLevel2: 0,
-            tokenAmountForLevel3: 0,
-            level1multiplier: 0,
-            level2multiplier: 0,
-            level3multiplier: 0
+            tokenAmountForTier1: 0,
+            tokenAmountForTier2: 0,
+            tokenAmountForTier3: 0,
+            tier1Multiplier: 10000,
+            tier2Multiplier: 10000,
+            tier3Multiplier: 10000
           },
           {
             reward: params.reward || 100,
@@ -116,24 +118,6 @@ describe('unit/Incentives', async () => {
         const incentive = await context.farming.incentives(incentiveId)
       })
 
-      it('adds to existing incentives', async () => {
-        const params = makeTimestamps(await blockTimestamp())
-        expect(subject(params)).to.emit(context.farming, 'IncentiveCreated')
-        expect(subject(params)).to.be.revertedWith('AlgebraFarming::createIncentive: there is already active incentive');
-        const incentiveId = await context.testIncentiveId.compute({
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
-          pool: context.pool01,
-          startTime: timestamps.startTime,
-          endTime: timestamps.endTime,
-          
-        })
-        const { numberOfFarms } = await context.farming.incentives(
-          incentiveId
-        )
-        expect(numberOfFarms).to.equal(0)
-      })
-
       it('does not override the existing numberOfFarms', async () => {
         const testTimestamps = makeTimestamps(await blockTimestamp() + 100)
         const rewardToken = context.token0
@@ -145,13 +129,13 @@ describe('unit/Incentives', async () => {
           
           pool: context.pool01,
         }
-        const levels = {
-          tokenAmountForLevel1: 0,
-          tokenAmountForLevel2: 0,
-          tokenAmountForLevel3: 0,
-          level1multiplier: 0,
-          level2multiplier: 0,
-          level3multiplier: 0,
+        const tiers = {
+          tokenAmountForTier1: 0,
+          tokenAmountForTier2: 0,
+          tokenAmountForTier3: 0,
+          tier1Multiplier: 10000,
+          tier2Multiplier: 10000,
+          tier3Multiplier: 10000,
         }
         const incentiveParams = {
           reward: BN(100),
@@ -162,12 +146,8 @@ describe('unit/Incentives', async () => {
 
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
-        await context.farming.connect(actors.incentiveCreator()).createIncentive(incentiveKey,levels, incentiveParams)
+        await context.farming.connect(actors.incentiveCreator()).createLimitFarming(incentiveKey,tiers, incentiveParams)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
-        let { numberOfFarms } = await context.farming.incentives(
-          incentiveId
-        )
-        expect(numberOfFarms).to.equal(0)
         expect(await rewardToken.balanceOf(context.farming.address)).to.eq(100)
         const { tokenId } = await helpers.mintFlow({
           lp: actors.lpUser0(),
@@ -178,6 +158,11 @@ describe('unit/Incentives', async () => {
           tokenId,
         })
 
+        let { numberOfFarms } = await context.farmingCenter.deposits(
+          tokenId
+        )
+        expect(numberOfFarms).to.equal(0)
+
         await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
@@ -185,11 +170,11 @@ describe('unit/Incentives', async () => {
           .connect(actors.lpUser0())
           .multicall([
             //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0]),
+            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
           ])
-        ;({ numberOfFarms } = await context.farming
+        ;({ numberOfFarms } = await context.farmingCenter
           .connect(actors.lpUser0())
-          .incentives(incentiveId))
+          .deposits(tokenId))
         expect(numberOfFarms).to.equal(1)
       })
 
@@ -212,7 +197,7 @@ describe('unit/Incentives', async () => {
           expect(now).to.be.lessThan(params.endTime, 'test setup: after end time')
 
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time must be now or in the future'
+            'start time too low'
           )
         })
 
@@ -220,14 +205,14 @@ describe('unit/Incentives', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime - 10
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time must be before end time'
+            'start must be before end time'
           )
         })
 
         it('start time is too far into the future', async () => {
           const params = makeTimestamps((await blockTimestamp()) + 2 ** 32 + 1)
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: start time too far into future'
+            'start time too far into future'
           )
         })
 
@@ -235,7 +220,7 @@ describe('unit/Incentives', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime + 2 ** 32 + 1
           await expect(subject(params)).to.be.revertedWith(
-            'AlgebraFarming::createIncentive: incentive duration is too long'
+            'incentive duration is too long'
           )
         })
       })
@@ -245,7 +230,7 @@ describe('unit/Incentives', async () => {
           const now = await blockTimestamp()
 
           await expect(
-            context.farming.connect(incentiveCreator).createIncentive(
+            context.farming.connect(incentiveCreator).createLimitFarming(
               {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,
@@ -254,12 +239,12 @@ describe('unit/Incentives', async () => {
                 ...makeTimestamps(now, 1_000),
               },
               {
-                tokenAmountForLevel1: 0,
-                tokenAmountForLevel2: 0,
-                tokenAmountForLevel3: 0,
-                level1multiplier: 0,
-                level2multiplier: 0,
-                level3multiplier: 0,
+                tokenAmountForTier1: 0,
+                tokenAmountForTier2: 0,
+                tokenAmountForTier3: 0,
+                tier1Multiplier: 10000,
+                tier2Multiplier: 10000,
+                tier3Multiplier: 10000,
               },
               {
                 reward: BNe18(0),
@@ -269,7 +254,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('AlgebraFarming::createIncentive: reward must be positive')
+          ).to.be.revertedWith('reward must be positive')
         })
       })
     })
@@ -335,7 +320,7 @@ describe('unit/Incentives', async () => {
   //     it('block.timestamp <= end time', async () => {
   //       await Time.set(timestamps.endTime - 10)
   //       await expect(subject({})).to.be.revertedWith(
-  //         'AlgebraFarming::endIncentive: cannot end incentive before end time'
+  //         'cannot end incentive before end time'
   //       )
   //     })
   //
@@ -346,7 +331,7 @@ describe('unit/Incentives', async () => {
   //         subject({
   //           startTime: (await blockTimestamp()) + 1000,
   //         })
-  //       ).to.be.revertedWith('AlgebraFarming::endIncentive: no refund available')
+  //       ).to.be.revertedWith('no refund available')
   //     })
   //
   //     it('incentive has farms', async () => {
@@ -364,7 +349,7 @@ describe('unit/Incentives', async () => {
   //       // Adjust the block.timestamp so it is after the claim deadline
   //       await Time.set(timestamps.endTime + 1)
   //       await expect(subject({})).to.be.revertedWith(
-  //         'AlgebraFarming::endIncentive: cannot end incentive while deposits are farmd'
+  //         'cannot end incentive while deposits are farmd'
   //       )
   //     })
   //   })

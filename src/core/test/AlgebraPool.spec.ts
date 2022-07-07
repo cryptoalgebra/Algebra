@@ -1426,7 +1426,7 @@ describe('AlgebraPool', () => {
       avrges = await pool.getAverages();
       console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(2981);
+      expect(fee3).to.be.equal(2982);
     })
 
     it('single huge spike after initialization', async () => {
@@ -1468,7 +1468,7 @@ describe('AlgebraPool', () => {
       console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       console.log((await pool.globalState()).fee);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(2981);
+      expect(fee3).to.be.equal(2982);
     })
 
     xit('changes', async () => {

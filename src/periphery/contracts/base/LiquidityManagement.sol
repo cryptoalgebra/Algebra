@@ -63,7 +63,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
 
         // compute the liquidity amount
         {
-            (uint160 sqrtPriceX96, , , , , , , ) = pool.globalState();
+            (uint160 sqrtPriceX96, , , , , , ) = pool.globalState();
             uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
             uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
 

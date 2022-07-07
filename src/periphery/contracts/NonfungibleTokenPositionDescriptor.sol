@@ -16,14 +16,7 @@ import './libraries/TokenRatioSortOrder.sol';
 /// @title Describes NFT token positions
 /// @notice Produces a string containing the data URI for a JSON metadata string
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
-    // Etherium mainnet addresses
-    //address private constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    //address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    //address private constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-    //address private constant WETH = 0x8dAEBADE922dF735c38C80C7eBD708Af50815fAa;
-    //address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-
-    // bscTestnet addresses
+    // Polygon addresses
     address private constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
     address private constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
     address private constant USDT = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
@@ -57,7 +50,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         bool _flipRatio = flipRatio(token0, token1, ChainId.get());
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
         address baseTokenAddress = !_flipRatio ? token0 : token1;
-        (, int24 tick, , , , , , ) = pool.globalState();
+        (, int24 tick, , , , , ) = pool.globalState();
 
         return
             NFTDescriptor.constructTokenURI(
@@ -66,10 +59,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                     quoteTokenAddress: quoteTokenAddress,
                     baseTokenAddress: baseTokenAddress,
                     quoteTokenSymbol: quoteTokenAddress == WNativeToken
-                        ? 'ETH'
+                        ? 'MATIC'
                         : SafeERC20Namer.tokenSymbol(quoteTokenAddress),
                     baseTokenSymbol: baseTokenAddress == WNativeToken
-                        ? 'ETH'
+                        ? 'MATIC'
                         : SafeERC20Namer.tokenSymbol(baseTokenAddress),
                     quoteTokenDecimals: IERC20Metadata(quoteTokenAddress).decimals(),
                     baseTokenDecimals: IERC20Metadata(baseTokenAddress).decimals(),

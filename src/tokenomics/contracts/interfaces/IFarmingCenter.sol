@@ -13,8 +13,8 @@ import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
 
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 
-import '../incentiveFarming/interfaces/IAlgebraIncentiveFarming.sol';
-import '../eternalFarming/interfaces/IAlgebraEternalFarming.sol';
+import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
+import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 
@@ -27,10 +27,8 @@ interface IFarmingCenter is
     IPeripheryPayments
 {
     struct VirtualPoolAddresses {
-        bool hasIncentive;
-        uint32 incentiveNonce;
         address eternalVirtualPool;
-        address virtualPool;
+        address limitVirtualPool;
     }
 
     function virtualPoolAddresses(address) external view returns (address, address);
@@ -38,7 +36,7 @@ interface IFarmingCenter is
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    function farming() external view returns (IAlgebraIncentiveFarming);
+    function limitFarming() external view returns (IAlgebraLimitFarming);
 
     function eternalFarming() external view returns (IAlgebraEternalFarming);
 
@@ -54,44 +52,78 @@ interface IFarmingCenter is
         );
 
     /// @notice Returns information about a deposited NFT
-    /// @return L2TokenId The nft layer2 id
-    /// @return tickLower The lower tick of the range
-    /// @return tickUpper The upper tick of the range
-    /// @return numberOfFarms
-    /// @return owner
-    /// @return inLimitFarming
-    /// @return tokensLocked
+    /// @param tokenId The ID of the deposit (and token) that is being transferred
+    /// @return L2TokenId The nft layer2 id,
+    /// numberOfFarms The number of farms,
+    /// inLimitFarming The parameter showing if the token is in the limit farm,
+    /// owner The owner of deposit
     function deposits(uint256 tokenId)
         external
         view
         returns (
             uint256 L2TokenId,
-            int24 tickLower,
-            int24 tickUpper,
             uint32 numberOfFarms,
-            address owner,
             bool inLimitFarming,
-            uint256 tokensLocked
+            address owner
         );
 
-    function setFarmingCenterAddress(IAlgebraPool pool, address virtualPool) external;
+    /// @notice Updates activeIncentive in AlgebraPool
+    /// @dev only farming can do it
+    /// @param pool The AlgebraPool for which farming was created
+    /// @param virtualPool The virtual pool to be connected
+    function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
 
-    function enterEternalFarming(
+    /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
+    /// @dev token must be deposited in FarmingCenter
+    /// @param key The incentive event key
+    /// @param tokenId The id of position NFT
+    /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
+    /// @param isLimit Is incetive time-limited or eternal
+    function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
-        uint256 tokensLocked
+        uint256 tokensLocked,
+        bool isLimit
     ) external;
 
-    function exitEternalFarming(IncentiveKey memory key, uint256 tokenId) external;
+    /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
+    /// @param key The incentive event key
+    /// @param tokenId The id of position NFT
+    /// @param isLimit Is incetive time-limited or eternal
+    function exitFarming(
+        IncentiveKey memory key,
+        uint256 tokenId,
+        bool isLimit
+    ) external;
 
+    /// @notice Collects up to a maximum amount of fees owed to a specific position to the recipient
+    /// @dev "proxies" to NonfungiblePositionManager
+    /// @param params tokenId The ID of the NFT for which tokens are being collected,
+    /// recipient The account that should receive the tokens,
+    /// amount0Max The maximum amount of token0 to collect,
+    /// amount1Max The maximum amount of token1 to collect
+    /// @return amount0 The amount of fees collected in token0
+    /// @return amount1 The amount of fees collected in token1
     function collect(INonfungiblePositionManager.CollectParams calldata params)
         external
         returns (uint256 amount0, uint256 amount1);
 
+    /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
+    /// @param key The incentive event key
+    /// @param tokenId The id of position NFT
+    /// @return reward The amount of collected reward
+    /// @return bonusReward The amount of collected  bonus reward
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
         external
         returns (uint256 reward, uint256 bonusReward);
 
+    /// @notice Used to claim and send rewards from farming(s)
+    /// @dev can be used via static call to get current rewards for user
+    /// @param rewardToken The token that is a reward
+    /// @param to The address to be rewarded
+    /// @param amountRequestedIncentive Amount to claim in incentive (limit) farming
+    /// @param amountRequestedEternal Amount to claim in eternal farming
+    /// @return reward The summary amount of claimed rewards
     function claimReward(
         IERC20Minimal rewardToken,
         address to,
@@ -99,14 +131,11 @@ interface IFarmingCenter is
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
-
-    function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
-
+    /// @notice Withdraw Algebra NFT-position token
+    /// @dev can be used via static call to get current rewards for user
+    /// @param tokenId The id of position NFT
+    /// @param to New owner of position NFT
+    /// @param data The additional data for NonfungiblePositionManager
     function withdrawToken(
         uint256 tokenId,
         address to,

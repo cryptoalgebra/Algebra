@@ -346,6 +346,14 @@ describe('AlgebraPool gas tests', () => {
           await pool.burn(bottomTick, topTick, 0) // poke to accumulate fees
           await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128))
         })
+
+        it('close to worst case, two tokens', async () => {
+          await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1))
+          await swapExact0For1(expandTo18Decimals(1).div(100), wallet.address)
+          await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
+          await pool.burn(bottomTick, topTick, 0) // poke to accumulate fees
+          await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128))
+        })
       })
 
       describe('#getInnerCumulatives', () => {

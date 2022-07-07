@@ -4,7 +4,6 @@ pragma solidity =0.7.6;
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 
-import './TickMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
 
@@ -94,15 +93,16 @@ library TickManager {
     uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-    require(liquidityTotalAfter <= Constants.MAX_LIQUIDITY_PER_TICK, 'LO');
-    flipped = (liquidityTotalAfter == 0);
+    require(liquidityTotalAfter < Constants.MAX_LIQUIDITY_PER_TICK + 1, 'LO');
 
-    data.liquidityTotal = liquidityTotalAfter;
     // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
     data.liquidityDelta = upper
       ? int256(liquidityDeltaBefore).sub(liquidityDelta).toInt128()
       : int256(liquidityDeltaBefore).add(liquidityDelta).toInt128();
 
+    data.liquidityTotal = liquidityTotalAfter;
+
+    flipped = (liquidityTotalAfter == 0);
     if (liquidityTotalBefore == 0) {
       flipped = !flipped;
       // by convention, we assume that all growth before a tick was initialized happened _below_ the tick
@@ -137,11 +137,13 @@ library TickManager {
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
 
-    data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
-    data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+    data.outerSecondsSpent = time - data.outerSecondsSpent;
     data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
     data.outerTickCumulative = tickCumulative - data.outerTickCumulative;
-    data.outerSecondsSpent = time - data.outerSecondsSpent;
-    liquidityDelta = data.liquidityDelta;
+
+    data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+    data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
+
+    return data.liquidityDelta;
   }
 }

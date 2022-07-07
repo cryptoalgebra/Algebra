@@ -52,7 +52,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (uint160 sqrtPriceX96After, int24 tickAfter, , , , , , ) = pool.globalState();
+        (uint160 sqrtPriceX96After, int24 tickAfter, , , , , ) = pool.globalState();
 
         if (isExactInput) {
             assembly {
@@ -111,7 +111,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     {
         int24 tickBefore;
         int24 tickAfter;
-        (, tickBefore, , , , , , ) = pool.globalState();
+        (, tickBefore, , , , , ) = pool.globalState();
         (amount, sqrtPriceX96After, tickAfter) = parseRevertReason(reason);
 
         initializedTicksCrossed = pool.countInitializedTicksCrossed(tickBefore, tickAfter);
