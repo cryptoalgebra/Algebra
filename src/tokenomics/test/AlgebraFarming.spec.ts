@@ -515,11 +515,11 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 
 
@@ -734,11 +734,11 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-			const reward1 = BN(await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address))
-			const reward2 = BN(await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address))
+			const reward1 = BN(await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address))
+			const reward2 = BN(await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address))
 
-			const reward3 = BN(await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address))
-			const reward4 = BN(await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address))
+			const reward3 = BN(await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address))
+			const reward4 = BN(await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address))
 
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
 			expect(BigNumber.from(reward2.add(reward1))).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
@@ -908,12 +908,12 @@ describe('AlgebraFarming', async ()=>{
 			);
 
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
@@ -1076,11 +1076,11 @@ describe('AlgebraFarming', async ()=>{
 			);
 
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 
 
@@ -1252,12 +1252,12 @@ describe('AlgebraFarming', async ()=>{
 			);
 
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 
 
@@ -1392,12 +1392,12 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
@@ -1490,12 +1490,12 @@ describe('AlgebraFarming', async ()=>{
 			);
 
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
@@ -1663,12 +1663,12 @@ describe('AlgebraFarming', async ()=>{
 			);
 
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
@@ -1812,12 +1812,12 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))
@@ -1911,12 +1911,12 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-			const reward1 = await context.farming.rewards(context.rewardToken.address,actors.lpUser0().address)
-			const reward2 = await context.farming.rewards(context.rewardToken.address, actors.lpUser1().address)
+			const reward1 = await context.farming.rewards(actors.lpUser0().address, context.rewardToken.address)
+			const reward2 = await context.farming.rewards(actors.lpUser1().address, context.rewardToken.address)
 
 
-			const reward3 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser0().address)
-			const reward4 = await context.farming.rewards(context.bonusRewardToken.address,actors.lpUser1().address)
+			const reward3 = await context.farming.rewards(actors.lpUser0().address, context.bonusRewardToken.address)
+			const reward4 = await context.farming.rewards(actors.lpUser1().address, context.bonusRewardToken.address)
 
 			expect(reward2.add(reward1)).to.beWithin(BN('2999999999999999999990'), BN('3000000000000000000000'))
 			expect(reward3.add(reward4)).to.beWithin(BN('3999999999999999999990'), BN('4000000000000000000000'))

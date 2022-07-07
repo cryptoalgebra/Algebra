@@ -198,11 +198,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             );
         }
 
+        mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
         if (reward != 0) {
-            rewards[key.rewardToken][_owner] += reward; // user must claim before overflow
+            rewardBalances[key.rewardToken] += reward; // user must claim before overflow
         }
         if (bonusReward != 0) {
-            rewards[key.bonusRewardToken][_owner] += bonusReward; // user must claim before overflow
+            rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
         }
 
         delete farms[tokenId][incentiveId];
@@ -273,11 +274,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         farms[tokenId][incentiveId].innerRewardGrowth0 = innerRewardGrowth0;
         farms[tokenId][incentiveId].innerRewardGrowth1 = innerRewardGrowth1;
 
+        mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
         if (reward != 0) {
-            rewards[key.rewardToken][_owner] += reward;
+            rewardBalances[key.rewardToken] += reward; // user must claim before overflow
         }
         if (bonusReward != 0) {
-            rewards[key.bonusRewardToken][_owner] += bonusReward;
+            rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
         }
 
         emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);
