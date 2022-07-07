@@ -16,6 +16,16 @@
 
 
 
+### onlyValidTicks
+
+
+
+
+
+
+
+
+
 
 
 ## Variables
@@ -64,6 +74,7 @@ Returns data about a specific timepoint index
 
 ### getInnerCumulatives
 
+onlyValidTicks
 
 `getInnerCumulatives(int24,int24)` view external
 
@@ -122,7 +133,7 @@ Sets the initial price for the pool
 
 ### mint
 
-lock
+lock, onlyValidTicks
 
 `mint(address,address,int24,int24,uint128,bytes)`  external
 
@@ -174,7 +185,7 @@ Collects tokens owed to a position
 
 ### burn
 
-lock
+lock, onlyValidTicks
 
 `burn(int24,int24,uint128)`  external
 

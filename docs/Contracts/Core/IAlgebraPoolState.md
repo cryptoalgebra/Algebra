@@ -28,7 +28,6 @@ and is exposed as a single method to save gas when accessed externally.
 | tick | int24 |  |
 | fee | uint16 |  |
 | timepointIndex | uint16 |  |
-| timepointIndexSwap | uint16 |  |
 | communityFeeToken0 | uint8 |  |
 | communityFeeToken1 | uint8 |  |
 | unlocked | bool |  |

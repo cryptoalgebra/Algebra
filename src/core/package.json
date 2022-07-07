@@ -5,13 +5,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.0",
+  "version": "2.0.0",
   "keywords": [
     "algebra"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Algebra/"
+    "url": "https://github.com/cryptoalgebra/Algebra/"
   },
   "files": [
     "contracts/interfaces",
