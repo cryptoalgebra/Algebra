@@ -187,7 +187,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
                 uint32(block.timestamp),
                 farm.tickLower,
                 farm.tickUpper,
-                -int128(farm.liquidity),
+                -int256(farm.liquidity).toInt128(),
                 tick
             );
 
