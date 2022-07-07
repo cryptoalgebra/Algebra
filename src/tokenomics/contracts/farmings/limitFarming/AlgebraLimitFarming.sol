@@ -222,7 +222,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 secondsPerLiquidityInsideX128
             );
 
-            rewards[key.rewardToken][_owner] += reward;
+            rewards[key.rewardToken][_owner] += reward; // user must claim before overflow
 
             if (incentive.bonusReward != 0) {
                 bonusReward = RewardMath.computeRewardAmount(
@@ -233,7 +233,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                     secondsPerLiquidityInsideX128
                 );
 
-                rewards[key.bonusRewardToken][_owner] += bonusReward;
+                rewards[key.bonusRewardToken][_owner] += bonusReward; // user must claim before overflow
             }
         } else {
             (, int24 tick, , , , , , ) = key.pool.globalState();
