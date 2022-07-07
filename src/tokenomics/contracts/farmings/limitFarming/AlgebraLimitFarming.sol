@@ -167,13 +167,15 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             tokensLocked
         );
 
-        require(farms[tokenId][incentiveId].liquidity == 0, 'token already farmed');
+        mapping(bytes32 => Farm) storage farmsForToken = farms[tokenId];
+        require(farmsForToken[incentiveId].liquidity == 0, 'token already farmed');
 
-        uint224 _currentTotalLiquidity = incentives[incentiveId].totalLiquidity;
+        Incentive storage incentive = incentives[incentiveId];
+        uint224 _currentTotalLiquidity = incentive.totalLiquidity;
         require(_currentTotalLiquidity + liquidity >= _currentTotalLiquidity, 'liquidity overflow');
-        incentives[incentiveId].totalLiquidity = _currentTotalLiquidity + liquidity;
+        incentive.totalLiquidity = _currentTotalLiquidity + liquidity;
 
-        farms[tokenId][incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
+        farmsForToken[incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
 
         emit FarmEntered(tokenId, incentiveId, liquidity, tokensLocked);
     }
