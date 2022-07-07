@@ -176,6 +176,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         {
             (, int24 tick, , , , , , ) = key.pool.globalState();
 
+            // update rewards, as ticks may be cleared when liquidity decreases
             virtualPool.applyLiquidityDeltaToPosition(uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
 
             (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = virtualPool.getInnerRewardsGrowth(
@@ -217,6 +218,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         );
     }
 
+    /// @notice reward amounts can be outdated, actual amounts could be obtained via static call of `collectRewards` in FarmingCenter
     /// @inheritdoc IAlgebraFarming
     function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
         external
@@ -242,6 +244,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         );
     }
 
+    /// @notice reward amounts should be updated before calling this method
     /// @inheritdoc IAlgebraEternalFarming
     function collectRewards(
         IncentiveKey memory key,
