@@ -5,6 +5,9 @@ pragma abicoder v2;
 import '../../IAlgebraVirtualPoolBase.sol';
 
 interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
+    /// @notice Change reward rates
+    /// @param rate0 The new rate of main token distribution per sec
+    /// @param rate1 The new rate of bonus token distribution per sec
     function setRates(uint128 rate0, uint128 rate1) external;
 
     function addRewards(uint256 token0Amount, uint256 token1Amount) external;

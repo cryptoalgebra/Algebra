@@ -36,6 +36,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         if (token1Amount > 0) rewardReserve1 += token1Amount;
     }
 
+    // @inheritdoc IAlgebraEternalVirtualPool
     function setRates(uint128 rate0, uint128 rate1) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
         (rewardRate0, rewardRate1) = (rate0, rate1);
