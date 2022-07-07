@@ -5,6 +5,7 @@ import 'algebra/contracts/libraries/TickManager.sol';
 
 import 'algebra/contracts/libraries/FullMath.sol';
 import 'algebra/contracts/libraries/Constants.sol';
+import 'algebra/contracts/libraries/LowGasSafeMath.sol';
 
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 
@@ -12,6 +13,7 @@ import '../AlgebraVirtualPoolBase.sol';
 
 contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPool {
     using TickManager for mapping(int24 => TickManager.Tick);
+    using LowGasSafeMath for uint256;
 
     uint128 public rewardRate0;
     uint128 public rewardRate1;
@@ -32,8 +34,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
 
     function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
-        if (token0Amount > 0) rewardReserve0 += token0Amount;
-        if (token1Amount > 0) rewardReserve1 += token1Amount;
+        if (token0Amount > 0) rewardReserve0 = rewardReserve0.add(token0Amount);
+        if (token1Amount > 0) rewardReserve1 = rewardReserve1.add(token1Amount);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
