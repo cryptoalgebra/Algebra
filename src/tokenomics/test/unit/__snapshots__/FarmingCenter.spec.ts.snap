@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost 1`] = `309148`;
+exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost 1`] = `309038`;
 
 exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 1`] = `60574`;
 
 exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost 2`] = `43430`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 1`] = `163283`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 1`] = `163159`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 2`] = `213369`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost 2`] = `213296`;
 
 exports[`unit/FarmingCenter swap gas 3 swaps 1`] = `257099`;
 
