@@ -56,8 +56,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
-        uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until 2053 year
-        if (!(timeDelta < currentTimestamp)) return Status.ACTIVE; // only once per block
+        uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
+        if (timeDelta == 0) return Status.ACTIVE; // only once per block
 
         uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
         if (_currentLiquidity > 0) {
