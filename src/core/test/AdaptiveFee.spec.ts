@@ -22,7 +22,7 @@ describe('AdaptiveFee', () => {
 
 
 
-    it.only('fee grid snapshot', async () => {
+    it('fee grid snapshot', async () => {
       const config = {
         alpha1: 2900,
         alpha2: 15000 - 3000,

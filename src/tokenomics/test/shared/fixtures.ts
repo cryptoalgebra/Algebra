@@ -120,7 +120,7 @@ export const algebraFactoryFixture: Fixture<AlgebraFactoryFixture> = async (wall
           NFTDescriptor: [
             {
               length: 20,
-              start: 1248,
+              start: 1246,
             },
           ],
         },

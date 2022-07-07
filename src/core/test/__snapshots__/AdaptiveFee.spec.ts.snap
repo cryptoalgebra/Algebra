@@ -158,3 +158,13 @@ Max error: 1.01%
 ======================================
 "
 `;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 0 volume 1`] = `3893`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 0 volat 100 volume 1`] = `3209`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 0 volume 1`] = `4584`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 100 volat 100 volume 1`] = `3900`;
+
+exports[`AdaptiveFee #getFee gas cost gas cost of 2000 volat 100 volume 1`] = `3216`;
