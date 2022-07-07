@@ -40,6 +40,7 @@ contract DataStorageEchidnaTest {
     int24 tick,
     uint128 liquidity
   ) external {
+    require(initialized);
     limitTimePassed(advanceTimeBy);
     dataStorage.update(DataStorageTest.UpdateParams({advanceTimeBy: advanceTimeBy, tick: tick, liquidity: liquidity}));
   }
