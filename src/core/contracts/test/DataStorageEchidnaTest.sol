@@ -71,7 +71,7 @@ contract DataStorageEchidnaTest {
   }
 
   function echidna_indexAlwaysLtCardinality() external view returns (bool) {
-    return dataStorage.index() < 65535 || !initialized;
+    return dataStorage.index() < 65536 || !initialized;
   }
 
   function echidna_canAlwaysGetPoints0IfInitialized() external view returns (bool) {
@@ -97,9 +97,9 @@ contract DataStorageEchidnaTest {
 
   function checkTwoAdjacentTimepointsTickCumulativeModTimeElapsedAlways0(uint16 index) external view {
     // check that the timepoints are initialized, and that the index is not the oldest timepoint
-    require(index < 65535 && index != (dataStorage.index() + 1) % 65535);
+    require(index < 65536 && index != (dataStorage.index() + 1) % 65536);
 
-    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , , , ) = dataStorage.timepoints(index == 0 ? 65535 - 1 : index - 1);
+    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , , , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
     (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , , , ) = dataStorage.timepoints(index);
 
     require(initialized0);
