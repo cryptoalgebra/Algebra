@@ -198,10 +198,10 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         }
 
         if (reward != 0) {
-            rewards[key.rewardToken][_owner] += reward;
+            rewards[key.rewardToken][_owner] += reward; // user must claim before overflow
         }
         if (bonusReward != 0) {
-            rewards[key.bonusRewardToken][_owner] += bonusReward;
+            rewards[key.bonusRewardToken][_owner] += bonusReward; // user must claim before overflow
         }
 
         delete farms[tokenId][incentiveId];
