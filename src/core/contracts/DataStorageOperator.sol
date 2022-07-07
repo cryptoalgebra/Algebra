@@ -12,12 +12,12 @@ import './libraries/AdaptiveFee.sol';
 import './libraries/Constants.sol';
 
 contract DataStorageOperator is IDataStorageOperator {
-  uint16 constant MAX_UINT16 = 65535;
+  uint256 constant UINT16_MODULO = 65536;
   uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
 
-  using DataStorage for DataStorage.Timepoint[MAX_UINT16];
+  using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
-  DataStorage.Timepoint[MAX_UINT16] public override timepoints;
+  DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
   AdaptiveFee.Configuration public feeConfig;
 
   address private immutable pool;
@@ -25,11 +25,6 @@ contract DataStorageOperator is IDataStorageOperator {
 
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
-    _;
-  }
-
-  modifier onlyFactory() {
-    require(msg.sender == factory, 'only factory can call this');
     _;
   }
 
@@ -75,9 +70,9 @@ contract DataStorageOperator is IDataStorageOperator {
   {
     uint16 oldestIndex;
     // check if we have overflow in the past
-    uint256 nextIndex = addmod(index, 1, MAX_UINT16);
+    uint16 nextIndex = index + 1; // considering overflow
     if (timepoints[nextIndex].initialized) {
-      oldestIndex = uint16(nextIndex);
+      oldestIndex = nextIndex;
     }
 
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);

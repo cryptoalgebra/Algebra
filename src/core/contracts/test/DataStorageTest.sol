@@ -5,9 +5,10 @@ pragma abicoder v2;
 import '../libraries/DataStorage.sol';
 
 contract DataStorageTest {
-  using DataStorage for DataStorage.Timepoint[65535];
+  uint256 private constant UINT16_MODULO = 65536;
+  using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
-  DataStorage.Timepoint[65535] public timepoints;
+  DataStorage.Timepoint[UINT16_MODULO] public timepoints;
 
   uint32 public time;
   int24 public tick;

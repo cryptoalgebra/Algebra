@@ -486,6 +486,11 @@ describe('DataStorage', () => {
     const STARTING_TIME = TEST_POOL_START_TIME
 
     const maxedOutDataStorageFixture = async () => {
+      await waffle.provider.send("hardhat_setLoggingEnabled", [false]);
+      await waffle.provider.send("hardhat_setBalance", [
+        wallet.address,
+        "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
+      ]);
       const dataStorage = await dataStorageFixture()
       await dataStorage.initialize({ liquidity: 0, tick: 0, time: STARTING_TIME })
 
@@ -500,7 +505,7 @@ describe('DataStorage', () => {
           }))
         await dataStorage.batchUpdate(batch)
       }
-
+      //await waffle.provider.send("hardhat_setLoggingEnabled", [true]);
       return dataStorage
     }
 
