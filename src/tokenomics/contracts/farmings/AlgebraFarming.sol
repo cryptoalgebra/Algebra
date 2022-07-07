@@ -50,9 +50,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     address internal incentiveMaker;
     address internal immutable owner;
 
-    /// @dev rewards[rewardToken][owner] => uint256
+    /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
-    mapping(IERC20Minimal => mapping(address => uint256)) public override rewards;
+    mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
 
     modifier onlyIncentiveMaker() {
         require(msg.sender == incentiveMaker);
@@ -274,13 +274,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         address to,
         uint256 amountRequested
     ) internal returns (uint256 reward) {
-        reward = rewards[rewardToken][from];
+        reward = rewards[from][rewardToken];
 
         if (amountRequested == 0 || amountRequested > reward) {
             amountRequested = reward;
         }
 
-        rewards[rewardToken][from] = reward - amountRequested;
+        rewards[from][rewardToken] = reward - amountRequested;
         TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);

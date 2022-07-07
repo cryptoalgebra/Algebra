@@ -646,8 +646,8 @@ describe('unit/FarmingCenter', () => {
         ETERNAL_FARMING
       )
 
-      claimable = await context.incentiveFarming.rewards(context.rewardToken.address, lpUser0.address)
-      claimableEternal = await context.farming.rewards(context.rewardToken.address, lpUser0.address)
+      claimable = await context.incentiveFarming.rewards(lpUser0.address, context.rewardToken.address)
+      claimableEternal = await context.farming.rewards(lpUser0.address, context.rewardToken.address)
 
       subject = (_token: string, _to: string, _amount: BigNumber) =>
         context.incentiveFarming.connect(lpUser0).claimReward(_token, _to, _amount)
@@ -678,12 +678,12 @@ describe('unit/FarmingCenter', () => {
 
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context
-        claimableEternal = await context.farming.rewards(rewardToken.address, lpUser0.address)
+        claimableEternal = await context.farming.rewards(lpUser0.address, rewardToken.address)
         await expect(subjectEternal(rewardToken.address, lpUser0.address, BN('0')))
           .to.emit(context.farming, 'RewardClaimed')
           .withArgs(lpUser0.address, claimableEternal, context.rewardToken.address, lpUser0.address)
 
-        claimable = await context.incentiveFarming.rewards(rewardToken.address, lpUser0.address)
+        claimable = await context.incentiveFarming.rewards(lpUser0.address, rewardToken.address)
           await expect(subject(rewardToken.address, lpUser0.address, BN('0')))
             .to.emit(context.incentiveFarming, 'RewardClaimed')
             .withArgs(lpUser0.address, claimable, context.rewardToken.address, lpUser0.address)
@@ -691,12 +691,12 @@ describe('unit/FarmingCenter', () => {
 
       it('transfers the correct reward amount to destination address', async () => {
         const { rewardToken } = context
-        claimable = await context.incentiveFarming.rewards(rewardToken.address, lpUser0.address)
+        claimable = await context.incentiveFarming.rewards(lpUser0.address, rewardToken.address)
         const balance = await rewardToken.balanceOf(lpUser0.address)
         await subject(rewardToken.address, lpUser0.address, BN('0'))
         expect(await rewardToken.balanceOf(lpUser0.address)).to.equal(balance.add(claimable))
 
-        claimableEternal = await context.farming.rewards(rewardToken.address, lpUser0.address)
+        claimableEternal = await context.farming.rewards(lpUser0.address, rewardToken.address)
         await subjectEternal(rewardToken.address, lpUser0.address, BN('0'))
         
         expect(await rewardToken.balanceOf(lpUser0.address)).to.equal(balance.add(claimable).add(claimableEternal))
@@ -704,18 +704,18 @@ describe('unit/FarmingCenter', () => {
 
       it('sets the claimed reward amount to zero', async () => {
         const { rewardToken } = context
-        expect(await context.incentiveFarming.rewards(rewardToken.address, lpUser0.address)).to.not.equal(0)
-        expect(await context.farming.rewards(rewardToken.address, lpUser0.address)).to.not.equal(0)
+        expect(await context.incentiveFarming.rewards(lpUser0.address, rewardToken.address)).to.not.equal(0)
+        expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.not.equal(0)
 
         await subject(rewardToken.address, lpUser0.address, BN('0'))
 
-        expect(await context.incentiveFarming.rewards(rewardToken.address, lpUser0.address)).to.equal(0)
+        expect(await context.incentiveFarming.rewards(lpUser0.address, rewardToken.address)).to.equal(0)
 
-        expect(await context.farming.rewards(rewardToken.address, lpUser0.address)).to.not.equal(0)
+        expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.not.equal(0)
 
         await subjectEternal(rewardToken.address, lpUser0.address, BN('0'))
 
-        expect(await context.farming.rewards(rewardToken.address, lpUser0.address)).to.equal(0)
+        expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.equal(0)
       })
 
       it('has gas cost', async () =>{
@@ -727,12 +727,12 @@ describe('unit/FarmingCenter', () => {
         const { rewardToken, farming, incentiveFarming } = context
         const amountBefore = await rewardToken.balanceOf(lpUser0.address)
         await subject(rewardToken.address, lpUser0.address, BN('0'))
-        expect(await incentiveFarming.rewards(rewardToken.address, lpUser0.address)).to.eq(BN('0'))
+        expect(await incentiveFarming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
         expect(await rewardToken.balanceOf(lpUser0.address)).to.eq(amountBefore.add(claimable))
 
         const amountAfter = await rewardToken.balanceOf(lpUser0.address)
         await subjectEternal(rewardToken.address, lpUser0.address, BN('0'))
-        expect(await farming.rewards(rewardToken.address, lpUser0.address)).to.eq(BN('0'))
+        expect(await farming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
         expect(await rewardToken.balanceOf(lpUser0.address)).to.eq(amountAfter.add(claimableEternal))
       })
     })
@@ -751,8 +751,8 @@ describe('unit/FarmingCenter', () => {
 
       it('transfers the correct reward amount to destination address', async () => {
         const { rewardToken } = context
-        claimable = await context.incentiveFarming.rewards(rewardToken.address, lpUser0.address)
-        claimableEternal = await context.farming.rewards(rewardToken.address, lpUser0.address)
+        claimable = await context.incentiveFarming.rewards(lpUser0.address, rewardToken.address)
+        claimableEternal = await context.farming.rewards(lpUser0.address, rewardToken.address)
 
         const balance = await rewardToken.balanceOf(lpUser0.address)
         await subject(rewardToken.address, lpUser0.address, claimable)
@@ -762,8 +762,8 @@ describe('unit/FarmingCenter', () => {
 
       it('sets the claimed reward amount to the correct amount', async () => {
         const { rewardToken, farming, incentiveFarming } = context
-        const initialRewardBalance = await incentiveFarming.rewards(rewardToken.address, lpUser0.address)
-        const initialRewardBalanceEternal = await farming.rewards(rewardToken.address, lpUser0.address)
+        const initialRewardBalance = await incentiveFarming.rewards(lpUser0.address, rewardToken.address)
+        const initialRewardBalanceEternal = await farming.rewards(lpUser0.address, rewardToken.address)
         expect(initialRewardBalance).to.not.equal(BN('0'))
         expect(initialRewardBalanceEternal).to.not.equal(BN('0'))
 
@@ -773,8 +773,8 @@ describe('unit/FarmingCenter', () => {
         await subject(rewardToken.address, lpUser0.address, partialClaim)
         await subjectEternal(rewardToken.address, lpUser0.address, partialClaimEternal)
 
-        expect(await incentiveFarming.rewards(rewardToken.address, lpUser0.address)).to.eq(initialRewardBalance.sub(partialClaim))
-        expect(await farming.rewards(rewardToken.address, lpUser0.address)).to.eq(initialRewardBalanceEternal.sub(partialClaimEternal))
+        expect(await incentiveFarming.rewards(lpUser0.address, rewardToken.address)).to.eq(initialRewardBalance.sub(partialClaim))
+        expect(await farming.rewards(lpUser0.address, rewardToken.address)).to.eq(initialRewardBalanceEternal.sub(partialClaimEternal))
       })
 
       describe('when user claims more than they have', () => {
@@ -785,8 +785,8 @@ describe('unit/FarmingCenter', () => {
           await subject(rewardToken.address, lpUser0.address, claimable.mul(BN('3')))
           await subjectEternal(rewardToken.address, lpUser0.address, claimableEternal.mul(BN('3')))
 
-          expect(await incentiveFarming.rewards(rewardToken.address, lpUser0.address)).to.eq(BN('0'))
-          expect(await farming.rewards(rewardToken.address, lpUser0.address)).to.eq(BN('0'))
+          expect(await incentiveFarming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
+          expect(await farming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
           expect(await rewardToken.balanceOf(lpUser0.address)).to.eq(amountBefore.add(claimable).add(claimableEternal))
         })
       })
@@ -1059,13 +1059,13 @@ describe('unit/FarmingCenter', () => {
         })
 
         it('updates the reward available for the context.tokenomics', async () => {
-          const rewardsAccured = await context.incentiveFarming.rewards(context.rewardToken.address, lpUser0.address)
+          const rewardsAccured = await context.incentiveFarming.rewards(lpUser0.address, context.rewardToken.address)
           await subject(lpUser0)
-          expect(await context.incentiveFarming.rewards(context.rewardToken.address, lpUser0.address)).to.be.gt(rewardsAccured)
+          expect(await context.incentiveFarming.rewards(lpUser0.address, context.rewardToken.address)).to.be.gt(rewardsAccured)
 
-          const rewardsAccured2 = await context.farming.rewards(context.rewardToken.address, lpUser0.address)
+          const rewardsAccured2 = await context.farming.rewards(lpUser0.address, context.rewardToken.address)
           await subjectEternal(lpUser0)
-          expect(await context.farming.rewards(context.rewardToken.address, lpUser0.address)).to.be.gt(rewardsAccured2)
+          expect(await context.farming.rewards(lpUser0.address, context.rewardToken.address)).to.be.gt(rewardsAccured2)
         })
 
         it('updates the farm struct', async () => {

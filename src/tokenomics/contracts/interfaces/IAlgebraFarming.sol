@@ -60,10 +60,10 @@ interface IAlgebraFarming is IIncentiveKey {
     function attachIncentive(IncentiveKey memory key) external;
 
     /// @notice Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
-    /// @param rewardToken The token for which to check rewards
     /// @param owner The owner for which the rewards owed are checked
+    /// @param rewardToken The token for which to check rewards
     /// @return rewardsOwed The amount of the reward token claimable by the owner
-    function rewards(IERC20Minimal rewardToken, address owner) external view returns (uint256 rewardsOwed);
+    function rewards(address owner, IERC20Minimal rewardToken) external view returns (uint256 rewardsOwed);
 
     /// @notice Updates farming center address
     /// @param _farmingCenter The new farming center contract address

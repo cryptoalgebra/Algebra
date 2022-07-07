@@ -199,12 +199,15 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         IAlgebraLimitVirtualPool virtualPool = IAlgebraLimitVirtualPool(incentive.virtualPoolAddress);
 
         if (block.timestamp > key.endTime) {
-            (bool wasFinished, uint256 activeTime) = virtualPool.finish();
-
-            if (!wasFinished) {
-                (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-                if (address(virtualPool) == _incentive) {
-                    farmingCenter.connectVirtualPool(key.pool, address(0));
+            uint256 activeTime;
+            {
+                bool wasFinished;
+                (wasFinished, activeTime) = virtualPool.finish();
+                if (!wasFinished) {
+                    (address _incentive, ) = _getCurrentVirtualPools(key.pool);
+                    if (address(virtualPool) == _incentive) {
+                        farmingCenter.connectVirtualPool(key.pool, address(0));
+                    }
                 }
             }
 
@@ -222,7 +225,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 secondsPerLiquidityInsideX128
             );
 
-            rewards[key.rewardToken][_owner] += reward; // user must claim before overflow
+            mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
+            if (reward > 0) {
+                rewardBalances[key.rewardToken] += reward; // user must claim before overflow
+            }
 
             if (incentive.bonusReward != 0) {
                 bonusReward = RewardMath.computeRewardAmount(
@@ -232,8 +238,9 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                     _totalLiquidity,
                     secondsPerLiquidityInsideX128
                 );
-
-                rewards[key.bonusRewardToken][_owner] += bonusReward; // user must claim before overflow
+                if (bonusReward > 0) {
+                    rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+                }
             }
         } else {
             (, int24 tick, , , , , , ) = key.pool.globalState();
