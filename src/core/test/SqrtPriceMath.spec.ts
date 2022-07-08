@@ -96,7 +96,7 @@ describe('TokenDeltaMath', () => {
       ).to.eq(1)
     })
 
-    it('zeroToOne = true gas', async () => {
+    it('zeroToOne = true gas  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
@@ -107,7 +107,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it('zeroToOne = false gas', async () => {
+    it('zeroToOne = false gas  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
@@ -214,7 +214,7 @@ describe('TokenDeltaMath', () => {
         .be.reverted
     })
 
-    it('zeroToOne = true gas', async () => {
+    it('zeroToOne = true gas  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
@@ -225,7 +225,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it('zeroToOne = false gas', async () => {
+    it('zeroToOne = false gas  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
@@ -284,7 +284,7 @@ describe('TokenDeltaMath', () => {
       expect(amount0Up).to.eq(amount0Down.add(1))
     })
 
-    it(`gas cost for amount0 where roundUp = true`, async () => {
+    it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetToken0Delta(
           encodePriceSqrt(100, 121),
@@ -295,7 +295,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it(`gas cost for amount0 where roundUp = true`, async () => {
+    it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetToken0Delta(
           encodePriceSqrt(100, 121),
@@ -338,7 +338,7 @@ describe('TokenDeltaMath', () => {
       expect(amount1RoundedDown).to.eq(amount1.sub(1))
     })
 
-    it(`gas cost for amount0 where roundUp = true`, async () => {
+    it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetToken0Delta(
           encodePriceSqrt(100, 121),
@@ -349,7 +349,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it(`gas cost for amount0 where roundUp = false`, async () => {
+    it(`gas cost for amount0 where roundUp = false  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetToken0Delta(
           encodePriceSqrt(100, 121),

@@ -34,10 +34,10 @@ describe('LiquidityMath', () => {
     it('3 + -4 underflows', async () => {
       await expect(liquidityMath.addDelta(3, -4)).to.be.revertedWith('LS')
     })
-    it('gas add', async () => {
+    it('gas add  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(liquidityMath.getGasCostOfAddDelta(15, 4))
     })
-    it('gas sub', async () => {
+    it('gas sub  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(liquidityMath.getGasCostOfAddDelta(15, -4))
     })
   })

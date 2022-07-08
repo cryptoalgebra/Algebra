@@ -58,7 +58,7 @@ describe('PoolAddress', () => {
       ).to.be.reverted
     })
 
-    it('gas cost', async () => {
+    it('gas cost [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         poolAddress.getGasCostOfComputeAddress(
           '0x5FbDB2315678afecb367f032d93F642f64180aa3',

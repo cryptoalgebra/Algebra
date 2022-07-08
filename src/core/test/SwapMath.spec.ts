@@ -230,7 +230,7 @@ describe('PriceMovementMath', () => {
       expect(feeAmount).to.eq(1)
     })
 
-    describe('gas', () => {
+    describe('gas  [ @skip-on-coverage ]', () => {
       it('swap one for zero exact in capped', async () => {
         await snapshotGasCost(
           PriceMovementMath.getGasCostOfmovePriceTowardsTarget(

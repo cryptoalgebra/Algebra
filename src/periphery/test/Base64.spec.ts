@@ -40,7 +40,7 @@ describe('Base64', () => {
         expect(await base64.encode(stringToHex(example))).to.eq(base64Encode(example))
       })
 
-      it(`gas cost of encode(${example})`, async () => {
+      it(`gas cost of encode(${example}) [ @skip-on-coverage ]`, async () => {
         await snapshotGasCost(base64.getGasCostOfEncode(stringToHex(example)))
       })
     }
@@ -56,7 +56,7 @@ describe('Base64', () => {
       it('correctness', async () => {
         expect(await base64.encode(stringToHex(str))).to.eq(base64Encode(str))
       })
-      it('gas cost', async () => {
+      it('gas cost [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(base64.getGasCostOfEncode(stringToHex(str)))
       })
     })

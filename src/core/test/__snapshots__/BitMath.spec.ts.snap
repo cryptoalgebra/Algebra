@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BitMath #leastSignificantBit gas cost of max uint128 1`] = `264`;
+exports[`BitMath #leastSignificantBit gas cost of max uint128  [ @skip-on-coverage ] 1`] = `264`;
 
-exports[`BitMath #leastSignificantBit gas cost of max uint256 1`] = `264`;
+exports[`BitMath #leastSignificantBit gas cost of max uint256  [ @skip-on-coverage ] 1`] = `264`;
 
-exports[`BitMath #leastSignificantBit gas cost of min number 1`] = `264`;
+exports[`BitMath #leastSignificantBit gas cost of min number  [ @skip-on-coverage ] 1`] = `264`;
 
-exports[`BitMath #leastSignificantBit gas cost of smaller number 1`] = `264`;
+exports[`BitMath #leastSignificantBit gas cost of smaller number  [ @skip-on-coverage ] 1`] = `264`;
 
-exports[`BitMath #mostSignificantBit gas cost of max uint128 1`] = `425`;
+exports[`BitMath #mostSignificantBit gas cost of max uint128  [ @skip-on-coverage ] 1`] = `425`;
 
-exports[`BitMath #mostSignificantBit gas cost of max uint256 1`] = `425`;
+exports[`BitMath #mostSignificantBit gas cost of max uint256  [ @skip-on-coverage ] 1`] = `425`;
 
-exports[`BitMath #mostSignificantBit gas cost of min number 1`] = `425`;
+exports[`BitMath #mostSignificantBit gas cost of min number  [ @skip-on-coverage ] 1`] = `425`;
 
-exports[`BitMath #mostSignificantBit gas cost of smaller number 1`] = `425`;
+exports[`BitMath #mostSignificantBit gas cost of smaller number  [ @skip-on-coverage ] 1`] = `425`;

@@ -113,7 +113,7 @@ describe('DataStorageLibrary', () => {
       expect(dataStorageTick).to.equal(BigNumber.from(-25))
     })
 
-    it('gas test', async () => {
+    it('gas test [ @skip-on-coverage ]', async () => {
       const period = 3
       const tickCumulatives = [BigNumber.from(7), BigNumber.from(12)]
       const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
@@ -191,7 +191,7 @@ describe('DataStorageLibrary', () => {
       expect(quoteAmount).to.equal(BigNumber.from('1'))
     })
 
-    it('gas test', async () => {
+    it('gas test [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         dataStorage.getGasCostOfGetQuoteAtTick(
           BigNumber.from(10),

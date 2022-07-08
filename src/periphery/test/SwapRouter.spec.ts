@@ -91,7 +91,7 @@ describe('SwapRouter', function () {
     expect(balance.eq(0)).to.be.eq(true)
   })
 
-  it('bytecode size', async () => {
+  it('bytecode size [ @skip-on-coverage ]', async () => {
     expect(((await router.provider.getCode(router.address)).length - 2) / 2).to.matchSnapshot()
   })
 

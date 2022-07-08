@@ -80,7 +80,7 @@ describe('Path', () => {
     })
   })
 
-  it('gas cost', async () => {
+  it('gas cost [ @skip-on-coverage ]', async () => {
     await snapshotGasCost(
       path.getGasCostOfDecodeFirstPool(encodePath([tokenAddresses[0], tokenAddresses[1]]))
     )

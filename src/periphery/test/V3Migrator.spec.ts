@@ -403,7 +403,7 @@ describe('V3Migrator', () => {
       }
     })
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       const [token0, token1] = sortedTokens(wnative, token)
       await migrator.createAndInitializePoolIfNecessary(
         token0.address,

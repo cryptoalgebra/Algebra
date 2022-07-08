@@ -80,7 +80,7 @@ describe('AdaptiveFee', () => {
     })
   })
 
-  describe('#getFee gas cost', () => {
+  describe('#getFee gas cost  [ @skip-on-coverage ]', () => {
     it('gas cost of 0 volat 0 volume', async () => {
       await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(0), BigNumber.from(0)));
     })

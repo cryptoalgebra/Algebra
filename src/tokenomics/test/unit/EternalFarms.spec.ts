@@ -153,7 +153,7 @@ describe('unit/EternalFarms', () => {
         expect((await context.farmingCenter.deposits(tokenId)).numberOfFarms).to.eq(nFarmsBefore.add(1))
       })
 
-      it('has gas cost', async () => await snapshotGasCost(subject(tokenId, lpUser0)))
+      it('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, lpUser0)))
     })
 
     describe('fails when', () => {
@@ -268,7 +268,7 @@ describe('unit/EternalFarms', () => {
     })
   })
 
-  describe('swap gas', async () => {
+  describe('swap gas [ @skip-on-coverage ]', async () => {
     it('3 swaps', async () => {
       timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
 
@@ -501,7 +501,7 @@ describe('unit/EternalFarms', () => {
         expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.equal(0)
       })
 
-      it('has gas cost', async () =>
+      it('has gas cost [ @skip-on-coverage ]', async () =>
         await snapshotGasCost(subject(context.rewardToken.address, lpUser0.address, BN('0'))))
 
       it('returns their claimable amount', async () => {
@@ -724,7 +724,7 @@ describe('unit/EternalFarms', () => {
           )
         })
 
-        it('has gas cost', async () => {
+        it('has gas cost [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(subject(lpUser0))
         })
 

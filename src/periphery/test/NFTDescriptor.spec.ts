@@ -300,7 +300,7 @@ describe('NFTDescriptor', () => {
       })
     })
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         nftDescriptor.getGasCostOfConstructTokenURI({
           tokenId,

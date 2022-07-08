@@ -38,7 +38,7 @@ describe('PeripheryImmutableState', () => {
     ;({ state, wnative, factory } = await loadFixture(nonfungiblePositionManagerFixture))
   })
 
-  it('bytecode size', async () => {
+  it('bytecode size [ @skip-on-coverage ]', async () => {
     expect(((await state.provider.getCode(state.address)).length - 2) / 2).to.matchSnapshot()
   })
 

@@ -52,11 +52,11 @@ describe('AlgebraFactory', () => {
     expect(await factory.owner()).to.eq(wallet.address)
   })
 
-  it('factory bytecode size', async () => {
+  it('factory bytecode size  [ @skip-on-coverage ]', async () => {
     expect(((await waffle.provider.getCode(factory.address)).length - 2) / 2).to.matchSnapshot()
   })
 
-  it('pool bytecode size', async () => {
+  it('pool bytecode size  [ @skip-on-coverage ]', async () => {
     await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
     const poolAddress = getCreate2Address(poolDeployer.address, TEST_ADDRESSES, poolBytecode)
     expect(((await waffle.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot()
@@ -112,7 +112,7 @@ describe('AlgebraFactory', () => {
       )
     })
 
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]))
     })
   })

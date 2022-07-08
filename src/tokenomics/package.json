@@ -42,7 +42,7 @@
     "size-contracts": "hardhat compile && hardhat size-contracts",
     "test": "hardhat test",
     "clear-cache": "rm -rf artifacts/ cache/ typechain/",
-    "coverage": "hardhat coverage",
+    "coverage": "npm --prefix ../periphery run compile && hardhat coverage",
     "precommit": "pretty-quick --staged --pattern **/*.sol"
   },
   "engines": {

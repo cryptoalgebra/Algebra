@@ -49,7 +49,7 @@ describe('DataStorage', () => {
         secondsPerLiquidityCumulative: 0,
       })
     })
-    it('gas', async () => {
+    it('gas  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(dataStorage.initialize({ liquidity: 1, tick: 1, time: 1 }))
     })
     it('should return interpolated volatility with gap > window', async () =>{
@@ -344,18 +344,18 @@ describe('DataStorage', () => {
         expect(secondsPerLiquidityCumulatives[5]).to.eq(0)
       })
 
-      it('gas for getTimepoints since most recent', async () => {
+      it('gas for getTimepoints since most recent  [ @skip-on-coverage ]', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.advanceTime(2)
         await snapshotGasCost(dataStorage.getGasCostOfGetPoints([1]))
       })
 
-      it('gas for single timepoint at current time', async () => {
+      it('gas for single timepoint at current time  [ @skip-on-coverage ]', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
       })
 
-      it('gas for single timepoint at current time counterfactually computed', async () => {
+      it('gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ]', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.advanceTime(5)
         await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
@@ -449,27 +449,27 @@ describe('DataStorage', () => {
           }).to.matchSnapshot()
         })
 
-        it('gas all of last 20 seconds', async () => {
+        it('gas all of last 20 seconds  [ @skip-on-coverage ]', async () => {
           await dataStorage.advanceTime(6)
           await snapshotGasCost(
             dataStorage.getGasCostOfGetPoints([20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
           )
         })
 
-        it('gas latest equal', async () => {
+        it('gas latest equal  [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
         })
-        it('gas latest transform', async () => {
+        it('gas latest transform  [ @skip-on-coverage ]', async () => {
           await dataStorage.advanceTime(5)
           await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
         })
-        it('gas oldest', async () => {
+        it('gas oldest  [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(dataStorage.getGasCostOfGetPoints([14]))
         })
-        it('gas between oldest and oldest + 1', async () => {
+        it('gas between oldest and oldest + 1  [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(dataStorage.getGasCostOfGetPoints([13]))
         })
-        it('gas middle', async () => {
+        it('gas middle  [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(dataStorage.getGasCostOfGetPoints([5]))
         })
       })

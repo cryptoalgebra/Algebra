@@ -37,7 +37,7 @@
     "compile": "npm --prefix ../core run compile && hardhat compile",
     "test": "hardhat test",
     "precommit": "pretty-quick --staged --pattern **/*.sol",
-    "coverage": "hardhat coverage"
+    "coverage": "npm --prefix ../core run compile && hardhat coverage"
   },
   "engines": {
     "npm": ">=8.0.0",

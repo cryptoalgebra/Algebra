@@ -190,7 +190,7 @@ describe('TickLens', () => {
       expect(max.liquidityGross).to.be.eq(fullRangeLiquidity)
     })
 
-    it('gas for single populated tick', async () => {
+    it('gas for single populated tick [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         tickLens.getGasCostOfGetPopulatedTicksInWord(
           poolAddress,
@@ -199,7 +199,7 @@ describe('TickLens', () => {
       )
     })
 
-    it('fully populated ticks', async () => {
+    it('fully populated ticks [ @skip-on-coverage ]', async () => {
       // fully populate a word
       for (let i = 0; i < 128; i++) {
         await mint(i * TICK_SPACINGS[FeeAmount.MEDIUM], (255 - i) * TICK_SPACINGS[FeeAmount.MEDIUM], 100)

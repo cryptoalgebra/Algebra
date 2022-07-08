@@ -26,7 +26,7 @@ import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
 
 const createFixtureLoader = waffle.createFixtureLoader
 
-describe('AlgebraPool gas tests', () => {
+describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet
 
   let token0: TestERC20;

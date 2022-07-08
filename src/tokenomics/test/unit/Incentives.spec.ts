@@ -178,7 +178,7 @@ describe('unit/Incentives', async () => {
         expect(numberOfFarms).to.equal(1)
       })
 
-      it('has gas cost', async () => {
+      it('has gas cost [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(subject({}))
       })
     })

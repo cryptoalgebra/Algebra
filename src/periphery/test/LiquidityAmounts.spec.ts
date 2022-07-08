@@ -14,7 +14,7 @@ describe('LiquidityAmounts', async () => {
   })
 
   describe('#getLiquidityForAmount0', () => {
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
       await snapshotGasCost(liquidityFromAmounts.getGasCostOfGetLiquidityForAmount0(sqrtPriceAX96, sqrtPriceBX96, 100))
@@ -22,7 +22,7 @@ describe('LiquidityAmounts', async () => {
   })
 
   describe('#getLiquidityForAmount1', () => {
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
       await snapshotGasCost(liquidityFromAmounts.getGasCostOfGetLiquidityForAmount1(sqrtPriceAX96, sqrtPriceBX96, 100))
@@ -100,7 +100,7 @@ describe('LiquidityAmounts', async () => {
       expect(liquidity).to.eq(2097)
     })
 
-    it('gas for price below', async () => {
+    it('gas for price below [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(99, 110)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
@@ -108,7 +108,7 @@ describe('LiquidityAmounts', async () => {
         liquidityFromAmounts.getGasCostOfGetLiquidityForAmounts(sqrtPriceX96, sqrtPriceAX96, sqrtPriceBX96, 100, 200)
       )
     })
-    it('gas for price above', async () => {
+    it('gas for price above [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(111, 100)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
@@ -116,7 +116,7 @@ describe('LiquidityAmounts', async () => {
         liquidityFromAmounts.getGasCostOfGetLiquidityForAmounts(sqrtPriceX96, sqrtPriceAX96, sqrtPriceBX96, 100, 200)
       )
     })
-    it('gas for price inside', async () => {
+    it('gas for price inside [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(1, 1)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
@@ -127,7 +127,7 @@ describe('LiquidityAmounts', async () => {
   })
 
   describe('#getAmount0ForLiquidity', () => {
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
       await snapshotGasCost(liquidityFromAmounts.getGasCostOfGetAmount0ForLiquidity(sqrtPriceAX96, sqrtPriceBX96, 100))
@@ -135,7 +135,7 @@ describe('LiquidityAmounts', async () => {
   })
 
   describe('#getLiquidityForAmount1', () => {
-    it('gas', async () => {
+    it('gas [ @skip-on-coverage ]', async () => {
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
       await snapshotGasCost(liquidityFromAmounts.getGasCostOfGetAmount1ForLiquidity(sqrtPriceAX96, sqrtPriceBX96, 100))
@@ -213,7 +213,7 @@ describe('LiquidityAmounts', async () => {
       expect(amount1).to.eq(199)
     })
 
-    it('gas for price below', async () => {
+    it('gas for price below [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(99, 110)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
@@ -221,7 +221,7 @@ describe('LiquidityAmounts', async () => {
         liquidityFromAmounts.getGasCostOfGetAmountsForLiquidity(sqrtPriceX96, sqrtPriceAX96, sqrtPriceBX96, 2148)
       )
     })
-    it('gas for price above', async () => {
+    it('gas for price above [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(111, 100)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
@@ -229,7 +229,7 @@ describe('LiquidityAmounts', async () => {
         liquidityFromAmounts.getGasCostOfGetAmountsForLiquidity(sqrtPriceX96, sqrtPriceAX96, sqrtPriceBX96, 1048)
       )
     })
-    it('gas for price inside', async () => {
+    it('gas for price inside [ @skip-on-coverage ]', async () => {
       const sqrtPriceX96 = encodePriceSqrt(1, 1)
       const sqrtPriceAX96 = encodePriceSqrt(100, 110)
       const sqrtPriceBX96 = encodePriceSqrt(110, 100)
