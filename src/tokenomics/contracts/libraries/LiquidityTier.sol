@@ -12,7 +12,7 @@ library LiquidityTier {
     /// @notice Get the multiplier by tokens locked amount
     /// @param tokenAmount The amount of locked tokens
     /// @param tiers The structure showing the dependence of the multiplier on the amount of locked tokens
-    /// @return multiplier The value represent persent of liquidity in ten thoushands(1 = 0.01%)
+    /// @return multiplier The value represent percent of liquidity in ten thousands(1 = 0.01%)
     function getLiquidityMultiplier(uint256 tokenAmount, IAlgebraFarming.Tiers memory tiers)
         internal
         pure

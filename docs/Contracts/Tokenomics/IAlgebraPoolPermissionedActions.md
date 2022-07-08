@@ -14,7 +14,7 @@ Contains pool methods that may only be called by the factory owner or tokenomics
 
 `setCommunityFee(uint8,uint8)`  external
 
-Set the community&#x27;s % share of the fees. Сannot exceed 25% (250)
+Set the community&#x27;s % share of the fees. Cannot exceed 25% (250)
 
 
 

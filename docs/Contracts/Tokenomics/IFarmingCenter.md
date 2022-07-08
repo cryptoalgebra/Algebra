@@ -182,7 +182,7 @@ Enters in incentive (time-limited or eternal farming) with NFT-position token
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
 | tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-| isLimit | bool | Is incetive time-limited or eternal |
+| isLimit | bool | Is incentive time-limited or eternal |
 
 
 ### exitFarming
@@ -198,7 +198,7 @@ Exits from incentive (time-limited or eternal farming) with NFT-position token
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
-| isLimit | bool | Is incetive time-limited or eternal |
+| isLimit | bool | Is incentive time-limited or eternal |
 
 
 ### collect

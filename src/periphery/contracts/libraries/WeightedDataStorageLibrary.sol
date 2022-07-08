@@ -52,11 +52,11 @@ library WeightedDataStorageLibrary {
         returns (int24 arithmeticMeanWeightedTick)
     {
         // Accumulates the sum of all timepoints' products between each their own average tick and harmonic average liquidity
-        // Each product can be stored in a int160, so it would take approximatelly 2**96 timepoints to overflow this accumulator
+        // Each product can be stored in a int160, so it would take approximately 2**96 timepoints to overflow this accumulator
         int256 numerator;
 
         // Accumulates the sum of the harmonic average liquidities from the given timepoints
-        // Each average liquidity can be stored in a uint128, so it will take approximatelly 2**128 timepoints to overflow this accumulator
+        // Each average liquidity can be stored in a uint128, so it will take approximately 2**128 timepoints to overflow this accumulator
         uint256 denominator;
 
         for (uint256 i; i < timepoints.length; i++) {

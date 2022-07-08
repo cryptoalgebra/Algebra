@@ -2,7 +2,7 @@
 
 # AlgebraVirtualPoolBase
 
-Abstract base contract for Algebra virual pools
+Abstract base contract for Algebra virtual pools
 
 
 ## Modifiers

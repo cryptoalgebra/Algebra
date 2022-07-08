@@ -25,7 +25,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
 
-    /// @dev saves adresses of virtual pools for pool
+    /// @dev saves addresses of virtual pools for pool
     mapping(address => VirtualPoolAddresses) private _virtualPoolAddresses;
 
     /// @dev deposits[tokenId] => Deposit

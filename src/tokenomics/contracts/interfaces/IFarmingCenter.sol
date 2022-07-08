@@ -78,7 +78,7 @@ interface IFarmingCenter is
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
     /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
-    /// @param isLimit Is incetive time-limited or eternal
+    /// @param isLimit Is incentive time-limited or eternal
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
@@ -89,7 +89,7 @@ interface IFarmingCenter is
     /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
-    /// @param isLimit Is incetive time-limited or eternal
+    /// @param isLimit Is incentive time-limited or eternal
     function exitFarming(
         IncentiveKey memory key,
         uint256 tokenId,

@@ -7,7 +7,7 @@ import 'algebra/contracts/libraries/LiquidityMath.sol';
 
 import './IAlgebraVirtualPoolBase.sol';
 
-/// @title Abstract base contract for Algebra virual pools
+/// @title Abstract base contract for Algebra virtual pools
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     using TickTable for mapping(int16 => uint256);
 
