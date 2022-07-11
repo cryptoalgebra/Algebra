@@ -1,0 +1,56 @@
+name: Echidna
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  Core:
+    strategy:
+      matrix:
+        testName:
+          - AdaptiveFeeEchidnaTest
+          - BitMathEchidnaTest
+          - DataStorageEchidnaTest
+          - FullMathEchidnaTest
+          - LowGasSafeMathEchidnaTest
+          - PriceMovementMathEchidnaTest
+          - TickMathEchidnaTest
+          - TickOverflowSafetyEchidnaTest
+          - TickTableEchidnaTest
+          - TokenDeltaMathEchidnaTest
+          - UnsafeMathEchidnaTest
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run ci-install
+
+      - name: Compile contracts
+        run: npm run compile
+        working-directory: ./src/core
+
+      - name: Run ${{ matrix.testName }}
+        uses: crytic/echidna-action@v2
+        with:
+          solc-version: 0.7.6
+          files: ./src/core/contracts/test/${{ matrix.testName }}.sol
+          contract: ${{ matrix.testName }}
+          crytic-args: --hardhat-ignore-compile
+          config: ./src/core/echidna.config.yml
+
