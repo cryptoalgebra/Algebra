@@ -1,4 +1,4 @@
-name: tests
+name: Tests
 
 on:
   push:
@@ -10,36 +10,25 @@ on:
       - master
 
 jobs:
-  core:
-    strategy:
-      matrix:
-        node: ['14.x']
-        os: [ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
+  Core:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
           cache: 'npm'
-      - run: npm i -g npm
+          cache-dependency-path: package-lock.json
       - run: npm run ci-install
-
       - run: npm run compile
         working-directory: ./src/core
       - run: npm run test
         working-directory: ./src/core
 
 
-  periphery:
-    strategy:
-      matrix:
-        node: ['14.x']
-        os: [ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
+  Periphery:
+    runs-on: ubuntu-latest
 
     defaults:
       run:
@@ -49,26 +38,16 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - run: npm i -g npm
-        working-directory: ./
       - run: npm run bootstrap
         working-directory: ./
       - run: npm run compile
-        working-directory: ./src/core
-
-      - run: npm install && npm run compile
       - run: npm run test
   
-  farming:
-    strategy:
-      matrix:
-        node: ['14.x']
-        os: [ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
+  Farming:
+    runs-on: ubuntu-latest
 
     defaults:
       run:
@@ -78,18 +57,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - run: npm i -g npm
-        working-directory: ./
       - run: npm run bootstrap
         working-directory: ./
       - run: npm run compile
-        working-directory: ./src/core
-
-      - run: npm install && npm run compile
-        working-directory: ./src/periphery
-
-      - run: npm install && npm run compile
       - run: npm run test
