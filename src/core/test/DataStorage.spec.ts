@@ -138,10 +138,6 @@ describe('DataStorage', () => {
         return { secondsPerLiquidityCumulative, tickCumulative }
       }
 
-      xit('fails before initialize', async () => {
-        await expect(getSingleTimepoint(0)).to.be.revertedWith('I')
-      })
-
       it('fails if an older timepoint does not exist', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await expect(getSingleTimepoint(1)).to.be.revertedWith('OLD')

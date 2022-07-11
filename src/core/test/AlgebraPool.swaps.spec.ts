@@ -277,20 +277,7 @@ interface PoolTestCase {
 
 const TEST_POOLS: PoolTestCase[] = [
   {
-    description: 'low fee, 1:1 price, 2e18 max range liquidity',
-    feeAmount: FeeAmount.LOW,
-    tickSpacing: TICK_SPACINGS[FeeAmount.LOW],
-    startingPrice: encodePriceSqrt(1, 1),
-    positions: [
-      {
-        bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.LOW]),
-        topTick: getMaxTick(TICK_SPACINGS[FeeAmount.LOW]),
-        liquidity: expandTo18Decimals(2),
-      },
-    ],
-  },
-  {
-    description: 'medium fee, 1:1 price, 2e18 max range liquidity',
+    description: '1:1 price, 2e18 max range liquidity',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 1),
@@ -303,20 +290,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'high fee, 1:1 price, 2e18 max range liquidity',
-    feeAmount: FeeAmount.HIGH,
-    tickSpacing: TICK_SPACINGS[FeeAmount.HIGH],
-    startingPrice: encodePriceSqrt(1, 1),
-    positions: [
-      {
-        bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.HIGH]),
-        topTick: getMaxTick(TICK_SPACINGS[FeeAmount.HIGH]),
-        liquidity: expandTo18Decimals(2),
-      },
-    ],
-  },
-  {
-    description: 'medium fee, 10:1 price, 2e18 max range liquidity',
+    description: '10:1 price, 2e18 max range liquidity',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(10, 1),
@@ -329,7 +303,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'medium fee, 1:10 price, 2e18 max range liquidity',
+    description: '1:10 price, 2e18 max range liquidity',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 10),
@@ -342,7 +316,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'medium fee, 1:1 price, 0 liquidity, all liquidity around current price',
+    description: '1:1 price, 0 liquidity, all liquidity around current price',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 1),
@@ -360,7 +334,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'medium fee, 1:1 price, additional liquidity around current price',
+    description: '1:1 price, additional liquidity around current price',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 1),
@@ -383,7 +357,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'low fee, large liquidity around current price (stable swap)',
+    description: 'large liquidity around current price (stable swap)',
     feeAmount: FeeAmount.LOW,
     tickSpacing: TICK_SPACINGS[FeeAmount.LOW],
     startingPrice: encodePriceSqrt(1, 1),
@@ -396,7 +370,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'medium fee, token0 liquidity only',
+    description: 'token0 liquidity only',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 1),
@@ -409,7 +383,7 @@ const TEST_POOLS: PoolTestCase[] = [
     ],
   },
   {
-    description: 'medium fee, token1 liquidity only',
+    description: 'token1 liquidity only',
     feeAmount: FeeAmount.MEDIUM,
     tickSpacing: TICK_SPACINGS[FeeAmount.MEDIUM],
     startingPrice: encodePriceSqrt(1, 1),
