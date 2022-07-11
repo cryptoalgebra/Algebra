@@ -54,9 +54,8 @@ jobs:
         uses: crytic/echidna-action@v2
         with:
           solc-version: 0.7.6
-          files: .
+          files: ./src/core
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
-          config: echidna.config.yml
-        working-directory: ./src/core
+          config: ./src/core/echidna.config.yml
 
