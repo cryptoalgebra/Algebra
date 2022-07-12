@@ -24,6 +24,13 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
     }
 
+    // try to reenter swap supporting fee
+    try IAlgebraPool(msg.sender).swapSupportingFeeOnInputTokens(address(0), address(0), false, 1, 0, new bytes(0)) {} catch Error(
+      string memory reason
+    ) {
+      require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
+    }
+
     // try to reenter mint
     try IAlgebraPool(msg.sender).mint(address(0), address(0), 0, 0, 0, new bytes(0)) {} catch Error(string memory reason) {
       require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));

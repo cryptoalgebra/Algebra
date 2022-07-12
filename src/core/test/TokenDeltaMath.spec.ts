@@ -238,6 +238,10 @@ describe('TokenDeltaMath', () => {
   })
 
   describe('#getToken0Delta', () => {
+    it('fails if prices are incorrect', async () => {
+      await expect(sqrtPriceMath.getToken0Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1) , 0, true)).to.be.reverted;
+      await expect(sqrtPriceMath.getToken0Delta(0, encodePriceSqrt(2, 1) , 0, true)).to.be.reverted;
+    })
     it('returns 0 if liquidity is 0', async () => {
       const amount0 = await sqrtPriceMath.getToken0Delta(encodePriceSqrt(1, 1), encodePriceSqrt(2, 1), 0, true)
 
@@ -308,6 +312,9 @@ describe('TokenDeltaMath', () => {
   })
 
   describe('#getToken1Delta', () => {
+    it('fails if prices are incorrect', async () => {
+      await expect(sqrtPriceMath.getToken1Delta(encodePriceSqrt(2, 1), encodePriceSqrt(1, 1) , 0, true)).to.be.reverted;
+    })
     it('returns 0 if liquidity is 0', async () => {
       const amount1 = await sqrtPriceMath.getToken1Delta(encodePriceSqrt(1, 1), encodePriceSqrt(2, 1), 0, true)
 
