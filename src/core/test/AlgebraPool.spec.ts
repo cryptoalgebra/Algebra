@@ -118,6 +118,10 @@ describe('AlgebraPool', () => {
     expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("11505743598341114571880798222544994"))
   })
 
+  it('_blockTimestamp works', async() => {
+    expect(await pool.checkBlockTimestamp()).to.be.eq(true);
+  })
+
   describe('#initialize', () => {
     it('fails if already initialized', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
@@ -200,6 +204,36 @@ describe('AlgebraPool', () => {
       })
 
       describe('failure cases', () => {
+        describe('underpayment', () => {
+          let payer: TestAlgebraSwapPay;
+
+          beforeEach(async() => {
+            const factory = await ethers.getContractFactory('TestAlgebraSwapPay')
+            payer = (await factory.deploy()) as TestAlgebraSwapPay;
+            await token0.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+            await token1.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+          })
+
+          it('fails if token0 payed 0', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWith('IIA');
+          }) 
+
+          it('fails if token1 payed 0', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIA');
+          }) 
+
+          it('fails if token0 hardly underpayed', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 1, expandTo18Decimals(100))).to.be.revertedWith('IIL2');
+          })     
+
+          it('fails if token1 hardly underpayed', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -22980, BigNumber.from('11505743598341114571880798222544994'), expandTo18Decimals(100), 1)).to.be.revertedWith('IIL2');
+          })          
+        })
+
+
         it('fails if bottomTick greater than topTick', async () => {
           // should be TLU but...hardhat
           await expect(mint(wallet.address, 1, 0, 1)).to.be.reverted
@@ -238,7 +272,7 @@ describe('AlgebraPool', () => {
             .to.not.be.reverted
         })
         it('fails if amount is 0', async () => {
-          await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 0)).to.be.reverted
+          await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 0)).to.be.revertedWith('IL');
         })
       })
 
@@ -1083,9 +1117,11 @@ describe('AlgebraPool', () => {
     })
 
     it('cannot be changed out of bounds', async () => {
-      await expect(pool.setCommunityFee(330, 330)).to.be.reverted
-      await expect(pool.setCommunityFee(330, 0)).to.be.reverted
-      await expect(pool.setCommunityFee(0, 330)).to.be.reverted
+      await expect(pool.setCommunityFee(251, 251)).to.be.reverted
+      await expect(pool.setCommunityFee(251, 0)).to.be.reverted
+      await expect(pool.setCommunityFee(0, 251)).to.be.reverted
+      await expect(pool.setCommunityFee(251, 250)).to.be.reverted
+      await expect(pool.setCommunityFee(250, 251)).to.be.reverted
     })
 
     it('cannot be changed by addresses that are not owner', async () => {
@@ -1193,6 +1229,36 @@ describe('AlgebraPool', () => {
       expect(token1Fees).to.eq(0)
     })
 
+    it('swap fees accumulate as expected (0 for 1), supporting fee on transfer community on', async () => {
+      await pool.setCommunityFee(170, 170)
+      let token0Fees
+      let token1Fees
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: true,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq('82999999999999')
+      expect(token1Fees).to.eq(0)
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: true,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq('165999999999998')
+      expect(token1Fees).to.eq(0)
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: true,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq('248999999999997')
+      expect(token1Fees).to.eq(0)
+    })
+
     it('swap fees accumulate as expected (1 for 0)', async () => {
       let token0Fees
       let token1Fees
@@ -1247,6 +1313,37 @@ describe('AlgebraPool', () => {
       expect(token0Fees).to.eq(0)
       expect(token1Fees).to.eq('299999999999997')
     })
+
+    it('swap fees accumulate as expected (1 for 0) supporting fee on transfer community on', async () => {
+      await pool.setCommunityFee(170, 170)
+      let token0Fees
+      let token1Fees
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: false,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq(0)
+      expect(token1Fees).to.eq('82999999999999')
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: false,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq(0)
+      expect(token1Fees).to.eq('165999999999998')
+      ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
+        amount: expandTo18Decimals(1),
+        zeroToOne: false,
+        poke: true,
+        supportingFee: true,
+      }))
+      expect(token0Fees).to.eq(0)
+      expect(token1Fees).to.eq('248999999999997')
+    })
+
 
     it('position owner gets partial fees when community fee is on', async () => {
       await pool.setCommunityFee(170, 170)
@@ -1372,6 +1469,12 @@ describe('AlgebraPool', () => {
           expect((await pool.globalState()).tick).to.eq(-120198)
         })
       })
+  })
+
+  it('tickMath handles tick overflow', async() => {
+    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest
+    await expect(sqrtTickMath.getSqrtRatioAtTick(887273)).to.be.revertedWith('T');
+    await expect(sqrtTickMath.getSqrtRatioAtTick(-887273)).to.be.revertedWith('T');
   })
 
   xit('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
@@ -2150,11 +2253,26 @@ describe('AlgebraPool', () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
     })
+    it('swap 0 tokens', async () => {
+      await expect(
+        underpay.swap(pool.address, wallet.address, true, MIN_SQRT_RATIO.add(1), 0, 1, 0)
+      ).to.be.revertedWith('AS')
+    })
 
     it('underpay zero for one and exact in', async () => {
       await expect(
         underpay.swap(pool.address, wallet.address, true, MIN_SQRT_RATIO.add(1), 1000, 1, 0)
       ).to.be.revertedWith('IIA')
+    })
+    it('underpay hardly zero for one and exact in supporting fee on transfer', async () => {
+      await expect(
+        underpay.swapSupportingFee(pool.address, wallet.address, true, MIN_SQRT_RATIO.add(1), 1000, 0, 0)
+      ).to.be.revertedWith('IIA')
+    })
+    it('underpay zero for one and exact in supporting fee on transfer', async () => {
+      await expect(
+        underpay.swapSupportingFee(pool.address, wallet.address, true, MIN_SQRT_RATIO.add(1), 1000, 900, 0)
+      ).to.be.not.reverted;
     })
     it('pay in the wrong token zero for one and exact in', async () => {
       await expect(
@@ -2185,6 +2303,16 @@ describe('AlgebraPool', () => {
       await expect(
         underpay.swap(pool.address, wallet.address, false, MAX_SQRT_RATIO.sub(1), 1000, 0, 1)
       ).to.be.revertedWith('IIA')
+    })
+    it('underpay hardly one for zero and exact in supporting fee on transfer', async () => {
+      await expect(
+        underpay.swapSupportingFee(pool.address, wallet.address, false, MAX_SQRT_RATIO.sub(1), 1000, 0, 0)
+      ).to.be.revertedWith('IIA')
+    })
+    it('underpay one for zero and exact in supporting fee on transfer', async () => {
+      await expect(
+        underpay.swapSupportingFee(pool.address, wallet.address, false, MAX_SQRT_RATIO.sub(1), 1000, 0, 990)
+      ).to.be.not.reverted
     })
     it('pay in the wrong token one for zero and exact in', async () => {
       await expect(

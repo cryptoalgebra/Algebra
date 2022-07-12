@@ -92,6 +92,10 @@ describe('AlgebraFactory', () => {
       await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
     })
 
+    it('fails if trying to create via pool deployer directly', async () => {
+      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], factory.address, TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted
+    })
+
     it('fails if token a == token b', async () => {
       await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted
     })
@@ -106,6 +110,29 @@ describe('AlgebraFactory', () => {
 
     it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]))
+    })
+  })
+  describe('Pool deployer', () => {
+    it('cannot change factory after initialization', async () => {
+      await expect(poolDeployer.setFactory(wallet.address)).to.be.reverted
+    })
+
+    it('cannot set zero address as factory', async () => {
+      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
+      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
+      await expect(_poolDeployer.setFactory(constants.AddressZero)).to.be.reverted
+    })
+
+    it('cannot set factory if caller is not owner', async () => {
+      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
+      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
+      await expect(_poolDeployer.connect(other).setFactory(TEST_ADDRESSES[0])).to.be.reverted
+    })
+
+    it('can set factory', async () => {
+      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
+      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
+      await expect(_poolDeployer.setFactory(TEST_ADDRESSES[0])).to.be.not.reverted;
     })
   })
 
