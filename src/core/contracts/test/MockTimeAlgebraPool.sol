@@ -24,6 +24,11 @@ contract MockTimeAlgebraPool is AlgebraPool {
     return uint32(time);
   }
 
+  function checkBlockTimestamp() external view returns (bool) {
+    require(super._blockTimestamp() == uint32(block.timestamp));
+    return true;
+  }
+
   function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
     (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
       _blockTimestamp(),

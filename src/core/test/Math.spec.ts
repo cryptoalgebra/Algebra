@@ -1,5 +1,6 @@
 import { ethers } from 'hardhat'
 import { FullMathTest } from '../typechain/FullMathTest'
+import { SafeMathTest } from '../typechain/SafeMathTest'
 import { expect } from './shared/expect'
 import { Decimal } from 'decimal.js'
 
@@ -10,6 +11,52 @@ const {
 const Q128 = BigNumber.from(2).pow(128)
 
 Decimal.config({ toExpNeg: -500, toExpPos: 500 })
+
+describe('SafeMath', () => {
+  let safeMath: SafeMathTest;
+
+  before('deploy FullMathTest', async () => {
+    const factory = await ethers.getContractFactory('SafeMathTest')
+    safeMath = (await factory.deploy()) as SafeMathTest
+  })
+
+  it('#add', async () => {
+    await expect(safeMath.add(BigNumber.from(2).pow(256).sub(1), 1)).to.be.reverted;
+  })
+
+  it('#sub', async () => {
+    await expect(safeMath.sub(Q128.sub(1), Q128)).to.be.reverted;
+  })
+
+  it('#mul', async () => {
+    await expect(safeMath.mul(Q128, Q128)).to.be.reverted;
+  })
+
+  it('#addInt', async () => {
+    await expect(safeMath.addInt(BigNumber.from(2).pow(255).sub(1), 1)).to.be.reverted;
+  })
+
+  it('#subInt', async () => {
+    await expect(safeMath.subInt(100, BigNumber.from(2).pow(256).sub(1))).to.be.reverted;
+    await expect(safeMath.subInt(BigNumber.from(2).pow(255).sub(1), -100)).to.be.reverted;
+  })
+
+  it('#add128', async () => {
+    await expect(safeMath.add128(Q128.sub(10), 15)).to.be.reverted;
+  })
+  
+  it('#toUint160', async () => {
+    await expect(safeMath.toUint160(BigNumber.from(2).pow(255).sub(1))).to.be.reverted;
+  })
+
+  it('#toInt128', async () => {
+    await expect(safeMath.toInt128(BigNumber.from(2).pow(255).sub(1))).to.be.reverted;
+  })
+
+  it('#toInt256', async () => {
+    await expect(safeMath.toInt256(BigNumber.from(2).pow(256).sub(1))).to.be.reverted;
+  })
+})
 
 describe('FullMath', () => {
   let fullMath: FullMathTest

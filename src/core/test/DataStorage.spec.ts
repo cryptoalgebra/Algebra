@@ -1,6 +1,7 @@
 import { BigNumber, BigNumberish, Wallet } from 'ethers'
 import { ethers, waffle } from 'hardhat'
 import { DataStorageTest } from '../typechain/DataStorageTest'
+import { DataStorageOperator } from '../typechain/DataStorageOperator'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME } from './shared/fixtures'
@@ -35,6 +36,10 @@ describe('DataStorage', () => {
     let dataStorage: DataStorageTest
     beforeEach('deploy test dataStorage', async () => {
       dataStorage = await loadFixture(dataStorageFixture)
+    })
+    it('cannot initialize twice', async () => {
+      await dataStorage.initialize({ liquidity: 1, tick: 1, time: 1 })
+      await expect(dataStorage.initialize({ liquidity: 2, tick: 1, time: 1 })).to.be.reverted;
     })
     it('index is 0', async () => {
       await dataStorage.initialize({ liquidity: 1, tick: 1, time: 1 })
@@ -137,10 +142,6 @@ describe('DataStorage', () => {
         } = await dataStorage.getTimepoints([secondsAgo])
         return { secondsPerLiquidityCumulative, tickCumulative }
       }
-
-      xit('fails before initialize', async () => {
-        await expect(getSingleTimepoint(0)).to.be.revertedWith('I')
-      })
 
       it('fails if an older timepoint does not exist', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
@@ -625,6 +626,127 @@ describe('DataStorage', () => {
     it('gas cost of getTimepoints(oldest) after 5 seconds', async () => {
       await dataStorage.advanceTime(5)
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * 13 + 5]))
+    })
+  })
+})
+
+describe('DataStorageOperator external methods', () => {
+  let wallet: Wallet, other: Wallet;
+  let dataStorageOperator: DataStorageOperator;
+  before('get signers', async () => {
+    ;[wallet, other] = await (ethers as any).getSigners()
+  })
+
+  beforeEach('deploy DataStorageOperator', async () => {
+    const dataStorageOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
+    dataStorageOperator = (await dataStorageOperatorFactory.deploy(ethers.constants.AddressZero)) as DataStorageOperator;
+  })
+
+  it('can get WINDOW', async() => {
+    expect(await dataStorageOperator.window()).to.be.eq(24*60*60);
+  })
+
+  it('cannot call onlyPool methods', async () => {
+    await expect(dataStorageOperator.getAverages(100, 0, 2, 1)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.write(10, 100, 2, 4, 2)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.getFee(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
+  })
+
+  describe('#calculateVolumePerLiquidity', () => {
+    it('volume > 2**192', async() => {
+      let amount0 = BigNumber.from(2).pow(192).add(1);
+      let amount1 = BigNumber.from(2).pow(192).add(1);
+      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
+    })
+
+    it('volume > max', async() => {
+      let amount0 = BigNumber.from(110000);
+      let amount1 = BigNumber.from(110000);
+      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
+    })
+
+    it('volume < max, zero liquidity', async() => {
+      let amount0 = BigNumber.from(1000);
+      let amount1 = BigNumber.from(1000);
+      let volumePerLiquidity = await dataStorageOperator.calculateVolumePerLiquidity(0, amount0, amount1);
+      expect(volumePerLiquidity.shr(64)).to.be.eq(961);
+    })
+  })
+  describe('#changeFeeConfiguration', () => {
+    const configuration  = {
+      alpha1: 3002,
+      alpha2: 10009,
+      beta1: 1001,
+      beta2: 1006,
+      gamma1: 20,
+      gamma2: 22,
+      volumeBeta: 1007,
+      volumeGamma: 26,
+      baseFee: 150
+    }
+    it('fails if caller is not factory', async () => {
+      await expect(dataStorageOperator.connect(other).changeFeeConfiguration(
+        configuration
+      )).to.be.reverted;
+    })
+
+    it('updates baseFeeConfiguration', async () => {
+      await dataStorageOperator.changeFeeConfiguration(
+        configuration
+      );
+
+      const newConfig = await dataStorageOperator.feeConfig();
+
+      expect(newConfig.alpha1).to.eq(configuration.alpha1);
+      expect(newConfig.alpha2).to.eq(configuration.alpha2);
+      expect(newConfig.beta1).to.eq(configuration.beta1);
+      expect(newConfig.beta2).to.eq(configuration.beta2);
+      expect(newConfig.gamma1).to.eq(configuration.gamma1);
+      expect(newConfig.gamma2).to.eq(configuration.gamma2);
+      expect(newConfig.volumeBeta).to.eq(configuration.volumeBeta);
+      expect(newConfig.volumeGamma).to.eq(configuration.volumeGamma);
+      expect(newConfig.baseFee).to.eq(configuration.baseFee);
+    })
+
+    it('emits event', async () => {
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        configuration
+      )).to.emit(dataStorageOperator, 'FeeConfiguration')
+        .withArgs(
+          [...Object.values(configuration)]
+        );
+    })
+
+    it('cannot exceed max fee', async () => {
+      let wrongConfig = {...configuration};
+      wrongConfig.alpha1 = 30000;
+      wrongConfig.alpha2 = 30000;
+      wrongConfig.baseFee = 15000;
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        wrongConfig
+      )).to.be.revertedWith('Max fee exceeded');
+    })
+
+    it('cannot set zero gamma', async () => {
+      let wrongConfig1 = {...configuration};
+      wrongConfig1.gamma1 = 0;
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        wrongConfig1
+      )).to.be.revertedWith('Gammas must be > 0');
+      
+      let wrongConfig2 = {...configuration};
+      wrongConfig2.gamma2 = 0;
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        wrongConfig2
+      )).to.be.revertedWith('Gammas must be > 0');
+
+      let wrongConfig3 = {...configuration};
+      wrongConfig3.volumeGamma = 0;
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        wrongConfig3
+      )).to.be.revertedWith('Gammas must be > 0');
     })
   })
 })
