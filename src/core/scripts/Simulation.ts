@@ -45,6 +45,8 @@ let flash: FlashFunction
 
 const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
+const PACK_SIZE = 10000; // how many blocks should be in one pack
+
 const FEE_CONFIGURATION = { // can be changed for different fee behavior
   alpha1: 2900,
   alpha2: 15000 - 3000,
@@ -117,12 +119,12 @@ async function main() {
   ]);
   await deployTokens();
   const blocks = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'AllBlocks_timestamped.json')).toString());
-  const fees = [];
-  const volats = [];
-  const volumesPerLiq = [];
-  const ticks = [];
-  const uniTicks = [];
-  const timestamps = []
+  let fees = [];
+  let volats = [];
+  let volumesPerLiq = [];
+  let ticks = [];
+  let uniTicks = [];
+  let timestamps = [];
   pool = await createPool(token0, token1);
   ({
     swapToLowerPrice,
@@ -152,6 +154,7 @@ async function main() {
   console.log(wallet.address);
   console.log('Number of blocks: ', blocks.length)
   await network.provider.send("evm_setAutomine", [false]);
+  let currentPack = 0;
   for (let blockNum = 0; blockNum < blocks.length; blockNum++) {
     let block = blocks[blockNum]
     //console.log('BLOCK:', blockNum, '|', blocks.length,  block[0].blockNumber)
@@ -170,34 +173,34 @@ async function main() {
     }
     for (let evNum = 0; evNum < block.length; evNum++) {
         let event = block[evNum]
-
         let values = event.returnValues
-        if (event.event == "Initialize") {
-          if (!initialized) {
-            await pool.initialize(BigNumber.from(values.price));
-            initialized = true;
-          }
-        } else if (event.event == "Mint") {
-          //console.log('Mint')
-          if (values.amount < 0) console.log('ERR: MINT', values.amount);
-          await mint(wallet.address, values.bottomTick, values.topTick, values.amount)
-
-        } else if (event.event == "Burn") {
-          //console.log('Burn')
-          if (values.amount < 0) console.log('ERR: BURN', values.amount);
-          await pool.burn(values.bottomTick, values.topTick, values.amount, {from: wallet.address})
-        } else if (event.event == "Swap") {
-          if (values.amount0 < 0) {
-            if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
-            await swapExact1For0(values.amount1, wallet.address);
-            // 1 -> 0
-          } else {
-            // 0 -> 1
-            if (values.amount0 < 0) console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
-            await swapExact0For1(values.amount0, wallet.address);
-          }
-          lastTick = values.tick;
-          //console.log('SWAP:', 'U', values.tick, 'A', (await pool.globalState()).tick)
+        switch(event.event) {
+          case "Initialize":
+            if (!initialized) {
+              await pool.initialize(BigNumber.from(values.price));
+              initialized = true;
+            }
+            break;
+          case "Mint":
+            if (values.amount < 0) console.log('ERR: MINT', values.amount);
+            await mint(wallet.address, values.bottomTick, values.topTick, values.amount)
+            break;
+          case "Burn":
+            if (values.amount < 0) console.log('ERR: BURN', values.amount);
+            await pool.burn(values.bottomTick, values.topTick, values.amount, {from: wallet.address})
+            break;
+          case "Swap":
+            if (values.amount0 < 0) {
+              if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
+              await swapExact1For0(values.amount1, wallet.address);
+              // 1 -> 0
+            } else {
+              // 0 -> 1
+              if (values.amount0 < 0) console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
+              await swapExact0For1(values.amount0, wallet.address);
+            }
+            lastTick = values.tick;
+            break;
         }
     }
     await network.provider.send("evm_mine", []);
@@ -222,6 +225,26 @@ async function main() {
     }
     
     //console.log('FEE:', (await pool.globalState()).fee)
+    let packNumber = Math.floor(blockNum / PACK_SIZE);
+    if (packNumber !== currentPack) {
+      let res = {
+        fees,
+        volats,
+        volumesPerLiq,
+        ticks,
+        timestamps,
+        uniTicks
+      }
+      fs.writeFileSync(path.resolve(__dirname, `results_${currentPack}.json`), JSON.stringify(res));
+      currentPack = packNumber;
+      fees = [];
+      volats = [];
+      volumesPerLiq = [];
+      ticks = [];
+      uniTicks = [];
+      timestamps = [];
+    }
+
     let state = await pool.globalState();
     let fee = state.fee;
     fees.push(fee)
@@ -235,18 +258,20 @@ async function main() {
     //console.log('\n');
     currentBlock = blockNum;
     printProgress((100*(blockNum/blocks.length)).toFixed(2), timeConverter(block[0].timestamp), fee, stats[0].toString())
-}
-  clearInterval(interval);
-  const res = {
-    fees,
-    volats,
-    volumesPerLiq,
-    ticks,
-    timestamps,
-    uniTicks
   }
 
-  fs.writeFileSync(path.resolve(__dirname, 'results.json'), JSON.stringify(res));
+  if (currentPack != Math.ceil(blocks.length/PACK_SIZE)) {
+    let res = {
+      fees,
+      volats,
+      volumesPerLiq,
+      ticks,
+      timestamps,
+      uniTicks
+    }
+    fs.writeFileSync(path.resolve(__dirname, `results_${currentPack}.json`), JSON.stringify(res));
+  }
+  clearInterval(interval);
 }
 
 
