@@ -151,6 +151,7 @@ async function main() {
   let lastTick = (await pool.globalState()).tick;
   console.log(wallet.address);
   console.log('Number of blocks: ', blocks.length)
+  await network.provider.send("evm_setAutomine", [false]);
   for (let blockNum = 0; blockNum < blocks.length; blockNum++) {
     let block = blocks[blockNum]
     //console.log('BLOCK:', blockNum, '|', blocks.length,  block[0].blockNumber)
@@ -198,8 +199,9 @@ async function main() {
           lastTick = values.tick;
           //console.log('SWAP:', 'U', values.tick, 'A', (await pool.globalState()).tick)
         }
-
     }
+    await network.provider.send("evm_mine", []);
+
     //console.log('Liq:', (await pool.liquidity()).toString())
     let stats
     try {
