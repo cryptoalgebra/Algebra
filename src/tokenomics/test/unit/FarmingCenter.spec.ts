@@ -1,6 +1,6 @@
 import { BigNumber, Contract, Wallet } from 'ethers'
 import { LoadFixtureFunction } from '../types'
-import { TestERC20, TestRewardMath } from '../../typechain'
+import { TestERC20 } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
