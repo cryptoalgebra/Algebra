@@ -1,7 +1,7 @@
 import { BigNumber, Wallet } from 'ethers'
 import { LoadFixtureFunction } from '../types'
 import { TestERC20 } from '../../typechain'
-import { algebraEternalFixture, mintPosition, EternalAlgebraFixtureType } from '../shared/fixtures'
+import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
   getMaxTick,
@@ -10,7 +10,6 @@ import {
   TICK_SPACINGS,
   blockTimestamp,
   BN,
-  BNe,
   BNe18,
   snapshotGasCost,
   ActorFixture,
@@ -37,17 +36,16 @@ describe('unit/EternalFarms', () => {
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
-  let context: EternalAlgebraFixtureType
+  let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
   let tokenId: string
-  let L2tokenId: string
 
   before('loader', async () => {
     loadFixture = createFixtureLoader(provider.getWallets(), provider)
   })
 
   beforeEach('create fixture loader', async () => {
-    context = await loadFixture(algebraEternalFixture)
+    context = await loadFixture(algebraFixture)
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
@@ -57,7 +55,7 @@ describe('unit/EternalFarms', () => {
     let subject: (L2TokenId: string, _actor: Wallet) => Promise<any>
 
     beforeEach(async () => {
-      context = await loadFixture(algebraEternalFixture)
+      context = await loadFixture(algebraFixture)
       helpers = HelperCommands.fromTestContext(context, actors, provider)
 
       /** We will be doing a lot of time-testing here, so leave some room between
@@ -127,17 +125,17 @@ describe('unit/EternalFarms', () => {
       it('emits the farm event', async () => {
         const { liquidity } = await context.nft.positions(tokenId)
         await expect(subject(tokenId, lpUser0))
-          .to.emit(context.farming, 'FarmEntered')
+          .to.emit(context.eternalFarming, 'FarmEntered')
           .withArgs(tokenId, incentiveId, liquidity, 0)
       })
 
       it('sets the farm struct properly', async () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
-        const farmBefore = await context.farming.farms(tokenId, incentiveId)
+        const farmBefore = await context.eternalFarming.farms(tokenId, incentiveId)
         const depositFarmsBefore = (await context.farmingCenter.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
-        const farmAfter = await context.farming.farms(tokenId, incentiveId)
+        const farmAfter = await context.eternalFarming.farms(tokenId, incentiveId)
         const depositFarmsAfter = (await context.farmingCenter.deposits(tokenId)).L2TokenId
 
         expect(farmBefore.liquidity).to.eq(0)
@@ -306,7 +304,7 @@ describe('unit/EternalFarms', () => {
 
       // await Time.set(timestamps.startTime)
       await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
-      await context.farming.farms(tokenId, incentiveId)
+      await context.eternalFarming.farms(tokenId, incentiveId)
 
       const pool = context.poolObj.connect(actors.lpUser0())
 
@@ -372,7 +370,7 @@ describe('unit/EternalFarms', () => {
 
       // await Time.set(timestamps.startTime)
       await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
-      await context.farming.farms(tokenId, incentiveId)
+      await context.eternalFarming.farms(tokenId, incentiveId)
     })
 
     it('returns correct rewardAmount and secondsInsideX128 for the position', async () => {
@@ -397,11 +395,11 @@ describe('unit/EternalFarms', () => {
 
       Time.set(timestamps.endTime + 10)
 
-      const rewardInfo = await context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
+      const rewardInfo = await context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
 
       const { tickLower, tickUpper } = await context.nft.positions(tokenId)
       const { innerSecondsSpentPerLiquidity } = await pool.getInnerCumulatives(tickLower, tickUpper)
-      const farm = await context.farming.farms(tokenId, incentiveId)
+      const farm = await context.eternalFarming.farms(tokenId, incentiveId)
 
       const expectedSecondsInPeriod = innerSecondsSpentPerLiquidity
         .mul(farm.liquidity)
@@ -414,7 +412,7 @@ describe('unit/EternalFarms', () => {
     it('reverts if farm does not exist', async () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
-      await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
+      await expect(context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
         'farm does not exist'
       )
     })
@@ -469,24 +467,24 @@ describe('unit/EternalFarms', () => {
         ETERNAL_FARMING
       )
 
-      claimable = await context.farming.rewards(lpUser0.address, context.rewardToken.address)
+      claimable = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
 
       subject = (_token: string, _to: string, _amount: BigNumber) =>
-        context.farming.connect(lpUser0).claimReward(_token, _to, _amount)
+        context.eternalFarming.connect(lpUser0).claimReward(_token, _to, _amount)
     })
 
     describe('when requesting the full amount', () => {
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context
-        claimable = await context.farming.rewards(lpUser0.address, rewardToken.address)
+        claimable = await context.eternalFarming.rewards(lpUser0.address, rewardToken.address)
         await expect(subject(rewardToken.address, lpUser0.address, BN('0')))
-          .to.emit(context.farming, 'RewardClaimed')
+          .to.emit(context.eternalFarming, 'RewardClaimed')
           .withArgs(lpUser0.address, claimable, context.rewardToken.address, lpUser0.address)
       })
 
       it('transfers the correct reward amount to destination address', async () => {
         const { rewardToken } = context
-        claimable = await context.farming.rewards(lpUser0.address, rewardToken.address)
+        claimable = await context.eternalFarming.rewards(lpUser0.address, rewardToken.address)
         const balance = await rewardToken.balanceOf(lpUser0.address)
         await subject(rewardToken.address, lpUser0.address, BN('0'))
         expect(await rewardToken.balanceOf(lpUser0.address)).to.equal(balance.add(claimable))
@@ -494,11 +492,11 @@ describe('unit/EternalFarms', () => {
 
       it('sets the claimed reward amount to zero', async () => {
         const { rewardToken } = context
-        expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.not.equal(0)
+        expect(await context.eternalFarming.rewards(lpUser0.address, rewardToken.address)).to.not.equal(0)
 
         await subject(rewardToken.address, lpUser0.address, BN('0'))
 
-        expect(await context.farming.rewards(lpUser0.address, rewardToken.address)).to.equal(0)
+        expect(await context.eternalFarming.rewards(lpUser0.address, rewardToken.address)).to.equal(0)
       })
 
       it('has gas cost [ @skip-on-coverage ]', async () =>
@@ -517,35 +515,35 @@ describe('unit/EternalFarms', () => {
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context
         await expect(subject(rewardToken.address, lpUser0.address, claimable))
-          .to.emit(context.farming, 'RewardClaimed')
+          .to.emit(context.eternalFarming, 'RewardClaimed')
           .withArgs(lpUser0.address, claimable, context.rewardToken.address, lpUser0.address)
       })
 
       it('transfers the correct reward amount to destination address', async () => {
         const { rewardToken } = context
-        claimable = await context.farming.rewards(lpUser0.address, rewardToken.address)
+        claimable = await context.eternalFarming.rewards(lpUser0.address, rewardToken.address)
         const balance = await rewardToken.balanceOf(lpUser0.address)
         await subject(rewardToken.address, lpUser0.address, claimable)
         expect(await rewardToken.balanceOf(lpUser0.address)).to.equal(balance.add(claimable))
       })
 
       it('sets the claimed reward amount to the correct amount', async () => {
-        const { rewardToken, farming } = context
-        const initialRewardBalance = await farming.rewards(lpUser0.address, rewardToken.address)
+        const { rewardToken, eternalFarming } = context
+        const initialRewardBalance = await eternalFarming.rewards(lpUser0.address, rewardToken.address)
         expect(initialRewardBalance).to.not.equal(BN('0'))
 
         const partialClaim = initialRewardBalance.div(BN('3'))
         await subject(rewardToken.address, lpUser0.address, partialClaim)
 
-        expect(await farming.rewards(lpUser0.address, rewardToken.address)).to.eq(initialRewardBalance.sub(partialClaim))
+        expect(await eternalFarming.rewards(lpUser0.address, rewardToken.address)).to.eq(initialRewardBalance.sub(partialClaim))
       })
 
       describe('when user claims more than they have', () => {
         it('only transfers what they have', async () => {
-          const { rewardToken, farming } = context
+          const { rewardToken, eternalFarming } = context
           const amountBefore = await rewardToken.balanceOf(lpUser0.address)
           await subject(rewardToken.address, lpUser0.address, claimable.mul(BN('3')))
-          expect(await farming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
+          expect(await eternalFarming.rewards(lpUser0.address, rewardToken.address)).to.eq(BN('0'))
           expect(await rewardToken.balanceOf(lpUser0.address)).to.eq(amountBefore.add(claimable))
         })
       })
@@ -626,7 +624,7 @@ describe('unit/EternalFarms', () => {
           },
           tokenId,
           ETERNAL_FARMING
-        )).to.be.emit(context.farming, 'FarmEnded')
+        )).to.be.emit(context.eternalFarming, 'FarmEnded')
       })
     })
 
@@ -713,7 +711,7 @@ describe('unit/EternalFarms', () => {
         })
 
         it('emits an exitFarmingd event', async () => {
-          await expect(subject(lpUser0)).to.emit(context.farming, 'FarmEnded').withArgs(
+          await expect(subject(lpUser0)).to.emit(context.eternalFarming, 'FarmEnded').withArgs(
               tokenId,
               incentiveId,
               context.rewardToken.address,
@@ -729,15 +727,15 @@ describe('unit/EternalFarms', () => {
         })
 
         it('updates the reward available for the context.tokenomics', async () => {
-          const rewardsAccured = await context.farming.rewards(lpUser0.address, context.rewardToken.address)
+          const rewardsAccured = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
           await subject(lpUser0)
-          expect(await context.farming.rewards(lpUser0.address, context.rewardToken.address)).to.be.gt(rewardsAccured)
+          expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)).to.be.gt(rewardsAccured)
         })
 
         it('updates the farm struct', async () => {
-          const farmBefore = await context.farming.farms(tokenId, incentiveId)
+          const farmBefore = await context.eternalFarming.farms(tokenId, incentiveId)
           await subject(lpUser0)
-          const farmAfter = await context.farming.farms(tokenId, incentiveId)
+          const farmAfter = await context.eternalFarming.farms(tokenId, incentiveId)
 
           expect(farmBefore.liquidity).to.gt(0)
           expect(farmAfter.liquidity).to.eq(0)
@@ -813,7 +811,7 @@ describe('unit/EternalFarms', () => {
       })
 
       await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0, ETERNAL_FARMING)
-      const farm = await context.farming.farms(tokenId, incentiveId)
+      const farm = await context.eternalFarming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.lt(MAX_UINT_96)
     })
 
@@ -834,7 +832,7 @@ describe('unit/EternalFarms', () => {
       })
 
       await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0, ETERNAL_FARMING)
-      const farm = await context.farming.farms(tokenId, incentiveId)
+      const farm = await context.eternalFarming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
     })
   })
