@@ -51,7 +51,7 @@ let flash: FlashFunction
 
 const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
-const PACK_SIZE = 10000; // how many blocks should be in one pack
+const PACK_SIZE = 20000; // how many blocks should be in one pack
 
 const FEE_CONFIGURATION = { // can be changed for different fee behavior
   alpha1: 2900,
@@ -203,13 +203,13 @@ async function main() {
           case "Swap":
             if (values.amount0 < 0) {
               if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
-              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE, gasLimit: GAS_LIMIT});
+              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
               nonce++;
               // 1 -> 0
             } else {
               // 0 -> 1
               if (values.amount0 < 0) console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
-              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE, gasLimit: GAS_LIMIT});
+              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
               nonce++;
             }
             lastTick = values.tick;
