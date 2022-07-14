@@ -29,6 +29,12 @@ let pool: SimulationTimeAlgebraPool
 
 let swapTarget: TestAlgebraCallee
 
+const MIN_ALLOWED_SQRT_RATIO = BigNumber.from('4295128739').add(1);
+const MAX_ALLOWED_SQRT_RATIO = BigNumber.from('1461446703485210103287273052203988822378723970342').sub(1);
+
+const GAS_PRICE = 40000000000;
+const GAS_LIMIT = 1000000;
+
 let swapToLowerPrice: SwapToPriceFunction
 let swapToHigherPrice: SwapToPriceFunction
 let swapExact0For1: SwapFunction
@@ -112,7 +118,6 @@ async function deployTokens() {
 
 
 async function main() {
-  await network.provider.send("hardhat_setLoggingEnabled", [false]);
   await network.provider.send("hardhat_setBalance", [
     "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
     "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
@@ -140,6 +145,9 @@ async function main() {
     pool: pool as MockTimeAlgebraPool,
   }))
 
+  await token0.approve(swapTarget.address, BigNumber.from(2).pow(256).sub(1))
+  await token1.approve(swapTarget.address, BigNumber.from(2).pow(256).sub(1))
+
   await pool.advanceTime(86400000);
   let initialized = false;
   let lastTimestamp = 0;
@@ -153,13 +161,12 @@ async function main() {
   let lastTick = (await pool.globalState()).tick;
   console.log(wallet.address);
   console.log('Number of blocks: ', blocks.length)
-  await network.provider.send("evm_setAutomine", [false]);
+
+  let nonce = await wallet.getTransactionCount();
+  //await network.provider.send("evm_setAutomine", [false]);
   let currentPack = 0;
   for (let blockNum = 0; blockNum < blocks.length; blockNum++) {
     let block = blocks[blockNum]
-    //console.log('BLOCK:', blockNum, '|', blocks.length,  block[0].blockNumber)
-    //console.log('DATE:', timeConverter(block[0].timestamp))
-    //console.log('TIMESTAMP:', block[0].timestamp)
     if (!block[0].timestamp) {
       continue;
     }
@@ -167,7 +174,8 @@ async function main() {
       lastTimestamp = block[0].timestamp
     } else {
       if (lastTimestamp !== block[0].timestamp) {
-        await pool.advanceTime(BigNumber.from(block[0].timestamp).sub(BigNumber.from(lastTimestamp)))
+        await pool.advanceTime(BigNumber.from(block[0].timestamp).sub(BigNumber.from(lastTimestamp)), {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE})
+        nonce++;
         lastTimestamp = block[0].timestamp
       }
     }
@@ -177,54 +185,48 @@ async function main() {
         switch(event.event) {
           case "Initialize":
             if (!initialized) {
-              await pool.initialize(BigNumber.from(values.price));
+              await pool.initialize(BigNumber.from(values.price), {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+              nonce++;
               initialized = true;
             }
             break;
           case "Mint":
             if (values.amount < 0) console.log('ERR: MINT', values.amount);
-            await mint(wallet.address, values.bottomTick, values.topTick, values.amount)
+            await swapTarget.mint(pool.address, wallet.address, values.bottomTick, values.topTick, values.amount, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+            nonce++;
             break;
           case "Burn":
             if (values.amount < 0) console.log('ERR: BURN', values.amount);
-            await pool.burn(values.bottomTick, values.topTick, values.amount, {from: wallet.address})
+            await pool.burn(values.bottomTick, values.topTick, values.amount, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+            nonce++;
             break;
           case "Swap":
             if (values.amount0 < 0) {
               if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
-              await swapExact1For0(values.amount1, wallet.address);
+              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE, gasLimit: GAS_LIMIT});
+              nonce++;
               // 1 -> 0
             } else {
               // 0 -> 1
               if (values.amount0 < 0) console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
-              await swapExact0For1(values.amount0, wallet.address);
+              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE, gasLimit: GAS_LIMIT});
+              nonce++;
             }
             lastTick = values.tick;
             break;
         }
     }
-    await network.provider.send("evm_mine", []);
-
-    //console.log('Liq:', (await pool.liquidity()).toString())
-    let stats
+    //await network.provider.send("evm_mine", []);
+    let stats;
     try {
       stats = await getStatistics(DAY);
-      //console.log('Volt:', stats[0].toString())
-      //console.log('V/L:', stats[1].toString())
-      //console.log('V/L:', BigNumber.from(stats[1]).div(BigNumber.from(2).pow(BigNumber.from(61))).toString())
-      //console.log(BigNumber.from(2).pow(BigNumber.from(64)).toString())
     } catch(e) {
       let now = await pool.getTimepoints([BigNumber.from(0)]);
       stats = [now.volatilityCumulatives[0].div(BigNumber.from(DAY)), 
       now.volumePerAvgLiquiditys[0],
       now.secondsPerLiquidityCumulatives[0]]
-      //console.log('Volt:', stats[0].toString())
-      //console.log('V/L:', stats[1].toString())
-      //console.log('V/L:', BigNumber.from(stats[1]).div(BigNumber.from(2).pow(BigNumber.from(61))).toString())
-      //console.log(BigNumber.from(2).pow(BigNumber.from(64)).toString())
     }
-    
-    //console.log('FEE:', (await pool.globalState()).fee)
+
     let packNumber = Math.floor(blockNum / PACK_SIZE);
     if (packNumber !== currentPack) {
       let res = {
