@@ -1,4 +1,4 @@
-import { BigNumber, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { LoadFixtureFunction } from '../types'
 import { TestERC20 } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
@@ -15,6 +15,7 @@ import {
   ActorFixture,
   makeTimestamps,
   maxGas,
+  ZERO_ADDRESS
 } from '../shared'
 import { createFixtureLoader, provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
@@ -32,9 +33,9 @@ describe('unit/EternalFarms', () => {
   const lpUser0 = actors.lpUser0()
   const amountDesired = BNe18(10)
   const totalReward = BigNumber.from('10000');
-  const bonusReward = BigNumber.from('200');
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
+  let bonusReward = BigNumber.from('200');
   let helpers: HelperCommands
   let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
@@ -834,6 +835,184 @@ describe('unit/EternalFarms', () => {
       await context.farmingCenter.connect(lpUser0).enterFarming(incentiveResultToFarmAdapter(incentive), tokenId, 0, ETERNAL_FARMING)
       const farm = await context.eternalFarming.farms(tokenId, incentiveId)
       expect(farm.liquidity).to.be.gt(MAX_UINT_96)
+    })
+  })
+
+  describe('attach/detach incentive', () => {
+    let incentiveArgs: HelperTypes.CreateIncentive.Args
+    let incentiveKey
+    let virtualPool
+
+    beforeEach(async () => {
+      /** We will be doing a lot of time-testing here, so leave some room between
+        and when the incentive starts */
+      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+      incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10000'),
+        bonusRewardRate: BigNumber.from('50000')
+      }
+
+      incentiveKey = {
+        ...timestamps,
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        
+        pool: context.pool01,
+      }
+
+      virtualPool = await (await helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).virtualPool
+
+    })
+
+    it('detach incentive', async () => {
+      
+      let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      await context.eternalFarming.connect(incentiveCreator).detachIncentive(incentiveKey)
+      let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      expect(activeIncentiveBefore).to.equal(virtualPool.address)
+      expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
+
+    })
+
+    it('attach incentive', async () => {
+
+      await context.eternalFarming.connect(incentiveCreator).detachIncentive(incentiveKey)
+      
+      let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+      
+      await context.eternalFarming.connect(incentiveCreator).attachIncentive(incentiveKey)
+
+      let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+      
+      expect(activeIncentiveBefore).to.equal(ZERO_ADDRESS)
+      expect(activeIncentiveAfter).to.equal(virtualPool.address) 
+    })
+  })
+
+  describe('rewards', async () => {
+    let incentiveArgs: HelperTypes.CreateIncentive.Args
+    let incentiveKey
+    let incentiveId
+
+    beforeEach(async () => {
+      /** We will be doing a lot of time-testing here, so leave some room between
+        and when the incentive starts */
+      bonusReward = BN(10000)
+      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+      incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('100'),
+        bonusRewardRate: BigNumber.from('3')
+      }
+
+      incentiveKey = {
+        ...timestamps,
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        
+        pool: context.pool01,
+      }
+
+
+      incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveWithMultiplierFlow(incentiveArgs))
+
+    })
+
+    it('#addRewards', async () =>{ 
+
+      let incentiveBefore = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.rewardToken, context.bonusRewardToken],
+        amountDesired,
+        context.eternalFarming.address
+      )
+      
+      await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amountDesired, amountDesired)
+
+      let incentiveAfter = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+      
+      expect(incentiveAfter.totalReward.sub(amountDesired)).to.eq(incentiveBefore.totalReward)
+      expect(incentiveAfter.bonusReward.sub(amountDesired)).to.eq(incentiveBefore.bonusReward)
+
+    })
+
+    it('#setRates', async () => {
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.token0, context.token1],
+        amountDesired,
+        context.nft.address
+      )
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: context.token0.address,
+        token1: context.token1.address,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      context.farmingCenter.connect(lpUser0).enterFarming(
+          {
+            
+            pool: context.pool01,
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            ...timestamps,
+          },
+          tokenId,
+          0,
+          ETERNAL_FARMING
+        )
+      await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey,BN(60),BN(5))
+      let rewardsBefore = await context.eternalFarming.getRewardInfo(incentiveKey, tokenId)
+      let time = await blockTimestamp()
+
+
+      await Time.set(time + 100)
+
+      const trader = actors.traderUser0()
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 10,
+      })
+      time = await blockTimestamp()
+      let rewardsAfter = await context.eternalFarming.getRewardInfo(incentiveKey, tokenId)
+
+      expect(rewardsAfter.reward.sub(rewardsBefore.reward)).to.eq(BN(60).mul(BN(104)))
+      expect(rewardsAfter.bonusReward.sub(rewardsBefore.bonusReward)).to.eq(BN(5).mul(BN(104)))
     })
   })
 })

@@ -1,6 +1,6 @@
-import { BigNumber, Wallet } from 'ethers'
+import { BigNumber, Contract, Wallet } from 'ethers'
 import { LoadFixtureFunction } from '../types'
-import { TestERC20 } from '../../typechain'
+import { TestERC20, TestRewardMath } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -33,8 +33,8 @@ describe('unit/FarmingCenter', () => {
   const incentiveCreator = actors.incentiveCreator()
   const lpUser0 = actors.lpUser0()
   const amountDesired = BNe18(10)
-  const totalReward = BigNumber.from('10000');
-  const bonusReward = BigNumber.from('200');
+  const totalReward = BN(10000);
+  const bonusReward = BN(200);
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
@@ -580,7 +580,7 @@ describe('unit/FarmingCenter', () => {
         poolAddress: context.poolObj.address,
         ...timestamps,
         eternal: true,
-        rewardRate: BigNumber.from('10'),
+        rewardRate: BigNumber.from('100'),
         bonusRewardRate: BigNumber.from('50')
       })
 
@@ -675,6 +675,85 @@ describe('unit/FarmingCenter', () => {
         //expect(balance0After).to.be.gt(balance0Before);
         expect(balance1After).to.be.gt(balance1Before);
       })
+
+      it('#claimReward', async() => {
+        
+        let balanceBefore = await context.rewardToken.balanceOf(lpUser0.address) 
+
+        const trader = actors.traderUser0()
+
+        await helpers.makeTickGoFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 10,
+        })
+
+        await context.farmingCenter.connect(lpUser0).claimReward(context.rewardToken.address, lpUser0.address, amountDesired, amountDesired)
+
+        let balanceAfter = await context.rewardToken.balanceOf(lpUser0.address)
+        expect(balanceAfter).to.equal(BN(19998)) 
+
+      }) 
+
+      it('#collectRewards', async() => {
+        
+        let balanceBefore = await context.rewardToken.balanceOf(lpUser0.address)
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          incentiveCreator,
+          [context.rewardToken, context.bonusRewardToken],
+          BNe18(1),
+          context.eternalFarming.address
+        )
+
+        await context.eternalFarming.connect(incentiveCreator).addRewards(
+          {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+          },
+          BNe18(1),
+          BNe18(1)
+        )
+
+        await context.farmingCenter.connect(lpUser0).enterFarming(
+          {
+            
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            pool: context.pool01,
+            ...timestamps,
+          },
+          tokenIdEternal,
+          0,
+          ETERNAL_FARMING
+        )
+        
+        await Time.set(timestamps.endTime + 1000)
+        const trader = actors.traderUser0()
+
+        await helpers.makeTickGoFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 10,
+        })
+
+        await context.farmingCenter.connect(lpUser0).collectRewards(
+          {
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            pool: context.pool01,
+            ...timestamps,
+          },
+          tokenIdEternal
+        )
+        
+        let balanceAfter = await context.rewardToken.balanceOf(lpUser0.address)
+        
+        expect(balanceAfter).to.equal(BN(0)) 
+
+      }) 
 
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context

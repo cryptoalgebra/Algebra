@@ -31,7 +31,6 @@ import { ISwapRouter } from 'algebra-periphery/typechain'
 import { ethers } from 'hardhat'
 import { ContractParams } from '../../types/contractParams'
 import { TestContext } from '../types'
-import { AlgebraLimitFarmingInterface } from '../../typechain/AlgebraLimitFarming'
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
@@ -266,7 +265,7 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
       
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
@@ -354,7 +353,7 @@ export class HelperCommands {
       amount1Min: 0,
       deadline: (await blockTimestamp()) + 1000,
     })
-    
+
     // Make sure LP has authorized tokenomics
     await params.tokensToFarm[0].connect(params.lp).approve(this.farming.address, params.amountsToFarm[0])
     await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
@@ -582,6 +581,71 @@ export class HelperCommands {
       )
       let currTick = await getCurrentTick(this.pool.connect(actor))
 
+      return currTick
+    }
+
+    let currentTick = await doTrade()
+
+    while (!isDone(currentTick)) {
+      currentTick = await doTrade()
+    }
+
+    return { currentTick }
+  }
+
+  makeTickGoFlowWithSmallSteps: HelperTypes.MakeTickGo.Command = async (params) => {
+    // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
+    // await tok0
+    //   .connect(trader0)
+    //   .approve(router.address, BNe18(2).mul(params.numberOfTrades))
+
+    const MAKE_TICK_GO_UP = params.direction === 'up'
+    const actor = params.trader || this.actors.traderUser0()
+
+    const isDone = (tick: number | undefined) => {
+      if (!params.desiredValue) {
+        return true
+      } else if (!tick) {
+        return false
+      } else if (MAKE_TICK_GO_UP) {
+        return tick > params.desiredValue
+      } else {
+        return tick < params.desiredValue
+      }
+    }
+
+    const [tok0Address, tok1Address] = await Promise.all([
+      this.pool.connect(actor).token0(),
+      this.pool.connect(actor).token1(),
+    ])
+    const erc20 = await ethers.getContractFactory('TestERC20')
+
+    const tok0 = erc20.attach(tok0Address) as TestERC20
+    const tok1 = erc20.attach(tok1Address) as TestERC20
+
+    const doTrade = async () => {
+      /** If we want to push price down, we need to increase tok0.
+         If we want to push price up, we need to increase tok1 */
+
+      const amountIn = BN(5).mul(BN(10).pow(16))
+
+      const erc20Helper = new ERC20Helper()
+      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
+
+      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
+
+
+      await this.router.connect(actor).exactInput(
+        {
+          recipient: actor.address,
+          deadline: MaxUint256,
+          path,
+          amountIn: amountIn.div(10),
+          amountOutMinimum: 0,
+        },
+        maxGas
+      )
+      let currTick = await getCurrentTick(this.pool.connect(actor))
       return currTick
     }
 
