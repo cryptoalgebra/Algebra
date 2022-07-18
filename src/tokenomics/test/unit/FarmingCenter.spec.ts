@@ -16,6 +16,7 @@ import {
   ActorFixture,
   makeTimestamps,
   maxGas,
+  ZERO_ADDRESS,
 } from '../shared'
 import { createFixtureLoader, provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
@@ -446,6 +447,8 @@ describe('unit/FarmingCenter', () => {
       const mintResult = await helpers.mintFlow({
         lp: lpUser0,
         tokens: [context.token0, context.token1],
+        tickLower: 120,
+        tickUpper: 240,
       })
       tokenId = mintResult.tokenId
 
@@ -499,44 +502,33 @@ describe('unit/FarmingCenter', () => {
       Time.set(timestamps.startTime + 10)
       //await provider.send('evm_mine', [timestamps.startTime + 100])
       const trader = actors.traderUser0()
-      await helpers.makeTickGoFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 10,
-      })
-
-      Time.set(timestamps.endTime - 10)
 
       await helpers.makeTickGoFlow({
           trader,
           direction: 'up',
-          desiredValue: 100,
+          desiredValue: 150,
       })
 
-      Time.set(timestamps.endTime + 10)
+      Time.set(timestamps.startTime + 100)
 
       const rewardInfo = await context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
 
       const { tickLower, tickUpper } = await context.nft.positions(tokenId)
       const { innerSecondsSpentPerLiquidity } = await pool.getInnerCumulatives(tickLower, tickUpper)
       const farm = await context.farming.farms(tokenId, incentiveId)
-
       const expectedSecondsInPeriod = innerSecondsSpentPerLiquidity
         .mul(farm.liquidity)
 
       // @ts-ignore
       expect(rewardInfo.reward).to.be.closeTo(BN('9900'),  BN('10000'));
-
       const rewardInfoEternal = await context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
 
       const { tickLower: tickLowerEternal, tickUpper: tickUpperEternal } = await context.nft.positions(tokenId)
       const { innerSecondsSpentPerLiquidity: innerSecondsSpentPerLiquidityEternal } = 
         await pool.getInnerCumulatives(tickLowerEternal, tickUpperEternal)
       const farmEternal = await context.eternalFarming.farms(tokenId, incentiveIdEternal)
-
       const expectedSecondsInPeriodEternal = innerSecondsSpentPerLiquidityEternal
         .mul(farmEternal.liquidity)
-
       // @ts-ignore
       expect(rewardInfoEternal.reward).to.be.closeTo(BN('9900'),  BN('10000'));
       //expect(rewardInfo.secondsInsideX128).to.equal(expectedSecondsInPeriod)
@@ -676,7 +668,26 @@ describe('unit/FarmingCenter', () => {
         expect(balance1After).to.be.gt(balance1Before);
       })
 
-      it('#claimReward', async() => {
+      it('collects fees without recipient ', async () => {
+        const { rewardToken } = context
+        const balance0Before = await context.token0.balanceOf(context.farmingCenter.address);
+        const balance1Before = await context.token1.balanceOf(context.farmingCenter.address);
+
+         await context.farmingCenter.connect(lpUser0).collect({
+          tokenId: Number(tokenId),
+          recipient: ZERO_ADDRESS,
+          amount0Max: BN('10').pow(BN('18')),
+          amount1Max: BN('10').pow(BN('18'))
+        })
+
+        const balance0After = await context.token0.balanceOf(context.farmingCenter.address);
+        const balance1After = await context.token1.balanceOf(context.farmingCenter.address);
+
+        //expect(balance0After).to.be.gt(balance0Before);
+        expect(balance1After).to.be.gt(balance1Before);
+      })
+
+      it('claim reward', async() => {
         
         let balanceBefore = await context.rewardToken.balanceOf(lpUser0.address) 
 
@@ -693,44 +704,10 @@ describe('unit/FarmingCenter', () => {
         let balanceAfter = await context.rewardToken.balanceOf(lpUser0.address)
         expect(balanceAfter).to.equal(BN(19998)) 
 
-      }) 
+      })
 
-      it('#collectRewards', async() => {
-        
-        let balanceBefore = await context.rewardToken.balanceOf(lpUser0.address)
+      it('claim rewards with 0 amounts', async() => {
 
-        await erc20Helper.ensureBalancesAndApprovals(
-          incentiveCreator,
-          [context.rewardToken, context.bonusRewardToken],
-          BNe18(1),
-          context.eternalFarming.address
-        )
-
-        await context.eternalFarming.connect(incentiveCreator).addRewards(
-          {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
-          pool: context.pool01,
-          ...timestamps,
-          },
-          BNe18(1),
-          BNe18(1)
-        )
-
-        await context.farmingCenter.connect(lpUser0).enterFarming(
-          {
-            
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
-            pool: context.pool01,
-            ...timestamps,
-          },
-          tokenIdEternal,
-          0,
-          ETERNAL_FARMING
-        )
-        
-        await Time.set(timestamps.endTime + 1000)
         const trader = actors.traderUser0()
 
         await helpers.makeTickGoFlow({
@@ -739,21 +716,12 @@ describe('unit/FarmingCenter', () => {
           desiredValue: 10,
         })
 
-        await context.farmingCenter.connect(lpUser0).collectRewards(
-          {
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
-            pool: context.pool01,
-            ...timestamps,
-          },
-          tokenIdEternal
-        )
-        
-        let balanceAfter = await context.rewardToken.balanceOf(lpUser0.address)
-        
-        expect(balanceAfter).to.equal(BN(0)) 
+        await context.farmingCenter.connect(lpUser0).claimReward(context.rewardToken.address, lpUser0.address, 0, 0)
 
-      }) 
+        let balanceAfter = await context.rewardToken.balanceOf(lpUser0.address)
+        expect(balanceAfter).to.equal(0) 
+
+      })
 
       it('emits RewardClaimed event', async () => {
         const { rewardToken } = context
@@ -870,6 +838,251 @@ describe('unit/FarmingCenter', () => {
         })
       })
     })
+  })
+
+  describe("#collectRewards", () => {
+    let createIncentiveResult: HelperTypes.CreateIncentive.Result
+    let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result
+    // The amount the user should be able to claim
+    let claimable: BigNumber
+    let claimableEternal: BigNumber
+
+    let tokenIdEternal: string
+
+    beforeEach('setup', async () => {
+      timestamps = makeTimestamps(await blockTimestamp())
+      const tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20]
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, context.nft.address)
+
+      createIncentiveResultEternal = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('100'),
+        bonusRewardRate: BigNumber.from('50')
+      })
+
+      createIncentiveResult = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps
+      })
+
+      const mintResult = await helpers.mintDepositFarmFlow({
+        lp: lpUser0,
+        tokensToFarm,
+        ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
+        amountsToFarm: [amountDesired, amountDesired],
+        createIncentiveResult
+      })
+      tokenId = mintResult.tokenId
+
+      await Time.setAndMine(timestamps.startTime + 1)
+
+      const mintResultEternal = await helpers.mintDepositFarmFlow({
+        lp: lpUser0,
+        tokensToFarm,
+        ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
+        amountsToFarm: [amountDesired, amountDesired],
+        createIncentiveResult: createIncentiveResultEternal,
+        eternal: true
+      })
+      tokenIdEternal = mintResultEternal.tokenId
+
+      const trader = actors.traderUser0()
+      await helpers.makeTickGoFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 10,
+      })
+    })
+
+    it('is works', async() => {
+        
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        incentiveCreator,
+        [context.rewardToken, context.bonusRewardToken],
+        BNe18(1),
+        context.eternalFarming.address
+      )
+
+      await context.eternalFarming.connect(incentiveCreator).addRewards(
+        {
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+        },
+        BNe18(1),
+        BNe18(1)
+      )
+
+      const trader = actors.traderUser0()
+      
+      await Time.set(timestamps.endTime + 1000)
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 10,
+      })
+
+      await context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )
+      
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+      
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199199))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99299)) 
+
+    }) 
+
+    it('collect rewards after eternalFarming detach', async() => {
+      
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        incentiveCreator,
+        [context.rewardToken, context.bonusRewardToken],
+        BNe18(1),
+        context.eternalFarming.address
+      )
+
+      await context.eternalFarming.connect(incentiveCreator).addRewards(
+        {
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+        },
+        BNe18(1),
+        BNe18(1)
+      )
+
+      const trader = actors.traderUser0()
+      
+      await Time.set(timestamps.endTime + 1000)
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 10,
+      })
+
+      await context.eternalFarming.connect(incentiveCreator).detachIncentive( 
+      {    
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      })
+
+      await context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )
+      
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+      
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199099))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99249)) 
+
+    }) 
+
+    it('when requesting zero amount', async () => {
+
+      await Time.set(timestamps.endTime + 10000)
+      await context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )
+
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+
+      await context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )
+      
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
+      
+      expect(balanceAfter.sub(balanceBefore)).to.equal(0)
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(0) 
+    })
+
+    it('collect with non-existent incentive', async () => {
+      await expect(context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool12,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )).to.be.revertedWith('non-existent incentive')
+    })
+
+    it('collect with non-existent nft', async () => {
+      await context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal,
+        ETERNAL_FARMING
+      )
+      
+      await expect(context.farmingCenter.connect(lpUser0).collectRewards(
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenIdEternal
+      )).to.be.revertedWith('farm does not exist')
+    })
+
   })
 
   describe('#Parallel exitFarming', () => {

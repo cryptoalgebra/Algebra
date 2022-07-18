@@ -11,6 +11,7 @@ import {
   BNe18,
   ActorFixture,
   makeTimestamps,
+  ZERO_ADDRESS,
 } from '../shared'
 import { createFixtureLoader, provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper} from '../helpers'
@@ -116,6 +117,38 @@ describe('unit/FarmingCenterVault', () => {
       eternalFarmingId = await helpers.getIncentiveId(await helpers.createIncentiveWithMultiplierFlow(eternalFarmingArgs))
 
 
+    })
+
+    describe('fails if', () => {
+
+      it('you are trying to call lockTokens', async () => {
+        
+        await expect(context.farmingCenterVault.connect(lpUser0).lockTokens(tokenId, incentiveId, 0)).to.revertedWith(
+          'onlyFarming'
+        )
+      })
+
+      it('you are trying to call setFarmingAddress from notOwner', async () => {
+        
+        await expect(context.farmingCenterVault.connect(lpUser0).setFarmingCenter(ZERO_ADDRESS)).to.revertedWith(
+          'onlyOwner'
+        )
+      })
+
+      it('you are trying to call setFarmingAddress after intialize', async () => {
+        
+        await expect(context.farmingCenterVault.connect(actors.farmingDeployer()).setFarmingCenter(ZERO_ADDRESS)).to.revertedWith(
+          'Already initialized'
+        )
+      })
+
+      it('you are trying to call claimTokens', async () => {
+        
+        await expect(context.farmingCenterVault.connect(lpUser0).claimTokens(ZERO_ADDRESS,lpUser0.address,tokenId, incentiveId)).to.revertedWith(
+          'onlyFarming'
+        )
+      })
+      
     })
 
     describe('limit farming', () => {

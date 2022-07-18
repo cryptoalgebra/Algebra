@@ -264,6 +264,24 @@ describe('unit/EternalFarms', () => {
           )
         ).to.be.revertedWith('non-existent incentive')
       })
+
+      it('create second eternal farming for one pool', async () => {
+
+        incentiveArgs = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          eternal: true,
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
+        }
+  
+        await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWith('Farming already exists')
+
+      }) 
     })
   })
 
@@ -763,11 +781,25 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('fails if', () => {
-      it('farm has already been exitFarmingd', async () => {
+      it('farm has already been exitFarming', async () => {
         // await Time.setAndMine(timestamps.endTime + 1)
         //await subject(lpUser0)
         await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
       })
+
+      // it('farm does not exist', async () => {
+      //   await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+      //     {
+            
+      //       pool: context.pool01,
+      //       rewardToken: context.rewardToken.address,
+      //       bonusRewardToken: context.bonusRewardToken.address,
+      //       ...timestamps,
+      //     },
+      //     tokenId,
+      //     ETERNAL_FARMING
+      //   )).to.be.revertedWith("farm does not exist")
+      // })
     })
   })
 
@@ -953,6 +985,39 @@ describe('unit/EternalFarms', () => {
       expect(incentiveAfter.totalReward.sub(amountDesired)).to.eq(incentiveBefore.totalReward)
       expect(incentiveAfter.bonusReward.sub(amountDesired)).to.eq(incentiveBefore.bonusReward)
 
+    })
+
+    it('#addRewards with 0 amounts', async () =>{ 
+
+      let incentiveBefore = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.rewardToken, context.bonusRewardToken],
+        amountDesired,
+        context.eternalFarming.address
+      )
+      
+      await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 0)
+
+      let incentiveAfter = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+      
+      expect(incentiveAfter.totalReward).to.eq(incentiveBefore.totalReward)
+      expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward)
+
+    })
+
+    it('#addRewards to non-existent incentive', async () => {
+
+      incentiveKey = {
+        ...timestamps,
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        
+        pool: context.pool12,
+      }
+      
+      await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 0)).to.be.revertedWith("non-existent incentive")      
     })
 
     it('#setRates', async () => {

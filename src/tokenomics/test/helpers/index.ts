@@ -12,6 +12,7 @@ import {
   getMinTick,
   getMaxTick,
   BN,
+  ZERO_ADDRESS,
 } from '../shared/index'
 import _ from 'lodash'
 import {
@@ -148,7 +149,7 @@ export class HelperCommands {
         params.bonusReward,
         params.rewardRate || 10,
         params.bonusRewardRate || 10,
-        params.rewardToken.address,
+        ZERO_ADDRESS,
         {
           tokenAmountForTier1: 0,
           tokenAmountForTier2: 0,
