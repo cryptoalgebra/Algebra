@@ -109,27 +109,29 @@ async function deployTokens() {
   [token0, token1] = [tokenA, tokenB].sort((tokenA, tokenB) =>
     tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1
   )
-
-  const [wallet2, other2] = await (ethers as any).getSigners()
-  wallet = wallet2;
-  other = other2;
 }
 
 
 
 async function main() {
-  await network.provider.send("hardhat_setBalance", [
-    "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
-    "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
-  ]);
+  const [wallet2, other2] = await (ethers as any).getSigners()
+  wallet = wallet2;
+  other = other2;
+  console.log('ADDRESS', wallet.address)
+  if (network.name == "hardhat") {
+    await network.provider.send("hardhat_setBalance", [
+      "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+      "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
+    ]);
+  }
   await deployTokens();
   const blocks = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'AllBlocks_timestamped.json')).toString());
-  let fees = [];
-  let volats = [];
-  let volumesPerLiq = [];
-  let ticks = [];
-  let uniTicks = [];
-  let timestamps = [];
+  let fees: any[] = [];
+  let volats: any[] = [];
+  let volumesPerLiq: any[] = [];
+  let ticks: any[] = [];
+  let uniTicks: any[] = [];
+  let timestamps: any[] = [];
   pool = await createPool(token0, token1);
   ({
     swapToLowerPrice,
@@ -165,8 +167,9 @@ async function main() {
   let nonce = await wallet.getTransactionCount();
   //await network.provider.send("evm_setAutomine", [false]);
   let currentPack = 0;
-  for (let blockNum = 0; blockNum < blocks.length; blockNum++) {
-    let block = blocks[blockNum]
+  const numberOfBlocks = blocks.length;
+  for (let blockNum = 0; blockNum < numberOfBlocks; blockNum++) {
+    let block = blocks.shift();
     if (!block[0].timestamp) {
       continue;
     }
@@ -201,17 +204,30 @@ async function main() {
             nonce++;
             break;
           case "Swap":
-            if (values.amount0 < 0) {
-              if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
-              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
-              nonce++;
-              // 1 -> 0
-            } else {
-              // 0 -> 1
-              if (values.amount0 < 0) console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
-              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
-              nonce++;
+            let ZtO = values.amount0 > 0;
+            if (values.amount0 == 0 && values.amount1 == 0) {
+              console.log('INVALID INPUT DATA: ZERO SWAP');
+              continue;
             }
+            if (ZtO) {
+              if (values.amount1 > 0) {
+                console.log('ERR: SWAP 0 -> 1', values.amount0, values.amount1);
+                continue;
+              }
+            } else {
+              if (values.amount1 < 0) console.log('ERR: SWAP 1 -> 0', values.amount1, values.amount0);
+              if (values.amount1 == 0)  {
+                console.error('INVALID INPUT DATA: SWAP 1 -> 0, ZERO INPUT AMOUNT')
+                continue;
+              }
+            }
+
+            if (ZtO) {
+              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+            } else {
+              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+            }
+            nonce++;
             lastTick = values.tick;
             break;
         }
@@ -259,10 +275,10 @@ async function main() {
     //console.log('===========================================');
     //console.log('\n');
     currentBlock = blockNum;
-    printProgress((100*(blockNum/blocks.length)).toFixed(2), timeConverter(block[0].timestamp), fee, stats[0].toString())
+    printProgress((100*(blockNum/numberOfBlocks)).toFixed(2), timeConverter(block[0].timestamp), fee, stats[0].toString())
   }
 
-  if (currentPack != Math.ceil(blocks.length/PACK_SIZE)) {
+  if (currentPack != Math.ceil(numberOfBlocks/PACK_SIZE)) {
     let res = {
       fees,
       volats,
