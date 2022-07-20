@@ -648,6 +648,7 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('after end time', () => {
+      let tokenIdOut;
       beforeEach('create the incentive and nft and farm it', async () => {
         timestamps = makeTimestamps(await blockTimestamp())
 
@@ -666,7 +667,7 @@ describe('unit/EternalFarms', () => {
         await erc20Helper.ensureBalancesAndApprovals(
           lpUser0,
           [context.token0, context.token1],
-          amountDesired,
+          amountDesired.mul(3),
           context.nft.address
         )
 
@@ -684,9 +685,27 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
+        tokenIdOut = await mintPosition(context.nft.connect(lpUser0), {
+          token0: context.token0.address,
+          token1: context.token1.address,
+          fee: FeeAmount.MEDIUM,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]) + TICK_SPACINGS[FeeAmount.MEDIUM],
+          recipient: lpUser0.address,
+          amount0Desired: 0,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 10000,
+        })
+
         await context.nft
           .connect(lpUser0)
           ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+        await context.nft
+          .connect(lpUser0)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenIdOut)
 
         await Time.setAndMine(timestamps.startTime + 1)
 
@@ -699,6 +718,18 @@ describe('unit/EternalFarms', () => {
             ...timestamps,
           },
           tokenId,
+          0,
+          ETERNAL_FARMING
+        )
+
+        await context.farmingCenter.connect(lpUser0).enterFarming(
+          {
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            pool: context.pool01,
+            ...timestamps,
+          },
+          tokenIdOut,
           0,
           ETERNAL_FARMING
         )
@@ -761,45 +792,54 @@ describe('unit/EternalFarms', () => {
         })
     })
 
-      describe('after the end time', () => {
-        beforeEach(async () => {
-          // Fast-forward to after the end time
-          //await Time.setAndMine(timestamps.endTime + 1)
-        })
+    it('owner can exitFarming', async () => {
+      await subject(lpUser0)
+    })
 
-       //  it('anyone cant exitFarming', async () => {
-       //    await subject(actors.lpUser1())
-       // })
+    it('can exit without rewards', async () => {
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          
+          pool: context.pool01,
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          ...timestamps,
+        },
+        tokenIdOut,
+        ETERNAL_FARMING
+      )).to.emit(context.eternalFarming, 'FarmEnded').withArgs(
+        tokenIdOut,
+        incentiveId,
+        context.rewardToken.address,
+        context.bonusRewardToken.address,
+        lpUser0.address,
+        BN('0'),
+        BN('0')
+    )
+    })
 
-        it('owner can exitFarming', async () => {
-          await subject(lpUser0)
-        })
+    it('cannot exit twice', async () => {
+      await subject(lpUser0)
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+            pool: context.pool01,
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            ...timestamps,
+          },
+          tokenId,
+          ETERNAL_FARMING
+        )).to.be.revertedWith("farm does not exist")
       })
 
-      it('calculates the right secondsPerLiquidity')
-      it('does not overflow totalSecondsUnclaimed')
+      //it('calculates the right secondsPerLiquidity')
+      //it('does not overflow totalSecondsUnclaimed')
     })
 
     describe('fails if', () => {
       it('farm has already been exitFarming', async () => {
-        // await Time.setAndMine(timestamps.endTime + 1)
-        //await subject(lpUser0)
         await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
       })
-
-      // it('farm does not exist', async () => {
-      //   await expect(context.farmingCenter.connect(lpUser0).exitFarming(
-      //     {
-            
-      //       pool: context.pool01,
-      //       rewardToken: context.rewardToken.address,
-      //       bonusRewardToken: context.bonusRewardToken.address,
-      //       ...timestamps,
-      //     },
-      //     tokenId,
-      //     ETERNAL_FARMING
-      //   )).to.be.revertedWith("farm does not exist")
-      // })
     })
   })
 
@@ -1004,6 +1044,16 @@ describe('unit/EternalFarms', () => {
       
       expect(incentiveAfter.totalReward).to.eq(incentiveBefore.totalReward)
       expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward)
+
+      await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 1)
+      incentiveAfter = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+      expect(incentiveAfter.totalReward).to.eq(incentiveBefore.totalReward)
+      expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward.add(1))
+
+      await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 1, 0)
+      incentiveAfter = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+      expect(incentiveAfter.totalReward).to.eq(incentiveBefore.totalReward.add(1))
+      expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward.add(1))
 
     })
 

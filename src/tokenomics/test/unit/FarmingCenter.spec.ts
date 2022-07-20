@@ -53,6 +53,18 @@ describe('unit/FarmingCenter', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
+  it('cannot call onERC721Received directly', async() => {
+    await expect(context.farmingCenter.onERC721Received(actors.lpUser0().address, actors.lpUser0().address, 1, [])).to.be.revertedWith('not an Algebra nft');
+  })
+
+  it('cannot call connectVirtualPool directly', async() => {
+    await expect(context.farmingCenter.connectVirtualPool(actors.lpUser0().address, actors.lpUser0().address)).to.be.revertedWith('only farming can call this');
+  })
+
+  it('cannot getApproved for nonexistent token', async() => {
+    await expect(context.farmingCenter.getApproved(100)).to.be.revertedWith('ERC721: approved query for nonexistent token');
+  })
+
   describe('#Enter ParallelFarmings', () => {
     let incentiveIdEternal: string
     let incentiveId: string

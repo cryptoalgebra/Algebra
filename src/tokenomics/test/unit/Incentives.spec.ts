@@ -287,6 +287,58 @@ describe('unit/Incentives', async () => {
         expect(bonusRewardAmount).to.eq(BNe18(90))
       })
 
+      it('can decrease rewards after end if 0 liquidity', async () => {
+        await Time.setAndMine(incentiveKey.endTime + 100);
+
+        let amount = BNe18(10)
+        await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
+      
+        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        
+        expect(rewardAmount).to.eq(BNe18(90))
+        expect(bonusRewardAmount).to.eq(BNe18(90))
+      })
+
+      it('cannot decrease rewards after end if has liquidity', async () => {
+        const { tokenId } = await helpers.mintFlow({
+          lp: actors.lpUser0(),
+          tokens: [context.token0, context.token1],
+        })
+        await helpers.depositFlow({
+          lp: actors.lpUser0(),
+          tokenId,
+        })
+
+        //await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), incentiveKey.rewardToken, BN(50), context.farming.address)
+
+        //await Time.set(testTimestamps.startTime)
+        await context.farmingCenter
+          .connect(actors.lpUser0())
+          .multicall([
+            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
+            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
+          ])
+
+        await Time.setAndMine(incentiveKey.endTime + 100);
+        
+        let amount = BNe18(10)
+        await expect(context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)).to.be.revertedWith('incentive finished');
+      })
+
+      it('decrease rewards completely', async () => {
+        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+
+        await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, rewardAmount.mul(2), bonusRewardAmount.mul(2))
+      
+        rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        
+        expect(rewardAmount).to.eq(0)
+        expect(bonusRewardAmount).to.eq(0)
+      })
+
       it('increase rewards', async () => {
         let amount = BNe18(10)
 
@@ -303,6 +355,41 @@ describe('unit/Incentives', async () => {
         let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         expect(rewardAmount).to.eq(BNe18(110))
         expect(bonusRewardAmount).to.eq(BNe18(110))
+      })
+
+      it('cannot increase rewards after end time', async () => {
+        let amount = BNe18(10)
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          incentiveCreator,
+          [context.rewardToken, context.bonusRewardToken],
+          BNe18(10),
+          context.farming.address
+        )
+        
+        await Time.setAndMine(incentiveKey.endTime + 100);
+        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, amount, amount)).to.be.revertedWith('cannot add rewards after endTime');
+      })
+
+
+      it('increase rewards with 0 amount do not emit event', async () => {
+        let amount = BNe18(10)
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          incentiveCreator,
+          [context.rewardToken, context.bonusRewardToken],
+          BNe18(10),
+          context.farming.address
+        )
+        let rewardAmountBefore = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmountBefore = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+
+        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, 0, 0)).to.not.emit(context.farming, 'RewardsAdded');
+
+        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        expect(rewardAmount).to.eq(rewardAmountBefore)
+        expect(bonusRewardAmount).to.eq(bonusRewardAmountBefore)
       })
 
     })
