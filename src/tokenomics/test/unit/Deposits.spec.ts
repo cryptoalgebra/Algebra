@@ -370,6 +370,13 @@ describe('unit/Deposits', () => {
         )
       })
 
+      it('you are withdrawing a token to farming center', async () => {
+        
+        await expect(context.farmingCenter.connect(lpUser0).withdrawToken(tokenId, context.farmingCenter.address, '0x')).to.revertedWith(
+          'cannot withdraw to farming'
+        )
+      })
+
       it('number of farms is not 0', async () => {
         const timestamps = makeTimestamps(await blockTimestamp())
         const incentiveParams: HelperTypes.CreateIncentive.Args = {

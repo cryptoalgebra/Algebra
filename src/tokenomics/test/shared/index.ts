@@ -105,6 +105,8 @@ export const MAX_GAS_LIMIT = 12_450_000
 export const maxGas = {
   gasLimit: MAX_GAS_LIMIT,
 }
+
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" 
 export const days = (n: number) => 86_400 * n
 
 export const getSlot0 = async (pool: IAlgebraPool) => {
