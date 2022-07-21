@@ -342,10 +342,15 @@ library DataStorage {
       Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
       return (
         (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
-        uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative)) >> 57
+        uint256(endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative) >> 57
       );
     } else {
-      return ((endOfWindow.volatilityCumulative) / WINDOW, uint256((endOfWindow.volumePerLiquidityCumulative)) >> 57);
+      uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
+      uint144 _oldestVolumePerLiquidityCumulative = oldest.volumePerLiquidityCumulative;
+      return (
+        (endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / WINDOW,
+        uint256(endOfWindow.volumePerLiquidityCumulative - _oldestVolumePerLiquidityCumulative) >> 57
+      );
     }
   }
 
@@ -399,14 +404,11 @@ library DataStorage {
 
     int24 avgTick = _getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative);
     int24 prevTick = tick;
-    {
-      if (index != oldestIndex) {
-        Timepoint memory prevLast;
-        Timepoint storage _prevLast = self[index - 1]; // considering index underflow
-        prevLast.blockTimestamp = _prevLast.blockTimestamp;
-        prevLast.tickCumulative = _prevLast.tickCumulative;
-        prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
-      }
+    if (index != oldestIndex) {
+      Timepoint storage _prevLast = self[index - 1]; // considering index underflow
+      uint32 _prevLastBlockTimestamp = _prevLast.blockTimestamp;
+      int56 _prevLastTickCumulative = _prevLast.tickCumulative;
+      prevTick = int24((last.tickCumulative - _prevLastTickCumulative) / (last.blockTimestamp - _prevLastBlockTimestamp));
     }
 
     self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick, volumePerLiquidity);
