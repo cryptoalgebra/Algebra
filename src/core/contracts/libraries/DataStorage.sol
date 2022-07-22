@@ -340,17 +340,18 @@ library DataStorage {
 
     Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
 
-    if (lteConsideringOverflow(oldest.blockTimestamp, time - WINDOW, time)) {
+    uint32 oldestTimestamp = oldest.blockTimestamp;
+    if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
       return (
         (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
         uint256(endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative) >> 57
       );
-    } else {
+    } else if (time != oldestTimestamp) {
       uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
       uint144 _oldestVolumePerLiquidityCumulative = oldest.volumePerLiquidityCumulative;
       return (
-        (endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / WINDOW,
+        (endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / (time - oldestTimestamp),
         uint256(endOfWindow.volumePerLiquidityCumulative - _oldestVolumePerLiquidityCumulative) >> 57
       );
     }
