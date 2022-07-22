@@ -51,7 +51,13 @@ let flash: FlashFunction
 
 const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
+// ##########  CONFIG SECTION  ##############
+
+const MAX_BLOCKS = 1000; // ignored if 0
+
 const PACK_SIZE = 20000; // how many blocks should be in one pack
+
+const SIMULATE_VIA_PRICES = true; // always try to move price to historically known. If false, just use amounts from events.
 
 const FEE_CONFIGURATION = { // can be changed for different fee behavior
   alpha1: 2900,
@@ -64,6 +70,8 @@ const FEE_CONFIGURATION = { // can be changed for different fee behavior
   volumeGamma: 10,
   baseFee: 100
 }
+
+// ##########  END OF CONFIG SECTION  ##############
 
 let createPool = async (firstToken: any, secondToken:any): Promise<SimulationTimeAlgebraPool> => {
     const poolDeployerFactory = await ethers.getContractFactory('SimulationTimePoolDeployer')
@@ -117,7 +125,6 @@ async function main() {
   const [wallet2, other2] = await (ethers as any).getSigners()
   wallet = wallet2;
   other = other2;
-  console.log('ADDRESS', wallet.address)
   if (network.name == "hardhat") {
     await network.provider.send("hardhat_setBalance", [
       "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
@@ -132,6 +139,8 @@ async function main() {
   let ticks: any[] = [];
   let uniTicks: any[] = [];
   let timestamps: any[] = [];
+  let globalFeeGrowth0: any[] = [];
+  let globalFeeGrowth1: any[] = [];
   pool = await createPool(token0, token1);
   ({
     swapToLowerPrice,
@@ -153,7 +162,6 @@ async function main() {
   await pool.advanceTime(86400000);
   let initialized = false;
   let lastTimestamp = 0;
-  numOfBlocks =  blocks.length;
   timePassed = 0;
   let interval = setInterval(() => {
     timePassed += 15
@@ -161,14 +169,18 @@ async function main() {
   }, 15000)
 
   let lastTick = (await pool.globalState()).tick;
-  console.log(wallet.address);
-  console.log('Number of blocks: ', blocks.length)
+  console.log('Used wallet: ', wallet.address);
+  
+  //await network.provider.send("evm_setAutomine", [false]);
 
   let nonce = await wallet.getTransactionCount();
-  //await network.provider.send("evm_setAutomine", [false]);
+
+  if (MAX_BLOCKS > 0) numOfBlocks = Math.min(MAX_BLOCKS, blocks.length);
+  else numOfBlocks =  blocks.length;
+  console.log('Number of blocks: ', blocks.length)
   let currentPack = 0;
-  const numberOfBlocks = blocks.length;
-  for (let blockNum = 0; blockNum < numberOfBlocks; blockNum++) {
+  
+  for (let blockNum = 0; blockNum < numOfBlocks; blockNum++) {
     let block = blocks.shift();
     if (!block[0].timestamp) {
       continue;
@@ -223,9 +235,13 @@ async function main() {
             }
 
             if (ZtO) {
-              await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+              if (SIMULATE_VIA_PRICES)
+                await swapTarget.swapToLowerSqrtPrice(pool.address, values.price, wallet.address, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+              else await swapTarget.swapExact0For1(pool.address, values.amount0, wallet.address, MIN_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
             } else {
-              await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+              if (SIMULATE_VIA_PRICES)
+                await swapTarget.swapToHigherSqrtPrice(pool.address, values.price, wallet.address, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
+              else await swapTarget.swapExact1For0(pool.address, values.amount1, wallet.address, MAX_ALLOWED_SQRT_RATIO, {nonce, maxFeePerGas: GAS_PRICE, maxPriorityFeePerGas: GAS_PRICE});
             }
             nonce++;
             lastTick = values.tick;
@@ -251,7 +267,9 @@ async function main() {
         volumesPerLiq,
         ticks,
         timestamps,
-        uniTicks
+        uniTicks,
+        globalFeeGrowth0,
+        globalFeeGrowth1
       }
       fs.writeFileSync(path.resolve(__dirname, `results_${currentPack}.json`), JSON.stringify(res));
       currentPack = packNumber;
@@ -261,6 +279,8 @@ async function main() {
       ticks = [];
       uniTicks = [];
       timestamps = [];
+      globalFeeGrowth0 = [];
+      globalFeeGrowth1 = [];
     }
 
     let state = await pool.globalState();
@@ -272,20 +292,24 @@ async function main() {
     ticks.push(tick)
     timestamps.push(block[0].timestamp)
     uniTicks.push(lastTick)
+    globalFeeGrowth0.push(Number(await pool.totalFeeGrowth0Token()));
+    globalFeeGrowth1.push(Number(await pool.totalFeeGrowth1Token()));
     //console.log('===========================================');
     //console.log('\n');
     currentBlock = blockNum;
-    printProgress((100*(blockNum/numberOfBlocks)).toFixed(2), timeConverter(block[0].timestamp), fee, stats[0].toString())
+    printProgress((100*(blockNum/numOfBlocks)).toFixed(2), timeConverter(block[0].timestamp), fee, stats[0].toString())
   }
 
-  if (currentPack != Math.ceil(numberOfBlocks/PACK_SIZE)) {
+  if (currentPack != Math.ceil(numOfBlocks/PACK_SIZE)) {
     let res = {
       fees,
       volats,
       volumesPerLiq,
       ticks,
       timestamps,
-      uniTicks
+      uniTicks,
+      globalFeeGrowth0,
+      globalFeeGrowth1
     }
     fs.writeFileSync(path.resolve(__dirname, `results_${currentPack}.json`), JSON.stringify(res));
   }
