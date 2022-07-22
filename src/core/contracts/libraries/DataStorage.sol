@@ -100,6 +100,8 @@ library DataStorage {
     if (res == b > currentTime) res = a <= b; // if both are on the same side
   }
 
+  /// @dev guaranteed that the result is within the bounds of int24
+  /// returns int256 for fuzzy tests
   function _getAverageTick(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -108,7 +110,7 @@ library DataStorage {
     uint16 oldestIndex,
     uint32 lastTimestamp,
     int56 lastTickCumulative
-  ) internal view returns (int24 avgTick) {
+  ) internal view returns (int256 avgTick) {
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
     int56 oldestTickCumulative = self[oldestIndex].tickCumulative;
 
@@ -117,7 +119,7 @@ library DataStorage {
         index -= 1; // considering underflow
         Timepoint storage startTimepoint = self[index];
         avgTick = startTimepoint.initialized
-          ? int24((lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp))
+          ? (lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp)
           : tick;
       } else {
         Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
@@ -125,10 +127,10 @@ library DataStorage {
         //    current-WINDOW  last   current
         // _________*____________*_______*_
         //           ||||||||||||
-        avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW));
+        avgTick = (lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW);
       }
     } else {
-      avgTick = (lastTimestamp == oldestTimestamp) ? tick : int24((lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp));
+      avgTick = (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp);
     }
   }
 
@@ -218,7 +220,7 @@ library DataStorage {
         return last;
       } else {
         // otherwise, we need to add new timepoint
-        int24 avgTick = _getAverageTick(self, time, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative);
+        int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
         int24 prevTick = tick;
         {
           if (index != oldestIndex) {
@@ -402,7 +404,7 @@ library DataStorage {
       oldestIndex = indexUpdated;
     }
 
-    int24 avgTick = _getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative);
+    int24 avgTick = int24(_getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
     int24 prevTick = tick;
     if (index != oldestIndex) {
       Timepoint storage _prevLast = self[index - 1]; // considering index underflow
