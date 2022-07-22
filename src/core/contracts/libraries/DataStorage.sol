@@ -108,7 +108,7 @@ library DataStorage {
     uint16 oldestIndex,
     uint32 lastTimestamp,
     int56 lastTickCumulative
-  ) private view returns (int24 avgTick) {
+  ) internal view returns (int24 avgTick) {
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
     int56 oldestTickCumulative = self[oldestIndex].tickCumulative;
 

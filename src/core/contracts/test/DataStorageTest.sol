@@ -96,4 +96,15 @@ contract DataStorageTest {
   ) external pure returns (uint256) {
     return DataStorage._volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
   }
+
+  function getAverageTick() external view returns (int24) {
+    uint32 lastTimestamp = timepoints[index].blockTimestamp;
+    int56 lastTickCumulative = timepoints[index].tickCumulative;
+    (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
+    return timepoints._getAverageTick(_time, _tick, _index, 0, lastTimestamp, lastTickCumulative);
+  }
+
+  function window() external pure returns (uint256) {
+    return DataStorage.WINDOW;
+  }
 }
