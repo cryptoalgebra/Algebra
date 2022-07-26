@@ -58,14 +58,14 @@ library AdaptiveFee {
       if (x >= 6 * uint256(g)) return alpha; // so x < 19 bits
       uint256 g8 = uint256(g)**8; // < 128 bits (8*16)
       uint256 ex = exp(x, g, g8); // < 155 bits
-      res = (alpha * (ex)) / (g8 + ex); // in worst case: (16 + 155 bits) / 155 bits
+      res = (alpha * ex) / (g8 + ex); // in worst case: (16 + 155 bits) / 155 bits
       // so res <= alpha
     } else {
       x = beta - x;
       if (x >= 6 * uint256(g)) return 0; // so x < 19 bits
       uint256 g8 = uint256(g)**8; // < 128 bits (8*16)
       uint256 ex = g8 + exp(x, g, g8); // < 156 bits
-      res = (alpha * g8) / (ex); // in worst case: (16 + 128 bits) / 156 bits
+      res = (alpha * g8) / ex; // in worst case: (16 + 128 bits) / 156 bits
       // g8 <= ex, so res <= alpha
     }
   }
