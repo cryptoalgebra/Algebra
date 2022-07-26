@@ -154,7 +154,7 @@ library DataStorage {
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) {
     uint256 left = oldestIndex; // oldest timepoint
     uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + UINT16_MODULO; // newest timepoint considering one index overflow
-    uint256 current = (left + right) / 2; // "middle" point between the boundaries
+    uint256 current = (left + right) >> 1; // "middle" point between the boundaries
 
     do {
       beforeOrAt = self[current % UINT16_MODULO]; // checking the "middle" point between the boundaries
@@ -183,7 +183,7 @@ library DataStorage {
         // should be impossible if initial boundaries and `target` are correct
         left = current + 1;
       }
-      current = (left + right) / 2; // calculating the new "middle" point index after updating the bounds
+      current = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
     } while (true);
 
     atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
