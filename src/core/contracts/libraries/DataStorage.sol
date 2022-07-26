@@ -50,7 +50,7 @@ library DataStorage {
     int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
     int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)); // sumOfSquares * 6
     int256 sumOfSequence = (dt * (dt + 1)); // sumOfSequence * 2
-    volatility = uint256((K**2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * (dt) * B**2) / (6 * dt**2));
+    volatility = uint256((K**2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * dt * B**2) / (6 * dt**2));
   }
 
   /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
