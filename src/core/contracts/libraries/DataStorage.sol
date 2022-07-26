@@ -157,12 +157,12 @@ library DataStorage {
     uint256 current = (left + right) >> 1; // "middle" point between the boundaries
 
     do {
-      beforeOrAt = self[current % UINT16_MODULO]; // checking the "middle" point between the boundaries
+      beforeOrAt = self[uint16(current)]; // checking the "middle" point between the boundaries
       (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
       if (initializedBefore) {
         if (lteConsideringOverflow(timestampBefore, target, time)) {
           // is current point before or at `target`?
-          atOrAfter = self[addmod(current, 1, UINT16_MODULO)]; // checking the next point after "middle"
+          atOrAfter = self[uint16(current + 1)]; // checking the next point after "middle"
           (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
           if (initializedAfter) {
             if (lteConsideringOverflow(target, timestampAfter, time)) {
