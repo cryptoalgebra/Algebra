@@ -631,11 +631,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    uint160 currentPrice;
-    int24 currentTick;
-    uint128 currentLiquidity;
-    uint256 communityFee;
-
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
     require(globalState.unlocked, 'LOK');
@@ -651,6 +646,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
     globalState.unlocked = true;
 
+    uint160 currentPrice;
+    int24 currentTick;
+    uint128 currentLiquidity;
+    uint256 communityFee;
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
