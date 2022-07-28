@@ -154,13 +154,6 @@ describe('DataStorage', () => {
       avrgTick = await dataStorage.getAverageTick();
       expect(avrgTick).to.be.lt(7400)
       expect(avrgTick).to.be.gt(7200);
-
-      let points = [];
-      for (let i = 0 ; i < 4; i++) {
-        points.push(dataStorage.timepoints(i))
-      }
-      points = await Promise.all(points);
-      console.log(points)
     })
   })
 
