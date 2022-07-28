@@ -31,17 +31,11 @@ library AdaptiveFee {
       sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
     if (sumOfSigmoids > type(uint16).max) {
-      // should be impossible
+      // should be impossible, just in case
       sumOfSigmoids = type(uint16).max;
     }
 
-    uint256 result = config.baseFee + sigmoid(volumePerLiquidity, config.volumeGamma, uint16(sumOfSigmoids), config.volumeBeta);
-    if (result > type(uint16).max) {
-      // should be impossible
-      fee = type(uint16).max;
-    } else {
-      fee = uint16(result);
-    }
+    return uint16(config.baseFee + sigmoid(volumePerLiquidity, config.volumeGamma, uint16(sumOfSigmoids), config.volumeBeta)); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
   }
 
   /// @notice calculates α / (1 + e^( (β-x) / γ))
