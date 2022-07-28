@@ -134,7 +134,7 @@ describe('DataStorage', () => {
       dataStorage = await loadFixture(dataStorageFixture)
     })
 
-    it.only('potential overflow scenario', async () => {
+    it('potential overflow scenario', async () => {
       const window = Number(await dataStorage.window());
       await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
       let avrgTick = await dataStorage.getAverageTick();
