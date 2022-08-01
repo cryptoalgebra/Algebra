@@ -84,6 +84,7 @@ describe('unit/Incentives', async () => {
           {
             reward: params.reward || 100,
             bonusReward: params.bonusReward || 100,
+            minimalPositionWidth: 0,
             multiplierToken: params.rewardToken || context.rewardToken.address,
             enterStartTime:  0,
           }
@@ -138,6 +139,7 @@ describe('unit/Incentives', async () => {
         const incentiveParams = {
           reward: BN(100),
           bonusReward: BN(100),
+          minimalPositionWidth: 0,
           multiplierToken: context.rewardToken.address,
           enterStartTime:  0,
         } 
@@ -486,6 +488,7 @@ describe('unit/Incentives', async () => {
               {
                 reward: BNe18(0),
                 bonusReward: BNe18(0),
+                minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
                 enterStartTime:  0,
               }
@@ -526,6 +529,7 @@ describe('unit/Incentives', async () => {
               {
                 reward: BNe18(1),
                 bonusReward: BNe18(1),
+                minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
                 enterStartTime:  0,
               }
@@ -564,6 +568,7 @@ describe('unit/Incentives', async () => {
               {
                 reward: BNe18(1),
                 bonusReward: BNe18(1),
+                minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
                 enterStartTime:  0,
               }

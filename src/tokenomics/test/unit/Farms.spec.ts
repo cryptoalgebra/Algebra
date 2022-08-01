@@ -380,6 +380,7 @@ describe('unit/Farms', () => {
       let params = {
         reward: 10000,
         bonusReward: 10000,
+        minimalPositionWidth: 0,
         multiplierToken: context.rewardToken.address,
         enterStartTime: timestamps[0],
       }

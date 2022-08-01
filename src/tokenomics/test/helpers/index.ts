@@ -145,11 +145,14 @@ export class HelperCommands {
           ...times,
           
         },
-        params.totalReward,
-        params.bonusReward,
-        params.rewardRate || 10,
-        params.bonusRewardRate || 10,
-        ZERO_ADDRESS,
+        { 
+          reward: params.totalReward,
+          bonusReward: params.bonusReward,
+          rewardRate: params.rewardRate || 10,
+          bonusRewardRate: params.bonusRewardRate || 10,
+          minimalPositionWidth: params.minimalPositionWidth || 0,
+          multiplierToken: params.rewardToken.address
+        },
         {
           tokenAmountForTier1: 0,
           tokenAmountForTier2: 0,
@@ -185,6 +188,7 @@ export class HelperCommands {
         {
           reward: params.totalReward,
           bonusReward: params.bonusReward,
+          minimalPositionWidth: params.minimalPositionWidth || 0,
           multiplierToken: params.rewardToken.address,
           enterStartTime: params.enterStartTime || 0,
         }
@@ -244,11 +248,14 @@ export class HelperCommands {
           ...times,
           
         },
-        params.totalReward,
-        params.bonusReward,
-        params.rewardRate || 10,
-        params.bonusRewardRate || 10,
-        params.rewardToken.address,
+        { 
+          reward: params.totalReward,
+          bonusReward: params.bonusReward,
+          rewardRate: params.rewardRate || 10,
+          bonusRewardRate: params.bonusRewardRate || 10,
+          minimalPositionWidth: params.minimalPositionWidth || 0,
+          multiplierToken: params.rewardToken.address
+        },
         {
           tokenAmountForTier1: 1000,
           tokenAmountForTier2: 5000,
@@ -291,6 +298,7 @@ export class HelperCommands {
         {
           reward: params.totalReward,
           bonusReward: params.bonusReward,
+          minimalPositionWidth: params.minimalPositionWidth || 0,
           multiplierToken: params.rewardToken.address,
           enterStartTime: params.enterStartTime || 0,
         }

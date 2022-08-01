@@ -29,6 +29,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 totalReward;
         uint256 bonusReward;
         address virtualPoolAddress;
+        uint24 minimalPositionWidth;
         uint224 totalLiquidity;
         address multiplierToken;
         Tiers tiers;
@@ -147,6 +148,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint256 reward,
         uint256 bonusReward,
+        uint24 minimalPositionWidth,
         address multiplierToken,
         Tiers calldata tiers
     )
@@ -166,6 +168,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
         newIncentive.virtualPoolAddress = virtualPool;
+        newIncentive.minimalPositionWidth = minimalPositionWidth;
 
         require(
             tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
@@ -258,6 +261,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         liquidity = uint128(liquidityAmountWithMultiplier);
 
         virtualPool = incentive.virtualPoolAddress;
+        uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
+        require(int256(tickUpper) - int256(tickLower) >= int256(minimalAllowedTickWidth), 'position too narrow');
 
         IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
             uint32(block.timestamp),

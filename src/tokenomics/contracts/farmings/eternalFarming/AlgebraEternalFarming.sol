@@ -40,11 +40,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraEternalFarming
     function createEternalFarming(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
-        uint128 rewardRate,
-        uint128 bonusRewardRate,
-        address multiplierToken,
+        IncentiveParams memory params,
         Tiers calldata tiers
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (, address _incentive) = _getCurrentVirtualPools(key.pool);
@@ -52,12 +48,13 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
         bytes32 incentiveId;
-        (incentiveId, reward, bonusReward) = _createFarming(
+        (incentiveId, params.reward, params.bonusReward) = _createFarming(
             virtualPool,
             key,
-            reward,
-            bonusReward,
-            multiplierToken,
+            params.reward,
+            params.bonusReward,
+            params.minimalPositionWidth,
+            params.multiplierToken,
             tiers
         );
 
@@ -68,17 +65,17 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             virtualPool,
             key.startTime,
             key.endTime,
-            reward,
-            bonusReward,
+            params.reward,
+            params.bonusReward,
             tiers,
-            multiplierToken
+            params.multiplierToken
         );
 
-        IAlgebraEternalVirtualPool(virtualPool).addRewards(reward, bonusReward);
-        IAlgebraEternalVirtualPool(virtualPool).setRates(rewardRate, bonusRewardRate);
+        IAlgebraEternalVirtualPool(virtualPool).addRewards(params.reward, params.bonusReward);
+        IAlgebraEternalVirtualPool(virtualPool).setRates(params.rewardRate, params.bonusRewardRate);
 
-        emit RewardsAdded(reward, bonusReward, incentiveId);
-        emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
+        emit RewardsAdded(params.reward, params.bonusReward, incentiveId);
+        emit RewardsRatesChanged(params.rewardRate, params.bonusRewardRate, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming

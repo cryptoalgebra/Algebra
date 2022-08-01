@@ -10,6 +10,7 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
     struct IncentiveParams {
         uint256 reward;
         uint256 bonusReward;
+        uint24 minimalPositionWidth;
         address multiplierToken;
         uint32 enterStartTime;
     }
