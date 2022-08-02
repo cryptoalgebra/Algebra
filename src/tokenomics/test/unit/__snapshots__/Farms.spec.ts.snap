@@ -6,8 +6,8 @@ exports[`unit/Farms #enterFarming works and has gas cost [ @skip-on-coverage ] 1
 
 exports[`unit/Farms #exitFarming works and has gas cost [ @skip-on-coverage ] 1`] = `158383`;
 
-exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 1`] = `192583`;
+exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 1`] = `192571`;
 
-exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 2`] = `197395`;
+exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 2`] = `197383`;
 
-exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 3`] = `198080`;
+exports[`unit/Farms swap gas [ @skip-on-coverage ] 3 swaps 3`] = `198068`;
