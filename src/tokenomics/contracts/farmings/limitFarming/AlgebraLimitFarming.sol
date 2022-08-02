@@ -98,6 +98,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             params.bonusReward,
             tiers,
             params.multiplierToken,
+            params.minimalPositionWidth,
             params.enterStartTime
         );
     }

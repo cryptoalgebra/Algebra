@@ -64,6 +64,7 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
     /// @param bonusReward The amount of bonus reward tokens to be distributed
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
     /// @param enterStartTime The time when enter becomes possible
     event LimitFarmingCreated(
         IERC20Minimal indexed rewardToken,
@@ -75,6 +76,7 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         uint256 bonusReward,
         Tiers tiers,
         address multiplierToken,
+        uint24 minimalAllowedPositionWidth,
         uint32 enterStartTime
     );
 

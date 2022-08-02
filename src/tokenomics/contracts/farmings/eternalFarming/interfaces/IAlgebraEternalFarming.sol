@@ -87,6 +87,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param bonusReward The amount of bonus reward tokens to be distributed
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
     event EternalFarmingCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
@@ -97,6 +98,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         Tiers tiers,
-        address multiplierToken
+        address multiplierToken,
+        uint24 minimalAllowedPositionWidth
     );
 }

@@ -68,7 +68,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             params.reward,
             params.bonusReward,
             tiers,
-            params.multiplierToken
+            params.multiplierToken,
+            params.minimalPositionWidth
         );
 
         IAlgebraEternalVirtualPool(virtualPool).addRewards(params.reward, params.bonusReward);
