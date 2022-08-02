@@ -7,12 +7,12 @@ import '../../../interfaces/IAlgebraFarming.sol';
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
 interface IAlgebraEternalFarming is IAlgebraFarming {
     struct IncentiveParams {
-        uint256 reward;
-        uint256 bonusReward;
-        uint128 rewardRate;
-        uint128 bonusRewardRate;
-        uint24 minimalPositionWidth;
-        address multiplierToken;
+        uint256 reward; // The amount of reward tokens to be distributed
+        uint256 bonusReward; // The amount of bonus reward tokens to be distributed
+        uint128 rewardRate; // The rate of reward distribution per second
+        uint128 bonusRewardRate; // The rate of bonus reward distribution per second
+        uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+        address multiplierToken; // The address of token which can be locked to get liquidity multiplier
     }
 
     /// @notice Event emitted when reward rates were changed

@@ -8,11 +8,11 @@ import '../../../interfaces/IAlgebraFarming.sol';
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraLimitFarming is IAlgebraFarming {
     struct IncentiveParams {
-        uint256 reward;
-        uint256 bonusReward;
-        uint24 minimalPositionWidth;
-        address multiplierToken;
-        uint32 enterStartTime;
+        uint256 reward; // The amount of reward tokens to be distributed
+        uint256 bonusReward; // The amount of bonus reward tokens to be distributed
+        uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+        address multiplierToken; // The address of token which can be locked to get liquidity multiplier
+        uint32 enterStartTime; // The time when enter should become possible
     }
 
     /// @notice The max duration of an incentive in seconds
