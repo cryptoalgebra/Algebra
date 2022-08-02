@@ -1,6 +1,6 @@
 import { constants } from 'ethers'
 import { TestContext, LoadFixtureFunction } from './types'
-import { TestERC20 } from '../typechain'
+import { AlgebraEternalFarming, TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
 	BigNumber,
@@ -45,6 +45,306 @@ describe('AlgebraFarming', async ()=>{
     before('create fixture loader', async () => {
         loadFixture = createFixtureLoader(wallets, provider)
     })
+
+	describe('minimal position width', async () => {
+		type TestSubject = {
+			createIncentiveResult: HelperTypes.CreateIncentive.Result
+			helpers: HelperCommands
+			context: TestContext
+		}
+		let subject: TestSubject
+
+		const ticksToFarm: [number, number] = [
+			getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+			getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+		]
+		const amountsToFarm: [BigNumber, BigNumber] = [BigNumber.from(100000), BNe18(10)]
+
+
+		const totalReward = BNe18(2_000_000)
+		const bonusReward = BNe18(4_000)
+		const duration = days(40)
+
+		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
+			const context = await algebraFixture(_wallet,_provider)
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+
+			const epoch = await blockTimestamp()
+			const startTime = epoch + 100
+			const endTime = startTime + duration
+
+			const createIncentiveResult = await helpers.createIncentiveFlow({
+				startTime,
+				endTime,
+				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
+				minimalPositionWidth: 10000,
+				poolAddress: context.pool01,
+				totalReward,
+				bonusReward
+			})
+			return {
+				context,
+				helpers,
+				createIncentiveResult
+			}
+		}
+
+		beforeEach('load Fixture', async () =>{
+			subject = await loadFixture(scenario);
+		})
+
+		it('cannot enter with too narrow position', async () => {
+			const {context, helpers, createIncentiveResult} = subject;
+
+			const lpUser3 = actors.traderUser2()
+
+			// The non-staking user will deposit 25x the liquidity as the others
+			const balanceDeposited = amountsToFarm[0]
+
+			// Someone starts staking
+			await e20h.ensureBalancesAndApprovals(
+				lpUser3,
+				[context.token0, context.token1],
+				balanceDeposited,
+				context.nft.address
+			)
+
+			const tokenId = await mintPosition(context.nft.connect(lpUser3), {
+				token0: context.token0.address,
+				token1: context.token1.address,
+				fee: FeeAmount.MEDIUM,
+				tickLower: ticksToFarm[0],
+				tickUpper: ticksToFarm[0] + TICK_SPACINGS[FeeAmount.MEDIUM],
+				recipient: lpUser3.address,
+				amount0Desired: 0,
+				amount1Desired: balanceDeposited,
+				amount0Min: 0,
+				amount1Min: 0,
+				deadline: (await blockTimestamp()) + 10000,
+			})
+
+			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
+			await context.nft
+			.connect(lpUser3)
+				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
+			
+
+			await expect(context.farmingCenter
+			.connect(lpUser3)
+			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, LIMIT_FARMING)).to.be.revertedWith('position too narrow')
+		})
+
+		it('too wide range cannot be used as minimal allowed', async () => {
+			const {context, helpers} = subject;
+
+			const lpUser3 = actors.traderUser2()
+
+			// The non-staking user will deposit 25x the liquidity as the others
+			const balanceDeposited = amountsToFarm[0]
+
+			// Someone starts staking
+			await e20h.ensureBalancesAndApprovals(
+				lpUser3,
+				[context.token0, context.token1],
+				balanceDeposited,
+				context.nft.address
+			)
+
+			const tokenId = await mintPosition(context.nft.connect(lpUser3), {
+				token0: context.token0.address,
+				token1: context.token1.address,
+				fee: FeeAmount.MEDIUM,
+				tickLower: ticksToFarm[0],
+				tickUpper: ticksToFarm[0] + TICK_SPACINGS[FeeAmount.MEDIUM],
+				recipient: lpUser3.address,
+				amount0Desired: 0,
+				amount1Desired: balanceDeposited,
+				amount0Min: 0,
+				amount1Min: 0,
+				deadline: (await blockTimestamp()) + 10000,
+			})
+
+			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
+			await context.nft
+			.connect(lpUser3)
+				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
+			
+			const epoch = await blockTimestamp()
+			const startTime = epoch + 100
+			const endTime = startTime + duration
+
+			let incentiveCreator = actors.incentiveCreator();
+
+			await context.rewardToken.transfer(incentiveCreator.address, totalReward)
+			await context.bonusRewardToken.transfer(incentiveCreator.address, bonusReward)
+			await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, totalReward)
+      		await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, bonusReward)
+
+			await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: (2**23 - 1) + (2**23 - 1),
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.revertedWith('minimalPositionWidth too wide');
+
+			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: 887272 * 2,
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.revertedWith('minimalPositionWidth too wide');
+
+			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: (887272 - 887272 % 60) * 2,
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.not.reverted;
+
+		})
+
+		it('max range can be used as minimal allowed', async () => {
+			const {context, helpers} = subject;
+
+			const lpUser3 = actors.traderUser2()
+
+			// The non-staking user will deposit 25x the liquidity as the others
+			const balanceDeposited = amountsToFarm[0]
+
+			// Someone starts staking
+			await e20h.ensureBalancesAndApprovals(
+				lpUser3,
+				[context.token0, context.token1],
+				balanceDeposited.mul(2),
+				context.nft.address
+			)
+
+			const tokenId = await mintPosition(context.nft.connect(lpUser3), {
+				token0: context.token0.address,
+				token1: context.token1.address,
+				fee: FeeAmount.MEDIUM,
+				tickLower: ticksToFarm[0],
+				tickUpper: ticksToFarm[0] + TICK_SPACINGS[FeeAmount.MEDIUM],
+				recipient: lpUser3.address,
+				amount0Desired: 0,
+				amount1Desired: balanceDeposited,
+				amount0Min: 0,
+				amount1Min: 0,
+				deadline: (await blockTimestamp()) + 10000,
+			})
+
+			const tokenIdCorrect = await mintPosition(context.nft.connect(lpUser3), {
+				token0: context.token0.address,
+				token1: context.token1.address,
+				fee: FeeAmount.MEDIUM,
+				tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+				tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+				recipient: lpUser3.address,
+				amount0Desired: balanceDeposited,
+				amount1Desired: balanceDeposited,
+				amount0Min: 0,
+				amount1Min: 0,
+				deadline: (await blockTimestamp()) + 10000,
+			})
+
+			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
+			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenIdCorrect);
+			await context.nft
+			.connect(lpUser3)
+				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
+			await context.nft
+			.connect(lpUser3)
+				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenIdCorrect);
+			
+			const epoch = await blockTimestamp()
+			const startTime = epoch + 100
+			const endTime = startTime + duration
+			const createIncentiveResult = await helpers.createIncentiveFlow({
+				startTime,
+				endTime,
+				rewardToken: context.rewardToken,
+				bonusRewardToken: context.bonusRewardToken,
+				minimalPositionWidth: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+				poolAddress: context.pool01,
+				totalReward,
+				bonusReward,
+				eternal: true
+			})
+
+			await expect(context.farmingCenter
+			.connect(lpUser3)
+			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, ETERNAL_FARMING)).to.be.revertedWith('position too narrow')
+
+			await expect(context.farmingCenter
+				.connect(lpUser3)
+				.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenIdCorrect, 0, ETERNAL_FARMING)).to.be.not.reverted;
+		})
+
+	})
 
 	describe('there are three LPs in the same range', async () => {
 		type TestSubject = {

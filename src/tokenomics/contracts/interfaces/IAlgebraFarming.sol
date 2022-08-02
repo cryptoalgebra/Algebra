@@ -46,6 +46,7 @@ interface IAlgebraFarming is IIncentiveKey {
             uint256 totalReward,
             uint256 bonusReward,
             address virtualPoolAddress,
+            uint24 minimalPositionWidth,
             uint224 totalLiquidity,
             address multiplierToken,
             Tiers memory tiers
