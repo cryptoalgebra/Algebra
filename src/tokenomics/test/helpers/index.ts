@@ -201,7 +201,7 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = await await (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
+      virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
 
     }
     

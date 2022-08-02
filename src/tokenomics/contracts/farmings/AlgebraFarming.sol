@@ -13,6 +13,8 @@ import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import 'algebra/contracts/interfaces/IERC20Minimal.sol';
 import 'algebra/contracts/libraries/SafeCast.sol';
+import 'algebra/contracts/libraries/TickMath.sol';
+import 'algebra/contracts/libraries/Constants.sol';
 import 'algebra/contracts/libraries/LowGasSafeMath.sol';
 import 'algebra/contracts/libraries/FullMath.sol';
 
@@ -167,6 +169,14 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
+        require(
+            minimalPositionWidth <=
+                ((int256(TickMath.MAX_TICK) / Constants.TICK_SPACING) *
+                    Constants.TICK_SPACING -
+                    (int256(TickMath.MIN_TICK) / Constants.TICK_SPACING) *
+                    Constants.TICK_SPACING),
+            'minimalPositionWidth too wide'
+        );
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.minimalPositionWidth = minimalPositionWidth;
 
@@ -174,7 +184,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier2Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier3Multiplier <= LiquidityTier.MAX_MULTIPLIER,
-            'Multiplier cant be grater than MAX_MULTIPLIER'
+            'Multiplier cant be greater than MAX_MULTIPLIER'
         );
 
         require(

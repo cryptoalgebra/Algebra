@@ -1,6 +1,6 @@
 import { constants } from 'ethers'
 import { TestContext, LoadFixtureFunction } from './types'
-import { TestERC20 } from '../typechain'
+import { AlgebraEternalFarming, TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
 	BigNumber,
@@ -135,7 +135,7 @@ describe('AlgebraFarming', async ()=>{
 			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, LIMIT_FARMING)).to.be.revertedWith('position too narrow')
 		})
 
-		it('max technical range can be used as minimal allowed', async () => {
+		it('too wide range cannot be used as minimal allowed', async () => {
 			const {context, helpers} = subject;
 
 			const lpUser3 = actors.traderUser2()
@@ -173,21 +173,98 @@ describe('AlgebraFarming', async ()=>{
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
 			const endTime = startTime + duration
-			const createIncentiveResult = await helpers.createIncentiveFlow({
-				startTime,
-				endTime,
-				rewardToken: context.rewardToken,
-				bonusRewardToken: context.bonusRewardToken,
-				minimalPositionWidth: (2**23 - 1) + (2**23 - 1),
-				poolAddress: context.pool01,
-				totalReward,
-				bonusReward,
-				eternal: true
-			})
 
-			await expect(context.farmingCenter
-			.connect(lpUser3)
-			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, ETERNAL_FARMING)).to.be.revertedWith('position too narrow')
+			let incentiveCreator = actors.incentiveCreator();
+
+			await context.rewardToken.transfer(incentiveCreator.address, totalReward)
+			await context.bonusRewardToken.transfer(incentiveCreator.address, bonusReward)
+			await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, totalReward)
+      		await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, bonusReward)
+
+			await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: (2**23 - 1) + (2**23 - 1),
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.revertedWith('minimalPositionWidth too wide');
+
+			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: 887272 * 2,
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.revertedWith('minimalPositionWidth too wide');
+
+			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+				{
+				  pool: context.pool01,
+				  rewardToken: context.rewardToken.address,
+				  bonusRewardToken: context.bonusRewardToken.address,
+				  startTime,
+				  endTime
+				  
+				},
+				{ 
+				  reward: totalReward,
+				  bonusReward: bonusReward,
+				  rewardRate:  10,
+				  bonusRewardRate:  10,
+				  minimalPositionWidth: (887272 - 887272 % 60) * 2,
+				  multiplierToken: context.rewardToken.address
+				},
+				{
+				  tokenAmountForTier1: 0,
+				  tokenAmountForTier2: 0,
+				  tokenAmountForTier3: 0,
+				  tier1Multiplier: 10000,
+				  tier2Multiplier: 10000,
+				  tier3Multiplier: 10000,
+				},
+				
+			  )).to.be.not.reverted;
+
 		})
 
 		it('max range can be used as minimal allowed', async () => {

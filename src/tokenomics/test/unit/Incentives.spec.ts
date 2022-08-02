@@ -574,7 +574,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier cant be grater than MAX_MULTIPLIER')
+          ).to.be.revertedWith('Multiplier cant be greater than MAX_MULTIPLIER')
         })
       })
 
