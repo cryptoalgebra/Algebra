@@ -277,7 +277,7 @@ describe('unit/Deposits', () => {
         //expect(farmAfter.secondsPerLiquidityInsideInitialX128).to.be.gt(0)
       })
 
-      it('has gas cost [ @skip-on-coverage ]', async () => {
+      xit('has gas cost [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(
           context.nft
             .connect(lpUser0)
@@ -359,7 +359,7 @@ describe('unit/Deposits', () => {
         expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(0)
       })
 
-      it('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, recipient)))
+      xit('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, recipient)))
     })
 
     describe('fails if', () => {
