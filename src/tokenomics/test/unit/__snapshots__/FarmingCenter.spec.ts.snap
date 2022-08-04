@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost [ @skip-on-coverage ] 1`] = `308481`;
+exports[`unit/FarmingCenter #Enter ParallelFarmings works and has gas cost [ @skip-on-coverage ] 1`] = `308593`;
 
-exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost [ @skip-on-coverage ] 1`] = `60574`;
+exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost [ @skip-on-coverage ] 1`] = `60562`;
 
-exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost [ @skip-on-coverage ] 2`] = `43430`;
+exports[`unit/FarmingCenter #Parallel claimReward when requesting the full amount has gas cost [ @skip-on-coverage ] 2`] = `43462`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost [ @skip-on-coverage ] 1`] = `163159`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost [ @skip-on-coverage ] 1`] = `163183`;
 
-exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost [ @skip-on-coverage ] 2`] = `205109`;
+exports[`unit/FarmingCenter #Parallel exitFarming after end time works and has gas cost [ @skip-on-coverage ] 2`] = `212780`;
 
-exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 1`] = `256645`;
+exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 1`] = `258845`;
 
-exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 2`] = `220557`;
+exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 2`] = `222757`;
 
-exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 3`] = `220555`;
+exports[`unit/FarmingCenter swap gas [ @skip-on-coverage ] 3 swaps 3`] = `223442`;

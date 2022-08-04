@@ -128,6 +128,35 @@ describe('DataStorage', () => {
     })
   })
 
+  describe('#getAverageTick', () => {
+    let dataStorage: DataStorageTest
+    beforeEach('deploy initialized test dataStorage', async () => {
+      dataStorage = await loadFixture(dataStorageFixture)
+    })
+
+    it('potential overflow scenario', async () => {
+      const window = Number(await dataStorage.window());
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      let avrgTick = await dataStorage.getAverageTick();
+      expect(avrgTick).to.be.lt(7300)
+      expect(avrgTick).to.be.gt(7100);
+      await dataStorage.update({ advanceTimeBy: 60*60, tick: 7300, liquidity: 6 })
+      avrgTick = await dataStorage.getAverageTick();
+      expect(avrgTick).to.be.lt(7300)
+      expect(avrgTick).to.be.gt(7199);
+      
+      await dataStorage.update({ advanceTimeBy: window - 2, tick: 7400, liquidity: 8 })
+      avrgTick = await dataStorage.getAverageTick();
+      expect(avrgTick).to.be.lt(7400)
+      expect(avrgTick).to.be.gt(7200);
+
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7600, liquidity: 8 })
+      avrgTick = await dataStorage.getAverageTick();
+      expect(avrgTick).to.be.lt(7400)
+      expect(avrgTick).to.be.gt(7200);
+    })
+  })
+
   describe('#getTimepoints', () => {
     describe('before initialization', async () => {
       let dataStorage: DataStorageTest
@@ -515,7 +544,7 @@ describe('DataStorage', () => {
     })
 
     it('index wrapped around', async () => {
-      expect(await dataStorage.index()).to.eq(165)
+      expect(await dataStorage.index()).to.eq(164)
     })
 
     async function checkGetPoints(

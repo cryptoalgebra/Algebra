@@ -707,13 +707,12 @@ describe('AlgebraPool', () => {
       expect((await pool.globalState()).tick).to.eq(-4463)
       await pool.advanceTime(4)
       await swapExact1For0(expandTo18Decimals(1).div(4), wallet.address)
-      expect((await pool.globalState()).tick).to.eq(-1560)
+      expect((await pool.globalState()).tick).to.eq(-1598)
       await pool.advanceTime(6)
       let {
         tickCumulatives: [tickCumulative],
       } = await pool.getTimepoints([0])
-      // -4463*4 + -1560*6  17848
-      expect(tickCumulative).to.eq(-27212)
+      expect(tickCumulative).to.eq(-27440)
     })
   })
 
@@ -1593,93 +1592,118 @@ describe('AlgebraPool', () => {
     })
 
     const AMOUNT = 500000000
+    it('single huge step after day', async () => {
+      pool = await createPool(FeeAmount.MEDIUM)
+      await pool.initialize(encodePriceSqrt(1, 1))
+      await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
+
+      await pool.advanceTime(DAY)
+      await swapExact0For1(BigNumber.from(1000), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact0For1(BigNumber.from(100), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact0For1(BigNumber.from(100), wallet.address);
+      let fee3 = (await pool.globalState()).fee;
+      expect(fee3).to.be.equal(2982);
+
+      let stats = [];
+      for (let i = 0; i < 25; i++) {
+        await swapExact0For1(BigNumber.from(100), wallet.address);
+        let avrges = await pool.getAverages();
+        let fee = (await pool.globalState()).fee;
+        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        await pool.advanceTime(60*60)
+      }
+      expect(stats).to.matchSnapshot('fee stats after step');
+    })
+
+    it('single huge step after initialization', async () => {
+      pool = await createPool(FeeAmount.MEDIUM)
+      await pool.initialize(encodePriceSqrt(1, 1))
+      await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
+
+      await pool.advanceTime(60)
+      await swapExact0For1(BigNumber.from(1000), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact0For1(BigNumber.from(100), wallet.address);
+      await pool.advanceTime(60)
+      await swapExact0For1(BigNumber.from(100), wallet.address);
+      let fee3 = (await pool.globalState()).fee;
+      expect(fee3).to.be.equal(14911);
+
+      let stats = [];
+      for (let i = 0; i < 25; i++) {
+        await swapExact0For1(BigNumber.from(100), wallet.address);
+        let avrges = await pool.getAverages();
+        let fee = (await pool.globalState()).fee;
+        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        await pool.advanceTime(60*60)
+      }
+      expect(stats).to.matchSnapshot('fee stats after step');
+    })
+
     it('single huge spike after day', async () => {
       pool = await createPool(FeeAmount.MEDIUM)
       await pool.initialize(encodePriceSqrt(1, 1))
-      let fee1 = (await pool.globalState()).fee;
-      //console.log((await pool.globalState()).fee);
-      let tick0 = (await pool.globalState()).tick;
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
-      let avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      let fee2 = (await pool.globalState()).fee;
-      //console.log((await pool.globalState()).fee);
-
       await pool.advanceTime(DAY)
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-
+      await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(1000), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await pool.advanceTime(60)
-      
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await pool.advanceTime(60)
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await swapExact0For1(BigNumber.from(100), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       let fee3 = (await pool.globalState()).fee;
       expect(fee3).to.be.equal(2982);
+
+      await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
+      await pool.advanceTime(60);
+
+      let stats = [];
+      for (let i = 0; i < 25; i++) {
+        await swapExact0For1(BigNumber.from(100), wallet.address);
+        let avrges = await pool.getAverages();
+        let fee = (await pool.globalState()).fee;
+        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        await pool.advanceTime(60*60)
+      }
+      expect(stats).to.matchSnapshot('fee stats after spike');
     })
 
     it('single huge spike after initialization', async () => {
       pool = await createPool(FeeAmount.MEDIUM)
       await pool.initialize(encodePriceSqrt(1, 1))
-      let fee1 = (await pool.globalState()).fee;
-      let avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      let tick0 = (await pool.globalState()).tick;
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      let fee2 = (await pool.globalState()).fee;
+
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(1000), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await pool.advanceTime(60)
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
       await pool.advanceTime(60)
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      await swapExact0For1(BigNumber.from(1000), wallet.address);
-      //console.log((await pool.globalState()).fee);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
+      await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      await swapExact0For1(BigNumber.from(1000), wallet.address);
-      avrges = await pool.getAverages();
-      //console.log('AVRGS', avrges.TWVolatilityAverage.toString(), avrges.TWVolumePerLiqAverage.toString())
-      //console.log((await pool.globalState()).fee);
+      await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(2982);
+      expect(fee3).to.be.equal(14911);
+
+      await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
+      await pool.advanceTime(60);
+
+      let stats = [];
+      for (let i = 0; i < 25; i++) {
+        await swapExact0For1(BigNumber.from(100), wallet.address);
+        let avrges = await pool.getAverages();
+        let fee = (await pool.globalState()).fee;
+        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        await pool.advanceTime(60*60)
+      }
+      expect(stats).to.matchSnapshot('fee stats after spike');
     })
 
     xit('changes', async () => {

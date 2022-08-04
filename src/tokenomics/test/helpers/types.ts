@@ -27,6 +27,7 @@ export module HelperTypes {
       eternal? : boolean
       rewardRate?: BigNumber,
       bonusRewardRate?: BigNumber
+      minimalPositionWidth?: number
     }
     export type Result = {
       poolAddress: string

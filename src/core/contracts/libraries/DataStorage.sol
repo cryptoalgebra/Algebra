@@ -50,7 +50,7 @@ library DataStorage {
     int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
     int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)); // sumOfSquares * 6
     int256 sumOfSequence = (dt * (dt + 1)); // sumOfSequence * 2
-    volatility = uint256((K**2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * (dt) * B**2) / (6 * dt**2));
+    volatility = uint256((K**2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * dt * B**2) / (6 * dt**2));
   }
 
   /// @notice Transforms a previous timepoint into a new timepoint, given the passage of time and the current tick and liquidity values
@@ -100,6 +100,8 @@ library DataStorage {
     if (res == b > currentTime) res = a <= b; // if both are on the same side
   }
 
+  /// @dev guaranteed that the result is within the bounds of int24
+  /// returns int256 for fuzzy tests
   function _getAverageTick(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -108,7 +110,7 @@ library DataStorage {
     uint16 oldestIndex,
     uint32 lastTimestamp,
     int56 lastTickCumulative
-  ) private view returns (int24 avgTick) {
+  ) internal view returns (int256 avgTick) {
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
     int56 oldestTickCumulative = self[oldestIndex].tickCumulative;
 
@@ -117,7 +119,7 @@ library DataStorage {
         index -= 1; // considering underflow
         Timepoint storage startTimepoint = self[index];
         avgTick = startTimepoint.initialized
-          ? int24((lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp))
+          ? (lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp)
           : tick;
       } else {
         Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
@@ -125,10 +127,10 @@ library DataStorage {
         //    current-WINDOW  last   current
         // _________*____________*_______*_
         //           ||||||||||||
-        avgTick = int24((lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW));
+        avgTick = (lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW);
       }
     } else {
-      avgTick = (lastTimestamp == oldestTimestamp) ? tick : int24((lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp));
+      avgTick = (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp);
     }
   }
 
@@ -152,15 +154,15 @@ library DataStorage {
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) {
     uint256 left = oldestIndex; // oldest timepoint
     uint256 right = lastIndex >= oldestIndex ? lastIndex : lastIndex + UINT16_MODULO; // newest timepoint considering one index overflow
-    uint256 current = (left + right) / 2; // "middle" point between the boundaries
+    uint256 current = (left + right) >> 1; // "middle" point between the boundaries
 
     do {
-      beforeOrAt = self[current % UINT16_MODULO]; // checking the "middle" point between the boundaries
+      beforeOrAt = self[uint16(current)]; // checking the "middle" point between the boundaries
       (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
       if (initializedBefore) {
         if (lteConsideringOverflow(timestampBefore, target, time)) {
           // is current point before or at `target`?
-          atOrAfter = self[addmod(current, 1, UINT16_MODULO)]; // checking the next point after "middle"
+          atOrAfter = self[uint16(current + 1)]; // checking the next point after "middle"
           (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
           if (initializedAfter) {
             if (lteConsideringOverflow(target, timestampAfter, time)) {
@@ -181,7 +183,7 @@ library DataStorage {
         // should be impossible if initial boundaries and `target` are correct
         left = current + 1;
       }
-      current = (left + right) / 2; // calculating the new "middle" point index after updating the bounds
+      current = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
     } while (true);
 
     atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
@@ -218,7 +220,7 @@ library DataStorage {
         return last;
       } else {
         // otherwise, we need to add new timepoint
-        int24 avgTick = _getAverageTick(self, time, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative);
+        int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
         int24 prevTick = tick;
         {
           if (index != oldestIndex) {
@@ -338,14 +340,20 @@ library DataStorage {
 
     Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
 
-    if (lteConsideringOverflow(oldest.blockTimestamp, time - WINDOW, time)) {
+    uint32 oldestTimestamp = oldest.blockTimestamp;
+    if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
       return (
         (endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW,
-        uint256((endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative)) >> 57
+        uint256(endOfWindow.volumePerLiquidityCumulative - startOfWindow.volumePerLiquidityCumulative) >> 57
       );
-    } else {
-      return ((endOfWindow.volatilityCumulative) / WINDOW, uint256((endOfWindow.volumePerLiquidityCumulative)) >> 57);
+    } else if (time != oldestTimestamp) {
+      uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
+      uint144 _oldestVolumePerLiquidityCumulative = oldest.volumePerLiquidityCumulative;
+      return (
+        (endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / (time - oldestTimestamp),
+        uint256(endOfWindow.volumePerLiquidityCumulative - _oldestVolumePerLiquidityCumulative) >> 57
+      );
     }
   }
 
@@ -397,16 +405,13 @@ library DataStorage {
       oldestIndex = indexUpdated;
     }
 
-    int24 avgTick = _getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative);
+    int24 avgTick = int24(_getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
     int24 prevTick = tick;
-    {
-      if (index != oldestIndex) {
-        Timepoint memory prevLast;
-        Timepoint storage _prevLast = self[index - 1]; // considering index underflow
-        prevLast.blockTimestamp = _prevLast.blockTimestamp;
-        prevLast.tickCumulative = _prevLast.tickCumulative;
-        prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
-      }
+    if (index != oldestIndex) {
+      Timepoint storage _prevLast = self[index - 1]; // considering index underflow
+      uint32 _prevLastBlockTimestamp = _prevLast.blockTimestamp;
+      int56 _prevLastTickCumulative = _prevLast.tickCumulative;
+      prevTick = int24((last.tickCumulative - _prevLastTickCumulative) / (last.blockTimestamp - _prevLastBlockTimestamp));
     }
 
     self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick, volumePerLiquidity);

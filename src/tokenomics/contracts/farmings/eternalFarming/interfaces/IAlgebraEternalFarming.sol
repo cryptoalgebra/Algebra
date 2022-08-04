@@ -6,6 +6,15 @@ import '../../../interfaces/IAlgebraFarming.sol';
 /// @title Algebra Eternal Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
 interface IAlgebraEternalFarming is IAlgebraFarming {
+    struct IncentiveParams {
+        uint256 reward; // The amount of reward tokens to be distributed
+        uint256 bonusReward; // The amount of bonus reward tokens to be distributed
+        uint128 rewardRate; // The rate of reward distribution per second
+        uint128 bonusRewardRate; // The rate of bonus reward distribution per second
+        uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+        address multiplierToken; // The address of token which can be locked to get liquidity multiplier
+    }
+
     /// @notice Event emitted when reward rates were changed
     /// @param rewardRate The new rate of main token distribution per sec
     /// @param bonusRewardRate The new rate of bonus token distribution per sec
@@ -40,20 +49,12 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
 
     /// @notice Creates a new liquidity mining incentive program
     /// @param key Details of the incentive to create
-    /// @param reward The amount of reward tokens to be distributed
-    /// @param bonusReward The amount of bonus reward tokens to be distributed
-    /// @param rewardRate The rate of reward distribution per second
-    /// @param bonusRewardRate The rate of bonus reward distribution per second
-    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param params Params of incentive
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @return virtualPool The virtual pool
     function createEternalFarming(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
-        uint128 rewardRate,
-        uint128 bonusRewardRate,
-        address multiplierToken,
+        IncentiveParams memory params,
         Tiers calldata tiers
     ) external returns (address virtualPool);
 
@@ -86,6 +87,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param bonusReward The amount of bonus reward tokens to be distributed
     /// @param tiers The amounts of locked token for liquidity multipliers
     /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
     event EternalFarmingCreated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
@@ -96,6 +98,7 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         Tiers tiers,
-        address multiplierToken
+        address multiplierToken,
+        uint24 minimalAllowedPositionWidth
     );
 }

@@ -57,12 +57,7 @@ contract DataStorageEchidnaTest {
     secondsAgos[0] = secondsAgo0;
     secondsAgos[1] = secondsAgo1;
 
-    (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives, //TODO: volumePerLiq ????
-      ,
-
-    ) = dataStorage.getTimepoints(secondsAgos);
+    (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, , ) = dataStorage.getTimepoints(secondsAgos);
     int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / timeElapsed;
     uint256 timeWeightedHarmonicMeanLiquidity = (uint256(timeElapsed) * type(uint160).max) /
       (uint256(secondsPerLiquidityCumulatives[1] - secondsPerLiquidityCumulatives[0]) << 32);
@@ -73,6 +68,11 @@ contract DataStorageEchidnaTest {
 
   function echidna_indexAlwaysLtCardinality() external view returns (bool) {
     return dataStorage.index() < 65536 || !initialized;
+  }
+
+  function echidna_avgTickNotOverflows() external view returns (bool) {
+    int256 res = dataStorage.getAverageTick();
+    return (res <= type(int24).max && res >= type(int24).min);
   }
 
   function echidna_canAlwaysGetPoints0IfInitialized() external view returns (bool) {
