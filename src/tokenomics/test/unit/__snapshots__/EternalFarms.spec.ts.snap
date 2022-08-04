@@ -6,8 +6,8 @@ exports[`unit/EternalFarms #enterFarming works and has gas cost [ @skip-on-cover
 
 exports[`unit/EternalFarms #exitFarming after end time works and has gas cost [ @skip-on-coverage ] 1`] = `182296`;
 
-exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 1`] = `239851`;
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 1`] = `239839`;
 
-exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 2`] = `203763`;
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 2`] = `203751`;
 
-exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 3`] = `204448`;
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 3`] = `204436`;
