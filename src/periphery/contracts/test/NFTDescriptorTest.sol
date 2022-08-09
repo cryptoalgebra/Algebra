@@ -53,8 +53,8 @@ contract NFTDescriptorTest {
         return NFTDescriptor.addressToString(_address);
     }
 
-    function generateSVGImage(NFTDescriptor.ConstructTokenURIParams memory params) public pure returns (string memory) {
-        return NFTDescriptor.generateSVGImage(params);
+    function generateSVGImage(uint256 tokenId) public pure returns (string memory) {
+        return string(Base64.encode(bytes(abi.encodePacked(NFTDescriptor.generateSVGImage(tokenId)))));
     }
 
     function tokenToColorHex(address token, uint256 offset) public pure returns (string memory) {
@@ -65,11 +65,11 @@ contract NFTDescriptorTest {
         return NFTDescriptor.sliceTokenHex(uint256(token), offset);
     }
 
-    function rangeLocation(int24 tickLower, int24 tickUpper) public pure returns (string memory, string memory) {
-        return NFTSVG.rangeLocation(tickLower, tickUpper);
-    }
+    // function rangeLocation(int24 tickLower, int24 tickUpper) public pure returns (string memory, string memory) {
+    //     return NFTSVG.rangeLocation(tickLower, tickUpper);
+    // }
 
-    function isRare(uint256 tokenId, address poolAddress) public pure returns (bool) {
-        return NFTSVG.isRare(tokenId, poolAddress);
-    }
+    // function isRare(uint256 tokenId, address poolAddress) public pure returns (bool) {
+    //     return NFTSVG.isRare(tokenId, poolAddress);
+    // }
 }

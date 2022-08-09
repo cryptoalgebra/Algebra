@@ -27,7 +27,16 @@ const completeFixture: Fixture<{
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
   ]
 
-  const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
+  const SVGStringsFactory = await ethers.getContractFactory('SVGStrings')
+  const SVGStrings = await SVGStringsFactory.deploy()
+
+  console.log(SVGStrings.address)
+  const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor',{
+    libraries:{
+      SVGStrings: SVGStrings.address
+    }
+  })
+
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy()
   const positionDescriptorFactory = await ethers.getContractFactory('NonfungibleTokenPositionDescriptor', {
     libraries: {

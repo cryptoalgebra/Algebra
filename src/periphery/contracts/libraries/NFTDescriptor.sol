@@ -52,7 +52,7 @@ library NFTDescriptor {
             addressToString(params.quoteTokenAddress),
             addressToString(params.baseTokenAddress)
         );
-        string memory image = Base64.encode(bytes(generateSVGImage(params)));
+        string memory image = Base64.encode(bytes(generateSVGImage(params.tokenId)));
 
         return
             string(
@@ -392,31 +392,8 @@ library NFTDescriptor {
         return (uint256(addr)).toHexString(20);
     }
 
-    function generateSVGImage(ConstructTokenURIParams memory params) internal pure returns (string memory svg) {
-        NFTSVG.SVGParams memory svgParams = NFTSVG.SVGParams({
-            quoteToken: addressToString(params.quoteTokenAddress),
-            baseToken: addressToString(params.baseTokenAddress),
-            poolAddress: params.poolAddress,
-            quoteTokenSymbol: params.quoteTokenSymbol,
-            baseTokenSymbol: params.baseTokenSymbol,
-            tickLower: params.tickLower,
-            tickUpper: params.tickUpper,
-            tickSpacing: params.tickSpacing,
-            overRange: overRange(params.tickLower, params.tickUpper, params.tickCurrent),
-            tokenId: params.tokenId,
-            color0: tokenToColorHex(uint256(params.quoteTokenAddress), 136),
-            color1: tokenToColorHex(uint256(params.baseTokenAddress), 136),
-            color2: tokenToColorHex(uint256(params.quoteTokenAddress), 0),
-            color3: tokenToColorHex(uint256(params.baseTokenAddress), 0),
-            x1: scale(getCircleCoord(uint256(params.quoteTokenAddress), 16, params.tokenId), 0, 255, 16, 274),
-            y1: scale(getCircleCoord(uint256(params.baseTokenAddress), 16, params.tokenId), 0, 255, 100, 484),
-            x2: scale(getCircleCoord(uint256(params.quoteTokenAddress), 32, params.tokenId), 0, 255, 16, 274),
-            y2: scale(getCircleCoord(uint256(params.baseTokenAddress), 32, params.tokenId), 0, 255, 100, 484),
-            x3: scale(getCircleCoord(uint256(params.quoteTokenAddress), 48, params.tokenId), 0, 255, 16, 274),
-            y3: scale(getCircleCoord(uint256(params.baseTokenAddress), 48, params.tokenId), 0, 255, 100, 484)
-        });
-
-        return NFTSVG.generateSVG(svgParams);
+    function generateSVGImage(uint256 tokenId) internal pure returns (string memory svg) {
+        return NFTSVG.generateSVG(tokenId);
     }
 
     function overRange(
