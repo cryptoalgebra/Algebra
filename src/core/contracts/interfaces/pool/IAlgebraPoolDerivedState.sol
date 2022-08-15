@@ -5,6 +5,8 @@ pragma solidity >=0.5.0;
  * @title Pool state that is not stored
  * @notice Contains view functions to provide information about the pool that is computed rather than stored on the
  * blockchain. The functions here may have variable gas costs.
+ * @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+ * https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
  */
 interface IAlgebraPoolDerivedState {
   /**

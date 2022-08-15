@@ -19,6 +19,8 @@ import '../libraries/PoolTicksCounter.sol';
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
+/// Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     using Path for bytes;
     using SafeCast for uint256;

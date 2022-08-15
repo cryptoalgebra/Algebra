@@ -15,6 +15,8 @@ import './libraries/TokenRatioSortOrder.sol';
 
 /// @title Describes NFT token positions
 /// @notice Produces a string containing the data URI for a JSON metadata string
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
     // Polygon addresses
     address private constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;

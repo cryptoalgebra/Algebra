@@ -10,6 +10,8 @@ import '../interfaces/IPeripheryPaymentsWithFee.sol';
 import '../interfaces/external/IWNativeToken.sol';
 import '../libraries/TransferHelper.sol';
 
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 abstract contract PeripheryPaymentsWithFee is PeripheryPayments, IPeripheryPaymentsWithFee {
     using LowGasSafeMath for uint256;
 

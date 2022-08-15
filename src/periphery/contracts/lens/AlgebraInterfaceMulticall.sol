@@ -3,6 +3,8 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 /// @notice A fork of Multicall2 specifically tailored for the Algebra Interface
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract AlgebraInterfaceMulticall {
     struct Call {
         address target;

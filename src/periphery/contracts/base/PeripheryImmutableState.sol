@@ -5,6 +5,8 @@ import '../interfaces/IPeripheryImmutableState.sol';
 
 /// @title Immutable state
 /// @notice Immutable state used by periphery contracts
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 abstract contract PeripheryImmutableState is IPeripheryImmutableState {
     /// @inheritdoc IPeripheryImmutableState
     address public immutable override factory;

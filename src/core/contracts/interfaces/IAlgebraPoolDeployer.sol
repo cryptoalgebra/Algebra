@@ -5,7 +5,9 @@ pragma solidity >=0.5.0;
  * @title An interface for a contract that is capable of deploying Algebra Pools
  * @notice A contract that constructs a pool must implement this to pass arguments to the pool
  * @dev This is used to avoid having constructor arguments in the pool contract, which results in the init code hash
- * of the pool being constant allowing the CREATE2 address of the pool to be cheaply computed on-chain
+ * of the pool being constant allowing the CREATE2 address of the pool to be cheaply computed on-chain.
+ * Credit to Uniswap Labs under GPL-2.0-or-later license:
+ * https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
  */
 interface IAlgebraPoolDeployer {
   /**

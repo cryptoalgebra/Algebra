@@ -3,6 +3,8 @@ pragma solidity >=0.5.0;
 
 /// @title Callback for IAlgebraPoolActions#mint
 /// @notice Any contract that calls IAlgebraPoolActions#mint must implement this interface
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraMintCallback {
   /// @notice Called to `msg.sender` after minting liquidity to a position from IAlgebraPool#mint.
   /// @dev In the implementation you must pay the pool tokens owed for the minted liquidity.

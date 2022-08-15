@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-// @title Pool state that can change
+/// @title Pool state that can change
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolState {
   /**
    * @notice The globalState structure in the pool stores many values but requires only one slot

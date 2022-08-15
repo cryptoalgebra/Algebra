@@ -10,6 +10,8 @@ import '../libraries/TransferHelper.sol';
 
 import './PeripheryImmutableState.sol';
 
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 abstract contract PeripheryPayments is IPeripheryPayments, PeripheryImmutableState {
     receive() external payable {
         require(msg.sender == WNativeToken, 'Not WNativeToken');

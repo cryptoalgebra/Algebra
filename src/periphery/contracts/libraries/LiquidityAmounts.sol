@@ -6,6 +6,8 @@ import 'algebra/contracts/libraries/Constants.sol';
 
 /// @title Liquidity amount functions
 /// @notice Provides functions for computing liquidity amounts from token amounts and prices
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library LiquidityAmounts {
     /// @notice Downcasts uint256 to uint128
     /// @param x The uint258 to be downcasted

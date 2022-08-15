@@ -5,6 +5,8 @@ import './IPeripheryPayments.sol';
 
 /// @title Periphery Payments
 /// @notice Functions to ease deposits and withdrawals of NativeToken
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 interface IPeripheryPaymentsWithFee is IPeripheryPayments {
     /// @notice Unwraps the contract's WNativeToken balance and sends it to recipient as NativeToken, with a percentage between
     /// 0 (exclusive), and 1 (inclusive) going to feeRecipient

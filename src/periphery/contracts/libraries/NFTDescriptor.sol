@@ -12,6 +12,8 @@ import 'base64-sol/base64.sol';
 import './HexStrings.sol';
 import './NFTSVG.sol';
 
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library NFTDescriptor {
     using TickMath for int24;
     using Strings for uint256;
