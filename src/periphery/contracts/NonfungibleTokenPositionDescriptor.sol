@@ -88,7 +88,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         if (token == WNativeToken) {
             return TokenRatioSortOrder.DENOMINATOR;
         }
-        if (chainId == 1) {
+        if (chainId == 137) {
             if (token == USDC) {
                 return TokenRatioSortOrder.NUMERATOR_MOST;
             } else if (token == USDT) {
