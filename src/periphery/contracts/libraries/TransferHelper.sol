@@ -3,6 +3,8 @@ pragma solidity >=0.6.0;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library TransferHelper {
     /// @notice Transfers tokens from the targeted address to the given destination
     /// @notice Errors with 'STF' if transfer fails

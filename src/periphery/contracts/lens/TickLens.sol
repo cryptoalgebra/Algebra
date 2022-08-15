@@ -7,6 +7,8 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import '../interfaces/ITickLens.sol';
 
 /// @title Tick Lens contract
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract TickLens is ITickLens {
     /// @inheritdoc ITickLens
     function getPopulatedTicksInWord(address pool, int16 tickTableIndex)

@@ -4,7 +4,7 @@ pragma solidity >=0.5.0 <0.8.0;
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 
 /// @title Weighted DataStorage library
-/// @notice Provides functions to integrate with different tier dataStorages of the same V3 pair
+/// @notice Provides functions to integrate with different tier dataStorages of the same pool
 library WeightedDataStorageLibrary {
     /// @notice The result of observating a pool across a certain period
     struct PeriodTimepoint {

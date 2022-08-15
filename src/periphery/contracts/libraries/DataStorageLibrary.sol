@@ -8,7 +8,7 @@ import 'algebra/contracts/libraries/LowGasSafeMath.sol';
 import '../libraries/PoolAddress.sol';
 
 /// @title DataStorage library
-/// @notice Provides functions to integrate with V3 pool dataStorage
+/// @notice Provides functions to integrate with pool dataStorage
 library DataStorageLibrary {
     /// @notice Fetches time-weighted average tick using Algebra dataStorage
     /// @param pool Address of Algebra pool that we want to getTimepoints

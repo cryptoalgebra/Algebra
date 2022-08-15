@@ -6,7 +6,9 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import './PeripheryImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
 
-/// @title Creates and initializes V3 Pools
+/// @title Creates and initializes Algebra Pools
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
     /// @inheritdoc IPoolInitializer
     function createAndInitializePoolIfNecessary(

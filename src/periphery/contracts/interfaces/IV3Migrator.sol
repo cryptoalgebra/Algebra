@@ -8,6 +8,8 @@ import './IPoolInitializer.sol';
 
 /// @title Algebra Migrator
 /// @notice Enables migration of liqudity from Uniswap v2-compatible pairs into Algebra pools
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 interface IV3Migrator is IMulticall, ISelfPermit, IPoolInitializer {
     struct MigrateParams {
         address pair; // the Uniswap v2-compatible pair

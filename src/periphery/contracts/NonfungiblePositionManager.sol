@@ -20,6 +20,8 @@ import './base/PoolInitializer.sol';
 
 /// @title NFT positions
 /// @notice Wraps Algebra  positions in the ERC721 non-fungible token interface
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract NonfungiblePositionManager is
     INonfungiblePositionManager,
     Multicall,

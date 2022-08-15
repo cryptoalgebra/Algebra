@@ -3,6 +3,8 @@ pragma solidity >=0.6.0;
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library PoolTicksCounter {
     /// @dev This function counts the number of initialized ticks that would incur a gas cost between tickBefore and tickAfter.
     /// When tickBefore and/or tickAfter themselves are initialized, the logic over whether we should count them depends on the

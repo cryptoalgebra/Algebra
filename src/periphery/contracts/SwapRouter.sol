@@ -19,6 +19,8 @@ import './interfaces/external/IWNativeToken.sol';
 
 /// @title Algebra Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract SwapRouter is
     ISwapRouter,
     PeripheryImmutableState,

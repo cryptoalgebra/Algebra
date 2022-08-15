@@ -14,6 +14,8 @@ import '../libraries/PoolAddress.sol';
 /// @title Non-fungible token for positions
 /// @notice Wraps Algebra positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 interface INonfungiblePositionManager is
     IPoolInitializer,
     IPeripheryPayments,

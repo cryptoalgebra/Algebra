@@ -3,6 +3,8 @@ pragma solidity >=0.7.5;
 
 /// @title Periphery Payments
 /// @notice Functions to ease deposits and withdrawals of NativeToken
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 interface IPeripheryPayments {
     /// @notice Unwraps the contract's WNativeToken balance and sends it to recipient as NativeToken.
     /// @dev The amountMinimum parameter prevents malicious contracts from stealing WNativeToken from users.

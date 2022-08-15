@@ -17,6 +17,8 @@ import './interfaces/external/IWNativeToken.sol';
 import './base/PoolInitializer.sol';
 
 /// @title Algebra Migrator
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 contract V3Migrator is IV3Migrator, PeripheryImmutableState, PoolInitializer, Multicall, SelfPermit {
     using LowGasSafeMath for uint256;
 

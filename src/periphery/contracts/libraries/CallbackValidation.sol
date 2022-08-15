@@ -5,6 +5,8 @@ import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 import './PoolAddress.sol';
 
 /// @notice Provides validation for callbacks from Algebra Pools
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library CallbackValidation {
     /// @notice Returns the address of a valid Algebra Pool
     /// @param poolDeployer The contract address of the Algebra pool deployer

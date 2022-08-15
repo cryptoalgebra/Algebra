@@ -6,6 +6,8 @@ import 'algebra/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Algebra
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 interface ISwapRouter is IAlgebraSwapCallback {
     struct ExactInputSingleParams {
         address tokenIn;

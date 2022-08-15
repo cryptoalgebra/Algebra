@@ -7,6 +7,8 @@ import 'base64-sol/base64.sol';
 
 /// @title NFTSVG
 /// @notice Provides a function for generating an SVG associated with a Algebra NFT
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-periphery
 library NFTSVG {
     using Strings for uint256;
 
