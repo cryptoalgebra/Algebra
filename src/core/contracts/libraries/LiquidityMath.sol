@@ -2,6 +2,8 @@
 pragma solidity >=0.5.0;
 
 /// @title Math library for liquidity
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/blob/main/contracts/libraries
 library LiquidityMath {
   /// @notice Add a signed liquidity delta to liquidity and revert if it overflows or underflows
   /// @param x The liquidity before change

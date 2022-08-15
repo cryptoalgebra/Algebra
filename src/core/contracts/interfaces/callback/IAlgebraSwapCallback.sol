@@ -3,6 +3,8 @@ pragma solidity >=0.5.0;
 
 /// @title Callback for IAlgebraPoolActions#swap
 /// @notice Any contract that calls IAlgebraPoolActions#swap must implement this interface
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraSwapCallback {
   /// @notice Called to `msg.sender` after executing a swap via IAlgebraPool#swap.
   /// @dev In the implementation you must pay the pool tokens owed for the swap.

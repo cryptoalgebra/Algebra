@@ -3,6 +3,8 @@ pragma solidity >=0.5.0;
 
 /// @title Minimal ERC20 interface for Algebra
 /// @notice Contains a subset of the full ERC20 interface that is used in Algebra
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IERC20Minimal {
   /// @notice Returns the balance of a token
   /// @param account The account for which to look up the number of tokens it has, i.e. its balance

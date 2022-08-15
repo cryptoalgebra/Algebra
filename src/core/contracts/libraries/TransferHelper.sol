@@ -5,6 +5,8 @@ import '../interfaces/IERC20Minimal.sol';
 
 /// @title TransferHelper
 /// @notice Contains helper methods for interacting with ERC20 tokens that do not consistently return true/false
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/blob/main/contracts/libraries
 library TransferHelper {
   /// @notice Transfers tokens from msg.sender to a recipient
   /// @dev Calls transfer on token contract, errors with TF if transfer fails

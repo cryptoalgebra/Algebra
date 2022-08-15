@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-// @title Events emitted by a pool
+/// @title Events emitted by a pool
+/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolEvents {
   /**
    * @notice Emitted exactly once by a pool when #initialize is first called on the pool
