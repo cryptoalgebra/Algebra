@@ -1818,7 +1818,7 @@ describe('AlgebraFarming', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 100
+			const startTime = epoch + 1000
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveFlow({
@@ -1986,7 +1986,7 @@ describe('AlgebraFarming', async ()=>{
 			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallets, _provider), _provider)
 
 			const epoch = await blockTimestamp()
-			const startTime = epoch + 30
+			const startTime = epoch + 1000
 			const endTime = startTime + duration
 
 			const createIncentiveResult = await helpers.createIncentiveWithMultiplierFlow({
