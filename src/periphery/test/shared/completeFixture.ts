@@ -9,6 +9,7 @@ import {
   NonfungibleTokenPositionDescriptor,
   TestERC20,
   IAlgebraFactory,
+  TransparentUpgradeableProxy
 } from '../../typechain'
 
 const completeFixture: Fixture<{
@@ -21,6 +22,7 @@ const completeFixture: Fixture<{
 }> = async ([wallet], provider) => {
   const { wnative, factory, router } = await v3RouterFixture([wallet], provider)
   const tokenFactory = await ethers.getContractFactory('TestERC20')
+  const factoryOwner = await factory.owner()
   const tokens: [TestERC20, TestERC20, TestERC20] = [
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20, // do not use maxu256 to avoid overflowing
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
@@ -34,15 +36,18 @@ const completeFixture: Fixture<{
       NFTDescriptor: nftDescriptorLibrary.address,
     },
   })
+  const ProxyFactory = await ethers.getContractFactory("TransparentUpgradeableProxy")
+
   const nftDescriptor = (await positionDescriptorFactory.deploy(
     tokens[0].address
   )) as NonfungibleTokenPositionDescriptor
+  const proxy = await ProxyFactory.deploy(nftDescriptor.address, "0xDeaD1F5aF792afc125812E875A891b038f888258", "0x") as NonfungibleTokenPositionDescriptor
 
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager')
   const nft = (await positionManagerFactory.deploy(
     factory.address,
     wnative.address,
-    nftDescriptor.address,
+    proxy.address,
       await factory.poolDeployer()
   )) as MockTimeNonfungiblePositionManager
 
@@ -54,7 +59,7 @@ const completeFixture: Fixture<{
     router,
     tokens,
     nft,
-    nftDescriptor,
+    nftDescriptor: proxy
   }
 }
 
