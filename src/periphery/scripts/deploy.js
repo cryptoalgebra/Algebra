@@ -7,8 +7,9 @@ async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
-  // // WNativeTokenAddress  
+  // WNativeTokenAddress  
   const WNativeTokenAddress = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+  const signers = await hre.ethers.getSigners()
   const ProxyAdmin = signers[0].address;
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens')
