@@ -18,6 +18,7 @@
     "ethereum-waffle": "^3.0.2",
     "ethers": "5.6.1",
     "hardhat": "2.6.5",
+    "hardhat-dependency-compiler": "1.1.2",
     "hardhat-contract-sizer": "^2.6.1",
     "hardhat-watcher": "^2.1.1",
     "husky": "^7.0.2",

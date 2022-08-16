@@ -1,6 +1,7 @@
 const hre = require('hardhat')
 const fs = require('fs');
 const path = require('path');
+const { ethers } = require('ethers');
 
 async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
@@ -8,13 +9,13 @@ async function main() {
 
   // // WNativeTokenAddress  
   const WNativeTokenAddress = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+  const ProxyAdmin = signers[0].address;
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens')
   const TickLens = await TickLensFactory.deploy()
 
   await TickLens.deployed()
 
-  //console.log('TickLens deployed to:', TickLens.address)
 
   // arg1 factory address
   // arg2 wnative address
@@ -55,12 +56,15 @@ async function main() {
     console.log('NonfungibleTokenPositionDescriptor deployed to:', NonfungibleTokenPositionDescriptor.address)
 
   //console.log('NFTDescriptor deployed to:', NFTDescriptor.address)
+  const ProxyFactory = await hre.ethers.getContractFactory("TransparentUpgradeableProxy")
+  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.address, ProxyAdmin, "0x") 
 
+  console.log('Proxy deployed to:', Proxy.address)
   // // arg1 factory address
   // // arg2 wnative address
   // // arg3 tokenDescriptor address
   const NonfungiblePositionManagerFactory = await hre.ethers.getContractFactory("NonfungiblePositionManager");
-  const NonfungiblePositionManager = await NonfungiblePositionManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, NonfungibleTokenPositionDescriptor.address, deploysData.poolDeployer);
+  const NonfungiblePositionManager = await NonfungiblePositionManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, Proxy.address, deploysData.poolDeployer);
 
   await NonfungiblePositionManager.deployed()
   deploysData.nonfungiblePositionManager = NonfungiblePositionManager.address;
