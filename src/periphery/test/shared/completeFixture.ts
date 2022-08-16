@@ -8,8 +8,7 @@ import {
   MockTimeSwapRouter,
   NonfungibleTokenPositionDescriptor,
   TestERC20,
-  IAlgebraFactory,
-  TransparentUpgradeableProxy
+  IAlgebraFactory
 } from '../../typechain'
 
 const completeFixture: Fixture<{
@@ -41,13 +40,13 @@ const completeFixture: Fixture<{
   const nftDescriptor = (await positionDescriptorFactory.deploy(
     tokens[0].address
   )) as NonfungibleTokenPositionDescriptor
-  const proxy = await ProxyFactory.deploy(nftDescriptor.address, "0xDeaD1F5aF792afc125812E875A891b038f888258", "0x") as NonfungibleTokenPositionDescriptor
-
+  const proxy = await ProxyFactory.deploy(nftDescriptor.address, "0xDeaD1F5aF792afc125812E875A891b038f888258", "0x");
+  const nftDescriptorProxied = (await positionDescriptorFactory.attach(proxy.address)) as NonfungibleTokenPositionDescriptor;
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager')
   const nft = (await positionManagerFactory.deploy(
     factory.address,
     wnative.address,
-    proxy.address,
+    nftDescriptorProxied.address,
       await factory.poolDeployer()
   )) as MockTimeNonfungiblePositionManager
 
@@ -59,7 +58,7 @@ const completeFixture: Fixture<{
     router,
     tokens,
     nft,
-    nftDescriptor: proxy
+    nftDescriptor: nftDescriptorProxied
   }
 }
 
