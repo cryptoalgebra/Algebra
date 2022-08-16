@@ -228,18 +228,10 @@ contract NonfungiblePositionManager is
         (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
         position.tokensOwed0 += uint128(
-            FullMath.mulDiv(
-                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                position.liquidity,
-                Constants.Q128
-            )
+            FullMath.mulShift(feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128, position.liquidity, 128)
         );
         position.tokensOwed1 += uint128(
-            FullMath.mulDiv(
-                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                position.liquidity,
-                Constants.Q128
-            )
+            FullMath.mulShift(feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128, position.liquidity, 128)
         );
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
@@ -277,20 +269,12 @@ contract NonfungiblePositionManager is
         position.tokensOwed0 +=
             uint128(amount0) +
             uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    positionLiquidity,
-                    Constants.Q128
-                )
+                FullMath.mulShift(feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128, positionLiquidity, 128)
             );
         position.tokensOwed1 +=
             uint128(amount1) +
             uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    positionLiquidity,
-                    Constants.Q128
-                )
+                FullMath.mulShift(feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128, positionLiquidity, 128)
             );
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
@@ -329,18 +313,10 @@ contract NonfungiblePositionManager is
             );
 
             tokensOwed0 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    position.liquidity,
-                    Constants.Q128
-                )
+                FullMath.mulShift(feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128, position.liquidity, 128)
             );
             tokensOwed1 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    position.liquidity,
-                    Constants.Q128
-                )
+                FullMath.mulShift(feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128, position.liquidity, 128)
             );
 
             position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;

@@ -28,7 +28,7 @@ library LiquidityAmounts {
         uint256 amount0
     ) internal pure returns (uint128 liquidity) {
         if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
-        uint256 intermediate = FullMath.mulDiv(sqrtRatioAX96, sqrtRatioBX96, Constants.Q96);
+        uint256 intermediate = FullMath.mulShift(sqrtRatioAX96, sqrtRatioBX96, 96);
         return toUint128(FullMath.mulDiv(amount0, intermediate, sqrtRatioBX96 - sqrtRatioAX96));
     }
 
@@ -105,7 +105,7 @@ library LiquidityAmounts {
     ) internal pure returns (uint256 amount1) {
         if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
-        return FullMath.mulDiv(liquidity, sqrtRatioBX96 - sqrtRatioAX96, Constants.Q96);
+        return FullMath.mulShift(liquidity, sqrtRatioBX96 - sqrtRatioAX96, 96);
     }
 
     /// @notice Computes the token0 and token1 value for a given amount of liquidity, the current
