@@ -3,6 +3,7 @@ import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-waffle'
 import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-watcher'
+import 'hardhat-dependency-compiler'
 import 'solidity-coverage'
 import 'algebra-solidity-docgen'
 import baseConfig from '../../hardhat.base.config';
@@ -70,5 +71,10 @@ export default {
     output: '../../docs/Contracts/Periphery',
     pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public'
+  },
+  dependencyCompiler: {
+    paths: [
+      '@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol',
+    ],
   }
 }
