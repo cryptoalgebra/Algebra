@@ -55,8 +55,8 @@ interface IAlgebraPoolState {
    * @dev This is a public structure, so the `return` natspec tags are omitted.
    * @param tick The tick to look up
    * @return liquidityTotal the total amount of position liquidity that uses the pool either as tick lower or
-   * tick upper
-   * @return liquidityDelta how much liquidity changes when the pool price crosses the tick;
+   * tick upper;
+   * Returns liquidityDelta how much liquidity changes when the pool price crosses the tick;
    * Returns outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0;
    * Returns outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1;
    * Returns outerTickCumulative the cumulative tick value on the other side of the tick from the current tick;
