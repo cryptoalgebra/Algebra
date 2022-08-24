@@ -1,9 +1,9 @@
-import { waffle, ethers, artifacts } from 'hardhat'
+import { ethers, artifacts } from 'hardhat'
 
 import { expect } from './shared/expect'
 
 import { PoolTicksCounterTest } from '../typechain'
-import { deployMockContract, Fixture, MockContract } from 'ethereum-waffle'
+import { deployMockContract,  MockContract } from 'ethereum-waffle'
 import { Artifact } from 'hardhat/types'
 
 describe('PoolTicksCounter', () => {

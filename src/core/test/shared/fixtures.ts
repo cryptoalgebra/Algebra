@@ -8,9 +8,9 @@ import { TestAlgebraCallee } from '../../typechain/test/TestAlgebraCallee'
 import { TestAlgebraRouter } from '../../typechain/test/TestAlgebraRouter'
 import { MockTimeAlgebraPoolDeployer } from '../../typechain/test/MockTimeAlgebraPoolDeployer'
 
-import { Fixture } from 'ethereum-waffle'
 import { AlgebraPoolDeployer } from "../../typechain/AlgebraPoolDeployer";
 
+type Fixture<T> = () => Promise<T>;
 interface FactoryFixture {
   factory: AlgebraFactory
 }

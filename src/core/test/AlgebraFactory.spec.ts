@@ -1,5 +1,6 @@
 import { Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
@@ -14,8 +15,6 @@ const TEST_ADDRESSES: [string, string] = [
   '0x1000000000000000000000000000000000000000',
   '0x2000000000000000000000000000000000000000',
 ]
-
-const createFixtureLoader = waffle.createFixtureLoader
 
 describe('AlgebraFactory', () => {
   let wallet: Wallet, other: Wallet
@@ -32,11 +31,9 @@ describe('AlgebraFactory', () => {
     return _factory;
   }
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
+
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   before('load pool bytecode', async () => {
@@ -52,13 +49,13 @@ describe('AlgebraFactory', () => {
   })
 
   it('factory bytecode size  [ @skip-on-coverage ]', async () => {
-    expect(((await waffle.provider.getCode(factory.address)).length - 2) / 2).to.matchSnapshot()
+    expect(((await ethers.provider.getCode(factory.address)).length - 2) / 2).to.matchSnapshot()
   })
 
   it('pool bytecode size  [ @skip-on-coverage ]', async () => {
     await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
     const poolAddress = getCreate2Address(poolDeployer.address, TEST_ADDRESSES, poolBytecode)
-    expect(((await waffle.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot()
+    expect(((await ethers.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot()
   })
 
   async function createAndCheckPool(
@@ -102,9 +99,7 @@ describe('AlgebraFactory', () => {
     it('fails if token a is 0 or token b is 0', async () => {
       await expect(factory.createPool(TEST_ADDRESSES[0], constants.AddressZero)).to.be.reverted
       await expect(factory.createPool(constants.AddressZero, TEST_ADDRESSES[0])).to.be.reverted
-      await expect(factory.createPool(constants.AddressZero, constants.AddressZero)).to.be.revertedWith(
-        ''
-      )
+      await expect(factory.createPool(constants.AddressZero, constants.AddressZero)).to.be.revertedWithoutReason
     })
 
     it('gas [ @skip-on-coverage ]', async () => {

@@ -1,4 +1,3 @@
-import { Fixture } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { v3RouterFixture } from './externalFixtures'
 import { constants } from 'ethers'
@@ -19,6 +18,7 @@ import {
   abi as NFT_ABI,
   bytecode as NFT_BYTECODE,
 } from 'algebra-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
+type Fixture<T> = () => Promise<T>;
 
 const completeFixture: Fixture<{
   wnative: IWNativeToken
@@ -27,8 +27,8 @@ const completeFixture: Fixture<{
   nft: MockTimeNonfungiblePositionManager
   nftDescriptor: NonfungibleTokenPositionDescriptor
   tokens: [TestERC20, TestERC20, TestERC20]
-}> = async ([wallet], provider) => {
-  const { wnative, factory, router } = await v3RouterFixture([wallet], provider)
+}> = async () => {
+  const { wnative, factory, router } = await v3RouterFixture()
   const tokenFactory = await ethers.getContractFactory('TestERC20')
   const tokens: [TestERC20, TestERC20, TestERC20] = [
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20, // do not use maxu256 to avoid overflowing

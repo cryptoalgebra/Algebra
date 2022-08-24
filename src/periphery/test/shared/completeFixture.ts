@@ -1,7 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { v3RouterFixture } from './externalFixtures'
-import { constants } from 'ethers'
+import { constants, Wallet } from 'ethers'
 import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
@@ -11,15 +10,15 @@ import {
   IAlgebraFactory
 } from '../../typechain'
 
-const completeFixture: Fixture<{
+const completeFixture: () => Promise<{
   wnative: IWNativeToken
   factory: IAlgebraFactory
   router: MockTimeSwapRouter
   nft: MockTimeNonfungiblePositionManager
   nftDescriptor: NonfungibleTokenPositionDescriptor
   tokens: [TestERC20, TestERC20, TestERC20]
-}> = async ([wallet], provider) => {
-  const { wnative, factory, router } = await v3RouterFixture([wallet], provider)
+}> = async () => {
+  const { wnative, factory, router } = await v3RouterFixture()
   const tokenFactory = await ethers.getContractFactory('TestERC20')
   const factoryOwner = await factory.owner()
   const tokens: [TestERC20, TestERC20, TestERC20] = [

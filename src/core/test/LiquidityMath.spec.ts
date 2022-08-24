@@ -1,6 +1,7 @@
 import { expect } from './shared/expect'
 import { LiquidityMathTest } from '../typechain/test/LiquidityMathTest'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import snapshotGasCost from './shared/snapshotGasCost'
 
 const { BigNumber } = ethers
@@ -12,7 +13,7 @@ describe('LiquidityMath', () => {
     return (await factory.deploy()) as LiquidityMathTest
   }
   beforeEach('deploy LiquidityMathTest', async () => {
-    liquidityMath = await waffle.loadFixture(fixture)
+    liquidityMath = await loadFixture(fixture)
   })
 
   describe('#addDelta', () => {

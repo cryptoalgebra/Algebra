@@ -1,4 +1,3 @@
-import { MockProvider } from 'ethereum-waffle'
 import { Wallet } from 'ethers'
 
 export const WALLET_USER_INDEXES = {
@@ -17,9 +16,9 @@ export const WALLET_USER_INDEXES = {
 
 export class ActorFixture {
   wallets: Array<Wallet>
-  provider: MockProvider
+  provider: any
 
-  constructor(wallets: Array<Wallet>, provider: MockProvider) {
+  constructor(wallets: Array<Wallet>, provider: any) {
     this.wallets = wallets
     this.provider = provider
   }

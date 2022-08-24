@@ -37,7 +37,7 @@ describe('SafeMath', () => {
   })
 
   it('#subInt', async () => {
-    await expect(safeMath.subInt(100, BigNumber.from(2).pow(256).sub(1))).to.be.reverted;
+    await expect(safeMath.subInt(100, BigNumber.from(2).pow(255).sub(1).mul(-1))).to.be.reverted;
     await expect(safeMath.subInt(BigNumber.from(2).pow(255).sub(1), -100)).to.be.reverted;
   })
 

@@ -21,7 +21,7 @@ chai.use(({ Assertion }) => {
   })
 })
 
-describe('BigNumber beWithin', () => {
+/*describe('BigNumber beWithin', () => {
   it('works', () => {
     expect(BN('100')).to.beWithin(BN('1'), BN('99'))
     expect(BN('100')).not.to.beWithin(BN('1'), BN('98'))
@@ -29,4 +29,4 @@ describe('BigNumber beWithin', () => {
     expect(BN('100')).not.to.beWithin(BN('1'), BN('102'))
     expect(BN('10')).not.to.beWithin(BN('1'), BN('2'))
   })
-})
+})*/

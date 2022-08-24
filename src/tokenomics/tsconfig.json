@@ -11,7 +11,7 @@
     "moduleResolution": "node",
     "incremental": true,
     "typeRoots": ["./typechain", "./node_modules/@types", "./types"],
-    "types": ["@nomiclabs/hardhat-ethers", "@nomiclabs/hardhat-waffle"]
+    "types": ["@nomiclabs/hardhat-ethers", "@nomicfoundation/hardhat-chai-matchers"]
   },
   "include": ["./test/**/*"],
   "files": ["./hardhat.config.ts"]

@@ -1,5 +1,6 @@
 import { Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
@@ -23,8 +24,6 @@ import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 const feeAmount = FeeAmount.MEDIUM
 const tickSpacing = 60
 
-const createFixtureLoader = waffle.createFixtureLoader
-
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 
 describe('AlgebraPool', () => {
@@ -46,13 +45,10 @@ describe('AlgebraPool', () => {
   let swapTargetCallee: TestAlgebraCallee
   let swapTargetRouter: TestAlgebraRouter
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool']
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   beforeEach('deploy first fixture', async () => {

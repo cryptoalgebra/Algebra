@@ -1,5 +1,6 @@
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
 import { BigNumber, BigNumberish, constants, Wallet } from 'ethers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
@@ -32,7 +33,6 @@ import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentra
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
 
-const createFixtureLoader = waffle.createFixtureLoader
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -66,12 +66,10 @@ describe('AlgebraPool', () => {
   let mint: MintFunction
   let flash: FlashFunction
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool']
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   beforeEach('deploy fixture', async () => {
@@ -212,13 +210,13 @@ describe('AlgebraPool', () => {
           })
 
           it('fails if token0 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWith('IIA');
-            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWith('IIAM');
+            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWith('IIAM');
           }) 
 
           it('fails if token1 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIA');
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIAM');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIAM');
           }) 
 
           it('fails if token0 hardly underpayed', async() => {
@@ -1925,12 +1923,12 @@ describe('AlgebraPool', () => {
       await expect(pool.connect(other).setCommunityFee(200, 200)).to.be.reverted
     })
     it('fails if fee is gt 25%', async () => {
-      await expect(pool.setCommunityFee(330, 330)).to.be.reverted
-      await expect(pool.setCommunityFee(170, 330)).to.be.reverted
-      await expect(pool.setCommunityFee(330, 170)).to.be.reverted
-      await expect(pool.setCommunityFee(330, 0)).to.be.reverted
-      await expect(pool.setCommunityFee(0, 500)).to.be.reverted
-      await expect(pool.setCommunityFee(260, 170)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(170, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 170)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 0)).to.be.reverted
+      await expect(pool.setCommunityFee(0, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(255, 170)).to.be.reverted
     })
     it('succeeds for fee 25%', async () => {
       await pool.setCommunityFee(250, 250)

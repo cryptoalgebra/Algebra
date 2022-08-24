@@ -1,6 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { constants, Contract, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
   IUniswapV2Pair,
   IAlgebraFactory,
@@ -23,17 +23,17 @@ import { getMaxTick, getMinTick } from './shared/ticks'
 describe('V3Migrator', () => {
   let wallet: Wallet
 
-  const migratorFixture: Fixture<{
+  const migratorFixture: () => Promise<{
     factoryV2: Contract
     factoryV3: IAlgebraFactory
     token: TestERC20
     wnative: IWNativeToken
     nft: MockTimeNonfungiblePositionManager
     migrator: V3Migrator
-  }> = async (wallets, provider) => {
-    const { factory, tokens, nft, wnative } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { factory, tokens, nft, wnative } = await completeFixture()
 
-    const { factory: factoryV2 } = await v2FactoryFixture(wallets, provider)
+    const { factory: factoryV2 } = await v2FactoryFixture()
 
     const token = tokens[0]
     await token.approve(factoryV2.address, constants.MaxUint256)
@@ -66,13 +66,10 @@ describe('V3Migrator', () => {
   let migrator: V3Migrator
   let pair: IUniswapV2Pair
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
     wallet = wallets[0]
-
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   beforeEach('load fixture', async () => {

@@ -1,11 +1,11 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
+import '@typechain/hardhat';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-contract-sizer';
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
-import { SolcUserConfig } from 'hardhat/types'
+import 'solidity-coverage';
+import 'algebra-solidity-docgen';
+import { SolcUserConfig } from 'hardhat/types';
 import baseConfig from '../../hardhat.base.config';
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {

@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js'
 import { BigNumber, BigNumberish, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { AlgebraPoolSwapTest } from '../typechain/test/AlgebraPoolSwapTest'
@@ -28,8 +29,6 @@ const {
   constants: { MaxUint256 },
 } = ethers
 
-const createFixtureLoader = waffle.createFixtureLoader
-
 Decimal.config({ toExpNeg: -500, toExpPos: 500 })
 
 function applySqrtRatioBipsHundredthsDelta(sqrtRatio: BigNumber, bipsHundredths: number): BigNumber {
@@ -50,11 +49,8 @@ function applySqrtRatioBipsHundredthsDelta(sqrtRatio: BigNumber, bipsHundredths:
 describe('AlgebraPool arbitrage tests', () => {
   let wallet: Wallet, arbitrageur: Wallet
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
-
   before('create fixture loader', async () => {
     ;[wallet, arbitrageur] = await (ethers as any).getSigners()
-    loadFixture = createFixtureLoader([wallet, arbitrageur])
   })
 
   for (const communityFee of [0, 170]) {
@@ -73,8 +69,8 @@ describe('AlgebraPool arbitrage tests', () => {
         expandTo18Decimals(100),
       ]) {
         describe(`passive liquidity of ${formatTokenAmount(passiveLiquidity)}`, () => {
-          const arbTestFixture = async ([wallet, arbitrageur]: Wallet[]) => {
-            const fix = await poolFixture([wallet], waffle.provider)
+          const arbTestFixture = async () => {
+            const fix = await poolFixture()
 
             const pool = await fix.createPool(feeAmount)
 

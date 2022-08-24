@@ -1,11 +1,11 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
-import 'hardhat-watcher'
-import 'hardhat-dependency-compiler'
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
+import '@typechain/hardhat';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomiclabs/hardhat-etherscan';
+import 'hardhat-watcher';
+import 'hardhat-dependency-compiler';
+import 'solidity-coverage';
+import 'algebra-solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {

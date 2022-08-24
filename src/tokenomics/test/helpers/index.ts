@@ -1,5 +1,4 @@
 import { BigNumber, Wallet } from 'ethers'
-import { MockProvider } from 'ethereum-waffle'
 import {
   blockTimestamp,
   BNe18,
@@ -44,7 +43,7 @@ const ETERNAL_FARMING = false;
  */
 export class HelperCommands {
   actors: ActorFixture
-  provider: MockProvider
+  provider: any
   farming: AlgebraLimitFarming
   eternalFarming: AlgebraEternalFarming
   nft: INonfungiblePositionManager
@@ -69,7 +68,7 @@ export class HelperCommands {
     testIncentiveId,
     farmingCenter
   }: {
-    provider: MockProvider
+    provider: any
     farming: AlgebraLimitFarming
     eternalFarming: AlgebraEternalFarming
     farmingCenter: FarmingCenter
@@ -90,7 +89,7 @@ export class HelperCommands {
     this.farmingCenter = farmingCenter
   }
 
-  static fromTestContext = (context: TestContext, actors: ActorFixture, provider: MockProvider): HelperCommands => {
+  static fromTestContext = (context: TestContext, actors: ActorFixture, provider: any): HelperCommands => {
     return new HelperCommands({
       actors,
       provider,
