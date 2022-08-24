@@ -1,7 +1,4 @@
-import '@typechain/hardhat';
-import '@nomiclabs/hardhat-ethers';
-import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomiclabs/hardhat-etherscan';
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-watcher';
 import 'hardhat-dependency-compiler';
 import 'solidity-coverage';
