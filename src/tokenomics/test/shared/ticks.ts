@@ -7,7 +7,7 @@ export const defaultTicks = (fee: FeeAmount = FeeAmount.MEDIUM) => ({
   tickUpper: getMaxTick(TICK_SPACINGS[fee]),
 })
 
-export const defaultTicksArray = (...args): [number, number] => {
+export const defaultTicksArray = (...args: any[]): [number, number] => {
   const { tickLower, tickUpper } = defaultTicks(...args)
   return [tickLower, tickUpper]
 }

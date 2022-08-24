@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { BigNumber } from 'ethers'
-import { TickTest } from '../typechain/TickTest'
+import { TickTest } from '../typechain/test/TickTest'
 import { expect } from './shared/expect'
 import { FeeAmount, TICK_SPACINGS, getMaxLiquidityPerTick } from './shared/utilities'
 const MaxUint128 = BigNumber.from(2).pow(128).sub(1)

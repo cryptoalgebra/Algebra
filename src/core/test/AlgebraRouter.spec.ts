@@ -1,15 +1,14 @@
 import { Wallet } from 'ethers'
 import { ethers, waffle } from 'hardhat'
-import { TestERC20 } from '../typechain/TestERC20'
+import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
 import { expect } from './shared/expect'
 
 import { poolFixture } from './shared/fixtures'
 
 import {
   FeeAmount,
-  TICK_SPACINGS,
   createPoolFunctions,
   PoolFunctions,
   createMultiPoolFunctions,
@@ -18,8 +17,8 @@ import {
   getMaxTick,
   expandTo18Decimals,
 } from './shared/utilities'
-import { TestAlgebraRouter } from '../typechain/TestAlgebraRouter'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
+import { TestAlgebraRouter } from '../typechain/test/TestAlgebraRouter'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 
 const feeAmount = FeeAmount.MEDIUM
 const tickSpacing = 60

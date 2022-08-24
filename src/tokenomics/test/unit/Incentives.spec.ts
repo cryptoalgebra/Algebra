@@ -17,6 +17,7 @@ import { HelperCommands, ERC20Helper } from '../helpers'
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
+import { Contract } from 'ethers'
 
 let loadFixture: LoadFixtureFunction
 const LIMIT_FARMING = true;
@@ -185,8 +186,8 @@ describe('unit/Incentives', async () => {
 
     describe('attach/detach incentive', () => {
       let incentiveArgs: HelperTypes.CreateIncentive.Args
-      let incentiveKey
-      let virtualPool
+      let incentiveKey: ContractParams.IncentiveKey
+      let virtualPool: Contract
 
 
       beforeEach(async () => {
@@ -244,8 +245,8 @@ describe('unit/Incentives', async () => {
     
     describe('increase/decrease rewards', () => {
         let incentiveArgs: HelperTypes.CreateIncentive.Args
-        let incentiveKey
-        let incentiveId
+        let incentiveKey: ContractParams.IncentiveKey
+        let incentiveId: string
   
       beforeEach(async () => {
           /** We will be doing a lot of time-testing here, so leave some room between

@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, Wallet } from 'ethers'
 import { ethers, waffle } from 'hardhat'
-import { DataStorageTest } from '../typechain/DataStorageTest'
+import { DataStorageTest } from '../typechain/test/DataStorageTest'
 import { DataStorageOperator } from '../typechain/DataStorageOperator'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'

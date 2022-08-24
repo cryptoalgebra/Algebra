@@ -1,6 +1,6 @@
 import { ethers, waffle } from 'hardhat'
 import { Wallet } from 'ethers'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
 import { expect } from './shared/expect'
 
 import { poolFixture } from './shared/fixtures'
@@ -21,8 +21,8 @@ import {
   MAX_SQRT_RATIO,
   MIN_SQRT_RATIO,
 } from './shared/utilities'
-import { TestERC20 } from '../typechain/TestERC20'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
+import { TestERC20 } from '../typechain/test/TestERC20'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 
 const createFixtureLoader = waffle.createFixtureLoader
 

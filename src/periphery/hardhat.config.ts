@@ -60,6 +60,9 @@ export default {
       'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
     },
   },
+  typechain: {
+    outDir: 'typechain'
+  },
   watcher: {
     test: {
       tasks: [{ command: 'test', params: { testFiles: ['{path}'] } }],

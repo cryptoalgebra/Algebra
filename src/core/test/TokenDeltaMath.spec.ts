@@ -1,6 +1,6 @@
 import { BigNumber, constants } from 'ethers'
 import { ethers } from 'hardhat'
-import { TokenDeltaMathTest } from '../typechain/TokenDeltaMathTest'
+import { TokenDeltaMathTest } from '../typechain/test/TokenDeltaMathTest'
 
 import { expect } from './shared/expect'
 import snapshotGasCost from './shared/snapshotGasCost'

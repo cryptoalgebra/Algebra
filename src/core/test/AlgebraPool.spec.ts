@@ -1,13 +1,12 @@
 import { ethers, waffle } from 'hardhat'
 import { BigNumber, BigNumberish, constants, Wallet } from 'ethers'
-import { TestERC20 } from '../typechain/TestERC20'
+import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
-import { MockTimeVirtualPool } from '../typechain/MockTimeVirtualPool'
-import { TestAlgebraSwapPay } from '../typechain/TestAlgebraSwapPay'
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
+import { MockTimeVirtualPool } from '../typechain/test/MockTimeVirtualPool'
+import { TestAlgebraSwapPay } from '../typechain/test/TestAlgebraSwapPay'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
-import * as fs from "fs"
 
 import { poolFixture, TEST_POOL_START_TIME, vaultAddress} from './shared/fixtures'
 
@@ -28,12 +27,10 @@ import {
   MIN_SQRT_RATIO,
   SwapToPriceFunction,
 } from './shared/utilities'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
-import { TestAlgebraReentrantCallee } from '../typechain/TestAlgebraReentrantCallee'
-import { TickMathTest } from '../typechain/TickMathTest'
-import { PriceMovementMathTest } from '../typechain/PriceMovementMathTest'
-import { buildSnapshotResolver } from 'jest-snapshot'
-import { poll } from 'ethers/lib/utils'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
+import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
+import { TickMathTest } from '../typechain/test/TickMathTest'
+import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
 
 const createFixtureLoader = waffle.createFixtureLoader
 

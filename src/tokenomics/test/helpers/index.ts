@@ -273,7 +273,10 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+      let txres = await txResult.wait(1);
+      if (txres.events && txres.events[3].args) {
+        virtualPoolAddress = txres.events[3].args['virtualPool']
+      } else throw new Error("Unable to get virtual pool address from event");
       
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)

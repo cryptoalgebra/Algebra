@@ -1,5 +1,5 @@
 import { expect } from './shared/expect'
-import { AdaptiveFeeTest } from '../typechain/AdaptiveFeeTest'
+import { AdaptiveFeeTest } from '../typechain/test/AdaptiveFeeTest'
 import { ethers, waffle } from 'hardhat'
 import snapshotGasCost from './shared/snapshotGasCost'
 

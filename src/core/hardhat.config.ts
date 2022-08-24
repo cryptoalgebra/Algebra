@@ -40,7 +40,9 @@ if (process.env.RUN_COVERAGE == '1') {
 export default {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
-
+  typechain: {
+    outDir: 'typechain'
+  },
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },

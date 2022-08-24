@@ -30,6 +30,9 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
+  typechain: {
+    outDir: 'typechain'
+  },
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: true,

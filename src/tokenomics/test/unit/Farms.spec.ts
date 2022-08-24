@@ -382,7 +382,7 @@ describe('unit/Farms', () => {
         bonusReward: 10000,
         minimalPositionWidth: 0,
         multiplierToken: context.rewardToken.address,
-        enterStartTime: timestamps[0],
+        enterStartTime: timestamps.startTime,
       }
 
       await expect(context.farming.connect(actors.lpUser1()).createLimitFarming(
@@ -665,7 +665,7 @@ describe('unit/Farms', () => {
   })
 
   describe('#exitFarming', () => {
-    let tokenIdOut;
+    let tokenIdOut: string;
     let incentiveId: string
     let subject: (actor: Wallet) => Promise<any>
     let createIncentiveResult: HelperTypes.CreateIncentive.Result
@@ -925,8 +925,8 @@ describe('unit/Farms', () => {
   describe('liquidityIfOverflow', () => {
     const MAX_UINT_96 = BN('2').pow(BN('96')).sub(1)
 
-    let incentive
-    let incentiveId
+    let incentive: HelperTypes.CreateIncentive.Result
+    let incentiveId: string
 
     beforeEach(async () => {
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))

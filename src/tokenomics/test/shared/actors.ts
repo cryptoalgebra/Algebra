@@ -19,7 +19,7 @@ export class ActorFixture {
   wallets: Array<Wallet>
   provider: MockProvider
 
-  constructor(wallets, provider) {
+  constructor(wallets: Array<Wallet>, provider: MockProvider) {
     this.wallets = wallets
     this.provider = provider
   }

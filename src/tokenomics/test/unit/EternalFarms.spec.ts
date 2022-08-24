@@ -1,6 +1,6 @@
 import { BigNumber, Contract, Wallet } from 'ethers'
 import { LoadFixtureFunction } from '../types'
-import { TestERC20 } from '../../typechain'
+import { TestERC20, TestIncentiveId } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
@@ -22,6 +22,7 @@ import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../he
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
+import { IAlgebraVirtualPool } from 'algebra/typechain'
 
 let loadFixture: LoadFixtureFunction
 const LIMIT_FARMING = true;
@@ -648,7 +649,7 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('after end time', () => {
-      let tokenIdOut;
+      let tokenIdOut: string;
       beforeEach('create the incentive and nft and farm it', async () => {
         timestamps = makeTimestamps(await blockTimestamp())
 
@@ -846,8 +847,8 @@ describe('unit/EternalFarms', () => {
   describe('liquidityIfOverflow', () => {
     const MAX_UINT_96 = BN('2').pow(BN('96')).sub(1)
 
-    let incentive
-    let incentiveId
+    let incentive: HelperTypes.CreateIncentive.Result;
+    let incentiveId: string;
 
     beforeEach(async () => {
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
@@ -912,8 +913,8 @@ describe('unit/EternalFarms', () => {
 
   describe('attach/detach incentive', () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args
-    let incentiveKey
-    let virtualPool
+    let incentiveKey: ContractParams.IncentiveKey
+    let virtualPool: Contract
 
     beforeEach(async () => {
       /** We will be doing a lot of time-testing here, so leave some room between
@@ -973,8 +974,8 @@ describe('unit/EternalFarms', () => {
 
   describe('rewards', async () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args
-    let incentiveKey
-    let incentiveId
+    let incentiveKey: ContractParams.IncentiveKey
+    let incentiveId: string
 
     beforeEach(async () => {
       /** We will be doing a lot of time-testing here, so leave some room between

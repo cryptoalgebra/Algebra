@@ -1,13 +1,12 @@
 import { Wallet } from 'ethers'
 import { ethers, waffle } from 'hardhat'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
-//import { DataStorageOperator } from "../typechain/DataStorageOperator";
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
 import { vaultAddress } from "./shared/fixtures";
 import snapshotGasCost from './shared/snapshotGasCost'
 
-import { FeeAmount, getCreate2Address, TICK_SPACINGS } from './shared/utilities'
+import { getCreate2Address } from './shared/utilities'
 
 const { constants } = ethers
 
