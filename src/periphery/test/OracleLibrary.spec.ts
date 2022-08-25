@@ -1,12 +1,12 @@
 import { expect } from 'chai'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { BigNumber, constants, ContractFactory } from 'ethers'
 import { DataStorageTest, TestERC20 } from '../typechain'
 import { expandTo18Decimals } from './shared/expandTo18Decimals'
 import snapshotGasCost from './shared/snapshotGasCost'
 
 describe('DataStorageLibrary', () => {
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
   let tokens: TestERC20[]
   let dataStorage: DataStorageTest
 
@@ -27,10 +27,6 @@ describe('DataStorageLibrary', () => {
       dataStorage: dataStorage as DataStorageTest,
     }
   }
-
-  before('create fixture loader', async () => {
-    loadFixture = waffle.createFixtureLoader(await (ethers as any).getSigners())
-  })
 
   beforeEach('deploy fixture', async () => {
     const fixtures = await loadFixture(dataStorageTestFixture)

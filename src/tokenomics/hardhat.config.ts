@@ -1,13 +1,13 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
-import 'hardhat-contract-sizer'
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
+import '@typechain/hardhat';
+import '@nomiclabs/hardhat-ethers';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomiclabs/hardhat-etherscan';
+import 'hardhat-contract-sizer';
+import 'solidity-coverage';
+import 'algebra-solidity-docgen';
 
-import { HardhatUserConfig } from 'hardhat/config'
-import { SolcUserConfig } from 'hardhat/types'
+import { HardhatUserConfig } from 'hardhat/config';
+import { SolcUserConfig } from 'hardhat/types';
 
 import baseConfig from '../../hardhat.base.config';
 
@@ -29,6 +29,9 @@ const config: HardhatUserConfig = {
   etherscan: baseConfig.etherscan,
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
+  },
+  typechain: {
+    outDir: 'typechain'
   },
   contractSizer: {
     alphaSort: false,

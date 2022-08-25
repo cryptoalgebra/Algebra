@@ -1,15 +1,15 @@
 import { Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
-import { TestERC20 } from '../typechain/TestERC20'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
 import { expect } from './shared/expect'
 
 import { poolFixture } from './shared/fixtures'
 
 import {
   FeeAmount,
-  TICK_SPACINGS,
   createPoolFunctions,
   PoolFunctions,
   createMultiPoolFunctions,
@@ -18,13 +18,11 @@ import {
   getMaxTick,
   expandTo18Decimals,
 } from './shared/utilities'
-import { TestAlgebraRouter } from '../typechain/TestAlgebraRouter'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
+import { TestAlgebraRouter } from '../typechain/test/TestAlgebraRouter'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 
 const feeAmount = FeeAmount.MEDIUM
 const tickSpacing = 60
-
-const createFixtureLoader = waffle.createFixtureLoader
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -47,13 +45,10 @@ describe('AlgebraPool', () => {
   let swapTargetCallee: TestAlgebraCallee
   let swapTargetRouter: TestAlgebraRouter
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool']
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   beforeEach('deploy first fixture', async () => {

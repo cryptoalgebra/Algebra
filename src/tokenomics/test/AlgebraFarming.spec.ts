@@ -1,5 +1,5 @@
-import { constants } from 'ethers'
-import { TestContext, LoadFixtureFunction } from './types'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
+import { TestContext } from './types'
 import { AlgebraEternalFarming, TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
@@ -23,29 +23,25 @@ import {
 } from './shared'
 import { createTimeMachine } from './shared/time'
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers'
-import { createFixtureLoader, provider } from './shared/provider'
+import { provider } from './shared/provider'
 import { ActorFixture } from './shared/actors'
-import { Fixture } from 'ethereum-waffle'
 import { HelperTypes } from './helpers/types'
-import { Wallet } from '@ethersproject/wallet'
+import { Wallet } from 'ethers'
 
-import './matchers/beWithin'
-import { curry } from 'lodash'
-
-let loadFixture: LoadFixtureFunction
+import './matchers/beWithin';
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
 
-describe('AlgebraFarming', async ()=>{
-    const wallets = provider.getWallets()
+describe('AlgebraFarming', () => {
+    let wallets: Wallet[];
     const Time = createTimeMachine(provider)
-    const actors = new ActorFixture(wallets, provider)
+    let actors: ActorFixture;
     const e20h = new ERC20Helper()
 
-    before('create fixture loader', async () => {
-        loadFixture = createFixtureLoader(wallets, provider)
-    })
-
+	before(async () => {
+		wallets = await (ethers.getSigners() as any) as Wallet[];
+		actors = new ActorFixture(wallets, provider)
+	})
 	describe('minimal position width', async () => {
 		type TestSubject = {
 			createIncentiveResult: HelperTypes.CreateIncentive.Result
@@ -65,9 +61,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(40)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -364,9 +361,9 @@ describe('AlgebraFarming', async ()=>{
 		]
 		const amountsToFarm: [BigNumber, BigNumber] = [BNe18(1), BNe18(1)]
 		
-		const scenario: Fixture<TestSubject> = async (_wallets, _provider) => {
+		const scenario: () => Promise<TestSubject> = async () => {
 	
-			const context = await algebraFixture(_wallets, _provider)
+			const context = await algebraFixture()
 			
 			const epoch = await blockTimestamp()
 
@@ -405,7 +402,7 @@ describe('AlgebraFarming', async ()=>{
 					})
 				)
 			)
-			await Time.set(startTime + 1)
+			await time.setNextBlockTimestamp(startTime + 1)
 
 			const trader = actors.traderUser0()
 			await helpers.makeTickGoFlow({
@@ -433,7 +430,7 @@ describe('AlgebraFarming', async ()=>{
 
 				const { helpers, createIncentiveResult } = subject
 
-				await Time.setAndMine(createIncentiveResult.endTime + 1)
+				await time.increaseTo(createIncentiveResult.endTime + 1)
 
 				const trader = actors.traderUser0()
 				await helpers.makeTickGoFlow({
@@ -472,7 +469,7 @@ describe('AlgebraFarming', async ()=>{
 			it('allows them all to withdraw at the end', async () => {
 				const { helpers, createIncentiveResult } = subject
 
-				await Time.setAndMine(createIncentiveResult.endTime + 1)
+				await time.increaseTo(createIncentiveResult.endTime + 1)
 
 				const trader = actors.traderUser0()
 				await helpers.makeTickGoFlow({
@@ -512,7 +509,7 @@ describe('AlgebraFarming', async ()=>{
 				const { helpers, createIncentiveResult, context, farms } = subject
 
 				// Go halfway through
-				await Time.set(createIncentiveResult.startTime + duration / 2)
+				await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 				const lpUser3 = actors.traderUser2()
 
@@ -541,7 +538,7 @@ describe('AlgebraFarming', async ()=>{
 					deadline: (await blockTimestamp()) + 1000,
 				})
 
-				await Time.set(createIncentiveResult.endTime + 1)
+				await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 				const trader = actors.traderUser0()
 				await helpers.makeTickGoFlow({
@@ -605,9 +602,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(40)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -701,7 +699,7 @@ describe('AlgebraFarming', async ()=>{
 
 			const epoch = await blockTimestamp()
 
-		    await Time.set(epoch + 1)
+			await time.increaseTo(epoch + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -739,7 +737,7 @@ describe('AlgebraFarming', async ()=>{
 		        maxGas
 	        )
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 			
 			const rewardInfo1 = await context.farming.connect(actors.lpUser0()).getRewardInfo(
@@ -771,7 +769,7 @@ describe('AlgebraFarming', async ()=>{
 				desiredValue: midpoint + 480,
 			})
 
-		    await Time.set(createIncentiveResult.startTime + 3 *duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 3 *duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -780,7 +778,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + 5 *duration / 6)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 5 *duration / 6)
 
 		     await helpers.makeTickGoFlow({
 				trader,
@@ -789,7 +787,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -850,9 +848,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -943,7 +942,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlowWithSmallSteps({
@@ -978,14 +977,14 @@ describe('AlgebraFarming', async ()=>{
 		        maxGas
 	        )
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 		    await helpers.makeTickGoFlowWithSmallSteps({
 				trader,
 				direction: 'down',
 				desiredValue: -50,
 			})
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 			let liquidityOfFirstPosition = await (await context.nft.connect(actors.lpUser0()).positions(2)).liquidity
 			let liquidityOfSecondPosition = await (await context.nft.connect(actors.lpUser1()).positions(3)).liquidity
@@ -1056,9 +1055,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -1148,7 +1148,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -1159,7 +1159,7 @@ describe('AlgebraFarming', async ()=>{
 
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 		
 
@@ -1171,7 +1171,7 @@ describe('AlgebraFarming', async ()=>{
 
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 		    await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1233,9 +1233,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -1325,7 +1326,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    // await helpers.makeTickGoFlow({
@@ -1336,10 +1337,10 @@ describe('AlgebraFarming', async ()=>{
 
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 		    await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1402,9 +1403,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -1495,7 +1497,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 20)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 20)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -1505,7 +1507,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -1514,7 +1516,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1572,9 +1574,10 @@ describe('AlgebraFarming', async ()=>{
 		const duration = days(1)
 		const baseAmount = BNe18(2)
 
-        const scenario: Fixture<TestSubject> = async (_wallets, _provider) => {
-			const context = await algebraFixture(_wallets, _provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallets, _provider), _provider)
+        const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 30
@@ -1637,7 +1640,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -1647,7 +1650,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -1656,7 +1659,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1746,7 +1749,7 @@ describe('AlgebraFarming', async ()=>{
 				LIMIT_FARMING
 			);
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -1756,7 +1759,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -1765,7 +1768,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1813,9 +1816,10 @@ describe('AlgebraFarming', async ()=>{
 		const bonusReward = BNe18(0)
 		const duration = days(1)
 
-		const scenario: Fixture<TestSubject> = async (_wallet, _provider) => {
-			const context = await algebraFixture(_wallet,_provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallet, _provider), _provider)
+		const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 1000
@@ -1906,7 +1910,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 20)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 20)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -1916,7 +1920,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 2)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -1925,7 +1929,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -1981,9 +1985,10 @@ describe('AlgebraFarming', async ()=>{
 		const duration = days(1)
 		const baseAmount = BNe18(2)
 
-        const scenario: Fixture<TestSubject> = async (_wallets, _provider) => {
-			const context = await algebraFixture(_wallets, _provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallets, _provider), _provider)
+        const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 1000
@@ -2057,7 +2062,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -2067,7 +2072,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -2076,7 +2081,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -2156,7 +2161,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -2166,7 +2171,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -2175,7 +2180,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -2255,7 +2260,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -2265,7 +2270,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -2274,7 +2279,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {
@@ -2326,9 +2331,10 @@ describe('AlgebraFarming', async ()=>{
         const bonusReward = BNe18(4_000)
 		const duration = days(1)
 
-        const scenario: Fixture<TestSubject> = async (_wallets, _provider) => {
-			const context = await algebraFixture(_wallets, _provider)
-			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(_wallets, _provider), _provider)
+        const scenario: () => Promise<TestSubject> = async () => {
+			const context = await algebraFixture()
+			const wallets = (await ethers.getSigners() as any) as Wallet[];
+			const helpers = HelperCommands.fromTestContext(context, new ActorFixture(wallets, ethers.provider), ethers.provider)
 
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 30
@@ -2395,7 +2401,7 @@ describe('AlgebraFarming', async ()=>{
 				)
 			)
 
-		    await Time.set(createIncentiveResult.startTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + 1)
 
 		    const trader = actors.traderUser0()
 		    await helpers.makeTickGoFlow({
@@ -2405,7 +2411,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.startTime + duration / 4)
+		    await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 4)
 
 		    await helpers.makeTickGoFlow({
 				trader,
@@ -2414,7 +2420,7 @@ describe('AlgebraFarming', async ()=>{
 			})
 
 
-		    await Time.set(createIncentiveResult.endTime + 1)
+		    await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
 			
 			await context.farmingCenter.connect(actors.lpUser0()).exitFarming(
 			    {

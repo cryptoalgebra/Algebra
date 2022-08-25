@@ -1,7 +1,7 @@
 import { constants, Wallet } from 'ethers'
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
-import { Fixture } from 'ethereum-waffle'
 import { SelfPermitTest, TestERC20PermitAllowed } from '../typechain'
 import { expect } from 'chai'
 import { getPermitSignature } from './shared/permit'
@@ -10,10 +10,10 @@ describe('SelfPermit', () => {
   let wallet: Wallet
   let other: Wallet
 
-  const fixture: Fixture<{
+  const fixture: () => Promise<{
     token: TestERC20PermitAllowed
     selfPermitTest: SelfPermitTest
-  }> = async (wallets, provider) => {
+  }> = async () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20PermitAllowed')
     const token = (await tokenFactory.deploy(0)) as TestERC20PermitAllowed
 
@@ -29,12 +29,10 @@ describe('SelfPermit', () => {
   let token: TestERC20PermitAllowed
   let selfPermitTest: SelfPermitTest
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
     ;[wallet, other] = wallets
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   beforeEach('load fixture', async () => {

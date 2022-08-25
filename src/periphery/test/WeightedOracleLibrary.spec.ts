@@ -1,14 +1,12 @@
 import { expect } from 'chai'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { BigNumber, BigNumberish, constants, ContractFactory } from 'ethers'
 import { TestERC20, WeightedDataStorageTest } from '../typechain'
 
 describe('WeightedDataStorageLibrary', () => {
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
   let tokens: TestERC20[]
   let dataStorage: WeightedDataStorageTest
-
-  const wallets = waffle.provider.getWallets()
 
   const dataStorageTestFixture = async () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20')
@@ -28,9 +26,6 @@ describe('WeightedDataStorageLibrary', () => {
     }
   }
 
-  before('create fixture loader', async () => {
-    loadFixture = waffle.createFixtureLoader(wallets)
-  })
 
   beforeEach('deploy fixture', async () => {
     const fixtures = await loadFixture(dataStorageTestFixture)

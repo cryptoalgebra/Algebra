@@ -1,4 +1,4 @@
-import { MockProvider } from 'ethereum-waffle'
+import { providers } from 'ethers'
 import { log } from './logging'
 
 type TimeSetterFunction = (timestamp: number) => Promise<void>
@@ -9,7 +9,7 @@ type TimeSetters = {
   setAndMine: TimeSetterFunction
 }
 
-export const createTimeMachine = (provider: MockProvider): TimeSetters => {
+export const createTimeMachine = (provider: providers.JsonRpcProvider): TimeSetters => {
   return {
     set: async (timestamp: number) => {
       log.debug(`🕒 setTime(${timestamp})`)

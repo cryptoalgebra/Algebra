@@ -1,6 +1,7 @@
 import { expect } from './shared/expect'
-import { AdaptiveFeeTest } from '../typechain/AdaptiveFeeTest'
-import { ethers, waffle } from 'hardhat'
+import { AdaptiveFeeTest } from '../typechain/test/AdaptiveFeeTest'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import snapshotGasCost from './shared/snapshotGasCost'
 
 const { BigNumber } = ethers
@@ -12,7 +13,7 @@ describe('AdaptiveFee', () => {
     return (await factory.deploy()) as AdaptiveFeeTest
   }
   beforeEach('deploy AdaptiveFeeTest', async () => {
-    adaptiveFee = await waffle.loadFixture(fixture)
+    adaptiveFee = await loadFixture(fixture)
   })
 
   describe('#getFee', () => {

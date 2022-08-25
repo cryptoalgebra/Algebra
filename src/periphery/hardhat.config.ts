@@ -1,11 +1,8 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
-import 'hardhat-watcher'
-import 'hardhat-dependency-compiler'
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
+import '@nomicfoundation/hardhat-toolbox';
+import 'hardhat-watcher';
+import 'hardhat-dependency-compiler';
+import 'solidity-coverage';
+import 'algebra-solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
@@ -59,6 +56,9 @@ export default {
       'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
     },
+  },
+  typechain: {
+    outDir: 'typechain'
   },
   watcher: {
     test: {

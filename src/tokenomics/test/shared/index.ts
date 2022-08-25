@@ -15,7 +15,6 @@ import { constants } from 'ethers'
 import bn from 'bignumber.js'
 
 import { expect, use } from 'chai'
-import { solidity } from 'ethereum-waffle'
 import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot'
 
 import { IAlgebraPool, TestERC20 } from '../../typechain'
@@ -34,7 +33,6 @@ export const blockTimestamp = async () => {
 
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 })
 
-use(solidity)
 use(jestSnapshotPlugin())
 
 export { expect }

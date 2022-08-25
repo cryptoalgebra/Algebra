@@ -1,7 +1,7 @@
 import { constants, Wallet } from 'ethers'
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from './shared/expect'
-import { Fixture } from 'ethereum-waffle'
 import { NonfungibleTokenPositionDescriptor, MockTimeNonfungiblePositionManager, TestERC20 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { encodePriceSqrt } from './shared/encodePriceSqrt'
@@ -21,12 +21,12 @@ const MATIC_CHAIN_ID = 137
 describe('NonfungibleTokenPositionDescriptor', () => {
   let wallets: Wallet[]
 
-  const nftPositionDescriptorCompleteFixture: Fixture<{
+  const nftPositionDescriptorCompleteFixture: () => Promise<{
     nftPositionDescriptor: NonfungibleTokenPositionDescriptor
     tokens: [TestERC20, TestERC20, TestERC20]
     nft: MockTimeNonfungiblePositionManager
-  }> = async (wallets, provider) => {
-    const { factory, nft, router, nftDescriptor } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { factory, nft, router, nftDescriptor } = await completeFixture()
     const tokenFactory = await ethers.getContractFactory('TestERC20')
     const tokens: [TestERC20, TestERC20, TestERC20] = [
       (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20, // do not use maxu256 to avoid overflowing
@@ -47,12 +47,8 @@ describe('NonfungibleTokenPositionDescriptor', () => {
   let nft: MockTimeNonfungiblePositionManager
   let wnative: TestERC20
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
   before('create fixture loader', async () => {
     wallets = await (ethers as any).getSigners()
-
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   beforeEach('load fixture', async () => {

@@ -1,10 +1,11 @@
 import { Decimal } from 'decimal.js'
 import { BigNumber, BigNumberish, ContractTransaction, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
-import { TestERC20 } from '../typechain/TestERC20'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
+import { TestERC20 } from '../typechain/test/TestERC20'
 
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 import { expect } from './shared/expect'
 import { poolFixture } from './shared/fixtures'
 import { formatPrice, formatTokenAmount } from './shared/format'
@@ -23,7 +24,6 @@ import {
 
 Decimal.config({ toExpNeg: -500, toExpPos: 500 })
 
-const createFixtureLoader = waffle.createFixtureLoader
 const { constants } = ethers
 
 interface BaseSwapTestCase {
@@ -465,21 +465,15 @@ const TEST_POOLS: PoolTestCase[] = [
 describe('AlgebraPool swap tests', () => {
   let wallet: Wallet, other: Wallet
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-
-    loadFixture = createFixtureLoader([wallet])
   })
 
   for (const poolCase of TEST_POOLS) {
     describe(poolCase.description, () => {
-      const poolCaseFixture = async (isDefl : boolean, zeroToOne : boolean) => {
-        const { createPool, token0, token1, swapTargetCallee: swapTarget } = await poolFixture(
-          [wallet],
-          waffle.provider
-        )
+      const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
+        const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
         const pool = await createPool(poolCase.feeAmount)
         const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
         await pool.initialize(poolCase.startingPrice)
@@ -517,7 +511,7 @@ describe('AlgebraPool swap tests', () => {
         ])
 
         return { token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions }
-      }
+    }
 
       let token0: TestERC20
       let token1: TestERC20
@@ -543,12 +537,10 @@ describe('AlgebraPool swap tests', () => {
 
           let withComission = 'comissionOnTransaction' in testCase && testCase.comissionOnTransaction;
           ;({ token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions } = await 
-            poolCaseFixture(withComission, testCase.zeroToOne)
+            setupPool(withComission, testCase.zeroToOne)
           )
 
           const globalState = await pool.globalState()
-          
-          
 
           const tx = executeSwap(pool, testCase, poolFunctions)
           try {

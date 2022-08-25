@@ -1,6 +1,7 @@
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
 import { Wallet } from 'ethers'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
 import { expect } from './shared/expect'
 
 import { poolFixture } from './shared/fixtures'
@@ -21,10 +22,8 @@ import {
   MAX_SQRT_RATIO,
   MIN_SQRT_RATIO,
 } from './shared/utilities'
-import { TestERC20 } from '../typechain/TestERC20'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
-
-const createFixtureLoader = waffle.createFixtureLoader
+import { TestERC20 } from '../typechain/test/TestERC20'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 
 describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet
@@ -33,11 +32,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let token1;
   let swapTarget: TestAlgebraCallee;
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
-
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   for (const communityFee of [0, 60]) {
@@ -49,8 +45,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       const minTick = getMinTick(tickSpacing)
       const maxTick = getMaxTick(tickSpacing)
 
-      const gasTestFixture = async ([wallet]: Wallet[]) => {
-        const fix = await poolFixture([wallet], waffle.provider)
+      const gasTestFixture = async () => {
+        const fix = await poolFixture()
 
         const pool = await fix.createPool(feeAmount)
 

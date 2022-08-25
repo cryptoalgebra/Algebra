@@ -1,5 +1,6 @@
-import { BigNumber } from 'ethers'
-import { LoadFixtureFunction } from '../types'
+import { ethers } from 'hardhat'
+import { BigNumber, Wallet } from 'ethers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -13,18 +14,18 @@ import {
   makeTimestamps,
   ZERO_ADDRESS,
 } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper} from '../helpers'
 import { ContractParams } from '../../types/contractParams'
 import { HelperTypes } from '../helpers/types'
 
-let loadFixture: LoadFixtureFunction
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
 
 describe('unit/FarmingCenterVault', () => {
-  const actors = new ActorFixture(provider.getWallets(), provider)
-  const lpUser0 = actors.lpUser0()
+  let actors: ActorFixture;
+  let lpUser0: Wallet
+  let incentiveCreator: Wallet
   const amountDesired = BNe18(10)
   const amountLocked = BigNumber.from(1000)
   const totalReward = BNe18(100)
@@ -36,8 +37,11 @@ describe('unit/FarmingCenterVault', () => {
   let eternalTimestamps: ContractParams.Timestamps
   let tokenId: string
 
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
+  before(async () => {
+    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    actors = new ActorFixture(wallets, provider)
+    lpUser0 = actors.lpUser0();
+    incentiveCreator = actors.incentiveCreator();
   })
 
   beforeEach('create fixture loader', async () => {

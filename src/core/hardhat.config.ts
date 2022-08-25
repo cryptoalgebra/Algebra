@@ -1,11 +1,7 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-contract-sizer';
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
-import { SolcUserConfig } from 'hardhat/types'
+import 'algebra-solidity-docgen';
+import { SolcUserConfig } from 'hardhat/types';
 import baseConfig from '../../hardhat.base.config';
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
@@ -40,7 +36,9 @@ if (process.env.RUN_COVERAGE == '1') {
 export default {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
-
+  typechain: {
+    outDir: 'typechain'
+  },
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
