@@ -135,21 +135,19 @@ library PriceMovementMath {
     int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
     int24 startTick = TickMath.getTickAtSqrtRatio(startPrice);
     int24 endTick = TickMath.getTickAtSqrtRatio(endPrice);
+    console.logInt(endTick - startTick);
     if (zeroToOne) {
-      int256 x = (int256(startTick - endTick - Constants.Ln) * Constants.Q160) /
+      int256 x = (int256(startTick - endTick) * Constants.Q160) /
         int256(endPrice) -
-        (int256(startTick - currentTick - Constants.Ln) * Constants.Q160) /
+        (int256(startTick - currentTick) * Constants.Q160) /
         int256(currentPrice);
-      console.log('x');
-      console.logInt(x);
+
       if (x < 0) x = -x;
-      feeAmount = FullMath.mulDiv(uint256(liquidity) * Constants.K * uint256(Constants.Ln), uint256(x), Constants.Q64 * Constants.K_DENOMINATOR);
+      feeAmount = FullMath.mulDiv(uint256(liquidity) * Constants.K, uint256(x), Constants.Q64 * Constants.K_DENOMINATOR * Constants.Ln);
     } else {
-      int256 y = int256(endPrice) * (endTick - startTick - Constants.Ln) - int256(currentPrice) * (currentTick - startTick - Constants.Ln);
-      console.log('y');
-      console.logInt(y);
+      int256 y = int256(endPrice) * (endTick - startTick) - int256(currentPrice) * (currentTick - startTick);
       if (y < 0) y = -y;
-      feeAmount = FullMath.mulDiv(uint256(liquidity) * Constants.K * uint256(Constants.Ln), uint256(y), Constants.Q96 * Constants.K_DENOMINATOR);
+      feeAmount = FullMath.mulDiv(uint256(liquidity) * Constants.K, uint256(y), Constants.Q96 * Constants.K_DENOMINATOR * Constants.Ln);
     }
   }
 
@@ -206,12 +204,12 @@ library PriceMovementMath {
       }
 
       output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
-      uint256 priceImpactFeeAmount = calculatePriceImpactFee(zeroToOne, liquidity, startPrice, currentPrice, resultPrice);
       console.log('res');
       console.log(input);
-      console.log(feeAmount);
-      console.log(priceImpactFeeAmount);
       console.log(output);
+
+      uint256 priceImpactFeeAmount = calculatePriceImpactFee(zeroToOne, liquidity, startPrice, currentPrice, resultPrice);
+      console.log(priceImpactFeeAmount);
     } else {
       function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
 
