@@ -28,6 +28,7 @@ import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
+import 'hardhat/console.sol';
 
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
@@ -614,9 +615,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _swapCallback(
     int256 amount0,
     int256 amount1,
+    uint256 feeAmount,
     bytes calldata data
   ) private {
-    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
+    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -636,7 +638,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (balanceBefore, ) = _syncBalances(); // TODO check
     else (, balanceBefore) = _syncBalances();
     // function _calculateSwapAndLock locks globalState.unlocked and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     uint256 balanceAfter;
     if (zeroToOne) {
@@ -653,6 +655,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(balanceBefore.add(uint256(amount1)) <= balanceAfter, 'IIA');
     }
 
+    communityFee = zeroToOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
+
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
       balanceAfter -= communityFee;
@@ -666,6 +672,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
+
   function swapSupportingFeeOnInputTokens(
     address sender,
     address recipient,
@@ -692,9 +699,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
+    uint256 feeAmount;
     uint256 communityFee;
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     // only transfer to the recipient
     if (zeroToOne) {
@@ -712,6 +720,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         amountRequired = int256(amount1);
       }
     }
+
+    communityFee = zeroToOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
@@ -765,7 +777,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint160 currentPrice,
       int24 currentTick,
       uint128 currentLiquidity,
-      uint256 communityFeeAmount
+      uint256 feeAmount
     )
   {
     uint32 blockTimestamp;
@@ -802,7 +814,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       blockTimestamp = _blockTimestamp();
 
-      cache.activeIncentive = activeIncentive;
+      if (blockTimestamp != startPriceUpdated) {
+        startPriceUpdated = blockTimestamp;
+        blockStartPrice = currentPrice;
+      }
+
+      if (activeIncentive != address(0)) {
+        IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
+        if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
+          activeIncentive = address(0);
+        } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
+          cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
+        } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
+          cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
+        }
+      }
 
       uint16 newTimepointIndex = _writeTimepoint(
         cache.timepointIndex,
@@ -812,7 +838,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.volumePerLiquidityInBlock
       );
 
-      // new timepoint appears only for first swap in block
+      // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
         cache.volumePerLiquidityInBlock = 0;
@@ -830,6 +856,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
+
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
         zeroToOne,
         currentPrice,
@@ -838,8 +865,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
+        blockStartPrice,
         cache.fee
       );
+
+      console.log('exit');
 
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
@@ -852,8 +882,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (cache.communityFee > 0) {
         uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
-        communityFeeAmount += delta;
       }
+
+      feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
