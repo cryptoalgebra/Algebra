@@ -28,7 +28,6 @@ import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
-import 'hardhat/console.sol';
 
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
@@ -868,8 +867,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         blockStartPrice,
         cache.fee
       );
-
-      console.log('exit');
 
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
