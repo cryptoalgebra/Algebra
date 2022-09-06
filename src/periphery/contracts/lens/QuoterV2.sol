@@ -43,6 +43,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     function algebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
+        uint256,
         bytes memory path
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported

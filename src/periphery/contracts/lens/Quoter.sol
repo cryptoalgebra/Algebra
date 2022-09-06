@@ -15,6 +15,8 @@ import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Provides quotes for swaps
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -42,6 +44,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     function algebraSwapCallback(
         int256 amount0Delta,
         int256 amount1Delta,
+        uint256 feeAmount,
         bytes memory path
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
@@ -54,6 +57,18 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
         (, , uint16 fee, , , , ) = pool.globalState();
+        console.log('amounts');
+        console.log(feeAmount);
+        console.log(amountToPay);
+        uint256 expectedFee = FullMath.mulDivRoundingUp(fee, amountToPay, 1e6);
+        if (feeAmount != 0 && (expectedFee != feeAmount)) {
+            uint256 actualFee = FullMath.mulDiv(feeAmount, 1e6, amountToPay);
+            if (actualFee < 50000) {
+                fee = uint16(actualFee);
+            } else {
+                fee = 50000;
+            }
+        }
 
         if (isExactInput) {
             assembly {
@@ -75,7 +90,9 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @dev Parses a revert reason that should contain the numeric quote
-    function parseRevertReason(bytes memory reason) private pure returns (uint256, uint16) {
+    function parseRevertReason(bytes memory reason) private view returns (uint256, uint16) {
+        console.log('reason length');
+        console.log(reason.length);
         if (reason.length != 64) {
             if (reason.length < 68) revert('Unexpected error');
             assembly {
