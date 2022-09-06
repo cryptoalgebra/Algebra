@@ -28,6 +28,7 @@ import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
+import 'hardhat/console.sol';
 
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
@@ -580,9 +581,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _swapCallback(
     int256 amount0,
     int256 amount1,
+    uint256 feeAmount,
     bytes calldata data
   ) private {
-    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
+    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -597,22 +599,27 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 communityFee;
+    uint256 feeAmount;
     // function _calculateSwapAndLock locks globalState.unlocked and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     if (zeroToOne) {
       if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1)); // transfer to recipient
 
       uint256 balance0Before = balanceToken0();
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
       require(balance0Before.add(uint256(amount0)) <= balanceToken0(), 'IIA');
     } else {
       if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0)); // transfer to recipient
 
       uint256 balance1Before = balanceToken1();
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
       require(balance1Before.add(uint256(amount1)) <= balanceToken1(), 'IIA');
     }
+
+    communityFee = zeroToOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
@@ -623,6 +630,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
+
   function swapSupportingFeeOnInputTokens(
     address sender,
     address recipient,
@@ -637,11 +645,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     globalState.unlocked = false;
     if (zeroToOne) {
       uint256 balance0Before = balanceToken0();
-      _swapCallback(amountRequired, 0, data);
+      _swapCallback(amountRequired, 0, 0, data);
       require((amountRequired = int256(balanceToken0().sub(balance0Before))) > 0, 'IIA');
     } else {
       uint256 balance1Before = balanceToken1();
-      _swapCallback(0, amountRequired, data);
+      _swapCallback(0, amountRequired, 0, data);
       require((amountRequired = int256(balanceToken1().sub(balance1Before))) > 0, 'IIA');
     }
     globalState.unlocked = true;
@@ -649,9 +657,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
+    uint256 feeAmount;
     uint256 communityFee;
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
     // only transfer to the recipient
     if (zeroToOne) {
@@ -663,6 +672,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // return the leftovers
       if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired.sub(amount1)));
     }
+
+    communityFee = zeroToOne
+      ? (feeAmount * globalState.communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR
+      : (feeAmount * globalState.communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (communityFee > 0) {
       _payCommunityFee(zeroToOne ? token0 : token1, communityFee);
@@ -712,7 +725,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint160 currentPrice,
       int24 currentTick,
       uint128 currentLiquidity,
-      uint256 communityFeeAmount
+      uint256 feeAmount
     )
   {
     uint32 blockTimestamp;
@@ -749,6 +762,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       blockTimestamp = _blockTimestamp();
 
+      if (blockTimestamp != startPriceUpdated) {
+        startPriceUpdated = blockTimestamp;
+        blockStartPrice = currentPrice;
+      }
+
       if (activeIncentive != address(0)) {
         IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
         if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
@@ -768,7 +786,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.volumePerLiquidityInBlock
       );
 
-      // new timepoint appears only for first swap in block
+      // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
         cache.volumePerLiquidityInBlock = 0;
@@ -786,6 +804,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
+
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
         zeroToOne,
         currentPrice,
@@ -794,8 +813,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
+        blockStartPrice,
         cache.fee
       );
+
+      console.log('exit');
 
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
@@ -808,8 +830,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (cache.communityFee > 0) {
         uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
-        communityFeeAmount += delta;
       }
+
+      feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 

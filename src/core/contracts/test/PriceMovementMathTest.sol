@@ -12,7 +12,7 @@ contract PriceMovementMathTest {
     uint16 feePips
   )
     external
-    pure
+    view
     returns (
       uint160 sqrtQ,
       uint256 amountIn,
@@ -20,7 +20,7 @@ contract PriceMovementMathTest {
       uint256 feeAmount
     )
   {
-    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
+    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, sqrtP, feePips);
   }
 
   function getGasCostOfmovePriceTowardsTarget(
@@ -31,7 +31,7 @@ contract PriceMovementMathTest {
     uint16 feePips
   ) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
+    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, sqrtP, feePips);
     return gasBefore - gasleft();
   }
 }

@@ -10,7 +10,7 @@ contract PriceMovementMathEchidnaTest {
     uint128 liquidity,
     int256 amountRemaining,
     uint16 feePips
-  ) external pure {
+  ) external view {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
     require(feePips > 0);
@@ -22,6 +22,7 @@ contract PriceMovementMathEchidnaTest {
       sqrtPriceTargetRaw,
       liquidity,
       amountRemaining,
+      sqrtPriceRaw,
       feePips
     );
 
