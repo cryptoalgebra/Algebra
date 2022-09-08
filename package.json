@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "devDependencies": {
-    "@defi-wonderland/smock": "^2.2.0",
+    "@defi-wonderland/smock": "^2.3.0",
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@typechain/ethers-v5": "^10.1.0",
     "@types/chai": "^4.2.6",
