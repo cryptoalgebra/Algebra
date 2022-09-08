@@ -763,7 +763,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       if (blockTimestamp != startPriceUpdated) {
         startPriceUpdated = blockTimestamp;
-        blockStartPrice = currentPrice;
+        blockStartTick = currentTick;
       }
 
       if (activeIncentive != address(0)) {
@@ -812,7 +812,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        blockStartPrice,
+        blockStartTick,
         cache.fee
       );
 

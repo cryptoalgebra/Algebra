@@ -26,7 +26,7 @@ abstract contract PoolState is IAlgebraPoolState {
   uint128 public override liquidity;
   uint128 internal volumePerLiquidityInBlock;
 
-  uint160 blockStartPrice;
+  int24 blockStartTick;
   uint32 startPriceUpdated;
   /// @inheritdoc IAlgebraPoolState
   uint32 public override liquidityCooldown;

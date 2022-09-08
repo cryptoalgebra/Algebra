@@ -126,17 +126,15 @@ library PriceMovementMath {
   }
 
   function calculatePriceImpactFee(
-    bool zeroToOne,
     uint128 liquidity,
-    uint160 startPrice,
+    int24 startTick,
     uint160 currentPrice,
     uint160 endPrice
   ) internal view returns (uint256 feeAmount) {
     int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
-    int24 startTick = TickMath.getTickAtSqrtRatio(startPrice);
     int24 endTick = TickMath.getTickAtSqrtRatio(endPrice);
     console.logInt(endTick - startTick);
-    if (zeroToOne) {
+    if (currentTick > startTick) {
       int256 x = (int256(startTick - endTick) * Constants.Q160) /
         int256(endPrice) -
         (int256(startTick - currentTick) * Constants.Q160) /
@@ -168,7 +166,7 @@ library PriceMovementMath {
     uint160 targetPrice,
     uint128 liquidity,
     int256 amountAvailable,
-    uint160 startPrice,
+    int24 startTick,
     uint16 fee
   )
     internal
@@ -208,7 +206,7 @@ library PriceMovementMath {
       console.log(input);
       console.log(output);
 
-      uint256 priceImpactFeeAmount = calculatePriceImpactFee(zeroToOne, liquidity, startPrice, currentPrice, resultPrice);
+      uint256 priceImpactFeeAmount = calculatePriceImpactFee(liquidity, startTick, currentPrice, resultPrice);
       console.log(priceImpactFeeAmount);
     } else {
       function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
@@ -231,7 +229,7 @@ library PriceMovementMath {
 
       input = getAmountA(resultPrice, currentPrice, liquidity);
       feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
-      //feeAmount += calculatePriceImpactFee(zeroToOne, liquidity, startPrice, currentPrice, resultPrice);
+      //feeAmount += calculatePriceImpactFee(liquidity, startTick, currentPrice, resultPrice);
     }
   }
 }
