@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
-
+import * as fs from 'fs';
 import { expect } from './shared/expect'
 import snapshotGasCost from './shared/snapshotGasCost'
 import { encodePriceSqrt, expandTo18Decimals } from './shared/utilities'
@@ -15,6 +15,44 @@ describe('PriceMovementMath', () => {
     const sqrtPriceMathTestFactory = await ethers.getContractFactory('TokenDeltaMathTest')
     PriceMovementMath = (await PriceMovementMathTestFactory.deploy()) as PriceMovementMathTest
     sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as TokenDeltaMathTest
+  })
+
+  describe.only('#calculatePriceImpactFee', () => {
+    it('values for fixed start tick, move price down', async () => {
+        let startTick = 1000;
+        let base = Number(1.0001);
+        let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
+
+        let tickDs = [];
+        let results = [];
+        for(let tickD = 1; tickD < 1000; tickD++) {
+          tickDs.push(tickD)
+          let endPrice = Math.floor(((base ** (startTick - tickD)) ** 0.5) * Number('2')**Number('96'));
+          results.push(
+            (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+            )
+        }
+        
+        fs.writeFileSync('./PIfee_out_down.json', JSON.stringify({tickDs, results}));
+    })
+
+    it('values for fixed start tick, move price up', async () => {
+      let startTick = 1000;
+      let base = Number(1.0001);
+      let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
+
+      let tickDs = [];
+      let results = [];
+      for(let tickD = 1; tickD < 1000; tickD++) {
+        tickDs.push(tickD)
+        let endPrice = Math.floor(((base ** (startTick + tickD)) ** 0.5) * Number('2')**Number('96'));
+        results.push(
+          (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+          )
+      }
+      
+      fs.writeFileSync('./PIfee_out_up.json', JSON.stringify({tickDs, results}));
+  })
   })
 
   describe('#movePriceTowardsTarget', () => {

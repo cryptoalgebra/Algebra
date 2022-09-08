@@ -135,23 +135,15 @@ library PriceMovementMath {
     currentPrice = TickMath.getSqrtRatioAtTick(currentTick);
     endPrice = TickMath.getSqrtRatioAtTick(endTick);
 
-    console.log('Tick delta');
-    console.logInt(endTick - startTick);
-    int256 nominator;
     if (endTick < currentTick) {
       int256 x = int256(currentPrice) * (startTick - endTick) - int256(endPrice) * (startTick - currentTick);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(x), (currentPrice - endPrice) * Constants.Ln) - (Constants.K);
+      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(x), (currentPrice - endPrice) * Constants.Ln) - 2 * (Constants.K);
     } else {
       int256 y = int256(endPrice) * (endTick - startTick) - int256(currentPrice) * (currentTick - startTick);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(y), (endPrice - currentPrice) * Constants.Ln) - (Constants.K);
+      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(y), (endPrice - currentPrice) * Constants.Ln) - 2 * (Constants.K);
     }
 
-    console.log('Fee percent:');
-    console.log(feeAmount);
-
     if (feeAmount > 20000) feeAmount = 20000;
-    console.log('Fee percent (capped):');
-    console.log(feeAmount);
   }
 
   /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
@@ -207,13 +199,8 @@ library PriceMovementMath {
       }
 
       output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
-      console.log('res');
-      console.log(input);
-      console.log(output);
 
       uint256 priceImpactFee = calculatePriceImpactFee(startTick, currentPrice, resultPrice);
-      console.log('Amount:');
-      console.log(FullMath.mulDiv(priceImpactFee, input, 10000000));
     } else {
       function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
 
