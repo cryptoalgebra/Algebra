@@ -5,6 +5,14 @@ import '../libraries/PriceMovementMath.sol';
 import '../libraries/TickMath.sol';
 
 contract PriceMovementMathTest {
+  function calculatePriceImpactFee(
+    int24 startTick,
+    uint160 currentPrice,
+    uint160 endPrice
+  ) external view returns (uint256) {
+    return PriceMovementMath.calculatePriceImpactFee(startTick, currentPrice, endPrice);
+  }
+
   function movePriceTowardsTarget(
     uint160 sqrtP,
     uint160 sqrtPTarget,

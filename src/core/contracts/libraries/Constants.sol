@@ -20,7 +20,7 @@ library Constants {
 
   // price impact fee constants
   // k = 0.003
-  uint16 internal constant K = 30000;
+  uint256 internal constant K = 900000;
   uint256 internal constant K_DENOMINATOR = 1000000;
   // 1/Ln(1.0001)
   uint256 internal constant Ln = 10000;
