@@ -25,9 +25,9 @@ describe('PriceMovementMath', () => {
 
         let tickDs = [];
         let results = [];
-        for(let tickD = 1; tickD < 1000; tickD++) {
-          tickDs.push(tickD)
-          let endPrice = Math.floor(((base ** (startTick - tickD)) ** 0.5) * Number('2')**Number('96'));
+        for(let tickD = 1; tickD < 2000; tickD++) {
+          tickDs.push(tickD/10)
+          let endPrice = Math.floor(((base ** (startTick - tickD/4)) ** 0.5) * Number('2')**Number('96'));
           results.push(
             (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
             )
@@ -43,9 +43,9 @@ describe('PriceMovementMath', () => {
 
       let tickDs = [];
       let results = [];
-      for(let tickD = 1; tickD < 1000; tickD++) {
-        tickDs.push(tickD)
-        let endPrice = Math.floor(((base ** (startTick + tickD)) ** 0.5) * Number('2')**Number('96'));
+      for(let tickD = 1; tickD < 2000; tickD++) {
+        tickDs.push(tickD/10)
+        let endPrice = Math.floor(((base ** (startTick + tickD/4)) ** 0.5) * Number('2')**Number('96'));
         results.push(
           (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
           )
