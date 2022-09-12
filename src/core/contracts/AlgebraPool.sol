@@ -698,6 +698,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 startTick; // The tick at the start of a swap
+    int24 blockStartTick; // The tick at the start of a swap
     uint16 timepointIndex; // The index of last written timepoint
   }
 
@@ -764,6 +765,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (blockTimestamp != startPriceUpdated) {
         startPriceUpdated = blockTimestamp;
         blockStartTick = currentTick;
+        cache.blockStartTick = currentTick;
+      } else {
+        cache.blockStartTick = blockStartTick;
       }
 
       if (activeIncentive != address(0)) {
@@ -812,7 +816,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        blockStartTick,
+        cache.blockStartTick,
         cache.fee
       );
 
