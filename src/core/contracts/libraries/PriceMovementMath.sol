@@ -157,7 +157,7 @@ library PriceMovementMath {
 
     startTick *= 100;
 
-    if (currentPriceRounded == endPrice) return 0;
+    if (currentPriceRounded == endPrice) return fee;
 
     if (endTick < currentTick) {
       int256 x = int256(currentPrice) *
@@ -213,13 +213,15 @@ library PriceMovementMath {
     if (amountAvailable >= 0) {
       {
         uint16 priceImpactFee;
+
         for (uint256 i = 0; i < 4; i++) {
           if (i > 0) {
             priceImpactFee = uint16(calculatePriceImpactFee(fee, startTick, currentPrice, resultPrice));
           } else priceImpactFee = fee;
           uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - priceImpactFee, 1e6);
           input = getAmountA(targetPrice, currentPrice, liquidity);
-
+          console.log(i);
+          console.log(priceImpactFee);
           if (amountAvailableAfterFee >= input) {
             resultPrice = targetPrice;
             feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);

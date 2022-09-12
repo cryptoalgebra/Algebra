@@ -462,7 +462,7 @@ const TEST_POOLS: PoolTestCase[] = [
   },
 ]
 
-describe.only('AlgebraPool swap tests', () => {
+describe('AlgebraPool swap tests', () => {
   let wallet: Wallet, other: Wallet
 
 
