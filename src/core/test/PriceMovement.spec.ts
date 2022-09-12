@@ -7,7 +7,7 @@ import snapshotGasCost from './shared/snapshotGasCost'
 import { encodePriceSqrt, expandTo18Decimals } from './shared/utilities'
 import { TokenDeltaMathTest } from '../typechain/test/TokenDeltaMathTest'
 
-describe('PriceMovementMath', () => {
+describe.only('PriceMovementMath', () => {
   let PriceMovementMath: PriceMovementMathTest
   let sqrtPriceMath: TokenDeltaMathTest
   before(async () => {
@@ -21,6 +21,7 @@ describe('PriceMovementMath', () => {
     it('values for fixed start tick, move price down', async () => {
         let startTick = 1000;
         let base = Number(1.0001);
+        let fee = 15000;
         let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
 
         let tickDs = [];
@@ -29,7 +30,7 @@ describe('PriceMovementMath', () => {
           tickDs.push(tickD/10)
           let endPrice = Math.floor(((base ** (startTick - tickD/4)) ** 0.5) * Number('2')**Number('96'));
           results.push(
-            (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+            (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
             )
         }
         
@@ -37,9 +38,10 @@ describe('PriceMovementMath', () => {
     })
 
     it('values for fixed start tick, move price up', async () => {
-      let startTick = 1000;
+      let startTick = 15000;
       let base = Number(1.0001);
       let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
+      let fee = 15000;
 
       let tickDs = [];
       let results = [];
@@ -47,7 +49,7 @@ describe('PriceMovementMath', () => {
         tickDs.push(tickD/10)
         let endPrice = Math.floor(((base ** (startTick + tickD/4)) ** 0.5) * Number('2')**Number('96'));
         results.push(
-          (await PriceMovementMath.calculatePriceImpactFee(startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+          (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
           )
       }
       
