@@ -125,55 +125,47 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
+  function _interpolateTick(uint160 price) private pure returns (int24 tick) {
+    tick = TickMath.getTickAtSqrtRatio(price);
+    uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(tick);
+    if (priceRoundedDown < price) {
+      uint160 priceRoundedUp = TickMath.getSqrtRatioAtTick(tick + 1);
+      uint160 subTick = (100 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
+      if (subTick * (priceRoundedUp - priceRoundedDown) < 100 * (price - priceRoundedDown)) {
+        subTick += 1;
+      }
+      tick = tick * 100 + int24(subTick);
+    } else tick = tick * 100;
+    return tick;
+  }
+
   function calculatePriceImpactFee(
     uint16 fee,
     int24 startTick,
     uint160 currentPrice,
     uint160 endPrice
   ) internal view returns (uint256 feeAmount) {
-    int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
-    int24 endTick = TickMath.getTickAtSqrtRatio(endPrice);
+    if (currentPrice == endPrice) return fee;
 
-    uint160 currentPriceRounded = TickMath.getSqrtRatioAtTick(currentTick);
-    uint160 endPriceRounded = TickMath.getSqrtRatioAtTick(endTick);
-
-    if (endPriceRounded < endPrice) {
-      uint160 endPriceRoundedUp = TickMath.getSqrtRatioAtTick(endTick + 1);
-      uint160 subTick = (100 * (endPrice - endPriceRounded)) / (endPriceRoundedUp - endPriceRounded);
-      if (subTick * (endPriceRoundedUp - endPriceRounded) < 100 * (endPrice - endPriceRounded)) {
-        subTick += 1;
-      }
-      endTick = endTick * 100 + int24(subTick);
-    } else endTick = endTick * 100;
-
-    if (currentPriceRounded < currentPrice) {
-      uint160 currentPriceRoundedUp = TickMath.getSqrtRatioAtTick(currentTick + 1);
-      uint160 subTick = (100 * (currentPrice - currentPriceRounded)) / (currentPriceRoundedUp - currentPriceRounded);
-      if (subTick * (currentPriceRoundedUp - currentPriceRounded) < 100 * (currentPrice - currentPriceRounded)) {
-        subTick += 1;
-      }
-      currentTick = currentTick * 100 + int24(subTick);
-    } else currentTick = currentTick * 100;
-
+    int24 currentTick = _interpolateTick(currentPrice);
+    int24 endTick = _interpolateTick(endPrice);
     startTick *= 100;
 
-    if (currentPriceRounded == endPrice) return fee;
-
+    uint256 nominator;
+    int256 denominator = 100 * (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
+    int24 tickDelta = endTick - startTick;
+    int24 partialTickDelta = currentTick - startTick;
+    console.logInt(startTick);
+    console.logInt(currentTick);
+    console.logInt(endTick);
     if (endTick < currentTick) {
-      int256 x = int256(currentPrice) *
-        (startTick - endTick) -
-        int256(endPrice) *
-        (startTick - currentTick) -
-        int256(200 * (currentPrice - endPrice) * Constants.Ln);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(x), 100 * (currentPrice - endPrice) * Constants.Ln);
+      denominator = -denominator;
+      nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
     } else {
-      int256 y = int256(endPrice) *
-        (endTick - startTick) -
-        int256(currentPrice) *
-        (currentTick - startTick) -
-        int256(200 * (endPrice - currentPrice) * Constants.Ln);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(y), 100 * (endPrice - currentPrice) * Constants.Ln);
+      nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
     }
+
+    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
 
     if (feeAmount > 20000) feeAmount = 20000;
     feeAmount = feeAmount + fee;
@@ -212,32 +204,46 @@ library PriceMovementMath {
     function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
     if (amountAvailable >= 0) {
       {
-        uint16 priceImpactFee;
-
-        for (uint256 i = 0; i < 4; i++) {
-          if (i > 0) {
-            priceImpactFee = uint16(calculatePriceImpactFee(fee, startTick, currentPrice, resultPrice));
-          } else priceImpactFee = fee;
-          uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - priceImpactFee, 1e6);
-          input = getAmountA(targetPrice, currentPrice, liquidity);
-          console.log(i);
-          console.log(priceImpactFee);
-          if (amountAvailableAfterFee >= input) {
-            resultPrice = targetPrice;
+        input = getAmountA(targetPrice, currentPrice, liquidity);
+        if (uint256(amountAvailable) > input) {
+          uint256 amountAvailableAfterFee;
+          {
+            uint16 priceImpactFee = uint16(calculatePriceImpactFee(fee, startTick, currentPrice, targetPrice));
+            amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - priceImpactFee, 1e6);
             feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);
-            //
-            if (i == 1) break;
-          } else {
-            resultPrice = getNewPriceAfterInput(zeroToOne, currentPrice, liquidity, amountAvailableAfterFee);
-            if (targetPrice != resultPrice) {
-              input = getAmountA(resultPrice, currentPrice, liquidity);
-
-              // we didn't reach the target, so take the remainder of the maximum input as fee
-              feeAmount = uint256(amountAvailable) - input;
-            } else {
-              feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);
-            }
           }
+          if (amountAvailableAfterFee >= input) {
+            if (zeroToOne) {
+              output = getTokenBDelta01(targetPrice, currentPrice, liquidity);
+            } else {
+              output = getTokenBDelta10(targetPrice, currentPrice, liquidity);
+            }
+            return (targetPrice, input, output, feeAmount);
+          }
+        }
+
+        feeAmount = fee; // dirty hack
+        for (uint256 i; i < 4; i++) {
+          {
+            uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - feeAmount, 1e6);
+            resultPrice = getNewPriceAfterInput(zeroToOne, currentPrice, liquidity, amountAvailableAfterFee);
+          }
+          uint16 priceImpactFeeNew = uint16(calculatePriceImpactFee(fee, startTick, currentPrice, resultPrice));
+          if (feeAmount == priceImpactFeeNew) break;
+          feeAmount = priceImpactFeeNew;
+        }
+        //console.log(i);
+        console.logInt(startTick);
+        console.logInt(amountAvailable);
+        console.logUint(feeAmount);
+        console.log();
+        //}
+        if (targetPrice != resultPrice) {
+          input = getAmountA(resultPrice, currentPrice, liquidity);
+          // we didn't reach the target, so take the remainder of the maximum input as fee
+          feeAmount = uint256(amountAvailable) - input;
+        } else {
+          feeAmount = FullMath.mulDivRoundingUp(input, feeAmount, 1e6 - feeAmount);
         }
       }
 
