@@ -7,7 +7,7 @@ import snapshotGasCost from './shared/snapshotGasCost'
 import { encodePriceSqrt, expandTo18Decimals } from './shared/utilities'
 import { TokenDeltaMathTest } from '../typechain/test/TokenDeltaMathTest'
 
-describe.only('PriceMovementMath', () => {
+describe('PriceMovementMath', () => {
   let PriceMovementMath: PriceMovementMathTest
   let sqrtPriceMath: TokenDeltaMathTest
   before(async () => {
@@ -17,11 +17,11 @@ describe.only('PriceMovementMath', () => {
     sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as TokenDeltaMathTest
   })
 
-  describe.only('#calculatePriceImpactFee', () => {
+  describe('#calculatePriceImpactFee', () => {
     it('values for fixed start tick, move price down', async () => {
         let startTick = 1000;
         let base = Number(1.0001);
-        let fee = 15000;
+        let fee = 100;
         let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
 
         let tickDs = [];
@@ -33,7 +33,7 @@ describe.only('PriceMovementMath', () => {
             (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
             )
         }
-        
+
         fs.writeFileSync('./PIfee_out_down.json', JSON.stringify({tickDs, results}));
     })
 
@@ -41,7 +41,7 @@ describe.only('PriceMovementMath', () => {
       let startTick = 15000;
       let base = Number(1.0001);
       let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
-      let fee = 15000;
+      let fee = 100;
 
       let tickDs = [];
       let results = [];
