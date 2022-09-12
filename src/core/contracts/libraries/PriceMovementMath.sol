@@ -132,15 +132,46 @@ library PriceMovementMath {
   ) internal view returns (uint256 feeAmount) {
     int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
     int24 endTick = TickMath.getTickAtSqrtRatio(endPrice);
-    currentPrice = TickMath.getSqrtRatioAtTick(currentTick);
-    endPrice = TickMath.getSqrtRatioAtTick(endTick);
+
+    uint160 currentPriceRounded = TickMath.getSqrtRatioAtTick(currentTick);
+    uint160 endPriceRounded = TickMath.getSqrtRatioAtTick(endTick);
+
+    if (endPriceRounded < endPrice) {
+      uint160 endPriceRoundedUp = TickMath.getSqrtRatioAtTick(endTick + 1);
+      uint160 subTick = (100 * (endPrice - endPriceRounded)) / (endPriceRoundedUp - endPriceRounded);
+      if (subTick * (endPriceRoundedUp - endPriceRounded) < 100 * (endPrice - endPriceRounded)) {
+        subTick += 1;
+      }
+      endTick = endTick * 100 + int24(subTick);
+    } else endTick = endTick * 100;
+
+    if (currentPriceRounded < currentPrice) {
+      uint160 currentPriceRoundedUp = TickMath.getSqrtRatioAtTick(currentTick + 1);
+      uint160 subTick = (100 * (currentPrice - currentPriceRounded)) / (currentPriceRoundedUp - currentPriceRounded);
+      if (subTick * (currentPriceRoundedUp - currentPriceRounded) < 100 * (currentPrice - currentPriceRounded)) {
+        subTick += 1;
+      }
+      currentTick = currentTick * 100 + int24(subTick);
+    } else currentTick = currentTick * 100;
+
+    startTick *= 100;
+
+    if (currentPriceRounded == endPrice) return 0;
 
     if (endTick < currentTick) {
-      int256 x = int256(currentPrice) * (startTick - endTick) - int256(endPrice) * (startTick - currentTick);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(x), (currentPrice - endPrice) * Constants.Ln) - 2 * (Constants.K);
+      int256 x = int256(currentPrice) *
+        (startTick - endTick) -
+        int256(endPrice) *
+        (startTick - currentTick) -
+        int256(200 * (currentPrice - endPrice) * Constants.Ln);
+      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(x), 100 * (currentPrice - endPrice) * Constants.Ln);
     } else {
-      int256 y = int256(endPrice) * (endTick - startTick) - int256(currentPrice) * (currentTick - startTick);
-      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(y), (endPrice - currentPrice) * Constants.Ln) - 2 * (Constants.K);
+      int256 y = int256(endPrice) *
+        (endTick - startTick) -
+        int256(currentPrice) *
+        (currentTick - startTick) -
+        int256(200 * (endPrice - currentPrice) * Constants.Ln);
+      feeAmount = FullMath.mulDivRoundingUp(Constants.K, uint256(y), 100 * (endPrice - currentPrice) * Constants.Ln);
     }
 
     if (feeAmount > 20000) feeAmount = 20000;
