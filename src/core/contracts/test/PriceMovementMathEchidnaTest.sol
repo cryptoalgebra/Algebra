@@ -2,6 +2,7 @@
 pragma solidity =0.7.6;
 
 import '../libraries/PriceMovementMath.sol';
+import '../libraries/TickMath.sol';
 
 contract PriceMovementMathEchidnaTest {
   function checkmovePriceTowardsTargetInvariants(
@@ -10,7 +11,7 @@ contract PriceMovementMathEchidnaTest {
     uint128 liquidity,
     int256 amountRemaining,
     uint16 feePips
-  ) external pure {
+  ) external view {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
     require(feePips > 0);
@@ -22,6 +23,7 @@ contract PriceMovementMathEchidnaTest {
       sqrtPriceTargetRaw,
       liquidity,
       amountRemaining,
+      TickMath.getTickAtSqrtRatio(sqrtPriceRaw),
       feePips
     );
 

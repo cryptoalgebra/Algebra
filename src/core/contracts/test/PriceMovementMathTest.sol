@@ -2,8 +2,18 @@
 pragma solidity =0.7.6;
 
 import '../libraries/PriceMovementMath.sol';
+import '../libraries/TickMath.sol';
 
 contract PriceMovementMathTest {
+  function calculatePriceImpactFee(
+    uint16 fee,
+    int24 startTick,
+    uint160 currentPrice,
+    uint160 endPrice
+  ) external view returns (uint256) {
+    return PriceMovementMath.calculatePriceImpactFee(fee, startTick, currentPrice, endPrice);
+  }
+
   function movePriceTowardsTarget(
     uint160 sqrtP,
     uint160 sqrtPTarget,
@@ -12,7 +22,7 @@ contract PriceMovementMathTest {
     uint16 feePips
   )
     external
-    pure
+    view
     returns (
       uint160 sqrtQ,
       uint256 amountIn,
@@ -20,7 +30,8 @@ contract PriceMovementMathTest {
       uint256 feeAmount
     )
   {
-    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
+    int24 tickStart = TickMath.getTickAtSqrtRatio(sqrtP);
+    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, tickStart, feePips);
   }
 
   function getGasCostOfmovePriceTowardsTarget(
@@ -30,8 +41,9 @@ contract PriceMovementMathTest {
     int256 amountRemaining,
     uint16 feePips
   ) external view returns (uint256) {
+    int24 tickStart = TickMath.getTickAtSqrtRatio(sqrtP);
     uint256 gasBefore = gasleft();
-    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, feePips);
+    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, tickStart, feePips);
     return gasBefore - gasleft();
   }
 }
