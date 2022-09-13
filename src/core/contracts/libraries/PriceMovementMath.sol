@@ -5,7 +5,6 @@ import './FullMath.sol';
 import './TokenDeltaMath.sol';
 import './TickMath.sol';
 import './Constants.sol';
-import 'hardhat/console.sol';
 
 /// @title Computes the result of price movement
 /// @notice Contains methods for computing the result of price movement within a single tick price range.
@@ -155,9 +154,7 @@ library PriceMovementMath {
     int256 denominator = 100 * (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
     int24 tickDelta = endTick - startTick;
     int24 partialTickDelta = currentTick - startTick;
-    console.logInt(startTick);
-    console.logInt(currentTick);
-    console.logInt(endTick);
+
     if (endTick < currentTick) {
       denominator = -denominator;
       nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
@@ -232,12 +229,7 @@ library PriceMovementMath {
           if (feeAmount == priceImpactFeeNew) break;
           feeAmount = priceImpactFeeNew;
         }
-        //console.log(i);
-        console.logInt(startTick);
-        console.logInt(amountAvailable);
-        console.logUint(feeAmount);
-        console.log();
-        //}
+
         if (targetPrice != resultPrice) {
           input = getAmountA(resultPrice, currentPrice, liquidity);
           // we didn't reach the target, so take the remainder of the maximum input as fee

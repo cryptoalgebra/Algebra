@@ -233,7 +233,7 @@ describe('Quoter', () => {
       })
     })
 
-    describe.only('#quoteExactOutputSingle', () => {
+    describe('#quoteExactOutputSingle', () => {
       it('0 -> 1', async () => {
         const {amountIn, fee} = await quoter.callStatic.quoteExactOutputSingle(
           tokens[0].address,
