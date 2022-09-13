@@ -124,36 +124,36 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
-  function _interpolateTick(uint160 price) private pure returns (int24 tick) {
+  function _interpolateTick(uint160 price) private pure returns (int32 tick) {
     tick = TickMath.getTickAtSqrtRatio(price);
-    uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(tick);
+    uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(int24(tick));
     if (priceRoundedDown < price) {
-      uint160 priceRoundedUp = TickMath.getSqrtRatioAtTick(tick + 1);
+      uint160 priceRoundedUp = TickMath.getSqrtRatioAtTick(int24(tick) + 1);
       uint160 subTick = (100 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
       if (subTick * (priceRoundedUp - priceRoundedDown) < 100 * (price - priceRoundedDown)) {
         subTick += 1;
       }
-      tick = tick * 100 + int24(subTick);
+      tick = tick * 100 + int32(subTick);
     } else tick = tick * 100;
     return tick;
   }
 
   function calculatePriceImpactFee(
     uint16 fee,
-    int24 startTick,
+    int32 startTick,
     uint160 currentPrice,
     uint160 endPrice
   ) internal view returns (uint256 feeAmount) {
     if (currentPrice == endPrice) return fee;
 
-    int24 currentTick = _interpolateTick(currentPrice);
-    int24 endTick = _interpolateTick(endPrice);
+    int32 currentTick = _interpolateTick(currentPrice);
+    int32 endTick = _interpolateTick(endPrice);
     startTick *= 100;
 
     uint256 nominator;
     int256 denominator = 100 * (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
-    int24 tickDelta = endTick - startTick;
-    int24 partialTickDelta = currentTick - startTick;
+    int32 tickDelta = endTick - startTick;
+    int32 partialTickDelta = currentTick - startTick;
 
     if (endTick < currentTick) {
       denominator = -denominator;
