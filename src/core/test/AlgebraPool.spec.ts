@@ -1915,7 +1915,7 @@ describe('AlgebraPool', () => {
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
         })
-        it.only('increases the fee growth by the expected amount after unexpected donation of token1', async () => {
+        it('increases the fee growth by the expected amount after unexpected donation of token1', async () => {
           await token1.transfer(pool.address, expandTo18Decimals(1))
           await flash(1001, 2002, other.address)
           expect(await pool.totalFeeGrowth0Token()).to.eq(
