@@ -6,6 +6,8 @@ import './TokenDeltaMath.sol';
 import './TickMath.sol';
 import './Constants.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Computes the result of price movement
 /// @notice Contains methods for computing the result of price movement within a single tick price range.
 library PriceMovementMath {
@@ -124,18 +126,23 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
-  function _interpolateTick(uint160 price) private pure returns (int32 tick) {
+  function _interpolateTick(uint160 price, bool roundUp) private pure returns (int32 tick, uint160 priceRounded) {
     tick = TickMath.getTickAtSqrtRatio(price);
     uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(int24(tick));
     if (priceRoundedDown < price) {
       uint160 priceRoundedUp = TickMath.getSqrtRatioAtTick(int24(tick) + 1);
-      uint160 subTick = (100 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
-      if (subTick * (priceRoundedUp - priceRoundedDown) < 100 * (price - priceRoundedDown)) {
-        subTick += 1;
+      uint160 subTick = (1000 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
+      if (roundUp && subTick % 10 > 0) {
+        subTick += 10;
       }
+      subTick /= 10;
       tick = tick * 100 + int32(subTick);
-    } else tick = tick * 100;
-    return tick;
+      priceRounded = priceRoundedDown + (subTick * (priceRoundedUp - priceRoundedDown)) / 100;
+    } else {
+      tick = tick * 100;
+      priceRounded = priceRoundedDown;
+    }
+    return (tick, priceRounded);
   }
 
   function calculatePriceImpactFee(
@@ -144,10 +151,13 @@ library PriceMovementMath {
     uint160 currentPrice,
     uint160 endPrice
   ) internal view returns (uint256 feeAmount) {
+    int32 currentTick;
+    int32 endTick;
+    (currentTick, currentPrice) = _interpolateTick(currentPrice, true);
+    (endTick, endPrice) = _interpolateTick(endPrice, endPrice >= currentPrice);
+
     if (currentPrice == endPrice) return fee;
 
-    int32 currentTick = _interpolateTick(currentPrice);
-    int32 endTick = _interpolateTick(endPrice);
     startTick *= 100;
 
     uint256 nominator;
@@ -163,7 +173,6 @@ library PriceMovementMath {
     }
 
     feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
-
     if (feeAmount > 20000) feeAmount = 20000;
     feeAmount = feeAmount + fee;
     if (feeAmount > 25000) feeAmount = 25000;
