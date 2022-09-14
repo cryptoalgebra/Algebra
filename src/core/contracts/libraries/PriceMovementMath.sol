@@ -126,7 +126,11 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
-  function _interpolateTick(uint160 price, bool roundUp) private pure returns (int32 tick, uint160 priceRounded) {
+  function _interpolateTick(
+    uint160 price,
+    bool roundUp,
+    bool fromTop
+  ) private pure returns (int32 tick, uint160 priceRounded) {
     tick = TickMath.getTickAtSqrtRatio(price);
     uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(int24(tick));
     if (priceRoundedDown < price) {
@@ -137,7 +141,11 @@ library PriceMovementMath {
       }
       subTick /= 10;
       tick = tick * 100 + int32(subTick);
-      priceRounded = priceRoundedDown + (subTick * (priceRoundedUp - priceRoundedDown)) / 100;
+      if (fromTop) {
+        priceRounded = uint160((Constants.Ln * uint256(priceRoundedUp)) / (Constants.Ln + uint256(100 - subTick)));
+      } else {
+        priceRounded = uint160(((Constants.Ln + uint256(subTick)) * uint256(priceRoundedDown)) / Constants.Ln);
+      }
     } else {
       tick = tick * 100;
       priceRounded = priceRoundedDown;
@@ -153,26 +161,27 @@ library PriceMovementMath {
   ) internal view returns (uint256 feeAmount) {
     int32 currentTick;
     int32 endTick;
-    (currentTick, currentPrice) = _interpolateTick(currentPrice, true);
-    (endTick, endPrice) = _interpolateTick(endPrice, endPrice >= currentPrice);
+    (currentTick, currentPrice) = _interpolateTick(currentPrice, true, false);
+    (endTick, endPrice) = _interpolateTick(endPrice, endPrice > currentPrice, endPrice < currentPrice);
 
     if (currentPrice == endPrice) return fee;
 
     startTick *= 100;
 
     uint256 nominator;
-    int256 denominator = 100 * (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
+    int256 denominator = (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
     int32 tickDelta = endTick - startTick;
     int32 partialTickDelta = currentTick - startTick;
 
-    if (endTick < currentTick) {
+    if (endPrice < currentPrice) {
       denominator = -denominator;
       nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
     } else {
       nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
     }
 
-    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
+    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - uint256(denominator), uint256(denominator));
+
     if (feeAmount > 20000) feeAmount = 20000;
     feeAmount = feeAmount + fee;
     if (feeAmount > 25000) feeAmount = 25000;
