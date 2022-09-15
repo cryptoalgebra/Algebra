@@ -77,6 +77,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
 
     /// @inheritdoc IAlgebraVirtualPool
     function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool {
+        _increaseCumulative(uint32(block.timestamp));
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = _crossTick(nextTick);
             if (zeroToOne) liquidityDelta = -liquidityDelta;
@@ -88,9 +89,9 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     /// @dev logic of cumulatives differs in virtual pools
     function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (Status);
 
-    /// @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
-        return _increaseCumulative(currentTimestamp);
+    /// @inheritdoc IAlgebraVirtualPoolBase
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFarming {
+        _increaseCumulative(currentTimestamp);
     }
 
     /// @dev logic of tick updating differs in virtual pools
