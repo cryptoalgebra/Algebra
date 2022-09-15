@@ -60,6 +60,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         override
         returns (uint160 innerSecondsSpentPerLiquidity)
     {
+        // TODO USE FOR BOTH FARMINGS
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
 

@@ -51,7 +51,33 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         override
         returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)
     {
-        return ticks.getInnerFeeGrowth(bottomTick, topTick, globalTick, totalRewardGrowth0, totalRewardGrowth1);
+        uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
+
+        uint256 _totalRewardGrowth0 = totalRewardGrowth0;
+        uint256 _totalRewardGrowth1 = totalRewardGrowth1;
+
+        if (timeDelta > 0) {
+            uint128 _currentLiquidity = currentLiquidity;
+            if (_currentLiquidity > 0) {
+                (uint256 _rewardRate0, uint256 _rewardRate1) = (rewardRate0, rewardRate1);
+                uint256 _rewardReserve0 = _rewardRate0 > 0 ? rewardReserve0 : 0;
+                uint256 _rewardReserve1 = _rewardRate1 > 0 ? rewardReserve1 : 0;
+
+                if (_rewardReserve0 > 0) {
+                    uint256 reward0 = _rewardRate0 * timeDelta;
+                    if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
+                    _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+                }
+
+                if (_rewardReserve1 > 0) {
+                    uint256 reward1 = _rewardRate1 * timeDelta;
+                    if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
+                    _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+                }
+            }
+        }
+
+        return ticks.getInnerFeeGrowth(bottomTick, topTick, globalTick, _totalRewardGrowth0, _totalRewardGrowth1);
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
