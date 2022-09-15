@@ -44,12 +44,12 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
         return ticks.cross(nextTick, 0, 0, globalSecondsPerLiquidityCumulative, 0, 0);
     }
 
-    function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
+    function _increaseCumulative(uint32 currentTimestamp) internal override returns (bool) {
         if (currentTimestamp <= desiredStartTimestamp) {
-            return Status.NOT_STARTED;
+            return true;
         }
         if (currentTimestamp > desiredEndTimestamp) {
-            return Status.NOT_EXIST;
+            return false; // return "not successful"
         }
 
         uint32 _previousTimestamp = prevTimestamp;
@@ -66,7 +66,7 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
             }
         }
 
-        return Status.ACTIVE;
+        return true;
     }
 
     function _updateTick(

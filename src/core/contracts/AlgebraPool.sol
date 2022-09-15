@@ -821,7 +821,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           }
           // every tick cross is needed to be duplicated in a virtual pool
           if (cache.activeIncentive != address(0)) {
-            IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
+            bool success = IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
+            if (!success) {
+              cache.activeIncentive = address(0);
+              activeIncentive = address(0);
+            }
           }
           int128 liquidityDelta;
           if (zeroToOne) {
