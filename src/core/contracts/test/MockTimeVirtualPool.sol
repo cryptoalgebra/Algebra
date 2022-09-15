@@ -19,14 +19,6 @@ contract MockTimeVirtualPool is IAlgebraVirtualPool {
     isStarted = _isStarted;
   }
 
-  function increaseCumulative(uint32 currentTimestamp) external override returns (Status) {
-    if (!isExist) return Status.NOT_EXIST;
-    if (!isStarted) return Status.NOT_STARTED;
-
-    timestamp = currentTimestamp;
-    return Status.ACTIVE;
-  }
-
   function cross(int24 nextTick, bool zeroToOne) external override {
     zeroToOne;
     require(isExist, 'Virtual pool not exist');

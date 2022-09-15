@@ -61,4 +61,11 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
         int128 liquidityDelta,
         int24 currentTick
     ) external;
+
+    /**
+     * @dev This function is called from the main pool before every swap To increase seconds per liquidity
+     * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
+     * @param currentTimestamp The timestamp of the current swap
+     */
+    function increaseCumulative(uint32 currentTimestamp) external;
 }

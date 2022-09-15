@@ -256,6 +256,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         require(incentive.totalReward > 0, 'non-existent incentive');
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+        virtualPool.increaseCumulative(uint32(block.timestamp));
 
         Farm memory farm = farms[tokenId][incentiveId];
         require(farm.liquidity != 0, 'farm does not exist');
