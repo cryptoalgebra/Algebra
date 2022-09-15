@@ -254,11 +254,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
      * @param nextTick The crossed tick
      * @param zeroToOne The direction
      */
-    function cross(int24 nextTick, bool zeroToOne) external override {
+    function cross(int24 nextTick, bool zeroToOne) external override returns (bool) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).cross(nextTick, zeroToOne);
+        // TODO handle "false" from virtual pool?
+        return true;
     }
 
     function virtualPoolAddresses(address pool) external view override returns (address limitVP, address eternalVP) {

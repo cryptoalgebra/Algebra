@@ -19,9 +19,11 @@ contract MockTimeVirtualPool is IAlgebraVirtualPool {
     isStarted = _isStarted;
   }
 
-  function cross(int24 nextTick, bool zeroToOne) external override {
+  function cross(int24 nextTick, bool zeroToOne) external override returns (bool) {
     zeroToOne;
-    require(isExist, 'Virtual pool not exist');
+    if (!isExist) return false;
     currentTick = nextTick;
+    if (isStarted) timestamp = uint32(block.timestamp);
+    return true;
   }
 }

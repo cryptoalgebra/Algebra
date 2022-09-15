@@ -58,9 +58,9 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, globalSecondsPerLiquidityCumulative, 0, 0);
     }
 
-    function _increaseCumulative(uint32 currentTimestamp) internal override returns (Status) {
+    function _increaseCumulative(uint32 currentTimestamp) internal override returns (bool) {
         uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
-        if (timeDelta == 0) return Status.ACTIVE; // only once per block
+        if (timeDelta == 0) return true; // only once per block
 
         uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
         if (_currentLiquidity > 0) {
@@ -88,7 +88,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
             prevTimestamp = currentTimestamp; // duplicated for gas optimization
         }
 
-        return Status.ACTIVE;
+        return true;
     }
 
     function _updateTick(
