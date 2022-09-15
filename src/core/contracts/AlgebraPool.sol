@@ -855,6 +855,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.stepSqrtPrice = currentPrice;
 
       (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroToOne);
+      // TODO SIMPLIFY
+      if (
+        (cache.blockStartTick < currentTick && step.nextTick < cache.blockStartTick) ||
+        (cache.blockStartTick > currentTick && step.nextTick > cache.blockStartTick)
+      ) {
+        step.nextTick = cache.blockStartTick;
+        step.initialized = false;
+      }
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 

@@ -173,10 +173,12 @@ library PriceMovementMath {
     int32 tickDelta = endTick - startTick;
     int32 partialTickDelta = currentTick - startTick;
 
+    uint256 K;
     if (endPrice < currentPrice) {
-      denominator = -denominator;
+      if (startTick < currentTick) return fee;
       nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
     } else {
+      if (startTick > currentTick) return fee;
       nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
     }
 
