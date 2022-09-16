@@ -20,7 +20,7 @@ library Constants {
 
   // price impact fee constants
   // k = 0.9
-  uint256 internal constant K = 900000;
-  // 1/Ln(1.0001)
-  uint256 internal constant Ln = 2000050;
+  uint256 internal constant K = 1000000 * 4;
+  // 2 * 1/Ln(1.0001)
+  uint256 internal constant Ln = 2000100;
 }

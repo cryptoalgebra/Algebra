@@ -126,11 +126,7 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
-  function _interpolateTick(
-    uint160 price,
-    bool roundUp,
-    bool fromTop
-  ) private pure returns (int32 tick, uint160 priceRounded) {
+  function _interpolateTick(uint160 price, bool roundUp) private pure returns (int32 tick, uint160 priceRounded) {
     tick = TickMath.getTickAtSqrtRatio(price);
     uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(int24(tick));
     if (priceRoundedDown < price) {
@@ -141,11 +137,10 @@ library PriceMovementMath {
       }
       subTick /= 10;
       tick = tick * 100 + int32(subTick);
-      if (fromTop) {
-        priceRounded = uint160((Constants.Ln * uint256(priceRoundedUp)) / (Constants.Ln + uint256(100 - subTick)));
-      } else {
-        priceRounded = uint160(((Constants.Ln + uint256(subTick)) * uint256(priceRoundedDown)) / Constants.Ln);
-      }
+      priceRounded =
+        priceRoundedDown +
+        uint160((uint256(priceRoundedDown) * uint256(subTick)) / Constants.Ln) +
+        uint160((uint256(priceRoundedDown) * uint256(subTick)**2) / (100010000 * 80000));
     } else {
       tick = tick * 100;
       priceRounded = priceRoundedDown;
@@ -161,8 +156,8 @@ library PriceMovementMath {
   ) internal view returns (uint256 feeAmount) {
     int32 currentTick;
     int32 endTick;
-    (currentTick, currentPrice) = _interpolateTick(currentPrice, true, false);
-    (endTick, endPrice) = _interpolateTick(endPrice, endPrice > currentPrice, endPrice < currentPrice);
+    (currentTick, currentPrice) = _interpolateTick(currentPrice, true);
+    (endTick, endPrice) = _interpolateTick(endPrice, endPrice > currentPrice);
 
     if (currentPrice == endPrice) return fee;
 
@@ -173,8 +168,8 @@ library PriceMovementMath {
     int32 tickDelta = endTick - startTick;
     int32 partialTickDelta = currentTick - startTick;
 
-    uint256 K;
     if (endPrice < currentPrice) {
+      denominator = -denominator;
       if (startTick < currentTick) return fee;
       nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
     } else {
