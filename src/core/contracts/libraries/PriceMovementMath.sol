@@ -128,22 +128,19 @@ library PriceMovementMath {
 
   function _interpolateTick(uint160 price, bool roundUp) private pure returns (int32 tick, uint160 priceRounded) {
     tick = TickMath.getTickAtSqrtRatio(price);
-    uint160 priceRoundedDown = TickMath.getSqrtRatioAtTick(int24(tick));
-    if (priceRoundedDown < price) {
-      uint160 priceRoundedUp = TickMath.getSqrtRatioAtTick(int24(tick) + 1);
-      uint160 subTick = (1000 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
+    priceRounded = TickMath.getSqrtRatioAtTick(int24(tick)); // round down
+    tick *= 100;
+    if (priceRounded < price) {
+      uint160 priceRoundedUp = uint160((uint256(priceRounded) * 10000499987500624960940234) / 10000000000000000000000000); // * sqrt(1.0001)
+      uint160 subTick = (1000 * (price - priceRounded)) / (priceRoundedUp - priceRounded);
       if (roundUp && subTick % 10 > 0) {
         subTick += 10;
       }
       subTick /= 10;
-      tick = tick * 100 + int32(subTick);
-      priceRounded =
-        priceRoundedDown +
-        uint160((uint256(priceRoundedDown) * uint256(subTick)) / Constants.Ln) +
-        uint160((uint256(priceRoundedDown) * uint256(subTick)**2) / (100010000 * 80000));
-    } else {
-      tick = tick * 100;
-      priceRounded = priceRoundedDown;
+      tick += int32(subTick);
+      priceRounded +=
+        uint160((uint256(priceRounded) * uint256(subTick)) / (2000100)) +
+        uint160((uint256(priceRounded) * uint256(subTick)**2) / (100010000 * 80000));
     }
     return (tick, priceRounded);
   }
@@ -177,7 +174,7 @@ library PriceMovementMath {
       nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
     }
 
-    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - uint256(denominator), uint256(denominator));
+    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
 
     if (feeAmount > 20000) feeAmount = 20000;
     feeAmount = feeAmount + fee;
