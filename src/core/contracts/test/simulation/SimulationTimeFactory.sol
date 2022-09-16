@@ -113,7 +113,7 @@ contract SimulationTimeFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xcd671fec56b7f0d2952d638e27bb769158d0c5760c59d564eff6ca23ea600291;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x1bee145cb49b5fd37e0cd0e3ad793efe0089f604aea253881bb4507dacad6cee;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
