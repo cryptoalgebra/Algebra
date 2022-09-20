@@ -30,7 +30,7 @@ contract TokenDeltaMathEchidnaTest {
     uint256 amountIn,
     bool zeroToOne
   ) external pure {
-    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterInput(sqrtP, liquidity, amountIn, zeroToOne);
+    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterInput(zeroToOne, sqrtP, liquidity, amountIn);
 
     if (zeroToOne) {
       assert(sqrtQ <= sqrtP);
@@ -47,7 +47,7 @@ contract TokenDeltaMathEchidnaTest {
     uint256 amountOut,
     bool zeroToOne
   ) external pure {
-    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterOutput(sqrtP, liquidity, amountOut, zeroToOne);
+    uint160 sqrtQ = PriceMovementMath.getNewPriceAfterOutput(zeroToOne, sqrtP, liquidity, amountOut);
 
     if (zeroToOne) {
       assert(sqrtQ <= sqrtP);
@@ -71,9 +71,9 @@ contract TokenDeltaMathEchidnaTest {
     uint160 sqrtQX96;
 
     if (add) {
-      sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(sqrtPX96, liquidity, amount, true);
+      sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(true, sqrtPX96, liquidity, amount);
     } else {
-      sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(sqrtPX96, liquidity, amount, false);
+      sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(false, sqrtPX96, liquidity, amount);
     }
 
     if (add) {
@@ -98,9 +98,9 @@ contract TokenDeltaMathEchidnaTest {
     uint160 sqrtQX96;
 
     if (add) {
-      sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(sqrtPX96, liquidity, amount, false);
+      sqrtQX96 = PriceMovementMath.getNewPriceAfterInput(false, sqrtPX96, liquidity, amount);
     } else {
-      sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(sqrtPX96, liquidity, amount, true);
+      sqrtQX96 = PriceMovementMath.getNewPriceAfterOutput(true, sqrtPX96, liquidity, amount);
     }
 
     if (add) {

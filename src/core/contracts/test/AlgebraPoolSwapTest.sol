@@ -31,6 +31,7 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
   function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
+    uint256,
     bytes calldata data
   ) external override {
     address sender = abi.decode(data, (address));
