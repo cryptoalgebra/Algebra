@@ -20,12 +20,14 @@ describe('PriceMovementMath', () => {
   describe.only('#calculatePriceImpactFee', function() {
     this.timeout(1_200_000)
 
+    const base = Number(1.0001);
+    const startTick = 1000;
+    const startPrice = Math.floor(((base ** (startTick + 0.1)) ** 0.5) * Number('2')**Number('96'));
+
     const STEP_DIVIDER = 1100
     it('values for fixed start tick, move price down', async () => {
-        let startTick = 1000;
-        let base = Number(1.0001);
         let fee = 100;
-        let currentPrice =  Math.floor(((base ** (startTick + 0.1)) ** 0.5) * Number('2')**Number('96'));
+        let currentPrice = startPrice;
 
         let tickDs = [];
         let results = [];
@@ -33,7 +35,7 @@ describe('PriceMovementMath', () => {
           tickDs.push(tickD/STEP_DIVIDER)
           let endPrice = Math.floor(((base ** (startTick + 0.1 - tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
           results.push(
-            (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+            (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(startPrice), BigInt(currentPrice), BigInt(endPrice))).toString()
             )
         }
 
@@ -41,9 +43,7 @@ describe('PriceMovementMath', () => {
     })
 
     it('values for fixed start tick, move price up', async () => {
-      let startTick = 1000;
-      let base = Number(1.0001);
-      let currentPrice =  Math.floor(((base ** (startTick + 0.1)) ** 0.5) * Number('2')**Number('96'));
+      let currentPrice =  startPrice;
       let fee = 100;
 
       let tickDs = [];
@@ -52,7 +52,7 @@ describe('PriceMovementMath', () => {
         tickDs.push(tickD/STEP_DIVIDER)
         let endPrice = Math.floor(((base ** (startTick + 0.1 + tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
         results.push(
-          (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
+          (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(startPrice), BigInt(currentPrice), BigInt(endPrice))).toString()
           )
       }
       

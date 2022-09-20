@@ -750,7 +750,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 startTick; // The tick at the start of a swap
-    int24 blockStartTick; // The tick at the start of a swap
+    int32 blockStartTickX100; // The tick at the start of a swap
     uint16 timepointIndex; // The index of last written timepoint
   }
 
@@ -816,10 +816,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       if (blockTimestamp != startPriceUpdated) {
         startPriceUpdated = blockTimestamp;
-        blockStartTick = currentTick;
-        cache.blockStartTick = currentTick;
+        (cache.blockStartTickX100, ) = PriceMovementMath._interpolateTick(
+          currentPrice,
+          TickMath.getSqrtRatioAtTick(currentTick),
+          int32(currentTick) * 100,
+          true
+        );
+        blockStartTickX100 = cache.blockStartTickX100;
       } else {
-        cache.blockStartTick = blockStartTick;
+        cache.blockStartTickX100 = blockStartTickX100;
       }
 
       if (activeIncentive != address(0)) {
@@ -857,10 +862,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroToOne);
       // TODO SIMPLIFY
       if (
-        (cache.blockStartTick < currentTick && step.nextTick < cache.blockStartTick) ||
-        (cache.blockStartTick > currentTick && step.nextTick > cache.blockStartTick)
+        (cache.blockStartTickX100 / 100 < currentTick && step.nextTick < cache.blockStartTickX100 / 100) ||
+        (cache.blockStartTickX100 / 100 > currentTick && step.nextTick > cache.blockStartTickX100 / 100)
       ) {
-        step.nextTick = cache.blockStartTick;
+        step.nextTick = int24(cache.blockStartTickX100 / 100);
         step.initialized = false;
       }
 
@@ -876,8 +881,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        cache.blockStartTick,
-        cache.fee
+        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, cache.startTick, cache.fee)
       );
 
       if (cache.exactInput) {
