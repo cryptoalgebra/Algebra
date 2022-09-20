@@ -746,7 +746,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    IAlgebraVirtualPool.Status incentiveStatus; // If there is an active incentive at the moment
+    address activeIncentive; // Address an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 startTick; // The tick at the start of a swap
@@ -827,16 +827,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.blockStartTickX100 = blockStartTickX100;
       }
 
-      if (activeIncentive != address(0)) {
-        IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
-        if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
-          activeIncentive = address(0);
-        } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
-        } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
-        }
-      }
+      cache.activeIncentive = activeIncentive;
 
       uint16 newTimepointIndex = _writeTimepoint(
         cache.timepointIndex,
@@ -917,8 +908,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
           // every tick cross is needed to be duplicated in a virtual pool
-          if (cache.incentiveStatus != IAlgebraVirtualPool.Status.NOT_EXIST) {
-            IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroToOne);
+          if (cache.activeIncentive != address(0)) {
+            bool success = IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
+            if (!success) {
+              cache.activeIncentive = address(0);
+              activeIncentive = address(0);
+            }
           }
           int128 liquidityDelta;
           if (zeroToOne) {
