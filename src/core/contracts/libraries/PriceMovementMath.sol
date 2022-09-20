@@ -153,24 +153,41 @@ library PriceMovementMath {
   ) internal view returns (uint256 feeAmount) {
     int32 currentTick;
     int32 endTick;
-    (currentTick, currentPrice) = _interpolateTick(currentPrice, true);
-    (endTick, endPrice) = _interpolateTick(endPrice, endPrice > currentPrice);
+    bool zto = endPrice < currentPrice;
+
+    (currentTick, currentPrice) = _interpolateTick(currentPrice, zto);
+    (endTick, endPrice) = _interpolateTick(endPrice, !zto);
 
     if (currentPrice == endPrice) return fee;
-
     startTick *= 100;
+
+    //console.logInt(startTick);
+    //console.logInt(currentTick);
+    //console.logInt(endTick);
+
+    if (zto) {
+      if (currentTick > startTick) startTick = currentTick;
+      if (endTick >= startTick) return fee;
+    } else {
+      if (currentTick < startTick) startTick = currentTick;
+      if (endTick <= startTick) return fee;
+    }
+
+    //console.logInt(startTick);
+    //console.logInt(currentTick);
+    //console.logInt(endTick);
+    //console.log();
 
     uint256 nominator;
     int256 denominator = (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
+
     int32 tickDelta = endTick - startTick;
     int32 partialTickDelta = currentTick - startTick;
 
-    if (endPrice < currentPrice) {
+    if (zto) {
       denominator = -denominator;
-      if (startTick <= endTick) return fee;
       nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
     } else {
-      if (startTick >= endTick) return fee;
       nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
     }
 

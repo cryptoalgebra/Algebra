@@ -17,19 +17,21 @@ describe('PriceMovementMath', () => {
     sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as TokenDeltaMathTest
   })
 
-  describe.only('#calculatePriceImpactFee', () => {
-    const STEP_DIVIDER = 110
+  describe.only('#calculatePriceImpactFee', function() {
+    this.timeout(1_200_000)
+
+    const STEP_DIVIDER = 1100
     it('values for fixed start tick, move price down', async () => {
         let startTick = 1000;
         let base = Number(1.0001);
         let fee = 100;
-        let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
+        let currentPrice =  Math.floor(((base ** (startTick + 0.1)) ** 0.5) * Number('2')**Number('96'));
 
         let tickDs = [];
         let results = [];
-        for(let tickD = 1; tickD < 10*STEP_DIVIDER; tickD++) {
+        for(let tickD = 1; tickD < 3*STEP_DIVIDER; tickD++) {
           tickDs.push(tickD/STEP_DIVIDER)
-          let endPrice = Math.floor(((base ** (startTick - tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
+          let endPrice = Math.floor(((base ** (startTick + 0.1 - tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
           results.push(
             (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
             )
@@ -41,14 +43,14 @@ describe('PriceMovementMath', () => {
     it('values for fixed start tick, move price up', async () => {
       let startTick = 1000;
       let base = Number(1.0001);
-      let currentPrice =  Math.floor(((base ** startTick) ** 0.5) * Number('2')**Number('96'));
+      let currentPrice =  Math.floor(((base ** (startTick + 0.1)) ** 0.5) * Number('2')**Number('96'));
       let fee = 100;
 
       let tickDs = [];
       let results = [];
-      for(let tickD = 1; tickD < 10*STEP_DIVIDER; tickD++) {
+      for(let tickD = 1; tickD < 3*STEP_DIVIDER; tickD++) {
         tickDs.push(tickD/STEP_DIVIDER)
-        let endPrice = Math.floor(((base ** (startTick + tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
+        let endPrice = Math.floor(((base ** (startTick + 0.1 + tickD/STEP_DIVIDER)) ** 0.5) * Number('2')**Number('96'));
         results.push(
           (await PriceMovementMath.calculatePriceImpactFee(fee, startTick, BigInt(currentPrice), BigInt(endPrice))).toString()
           )
