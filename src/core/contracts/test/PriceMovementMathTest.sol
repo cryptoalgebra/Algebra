@@ -8,10 +8,13 @@ contract PriceMovementMathTest {
   function calculatePriceImpactFee(
     uint16 fee,
     int24 startTick,
+    uint160 startPrice,
     uint160 currentPrice,
     uint160 endPrice
   ) external view returns (uint256) {
-    return PriceMovementMath.calculatePriceImpactFee(fee, startTick, currentPrice, endPrice);
+    int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
+    (int32 startTickX100, ) = PriceMovementMath._interpolateTick(startPrice, TickMath.getSqrtRatioAtTick(startTick), int32(startTick) * 100, true);
+    return PriceMovementMath.calculatePriceImpactFee(PriceMovementMath.ElasticFeeData(startTickX100, currentTick, fee), currentPrice, endPrice);
   }
 
   function movePriceTowardsTarget(
@@ -30,8 +33,9 @@ contract PriceMovementMathTest {
       uint256 feeAmount
     )
   {
-    int24 tickStart = TickMath.getTickAtSqrtRatio(sqrtP);
-    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, tickStart, feePips);
+    int24 currentTick = TickMath.getTickAtSqrtRatio(sqrtP);
+    PriceMovementMath.ElasticFeeData memory data = PriceMovementMath.ElasticFeeData(currentTick * 100, currentTick, feePips);
+    return PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, data);
   }
 
   function getGasCostOfmovePriceTowardsTarget(
@@ -41,9 +45,10 @@ contract PriceMovementMathTest {
     int256 amountRemaining,
     uint16 feePips
   ) external view returns (uint256) {
-    int24 tickStart = TickMath.getTickAtSqrtRatio(sqrtP);
+    int24 currentTick = TickMath.getTickAtSqrtRatio(sqrtP);
+    PriceMovementMath.ElasticFeeData memory data = PriceMovementMath.ElasticFeeData(currentTick * 100, currentTick, feePips);
     uint256 gasBefore = gasleft();
-    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, tickStart, feePips);
+    PriceMovementMath.movePriceTowardsTarget(sqrtPTarget < sqrtP, sqrtP, sqrtPTarget, liquidity, amountRemaining, data);
     return gasBefore - gasleft();
   }
 }
