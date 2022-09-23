@@ -1,9 +1,0 @@
-artifacts/
-cache/
-crytic-export/
-node_modules/
-typechain/
-*.code-workspace
-dist/
-coverage/
-.env

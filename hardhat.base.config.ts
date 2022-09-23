@@ -44,7 +44,7 @@ export default {
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 8000000000
     },
-    bscTestnet: {
+    chapel: {
       url: `https://data-seed-prebsc-2-s3.binance.org:8545`,
       chainId: 97,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
@@ -52,12 +52,12 @@ export default {
     bsc: {
       url: `https://bsc-dataseed3.binance.org`,
     },
-    maticTestnet: {
+    mumbai: {
       url: `https://rpc-mumbai.maticvigil.com`,
       chainId: 80001,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
-    maticMainnet: {
+    polygon: {
       url: `https://rpc-mainnet.matic.quiknode.pro`,
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],

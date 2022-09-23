@@ -36,10 +36,10 @@
   "scripts": {
     "postinstall": "husky install",
     "lint": "prettier .",
-    "bootstrap": "npm install && lerna bootstrap && npm install --prefix ./src/periphery && npm install --prefix ./src/tokenomics",
+    "bootstrap": "npm install && lerna bootstrap",
     "ci-install": "npm ci && lerna bootstrap",
     "deploy": "node scripts/deployAll.js",
-    "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../tokenomics && hardhat docgen && node ../../docs/cleanup.js"
+    "docgen": "cd src/core && hardhat docgen && node ../../docs/cleanup.js"
   },
   "dependencies": {
     "@ethersproject/solidity": "^5.4.0"

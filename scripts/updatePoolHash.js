@@ -20,7 +20,6 @@ function updateHash(pathToPool, files) {
 updateHash(
     '../src/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json', 
     [
-        '../src/periphery/contracts/libraries/PoolAddress.sol',
         '../src/core/contracts/AlgebraFactory.sol',
     ]
 );

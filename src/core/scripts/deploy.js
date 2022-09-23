@@ -1,6 +1,4 @@
 const hre = require("hardhat");
-const fs = require('fs');
-const path = require('path');
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -23,12 +21,6 @@ async function main() {
 
     console.log("AlgebraPoolDeployer to:", poolDeployer.address);
     console.log("AlgebraFactory deployed to:", Algebra.address);
-    
-    const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
-    let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
-    deploysData.poolDeployer = poolDeployer.address;
-    deploysData.factory = Algebra.address;
-    fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 
 }
 
