@@ -816,12 +816,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       if (blockTimestamp != startPriceUpdated) {
         startPriceUpdated = blockTimestamp;
-        (cache.blockStartTickX100, ) = PriceMovementMath._interpolateTick(
-          currentPrice,
-          TickMath.getSqrtRatioAtTick(currentTick),
-          int32(currentTick) * 100,
-          true
-        );
+        (cache.blockStartTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
         blockStartTickX100 = cache.blockStartTickX100;
       } else {
         cache.blockStartTickX100 = blockStartTickX100;
