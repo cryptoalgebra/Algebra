@@ -1,6 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { BigNumber, constants, Contract, ContractTransaction, Wallet } from 'ethers'
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { IWNativeToken, MockTimeNonfungiblePositionManager, MockTimeSwapRouter, TestERC20 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { FeeAmount, TICK_SPACINGS } from './shared/constants'
@@ -16,14 +16,14 @@ describe('SwapRouter', function () {
   let wallet: Wallet
   let trader: Wallet
 
-  const swapRouterFixture: Fixture<{
+  const swapRouterFixture: () => Promise<{
     wnative: IWNativeToken
     factory: Contract
     router: MockTimeSwapRouter
     nft: MockTimeNonfungiblePositionManager
     tokens: [TestERC20, TestERC20, TestERC20]
-  }> = async (wallets, provider) => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { wnative, factory, router, tokens, nft } = await completeFixture()
 
     // approve & fund wallets
     for (const token of tokens) {
@@ -56,11 +56,9 @@ describe('SwapRouter', function () {
     token2: BigNumber
   }>
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     ;[wallet, trader] = await (ethers as any).getSigners()
-    loadFixture = waffle.createFixtureLoader([wallet, trader])
   })
 
   // helper for getting wnative and token balances
@@ -87,7 +85,7 @@ describe('SwapRouter', function () {
   afterEach('load fixture', async () => {
     const balances = await getBalances(router.address)
     expect(Object.values(balances).every((b) => b.eq(0))).to.be.eq(true)
-    const balance = await waffle.provider.getBalance(router.address)
+    const balance = await ethers.provider.getBalance(router.address)
     expect(balance.eq(0)).to.be.eq(true)
   })
 
@@ -884,7 +882,7 @@ describe('SwapRouter', function () {
       })
 
       it('#unwrapWNativeTokenWithFee', async () => {
-        const startBalance = await waffle.provider.getBalance(feeRecipient)
+        const startBalance = await ethers.provider.getBalance(feeRecipient)
         await createPoolWNativeToken(tokens[0].address)
 
         const amountOutMinimum = 100
@@ -907,7 +905,7 @@ describe('SwapRouter', function () {
         ]
 
         await router.connect(trader).multicall(data)
-        const endBalance = await waffle.provider.getBalance(feeRecipient)
+        const endBalance = await ethers.provider.getBalance(feeRecipient)
         expect(endBalance.sub(startBalance).eq(1)).to.be.eq(true)
       })
     })

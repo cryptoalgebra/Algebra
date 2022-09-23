@@ -3,6 +3,10 @@ pragma solidity =0.7.6;
 
 import './FullMath.sol';
 import './TokenDeltaMath.sol';
+import './TickMath.sol';
+import './Constants.sol';
+
+import 'hardhat/console.sol';
 
 /// @title Computes the result of price movement
 /// @notice Contains methods for computing the result of price movement within a single tick price range.
@@ -18,10 +22,10 @@ library PriceMovementMath {
   /// @param zeroToOne Whether the amount in is token0 or token1
   /// @return resultPrice The Q64.96 sqrt price after adding the input amount to token0 or token1
   function getNewPriceAfterInput(
+    bool zeroToOne,
     uint160 price,
     uint128 liquidity,
-    uint256 input,
-    bool zeroToOne
+    uint256 input
   ) internal pure returns (uint160 resultPrice) {
     return getNewPrice(price, liquidity, input, zeroToOne, true);
   }
@@ -34,10 +38,10 @@ library PriceMovementMath {
   /// @param zeroToOne Whether the amount out is token0 or token1
   /// @return resultPrice The Q64.96 sqrt price after removing the output amount of token0 or token1
   function getNewPriceAfterOutput(
+    bool zeroToOne,
     uint160 price,
     uint128 liquidity,
-    uint256 output,
-    bool zeroToOne
+    uint256 output
   ) internal pure returns (uint160 resultPrice) {
     return getNewPrice(price, liquidity, output, zeroToOne, false);
   }
@@ -122,13 +126,59 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
+  struct ElasticFeeData {
+    int32 startTickX100;
+    int24 currentTick;
+    uint16 fee;
+  }
+
+  function calculatePriceImpactFee(
+    ElasticFeeData memory feeData,
+    uint160 currentPrice,
+    uint160 endPrice
+  ) internal view returns (uint256 feeAmount) {
+    bool zto = endPrice < currentPrice;
+
+    (int32 currentTickX100, uint160 currentPriceRounded) = TickMath.getTickX100(feeData.currentTick, currentPrice, zto);
+    (int32 endTickX100, uint160 endPriceRounded) = TickMath.getTickX100AtSqrtRatio(endPrice, !zto);
+
+    if (currentPriceRounded == endPriceRounded) return feeData.fee;
+    int32 startTickX100 = feeData.startTickX100;
+
+    if (zto) {
+      if (currentTickX100 > startTickX100) startTickX100 = currentTickX100;
+      if (endTickX100 >= startTickX100) return feeData.fee;
+    } else {
+      if (currentTickX100 < startTickX100) startTickX100 = currentTickX100;
+      if (endTickX100 <= startTickX100) return feeData.fee;
+    }
+
+    uint256 nominator;
+    int256 denominator = (int256(endPriceRounded) - int256(currentPriceRounded)) * int256(Constants.Ln);
+
+    int32 finalTickShift = endTickX100 - startTickX100;
+    int32 currentTickShift = currentTickX100 - startTickX100;
+
+    if (zto) {
+      denominator = -denominator;
+      nominator = uint256(int256(endPriceRounded) * currentTickShift - int256(currentPriceRounded) * finalTickShift);
+    } else {
+      nominator = uint256(int256(endPriceRounded) * finalTickShift - int256(currentPriceRounded) * currentTickShift);
+    }
+
+    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
+
+    if (feeAmount > 20000) feeAmount = 20000;
+    feeAmount = feeAmount + feeData.fee;
+    if (feeAmount > 25000) feeAmount = 25000;
+  }
+
   /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
   /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
   /// @param currentPrice The current Q64.96 sqrt price of the pool
   /// @param targetPrice The Q64.96 sqrt price that cannot be exceeded, from which the direction of the swap is inferred
   /// @param liquidity The usable liquidity
   /// @param amountAvailable How much input or output amount is remaining to be swapped in/out
-  /// @param fee The fee taken from the input amount, expressed in hundredths of a bip
   /// @return resultPrice The Q64.96 sqrt price after swapping the amount in/out, not to exceed the price target
   /// @return input The amount to be swapped in, of either token0 or token1, based on the direction of the swap
   /// @return output The amount to be received, of either token0 or token1, based on the direction of the swap
@@ -139,10 +189,10 @@ library PriceMovementMath {
     uint160 targetPrice,
     uint128 liquidity,
     int256 amountAvailable,
-    uint16 fee
+    ElasticFeeData memory feeData
   )
     internal
-    pure
+    view
     returns (
       uint160 resultPrice,
       uint256 input,
@@ -150,36 +200,53 @@ library PriceMovementMath {
       uint256 feeAmount
     )
   {
-    function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
+    function(uint160, uint160, uint128) pure returns (uint256) getAmountA;
+    function(uint160, uint160, uint128) pure returns (uint256) getAmountB;
+    (getAmountA, getAmountB) = zeroToOne ? (getTokenADelta01, getTokenBDelta01) : (getTokenADelta10, getTokenBDelta10);
 
     if (amountAvailable >= 0) {
-      // exactIn or not
-      uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
-      input = getAmountA(targetPrice, currentPrice, liquidity);
-      if (amountAvailableAfterFee >= input) {
-        resultPrice = targetPrice;
-        feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
-      } else {
-        resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
+      {
+        input = getAmountA(targetPrice, currentPrice, liquidity);
+        if (uint256(amountAvailable) > input) {
+          uint256 amountAvailableAfterFee;
+          {
+            uint16 priceImpactFee = uint16(calculatePriceImpactFee(feeData, currentPrice, targetPrice));
+            amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - priceImpactFee, 1e6);
+            feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);
+          }
+          if (amountAvailableAfterFee >= input) {
+            output = getAmountB(targetPrice, currentPrice, liquidity);
+            return (targetPrice, input, output, feeAmount);
+          }
+        }
+
+        feeAmount = feeData.fee; // dirty hack
+        for (uint256 i; i < 4; i++) {
+          {
+            uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - feeAmount, 1e6);
+            resultPrice = getNewPriceAfterInput(zeroToOne, currentPrice, liquidity, amountAvailableAfterFee);
+          }
+          uint16 priceImpactFeeNew = uint16(calculatePriceImpactFee(feeData, currentPrice, resultPrice));
+          if (feeAmount == priceImpactFeeNew) break;
+          feeAmount = priceImpactFeeNew;
+        }
+
         if (targetPrice != resultPrice) {
           input = getAmountA(resultPrice, currentPrice, liquidity);
-
           // we didn't reach the target, so take the remainder of the maximum input as fee
           feeAmount = uint256(amountAvailable) - input;
         } else {
-          feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+          feeAmount = FullMath.mulDivRoundingUp(input, feeAmount, 1e6 - feeAmount);
         }
       }
 
-      output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
+      output = getAmountB(resultPrice, currentPrice, liquidity);
     } else {
-      function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
-
       output = getAmountB(targetPrice, currentPrice, liquidity);
       amountAvailable = -amountAvailable;
       if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
       else {
-        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
+        resultPrice = getNewPriceAfterOutput(zeroToOne, currentPrice, liquidity, uint256(amountAvailable));
 
         if (targetPrice != resultPrice) {
           output = getAmountB(resultPrice, currentPrice, liquidity);
@@ -192,7 +259,8 @@ library PriceMovementMath {
       }
 
       input = getAmountA(resultPrice, currentPrice, liquidity);
-      feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+      uint16 priceImpactFee = uint16(calculatePriceImpactFee(feeData, currentPrice, resultPrice));
+      feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);
     }
   }
 }

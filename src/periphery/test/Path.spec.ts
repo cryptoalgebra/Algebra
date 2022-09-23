@@ -1,4 +1,5 @@
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { FeeAmount } from './shared/constants'
 
 import { expect } from './shared/expect'
@@ -22,12 +23,6 @@ describe('Path', () => {
     const pathTestFactory = await ethers.getContractFactory('PathTest')
     return (await pathTestFactory.deploy()) as PathTest
   }
-
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
-  before('create fixture loader', async () => {
-    loadFixture = waffle.createFixtureLoader(await (ethers as any).getSigners())
-  })
 
   beforeEach('deploy PathTest', async () => {
     path = await loadFixture(pathTestFixture)

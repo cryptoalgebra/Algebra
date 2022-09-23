@@ -1,10 +1,8 @@
-import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
-import '@nomiclabs/hardhat-etherscan'
-import 'hardhat-watcher'
-import 'solidity-coverage'
-import 'algebra-solidity-docgen'
+import '@nomicfoundation/hardhat-toolbox';
+import 'hardhat-watcher';
+import 'hardhat-dependency-compiler';
+import 'solidity-coverage';
+import 'algebra-solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
@@ -59,6 +57,9 @@ export default {
       'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
     },
   },
+  typechain: {
+    outDir: 'typechain'
+  },
   watcher: {
     test: {
       tasks: [{ command: 'test', params: { testFiles: ['{path}'] } }],
@@ -70,5 +71,10 @@ export default {
     output: '../../docs/Contracts/Periphery',
     pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public'
+  },
+  dependencyCompiler: {
+    paths: [
+      '@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol',
+    ],
   }
 }

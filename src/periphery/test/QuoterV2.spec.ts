@@ -1,6 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { constants, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { FeeAmount, MaxUint128 } from './shared/constants'
@@ -16,12 +16,12 @@ describe('QuoterV2', function () {
   let wallet: Wallet
   let trader: Wallet
 
-  const swapRouterFixture: Fixture<{
+  const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager
     tokens: [TestERC20, TestERC20, TestERC20]
     quoter: QuoterV2
-  }> = async (wallets, provider) => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { wnative, factory, router, tokens, nft } = await completeFixture()
 
     // approve & fund wallets
     for (const token of tokens) {
@@ -45,12 +45,9 @@ describe('QuoterV2', function () {
   let tokens: [TestERC20, TestERC20, TestERC20]
   let quoter: QuoterV2
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
     ;[wallet, trader] = wallets
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   // helper for getting wnative and token balances

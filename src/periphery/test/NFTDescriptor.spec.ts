@@ -1,9 +1,9 @@
 import { BigNumber, constants, Wallet } from 'ethers'
 import { encodePriceSqrt } from './shared/encodePriceSqrt'
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from './shared/expect'
 import { TestERC20Metadata, NFTDescriptorTest } from '../typechain'
-import { Fixture } from 'ethereum-waffle'
 import { FeeAmount, TICK_SPACINGS } from './shared/constants'
 import snapshotGasCost from './shared/snapshotGasCost'
 import { formatSqrtRatioX96 } from './shared/formatSqrtRatioX96'
@@ -18,12 +18,11 @@ const LOWEST_SQRT_RATIO = 4310618292
 const HIGHEST_SQRT_RATIO = BigNumber.from(33849).mul(TEN.pow(34))
 
 describe('NFTDescriptor', () => {
-  let wallets: Wallet[]
 
-  const nftDescriptorFixture: Fixture<{
+  const nftDescriptorFixture: () => Promise<{
     tokens: [TestERC20Metadata, TestERC20Metadata, TestERC20Metadata, TestERC20Metadata]
     nftDescriptor: NFTDescriptorTest
-  }> = async (wallets, provider) => {
+  }> = async () => {
     const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
     const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy()
 
@@ -50,14 +49,6 @@ describe('NFTDescriptor', () => {
 
   let nftDescriptor: NFTDescriptorTest
   let tokens: [TestERC20Metadata, TestERC20Metadata, TestERC20Metadata, TestERC20Metadata]
-
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
-  before('create fixture loader', async () => {
-    wallets = await (ethers as any).getSigners()
-
-    loadFixture = waffle.createFixtureLoader(wallets)
-  })
 
   beforeEach('load fixture', async () => {
     ;({ nftDescriptor, tokens } = await loadFixture(nftDescriptorFixture))

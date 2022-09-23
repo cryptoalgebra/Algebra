@@ -1,18 +1,17 @@
 import { Contract } from 'ethers'
-import { waffle, ethers } from 'hardhat'
-
-import { Fixture } from 'ethereum-waffle'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { PeripheryImmutableStateTest, IWNativeToken } from '../typechain'
 import { expect } from './shared/expect'
 import { v3RouterFixture } from './shared/externalFixtures'
 
 describe('PeripheryImmutableState', () => {
-  const nonfungiblePositionManagerFixture: Fixture<{
+  const nonfungiblePositionManagerFixture: () => Promise<{
     wnative: IWNativeToken
     factory: Contract
     state: PeripheryImmutableStateTest
-  }> = async (wallets, provider) => {
-    const { wnative, factory } = await v3RouterFixture(wallets, provider)
+  }> = async () => {
+    const { wnative, factory } = await v3RouterFixture()
 
     const stateFactory = await ethers.getContractFactory('PeripheryImmutableStateTest')
     const state = (await stateFactory.deploy(factory.address, wnative.address, await factory.poolDeployer())) as PeripheryImmutableStateTest
@@ -27,12 +26,6 @@ describe('PeripheryImmutableState', () => {
   let factory: Contract
   let wnative: IWNativeToken
   let state: PeripheryImmutableStateTest
-
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
-  before('create fixture loader', async () => {
-    loadFixture = waffle.createFixtureLoader(await (ethers as any).getSigners())
-  })
 
   beforeEach('load fixture', async () => {
     ;({ state, wnative, factory } = await loadFixture(nonfungiblePositionManagerFixture))

@@ -1,7 +1,6 @@
 import { BigNumberish, constants, Wallet, BigNumber } from 'ethers'
-import { waffle, ethers } from 'hardhat'
-
-import { Fixture } from 'ethereum-waffle'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
   TestPositionNFTOwner,
   MockTimeNonfungiblePositionManager,
@@ -30,14 +29,14 @@ describe('NonfungiblePositionManager', () => {
   let wallets: Wallet[]
   let wallet: Wallet, other: Wallet
 
-  const nftFixture: Fixture<{
+  const nftFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager
     factory: IAlgebraFactory
     tokens: [TestERC20, TestERC20, TestERC20]
     wnative: IWNativeToken
     router: SwapRouter
-  }> = async (wallets, provider) => {
-    const { wnative, factory, tokens, nft, router } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { wnative, factory, tokens, nft, router } = await completeFixture()
 
     // approve & fund wallets
     for (const token of tokens) {
@@ -61,13 +60,10 @@ describe('NonfungiblePositionManager', () => {
   let wnative: IWNativeToken
   let router: SwapRouter
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     wallets = await (ethers as any).getSigners()
     ;[wallet, other] = wallets
-
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   beforeEach('load fixture', async () => {

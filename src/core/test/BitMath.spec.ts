@@ -1,6 +1,7 @@
 import { expect } from './shared/expect'
-import { BitMathTest } from '../typechain/BitMathTest'
-import { ethers, waffle } from 'hardhat'
+import { BitMathTest } from '../typechain/test/BitMathTest'
+import { ethers } from 'hardhat';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import snapshotGasCost from './shared/snapshotGasCost'
 
 const { BigNumber } = ethers
@@ -12,7 +13,7 @@ describe('BitMath', () => {
     return (await factory.deploy()) as BitMathTest
   }
   beforeEach('deploy BitMathTest', async () => {
-    bitMath = await waffle.loadFixture(fixture)
+    bitMath = await loadFixture(fixture)
   })
 
   describe('#mostSignificantBit', () => {

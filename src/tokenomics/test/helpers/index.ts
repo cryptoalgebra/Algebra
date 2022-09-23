@@ -1,5 +1,4 @@
 import { BigNumber, Wallet } from 'ethers'
-import { MockProvider } from 'ethereum-waffle'
 import {
   blockTimestamp,
   BNe18,
@@ -44,7 +43,7 @@ const ETERNAL_FARMING = false;
  */
 export class HelperCommands {
   actors: ActorFixture
-  provider: MockProvider
+  provider: any
   farming: AlgebraLimitFarming
   eternalFarming: AlgebraEternalFarming
   nft: INonfungiblePositionManager
@@ -69,7 +68,7 @@ export class HelperCommands {
     testIncentiveId,
     farmingCenter
   }: {
-    provider: MockProvider
+    provider: any
     farming: AlgebraLimitFarming
     eternalFarming: AlgebraEternalFarming
     farmingCenter: FarmingCenter
@@ -90,7 +89,7 @@ export class HelperCommands {
     this.farmingCenter = farmingCenter
   }
 
-  static fromTestContext = (context: TestContext, actors: ActorFixture, provider: MockProvider): HelperCommands => {
+  static fromTestContext = (context: TestContext, actors: ActorFixture, provider: any): HelperCommands => {
     return new HelperCommands({
       actors,
       provider,
@@ -273,7 +272,10 @@ export class HelperCommands {
         ...times,
         
       })
-      virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+      let txres = await txResult.wait(1);
+      if (txres.events && txres.events[3].args) {
+        virtualPoolAddress = txres.events[3].args['virtualPool']
+      } else throw new Error("Unable to get virtual pool address from event");
       
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)

@@ -1,6 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { constants, Wallet, ContractTransaction } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { IWNativeToken, MockTimeNonfungiblePositionManager, MockTimeSwapRouter, Quoter, TestERC20 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { FeeAmount, MaxUint128, TICK_SPACINGS } from './shared/constants'
@@ -9,21 +9,19 @@ import { expandTo18Decimals } from './shared/expandTo18Decimals'
 import { expect } from './shared/expect'
 import { encodePath } from './shared/path'
 import { createPool } from './shared/quoter'
-import { MockProvider } from 'ethereum-waffle'
 
 describe('Quoter', () => {
   let wallet: Wallet
   let trader: Wallet
 
-  const swapRouterFixture: Fixture<{
+  const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager
     tokens: [TestERC20, TestERC20, TestERC20]
     quoter: Quoter,
-    provider: MockProvider,
     router: MockTimeSwapRouter,
     wnative: IWNativeToken,
-  }> = async (wallets, provider) => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { wnative, factory, router, tokens, nft } = await completeFixture()
 
     // approve & fund wallets
     for (const token of tokens) {
@@ -40,7 +38,6 @@ describe('Quoter', () => {
       tokens,
       nft,
       quoter,
-      provider,
       router,
       wnative
     }
@@ -49,21 +46,18 @@ describe('Quoter', () => {
   let nft: MockTimeNonfungiblePositionManager
   let tokens: [TestERC20, TestERC20, TestERC20]
   let quoter: Quoter
-  let provider: MockProvider
   let router: MockTimeSwapRouter
   let wnative: IWNativeToken
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
     ;[wallet, trader] = wallets
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   // helper for getting wnative and token balances
   beforeEach('load fixture', async () => {
-    ;({ tokens, nft, quoter, provider, router, wnative} = await loadFixture(swapRouterFixture))
+    ;({ tokens, nft, quoter, router, wnative} = await loadFixture(swapRouterFixture))
   })
 
   describe('quotes', () => {
@@ -122,9 +116,9 @@ describe('Quoter', () => {
 
         await exactInput([tokens[0].address, tokens[1].address], 300000)
 
-        await provider.send('evm_mine', [])
-        await provider.send('evm_increaseTime', [60*60*3])
-        await provider.send('evm_mine', [])
+        await ethers.provider.send('evm_mine', [])
+        await ethers.provider.send('evm_increaseTime', [60*60*3])
+        await ethers.provider.send('evm_mine', [])
         
         const {amountOut: amountOut2, fees: fees2} = await quoter.callStatic.quoteExactInput(
           encodePath([tokens[0].address, tokens[1].address]),

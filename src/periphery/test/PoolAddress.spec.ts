@@ -1,5 +1,6 @@
 import { constants } from 'ethers'
-import { waffle, ethers } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import { PoolAddressTest } from '../typechain'
 import { POOL_BYTECODE_HASH } from './shared/computePoolAddress'
@@ -13,12 +14,6 @@ describe('PoolAddress', () => {
     const poolAddressTestFactory = await ethers.getContractFactory('PoolAddressTest')
     return (await poolAddressTestFactory.deploy()) as PoolAddressTest
   }
-
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
-
-  before('create fixture loader', async () => {
-    loadFixture = waffle.createFixtureLoader(await (ethers as any).getSigners())
-  })
 
   beforeEach('deploy PoolAddressTest', async () => {
     poolAddress = await loadFixture(poolAddressTestFixture)

@@ -1,5 +1,6 @@
+import { ethers } from 'hardhat'
 import { BigNumber, Wallet } from 'ethers'
-import { LoadFixtureFunction } from '../types'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20 } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
@@ -18,20 +19,19 @@ import {
   maxGas,
   days
 } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
-let loadFixture: LoadFixtureFunction
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
 
 describe('unit/Farms', () => {
-  const actors = new ActorFixture(provider.getWallets(), provider)
-  const incentiveCreator = actors.incentiveCreator()
-  const lpUser0 = actors.lpUser0()
+  let actors: ActorFixture;
+  let lpUser0: Wallet
+  let incentiveCreator: Wallet
   const amountDesired = BNe18(10)
   const totalReward = BNe18(100)
   const bonusReward = BNe18(100)
@@ -43,8 +43,11 @@ describe('unit/Farms', () => {
   let tokenId: string
   let L2tokenId: string
 
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
+  before(async () => {
+    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    actors = new ActorFixture(wallets, provider)
+    lpUser0 = actors.lpUser0();
+    incentiveCreator = actors.incentiveCreator();
   })
 
   beforeEach('create fixture loader', async () => {
@@ -382,7 +385,7 @@ describe('unit/Farms', () => {
         bonusReward: 10000,
         minimalPositionWidth: 0,
         multiplierToken: context.rewardToken.address,
-        enterStartTime: timestamps[0],
+        enterStartTime: timestamps.startTime,
       }
 
       await expect(context.farming.connect(actors.lpUser1()).createLimitFarming(
@@ -665,7 +668,7 @@ describe('unit/Farms', () => {
   })
 
   describe('#exitFarming', () => {
-    let tokenIdOut;
+    let tokenIdOut: string;
     let incentiveId: string
     let subject: (actor: Wallet) => Promise<any>
     let createIncentiveResult: HelperTypes.CreateIncentive.Result
@@ -925,8 +928,8 @@ describe('unit/Farms', () => {
   describe('liquidityIfOverflow', () => {
     const MAX_UINT_96 = BN('2').pow(BN('96')).sub(1)
 
-    let incentive
-    let incentiveId
+    let incentive: HelperTypes.CreateIncentive.Result
+    let incentiveId: string
 
     beforeEach(async () => {
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))

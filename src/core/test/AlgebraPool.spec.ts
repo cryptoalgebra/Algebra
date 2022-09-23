@@ -1,13 +1,13 @@
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
 import { BigNumber, BigNumberish, constants, Wallet } from 'ethers'
-import { TestERC20 } from '../typechain/TestERC20'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
-import { MockTimeAlgebraPool } from '../typechain/MockTimeAlgebraPool'
-import { MockTimeVirtualPool } from '../typechain/MockTimeVirtualPool'
-import { TestAlgebraSwapPay } from '../typechain/TestAlgebraSwapPay'
+import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
+import { MockTimeVirtualPool } from '../typechain/test/MockTimeVirtualPool'
+import { TestAlgebraSwapPay } from '../typechain/test/TestAlgebraSwapPay'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
-import * as fs from "fs"
 
 import { poolFixture, TEST_POOL_START_TIME, vaultAddress} from './shared/fixtures'
 
@@ -28,14 +28,11 @@ import {
   MIN_SQRT_RATIO,
   SwapToPriceFunction,
 } from './shared/utilities'
-import { TestAlgebraCallee } from '../typechain/TestAlgebraCallee'
-import { TestAlgebraReentrantCallee } from '../typechain/TestAlgebraReentrantCallee'
-import { TickMathTest } from '../typechain/TickMathTest'
-import { PriceMovementMathTest } from '../typechain/PriceMovementMathTest'
-import { buildSnapshotResolver } from 'jest-snapshot'
-import { poll } from 'ethers/lib/utils'
+import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
+import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
+import { TickMathTest } from '../typechain/test/TickMathTest'
+import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
 
-const createFixtureLoader = waffle.createFixtureLoader
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -69,12 +66,10 @@ describe('AlgebraPool', () => {
   let mint: MintFunction
   let flash: FlashFunction
 
-  let loadFixture: ReturnType<typeof createFixtureLoader>
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool']
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-    loadFixture = createFixtureLoader([wallet, other])
   })
 
   beforeEach('deploy fixture', async () => {
@@ -215,13 +210,13 @@ describe('AlgebraPool', () => {
           })
 
           it('fails if token0 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWith('IIA');
-            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWith('IIAM');
+            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWith('IIAM');
           }) 
 
           it('fails if token1 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIA');
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIA');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIAM');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIAM');
           }) 
 
           it('fails if token0 hardly underpayed', async() => {
@@ -1065,6 +1060,49 @@ describe('AlgebraPool', () => {
         expect(amount0).to.be.eq('99999999999999')
         expect(amount1).to.be.eq(0)
       })
+
+      it('unexpected donation', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1999999999999999999')
+        expect(amount1).to.be.eq('999999999999999999')
+      })
+      it('token0 with unexpected donation before burn', async () => {
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await token0.transfer(pool.address, expandTo18Decimals(1))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1000099999999999999')
+        expect(amount1).to.be.eq(0)
+      })
+      it('token0 with unexpected donation before swap', async () => {
+        await token0.transfer(pool.address, expandTo18Decimals(1))
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('1000099999999999999')
+        expect(amount1).to.be.eq(0)
+      })
       it('token1', async () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
         await pool.burn(minTick, maxTick, 0)
@@ -1077,6 +1115,34 @@ describe('AlgebraPool', () => {
         )
         expect(amount0).to.be.eq(0)
         expect(amount1).to.be.eq('99999999999999')
+      })
+      it('token1 with unexpected donation before burn', async () => {
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq(0)
+        expect(amount1).to.be.eq('1000099999999999999')
+      })
+      it('token1 with unexpected donation before swap', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq(0)
+        expect(amount1).to.be.eq('1000099999999999999')
       })
       it('token0 and token1', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
@@ -1091,6 +1157,38 @@ describe('AlgebraPool', () => {
         )
         expect(amount0).to.be.eq('99999999999999')
         expect(amount1).to.be.eq('100000000000000')
+      })
+      it('token0 and token1 with unexpected donation before burn', async () => {
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('2000099999999999999')
+        expect(amount1).to.be.eq('1000100000000000000')
+      })
+      it('token0 and token1 with unexpected donation before swaps', async () => {
+        await token1.transfer(pool.address, expandTo18Decimals(1))
+        await token0.transfer(pool.address, expandTo18Decimals(2))
+        await swapExact0For1(expandTo18Decimals(1), wallet.address)
+        await swapExact1For0(expandTo18Decimals(1), wallet.address)
+        await pool.burn(minTick, maxTick, 0)
+        const { amount0, amount1 } = await pool.callStatic.collect(
+          wallet.address,
+          minTick,
+          maxTick,
+          MaxUint128,
+          MaxUint128
+        )
+        expect(amount0).to.be.eq('2000099999999999999')
+        expect(amount1).to.be.eq('1000100000000000000')
       })
     })
   })
@@ -1807,6 +1905,37 @@ describe('AlgebraPool', () => {
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
         })
+        it('increases the fee growth by the expected amount after unexpected donation of token0', async () => {
+          await token0.transfer(pool.address, expandTo18Decimals(2))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
+        it('increases the fee growth by the expected amount after unexpected donation of token1', async () => {
+          await token1.transfer(pool.address, expandTo18Decimals(1))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(1).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
+        it('increases the fee growth by the expected amount after unexpected donation', async () => {
+          await token0.transfer(pool.address, expandTo18Decimals(2))
+          await token1.transfer(pool.address, expandTo18Decimals(1))
+          await flash(1001, 2002, other.address)
+          expect(await pool.totalFeeGrowth0Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+          expect(await pool.totalFeeGrowth1Token()).to.eq(
+            BigNumber.from(expandTo18Decimals(1).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
+          )
+        })
         it('fails if original balance not returned in either token', async () => {
           await expect(flash(1000, 0, other.address, 999, 0)).to.be.reverted
           await expect(flash(0, 1000, other.address, 0, 999)).to.be.reverted
@@ -1928,12 +2057,12 @@ describe('AlgebraPool', () => {
       await expect(pool.connect(other).setCommunityFee(200, 200)).to.be.reverted
     })
     it('fails if fee is gt 25%', async () => {
-      await expect(pool.setCommunityFee(330, 330)).to.be.reverted
-      await expect(pool.setCommunityFee(170, 330)).to.be.reverted
-      await expect(pool.setCommunityFee(330, 170)).to.be.reverted
-      await expect(pool.setCommunityFee(330, 0)).to.be.reverted
-      await expect(pool.setCommunityFee(0, 500)).to.be.reverted
-      await expect(pool.setCommunityFee(260, 170)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(170, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 170)).to.be.reverted
+      await expect(pool.setCommunityFee(254, 0)).to.be.reverted
+      await expect(pool.setCommunityFee(0, 254)).to.be.reverted
+      await expect(pool.setCommunityFee(255, 170)).to.be.reverted
     })
     it('succeeds for fee 25%', async () => {
       await pool.setCommunityFee(250, 250)

@@ -1,6 +1,7 @@
 import { BigNumber, BigNumberish, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
-import { DataStorageTest } from '../typechain/DataStorageTest'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { DataStorageTest } from '../typechain/test/DataStorageTest'
 import { DataStorageOperator } from '../typechain/DataStorageOperator'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
@@ -11,10 +12,8 @@ import { MaxUint128 } from './shared/utilities'
 describe('DataStorage', () => {
   let wallet: Wallet, other: Wallet
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
-    loadFixture = waffle.createFixtureLoader([wallet, other])
   })
 
   const dataStorageFixture = async () => {
@@ -516,8 +515,8 @@ describe('DataStorage', () => {
     const STARTING_TIME = TEST_POOL_START_TIME
 
     const maxedOutDataStorageFixture = async () => {
-      await waffle.provider.send("hardhat_setLoggingEnabled", [false]);
-      await waffle.provider.send("hardhat_setBalance", [
+      await ethers.provider.send("hardhat_setLoggingEnabled", [false]);
+      await ethers.provider.send("hardhat_setBalance", [
         wallet.address,
         "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
       ]);

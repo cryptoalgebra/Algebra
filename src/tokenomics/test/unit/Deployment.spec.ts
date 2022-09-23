@@ -1,18 +1,13 @@
-import { LoadFixtureFunction } from '../types'
 import { ethers } from 'hardhat'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { AlgebraLimitFarming } from '../../typechain'
 import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
 import { expect } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import {  provider } from '../shared/provider'
 
-let loadFixture: LoadFixtureFunction
 
 describe('unit/Deployment', () => {
   let context: AlgebraFixtureType
-
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
-  })
 
   beforeEach('create fixture loader', async () => {
     context = await loadFixture(algebraFixture)

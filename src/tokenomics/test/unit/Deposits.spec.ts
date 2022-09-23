@@ -1,6 +1,6 @@
 import { constants, BigNumberish, Wallet } from 'ethers'
-import { LoadFixtureFunction } from '../types'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -16,32 +16,35 @@ import {
   makeTimestamps,
   maxGas,
 } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
-let loadFixture: LoadFixtureFunction
-
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
 
 describe('unit/Deposits', () => {
-  const actors = new ActorFixture(provider.getWallets(), provider)
-  const lpUser0 = actors.lpUser0()
+  let actors: ActorFixture;
+  let lpUser0: Wallet
   const amountDesired = BNe18(10)
   const totalReward = BNe18(100)
   const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
-  const incentiveCreator = actors.incentiveCreator()
+  let incentiveCreator: Wallet
   let context: AlgebraFixtureType
+  let recipient: string
 
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
+  before(async() => {
+    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    actors = new ActorFixture(wallets, provider)
+    lpUser0 = actors.lpUser0();
+    incentiveCreator = actors.incentiveCreator();
+    recipient = lpUser0.address
   })
 
   beforeEach('create fixture loader', async () => {
@@ -51,7 +54,6 @@ describe('unit/Deposits', () => {
 
   let subject: (tokenId: string, recipient: string) => Promise<any>
   let tokenId: string
-  let recipient = lpUser0.address
   const SAFE_TRANSFER_FROM_SIGNATURE = 'safeTransferFrom(address,address,uint256,bytes)'
   const INCENTIVE_KEY_ABI =
     'tuple(address rewardToken, address bonusRewardToken, address pool, uint256 startTime, uint256 endTime)'
@@ -410,9 +412,10 @@ describe('unit/Deposits', () => {
 
   describe('#transferNFTL2',  () => {
 
-    const lpUser1 = actors.lpUser1()     
+    let lpUser1: Wallet     
 
     beforeEach('setup', async () => {
+        lpUser1 = actors.lpUser1()   
 
         await context.nft.connect(lpUser0).approve(lpUser1.address,tokenId)
   

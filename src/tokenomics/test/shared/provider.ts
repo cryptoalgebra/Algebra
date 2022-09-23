@@ -1,4 +1,3 @@
-import { waffle } from 'hardhat'
+import { ethers } from 'hardhat'
 
-export const provider = waffle.provider
-export const createFixtureLoader = waffle.createFixtureLoader
+export const provider = ethers.provider

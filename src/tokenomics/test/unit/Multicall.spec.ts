@@ -1,5 +1,7 @@
-import { LoadFixtureFunction } from '../types'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
+import { Wallet } from 'ethers'
 import {
   getMaxTick,
   getMinTick,
@@ -15,17 +17,17 @@ import {
   defaultTicksArray,
   expect,
 } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import {  provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
-let loadFixture: LoadFixtureFunction
 
 describe('unit/Multicall', () => {
-  const actors = new ActorFixture(provider.getWallets(), provider)
-  const incentiveCreator = actors.incentiveCreator()
-  const lpUser0 = actors.lpUser0()
+  let actors: ActorFixture;
+  let lpUser0: Wallet
+  let incentiveCreator: Wallet
+  let multicaller: Wallet
   const amountDesired = BNe18(10)
   const totalReward = BNe18(100)
   const bonusReward = BNe18(100)
@@ -33,11 +35,14 @@ describe('unit/Multicall', () => {
   const Time = createTimeMachine(provider)
   let helpers: HelperCommands
   let context: AlgebraFixtureType
-  const multicaller = actors.traderUser2()
 
   /*
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
+  before( async () => {
+    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    actors = new ActorFixture(wallets, provider);
+    lpUser0 = actors.lpUser0();
+    incentiveCreator = actors.incentiveCreator();
+    multicaller = actors.traderUser2();
   })
 
   beforeEach('create fixture loader', async () => {

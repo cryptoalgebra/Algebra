@@ -1,5 +1,5 @@
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { constants } from 'ethers'
-import { TestContext, LoadFixtureFunction } from './types'
 import { AlgebraVault } from '../typechain'
 import { IAlgebraPool } from "algebra/typechain";
 import { TestERC20 } from '../typechain'
@@ -8,41 +8,22 @@ import {
 	BigNumber,
 	blockTimestamp,
 	BN,
-	BNe18,
-	expect,
-	FeeAmount,
 	getMaxTick,
 	getMinTick,
-	TICK_SPACINGS,
 	algebraFixture,
   AlgebraFixtureType,
-	log,
-	days,
-	ratioE18,
-	bnSum,
-	getCurrentTick,
-	BNe,
-	mintPosition, MaxUint256, maxGas, encodePath,
+  MaxUint256, 
+  encodePath,
   poolFactory
 } from './shared'
-import { createTimeMachine } from './shared/time'
-import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers'
-import { createFixtureLoader, provider } from './shared/provider'
-import { ActorFixture } from './shared/actors'
-import { Fixture } from 'ethereum-waffle'
-import { HelperTypes } from './helpers/types'
-import { Wallet } from '@ethersproject/wallet'
+import { expect } from 'chai'
 
-import './matchers/beWithin'
-import {round} from "lodash";
 
-let loadFixture: LoadFixtureFunction
 
-describe('AlgebraVault', async ()=> {
-  const wallets = provider.getWallets()
-
-  before('create fixture loader', async () => {
-    loadFixture = createFixtureLoader(wallets, provider)
+describe('AlgebraVault', function() {
+  let wallets: any;
+  before(async () => {
+    wallets = await ethers.getSigners();
   })
 
   describe('main', async () => {

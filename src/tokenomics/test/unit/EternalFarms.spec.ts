@@ -1,6 +1,7 @@
+import { ethers } from 'hardhat'
 import { BigNumber, Contract, Wallet } from 'ethers'
-import { LoadFixtureFunction } from '../types'
-import { TestERC20 } from '../../typechain'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { TestERC20, TestIncentiveId } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
@@ -17,20 +18,20 @@ import {
   maxGas,
   ZERO_ADDRESS
 } from '../shared'
-import { createFixtureLoader, provider } from '../shared/provider'
+import {  provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
+import { IAlgebraVirtualPool } from 'algebra/typechain'
 
-let loadFixture: LoadFixtureFunction
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
 
 describe('unit/EternalFarms', () => {
-  const actors = new ActorFixture(provider.getWallets(), provider)
-  const incentiveCreator = actors.incentiveCreator()
-  const lpUser0 = actors.lpUser0()
+  let actors: ActorFixture;
+  let lpUser0: Wallet
+  let incentiveCreator: Wallet
   const amountDesired = BNe18(10)
   const totalReward = BigNumber.from('10000');
   const erc20Helper = new ERC20Helper()
@@ -41,8 +42,11 @@ describe('unit/EternalFarms', () => {
   let timestamps: ContractParams.Timestamps
   let tokenId: string
 
-  before('loader', async () => {
-    loadFixture = createFixtureLoader(provider.getWallets(), provider)
+  before( async () => {
+    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    actors = new ActorFixture(wallets, provider)
+    lpUser0 = actors.lpUser0();
+    incentiveCreator = actors.incentiveCreator();
   })
 
   beforeEach('create fixture loader', async () => {
@@ -648,7 +652,7 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('after end time', () => {
-      let tokenIdOut;
+      let tokenIdOut: string;
       beforeEach('create the incentive and nft and farm it', async () => {
         timestamps = makeTimestamps(await blockTimestamp())
 
@@ -846,8 +850,8 @@ describe('unit/EternalFarms', () => {
   describe('liquidityIfOverflow', () => {
     const MAX_UINT_96 = BN('2').pow(BN('96')).sub(1)
 
-    let incentive
-    let incentiveId
+    let incentive: HelperTypes.CreateIncentive.Result;
+    let incentiveId: string;
 
     beforeEach(async () => {
       timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
@@ -912,8 +916,8 @@ describe('unit/EternalFarms', () => {
 
   describe('attach/detach incentive', () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args
-    let incentiveKey
-    let virtualPool
+    let incentiveKey: ContractParams.IncentiveKey
+    let virtualPool: Contract
 
     beforeEach(async () => {
       /** We will be doing a lot of time-testing here, so leave some room between
@@ -973,8 +977,8 @@ describe('unit/EternalFarms', () => {
 
   describe('rewards', async () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args
-    let incentiveKey
-    let incentiveId
+    let incentiveKey: ContractParams.IncentiveKey
+    let incentiveId: string
 
     beforeEach(async () => {
       /** We will be doing a lot of time-testing here, so leave some room between

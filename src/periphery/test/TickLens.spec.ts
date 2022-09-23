@@ -1,6 +1,6 @@
-import { Fixture } from 'ethereum-waffle'
 import { BigNumber, BigNumberish, constants, Contract, ContractTransaction, Wallet } from 'ethers'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { MockTimeNonfungiblePositionManager, TestERC20, TickLensTest } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { FeeAmount, TICK_SPACINGS } from './shared/constants'
@@ -13,12 +13,12 @@ import snapshotGasCost from './shared/snapshotGasCost'
 describe('TickLens', () => {
   let wallets: Wallet[]
 
-  const nftFixture: Fixture<{
+  const nftFixture: () => Promise<{
     factory: Contract
     nft: MockTimeNonfungiblePositionManager
     tokens: [TestERC20, TestERC20, TestERC20]
-  }> = async (wallets, provider) => {
-    const { factory, tokens, nft } = await completeFixture(wallets, provider)
+  }> = async () => {
+    const { factory, tokens, nft } = await completeFixture()
 
     for (const token of tokens) {
       await token.approve(nft.address, constants.MaxUint256)
@@ -37,11 +37,9 @@ describe('TickLens', () => {
   let poolAddress: string
   let tickLens: TickLensTest
 
-  let loadFixture: ReturnType<typeof waffle.createFixtureLoader>
 
   before('create fixture loader', async () => {
     wallets = await (ethers as any).getSigners()
-    loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   beforeEach('load fixture', async () => {
