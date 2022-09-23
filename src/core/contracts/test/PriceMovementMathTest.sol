@@ -13,7 +13,7 @@ contract PriceMovementMathTest {
     uint160 endPrice
   ) external view returns (uint256) {
     int24 currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
-    (int32 startTickX100, ) = PriceMovementMath._interpolateTick(startPrice, TickMath.getSqrtRatioAtTick(startTick), int32(startTick) * 100, true);
+    (int32 startTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
     return PriceMovementMath.calculatePriceImpactFee(PriceMovementMath.ElasticFeeData(startTickX100, currentTick, fee), currentPrice, endPrice);
   }
 

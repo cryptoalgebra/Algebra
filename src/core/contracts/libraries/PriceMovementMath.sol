@@ -126,33 +126,6 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
-  function _interpolateTick(
-    uint160 price,
-    uint160 priceRoundedDown,
-    int32 tickRounded,
-    bool roundUp
-  ) internal pure returns (int32 tick, uint160 priceRounded) {
-    uint160 priceRoundedUp = uint160((uint256(priceRoundedDown) * 10000499987500624960940234) / 10000000000000000000000000); // * sqrt(1.0001)
-    uint160 subTick = (1000 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown);
-    if (roundUp && subTick % 10 > 0) subTick += 10;
-    subTick /= 10;
-
-    tick = tickRounded + int32(subTick);
-    priceRounded =
-      priceRoundedDown +
-      uint160((uint256(priceRoundedDown) * uint256(subTick)) / (2000100)) +
-      uint160((uint256(priceRoundedDown) * uint256(subTick)**2) / (100010000 * 80000));
-  }
-
-  function getTickX100AtPrice(uint160 price, bool roundUp) internal pure returns (int32 tick, uint160 priceRounded) {
-    tick = TickMath.getTickAtSqrtRatio(price);
-    priceRounded = TickMath.getSqrtRatioAtTick(int24(tick)); // round down
-    tick *= 100;
-    if (priceRounded < price) {
-      (tick, priceRounded) = _interpolateTick(price, priceRounded, tick, roundUp);
-    }
-  }
-
   struct ElasticFeeData {
     int32 startTickX100;
     int24 currentTick;
@@ -164,45 +137,33 @@ library PriceMovementMath {
     uint160 currentPrice,
     uint160 endPrice
   ) internal view returns (uint256 feeAmount) {
-    int32 currentTick;
-    int32 endTick;
     bool zto = endPrice < currentPrice;
 
-    (currentTick, currentPrice) = _interpolateTick(currentPrice, TickMath.getSqrtRatioAtTick(feeData.currentTick), feeData.currentTick * 100, zto);
-    (endTick, endPrice) = getTickX100AtPrice(endPrice, !zto);
+    (int32 currentTickX100, uint160 currentPriceRounded) = TickMath.getTickX100(feeData.currentTick, currentPrice, zto);
+    (int32 endTickX100, uint160 endPriceRounded) = TickMath.getTickX100AtSqrtRatio(endPrice, !zto);
 
-    if (currentPrice == endPrice) return feeData.fee;
-    int32 startTick = feeData.startTickX100;
-
-    //console.log();
-    //console.logInt(startTick);
-    //console.logInt(currentTick);
-    //console.logInt(endTick);
+    if (currentPriceRounded == endPriceRounded) return feeData.fee;
+    int32 startTickX100 = feeData.startTickX100;
 
     if (zto) {
-      if (currentTick > startTick) startTick = currentTick;
-      if (endTick >= startTick) return feeData.fee;
+      if (currentTickX100 > startTickX100) startTickX100 = currentTickX100;
+      if (endTickX100 >= startTickX100) return feeData.fee;
     } else {
-      if (currentTick < startTick) startTick = currentTick;
-      if (endTick <= startTick) return feeData.fee;
+      if (currentTickX100 < startTickX100) startTickX100 = currentTickX100;
+      if (endTickX100 <= startTickX100) return feeData.fee;
     }
 
-    //console.logInt(startTick);
-    //console.logInt(currentTick);
-    //console.logInt(endTick);
-    //console.log();
-
     uint256 nominator;
-    int256 denominator = (int256(endPrice) - int256(currentPrice)) * int256(Constants.Ln);
+    int256 denominator = (int256(endPriceRounded) - int256(currentPriceRounded)) * int256(Constants.Ln);
 
-    int32 tickDelta = endTick - startTick;
-    int32 partialTickDelta = currentTick - startTick;
+    int32 finalTickShift = endTickX100 - startTickX100;
+    int32 currentTickShift = currentTickX100 - startTickX100;
 
     if (zto) {
       denominator = -denominator;
-      nominator = uint256(int256(endPrice) * partialTickDelta - int256(currentPrice) * tickDelta);
+      nominator = uint256(int256(endPriceRounded) * currentTickShift - int256(currentPriceRounded) * finalTickShift);
     } else {
-      nominator = uint256(int256(endPrice) * tickDelta - int256(currentPrice) * partialTickDelta);
+      nominator = uint256(int256(endPriceRounded) * finalTickShift - int256(currentPriceRounded) * currentTickShift);
     }
 
     feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
