@@ -31,11 +31,11 @@ To install dependencies, you need to run the command in the root directory:
 ```
 $ npm run bootstrap
 ```
-This will download and install dependencies for all modules and set up husky hooks.
+This will download and install dependencies and set up husky hooks.
 
 
 
-To compile a specific module, you need to run the following command in the module folder:
+To compile, you need to run the following command in the src/core folder:
 ```
 $ npm run compile
 ```
@@ -43,14 +43,14 @@ $ npm run compile
 
 ### Tests
 
-Tests for a specific module are run by the following command in the module folder:
+Tests are run by the following command in the src/core folder:
 ```
 $ npm run test
 ```
 
 ### Tests coverage
 
-To get a test coverage for specific module, you need to run the following command in the module folder:
+To get a test coverage, you need to run the following command in the src/core folder:
 
 ```
 $ npm run coverage
@@ -59,7 +59,7 @@ $ npm run coverage
 ### Deploy
 Firstly you need to create `.env` file in the root directory of project as in `env.example`.
 
-To deploy all modules in specific network:
+To deploy in specific network:
 ```
 $ node scripts/deployAll.js <network>
 ```
@@ -98,7 +98,7 @@ Main contract of pair with concentrated liquidity and dynamical fee. It contains
 ### src/core/contracts/AlgebraPoolDeployer.sol
 A contract that constructs a pool must implement this to pass arguments to the pool. This is used to avoid having constructor arguments in the pool contract, which results in the init code hash of the pool being constant allowing the CREATE2 address of the pool to be cheaply computed on-chain
 ### src/core/contracts/DataStorageOperator.sol
-This contract using for interacting with DataStorage library
+This contract is used for interacting with DataStorage library
 ### src/core/contracts/libraries/AdaptiveFee.sol
 Calculates fee based on combination of sigmoids
 ### src/core/contracts/libraries/DataStorage.sol.sol
