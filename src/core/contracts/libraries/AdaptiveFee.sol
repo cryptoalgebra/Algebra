@@ -115,8 +115,6 @@ library AdaptiveFee {
     xLowestDegree *= x; // x**2
     res += ((xLowestDegree * gHighestDegree) * 3 + (xLowestDegree * x * g)) / 6;
 
-    res = (res * closestValue) / (10000000000000000000);
-    if (res % 10 >= 5) res = res / 10 + 1;
-    else res = res / 10;
+    res = (res * closestValue) / (100000000000000000000);
   }
 }
