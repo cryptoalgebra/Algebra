@@ -8,7 +8,7 @@ contract AdaptiveFeeEchidnaTest {
     require(gamma != 0);
     if (x >= 6 * gamma) return;
     uint256 g8 = uint256(gamma)**8;
-    uint256 exp = AdaptiveFee.exp(x, gamma, g8);
+    uint256 exp = AdaptiveFee.expMul(x, gamma, g8);
     assert(exp < 2**137);
   }
 
