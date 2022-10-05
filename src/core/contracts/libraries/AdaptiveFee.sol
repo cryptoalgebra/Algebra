@@ -90,7 +90,7 @@ library AdaptiveFee {
           closestValue := 14841315910257660342111
         }
 
-        x := sub(x, mul(xdg, g))
+        x := mod(x, g)
       }
 
       if (x >= g / 2) {
