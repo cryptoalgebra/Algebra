@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0 <0.8.0;
 
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 /// @title Weighted DataStorage library
 /// @notice Provides functions to integrate with different tier dataStorages of the same pool

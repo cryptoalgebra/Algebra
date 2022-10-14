@@ -2,7 +2,7 @@
 pragma solidity >=0.7.6;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
-import 'algebra/contracts/libraries/TickTable.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickTable.sol';
 import 'base64-sol/base64.sol';
 
 /// @title NFTSVG

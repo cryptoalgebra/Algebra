@@ -2,14 +2,14 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
-import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
-import 'algebra/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
-import 'algebra-periphery/contracts/interfaces/IMulticall.sol';
-import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
 
 import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 

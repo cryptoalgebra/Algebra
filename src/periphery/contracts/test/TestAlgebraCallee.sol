@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import 'algebra/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
-import 'algebra/contracts/libraries/SafeCast.sol';
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
+import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 contract TestAlgebraCallee is IAlgebraSwapCallback {

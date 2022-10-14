@@ -2,7 +2,7 @@
 
 pragma solidity ^0.7.0;
 
-import 'algebra/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract ERC20 is IERC20Minimal {

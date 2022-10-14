@@ -2,9 +2,9 @@
 pragma solidity >=0.7.0;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
-import 'algebra/contracts/libraries/TickMath.sol';
-import 'algebra/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/math/SignedSafeMath.sol';

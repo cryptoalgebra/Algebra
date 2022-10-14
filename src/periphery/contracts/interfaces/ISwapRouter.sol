@@ -2,7 +2,7 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
+import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Algebra

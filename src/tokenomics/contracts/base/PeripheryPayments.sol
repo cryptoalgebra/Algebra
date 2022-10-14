@@ -3,10 +3,10 @@ pragma solidity >=0.7.5;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import 'algebra-periphery/contracts/interfaces/IPeripheryPayments.sol';
-import 'algebra-periphery/contracts/interfaces/external/IWNativeToken.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/external/IWNativeToken.sol';
 
-import 'algebra-periphery/contracts/libraries/TransferHelper.sol';
+import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
 abstract contract PeripheryPayments is IPeripheryPayments {
     address public immutable WNativeToken;

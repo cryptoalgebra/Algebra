@@ -1,6 +1,6 @@
 {
-  "name": "algebra-periphery",
-  "description": "Peripheral smart contracts",
+  "name": "@cryptoalgebra/periphery",
+  "description": "Peripheral smart contracts of Algebra protocol",
   "license": "GPL-2.0-or-later",
   "publishConfig": {
     "access": "public"
@@ -26,7 +26,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "3.4.1-solc-0.7-2",
     "@uniswap/v2-core": "1.0.1",
-    "algebra": "file:../core",
+    "@cryptoalgebra/core": "file:../core",
     "base64-sol": "1.0.1",
     "root": "file:../.."
   },

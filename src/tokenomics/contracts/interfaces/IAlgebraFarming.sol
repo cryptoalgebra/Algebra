@@ -2,10 +2,10 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraPoolDeployer.sol';
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
-import 'algebra/contracts/interfaces/IERC20Minimal.sol';
-import 'algebra-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';

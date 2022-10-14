@@ -1,4 +1,4 @@
-import { bytecode } from 'algebra/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
+import { bytecode } from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
 import { utils } from 'ethers'
 
 export const POOL_BYTECODE_HASH = utils.keccak256(bytecode)

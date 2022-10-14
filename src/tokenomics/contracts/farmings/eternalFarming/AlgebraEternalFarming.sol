@@ -7,10 +7,10 @@ import './interfaces/IAlgebraEternalVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 import './EternalVirtualPool.sol';
 
-import 'algebra/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 
-import 'algebra/contracts/libraries/FullMath.sol';
-import 'algebra/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
 import '../AlgebraFarming.sol';
 

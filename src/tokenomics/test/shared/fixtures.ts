@@ -1,16 +1,16 @@
 import { constants, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 
-import AlgebraPool from 'algebra/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
-import AlgebraFactoryJson from 'algebra/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
-import AlgebraPoolDeployerJson from 'algebra/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
-import NFTDescriptorJson from 'algebra-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json'
-import NonfungiblePositionManagerJson from 'algebra-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
-import NonfungibleTokenPositionDescriptor from 'algebra-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json'
-import SwapRouter from 'algebra-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
+import AlgebraPool from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
+import AlgebraFactoryJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
+import AlgebraPoolDeployerJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
+import NFTDescriptorJson from '@cryptoalgebra/periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json'
+import NonfungiblePositionManagerJson from '@cryptoalgebra/periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
+import NonfungibleTokenPositionDescriptor from '@cryptoalgebra/periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json'
+import SwapRouter from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
 import WNativeToken from './external/WNativeToken.json'
 import { linkLibraries } from './linkLibraries'
-import { ISwapRouter,IWNativeToken,NFTDescriptor } from 'algebra-periphery/typechain'
+import { ISwapRouter,IWNativeToken,NFTDescriptor } from '@cryptoalgebra/periphery/typechain'
 import {
   AlgebraLimitFarming,
   AlgebraEternalFarming,

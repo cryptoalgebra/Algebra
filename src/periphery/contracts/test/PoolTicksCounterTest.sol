@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 pragma solidity >=0.6.0;
 

@@ -1,6 +1,6 @@
 {
-  "name": "algebra-farming",
-  "description": "Canonical liquidity mining contract for Algebra",
+  "name": "@cryptoalgebra/farmings",
+  "description": "Liquidity mining contracts for Algebra protocol",
   "license": "GPL-3.0-or-later",
   "version": "2.0.0",
   "keywords": [
@@ -22,8 +22,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "3.4.1-solc-0.7-2",
     "@uniswap/v2-core": "^1.0.1",
-    "algebra": "file:../core",
-    "algebra-periphery": "file:../periphery",
+    "@cryptoalgebra/core": "file:../core",
+    "@cryptoalgebra/periphery": "file:../periphery",
     "root": "file:../.."
   },
   "devDependencies": {

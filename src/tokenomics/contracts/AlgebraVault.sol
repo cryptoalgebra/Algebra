@@ -4,8 +4,8 @@ pragma abicoder v2;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-import 'algebra/contracts/libraries/FullMath.sol';
-import 'algebra-periphery/contracts/interfaces/ISwapRouter.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/ISwapRouter.sol';
 
 contract AlgebraVault {
     using SafeERC20 for IERC20;

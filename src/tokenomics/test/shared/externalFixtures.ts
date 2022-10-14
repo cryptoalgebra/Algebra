@@ -1,22 +1,22 @@
 import {
   abi as FACTORY_ABI,
   bytecode as FACTORY_BYTECODE,
-} from 'algebra/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
+} from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
 import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
-} from 'algebra/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
+} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
 import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { ethers } from 'hardhat'
-import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from 'algebra-periphery/typechain'
+import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '@cryptoalgebra/periphery/typechain'
 import {
   abi as SWAPROUTER_ABI,
   bytecode as SWAPROUTER_BYTECODE,
-} from 'algebra-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
+} from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
 import {
   abi as WNATIVE_ABI,
   bytecode as WNATIWE_BYTECODE,
-} from 'algebra-periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json'
+} from '@cryptoalgebra/periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json'
 
 //import WNativeToken from '../contracts/WNativeToken.json'
 import { Contract } from '@ethersproject/contracts'

@@ -23,7 +23,7 @@ import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../he
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
-import { IAlgebraVirtualPool } from 'algebra/typechain'
+import { IAlgebraVirtualPool } from '@cryptoalgebra/core/typechain'
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;

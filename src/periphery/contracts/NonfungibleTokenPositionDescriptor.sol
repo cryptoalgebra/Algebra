@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './libraries/SafeERC20Namer.sol';
 import './libraries/ChainId.sol';

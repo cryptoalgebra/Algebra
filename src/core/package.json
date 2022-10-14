@@ -1,5 +1,5 @@
 {
-  "name": "algebra",
+  "name": "@cryptoalgebra/core",
   "description": "Core smart contracts of Algebra",
   "license": "GPL-2.0-or-later",
   "publishConfig": {

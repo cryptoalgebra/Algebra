@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/interfaces/IAlgebraVirtualPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Base interface for virtual pools
 interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {

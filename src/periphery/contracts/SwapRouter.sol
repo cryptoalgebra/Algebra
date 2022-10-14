@@ -2,9 +2,9 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import 'algebra/contracts/libraries/SafeCast.sol';
-import 'algebra/contracts/libraries/TickMath.sol';
-import 'algebra/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/ISwapRouter.sol';
 import './base/PeripheryImmutableState.sol';
