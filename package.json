@@ -41,9 +41,6 @@
     "deploy": "node scripts/deployAll.js",
     "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../tokenomics && hardhat docgen && node ../../docs/cleanup.js"
   },
-  "dependencies": {
-    "@ethersproject/solidity": "^5.4.0"
-  },
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=14.0.0"
