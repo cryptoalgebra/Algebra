@@ -27,7 +27,7 @@ describe('PoolTicksCounter', () => {
       PoolAbi = await artifacts.readArtifact('IAlgebraPool')
       const poolTicksHelperFactory = await ethers.getContractFactory('PoolTicksCounterTest')
       PoolTicksCounter = (await poolTicksHelperFactory.deploy()) as PoolTicksCounterTest
-      pool = await smock.fake('IAlgebraPool');
+      pool = await smock.fake(PoolAbi);
       await pool.tickSpacing.returns(TICK_SPACING)
     })
 
