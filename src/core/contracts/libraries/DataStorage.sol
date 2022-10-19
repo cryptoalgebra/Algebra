@@ -331,10 +331,12 @@ library DataStorage {
     uint32 oldestTimestamp = oldest.blockTimestamp;
     if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
-      return ((endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW);
+      return ((endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW); // sample is big enough to ignore bias of variance
     } else if (time != oldestTimestamp) {
       uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
-      return ((endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / (time - oldestTimestamp));
+      uint32 unbiasedDenominator = time - oldestTimestamp;
+      if (unbiasedDenominator > 1) unbiasedDenominator--; // Bessel's correction for "small" sample
+      return ((endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / unbiasedDenominator);
     }
   }
 
