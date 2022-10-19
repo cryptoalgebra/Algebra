@@ -6,8 +6,6 @@ import './TokenDeltaMath.sol';
 import './TickMath.sol';
 import './Constants.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Computes the result of price movement
 /// @notice Contains methods for computing the result of price movement within a single tick price range.
 library PriceMovementMath {
@@ -166,7 +164,17 @@ library PriceMovementMath {
       nominator = uint256(int256(endPriceRounded) * finalTickShift - int256(currentPriceRounded) * currentTickShift);
     }
 
-    feeAmount = FullMath.mulDivRoundingUp(Constants.K, nominator - 2 * uint256(denominator), uint256(denominator));
+    uint256 k;
+    if (feeData.fee < 500 && feeData.fee > 100) {
+      k = 75 * feeData.fee + 7500;
+    }
+    if (feeData.fee < 3000) {
+      k = 20 * feeData.fee + 40000;
+    } else {
+      k = (25 * feeData.fee) / 3 + 75000;
+    }
+
+    feeAmount = FullMath.mulDivRoundingUp(k, nominator - 2 * uint256(denominator), uint256(denominator));
 
     if (feeAmount > 20000) feeAmount = 20000;
     feeAmount = feeAmount + feeData.fee;
