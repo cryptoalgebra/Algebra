@@ -157,6 +157,8 @@ library PriceMovementMath {
     int32 finalTickShift = endTickX100 - startTickX100;
     int32 currentTickShift = currentTickX100 - startTickX100;
 
+    if (finalTickShift <= 500) return feeData.fee;
+
     if (zto) {
       denominator = -denominator;
       nominator = uint256(int256(endPriceRounded) * currentTickShift - int256(currentPriceRounded) * finalTickShift);
@@ -165,7 +167,7 @@ library PriceMovementMath {
     }
 
     uint256 k;
-    if (feeData.fee < 500 && feeData.fee > 100) {
+    if (feeData.fee < 500) {
       k = 75 * feeData.fee + 7500;
     }
     if (feeData.fee < 3000) {
