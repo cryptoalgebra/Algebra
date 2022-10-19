@@ -464,11 +464,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 receivedAmount0;
     uint256 receivedAmount1;
     {
-      if (amount0 > 0) receivedAmount0 = balanceToken0();
-      if (amount1 > 0) receivedAmount1 = balanceToken1();
+      (receivedAmount0, receivedAmount1) = (balanceToken0(), balanceToken1());
       IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-      if (amount0 > 0) require((receivedAmount0 = balanceToken0() - receivedAmount0) > 0, 'IIAM');
-      if (amount1 > 0) require((receivedAmount1 = balanceToken1() - receivedAmount1) > 0, 'IIAM');
+      (receivedAmount0, receivedAmount1) = (balanceToken0() - receivedAmount0, balanceToken1() - receivedAmount1);
+
+      if (amount0 > 0) require(receivedAmount0 > 0, 'IIAM');
+      if (amount1 > 0) require(receivedAmount1 > 0, 'IIAM');
     }
 
     liquidityActual = liquidityDesired;
