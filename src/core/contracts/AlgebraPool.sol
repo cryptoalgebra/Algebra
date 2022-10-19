@@ -86,8 +86,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
       uint88 volatilityCumulative,
-      int24 averageTick,
-      uint144 volumePerLiquidityCumulative
+      int24 averageTick
     )
   {
     return IDataStorageOperator(dataStorageOperator).timepoints(index);
@@ -146,7 +145,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (currentTick < topTick) {
       uint32 globalTime = _blockTimestamp();
-      (int56 globalTickCumulative, uint160 globalSecondsPerLiquidityCumulative, , ) = _getSingleTimepoint(
+      (int56 globalTickCumulative, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(
         globalTime,
         0,
         currentTick,
@@ -175,8 +174,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     returns (
       int56[] memory tickCumulatives,
       uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
+      uint112[] memory volatilityCumulatives
     )
   {
     return
@@ -294,7 +292,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool toggledTop;
     if (liquidityDelta != 0) {
       uint32 time = _blockTimestamp();
-      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
+      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
 
       if (
         ticks.update(
@@ -352,11 +350,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore, volumePerLiquidityInBlock);
+        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
         if (cache.timepointIndex != newTimepointIndex) {
           globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
           globalState.timepointIndex = newTimepointIndex;
-          volumePerLiquidityInBlock = 0;
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
@@ -586,10 +583,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint16 timepointIndex,
     uint32 blockTimestamp,
     int24 tick,
-    uint128 liquidity,
-    uint128 volumePerLiquidityInBlock
+    uint128 liquidity
   ) private returns (uint16 newTimepointIndex) {
-    return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity, volumePerLiquidityInBlock);
+    return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity);
   }
 
   function _getSingleTimepoint(
@@ -604,8 +600,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     returns (
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
+      uint112 volatilityCumulative
     )
   {
     return IDataStorageOperator(dataStorageOperator).getSingleTimepoint(blockTimestamp, secondsAgo, startTick, timepointIndex, liquidityStart);
@@ -738,7 +733,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint128 volumePerLiquidityInBlock;
     int56 tickCumulative; // The global tickCumulative at the moment
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool computedLatestTimepoint; //  if we have already fetched _tickCumulative_ and _secondPerLiquidity_ from the DataOperator
@@ -798,7 +792,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(amountRequired != 0, 'AS');
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
-      (currentLiquidity, cache.volumePerLiquidityInBlock) = (liquidity, volumePerLiquidityInBlock);
+      currentLiquidity = liquidity;
 
       if (zeroToOne) {
         require(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO, 'SPL');
@@ -824,18 +818,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       cache.activeIncentive = activeIncentive;
 
-      uint16 newTimepointIndex = _writeTimepoint(
-        cache.timepointIndex,
-        blockTimestamp,
-        cache.startTick,
-        currentLiquidity,
-        cache.volumePerLiquidityInBlock
-      );
+      uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
 
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        cache.volumePerLiquidityInBlock = 0;
         cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
       }
     }
@@ -892,7 +879,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
           if (!cache.computedLatestTimepoint) {
-            (cache.tickCumulative, cache.secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(
+            (cache.tickCumulative, cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
               blockTimestamp,
               0,
               cache.startTick,
@@ -953,10 +940,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex) = (currentPrice, currentTick, cache.fee, cache.timepointIndex);
 
-    (liquidity, volumePerLiquidityInBlock) = (
-      currentLiquidity,
-      cache.volumePerLiquidityInBlock + IDataStorageOperator(dataStorageOperator).calculateVolumePerLiquidity(currentLiquidity, amount0, amount1)
-    );
+    liquidity = currentLiquidity;
 
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;

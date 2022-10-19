@@ -27,8 +27,6 @@ contract MockTimeAlgebraPoolDeployer {
       60000, // beta2
       59, // gamma1
       8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
       Constants.BASE_FEE // baseFee
     );
 

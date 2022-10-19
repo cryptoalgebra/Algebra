@@ -34,8 +34,6 @@ contract AlgebraFactory is IAlgebraFactory {
       60000, // beta2
       59, // gamma1
       8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
       Constants.BASE_FEE // baseFee
     );
 
@@ -102,18 +100,16 @@ contract AlgebraFactory is IAlgebraFactory {
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
-    uint32 volumeBeta,
-    uint16 volumeGamma,
     uint16 baseFee
   ) external override onlyOwner {
     require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(gamma1 != 0 && gamma2 != 0 && volumeGamma != 0, 'Gammas must be > 0');
+    require(gamma1 != 0 && gamma2 != 0, 'Gammas must be > 0');
 
-    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
-    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
+    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
+    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x87b1fd4555fe164580b83494a7bd123cc19639cf1b359d781ad9f670d196c523;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xa351f3391a1c55d84ff06f6c67d2683b342f0fea3ba033cf01458b742f5fff98;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

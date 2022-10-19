@@ -14,19 +14,13 @@ library AdaptiveFee {
     uint32 beta2; // shift along the x-axis for the second sigmoid
     uint16 gamma1; // horizontal stretch factor for the first sigmoid
     uint16 gamma2; // horizontal stretch factor for the second sigmoid
-    uint32 volumeBeta; // shift along the x-axis for the outer volume-sigmoid
-    uint16 volumeGamma; // horizontal stretch factor the outer volume-sigmoid
     uint16 baseFee; // minimum possible fee
   }
 
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
   /// maximum value capped by baseFee + alpha1 + alpha2
-  function getFee(
-    uint88 volatility,
-    uint256 volumePerLiquidity,
-    Configuration memory config
-  ) internal pure returns (uint16 fee) {
+  function getFee(uint88 volatility, Configuration memory config) internal pure returns (uint16 fee) {
     uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
       sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
@@ -35,7 +29,7 @@ library AdaptiveFee {
       sumOfSigmoids = type(uint16).max;
     }
 
-    return uint16(config.baseFee + sigmoid(volumePerLiquidity, config.volumeGamma, uint16(sumOfSigmoids), config.volumeBeta)); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
+    return uint16(config.baseFee + sumOfSigmoids); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
   }
 
   /// @notice calculates α / (1 + e^( (β-x) / γ))

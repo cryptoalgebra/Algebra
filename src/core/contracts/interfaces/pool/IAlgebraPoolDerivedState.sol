@@ -21,7 +21,6 @@ interface IAlgebraPoolDerivedState {
    * @return secondsPerLiquidityCumulatives Cumulative seconds per liquidity-in-range value as of each `secondsAgos`
    * from the current block timestamp
    * @return volatilityCumulatives Cumulative standard deviation as of each `secondsAgos`
-   * @return volumePerAvgLiquiditys Cumulative swap volume per liquidity as of each `secondsAgos`
    */
   function getTimepoints(uint32[] calldata secondsAgos)
     external
@@ -29,8 +28,7 @@ interface IAlgebraPoolDerivedState {
     returns (
       int56[] memory tickCumulatives,
       uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
+      uint112[] memory volatilityCumulatives
     );
 
   /**
