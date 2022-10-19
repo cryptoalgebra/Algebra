@@ -17,7 +17,7 @@ describe('PriceMovementMath', () => {
     sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as TokenDeltaMathTest
   })
 
-  describe.only('#calculatePriceImpactFee', function() {
+  describe('#calculatePriceImpactFee', function() {
     this.timeout(1_200_000)
 
     const base = Number(1.0001);

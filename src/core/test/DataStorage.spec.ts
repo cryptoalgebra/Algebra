@@ -675,33 +675,13 @@ describe('DataStorageOperator external methods', () => {
   })
 
   it('cannot call onlyPool methods', async () => {
-    await expect(dataStorageOperator.getAverages(100, 0, 2, 1)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.getAverageVolatility(100, 0, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.write(10, 100, 2, 4, 2)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.write(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.getFee(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
   })
 
-  describe('#calculateVolumePerLiquidity', () => {
-    it('volume > 2**192', async() => {
-      let amount0 = BigNumber.from(2).pow(192).add(1);
-      let amount1 = BigNumber.from(2).pow(192).add(1);
-      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
-    })
-
-    it('volume > max', async() => {
-      let amount0 = BigNumber.from(110000);
-      let amount1 = BigNumber.from(110000);
-      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
-    })
-
-    it('volume < max, zero liquidity', async() => {
-      let amount0 = BigNumber.from(1000);
-      let amount1 = BigNumber.from(1000);
-      let volumePerLiquidity = await dataStorageOperator.calculateVolumePerLiquidity(0, amount0, amount1);
-      expect(volumePerLiquidity.shr(64)).to.be.eq(961);
-    })
-  })
   describe('#changeFeeConfiguration', () => {
     const configuration  = {
       alpha1: 3002,
@@ -710,8 +690,6 @@ describe('DataStorageOperator external methods', () => {
       beta2: 1006,
       gamma1: 20,
       gamma2: 22,
-      volumeBeta: 1007,
-      volumeGamma: 26,
       baseFee: 150
     }
     it('fails if caller is not factory', async () => {
@@ -733,8 +711,6 @@ describe('DataStorageOperator external methods', () => {
       expect(newConfig.beta2).to.eq(configuration.beta2);
       expect(newConfig.gamma1).to.eq(configuration.gamma1);
       expect(newConfig.gamma2).to.eq(configuration.gamma2);
-      expect(newConfig.volumeBeta).to.eq(configuration.volumeBeta);
-      expect(newConfig.volumeGamma).to.eq(configuration.volumeGamma);
       expect(newConfig.baseFee).to.eq(configuration.baseFee);
     })
 
@@ -768,12 +744,6 @@ describe('DataStorageOperator external methods', () => {
       wrongConfig2.gamma2 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
         wrongConfig2
-      )).to.be.revertedWith('Gammas must be > 0');
-
-      let wrongConfig3 = {...configuration};
-      wrongConfig3.volumeGamma = 0;
-      await expect(dataStorageOperator.changeFeeConfiguration(
-        wrongConfig3
       )).to.be.revertedWith('Gammas must be > 0');
     })
   })

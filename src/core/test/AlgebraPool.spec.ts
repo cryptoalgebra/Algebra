@@ -1672,10 +1672,8 @@ describe('AlgebraPool', () => {
       let now = await pool.getTimepoints([BigNumber.from(0)]);
       let then = await pool.getTimepoints([BigNumber.from(time)]);
       return [now.volatilityCumulatives[0].sub(then.volatilityCumulatives[0]).div(BigNumber.from(DAY)),
-      now.volumePerAvgLiquiditys[0].sub(then.volumePerAvgLiquiditys[0]),
       now.secondsPerLiquidityCumulatives[0].sub(then.secondsPerLiquidityCumulatives[0]),
       time]
-
     }
 
     it('doesnt change at 0 volume', async () => {
@@ -1709,9 +1707,9 @@ describe('AlgebraPool', () => {
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
-        let avrges = await pool.getAverages();
+        const avgVolatility = await pool.getAverageVolatility();
         let fee = (await pool.globalState()).fee;
-        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
         await pool.advanceTime(60*60)
       }
       expect(stats).to.matchSnapshot('fee stats after step');
@@ -1736,9 +1734,9 @@ describe('AlgebraPool', () => {
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
-        let avrges = await pool.getAverages();
+        const avgVolatility = await pool.getAverageVolatility();
         let fee = (await pool.globalState()).fee;
-        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
         await pool.advanceTime(60*60)
       }
       expect(stats).to.matchSnapshot('fee stats after step');
@@ -1766,9 +1764,9 @@ describe('AlgebraPool', () => {
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
-        let avrges = await pool.getAverages();
+        let avgVolatility = await pool.getAverageVolatility();
         let fee = (await pool.globalState()).fee;
-        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
         await pool.advanceTime(60*60)
       }
       expect(stats).to.matchSnapshot('fee stats after spike');
@@ -1796,9 +1794,9 @@ describe('AlgebraPool', () => {
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
-        let avrges = await pool.getAverages();
+        let avgVolatility = await pool.getAverageVolatility();
         let fee = (await pool.globalState()).fee;
-        stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
+        stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
         await pool.advanceTime(60*60)
       }
       expect(stats).to.matchSnapshot('fee stats after spike');
@@ -1818,14 +1816,6 @@ describe('AlgebraPool', () => {
       console.log('Tick:', tick1 - tick0)
       console.log('Volt:', stats[0].toString())
       console.log('Volm:', BigNumber.from(stats[1]).div(BigNumber.from(10).pow(18)).toString())
-
-      console.log('V/L',
-        BigNumber.from(stats[1])
-        .mul(BigNumber.from(stats[2]))
-        .div(
-          BigNumber.from(DAY).mul(BigNumber.from(2).pow(128))
-          ).toString()
-      )
       console.log(DAY)
     })
   })

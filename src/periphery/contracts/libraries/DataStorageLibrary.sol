@@ -21,7 +21,7 @@ library DataStorageLibrary {
         secondAgos[0] = period;
         secondAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, , , ) = IAlgebraPool(pool).getTimepoints(secondAgos);
+        (int56[] memory tickCumulatives, , ) = IAlgebraPool(pool).getTimepoints(secondAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
 
         timeWeightedAverageTick = int24(tickCumulativesDelta / period);

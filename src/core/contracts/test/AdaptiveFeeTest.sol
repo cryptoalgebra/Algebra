@@ -13,18 +13,16 @@ contract AdaptiveFeeTest {
       60000, // beta2
       59, // gamma1
       8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
       Constants.BASE_FEE // baseFee
     );
 
-  function getFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256 fee) {
-    return AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
+  function getFee(uint88 volatility) external view returns (uint256 fee) {
+    return AdaptiveFee.getFee(volatility, feeConfig);
   }
 
-  function getGasCostOfGetFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256) {
+  function getGasCostOfGetFee(uint88 volatility) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
+    AdaptiveFee.getFee(volatility, feeConfig);
     return gasBefore - gasleft();
   }
 }

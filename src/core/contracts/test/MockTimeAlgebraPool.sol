@@ -29,8 +29,8 @@ contract MockTimeAlgebraPool is AlgebraPool {
     return true;
   }
 
-  function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
-    (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
+  function getAverageVolatility() external view returns (uint112 TWVolatilityAverage) {
+    TWVolatilityAverage = IDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
       globalState.fee,
       globalState.timepointIndex,
@@ -40,8 +40,8 @@ contract MockTimeAlgebraPool is AlgebraPool {
 
   function getPrevTick() external view returns (int24 tick, int24 currentTick) {
     if (globalState.timepointIndex > 2) {
-      (, uint32 lastTsmp, int56 tickCum, , , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
-      (, uint32 plastTsmp, int56 ptickCum, , , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex - 1);
+      (, uint32 lastTsmp, int56 tickCum, , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
+      (, uint32 plastTsmp, int56 ptickCum, , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex - 1);
       tick = int24((tickCum - ptickCum) / (lastTsmp - plastTsmp));
     }
     currentTick = globalState.tick;

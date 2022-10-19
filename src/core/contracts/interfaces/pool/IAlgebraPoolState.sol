@@ -119,7 +119,6 @@ interface IAlgebraPoolState {
    * Returns secondsPerLiquidityCumulative the seconds per in range liquidity for the life of the pool as of the timepoint timestamp;
    * Returns volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp;
    * Returns averageTick Time-weighted average tick;
-   * Returns volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp;
    */
   function timepoints(uint256 index)
     external
@@ -130,8 +129,7 @@ interface IAlgebraPoolState {
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
       uint88 volatilityCumulative,
-      int24 averageTick,
-      uint144 volumePerLiquidityCumulative
+      int24 averageTick
     );
 
   /**

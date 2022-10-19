@@ -43,7 +43,7 @@ contract DataStorageOperator is IDataStorageOperator {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
 
     require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0 && _feeConfig.volumeGamma != 0, 'Gammas must be > 0');
+    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0, 'Gammas must be > 0');
 
     feeConfig = _feeConfig;
     emit FeeConfiguration(_feeConfig);
@@ -64,8 +64,7 @@ contract DataStorageOperator is IDataStorageOperator {
     returns (
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
+      uint112 volatilityCumulative
     )
   {
     uint16 oldestIndex;
@@ -76,11 +75,10 @@ contract DataStorageOperator is IDataStorageOperator {
     }
 
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
-    (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative, volumePerAvgLiquidity) = (
+    (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative) = (
       result.tickCumulative,
       result.secondsPerLiquidityCumulative,
-      result.volatilityCumulative,
-      result.volumePerLiquidityCumulative
+      result.volatilityCumulative
     );
   }
 
@@ -99,21 +97,20 @@ contract DataStorageOperator is IDataStorageOperator {
     returns (
       int56[] memory tickCumulatives,
       uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
+      uint112[] memory volatilityCumulatives
     )
   {
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getAverages(
+  function getAverageVolatility(
     uint32 time,
     int24 tick,
     uint16 index,
     uint128 liquidity
-  ) external view override onlyPool returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
-    return timepoints.getAverages(time, tick, index, liquidity);
+  ) external view override onlyPool returns (uint112 TWVolatilityAverage) {
+    return timepoints.getAverageVolatility(time, tick, index, liquidity);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -121,24 +118,9 @@ contract DataStorageOperator is IDataStorageOperator {
     uint16 index,
     uint32 blockTimestamp,
     int24 tick,
-    uint128 liquidity,
-    uint128 volumePerLiquidity
+    uint128 liquidity
   ) external override onlyPool returns (uint16 indexUpdated) {
-    return timepoints.write(index, blockTimestamp, tick, liquidity, volumePerLiquidity);
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function calculateVolumePerLiquidity(
-    uint128 liquidity,
-    int256 amount0,
-    int256 amount1
-  ) external pure override returns (uint128 volumePerLiquidity) {
-    uint256 volume = Sqrt.sqrtAbs(amount0) * Sqrt.sqrtAbs(amount1);
-    uint256 volumeShifted;
-    if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
-    else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
-    if (volumeShifted >= MAX_VOLUME_PER_LIQUIDITY) return MAX_VOLUME_PER_LIQUIDITY;
-    else return uint128(volumeShifted);
+    return timepoints.write(index, blockTimestamp, tick, liquidity);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -153,8 +135,7 @@ contract DataStorageOperator is IDataStorageOperator {
     uint16 _index,
     uint128 _liquidity
   ) external view override onlyPool returns (uint16 fee) {
-    (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
-
-    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig);
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, _tick, _index, _liquidity);
+    return AdaptiveFee.getFee(volatilityAverage / 15, feeConfig); // TODO CONST
   }
 }
