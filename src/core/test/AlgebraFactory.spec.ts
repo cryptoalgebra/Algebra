@@ -137,11 +137,13 @@ describe('AlgebraFactory', () => {
 
     it('updates owner', async () => {
       await factory.setOwner(other.address)
+      await factory.connect(other).acceptOwnership()
       expect(await factory.owner()).to.eq(other.address)
     })
 
     it('emits event', async () => {
-      await expect(factory.setOwner(other.address))
+      await factory.setOwner(other.address)
+      await expect(factory.connect(other).acceptOwnership())
         .to.emit(factory, 'Owner')
         .withArgs(other.address)
     })
