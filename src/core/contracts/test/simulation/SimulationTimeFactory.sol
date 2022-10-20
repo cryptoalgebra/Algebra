@@ -13,6 +13,7 @@ import '../../DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract SimulationTimeFactory is IAlgebraFactory {
+  address private _pendingOwner;
   /// @inheritdoc IAlgebraFactory
   address public override owner;
 
@@ -74,8 +75,16 @@ contract SimulationTimeFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
     require(owner != _owner);
-    emit Owner(_owner);
-    owner = _owner;
+    require(_owner != address(0), 'Cannot set 0 address as owner');
+    _pendingOwner = _owner;
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function acceptOwnership() external override {
+    require(_pendingOwner == msg.sender, 'Caller is not the new owner');
+    owner = _pendingOwner;
+    delete _pendingOwner;
+    emit Owner(owner);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -109,7 +118,7 @@ contract SimulationTimeFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x83987ffcae0814fc344a50bfe3672ceb266f07b5285c4e2e8f3c03456b91f3c5;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x1f2d34a4b3498e8f37c9a5000510a93828ed3582ba4d87fa059d6a0b1cf6bc4a;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

@@ -78,11 +78,16 @@ interface IAlgebraFactory {
   function createPool(address tokenA, address tokenB) external returns (address pool);
 
   /**
-   *  @notice Updates the owner of the factory
+   *  @notice Starts the ownership transfer of the contract to a new account
    *  @dev Must be called by the current owner
    *  @param _owner The new owner of the factory
    */
   function setOwner(address _owner) external;
+
+  /**
+   *  @notice The new owner accepts the ownership transfer
+   */
+  function acceptOwnership() external;
 
   /**
    * @dev updates tokenomics address on the factory

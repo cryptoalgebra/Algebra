@@ -171,9 +171,9 @@ library PriceMovementMath {
       k = 75 * feeData.fee + 7500;
     }
     if (feeData.fee < 3000) {
-      k = 20 * feeData.fee + 40000;
+      k = 20 * uint256(feeData.fee) + 40000;
     } else {
-      k = (25 * feeData.fee) / 3 + 75000;
+      k = (25 * uint256(feeData.fee)) / 3 + 75000;
     }
 
     feeAmount = FullMath.mulDivRoundingUp(k, nominator - 2 * uint256(denominator), uint256(denominator));
