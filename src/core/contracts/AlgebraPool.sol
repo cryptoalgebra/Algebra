@@ -674,6 +674,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
+    if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
     require(globalState.unlocked, 'LOK');
@@ -681,12 +682,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (zeroToOne) {
       (uint256 balance0Before, ) = _syncBalances();
       _swapCallback(amountRequired, 0, data);
-      require((amountRequired = int256(balanceToken0().sub(balance0Before))) > 0, 'IIA');
+      int256 amountReceived = int256(balanceToken0().sub(balance0Before));
+      if (amountReceived < amountRequired) amountRequired = int256(amountReceived);
     } else {
       (, uint256 balance1Before) = _syncBalances();
       _swapCallback(0, amountRequired, data);
-      require((amountRequired = int256(balanceToken1().sub(balance1Before))) > 0, 'IIA');
+      int256 amountReceived = int256(balanceToken1().sub(balance1Before));
+      if (amountReceived < amountRequired) amountRequired = int256(amountReceived);
     }
+    require(amountRequired != 0, 'IIA');
     globalState.unlocked = true;
 
     uint160 currentPrice;

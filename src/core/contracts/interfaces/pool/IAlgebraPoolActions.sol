@@ -107,7 +107,7 @@ interface IAlgebraPoolActions {
    * @param sender The address called this function (Comes from the Router)
    * @param recipient The address to receive the output of the swap
    * @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-   * @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+   * @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input
    * @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
    * value after the swap. If one for zero, the price cannot be greater than this value after the swap
    * @param data Any data to be passed through to the callback. If using the Router it should contain
