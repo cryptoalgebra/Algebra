@@ -32,8 +32,6 @@ abstract contract PoolState is IAlgebraPoolState {
   uint256 public reserve1;
 
   /// @inheritdoc IAlgebraPoolState
-  uint32 public override liquidityCooldown;
-  /// @inheritdoc IAlgebraPoolState
   address public override activeIncentive;
 
   /// @inheritdoc IAlgebraPoolState
