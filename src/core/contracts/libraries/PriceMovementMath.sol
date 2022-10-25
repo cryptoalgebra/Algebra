@@ -157,7 +157,11 @@ library PriceMovementMath {
     int32 finalTickShift = endTickX100 - startTickX100;
     int32 currentTickShift = currentTickX100 - startTickX100;
 
-    if (finalTickShift <= 500) return feeData.fee;
+    // decrease fee for small swaps
+    if (finalTickShift <= Constants.NORMAL_SHIFT && finalTickShift >= -Constants.NORMAL_SHIFT) {
+      if (finalTickShift < 0) finalTickShift = -finalTickShift;
+      return (uint256(finalTickShift + 500) * feeData.fee) / 1000;
+    }
 
     if (zto) {
       denominator = -denominator;
