@@ -88,6 +88,13 @@ contract SimulationTimeFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
+  function renounceOwnership() external override onlyOwner {
+    delete owner;
+    delete _pendingOwner;
+    emit Owner(owner);
+  }
+
+  /// @inheritdoc IAlgebraFactory
   function setFarmingAddress(address _farmingAddress) external override onlyOwner {
     require(farmingAddress != _farmingAddress);
     emit FarmingAddress(_farmingAddress);
