@@ -952,21 +952,20 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   ) external override lock {
     require(liquidity > 0, 'L'); // TODO can be removed!
 
-    uint16 _fee = globalState.fee;
     uint8 _communityFeeToken0 = globalState.communityFeeToken0;
     uint8 _communityFeeToken1 = globalState.communityFeeToken1;
 
     uint256 fee0;
     uint256 balance0Before = balanceToken0();
     if (amount0 > 0) {
-      fee0 = FullMath.mulDivRoundingUp(amount0, _fee, 1e6);
+      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token0, recipient, amount0);
     }
 
     uint256 fee1;
     uint256 balance1Before = balanceToken1();
     if (amount1 > 0) {
-      fee1 = FullMath.mulDivRoundingUp(amount1, _fee, 1e6);
+      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token1, recipient, amount1);
     }
 
