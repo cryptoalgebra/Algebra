@@ -140,15 +140,15 @@ library PriceMovementMath {
     (int32 currentTickX100, uint160 currentPriceRounded) = TickMath.getTickX100(feeData.currentTick, currentPrice, zto);
     (int32 endTickX100, uint160 endPriceRounded) = TickMath.getTickX100AtSqrtRatio(endPrice, !zto);
 
-    if (currentPriceRounded == endPriceRounded) return feeData.fee;
+    if (currentPriceRounded == endPriceRounded) return feeData.fee / 2;
     int32 startTickX100 = feeData.startTickX100;
 
     if (zto) {
       if (currentTickX100 > startTickX100) startTickX100 = currentTickX100;
-      if (endTickX100 >= startTickX100) return feeData.fee;
+      if (endTickX100 >= startTickX100) return feeData.fee / 2;
     } else {
       if (currentTickX100 < startTickX100) startTickX100 = currentTickX100;
-      if (endTickX100 <= startTickX100) return feeData.fee;
+      if (endTickX100 <= startTickX100) return feeData.fee / 2;
     }
 
     uint256 nominator;
