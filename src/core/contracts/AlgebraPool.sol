@@ -221,13 +221,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (liquidityDelta == 0) {
       require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
     } else {
-      if (liquidityDelta < 0) {
-        uint32 _liquidityCooldown = liquidityCooldown;
-        if (_liquidityCooldown > 0) {
-          require((_blockTimestamp() - lastLiquidityAddTimestamp) >= _liquidityCooldown);
-        }
-      }
-
       // change position liquidity
       uint128 liquidityNext = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
       (_position.liquidity, _position.lastLiquidityAddTimestamp) = (
@@ -1016,12 +1009,5 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     activeIncentive = virtualPoolAddress;
 
     emit Incentive(virtualPoolAddress);
-  }
-
-  /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setLiquidityCooldown(uint32 newLiquidityCooldown) external override onlyFactoryOwner {
-    require(newLiquidityCooldown <= Constants.MAX_LIQUIDITY_COOLDOWN && liquidityCooldown != newLiquidityCooldown);
-    liquidityCooldown = newLiquidityCooldown;
-    emit LiquidityCooldown(newLiquidityCooldown);
   }
 }

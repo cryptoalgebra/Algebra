@@ -138,9 +138,4 @@ interface IAlgebraPoolState {
    * @return virtualPool The address of a virtual pool associated with the current active incentive
    */
   function activeIncentive() external view returns (address virtualPool);
-
-  /**
-   * @notice Returns the lock time for added liquidity
-   */
-  function liquidityCooldown() external view returns (uint32 cooldownInSeconds);
 }

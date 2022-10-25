@@ -20,10 +20,4 @@ interface IAlgebraPoolPermissionedActions {
    * @param virtualPoolAddress The address of a virtual pool associated with the incentive
    */
   function setIncentive(address virtualPoolAddress) external;
-
-  /**
-   * @notice Sets new lock time for added liquidity
-   * @param newLiquidityCooldown The time in seconds
-   */
-  function setLiquidityCooldown(uint32 newLiquidityCooldown) external;
 }

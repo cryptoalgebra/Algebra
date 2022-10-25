@@ -98,10 +98,4 @@ interface IAlgebraPoolEvents {
    * @param fee The value of the token fee
    */
   event Fee(uint16 fee);
-
-  /**
-   * @notice Emitted when the LiquidityCooldown changes
-   * @param liquidityCooldown The value of locktime for added liquidity
-   */
-  event LiquidityCooldown(uint32 liquidityCooldown);
 }
