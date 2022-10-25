@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
-import { vaultAddress } from "./shared/fixtures";
+import { vaultAddress, ZERO_ADDRESS } from "./shared/fixtures";
 import snapshotGasCost from './shared/snapshotGasCost'
 
 import { getCreate2Address } from './shared/utilities'
@@ -156,6 +156,11 @@ describe('AlgebraFactory', () => {
     it('cannot set current owner', async () => {
       await factory.setOwner(other.address);
       await expect(factory.connect(other).setOwner(other.address)).to.be.reverted;
+    })
+    
+    it('renounceOwner set owner to zero address', async () => {
+      await factory.renounceOwnership();
+      await expect(await factory.owner()).to.be.eq(ZERO_ADDRESS);
     })
   })
 

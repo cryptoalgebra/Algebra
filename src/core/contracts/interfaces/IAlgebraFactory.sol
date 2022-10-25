@@ -90,6 +90,11 @@ interface IAlgebraFactory {
   function acceptOwnership() external;
 
   /**
+   *  @notice Set owner to zero address
+   */
+  function renounceOwnership() external;
+
+  /**
    * @dev updates tokenomics address on the factory
    * @param _farmingAddress The new tokenomics contract address
    */
