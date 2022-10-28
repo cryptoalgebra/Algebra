@@ -108,31 +108,6 @@ interface IAlgebraPoolState {
     );
 
   /**
-   * @notice Returns data about a specific timepoint index
-   * @param index The element of the timepoints array to fetch
-   * @dev You most likely want to use #getTimepoints() instead of this method to get an timepoint as of some amount of time
-   * ago, rather than at a specific index in the array.
-   * This is a public mapping of structures, so the `return` natspec tags are omitted.
-   * @return initialized whether the timepoint has been initialized and the values are safe to use;
-   * Returns blockTimestamp The timestamp of the timepoint;
-   * Returns tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp;
-   * Returns secondsPerLiquidityCumulative the seconds per in range liquidity for the life of the pool as of the timepoint timestamp;
-   * Returns volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp;
-   * Returns averageTick Time-weighted average tick;
-   */
-  function timepoints(uint256 index)
-    external
-    view
-    returns (
-      bool initialized,
-      uint32 blockTimestamp,
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint88 volatilityCumulative,
-      int24 averageTick
-    );
-
-  /**
    * @notice Returns the information about active incentive
    * @dev if there is no active incentive at the moment, virtualPool,endTimestamp,startTimestamp would be equal to 0
    * @return virtualPool The address of a virtual pool associated with the current active incentive

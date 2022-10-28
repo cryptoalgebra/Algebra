@@ -3,6 +3,8 @@ pragma solidity >=0.5.0 <0.8.0;
 
 import 'algebra/contracts/interfaces/IAlgebraPool.sol';
 
+import 'algebra/contracts/interfaces/IDataStorageOperator.sol';
+
 /// @title Weighted DataStorage library
 /// @notice Provides functions to integrate with different tier dataStorages of the same pool
 library WeightedDataStorageLibrary {
@@ -25,7 +27,9 @@ library WeightedDataStorageLibrary {
         secondsAgos[0] = period;
         secondsAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s, ) = IAlgebraPool(pool)
+        IDataStorageOperator dsOperator = IDataStorageOperator(IAlgebraPool(pool).dataStorageOperator());
+
+        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s, ) = dsOperator
             .getTimepoints(secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[1] -
