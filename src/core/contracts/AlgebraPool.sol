@@ -848,7 +848,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, cache.startTick, cache.fee)
+        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
       );
 
       if (cache.exactInput) {
