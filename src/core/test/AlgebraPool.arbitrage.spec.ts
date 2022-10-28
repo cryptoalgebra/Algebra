@@ -100,7 +100,7 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.approve(tester.address, MaxUint256)
 
             await pool.initialize(startingPrice)
-            if (communityFee != 0) await pool.setCommunityFee(communityFee, communityFee)
+            if (communityFee != 0) await pool.setCommunityFee(communityFee)
             await mint(wallet.address, minTick, maxTick, passiveLiquidity)
 
             expect((await pool.globalState()).tick).to.eq(startingTick)

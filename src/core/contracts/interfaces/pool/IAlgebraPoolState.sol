@@ -14,8 +14,7 @@ interface IAlgebraPoolState {
    * boundary;
    * Returns fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
    * Returns timepointIndex The index of the last written timepoint;
-   * Returns communityFeeToken0 The community fee percentage of the swap fee in thousandths (1e-3) for token0;
-   * Returns communityFeeToken1 The community fee percentage of the swap fee in thousandths (1e-3) for token1;
+   * Returns communityFee The community fee percentage of the swap fee in thousandths (1e-3);
    * Returns unlocked Whether the pool is currently locked to reentrancy;
    */
   function globalState()
@@ -26,8 +25,7 @@ interface IAlgebraPoolState {
       int24 tick,
       uint16 fee,
       uint16 timepointIndex,
-      uint8 communityFeeToken0,
-      uint8 communityFeeToken1,
+      uint8 communityFee,
       bool unlocked
     );
 
