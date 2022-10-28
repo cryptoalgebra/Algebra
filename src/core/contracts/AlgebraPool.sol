@@ -75,23 +75,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IERC20Minimal(token1).balanceOf(address(this));
   }
 
-  /// @inheritdoc IAlgebraPoolState
-  function timepoints(uint256 index)
-    external
-    view
-    override
-    returns (
-      bool initialized,
-      uint32 blockTimestamp,
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint88 volatilityCumulative,
-      int24 averageTick
-    )
-  {
-    return IDataStorageOperator(dataStorageOperator).timepoints(index);
-  }
-
   struct Cumulatives {
     int56 tickCumulative;
     uint160 outerSecondPerLiquidity;
@@ -164,27 +147,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       upper.outerSecondPerLiquidity - lower.outerSecondPerLiquidity,
       upper.outerSecondsSpent - lower.outerSecondsSpent
     );
-  }
-
-  /// @inheritdoc IAlgebraPoolDerivedState
-  function getTimepoints(uint32[] calldata secondsAgos)
-    external
-    view
-    override
-    returns (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives
-    )
-  {
-    return
-      IDataStorageOperator(dataStorageOperator).getTimepoints(
-        _blockTimestamp(),
-        secondsAgos,
-        globalState.tick,
-        globalState.timepointIndex,
-        liquidity
-      );
   }
 
   /// @inheritdoc IAlgebraPoolActions

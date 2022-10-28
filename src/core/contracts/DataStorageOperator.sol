@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IDataStorageOperator.sol';
+import './interfaces/pool/IAlgebraPoolState.sol';
 
 import './libraries/DataStorage.sol';
 import './libraries/Sqrt.sol';
@@ -82,13 +83,27 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getTimepoints(
+  function getTimepointsWithParams(
     uint32 time,
     uint32[] memory secondsAgos,
     int24 tick,
     uint16 index,
     uint128 liquidity
   )
+    public
+    view
+    override
+    returns (
+      int56[] memory tickCumulatives,
+      uint160[] memory secondsPerLiquidityCumulatives,
+      uint112[] memory volatilityCumulatives
+    )
+  {
+    return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
+  }
+
+  /// @inheritdoc IDataStorageOperator
+  function getTimepoints(uint32[] memory secondsAgos)
     external
     view
     override
@@ -98,6 +113,9 @@ contract DataStorageOperator is IDataStorageOperator {
       uint112[] memory volatilityCumulatives
     )
   {
+    uint32 time = uint32(block.timestamp); // TODO MOVE TO ABSTRACT
+    (, int24 tick, , uint16 index, , , ) = IAlgebraPoolState(pool).globalState();
+    uint128 liquidity = IAlgebraPoolState(pool).liquidity();
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
 

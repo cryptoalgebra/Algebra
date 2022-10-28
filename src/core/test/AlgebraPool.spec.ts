@@ -32,6 +32,7 @@ import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
+import { DataStorageOperator } from '../typechain/DataStorageOperator';
 
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
@@ -45,6 +46,7 @@ describe('AlgebraPool', () => {
 
   let factory: AlgebraFactory
   let pool: MockTimeAlgebraPool
+  let dsOperator: DataStorageOperator
 
   let swapTarget: TestAlgebraCallee
 
@@ -104,6 +106,8 @@ describe('AlgebraPool', () => {
 
     // default to the 30 bips pool
     pool = await createPool(FeeAmount.LOW)
+    const dsOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
+    dsOperator = (dsOperatorFactory.attach(await pool.dataStorageOperator())) as DataStorageOperator;
   })
 
   it('constructor initializes immutables', async () => {
@@ -149,7 +153,7 @@ describe('AlgebraPool', () => {
     })
     it('initializes the first timepoints slot', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
-      checkTimepointEquals(await pool.timepoints(0), {
+      checkTimepointEquals(await dsOperator.timepoints(0), {
         initialized: true,
         secondsPerLiquidityCumulative: 0,
         blockTimestamp: TEST_POOL_START_TIME,
@@ -346,7 +350,7 @@ describe('AlgebraPool', () => {
           })
 
           it('does not write an timepoint', async () => {
-            checkTimepointEquals(await pool.timepoints(0), {
+            checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -354,7 +358,7 @@ describe('AlgebraPool', () => {
             })
             await pool.advanceTime(1)
             await mint(wallet.address, -240, 0, 100)
-            checkTimepointEquals(await pool.timepoints(0), {
+            checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -411,7 +415,7 @@ describe('AlgebraPool', () => {
           })
 
           it('writes an timepoint', async () => {
-            checkTimepointEquals(await pool.timepoints(0), {
+            checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -419,7 +423,7 @@ describe('AlgebraPool', () => {
             })
             await pool.advanceTime(1)
             await mint(wallet.address, minTick, maxTick, 100)
-            checkTimepointEquals(await pool.timepoints(1), {
+            checkTimepointEquals(await dsOperator.timepoints(1), {
               tickCumulative: -23028,
               blockTimestamp: TEST_POOL_START_TIME + 1,
               initialized: true,
@@ -467,7 +471,7 @@ describe('AlgebraPool', () => {
           })
 
           it('does not write an timepoint', async () => {
-            checkTimepointEquals(await pool.timepoints(0), {
+            checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -475,7 +479,7 @@ describe('AlgebraPool', () => {
             })
             await pool.advanceTime(1)
             await mint(wallet.address, -46080, -23040, 100)
-            checkTimepointEquals(await pool.timepoints(0), {
+            checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -641,12 +645,12 @@ describe('AlgebraPool', () => {
     it('current tick accumulator increases by tick over time', async () => {
       let {
         tickCumulatives: [tickCumulative],
-      } = await pool.getTimepoints([0])
+      } = await dsOperator.getTimepoints([0])
       expect(tickCumulative).to.eq(0)
       await pool.advanceTime(10)
       ;({
         tickCumulatives: [tickCumulative],
-      } = await pool.getTimepoints([0]))
+      } = await dsOperator.getTimepoints([0]))
       expect(tickCumulative).to.eq(0)
     })
 
@@ -656,7 +660,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(4)
       let {
         tickCumulatives: [tickCumulative],
-      } = await pool.getTimepoints([0])
+      } = await dsOperator.getTimepoints([0])
       expect(tickCumulative).to.eq(-4)
     })
 
@@ -669,7 +673,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(6)
       let {
         tickCumulatives: [tickCumulative],
-      } = await pool.getTimepoints([0])
+      } = await dsOperator.getTimepoints([0])
       expect(tickCumulative).to.eq(-27440)
     })
   })
@@ -1632,8 +1636,8 @@ describe('AlgebraPool', () => {
     }
 
     async function getStatistics(time: number) {
-      let now = await pool.getTimepoints([BigNumber.from(0)]);
-      let then = await pool.getTimepoints([BigNumber.from(time)]);
+      let now = await dsOperator.getTimepoints([BigNumber.from(0)]);
+      let then = await dsOperator.getTimepoints([BigNumber.from(time)]);
       return [now.volatilityCumulatives[0].sub(then.volatilityCumulatives[0]).div(BigNumber.from(DAY)),
       now.secondsPerLiquidityCumulatives[0].sub(then.secondsPerLiquidityCumulatives[0]),
       time]
