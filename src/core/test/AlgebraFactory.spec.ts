@@ -311,8 +311,8 @@ describe('AlgebraFactory', () => {
         configuration.alpha2,
         configuration.beta1,
         configuration.beta2,
-        configuration.gamma1,
-        configuration.gamma2,
+        0,
+        0,
         configuration.baseFee
       )).to.be.revertedWith('Gammas must be > 0');
     })
