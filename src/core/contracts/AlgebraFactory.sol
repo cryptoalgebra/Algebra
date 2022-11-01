@@ -13,6 +13,7 @@ import './DataStorageOperator.sol';
  * @notice Is used to deploy pools and its dataStorages
  */
 contract AlgebraFactory is IAlgebraFactory {
+  address private _pendingOwner;
   /// @inheritdoc IAlgebraFactory
   address public override owner;
 
@@ -34,8 +35,6 @@ contract AlgebraFactory is IAlgebraFactory {
       60000, // beta2
       59, // gamma1
       8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
       Constants.BASE_FEE // baseFee
     );
 
@@ -76,8 +75,23 @@ contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
     require(owner != _owner);
-    emit Owner(_owner);
-    owner = _owner;
+    require(_owner != address(0), 'Cannot set 0 address as owner');
+    _pendingOwner = _owner;
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function acceptOwnership() external override {
+    require(_pendingOwner == msg.sender, 'Caller is not the new owner');
+    owner = _pendingOwner;
+    delete _pendingOwner;
+    emit Owner(owner);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function renounceOwnership() external override onlyOwner {
+    delete owner;
+    delete _pendingOwner;
+    emit Owner(owner);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -90,6 +104,7 @@ contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
     require(vaultAddress != _vaultAddress);
+    require(vaultAddress != address(0), 'Cannot set 0 address as vault');
     emit VaultAddress(_vaultAddress);
     vaultAddress = _vaultAddress;
   }
@@ -102,15 +117,13 @@ contract AlgebraFactory is IAlgebraFactory {
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
-    uint32 volumeBeta,
-    uint16 volumeGamma,
     uint16 baseFee
   ) external override onlyOwner {
     require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(gamma1 != 0 && gamma2 != 0 && volumeGamma != 0, 'Gammas must be > 0');
+    require(gamma1 != 0 && gamma2 != 0, 'Gammas must be > 0');
 
-    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
-    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
+    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
+    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
   bytes32 internal constant POOL_INIT_CODE_HASH = 0xb6c83ae2e016d4a9fca5222f29d31b08c585e741744d724ff21515a6544b3b8c;

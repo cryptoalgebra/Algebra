@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
-import { vaultAddress } from "./shared/fixtures";
+import { vaultAddress, ZERO_ADDRESS } from "./shared/fixtures";
 import snapshotGasCost from './shared/snapshotGasCost'
 
 import { getCreate2Address } from './shared/utilities'
@@ -137,11 +137,13 @@ describe('AlgebraFactory', () => {
 
     it('updates owner', async () => {
       await factory.setOwner(other.address)
+      await factory.connect(other).acceptOwnership()
       expect(await factory.owner()).to.eq(other.address)
     })
 
     it('emits event', async () => {
-      await expect(factory.setOwner(other.address))
+      await factory.setOwner(other.address)
+      await expect(factory.connect(other).acceptOwnership())
         .to.emit(factory, 'Owner')
         .withArgs(other.address)
     })
@@ -154,6 +156,11 @@ describe('AlgebraFactory', () => {
     it('cannot set current owner', async () => {
       await factory.setOwner(other.address);
       await expect(factory.connect(other).setOwner(other.address)).to.be.reverted;
+    })
+    
+    it('renounceOwner set owner to zero address', async () => {
+      await factory.renounceOwnership();
+      await expect(await factory.owner()).to.be.eq(ZERO_ADDRESS);
     })
   })
 
@@ -209,8 +216,6 @@ describe('AlgebraFactory', () => {
       beta2: 1006,
       gamma1: 20,
       gamma2: 22,
-      volumeBeta: 1007,
-      volumeGamma: 26,
       baseFee: 150
     }
     it('fails if caller is not owner', async () => {
@@ -221,8 +226,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         configuration.gamma1,
         configuration.gamma2,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         configuration.baseFee
       )).to.be.reverted;
     })
@@ -235,8 +238,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         configuration.gamma1,
         configuration.gamma2,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         configuration.baseFee
       )
 
@@ -248,8 +249,6 @@ describe('AlgebraFactory', () => {
       expect(newConfig.beta2).to.eq(configuration.beta2);
       expect(newConfig.gamma1).to.eq(configuration.gamma1);
       expect(newConfig.gamma2).to.eq(configuration.gamma2);
-      expect(newConfig.volumeBeta).to.eq(configuration.volumeBeta);
-      expect(newConfig.volumeGamma).to.eq(configuration.volumeGamma);
       expect(newConfig.baseFee).to.eq(configuration.baseFee);
     })
 
@@ -261,8 +260,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         configuration.gamma1,
         configuration.gamma2,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         configuration.baseFee
       )).to.emit(factory, 'FeeConfiguration')
         .withArgs(
@@ -272,8 +269,6 @@ describe('AlgebraFactory', () => {
           configuration.beta2,
           configuration.gamma1,
           configuration.gamma2,
-          configuration.volumeBeta,
-          configuration.volumeGamma,
           configuration.baseFee
         );
     })
@@ -286,8 +281,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         configuration.gamma1,
         configuration.gamma2,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         15000
       )).to.be.revertedWith('Max fee exceeded');
     })
@@ -300,8 +293,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         0,
         configuration.gamma2,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         configuration.baseFee
       )).to.be.revertedWith('Gammas must be > 0');
 
@@ -312,8 +303,6 @@ describe('AlgebraFactory', () => {
         configuration.beta2,
         configuration.gamma1,
         0,
-        configuration.volumeBeta,
-        configuration.volumeGamma,
         configuration.baseFee
       )).to.be.revertedWith('Gammas must be > 0');
 
@@ -322,9 +311,7 @@ describe('AlgebraFactory', () => {
         configuration.alpha2,
         configuration.beta1,
         configuration.beta2,
-        configuration.gamma1,
-        configuration.gamma2,
-        configuration.volumeBeta,
+        0,
         0,
         configuration.baseFee
       )).to.be.revertedWith('Gammas must be > 0');

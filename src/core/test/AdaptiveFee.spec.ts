@@ -18,7 +18,7 @@ describe('AdaptiveFee', () => {
 
   describe('#getFee', () => {
     it('fee: 0 volat 0 volume', async () => {
-      console.log( (await adaptiveFee.getFee(BigNumber.from(0), BigNumber.from(0))).toString());
+      console.log( (await adaptiveFee.getFee(BigNumber.from(0))).toString());
     })
 
 
@@ -64,7 +64,7 @@ describe('AdaptiveFee', () => {
         let prev = 0;
         for (let volat of volats) {
           let fee = getFee(vol, volat);
-          let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat), BigNumber.from(vol))).toString())
+          let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat))).toString())
           expect(cFee).to.be.gte(prev);
           prev = cFee;
           let error = (cFee - fee) * 100 / fee;
@@ -82,24 +82,16 @@ describe('AdaptiveFee', () => {
   })
 
   describe('#getFee gas cost  [ @skip-on-coverage ]', () => {
-    it('gas cost of 0 volat 0 volume', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(0), BigNumber.from(0)));
+    it('gas cost of 0 volat', async () => {
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(0)));
     })
 
-    it('gas cost of 0 volat 100 volume', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(0), BigNumber.from(100)));
+    it('gas cost of 100 volat', async () => {
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(100)));
     })
 
-    it('gas cost of 100 volat 0 volume', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(100), BigNumber.from(0)));
-    })
-
-    it('gas cost of 100 volat 100 volume', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(100), BigNumber.from(100)));
-    })
-
-    it('gas cost of 2000 volat 100 volume', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(2000), BigNumber.from(100)));
+    it('gas cost of 2000 volat', async () => {
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(2000)));
     })
   })
 })

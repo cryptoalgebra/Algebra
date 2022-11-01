@@ -86,8 +86,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
       uint88 volatilityCumulative,
-      int24 averageTick,
-      uint144 volumePerLiquidityCumulative
+      int24 averageTick
     )
   {
     return IDataStorageOperator(dataStorageOperator).timepoints(index);
@@ -146,7 +145,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (currentTick < topTick) {
       uint32 globalTime = _blockTimestamp();
-      (int56 globalTickCumulative, uint160 globalSecondsPerLiquidityCumulative, , ) = _getSingleTimepoint(
+      (int56 globalTickCumulative, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(
         globalTime,
         0,
         currentTick,
@@ -175,8 +174,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     returns (
       int56[] memory tickCumulatives,
       uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
+      uint112[] memory volatilityCumulatives
     )
   {
     return
@@ -223,13 +221,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (liquidityDelta == 0) {
       require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
     } else {
-      if (liquidityDelta < 0) {
-        uint32 _liquidityCooldown = liquidityCooldown;
-        if (_liquidityCooldown > 0) {
-          require((_blockTimestamp() - lastLiquidityAddTimestamp) >= _liquidityCooldown);
-        }
-      }
-
       // change position liquidity
       uint128 liquidityNext = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
       (_position.liquidity, _position.lastLiquidityAddTimestamp) = (
@@ -294,7 +285,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool toggledTop;
     if (liquidityDelta != 0) {
       uint32 time = _blockTimestamp();
-      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
+      (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
 
       if (
         ticks.update(
@@ -352,11 +343,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore, volumePerLiquidityInBlock);
+        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
         if (cache.timepointIndex != newTimepointIndex) {
           globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
           globalState.timepointIndex = newTimepointIndex;
-          volumePerLiquidityInBlock = 0;
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
@@ -467,9 +457,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (receivedAmount0, receivedAmount1) = _syncBalances();
       if (amount0 == 0) receivedAmount0 = 0;
       if (amount1 == 0) receivedAmount1 = 0;
+
       IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-      if (amount0 > 0) require((receivedAmount0 = balanceToken0() - receivedAmount0) > 0, 'IIAM');
-      if (amount1 > 0) require((receivedAmount1 = balanceToken1() - receivedAmount1) > 0, 'IIAM');
+      (receivedAmount0, receivedAmount1) = (balanceToken0() - receivedAmount0, balanceToken1() - receivedAmount1);
+
+      if (amount0 > 0) require(receivedAmount0 > 0, 'IIAM');
+      if (amount1 > 0) require(receivedAmount1 > 0, 'IIAM');
     }
 
     liquidityActual = liquidityDesired;
@@ -582,10 +575,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint16 timepointIndex,
     uint32 blockTimestamp,
     int24 tick,
-    uint128 liquidity,
-    uint128 volumePerLiquidityInBlock
+    uint128 liquidity
   ) private returns (uint16 newTimepointIndex) {
-    return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity, volumePerLiquidityInBlock);
+    return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity);
   }
 
   function _getSingleTimepoint(
@@ -600,8 +592,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     returns (
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
+      uint112 volatilityCumulative
     )
   {
     return IDataStorageOperator(dataStorageOperator).getSingleTimepoint(blockTimestamp, secondsAgo, startTick, timepointIndex, liquidityStart);
@@ -610,9 +601,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _swapCallback(
     int256 amount0,
     int256 amount1,
+    uint256 feeAmount,
     bytes calldata data
   ) private {
-    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
+    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -626,10 +618,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint256 communityFee;
-    // function _calculateSwapAndLock locks globalState.unlocked and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    uint256 feeAmount;
 
+    // function _calculateSwapAndLock locks globalState.unlocked and does not release
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+
+    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
     if (zeroToOne) {
       (uint256 balanceBefore, ) = _syncBalances();
       if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
@@ -653,6 +647,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
+
   function swapSupportingFeeOnInputTokens(
     address sender,
     address recipient,
@@ -683,10 +678,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint256 communityFee;
+    uint256 feeAmount;
+    
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
+    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
     // only transfer to the recipient
     if (zeroToOne) {
       if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1));
@@ -715,7 +712,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint128 volumePerLiquidityInBlock;
     int56 tickCumulative; // The global tickCumulative at the moment
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool computedLatestTimepoint; //  if we have already fetched _tickCumulative_ and _secondPerLiquidity_ from the DataOperator
@@ -723,10 +719,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    IAlgebraVirtualPool.Status incentiveStatus; // If there is an active incentive at the moment
+    address activeIncentive; // Address an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 startTick; // The tick at the start of a swap
+    int32 blockStartTickX100; // The tick at the start of a swap
     uint16 timepointIndex; // The index of last written timepoint
   }
 
@@ -753,7 +750,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint160 currentPrice,
       int24 currentTick,
       uint128 currentLiquidity,
-      uint256 communityFeeAmount
+      uint256 feeAmount
     )
   {
     uint32 blockTimestamp;
@@ -764,8 +761,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       currentTick = globalState.tick;
       cache.fee = globalState.fee;
       cache.timepointIndex = globalState.timepointIndex;
-      uint256 _communityFeeToken0 = globalState.communityFeeToken0;
-      uint256 _communityFeeToken1 = globalState.communityFeeToken1;
+      cache.communityFee = globalState.communityFee;
       bool unlocked = globalState.unlocked;
 
       globalState.unlocked = false; // lock will not be released in this function
@@ -774,45 +770,35 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(amountRequired != 0, 'AS');
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
-      (currentLiquidity, cache.volumePerLiquidityInBlock) = (liquidity, volumePerLiquidityInBlock);
+      currentLiquidity = liquidity;
 
       if (zeroToOne) {
         require(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO, 'SPL');
         cache.totalFeeGrowth = totalFeeGrowth0Token;
-        cache.communityFee = _communityFeeToken0;
       } else {
         require(limitSqrtPrice > currentPrice && limitSqrtPrice < TickMath.MAX_SQRT_RATIO, 'SPL');
         cache.totalFeeGrowth = totalFeeGrowth1Token;
-        cache.communityFee = _communityFeeToken1;
       }
 
       cache.startTick = currentTick;
 
       blockTimestamp = _blockTimestamp();
 
-      if (activeIncentive != address(0)) {
-        IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
-        if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
-          activeIncentive = address(0);
-        } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
-        } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
-        }
+      if (blockTimestamp != startPriceUpdated) {
+        startPriceUpdated = blockTimestamp;
+        (cache.blockStartTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
+        blockStartTickX100 = cache.blockStartTickX100;
+      } else {
+        cache.blockStartTickX100 = blockStartTickX100;
       }
 
-      uint16 newTimepointIndex = _writeTimepoint(
-        cache.timepointIndex,
-        blockTimestamp,
-        cache.startTick,
-        currentLiquidity,
-        cache.volumePerLiquidityInBlock
-      );
+      cache.activeIncentive = activeIncentive;
 
-      // new timepoint appears only for first swap in block
+      uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
+
+      // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        cache.volumePerLiquidityInBlock = 0;
         cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
       }
     }
@@ -823,10 +809,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.stepSqrtPrice = currentPrice;
 
       (step.nextTick, step.initialized) = tickTable.nextTickInTheSameRow(currentTick, zeroToOne);
+      // TODO SIMPLIFY
+      if (
+        (cache.blockStartTickX100 / 100 < currentTick && step.nextTick < cache.blockStartTickX100 / 100) ||
+        (cache.blockStartTickX100 / 100 > currentTick && step.nextTick > cache.blockStartTickX100 / 100)
+      ) {
+        step.nextTick = int24(cache.blockStartTickX100 / 100);
+        step.initialized = false;
+      }
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
+
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
         zeroToOne,
         currentPrice,
@@ -835,7 +830,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        cache.fee
+        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
       );
 
       if (cache.exactInput) {
@@ -849,8 +844,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (cache.communityFee > 0) {
         uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
-        communityFeeAmount += delta;
       }
+
+      feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
@@ -859,7 +855,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
           if (!cache.computedLatestTimepoint) {
-            (cache.tickCumulative, cache.secondsPerLiquidityCumulative, , ) = _getSingleTimepoint(
+            (cache.tickCumulative, cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
               blockTimestamp,
               0,
               cache.startTick,
@@ -870,8 +866,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
           // every tick cross is needed to be duplicated in a virtual pool
-          if (cache.incentiveStatus != IAlgebraVirtualPool.Status.NOT_EXIST) {
-            IAlgebraVirtualPool(activeIncentive).cross(step.nextTick, zeroToOne);
+          if (cache.activeIncentive != address(0)) {
+            bool success = IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
+            if (!success) {
+              cache.activeIncentive = address(0);
+              activeIncentive = address(0);
+            }
           }
           int128 liquidityDelta;
           if (zeroToOne) {
@@ -916,10 +916,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex) = (currentPrice, currentTick, cache.fee, cache.timepointIndex);
 
-    (liquidity, volumePerLiquidityInBlock) = (
-      currentLiquidity,
-      cache.volumePerLiquidityInBlock + IDataStorageOperator(dataStorageOperator).calculateVolumePerLiquidity(currentLiquidity, amount0, amount1)
-    );
+    liquidity = currentLiquidity;
 
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
@@ -937,21 +934,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   ) external override lock {
     require(liquidity > 0, 'L'); // TODO can be removed!
 
-    uint16 _fee = globalState.fee;
-    uint8 _communityFeeToken0 = globalState.communityFeeToken0;
-    uint8 _communityFeeToken1 = globalState.communityFeeToken1;
+    uint8 _communityFee = globalState.communityFee;
 
     uint256 fee0;
     uint256 balance0Before = balanceToken0();
     if (amount0 > 0) {
-      fee0 = FullMath.mulDivRoundingUp(amount0, _fee, 1e6);
+      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token0, recipient, amount0);
     }
 
     uint256 fee1;
     uint256 balance1Before = balanceToken1();
     if (amount1 > 0) {
-      fee1 = FullMath.mulDivRoundingUp(amount1, _fee, 1e6);
+      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token1, recipient, amount1);
     }
 
@@ -964,15 +959,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(balance1Before.add(fee1) <= paid1, 'F1');
     paid1 -= balance1Before;
 
-    if (_communityFeeToken0 | _communityFeeToken1 != 0) {
+    if (_communityFee != 0) {
       address vault = IAlgebraFactory(factory).vaultAddress();
-      if (paid0 > 0 && _communityFeeToken0 > 0) {
-        uint256 fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
+      if (paid0 > 0) {
+        uint256 fees0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token0, vault, fees0);
       }
 
-      if (paid1 > 0 && _communityFeeToken1 > 0) {
-        uint256 fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
+      if (paid1 > 0) {
+        uint256 fees1 = (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token1, vault, fees1);
       }
     }
@@ -982,10 +977,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external override lock onlyFactoryOwner {
-    require((communityFee0 <= Constants.MAX_COMMUNITY_FEE) && (communityFee1 <= Constants.MAX_COMMUNITY_FEE));
-    (globalState.communityFeeToken0, globalState.communityFeeToken1) = (communityFee0, communityFee1);
-    emit CommunityFee(communityFee0, communityFee1);
+  function setCommunityFee(uint8 communityFee) external override lock onlyFactoryOwner {
+    require(communityFee <= Constants.MAX_COMMUNITY_FEE);
+    globalState.communityFee = communityFee;
+    emit CommunityFee(communityFee);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
@@ -994,12 +989,5 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     activeIncentive = virtualPoolAddress;
 
     emit Incentive(virtualPoolAddress);
-  }
-
-  /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setLiquidityCooldown(uint32 newLiquidityCooldown) external override onlyFactoryOwner {
-    require(newLiquidityCooldown <= Constants.MAX_LIQUIDITY_COOLDOWN && liquidityCooldown != newLiquidityCooldown);
-    liquidityCooldown = newLiquidityCooldown;
-    emit LiquidityCooldown(newLiquidityCooldown);
   }
 }

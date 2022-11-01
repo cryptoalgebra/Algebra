@@ -40,6 +40,7 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
   function algebraSwapCallback(
     int256 amount0Delta,
     int256 amount1Delta,
+    uint256,
     bytes calldata data
   ) public override {
     emit SwapCallback(amount0Delta, amount1Delta);

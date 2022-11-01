@@ -16,8 +16,7 @@ interface IDataStorageOperator {
    * tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
    * secondsPerLiquidityCumulative The seconds per in range liquidity for the life of the pool as of the timepoint timestamp,
    * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
-   * averageTick Time-weighted average tick,
-   * volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
+   * averageTick Time-weighted average tick
    */
   function timepoints(uint256 index)
     external
@@ -28,8 +27,7 @@ interface IDataStorageOperator {
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
       uint88 volatilityCumulative,
-      int24 averageTick,
-      uint144 volumePerLiquidityCumulative
+      int24 averageTick
     );
 
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
@@ -49,7 +47,6 @@ interface IDataStorageOperator {
   /// @return tickCumulative The cumulative tick since the pool was first initialized, as of `secondsAgo`
   /// @return secondsPerLiquidityCumulative The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of `secondsAgo`
   /// @return volatilityCumulative The cumulative volatility value since the pool was first initialized, as of `secondsAgo`
-  /// @return volumePerAvgLiquidity The cumulative volume per liquidity value since the pool was first initialized, as of `secondsAgo`
   function getSingleTimepoint(
     uint32 time,
     uint32 secondsAgo,
@@ -62,8 +59,7 @@ interface IDataStorageOperator {
     returns (
       int56 tickCumulative,
       uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
+      uint112 volatilityCumulative
     );
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
@@ -76,7 +72,6 @@ interface IDataStorageOperator {
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
-  /// @return volumePerAvgLiquiditys The cumulative volume per liquidity values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
     uint32 time,
     uint32[] memory secondsAgos,
@@ -89,8 +84,7 @@ interface IDataStorageOperator {
     returns (
       int56[] memory tickCumulatives,
       uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
+      uint112[] memory volatilityCumulatives
     );
 
   /// @notice Returns average volatility in the range from time-WINDOW to time
@@ -99,13 +93,12 @@ interface IDataStorageOperator {
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
   /// @return TWVolatilityAverage The average volatility in the recent range
-  /// @return TWVolumePerLiqAverage The average volume per liquidity in the recent range
-  function getAverages(
+  function getAverageVolatility(
     uint32 time,
     int24 tick,
     uint16 index,
     uint128 liquidity
-  ) external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage);
+  ) external view returns (uint112 TWVolatilityAverage);
 
   /// @notice Writes an dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
@@ -113,29 +106,16 @@ interface IDataStorageOperator {
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
   /// @param liquidity The total in-range liquidity at the time of the new timepoint
-  /// @param volumePerLiquidity The gmean(volumes)/liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
   function write(
     uint16 index,
     uint32 blockTimestamp,
     int24 tick,
-    uint128 liquidity,
-    uint128 volumePerLiquidity
+    uint128 liquidity
   ) external returns (uint16 indexUpdated);
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
-
-  /// @notice Calculates gmean(volume/liquidity) for block
-  /// @param liquidity The current in-range pool liquidity
-  /// @param amount0 Total amount of swapped token0
-  /// @param amount1 Total amount of swapped token1
-  /// @return volumePerLiquidity gmean(volume/liquidity) capped by 100000 << 64
-  function calculateVolumePerLiquidity(
-    uint128 liquidity,
-    int256 amount0,
-    int256 amount1
-  ) external pure returns (uint128 volumePerLiquidity);
 
   /// @return windowLength Length of window used to calculate averages
   function window() external view returns (uint32 windowLength);

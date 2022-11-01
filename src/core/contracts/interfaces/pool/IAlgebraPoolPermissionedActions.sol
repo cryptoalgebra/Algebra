@@ -10,20 +10,13 @@ pragma solidity >=0.5.0;
 interface IAlgebraPoolPermissionedActions {
   /**
    * @notice Set the community's % share of the fees. Cannot exceed 25% (250)
-   * @param communityFee0 new community fee percent for token0 of the pool in thousandths (1e-3)
-   * @param communityFee1 new community fee percent for token1 of the pool in thousandths (1e-3)
+   * @param communityFee new community fee percent in thousandths (1e-3)
    */
-  function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external;
+  function setCommunityFee(uint8 communityFee) external;
 
   /**
    * @notice Sets an active incentive
    * @param virtualPoolAddress The address of a virtual pool associated with the incentive
    */
   function setIncentive(address virtualPoolAddress) external;
-
-  /**
-   * @notice Sets new lock time for added liquidity
-   * @param newLiquidityCooldown The time in seconds
-   */
-  function setLiquidityCooldown(uint32 newLiquidityCooldown) external;
 }

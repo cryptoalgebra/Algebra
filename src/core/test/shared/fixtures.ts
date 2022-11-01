@@ -16,6 +16,7 @@ interface FactoryFixture {
 }
 
 export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 async function factoryFixture(): Promise<FactoryFixture> {
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')

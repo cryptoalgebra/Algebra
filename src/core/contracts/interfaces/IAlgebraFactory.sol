@@ -33,17 +33,7 @@ interface IAlgebraFactory {
    */
   event FarmingAddress(address indexed newFarmingAddress);
 
-  event FeeConfiguration(
-    uint16 alpha1,
-    uint16 alpha2,
-    uint32 beta1,
-    uint32 beta2,
-    uint16 gamma1,
-    uint16 gamma2,
-    uint32 volumeBeta,
-    uint16 volumeGamma,
-    uint16 baseFee
-  );
+  event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
 
   /**
    *  @notice Returns the current owner of the factory
@@ -88,11 +78,21 @@ interface IAlgebraFactory {
   function createPool(address tokenA, address tokenB) external returns (address pool);
 
   /**
-   *  @notice Updates the owner of the factory
+   *  @notice Starts the ownership transfer of the contract to a new account
    *  @dev Must be called by the current owner
    *  @param _owner The new owner of the factory
    */
   function setOwner(address _owner) external;
+
+  /**
+   *  @notice The new owner accepts the ownership transfer
+   */
+  function acceptOwnership() external;
+
+  /**
+   *  @notice Set owner to zero address
+   */
+  function renounceOwnership() external;
 
   /**
    * @dev updates tokenomics address on the factory
@@ -117,8 +117,6 @@ interface IAlgebraFactory {
    * @param beta2 shift along the x-axis for the second sigmoid
    * @param gamma1 horizontal stretch factor for the first sigmoid
    * @param gamma2 horizontal stretch factor for the second sigmoid
-   * @param volumeBeta shift along the x-axis for the outer volume-sigmoid
-   * @param volumeGamma horizontal stretch factor the outer volume-sigmoid
    * @param baseFee minimum possible fee
    */
   function setBaseFeeConfiguration(
@@ -128,8 +126,6 @@ interface IAlgebraFactory {
     uint32 beta2,
     uint16 gamma1,
     uint16 gamma2,
-    uint32 volumeBeta,
-    uint16 volumeGamma,
     uint16 baseFee
   ) external;
 }

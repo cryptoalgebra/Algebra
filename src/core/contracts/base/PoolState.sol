@@ -10,8 +10,7 @@ abstract contract PoolState is IAlgebraPoolState {
     int24 tick; // The current tick
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
-    uint8 communityFeeToken0; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
-    uint8 communityFeeToken1;
+    uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
 
@@ -24,13 +23,13 @@ abstract contract PoolState is IAlgebraPoolState {
 
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
-  uint128 internal volumePerLiquidityInBlock;
+
+  int32 blockStartTickX100;
+  uint32 startPriceUpdated;
 
   uint256 public reserve0;
   uint256 public reserve1;
 
-  /// @inheritdoc IAlgebraPoolState
-  uint32 public override liquidityCooldown;
   /// @inheritdoc IAlgebraPoolState
   address public override activeIncentive;
 

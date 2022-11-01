@@ -25,7 +25,7 @@ library WeightedDataStorageLibrary {
         secondsAgos[0] = period;
         secondsAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s, , ) = IAlgebraPool(pool)
+        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s, ) = IAlgebraPool(pool)
             .getTimepoints(secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[1] -

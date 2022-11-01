@@ -174,10 +174,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         returns (uint256 reward, uint256 bonusReward)
     {
         checkAuthorizationForToken(deposits[tokenId].L2TokenId);
-        address _virtualPool = _virtualPoolAddresses[address(key.pool)].eternalVirtualPool;
-        if (_virtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPool).increaseCumulative(uint32(block.timestamp));
-        }
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
@@ -258,35 +254,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
      * @param nextTick The crossed tick
      * @param zeroToOne The direction
      */
-    function cross(int24 nextTick, bool zeroToOne) external override {
+    function cross(int24 nextTick, bool zeroToOne) external override returns (bool) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
         IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).cross(nextTick, zeroToOne);
-    }
-
-    /**
-     * @dev This function is called by the main pool at start of the swap if two farmings are active at same time.
-     * @param blockTimestamp The current block timestamp, truncated
-     * @return status The current farming(s) status
-     */
-    function increaseCumulative(uint32 blockTimestamp) external override returns (Status status) {
-        VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
-        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).increaseCumulative(
-            blockTimestamp
-        );
-
-        Status limitStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).increaseCumulative(
-            blockTimestamp
-        );
-
-        if (eternalStatus == Status.ACTIVE || limitStatus == Status.ACTIVE) {
-            return Status.ACTIVE;
-        } else if (limitStatus == Status.NOT_STARTED) {
-            return Status.NOT_STARTED;
-        }
-
-        return Status.NOT_EXIST;
+        // TODO handle "false" from virtual pool?
+        return true;
     }
 
     function virtualPoolAddresses(address pool) external view override returns (address limitVP, address eternalVP) {
