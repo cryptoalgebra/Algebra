@@ -417,13 +417,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 receivedAmount1;
     {
       (receivedAmount0, receivedAmount1) = _syncBalances();
+<<<<<<< HEAD
       if (amount0 == 0) receivedAmount0 = 0;
       if (amount1 == 0) receivedAmount1 = 0;
-      IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-      (receivedAmount0, receivedAmount1) = (balanceToken0() - receivedAmount0, balanceToken1() - receivedAmount1);
+=======
 
-      if (amount0 > 0) require(receivedAmount0 > 0, 'IIAM');
-      if (amount1 > 0) require(receivedAmount1 > 0, 'IIAM');
+>>>>>>> f890c26 ([Core] fix after merge)
+      IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+
+      if (amount0 > 0) {
+        require((receivedAmount0 = balanceToken0().sub(receivedAmount0)) > 0, 'IIAM');
+      } else receivedAmount0 = 0;
+
+      if (amount1 > 0) {
+        require((receivedAmount1 = balanceToken1().sub(receivedAmount1)) > 0, 'IIAM');
+      } else receivedAmount1 = 0;
     }
 
     liquidityActual = liquidityDesired;
@@ -586,7 +594,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (zeroToOne) {
       (uint256 balanceBefore, ) = _syncBalances();
       if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
 
       if (communityFee > 0) _payCommunityFee(token0, communityFee);
@@ -594,7 +602,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     } else {
       (, uint256 balanceBefore) = _syncBalances();
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
 
       if (communityFee > 0) _payCommunityFee(token1, communityFee);
@@ -622,12 +630,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     globalState.unlocked = false;
     if (zeroToOne) {
       (uint256 balance0Before, ) = _syncBalances();
-      _swapCallback(amountRequired, 0, data);
+      _swapCallback(amountRequired, 0, 0, data);
       int256 amountReceived = int256(balanceToken0().sub(balance0Before));
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     } else {
       (, uint256 balance1Before) = _syncBalances();
-      _swapCallback(0, amountRequired, data);
+      _swapCallback(0, amountRequired, 0, data);
       int256 amountReceived = int256(balanceToken1().sub(balance1Before));
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     }
@@ -638,7 +646,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 feeAmount;
-    uint256 communityFee;
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
 
