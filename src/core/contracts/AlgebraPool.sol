@@ -40,7 +40,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
-    uint32 lastLiquidityAddTimestamp; // Timestamp of last adding of liquidity
     uint256 innerFeeGrowth0Token; // The last updated fee growth per unit of liquidity
     uint256 innerFeeGrowth1Token;
     uint128 fees0; // The amount of token0 owed to a LP
@@ -178,29 +177,26 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
-    (uint128 currentLiquidity, uint32 lastLiquidityAddTimestamp) = (_position.liquidity, _position.lastLiquidityAddTimestamp);
+    uint128 currentLiquidity = _position.liquidity;
 
     if (liquidityDelta == 0) {
+      // TODO MB REMOVE?
       require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
     } else {
       // change position liquidity
-      uint128 liquidityNext = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-      (_position.liquidity, _position.lastLiquidityAddTimestamp) = (
-        liquidityNext,
-        liquidityNext > 0 ? (liquidityDelta > 0 ? _blockTimestamp() : lastLiquidityAddTimestamp) : 0
-      );
+      _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
     }
 
     // update the position
-    uint256 _innerFeeGrowth0Token = _position.innerFeeGrowth0Token;
-    uint256 _innerFeeGrowth1Token = _position.innerFeeGrowth1Token;
+    uint256 _innerFeeGrowth0Token;
     uint128 fees0;
-    if (innerFeeGrowth0Token != _innerFeeGrowth0Token) {
+    if ((_innerFeeGrowth0Token = _position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
       _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
       fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, currentLiquidity, Constants.Q128));
     }
+    uint256 _innerFeeGrowth1Token;
     uint128 fees1;
-    if (innerFeeGrowth1Token != _innerFeeGrowth1Token) {
+    if ((_innerFeeGrowth1Token = _position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
       _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
       fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, currentLiquidity, Constants.Q128));
     }
