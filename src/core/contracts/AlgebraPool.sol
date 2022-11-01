@@ -49,12 +49,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
 
-  /// @dev Restricts everyone calling a function except factory owner
-  modifier onlyFactoryOwner() {
-    require(msg.sender == IAlgebraFactory(factory).owner());
-    _;
-  }
-
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     require(topTick < TickMath.MAX_TICK + 1, 'TUM');
     require(topTick > bottomTick, 'TLU');
@@ -606,7 +600,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
-
   function swapSupportingFeeOnInputTokens(
     address sender,
     address recipient,
@@ -935,7 +928,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 communityFee) external override lock onlyFactoryOwner {
+  function setCommunityFee(uint8 communityFee) external override lock {
+    require(msg.sender == IAlgebraFactory(factory).owner());
     require(communityFee <= Constants.MAX_COMMUNITY_FEE);
     globalState.communityFee = communityFee;
     emit CommunityFee(communityFee);
