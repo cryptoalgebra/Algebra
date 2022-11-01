@@ -114,7 +114,7 @@ contract DataStorageOperator is IDataStorageOperator {
     )
   {
     uint32 time = uint32(block.timestamp); // TODO MOVE TO ABSTRACT
-    (, int24 tick, , uint16 index, , , ) = IAlgebraPoolState(pool).globalState();
+    (, int24 tick, , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
     uint128 liquidity = IAlgebraPoolState(pool).liquidity();
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
