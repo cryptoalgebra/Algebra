@@ -417,12 +417,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 receivedAmount1;
     {
       (receivedAmount0, receivedAmount1) = _syncBalances();
-<<<<<<< HEAD
-      if (amount0 == 0) receivedAmount0 = 0;
-      if (amount1 == 0) receivedAmount1 = 0;
-=======
-
->>>>>>> f890c26 ([Core] fix after merge)
       IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
       if (amount0 > 0) {
@@ -587,9 +581,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint256 communityFee;
+    uint256 feeAmount;
     // function _calculateSwapAndLock locks globalState.unlocked and does not release
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+
+    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     if (zeroToOne) {
       (uint256 balanceBefore, ) = _syncBalances();
@@ -648,6 +644,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 feeAmount;
     // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     // only transfer to the recipient
     if (zeroToOne) {
@@ -757,16 +754,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         cache.blockStartTickX100 = blockStartTickX100;
       }
 
-      if (activeIncentive != address(0)) {
-        IAlgebraVirtualPool.Status _status = IAlgebraVirtualPool(activeIncentive).increaseCumulative(blockTimestamp);
-        if (_status == IAlgebraVirtualPool.Status.NOT_EXIST) {
-          activeIncentive = address(0);
-        } else if (_status == IAlgebraVirtualPool.Status.ACTIVE) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.ACTIVE;
-        } else if (_status == IAlgebraVirtualPool.Status.NOT_STARTED) {
-          cache.incentiveStatus = IAlgebraVirtualPool.Status.NOT_STARTED;
-        }
-      }
+      cache.activeIncentive = activeIncentive;
 
       uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
 
