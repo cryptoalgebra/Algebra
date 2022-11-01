@@ -27,6 +27,7 @@ import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
+import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
@@ -45,8 +46,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 fees1; // The amount of token1 owed to a LP
   }
 
+  struct LimitPosition {
+    uint128 amount; // The amount of tokens to sell
+    uint256 askCumulative;
+    address token;
+  }
+
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
+
+  mapping(bytes32 => LimitPosition) public limitPositions;
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManager.checkTickRangeValidity(bottomTick, topTick);
@@ -361,6 +370,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return positions[key];
   }
 
+  function getOrCreateLimitPosition(address owner, int24 tick) private view returns (LimitPosition storage) {
+    bytes32 key;
+    assembly {
+      key := or(shl(24, owner), and(tick, 0xFFFFFF))
+    }
+    return limitPositions[key];
+  }
+
   function _syncBalances() internal returns (uint256 balance0, uint256 balance1) {
     (balance0, balance1) = (balanceToken0(), balanceToken1());
     uint128 _liquidity = liquidity;
@@ -514,6 +531,100 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
+  }
+
+  function _limitOrderCallback(
+    uint128 amount0,
+    uint128 amount1,
+    bytes calldata data
+  ) private {
+    IAlgebraLimitOrderCallback(msg.sender).algebraLimitOrderCallback(amount0, amount1, data);
+  }
+
+  function addLimitOrder(
+    address recipient,
+    int24 tick,
+    uint128 amount,
+    bytes calldata data
+  ) external lock {
+    address token = globalState.tick > tick ? token1 : token0;
+
+    // TODO check tick
+
+    if (token == token0) {
+      (uint256 balance0Before, ) = _syncBalances();
+      _limitOrderCallback(amount, 0, data);
+      uint256 amountReceived = balanceToken0().sub(balance0Before);
+      if (amountReceived < amount) amount = uint128(amountReceived);
+      reserve0 += amount;
+    } else {
+      (, uint256 balance1Before) = _syncBalances();
+      _limitOrderCallback(0, amount, data);
+      uint256 amountReceived = balanceToken1().sub(balance1Before);
+      if (amountReceived < amount) amount = uint128(amountReceived);
+      reserve1 += amount;
+    }
+
+    bool flipped = ticks.addLimitOrder(tick, amount);
+    if (flipped) tickTable.toggleTick(tick);
+
+    LimitPosition storage _position = getOrCreateLimitPosition(recipient, tick);
+    // TODO handle existing position
+    _position.askCumulative = ticks[tick].spentAskCumulative;
+    _position.amount += amount;
+    _position.token = token;
+  }
+
+  function removeLimitOrder(address recipient, int24 tick) external lock returns (uint256 amount0, uint256 amount1) {
+    LimitPosition storage _position = getOrCreateLimitPosition(msg.sender, tick);
+    // TODO check tick
+    require(_position.amount > 0);
+
+    uint256 amount = FullMath.mulDiv(ticks[tick].spentAskCumulative - _position.askCumulative, _position.amount, Constants.Q128);
+
+    uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+    uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
+
+    address inputToken = _position.token;
+    uint256 requestedAmount = inputToken == token0
+      ? FullMath.mulDiv(_position.amount, price, Constants.Q96)
+      : FullMath.mulDiv(_position.amount, Constants.Q96, price);
+
+    if (amount >= requestedAmount) {
+      if (inputToken == token0) {
+        _payFromReserve(token1, recipient, requestedAmount);
+        amount1 = requestedAmount;
+      } else {
+        _payFromReserve(token0, recipient, requestedAmount);
+        amount0 = requestedAmount;
+      }
+    } else {
+      if (inputToken == token0) {
+        amount1 = amount;
+        amount0 = FullMath.mulDiv(requestedAmount - amount, Constants.Q96, price); // unspent input
+      } else {
+        amount0 = amount;
+        amount1 = FullMath.mulDiv(requestedAmount - amount, price, Constants.Q96); // unspent input
+      }
+      if (amount0 > 0) _payFromReserve(token0, recipient, amount0);
+      if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
+    }
+
+    bool flipped = ticks.removeLimitOrder(tick, _position.amount);
+    if (flipped) tickTable.toggleTick(tick);
+
+    // delete position
+    (_position.amount, _position.askCumulative, _position.token) = (0, 0, address(0));
+  }
+
+  /// @dev Returns new fee according combination of sigmoids
+  function _getNewFee(
+    uint32 _time,
+    int24 _tick,
+    uint16 _index
+  ) private returns (uint16 newFee) {
+    newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index);
+    emit Fee(newFee);
   }
 
   function _vaultAddress() private view returns (address) {

@@ -89,8 +89,13 @@ interface IAlgebraPoolState {
       int24 nextTick,
       uint160 outerSecondsPerLiquidity,
       uint32 outerSecondsSpent,
-      bool initialized
+      bool initialized,
+      uint128 sumOfAsk,
+      uint128 spentAsk,
+      uint256 spentAskCumulative
     );
+
+  // TODO ADD NATSPEC
 
   /** @notice Returns 256 packed tick initialized boolean values. See TickTree for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);

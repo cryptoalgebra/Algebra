@@ -5,6 +5,7 @@ import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 
 import './TickMath.sol';
+import './FullMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
 
@@ -27,6 +28,9 @@ library TickManager {
     uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
     uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
     bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
+    uint128 sumOfAsk;
+    uint128 spentAsk;
+    uint256 spentAskCumulative;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
@@ -185,5 +189,88 @@ library TickManager {
     self[tick].nextTick = nextTick;
     self[prevTick].nextTick = tick;
     self[nextTick].prevTick = tick;
+  }
+
+  function addLimitOrder(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    uint128 amount
+  ) internal returns (bool flipped) {
+    Tick storage data = self[tick];
+    data.sumOfAsk += amount;
+
+    if (!data.initialized) {
+      data.initialized = true;
+      flipped = true;
+    }
+  }
+
+  function removeLimitOrder(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    uint128 amount
+  ) internal returns (bool flipped) {
+    Tick storage data = self[tick];
+    uint128 sumOfAsk = data.sumOfAsk;
+    sumOfAsk -= amount;
+    data.sumOfAsk = sumOfAsk;
+
+    if (sumOfAsk == 0) {
+      data.spentAsk = 0;
+      flipped = data.liquidityTotal == 0;
+    }
+  }
+
+  function executeLimitOrdersInput(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    bool zto,
+    uint256 tokenAmountInput
+  )
+    internal
+    returns (
+      bool closed,
+      bool flipped,
+      uint256 amountInputLeft,
+      uint256 amountOut
+    )
+  {
+    Tick storage data = self[tick];
+    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
+
+    uint160 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+    uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
+
+    if (zto) {
+      amountOut = FullMath.mulDiv(tokenAmountInput, price, Constants.Q96);
+    } else {
+      amountOut = FullMath.mulDiv(tokenAmountInput, Constants.Q96, price);
+    }
+
+    if (amountOut < sumOfAsk - spentAsk) {
+      data.spentAsk += uint128(amountOut);
+      data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
+    } else if (amountOut == sumOfAsk - spentAsk) {
+      (data.sumOfAsk, data.spentAsk) = (0, 0);
+      data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
+      closed = true;
+    } else {
+      uint256 unspentInputAsk;
+      if (zto) {
+        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, Constants.Q96, price);
+      } else {
+        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, price, Constants.Q96);
+      }
+
+      data.spentAskCumulative += FullMath.mulDiv(unspentInputAsk, Constants.Q128, sumOfAsk);
+      (data.sumOfAsk, data.spentAsk) = (0, 0);
+      closed = true;
+      amountInputLeft = tokenAmountInput - unspentInputAsk;
+      amountOut = sumOfAsk - spentAsk;
+    }
+
+    if (closed) {
+      flipped = data.liquidityTotal == 0;
+    }
   }
 }
