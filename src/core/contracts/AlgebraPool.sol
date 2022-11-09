@@ -500,10 +500,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     uint128 amount,
     bytes calldata data
-  ) external nonReentrant {
+  ) external override nonReentrant {
     address token = globalState.tick > tick ? token1 : token0;
 
-    require(tick % Constants.TICK_SPACING == 0, 'T');
+    require(tick % tickSpacing == 0, 'T');
 
     if (token == token0) {
       (uint256 balance0Before, ) = _syncBalances();
@@ -532,7 +532,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function removeLimitOrder(address recipient, int24 tick) external nonReentrant returns (uint256 amount0, uint256 amount1) {
     LimitPosition storage _position = getOrCreateLimitPosition(msg.sender, tick);
 
-    require(tick % Constants.TICK_SPACING == 0, 'T');
+    require(tick % tickSpacing == 0, 'T');
     require(_position.amount > 0);
 
     uint256 amount = FullMath.mulDiv(ticks[tick].spentAskCumulative - _position.askCumulative, _position.amount, Constants.Q128);

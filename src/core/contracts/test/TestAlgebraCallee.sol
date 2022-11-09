@@ -129,6 +129,15 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     emit MintResult(amount0Owed, amount1Owed, resultLiquidity);
   }
 
+  function addLimitOrder(
+    address pool,
+    address recipient,
+    int24 tick,
+    uint128 amount
+  ) external {
+    IAlgebraPool(pool).addLimitOrder(recipient, tick, amount, abi.encode(msg.sender));
+  }
+
   event MintCallback(uint256 amount0Owed, uint256 amount1Owed);
 
   function algebraMintCallback(

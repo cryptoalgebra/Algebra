@@ -42,6 +42,13 @@ interface IAlgebraPoolActions {
       uint128 liquidityActual
     );
 
+  function addLimitOrder(
+    address recipient,
+    int24 tick,
+    uint128 amount,
+    bytes calldata data
+  ) external;
+
   /**
    * @notice Collects tokens owed to a position
    * @dev Does not recompute fees earned, which must be done either via mint or burn of any amount of liquidity.
