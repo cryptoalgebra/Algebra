@@ -83,10 +83,10 @@ describe('TickTable', () => {
     })
   })
 
-  describe('#nextTickInTheSameRow', () => {
+  describe.only('#nextTickInTheSameRow', () => {
     beforeEach('set up some ticks', async () => {
       // word boundaries are at multiples of 256
-      await initTicks([-200*60, -55*60, -4*60, 70*60, 78*60, 84*60, 139*60, 240*60, 535*60])
+      await initTicks([-200*60, -55*60, -4*60, 70*60, 78*60, 84*60, 139*60, 240*60, 535*60, 887270])
     })
 
     describe('lte = false', async () => {

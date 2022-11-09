@@ -11,6 +11,7 @@ import './base/PoolImmutables.sol';
 import './libraries/TokenDeltaMath.sol';
 import './libraries/PriceMovementMath.sol';
 import './libraries/TickManager.sol';
+import './libraries/TickTable.sol';
 
 import './libraries/LowGasSafeMath.sol';
 import './libraries/SafeCast.sol';
@@ -34,6 +35,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint128;
   using SafeCast for uint256;
   using SafeCast for int256;
+  using TickTable for mapping(int16 => uint256);
   using TickManager for mapping(int24 => TickManager.Tick);
 
   struct Position {
@@ -79,28 +81,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     view
     override
     onlyValidTicks(bottomTick, topTick)
-    returns (
-      uint160 innerSecondsSpentPerLiquidity,
-      uint32 innerSecondsSpent
-    )
+    returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)
   {
     Cumulatives memory lower;
     {
       TickManager.Tick storage _lower = ticks[bottomTick];
-      (lower.outerSecondPerLiquidity, lower.outerSecondsSpent) = (
-        _lower.outerSecondsPerLiquidity,
-        _lower.outerSecondsSpent
-      );
+      (lower.outerSecondPerLiquidity, lower.outerSecondsSpent) = (_lower.outerSecondsPerLiquidity, _lower.outerSecondsSpent);
       require(_lower.initialized);
     }
 
     Cumulatives memory upper;
     {
       TickManager.Tick storage _upper = ticks[topTick];
-      (upper.outerSecondPerLiquidity, upper.outerSecondsSpent) = (
-        _upper.outerSecondsPerLiquidity,
-        _upper.outerSecondsSpent
-      );
+      (upper.outerSecondPerLiquidity, upper.outerSecondsSpent) = (_upper.outerSecondsPerLiquidity, _upper.outerSecondsSpent);
 
       require(_upper.initialized);
     }
@@ -108,31 +101,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     (int24 currentTick, uint16 currentTimepointIndex) = (globalState.tick, globalState.timepointIndex);
 
     if (currentTick < bottomTick) {
-      return (
-        lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity,
-        lower.outerSecondsSpent - upper.outerSecondsSpent
-      );
+      return (lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity, lower.outerSecondsSpent - upper.outerSecondsSpent);
     }
 
     if (currentTick < topTick) {
       uint32 globalTime = _blockTimestamp();
-      (, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(
-        globalTime,
-        0,
-        currentTick,
-        currentTimepointIndex,
-        liquidity
-      );
+      (, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(globalTime, 0, currentTick, currentTimepointIndex, liquidity);
       return (
         globalSecondsPerLiquidityCumulative - lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity,
         globalTime - lower.outerSecondsSpent - upper.outerSecondsSpent
       );
     }
 
-    return (
-      upper.outerSecondPerLiquidity - lower.outerSecondPerLiquidity,
-      upper.outerSecondsSpent - lower.outerSecondsSpent
-    );
+    return (upper.outerSecondPerLiquidity - lower.outerSecondPerLiquidity, upper.outerSecondsSpent - lower.outerSecondsSpent);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -221,7 +202,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       int256 amount1
     )
   {
-    UpdatePositionCache memory cache = UpdatePositionCache(globalState.price, globalState.tick, globalState.prevInitializedTick, globalState.timepointIndex);
+    UpdatePositionCache memory cache = UpdatePositionCache(
+      globalState.price,
+      globalState.tick,
+      globalState.prevInitializedTick,
+      globalState.timepointIndex
+    );
 
     position = getOrCreatePosition(owner, bottomTick, topTick);
 
@@ -231,7 +217,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool toggledTop;
     if (liquidityDelta != 0) {
       uint32 time = _blockTimestamp();
-      ( ,uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
+      (, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
 
       if (
         ticks.update(
@@ -246,6 +232,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledBottom = true;
+        tickTable.toggleTick(bottomTick);
       }
 
       if (
@@ -261,6 +248,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledTop = true;
+        tickTable.toggleTick(topTick);
       }
     }
 
@@ -278,12 +266,23 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (liquidityDelta < 0) {
         if (toggledBottom) {
-          if (cache.prevInitializedTick == bottomTick) globalState = bottomTick[prevTick] ;
+          if (cache.prevInitializedTick == bottomTick) globalState.prevInitializedTick = ticks[bottomTick].prevTick;
           ticks.removeTick(bottomTick);
-        }  
+        }
         if (toggledTop) {
-          if (cache.prevInitializedTick == topTick) globalState = topTick[prevTick] ;
+          if (cache.prevInitializedTick == topTick) globalState.prevInitializedTick = ticks[topTick].prevTick;
           ticks.removeTick(topTick);
+        }
+      } else {
+        if (toggledBottom) {
+          int24 prevBottomTick = tickTable.getNextWordWithInitializedTick(bottomTick, true);
+          if (cache.prevInitializedTick == prevBottomTick) globalState.prevInitializedTick = bottomTick;
+          ticks.insertTick(bottomTick, prevBottomTick, ticks[prevBottomTick].nextTick);
+        }
+        if (toggledTop) {
+          int24 prevTopTick = tickTable.getNextWordWithInitializedTick(topTick, true);
+          if (cache.prevInitializedTick == topTick) globalState.prevInitializedTick = topTick;
+          ticks.insertTick(topTick, prevTopTick, ticks[prevTopTick].nextTick);
         }
       }
 
@@ -373,8 +372,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     address recipient,
     int24 bottomTick,
     int24 topTick,
-    int24 prevBottomTick,
-    int24 prevtopTick,
     uint128 liquidityDesired,
     bytes calldata data
   )
@@ -428,7 +425,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(liquidityActual > 0, 'IIL2');
 
     {
-      (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, prevBottomTick, prevTopTick, int256(liquidityActual).toInt128());
+      (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
 
       require((amount0 = uint256(amount0Int)) <= receivedAmount0, 'IIAM2');
       require((amount1 = uint256(amount1Int)) <= receivedAmount1, 'IIAM2');
@@ -754,7 +751,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     PriceMovementCache memory step;
 
-    step.nextTick = zeroToOne ? ticks[globalState.prevInitializedTick].next : globalState.prevInitializedTick;
+    step.nextTick = zeroToOne ? ticks[globalState.prevInitializedTick].nextTick : globalState.prevInitializedTick;
     // swap until there is remaining input or output tokens or we reach the price limit
     while (true) {
       step.stepSqrtPrice = currentPrice;
@@ -806,7 +803,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
           if (!cache.computedLatestTimepoint) {
-            ( , cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
+            (, cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
               blockTimestamp,
               0,
               cache.startTick,
@@ -833,7 +830,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.secondsPerLiquidityCumulative,
               blockTimestamp
             );
-            cache.prevTick 
           } else {
             liquidityDelta = ticks.cross(
               step.nextTick,
@@ -842,7 +838,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.secondsPerLiquidityCumulative,
               blockTimestamp
             );
-            
           }
 
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
@@ -860,7 +855,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         break;
       }
 
-      step.nextTick = zeroToOne ? ticks[nextTick].nextTick : ticks[nextTick].prevTick;
+      step.nextTick = zeroToOne ? ticks[step.nextTick].nextTick : ticks[step.nextTick].prevTick;
     }
 
     (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less then initially specified (e.g. reached limit)
@@ -873,7 +868,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
-      globalState.prevInitializedTick = ticks[step.nextTick].prev;
+      globalState.prevInitializedTick = ticks[step.nextTick].prevTick;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowth;
       globalState.prevInitializedTick = step.nextTick;

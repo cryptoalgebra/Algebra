@@ -36,6 +36,8 @@ abstract contract PoolState is IAlgebraPoolState {
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManager.Tick) public override ticks;
+  /// @inheritdoc IAlgebraPoolState
+  mapping(int16 => uint256) public override tickTable;
 
   /// @dev Reentrancy protection. Implemented in every function of the contract since there are checks of balances.
   modifier lock() {

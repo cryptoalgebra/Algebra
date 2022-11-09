@@ -134,7 +134,7 @@ library PriceMovementMath {
     ElasticFeeData memory feeData,
     uint160 currentPrice,
     uint160 endPrice
-  ) internal view returns (uint256 feeAmount) {
+  ) internal pure returns (uint256 feeAmount) {
     bool zto = endPrice < currentPrice;
 
     (int32 currentTickX100, uint160 currentPriceRounded) = TickMath.getTickX100(feeData.currentTick, currentPrice, zto);

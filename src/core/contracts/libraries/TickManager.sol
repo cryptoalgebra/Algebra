@@ -113,10 +113,6 @@ library TickManager {
         data.outerSecondsSpent = time;
       }
       data.initialized = true;
-      //insert 
-      if(tick != TickMath.MIN_TICK && tick != TickMath.MAX_TICK){
-        insert()
-      }
     }
   }
 
@@ -147,38 +143,29 @@ library TickManager {
     return data.liquidityDelta;
   }
 
-    function initTickState(mapping(int24 => Tick) storage self) internal{
-      (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
-      (self[TickMath.MAX_TICK].prevTick, self[TickMath.MAX_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
-    }
+  function initTickState(mapping(int24 => Tick) storage self) internal {
+    (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
+    (self[TickMath.MAX_TICK].prevTick, self[TickMath.MAX_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
+  }
 
-    function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
-      Tick memory data = self[tick];
-      require(data.nextTick != data.prevTick);
-      self[data.prevTick].nextTick = data.nextTick;
-      self[data.nextTick].prevTick = data.prevTick;
-      if (tick != TickMath.MIN_TICK && tick != TickMath.MAX_TICK) delete self[tick];
-    }
+  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
+    Tick memory data = self[tick];
+    require(data.nextTick != data.prevTick);
+    self[data.prevTick].nextTick = data.nextTick;
+    self[data.nextTick].prevTick = data.prevTick;
+    if (tick != TickMath.MIN_TICK && tick != TickMath.MAX_TICK) delete self[tick];
+  }
 
-    function insertTick(mapping(int24 => Tick) storage self, int24 tick) internal{
-      
-    }
-
-
-  /// @dev Insert a new value to the linked list given its lower value that is inside the linked list
-  /// @param newValue the new value to insert, it must not exist in the LinkedList
-  /// @param lowerValue the nearest value which is <= newValue and is in the LinkedList
-  function insert(
-    mapping(int24 => Linkedlist.Data) storage self,
-    int24 newValue,
-    int24 lowerValue,
-    int24 nextValue
+  function insertTick(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    int24 prevTick,
+    int24 nextTick
   ) internal {
-    require(nextValue != self[lowerValue].previous, 'lower value is not initialized');
-    require(lowerValue < newValue && nextValue > newValue, 'invalid lower value');
-    self[newValue].next = nextValue;
-    self[newValue].previous = lowerValue;
-    self[nextValue].previous = newValue;
-    self[lowerValue].next = newValue;
+    require(prevTick < tick && nextTick > tick, 'invalid lower value');
+    self[tick].prevTick = prevTick;
+    self[tick].nextTick = nextTick;
+    self[prevTick].nextTick = tick;
+    self[nextTick].prevTick = tick;
   }
 }

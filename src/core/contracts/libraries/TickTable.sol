@@ -21,6 +21,7 @@ library TickTable {
       bitNumber := and(tick, 0xFF)
       rowNumber := shr(8, tick)
     }
+
     self[rowNumber] ^= 1 << bitNumber;
   }
 
@@ -116,6 +117,15 @@ library TickTable {
         return (uncompressAndBoundTick(tick), false);
       }
     }
+  }
+
+  function getNextWordWithInitializedTick(
+    mapping(int16 => uint256) storage self,
+    int24 tick,
+    bool lte
+  ) internal view returns (int24 nextTick) {
+    // TODO
+    return tick;
   }
 
   function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {

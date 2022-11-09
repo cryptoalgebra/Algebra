@@ -42,18 +42,8 @@ contract TickOverflowSafetyEchidnaTest {
     require(bottomTick > MIN_TICK);
     require(topTick < MAX_TICK);
     require(bottomTick < topTick);
-    bool flippedLower = ticks.update(
-      bottomTick,
-      tick,
-      liquidityDelta,
-      totalFeeGrowth0Token,
-      totalFeeGrowth1Token,
-      0,
-      0,
-      uint32(block.timestamp),
-      false
-    );
-    bool flippedUpper = ticks.update(topTick, tick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, 0, uint32(block.timestamp), true);
+    bool flippedLower = ticks.update(bottomTick, tick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp), false);
+    bool flippedUpper = ticks.update(topTick, tick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp), true);
 
     if (flippedLower) {
       if (liquidityDelta < 0) {
@@ -84,10 +74,10 @@ contract TickOverflowSafetyEchidnaTest {
     require(target < MAX_TICK);
     while (tick != target) {
       if (tick < target) {
-        if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, 0, uint32(block.timestamp));
+        if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
         tick++;
       } else {
-        if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, 0, uint32(block.timestamp));
+        if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
         tick--;
       }
     }
