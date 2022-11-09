@@ -487,12 +487,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
-  function _limitOrderCallback(
-    uint128 amount0,
-    uint128 amount1,
+  function _mintCallback(
+    uint256 amount0,
+    uint256 amount1,
     bytes calldata data
   ) private {
-    IAlgebraLimitOrderCallback(msg.sender).algebraLimitOrderCallback(amount0, amount1, data);
+    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
   }
 
   function addLimitOrder(
@@ -500,20 +500,20 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     uint128 amount,
     bytes calldata data
-  ) external lock {
+  ) external nonReentrant {
     address token = globalState.tick > tick ? token1 : token0;
 
     // TODO check tick
 
     if (token == token0) {
       (uint256 balance0Before, ) = _syncBalances();
-      _limitOrderCallback(amount, 0, data);
+      _mintCallback(amount, 0, data);
       uint256 amountReceived = balanceToken0().sub(balance0Before);
       if (amountReceived < amount) amount = uint128(amountReceived);
       reserve0 += amount;
     } else {
       (, uint256 balance1Before) = _syncBalances();
-      _limitOrderCallback(0, amount, data);
+      _mintCallback(0, amount, data);
       uint256 amountReceived = balanceToken1().sub(balance1Before);
       if (amountReceived < amount) amount = uint128(amountReceived);
       reserve1 += amount;
@@ -529,7 +529,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     _position.token = token;
   }
 
-  function removeLimitOrder(address recipient, int24 tick) external lock returns (uint256 amount0, uint256 amount1) {
+  function removeLimitOrder(address recipient, int24 tick) external nonReentrant returns (uint256 amount0, uint256 amount1) {
     LimitPosition storage _position = getOrCreateLimitPosition(msg.sender, tick);
     // TODO check tick
     require(_position.amount > 0);
@@ -818,7 +818,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
-      if (step.stepSqrtPrice == step.nextTickPrice) {
+      if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].sumOfAsk != 0) {
         bool flipped;
         // calculate the amounts from LO
         // TODO fee
