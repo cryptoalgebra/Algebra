@@ -25,8 +25,6 @@ library TickManager {
     uint256 outerFeeGrowth1Token;
     int24 prevTick;
     int24 nextTick;
-    uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
-    uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
     bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
     uint128 sumOfAsk;
     uint128 spentAsk;
@@ -119,8 +117,6 @@ library TickManager {
       if (tick <= currentTick) {
         data.outerFeeGrowth0Token = totalFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token;
-        data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
-        data.outerSecondsSpent = time;
       }
       data.initialized = true;
     }
@@ -131,21 +127,14 @@ library TickManager {
   /// @param tick The destination tick of the transition
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param secondsPerLiquidityCumulative The current seconds per liquidity
-  /// @param time The current block.timestamp
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
   function cross(
     mapping(int24 => Tick) storage self,
     int24 tick,
     uint256 totalFeeGrowth0Token,
-    uint256 totalFeeGrowth1Token,
-    uint160 secondsPerLiquidityCumulative,
-    uint32 time
+    uint256 totalFeeGrowth1Token
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
-
-    data.outerSecondsSpent = time - data.outerSecondsSpent;
-    data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
 
     data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
     data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
@@ -224,6 +213,7 @@ library TickManager {
   function executeLimitOrdersInput(
     mapping(int24 => Tick) storage self,
     int24 tick,
+    uint160 tickSqrtPrice,
     bool zto,
     uint256 tokenAmountInput
   )
@@ -238,7 +228,6 @@ library TickManager {
     Tick storage data = self[tick];
     (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
 
-    uint160 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
 
     if (zto) {
@@ -267,6 +256,58 @@ library TickManager {
       closed = true;
       amountInputLeft = tokenAmountInput - unspentInputAsk;
       amountOut = sumOfAsk - spentAsk;
+    }
+
+    if (closed) {
+      flipped = data.liquidityTotal == 0;
+    }
+  }
+
+  function executeLimitOrdersOutput(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    uint160 tickSqrtPrice,
+    bool zto,
+    uint256 tokenAmountOut
+  )
+    internal
+    returns (
+      bool closed,
+      bool flipped,
+      uint256 amountOutLeft,
+      uint256 amountIn
+    )
+  {
+    Tick storage data = self[tick];
+    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
+    uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
+
+    if (zto) {
+      amountIn = FullMath.mulDiv(tokenAmountOut, Constants.Q96, price);
+    } else {
+      amountIn = FullMath.mulDiv(tokenAmountOut, price, Constants.Q96);
+    }
+
+    if (tokenAmountOut < sumOfAsk - spentAsk) {
+      data.spentAsk += uint128(tokenAmountOut);
+      data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+    } else if (tokenAmountOut == sumOfAsk - spentAsk) {
+      (data.sumOfAsk, data.spentAsk) = (0, 0);
+      data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+      closed = true;
+    } else {
+      uint256 unspentInputAsk;
+      if (zto) {
+        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, Constants.Q96, price);
+      } else {
+        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, price, Constants.Q96);
+      }
+
+      data.spentAskCumulative += FullMath.mulDiv(unspentInputAsk, Constants.Q128, sumOfAsk);
+      (data.sumOfAsk, data.spentAsk) = (0, 0);
+      closed = true;
+      amountOutLeft = tokenAmountOut - (sumOfAsk - spentAsk);
+      amountIn = unspentInputAsk;
     }
 
     if (closed) {

@@ -70,8 +70,6 @@ interface IAlgebraPoolState {
    * Returns outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1;
    * Returns prevTick;
    * Returns nextTick;
-   * Returns outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick;
-   * Returns outerSecondsSpent the seconds spent on the other side of the tick from the current tick;
    * Returns initialized Set to true if the tick is initialized, i.e. liquidityTotal is greater than 0
    * otherwise equal to false. Outside values can only be used if the tick is initialized.
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
@@ -87,8 +85,6 @@ interface IAlgebraPoolState {
       uint256 outerFeeGrowth1Token,
       int24 prevTick,
       int24 nextTick,
-      uint160 outerSecondsPerLiquidity,
-      uint32 outerSecondsSpent,
       bool initialized,
       uint128 sumOfAsk,
       uint128 spentAsk,

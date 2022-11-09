@@ -77,52 +77,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IERC20Minimal(token1).balanceOf(address(this));
   }
 
-  struct Cumulatives {
-    uint160 outerSecondPerLiquidity;
-    uint32 outerSecondsSpent;
-  }
-
-  /// @inheritdoc IAlgebraPoolDerivedState
-  function getInnerCumulatives(int24 bottomTick, int24 topTick)
-    external
-    view
-    override
-    onlyValidTicks(bottomTick, topTick)
-    returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)
-  {
-    Cumulatives memory lower;
-    {
-      TickManager.Tick storage _lower = ticks[bottomTick];
-      (lower.outerSecondPerLiquidity, lower.outerSecondsSpent) = (_lower.outerSecondsPerLiquidity, _lower.outerSecondsSpent);
-      require(_lower.initialized);
-    }
-
-    Cumulatives memory upper;
-    {
-      TickManager.Tick storage _upper = ticks[topTick];
-      (upper.outerSecondPerLiquidity, upper.outerSecondsSpent) = (_upper.outerSecondsPerLiquidity, _upper.outerSecondsSpent);
-
-      require(_upper.initialized);
-    }
-
-    (int24 currentTick, uint16 currentTimepointIndex) = (globalState.tick, globalState.timepointIndex);
-
-    if (currentTick < bottomTick) {
-      return (lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity, lower.outerSecondsSpent - upper.outerSecondsSpent);
-    }
-
-    if (currentTick < topTick) {
-      uint32 globalTime = _blockTimestamp();
-      uint160 globalSecondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(globalTime, 0, currentTimepointIndex, liquidity);
-      return (
-        globalSecondsPerLiquidityCumulative - lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity,
-        globalTime - lower.outerSecondsSpent - upper.outerSecondsSpent
-      );
-    }
-
-    return (upper.outerSecondPerLiquidity - lower.outerSecondPerLiquidity, upper.outerSecondsSpent - lower.outerSecondsSpent);
-  }
-
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     require(globalState.price == 0, 'AI');
@@ -759,7 +713,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool computedLatestTimepoint; //  if we have already fetched _tickCumulative_ and _secondPerLiquidity_ from the DataOperator
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
@@ -782,6 +735,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
+    bool limitOrder;
   }
 
   function _calculateSwap(
@@ -799,7 +753,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint256 feeAmount
     )
   {
-    uint32 blockTimestamp;
     SwapCalculationCache memory cache;
     {
       // load from one storage slot
@@ -825,7 +778,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       cache.startTick = currentTick;
 
-      blockTimestamp = _blockTimestamp();
+      uint32 blockTimestamp = _blockTimestamp();
 
       if (blockTimestamp != startPriceUpdated) {
         (cache.blockStartTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
@@ -865,17 +818,44 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
-      // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
-      (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
-        zeroToOne,
-        currentPrice,
-        (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
-          ? limitSqrtPrice
-          : step.nextTickPrice,
-        currentLiquidity,
-        amountRequired,
-        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
-      );
+      if (step.stepSqrtPrice == step.nextTickPrice) {
+        bool flipped;
+        // calculate the amounts from LO
+        // TODO fee
+        if (cache.exactInput) {
+          (step.limitOrder, flipped, step.input, step.output) = ticks.executeLimitOrdersInput(
+            step.nextTick,
+            currentPrice,
+            zeroToOne,
+            uint256(amountRequired)
+          );
+          step.input = uint256(amountRequired) - step.input;
+        } else {
+          (step.limitOrder, flipped, step.output, step.input) = ticks.executeLimitOrdersOutput(
+            step.nextTick,
+            currentPrice,
+            zeroToOne,
+            uint256(-amountRequired)
+          );
+          step.output = uint256(-amountRequired) - step.output;
+        }
+        if (flipped) tickTable.toggleTick(step.nextTick);
+        step.limitOrder = !step.limitOrder;
+      } else {
+        // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
+
+        (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
+          zeroToOne,
+          currentPrice,
+          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
+            ? limitSqrtPrice
+            : step.nextTickPrice,
+          currentLiquidity,
+          amountRequired,
+          PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
+        );
+      }
+
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
         cache.amountCalculated = cache.amountCalculated.sub(step.output.toInt256()); // decrease calculated output amount
@@ -893,20 +873,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
-      if (currentPrice == step.nextTickPrice) {
+      if (currentPrice == step.nextTickPrice && !step.limitOrder) {
         // if the reached tick is initialized then we need to cross it
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
+          // TODO
           if (!cache.computedLatestTimepoint) {
-            cache.secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(
-              blockTimestamp,
-              0,
-              cache.timepointIndex,
-              currentLiquidity // currentLiquidity can be changed only after computedLatestTimepoint
-            );
             cache.computedLatestTimepoint = true;
             cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
+
+          // we have opened LOs
+          if (ticks[step.nextTick].sumOfAsk != 0) continue;
+
           // every tick cross is needed to be duplicated in a virtual pool
           if (cache.activeIncentive != address(0)) {
             bool success = IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
@@ -920,18 +899,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             liquidityDelta = -ticks.cross(
               step.nextTick,
               cache.totalFeeGrowth, // A == 0
-              cache.totalFeeGrowthB, // B == 1
-              cache.secondsPerLiquidityCumulative,
-              blockTimestamp
+              cache.totalFeeGrowthB // B == 1
             );
             cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
           } else {
             liquidityDelta = ticks.cross(
               step.nextTick,
               cache.totalFeeGrowthB, // B == 0
-              cache.totalFeeGrowth, // A == 1
-              cache.secondsPerLiquidityCumulative,
-              blockTimestamp
+              cache.totalFeeGrowth // A == 1
             );
             cache.prevInitializedTick = step.nextTick;
           }
