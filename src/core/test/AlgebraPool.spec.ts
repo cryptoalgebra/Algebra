@@ -490,7 +490,7 @@ describe('AlgebraPool', () => {
       })
 
       it('community fees accumulate as expected during swap', async () => {
-        await pool.setCommunityFee(170, 170)
+        await pool.setCommunityFee(170)
 
         await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(1))
         await swapExact0For1(expandTo18Decimals(1).div(10), wallet.address)
@@ -508,7 +508,7 @@ describe('AlgebraPool', () => {
         expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(0)
         expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
 
-        await pool.setCommunityFee(170, 170)
+        await pool.setCommunityFee(170)
         expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(0)
         expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
       })
@@ -905,7 +905,7 @@ describe('AlgebraPool', () => {
     })
 
     describe('fee is on', () => {
-      beforeEach(() => pool.setCommunityFee(170, 170))
+      beforeEach(() => pool.setCommunityFee(170))
       it('limit selling 0 for 1 at tick 0 thru 1', async () => {
         await expect(mint(wallet.address, 0, 120, expandTo18Decimals(1)))
           .to.emit(token0, 'Transfer')
@@ -1170,26 +1170,20 @@ describe('AlgebraPool', () => {
     })
 
     it('is initially set to 0', async () => {
-      expect((await pool.globalState()).communityFeeToken0).to.eq(0)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(0)
+      expect((await pool.globalState()).communityFee).to.eq(0)
     })
 
     it('can be changed by the owner', async () => {
-      await pool.setCommunityFee(170, 170)
-      expect((await pool.globalState()).communityFeeToken0).to.eq(170)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(170)
+      await pool.setCommunityFee(170)
+      expect((await pool.globalState()).communityFee).to.eq(170)
     })
 
     it('cannot be changed out of bounds', async () => {
-      await expect(pool.setCommunityFee(251, 251)).to.be.reverted
-      await expect(pool.setCommunityFee(251, 0)).to.be.reverted
-      await expect(pool.setCommunityFee(0, 251)).to.be.reverted
-      await expect(pool.setCommunityFee(251, 250)).to.be.reverted
-      await expect(pool.setCommunityFee(250, 251)).to.be.reverted
+      await expect(pool.setCommunityFee(251)).to.be.reverted
     })
 
     it('cannot be changed by addresses that are not owner', async () => {
-      await expect(pool.connect(other).setCommunityFee(170, 170)).to.be.reverted
+      await expect(pool.connect(other).setCommunityFee(170)).to.be.reverted
     })
 
     async function swapAndGetFeesOwed({
@@ -1294,7 +1288,7 @@ describe('AlgebraPool', () => {
     })
 
     it('swap fees accumulate as expected (0 for 1), supporting fee on transfer community on', async () => {
-      await pool.setCommunityFee(170, 170)
+      await pool.setCommunityFee(170)
       let token0Fees
       let token1Fees
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
@@ -1379,7 +1373,7 @@ describe('AlgebraPool', () => {
     })
 
     it('swap fees accumulate as expected (1 for 0) supporting fee on transfer community on', async () => {
-      await pool.setCommunityFee(170, 170)
+      await pool.setCommunityFee(170)
       let token0Fees
       let token1Fees
       ;({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
@@ -1410,7 +1404,7 @@ describe('AlgebraPool', () => {
 
 
     it('position owner gets partial fees when community fee is on', async () => {
-      await pool.setCommunityFee(170, 170)
+      await pool.setCommunityFee(170)
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1446,7 +1440,7 @@ describe('AlgebraPool', () => {
         poke: false,
       })
 
-      await pool.setCommunityFee(170, 170)
+      await pool.setCommunityFee(170)
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1459,7 +1453,7 @@ describe('AlgebraPool', () => {
     })
 
     it('fees collected by lp after two swaps with intermediate withdrawal', async () => {
-      await pool.setCommunityFee(170, 170)
+      await pool.setCommunityFee(170)
 
       const { token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1669,7 +1663,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(2982);
+      expect(fee3).to.be.equal(3000);
 
       let stats = [];
       for (let i = 0; i < 25; i++) {
@@ -1696,7 +1690,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(14911);
+      expect(fee3).to.be.equal(15000);
 
       let stats = [];
       for (let i = 0; i < 25; i++) {
@@ -1723,7 +1717,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(2982);
+      expect(fee3).to.be.equal(3000);
 
       await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
       await pool.advanceTime(60);
@@ -1753,7 +1747,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
       let fee3 = (await pool.globalState()).fee;
-      expect(fee3).to.be.equal(14911);
+      expect(fee3).to.be.equal(15000);
 
       await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
       await pool.advanceTime(60);
@@ -1937,7 +1931,7 @@ describe('AlgebraPool', () => {
 
       describe('fee on', () => {
         beforeEach('turn community fee on', async () => {
-          await pool.setCommunityFee(170, 170)
+          await pool.setCommunityFee(170)
         })
 
         it('emits an event', async () => {
@@ -2011,53 +2005,45 @@ describe('AlgebraPool', () => {
     })
 
     it('can only be called by factory owner', async () => {
-      await expect(pool.connect(other).setCommunityFee(200, 200)).to.be.reverted
+      await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted
     })
     it('fails if fee is gt 25%', async () => {
-      await expect(pool.setCommunityFee(254, 254)).to.be.reverted
-      await expect(pool.setCommunityFee(170, 254)).to.be.reverted
-      await expect(pool.setCommunityFee(254, 170)).to.be.reverted
-      await expect(pool.setCommunityFee(254, 0)).to.be.reverted
-      await expect(pool.setCommunityFee(0, 254)).to.be.reverted
-      await expect(pool.setCommunityFee(255, 170)).to.be.reverted
+      await expect(pool.setCommunityFee(254)).to.be.reverted
     })
     it('succeeds for fee 25%', async () => {
-      await pool.setCommunityFee(250, 250)
+      await pool.setCommunityFee(250)
     })
     it('succeeds for fee of 10%', async () => {
-      await pool.setCommunityFee(100, 100)
+      await pool.setCommunityFee(100)
     })
     it('sets community fee', async () => {
-      await pool.setCommunityFee(140, 140)
-      expect((await pool.globalState()).communityFeeToken0).to.eq(140)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(140)
+      await pool.setCommunityFee(140)
+      expect((await pool.globalState()).communityFee).to.eq(140)
     })
     it('can change community fee', async () => {
-      await pool.setCommunityFee(140, 140)
-      await pool.setCommunityFee(200, 120)
-      expect((await pool.globalState()).communityFeeToken0).to.eq(200)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(120)
+      await pool.setCommunityFee(140)
+      await pool.setCommunityFee(200)
+      expect((await pool.globalState()).communityFee).to.eq(200)
     })
     it('can turn off community fee', async () => {
-      await pool.setCommunityFee(250, 250)
-      await pool.setCommunityFee(0, 0)
-      expect((await pool.globalState()).communityFeeToken0).to.eq(0)
-      expect((await pool.globalState()).communityFeeToken1).to.eq(0)
+      await pool.setCommunityFee(250)
+      await pool.setCommunityFee(0)
+      expect((await pool.globalState()).communityFee).to.eq(0)
     })
     it('emits an event when turned on', async () => {
-      await expect(pool.setCommunityFee(140, 140)).to.be.emit(pool, 'CommunityFee').withArgs(140, 140)
+      await expect(pool.setCommunityFee(140)).to.be.emit(pool, 'CommunityFee').withArgs(140)
     })
     it('emits an event when turned off', async () => {
-      await pool.setCommunityFee(140, 200)
-      await expect(pool.setCommunityFee(0, 0)).to.be.emit(pool, 'CommunityFee').withArgs(0, 0)
+      await pool.setCommunityFee(140)
+      await expect(pool.setCommunityFee(0)).to.be.emit(pool, 'CommunityFee').withArgs(0)
     })
     it('emits an event when changed', async () => {
-      await pool.setCommunityFee(250, 100)
-      await expect(pool.setCommunityFee(170, 120)).to.be.emit(pool, 'CommunityFee').withArgs(170, 120)
+      await pool.setCommunityFee(250)
+      await expect(pool.setCommunityFee(170)).to.be.emit(pool, 'CommunityFee').withArgs(170)
     })
     it('emits an event when unchanged', async () => {
-      await pool.setCommunityFee(200, 110)
-      await expect(pool.setCommunityFee(200, 110)).to.be.emit(pool, 'CommunityFee').withArgs( 200, 110)
+      await pool.setCommunityFee(200)
+      await expect(pool.setCommunityFee(200)).to.be.emit(pool, 'CommunityFee').withArgs(200)
     })
   })
 

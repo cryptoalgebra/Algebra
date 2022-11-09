@@ -675,11 +675,8 @@ describe('DataStorageOperator external methods', () => {
   })
 
   it('cannot call onlyPool methods', async () => {
-    await expect(dataStorageOperator.getAverageVolatility(100, 0, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.write(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getFee(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
   })
 
   describe('#changeFeeConfiguration', () => {
