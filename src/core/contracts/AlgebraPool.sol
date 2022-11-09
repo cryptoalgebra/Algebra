@@ -823,6 +823,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         bool flipped;
         // calculate the amounts from LO
         // TODO fee
+        step.feeAmount = 0;
         if (cache.exactInput) {
           (step.limitOrder, flipped, step.input, step.output) = ticks.executeLimitOrdersInput(
             step.nextTick,
