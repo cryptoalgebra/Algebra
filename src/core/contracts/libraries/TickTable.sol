@@ -43,24 +43,6 @@ library TickTable {
     }
   }
 
-  /// @notice get position of most significant 1-bit (leftmost)
-  /// @dev it is assumed that before the call, a check will be made that the argument (word) is not equal to zero
-  /// @param word The word containing at least one 1-bit
-  function getMostSignificantBit(uint256 word) internal pure returns (uint8 mostBitPos) {
-    assembly {
-      word := or(word, shr(1, word))
-      word := or(word, shr(2, word))
-      word := or(word, shr(4, word))
-      word := or(word, shr(8, word))
-      word := or(word, shr(16, word))
-      word := or(word, shr(32, word))
-      word := or(word, shr(64, word))
-      word := or(word, shr(128, word))
-      word := sub(word, shr(1, word))
-    }
-    return (getSingleSignificantBit(word));
-  }
-
   function writeWord(
     mapping(int16 => uint256) storage self,
     int24 tick,
