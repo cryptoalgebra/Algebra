@@ -201,6 +201,8 @@ library TickManager {
   ) internal returns (bool flipped) {
     Tick storage data = self[tick];
     uint128 sumOfAsk = data.sumOfAsk;
+    if (sumOfAsk == 0) return false;
+
     sumOfAsk -= amount;
     data.sumOfAsk = sumOfAsk;
 
