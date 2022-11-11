@@ -105,10 +105,6 @@ library TickTable {
     }
     (nextTick, initialized) = nextTickInTheSameRow(self[rowNumber], tick);
     if (!initialized) {
-      assembly {
-        rowNumber := sar(8, tick)
-      }
-
       int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
 
       assembly {
@@ -128,13 +124,13 @@ library TickTable {
           assembly {
             nextTick := shl(8, nextTick)
           }
-          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick);
+          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick - 1);
           nextTick -= MIN_ROW_ABS;
           rowNumber = int16(nextTick);
           assembly {
             nextTick := shl(8, nextTick)
           }
-          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
+          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick - 1);
         }
       } else {
         nextTick -= MIN_ROW_ABS;
@@ -142,7 +138,7 @@ library TickTable {
         assembly {
           nextTick := shl(8, nextTick)
         }
-        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
+        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick - 1);
       }
     }
   }
