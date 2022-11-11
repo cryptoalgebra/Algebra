@@ -20,7 +20,7 @@ library TickTable {
 
     assembly {
       bitNumber := and(tick, 0xFF)
-      rowNumber := shr(8, tick)
+      rowNumber := sar(8, tick)
     }
     uint256 wordBefore = self[rowNumber];
     self[rowNumber] ^= 1 << bitNumber;
@@ -67,19 +67,18 @@ library TickTable {
     uint256 word
   ) internal returns (uint256 res) {
     require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
-    tick /= Constants.TICK_SPACING; // compress tick
     int16 rowNumber;
     uint8 bitNumber;
     res = word;
     assembly {
-      rowNumber := shr(8, tick)
+      rowNumber := sar(8, tick)
     }
 
     int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
 
     assembly {
       bitNumber := and(movedRowNumber, 0xFF)
-      rowNumber := shr(8, movedRowNumber)
+      rowNumber := sar(8, movedRowNumber)
     }
     uint256 wordBefore = self[rowNumber];
     self[rowNumber] ^= 1 << bitNumber;
@@ -102,18 +101,18 @@ library TickTable {
     int16 rowNumber;
 
     assembly {
-      rowNumber := shr(8, tick)
+      rowNumber := sar(8, tick)
     }
     (nextTick, initialized) = nextTickInTheSameRow(self[rowNumber], tick);
     if (!initialized) {
       assembly {
-        rowNumber := shr(8, tick)
+        rowNumber := sar(8, tick)
       }
 
       int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
 
       assembly {
-        rowNumber := shr(8, movedRowNumber)
+        rowNumber := sar(8, movedRowNumber)
       }
       (nextTick, initialized) = nextTickInTheSameRow(wordTicks[rowNumber], movedRowNumber);
 

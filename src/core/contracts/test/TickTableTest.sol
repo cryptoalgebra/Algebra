@@ -12,7 +12,8 @@ contract TickTableTest {
 
   function toggleTick(int24 tick) external {
     bool toggle = bitmap.toggleTick(tick);
-    word = tickWordsTable.writeWord(tick, word);
+
+    if (toggle) word = tickWordsTable.writeWord(tick, word);
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {

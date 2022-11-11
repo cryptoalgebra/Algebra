@@ -156,6 +156,30 @@ describe('TickTable', () => {
         expect(initialized).to.eq(true)
       })
 
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-10000, false)
+        expect(next).to.eq(-300)
+        expect(initialized).to.eq(true)
+      })
+
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-300, false)
+        expect(next).to.eq(-200)
+        expect(initialized).to.eq(true)
+      })
+
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-200, false)
+        expect(next).to.eq(-100)
+        expect(initialized).to.eq(true)
+      })
+
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-100, false)
+        expect(next).to.eq(100)
+        expect(initialized).to.eq(true)
+      })
+
       it('gas cost on boundary  [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(await tickTable.getGasCostOfNextTickInTheSameRow(255*60, false))
       })
