@@ -59,4 +59,10 @@ contract MockTimeAlgebraPool is AlgebraPool {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
     }
   }
+
+  function getKeyForLimitPosition(address owner, int24 tick) external pure returns (bytes32 key) {
+    assembly {
+      key := or(shl(24, owner), and(tick, 0xFFFFFF))
+    }
+  }
 }

@@ -29,6 +29,8 @@ import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
+import 'hardhat/console.sol';
+
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
@@ -529,11 +531,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     _position.token = token;
   }
 
-  function removeLimitOrder(address recipient, int24 tick) external nonReentrant returns (uint256 amount0, uint256 amount1) {
+  function removeLimitOrder(address recipient, int24 tick) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
     LimitPosition storage _position = getOrCreateLimitPosition(msg.sender, tick);
 
     require(tick % tickSpacing == 0, 'T');
-    require(_position.amount > 0);
+    require(_position.amount > 0, 'ZP');
 
     uint256 amount = FullMath.mulDiv(ticks[tick].spentAskCumulative - _position.askCumulative, _position.amount, Constants.Q128);
 
@@ -886,7 +888,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           }
 
           // we have opened LOs
-          if (ticks[step.nextTick].sumOfAsk != 0) continue;
+          if (ticks[step.nextTick].sumOfAsk != 0) {
+            currentTick = zeroToOne ? step.nextTick : step.nextTick - 1;
+            continue;
+          }
 
           // every tick cross is needed to be duplicated in a virtual pool
           if (cache.activeIncentive != address(0)) {
