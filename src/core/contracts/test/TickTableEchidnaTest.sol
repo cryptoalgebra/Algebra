@@ -5,12 +5,15 @@ import '../libraries/TickTable.sol';
 
 contract TickTableEchidnaTest {
   using TickTable for mapping(int16 => uint256);
+  uint256 public word;
 
-  mapping(int16 => uint256) private bitmap;
+  mapping(int16 => uint256) public tickWordsTable;
+  mapping(int16 => uint256) public bitmap;
 
   // returns whether the given tick is initialized
   function isInitialized(int24 tick) private view returns (bool) {
-    (int24 next, bool initialized) = bitmap.nextTickInTheSameRow(tick, true);
+    int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
+    bool initialized = true;
     return next == tick ? initialized : false;
   }
 
@@ -33,7 +36,8 @@ contract TickTableEchidnaTest {
     require(tick >= -887272);
     require(tick <= 887272);
 
-    (int24 next, bool initialized) = bitmap.nextTickInTheSameRow(tick, lte);
+    int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
+    bool initialized = true;
     if (lte) {
       // type(int24).min + 256
       assert(next <= tick);

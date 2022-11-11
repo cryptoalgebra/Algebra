@@ -86,6 +86,8 @@ interface IAlgebraPoolState {
   /** @notice Returns 256 packed tick initialized boolean values. See TickTable for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);
 
+  function tickWordsTable(int16 wordRow) external view returns (uint256);
+
   /**
    * @notice Returns the information about a position by the position's key
    * @dev This is a public mapping of structures, so the `return` natspec tags are omitted.

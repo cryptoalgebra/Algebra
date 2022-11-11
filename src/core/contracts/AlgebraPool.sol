@@ -181,6 +181,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick; // The current tick
     int24 prevInitializedTick;
     uint16 timepointIndex; // The index of the last written timepoint
+    int24 nextTopTick;
+    int24 nextBottomTick;
   }
 
   /**
@@ -206,7 +208,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       globalState.price,
       globalState.tick,
       globalState.prevInitializedTick,
-      globalState.timepointIndex
+      globalState.timepointIndex,
+      0,
+      0
     );
 
     position = getOrCreatePosition(owner, bottomTick, topTick);
@@ -232,7 +236,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledBottom = true;
-        tickTable.toggleTick(bottomTick);
+        if (tickTable.toggleTick(bottomTick)) word = tickWordsTable.writeWord(bottomTick, word);
       }
 
       if (
@@ -248,7 +252,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledTop = true;
-        tickTable.toggleTick(topTick);
+        if (tickTable.toggleTick(topTick)) word = tickWordsTable.writeWord(topTick, word);
       }
     }
 
@@ -275,14 +279,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         }
       } else {
         if (toggledBottom) {
-          int24 prevBottomTick = tickTable.getNextWordWithInitializedTick(bottomTick, true);
-          if (cache.prevInitializedTick == prevBottomTick) globalState.prevInitializedTick = bottomTick;
-          ticks.insertTick(bottomTick, prevBottomTick, ticks[prevBottomTick].nextTick);
+          {
+            cache.nextBottomTick = tickTable.getNextTick(tickWordsTable, word, bottomTick);
+            if (cache.prevInitializedTick == ticks[cache.nextBottomTick].prevTick) globalState.prevInitializedTick = bottomTick;
+            ticks.insertTick(bottomTick, ticks[cache.nextBottomTick].prevTick, cache.nextBottomTick);
+          }
         }
         if (toggledTop) {
-          int24 prevTopTick = tickTable.getNextWordWithInitializedTick(topTick, true);
-          if (cache.prevInitializedTick == topTick) globalState.prevInitializedTick = topTick;
-          ticks.insertTick(topTick, prevTopTick, ticks[prevTopTick].nextTick);
+          {
+            cache.nextTopTick = tickTable.getNextTick(tickWordsTable, word, topTick);
+            if (cache.prevInitializedTick == ticks[cache.nextTopTick].prevTick) globalState.prevInitializedTick = topTick;
+            ticks.insertTick(topTick, ticks[cache.nextTopTick].prevTick, cache.nextTopTick);
+          }
         }
       }
 

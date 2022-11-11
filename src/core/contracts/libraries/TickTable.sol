@@ -8,12 +8,13 @@ import './TickMath.sol';
 /// @notice Stores a packed mapping of tick index to its initialized state
 /// @dev The mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
 library TickTable {
+  int16 internal constant MIN_ROW_ABS = 3466;
+
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
-  function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
+  function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal returns (bool toggle) {
     require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
-    tick /= Constants.TICK_SPACING; // compress tick
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -21,8 +22,9 @@ library TickTable {
       bitNumber := and(tick, 0xFF)
       rowNumber := shr(8, tick)
     }
-
+    uint256 wordBefore = self[rowNumber];
     self[rowNumber] ^= 1 << bitNumber;
+    if ((self[rowNumber] == 0) != (wordBefore == 0)) return true;
   }
 
   /// @notice get position of single 1-bit
@@ -59,81 +61,116 @@ library TickTable {
     return (getSingleSignificantBit(word));
   }
 
+  function writeWord(
+    mapping(int16 => uint256) storage self,
+    int24 tick,
+    uint256 word
+  ) internal returns (uint256 res) {
+    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
+    tick /= Constants.TICK_SPACING; // compress tick
+    int16 rowNumber;
+    uint8 bitNumber;
+    res = word;
+    assembly {
+      rowNumber := shr(8, tick)
+    }
+
+    int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
+
+    assembly {
+      bitNumber := and(movedRowNumber, 0xFF)
+      rowNumber := shr(8, movedRowNumber)
+    }
+    uint256 wordBefore = self[rowNumber];
+    self[rowNumber] ^= 1 << bitNumber;
+    if ((self[rowNumber] == 0) != (wordBefore == 0)) {
+      uint8 wordBitNumber;
+      assembly {
+        wordBitNumber := and(rowNumber, 0xFF)
+      }
+      res ^= 1 << wordBitNumber;
+    }
+  }
+
+  function getNextTick(
+    mapping(int16 => uint256) storage self,
+    mapping(int16 => uint256) storage wordTicks,
+    uint256 word,
+    int24 tick
+  ) internal view returns (int24 nextTick) {
+    bool initialized;
+    int16 rowNumber;
+
+    assembly {
+      rowNumber := shr(8, tick)
+    }
+    (nextTick, initialized) = nextTickInTheSameRow(self[rowNumber], tick);
+    if (!initialized) {
+      assembly {
+        rowNumber := shr(8, tick)
+      }
+
+      int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
+
+      assembly {
+        rowNumber := shr(8, movedRowNumber)
+      }
+      (nextTick, initialized) = nextTickInTheSameRow(wordTicks[rowNumber], movedRowNumber);
+
+      if (!initialized) {
+        uint8 wordBitNumber;
+        assembly {
+          wordBitNumber := and(rowNumber, 0xFF)
+        }
+        (nextTick, initialized) = nextTickInTheSameRow(word, wordBitNumber);
+        if (!initialized) return TickMath.MAX_TICK;
+        else {
+          rowNumber = int16(nextTick);
+          assembly {
+            nextTick := shl(8, nextTick)
+          }
+          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick);
+          nextTick -= MIN_ROW_ABS;
+          rowNumber = int16(nextTick);
+          assembly {
+            nextTick := shl(8, nextTick)
+          }
+          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
+        }
+      } else {
+        nextTick -= MIN_ROW_ABS;
+        rowNumber = int16(nextTick);
+        assembly {
+          nextTick := shl(8, nextTick)
+        }
+        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
+      }
+    }
+  }
+
   /// @notice Returns the next initialized tick contained in the same word (or adjacent word) as the tick that is either
   /// to the left (less than or equal to) or right (greater than) of the given tick
-  /// @param self The mapping in which to compute the next initialized tick
+  /// @param word The mapping in which to compute the next initialized tick
   /// @param tick The starting tick
-  /// @param lte Whether to search for the next initialized tick to the left (less than or equal to the starting tick)
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function nextTickInTheSameRow(
-    mapping(int16 => uint256) storage self,
-    int24 tick,
-    bool lte
-  ) internal view returns (int24 nextTick, bool initialized) {
-    {
-      int24 tickSpacing = Constants.TICK_SPACING;
-      // compress and round towards negative infinity if negative
-      assembly {
-        tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))
-      }
+  function nextTickInTheSameRow(uint256 word, int24 tick) private view returns (int24 nextTick, bool initialized) {
+    // start from the word of the next tick, since the current tick state doesn't matter
+    tick += 1;
+    uint8 bitNumber;
+    assembly {
+      bitNumber := and(tick, 0xFF)
     }
 
-    if (lte) {
-      // unpacking not made into a separate function for gas and contract size savings
-      int16 rowNumber;
-      uint8 bitNumber;
-      assembly {
-        bitNumber := and(tick, 0xFF)
-        rowNumber := shr(8, tick)
-      }
-      uint256 _row = self[rowNumber] << (255 - bitNumber); // all the 1s at or to the right of the current bitNumber
+    // all the 1s at or to the left of the bitNumber
+    uint256 _row = word >> (bitNumber);
 
-      if (_row != 0) {
-        tick -= int24(255 - getMostSignificantBit(_row));
-        return (uncompressAndBoundTick(tick), true);
-      } else {
-        tick -= int24(bitNumber);
-        return (uncompressAndBoundTick(tick), false);
-      }
+    if (_row != 0) {
+      tick += int24(getSingleSignificantBit(-_row & _row)); // least significant bit
+      return (tick, true);
     } else {
-      // start from the word of the next tick, since the current tick state doesn't matter
-      tick += 1;
-      int16 rowNumber;
-      uint8 bitNumber;
-      assembly {
-        bitNumber := and(tick, 0xFF)
-        rowNumber := shr(8, tick)
-      }
-
-      // all the 1s at or to the left of the bitNumber
-      uint256 _row = self[rowNumber] >> (bitNumber);
-
-      if (_row != 0) {
-        tick += int24(getSingleSignificantBit(-_row & _row)); // least significant bit
-        return (uncompressAndBoundTick(tick), true);
-      } else {
-        tick += int24(255 - bitNumber);
-        return (uncompressAndBoundTick(tick), false);
-      }
-    }
-  }
-
-  function getNextWordWithInitializedTick(
-    mapping(int16 => uint256) storage self,
-    int24 tick,
-    bool lte
-  ) internal view returns (int24 nextTick) {
-    // TODO
-    return tick;
-  }
-
-  function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
-    boundedTick = tick * Constants.TICK_SPACING;
-    if (boundedTick < TickMath.MIN_TICK) {
-      boundedTick = TickMath.MIN_TICK;
-    } else if (boundedTick > TickMath.MAX_TICK) {
-      boundedTick = TickMath.MAX_TICK;
+      tick += int24(255 - bitNumber);
+      return (tick, false);
     }
   }
 }

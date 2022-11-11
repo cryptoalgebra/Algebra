@@ -83,10 +83,10 @@ describe('TickTable', () => {
     })
   })
 
-  describe.only('#nextTickInTheSameRow', () => {
+  describe('#nextTickInTheSameRow', () => {
     beforeEach('set up some ticks', async () => {
       // word boundaries are at multiples of 256
-      await initTicks([-200*60, -55*60, -4*60, 70*60, 78*60, 84*60, 139*60, 240*60, 535*60, 887270])
+      await initTicks([-70000,-20000,-10000,-300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000])
     })
 
     describe('lte = false', async () => {
@@ -106,43 +106,54 @@ describe('TickTable', () => {
         expect(next).to.eq(78*60)
         expect(initialized).to.eq(true)
       })
-      it('returns the tick directly to the right', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(-56*60, false)
-        expect(next).to.eq(-55*60)
+      it.only('returns the tick directly to the right', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(200, false)
+        expect(next).to.eq(300)
         expect(initialized).to.eq(true)
       })
 
-      it('returns the next words initialized tick if on the right boundary', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(255*60, false)
-        expect(next).to.eq(511*60)
-        expect(initialized).to.eq(false)
+      it.only('returns the next words initialized tick if on the right boundary', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-200, false)
+        expect(next).to.eq(-100)
+        expect(initialized).to.eq(true)
       })
-      it('returns the next words initialized tick if on the right boundary', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(-257*60, false)
-        expect(next).to.eq(-200*60)
+      it.only('returns the next words initialized tick if on the right boundary', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(100, false)
+        expect(next).to.eq(200)
         expect(initialized).to.eq(true)
       })
 
-      it('returns the next initialized tick from the next word', async () => {
-        await tickTable.toggleTick(340*60)
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(328*60, false)
-        expect(next).to.eq(340*60)
+      it.only('returns the next initialized tick from the next word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(300, false)
+        expect(next).to.eq(65636)
         expect(initialized).to.eq(true)
       })
-      it('does not exceed boundary', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(508*60, false)
-        expect(next).to.eq(511*60)
-        expect(initialized).to.eq(false)
+      it.only('does not exceed boundary', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(70000, false)
+        expect(next).to.eq(150000)
+        expect(initialized).to.eq(true)
       })
-      it('skips entire word', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(255*60, false)
-        expect(next).to.eq(511*60)
-        expect(initialized).to.eq(false)
+      it.only('skips entire word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(150000, false)
+        expect(next).to.eq(800000)
+        expect(initialized).to.eq(true)
       })
-      it('skips half word', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(383*60, false)
-        expect(next).to.eq(511*60)
-        expect(initialized).to.eq(false)
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(65636, false)
+        expect(next).to.eq(65646)
+        expect(initialized).to.eq(true)
+      })
+
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-70000, false)
+        expect(next).to.eq(-20000)
+        expect(initialized).to.eq(true)
+      })
+
+      it.only('skips half word', async () => {
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(-20000, false)
+        expect(next).to.eq(-10000)
+        expect(initialized).to.eq(true)
       })
 
       it('gas cost on boundary  [ @skip-on-coverage ]', async () => {
@@ -194,9 +205,9 @@ describe('TickTable', () => {
         expect(initialized).to.eq(false)
       })
       it('entire empty word', async () => {
-        const { next, initialized } = await tickTable.nextTickInTheSameRow(1023*60, true)
+        const { next, initialized } = await tickTable.nextTickInTheSameRow(1023, true)
 
-        expect(next).to.eq(768*60)
+        expect(next).to.eq(768)
         expect(initialized).to.eq(false)
       })
       it('halfway through empty word', async () => {
