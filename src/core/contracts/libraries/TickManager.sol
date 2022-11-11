@@ -149,11 +149,12 @@ library TickManager {
   }
 
   function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
+    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
     Tick memory data = self[tick];
-    require(data.nextTick != data.prevTick);
+    require(data.nextTick != data.prevTick, 'next eq prev tick');
     self[data.prevTick].nextTick = data.nextTick;
     self[data.nextTick].prevTick = data.prevTick;
-    if (tick != TickMath.MIN_TICK && tick != TickMath.MAX_TICK) delete self[tick];
+    delete self[tick];
   }
 
   function insertTick(
@@ -162,6 +163,7 @@ library TickManager {
     int24 prevTick,
     int24 nextTick
   ) internal {
+    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
     require(prevTick < tick && nextTick > tick, 'invalid lower value');
     self[tick].prevTick = prevTick;
     self[tick].nextTick = nextTick;

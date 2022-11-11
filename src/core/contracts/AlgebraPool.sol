@@ -181,8 +181,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick; // The current tick
     int24 prevInitializedTick;
     uint16 timepointIndex; // The index of the last written timepoint
-    int24 nextTopTick;
-    int24 nextBottomTick;
+    int24 nextTick;
   }
 
   /**
@@ -209,7 +208,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       globalState.tick,
       globalState.prevInitializedTick,
       globalState.timepointIndex,
-      0,
       0
     );
 
@@ -280,16 +278,25 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       } else {
         if (toggledBottom) {
           {
-            cache.nextBottomTick = tickTable.getNextTick(tickWordsTable, word, bottomTick);
-            if (cache.prevInitializedTick == ticks[cache.nextBottomTick].prevTick) globalState.prevInitializedTick = bottomTick;
-            ticks.insertTick(bottomTick, ticks[cache.nextBottomTick].prevTick, cache.nextBottomTick);
+            if (cache.prevInitializedTick < bottomTick && bottomTick < cache.tick) {
+              globalState.prevInitializedTick = bottomTick;
+              ticks.insertTick(bottomTick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
+              cache.prevInitializedTick = bottomTick;
+            } else {
+              cache.nextTick = tickTable.getNextTick(tickWordsTable, word, bottomTick);
+              ticks.insertTick(bottomTick, ticks[cache.nextTick].prevTick, cache.nextTick);
+            }
           }
         }
         if (toggledTop) {
           {
-            cache.nextTopTick = tickTable.getNextTick(tickWordsTable, word, topTick);
-            if (cache.prevInitializedTick == ticks[cache.nextTopTick].prevTick) globalState.prevInitializedTick = topTick;
-            ticks.insertTick(topTick, ticks[cache.nextTopTick].prevTick, cache.nextTopTick);
+            if (cache.prevInitializedTick < topTick && topTick < cache.tick) {
+              globalState.prevInitializedTick = topTick;
+              ticks.insertTick(topTick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
+            } else {
+              cache.nextTick = tickTable.getNextTick(tickWordsTable, word, topTick);
+              ticks.insertTick(topTick, ticks[cache.nextTick].prevTick, cache.nextTick);
+            }
           }
         }
       }
@@ -759,7 +766,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     PriceMovementCache memory step;
 
-    step.nextTick = zeroToOne ? ticks[globalState.prevInitializedTick].nextTick : globalState.prevInitializedTick;
+    step.nextTick = zeroToOne ? globalState.prevInitializedTick : ticks[globalState.prevInitializedTick].nextTick;
     // swap until there is remaining input or output tokens or we reach the price limit
     while (true) {
       step.stepSqrtPrice = currentPrice;
@@ -777,7 +784,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
-
       (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
         zeroToOne,
         currentPrice,
@@ -788,7 +794,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         amountRequired,
         PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
       );
-
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
         cache.amountCalculated = cache.amountCalculated.sub(step.output.toInt256()); // decrease calculated output amount
@@ -805,7 +810,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
-
       if (currentPrice == step.nextTickPrice) {
         // if the reached tick is initialized then we need to cross it
         if (step.initialized) {
@@ -847,7 +851,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               blockTimestamp
             );
           }
-
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         }
 
@@ -857,13 +860,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
         break; // since the price hasn't reached the target, amountRequired should be 0
       }
-
       // check stop condition
       if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
         break;
       }
 
-      step.nextTick = zeroToOne ? ticks[step.nextTick].nextTick : ticks[step.nextTick].prevTick;
+      step.nextTick = zeroToOne ? ticks[step.nextTick].prevTick : ticks[step.nextTick].nextTick;
     }
 
     (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less then initially specified (e.g. reached limit)

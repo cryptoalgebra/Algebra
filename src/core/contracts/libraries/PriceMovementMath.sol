@@ -217,7 +217,6 @@ library PriceMovementMath {
     function(uint160, uint160, uint128) pure returns (uint256) getAmountA;
     function(uint160, uint160, uint128) pure returns (uint256) getAmountB;
     (getAmountA, getAmountB) = zeroToOne ? (getTokenADelta01, getTokenBDelta01) : (getTokenADelta10, getTokenBDelta10);
-
     if (amountAvailable >= 0) {
       {
         input = getAmountA(targetPrice, currentPrice, liquidity);
@@ -233,7 +232,6 @@ library PriceMovementMath {
             return (targetPrice, input, output, feeAmount);
           }
         }
-
         feeAmount = feeData.fee; // dirty hack
         for (uint256 i; i < 4; i++) {
           {
@@ -244,7 +242,6 @@ library PriceMovementMath {
           if (feeAmount == priceImpactFeeNew) break;
           feeAmount = priceImpactFeeNew;
         }
-
         if (targetPrice != resultPrice) {
           input = getAmountA(resultPrice, currentPrice, liquidity);
           // we didn't reach the target, so take the remainder of the maximum input as fee
@@ -253,7 +250,6 @@ library PriceMovementMath {
           feeAmount = FullMath.mulDivRoundingUp(input, feeAmount, 1e6 - feeAmount);
         }
       }
-
       output = getAmountB(resultPrice, currentPrice, liquidity);
     } else {
       output = getAmountB(targetPrice, currentPrice, liquidity);
@@ -265,13 +261,11 @@ library PriceMovementMath {
         if (targetPrice != resultPrice) {
           output = getAmountB(resultPrice, currentPrice, liquidity);
         }
-
         // cap the output amount to not exceed the remaining output amount
         if (output > uint256(amountAvailable)) {
           output = uint256(amountAvailable);
         }
       }
-
       input = getAmountA(resultPrice, currentPrice, liquidity);
       uint16 priceImpactFee = uint16(calculatePriceImpactFee(feeData, currentPrice, resultPrice));
       feeAmount = FullMath.mulDivRoundingUp(input, priceImpactFee, 1e6 - priceImpactFee);
