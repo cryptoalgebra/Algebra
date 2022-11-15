@@ -8,33 +8,33 @@ contract TickTableTest {
   uint256 public word;
 
   mapping(int16 => uint256) public tickWordsTable;
-  mapping(int16 => uint256) public bitmap;
+  mapping(int16 => uint256) public tickTable;
 
   function toggleTick(int24 tick) external {
-    bool toggle = bitmap.toggleTick(tick);
+    bool toggle = tickTable.toggleTick(tick);
 
     if (toggle) word = tickWordsTable.writeWord(tick, word);
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     uint256 gasBefore = gasleft();
-    bitmap.toggleTick(tick);
+    tickTable.toggleTick(tick);
     return gasBefore - gasleft();
   }
 
   function nextTickInTheSameRow(int24 tick, bool lte) external view returns (int24 next, bool initialized) {
-    return (bitmap.getNextTick(tickWordsTable, word, tick), true);
+    return (tickTable.getNextTick(tickWordsTable, word, tick), true);
   }
 
   function getGasCostOfNextTickInTheSameRow(int24 tick, bool lte) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    bitmap.getNextTick(tickWordsTable, word, tick);
+    tickTable.getNextTick(tickWordsTable, word, tick);
     return gasBefore - gasleft();
   }
 
   // returns whether the given tick is initialized
   function isInitialized(int24 tick) external view returns (bool) {
-    int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
+    int24 next = tickTable.getNextTick(tickWordsTable, word, tick - 1);
     bool initialized = true;
     return next == tick ? initialized : false;
   }

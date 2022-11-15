@@ -30,7 +30,6 @@ contract TickTest {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
     uint160 secondsPerLiquidityCumulative,
-    int56 tickCumulative,
     uint32 time,
     bool upper
   ) external returns (bool flipped) {
@@ -46,7 +45,6 @@ contract TickTest {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
     uint160 secondsPerLiquidityCumulative,
-    int56 tickCumulative,
     uint32 time
   ) external returns (int128 liquidityDelta) {
     return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, time);

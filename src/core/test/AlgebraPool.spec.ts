@@ -2092,22 +2092,18 @@ describe('AlgebraPool', () => {
     it('is zero immediately after initialize', async () => {
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(0)
-      expect(innerTickCumulative).to.eq(0)
       expect(innerSecondsSpent).to.eq(0)
     })
     it('increases by expected amount when time elapses in the range', async () => {
       await pool.advanceTime(5)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(5).shl(128).div(10))
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(0)
       expect(innerSecondsSpent).to.eq(5)
     })
     it('does not account for time increase above range', async () => {
@@ -2116,11 +2112,9 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(7)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(5).shl(128).div(10))
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(0)
       expect(innerSecondsSpent).to.eq(5)
     })
     it('does not account for time increase below range', async () => {
@@ -2129,12 +2123,10 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(7)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(5).shl(128).div(10))
       // tick is 0 for 5 seconds, then not in range
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(0)
       expect(innerSecondsSpent).to.eq(5)
     })
     it('time increase below range is not counted', async () => {
@@ -2144,12 +2136,10 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(7)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(7).shl(128).div(10))
       // tick is not in range then tick is 0 for 7 seconds
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(0)
       expect(innerSecondsSpent).to.eq(7)
     })
     it('time increase above range is not counted', async () => {
@@ -2159,12 +2149,10 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(7)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(7).shl(128).div(10))
-      expect((await pool.globalState()).tick).to.eq(-1) // justify the -7 tick cumulative inside value
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(-7)
+      expect((await pool.globalState()).tick).to.eq(-1)
       expect(innerSecondsSpent).to.eq(7)
     })
     it('positions minted after time spent', async () => {
@@ -2174,14 +2162,10 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(8)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(topTick, getMaxTick(tickSpacing))
 
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(8).shl(128).div(15))
-      // the tick of 2/1 is 6931
-      // 8 seconds * 6931 = 55448
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(55448)
       expect(innerSecondsSpent).to.eq(8)
     })
     it('overlapping liquidity is aggregated', async () => {
@@ -2191,10 +2175,8 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(8)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
-      expect(innerTickCumulative, 'innerTickCumulative').to.eq(0)
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(5).shl(128).div(25))
       expect(innerSecondsSpent).to.eq(5)
     })
@@ -2203,7 +2185,6 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, getMinTick(tickSpacing), bottomTick, 15)
       const {
         innerSecondsSpentPerLiquidity: innerSecondsSpentPerLiquidityStart,
-        innerTickCumulative: innerTickCumulativeStart,
         innerSecondsSpent: innerSecondsSpentStart,
       } = await pool.getInnerCumulatives(getMinTick(tickSpacing), bottomTick)
       await pool.advanceTime(8)
@@ -2212,7 +2193,6 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(3)
       const {
         innerSecondsSpentPerLiquidity,
-        innerTickCumulative,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(getMinTick(tickSpacing), bottomTick)
       const expectedDiffSecondsPerLiquidity = BigNumber.from(3).shl(128).div(15)
@@ -2220,9 +2200,6 @@ describe('AlgebraPool', () => {
         expectedDiffSecondsPerLiquidity
       )
       expect(innerSecondsSpentPerLiquidity).to.not.eq(expectedDiffSecondsPerLiquidity)
-      // the tick is the one corresponding to the price of 1/2, or log base 1.0001 of 0.5
-      // this is -6932, and 3 seconds have passed, so the cumulative computed from the diff equals 6932 * 3
-      expect(innerTickCumulative.sub(innerTickCumulativeStart), 'innerTickCumulative').to.eq(-20796)
       expect(innerSecondsSpent - innerSecondsSpentStart).to.eq(3)
       expect(innerSecondsSpent).to.not.eq(3)
     })

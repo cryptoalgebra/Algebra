@@ -90,19 +90,19 @@ describe('TickTable', () => {
     })
 
     it('returns tick to right if at initialized tick', async () => {
-      const { next, initialized } = await tickTable.nextTickInTheSameRow(78*60, false)
-      expect(next).to.eq(84*60)
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(65636, false)
+      expect(next).to.eq(65646)
       expect(initialized).to.eq(true)
     })
     it('returns tick to right if at initialized tick', async () => {
-      const { next, initialized } = await tickTable.nextTickInTheSameRow(-55*60, false)
-      expect(next).to.eq(-4*60)
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(-10000, false)
+      expect(next).to.eq(-300)
       expect(initialized).to.eq(true)
     })
 
     it('returns the tick directly to the right', async () => {
       const { next, initialized } = await tickTable.nextTickInTheSameRow(77*60, false)
-      expect(next).to.eq(78*60)
+      expect(next).to.eq(65636)
       expect(initialized).to.eq(true)
     })
     it('returns the tick directly to the right', async () => {

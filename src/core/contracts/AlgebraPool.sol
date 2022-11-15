@@ -812,6 +812,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
+
       if (currentPrice == step.nextTickPrice) {
         // if the reached tick is initialized then we need to cross it
         if (step.initialized) {

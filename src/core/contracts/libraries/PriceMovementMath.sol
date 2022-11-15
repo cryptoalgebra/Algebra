@@ -137,6 +137,8 @@ library PriceMovementMath {
   ) internal pure returns (uint256 feeAmount) {
     bool zto = endPrice < currentPrice;
 
+    //return feeData.fee; // TODO TEST
+
     (int32 currentTickX100, uint160 currentPriceRounded) = TickMath.getTickX100(feeData.currentTick, currentPrice, zto);
     (int32 endTickX100, uint160 endPriceRounded) = TickMath.getTickX100AtSqrtRatio(endPrice, !zto);
 
