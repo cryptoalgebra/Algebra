@@ -72,7 +72,7 @@ describe('AlgebraPool arbitrage tests', () => {
           const arbTestFixture = async () => {
             const fix = await poolFixture()
 
-            const pool = await fix.createPool(feeAmount)
+            const pool = await fix.createPool()
 
             await fix.token0.transfer(arbitrageur.address, BigNumber.from(2).pow(254))
             await fix.token1.transfer(arbitrageur.address, BigNumber.from(2).pow(254))
@@ -100,6 +100,7 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.approve(tester.address, MaxUint256)
 
             await pool.initialize(startingPrice)
+            await pool.setTickSpacing(tickSpacing)
             if (communityFee != 0) await pool.setCommunityFee(communityFee)
             await mint(wallet.address, minTick, maxTick, passiveLiquidity)
 

@@ -61,7 +61,6 @@ interface PoolFixture extends TokensAndFactoryFixture {
   swapTargetCallee: TestAlgebraCallee
   swapTargetRouter: TestAlgebraRouter
   createPool(
-    fee: number,
     firstToken?: TestERC20,
     secondToken?: TestERC20
   ): Promise<MockTimeAlgebraPool>
@@ -92,7 +91,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
     factory,
     swapTargetCallee,
     swapTargetRouter,
-    createPool: async (fee, firstToken = token0, secondToken = token1) => {
+    createPool: async (firstToken = token0, secondToken = token1) => {
       const mockTimePoolDeployer = (await MockTimeAlgebraPoolDeployerFactory.deploy()) as MockTimeAlgebraPoolDeployer
       const tx = await mockTimePoolDeployer.deployMock(
         factory.address,
@@ -102,7 +101,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
 
       const receipt = await tx.wait()
       const poolAddress = receipt.events?.[1].args?.pool as string
-      return MockTimeAlgebraPoolFactory.attach(poolAddress) as MockTimeAlgebraPool
+      return MockTimeAlgebraPoolFactory.attach(poolAddress) as MockTimeAlgebraPool;
     },
   }
 }

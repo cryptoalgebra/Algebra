@@ -59,7 +59,6 @@ describe('AlgebraPool', () => {
   let swapExact1For0: SwapFunction
   let swap1ForExact0: SwapFunction
 
-  let feeAmount: number
   let tickSpacing: number
 
   let minTick: number
@@ -78,8 +77,8 @@ describe('AlgebraPool', () => {
     ;({ token0, token1, token2, factory, createPool, swapTargetCallee: swapTarget } = await loadFixture(poolFixture))
 
     const oldCreatePool = createPool
-    createPool = async (_feeAmount) => {
-      const pool = await oldCreatePool(_feeAmount)
+    createPool = async () => {
+      const pool = await oldCreatePool()
       ;({
         swapToLowerPrice,
         swapToHigherPrice,
@@ -99,13 +98,11 @@ describe('AlgebraPool', () => {
       }))
       minTick = getMinTick(60)
       maxTick = getMaxTick(60)
-      feeAmount = _feeAmount
       tickSpacing = 60
       return pool
     }
 
-    // default to the 30 bips pool
-    pool = await createPool(FeeAmount.LOW)
+    pool = await createPool()
     const dsOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
     dsOperator = (dsOperatorFactory.attach(await pool.dataStorageOperator())) as DataStorageOperator;
   })
@@ -114,7 +111,7 @@ describe('AlgebraPool', () => {
     expect(await pool.factory()).to.eq(factory.address)
     expect(await pool.token0()).to.eq(token0.address)
     expect(await pool.token1()).to.eq(token1.address)
-    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("11505743598341114571880798222544994"))
+    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("40564824043007195767232224305152"))
   })
 
   it('_blockTimestamp works', async() => {
@@ -194,7 +191,7 @@ describe('AlgebraPool', () => {
 
           it('fails if token1 payed 0', async() => {
             await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWith('IIAM');
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -23028 - tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIAM');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, Math.floor((-23028 - tickSpacing) / tickSpacing)*tickSpacing, 10000, 100, 0)).to.be.revertedWith('IIAM');
           }) 
 
           it('fails if token0 hardly underpayed', async() => {
@@ -680,7 +677,7 @@ describe('AlgebraPool', () => {
 
   describe('miscellaneous mint tests', () => {
     beforeEach('initialize at zero tick', async () => {
-      pool = await createPool(FeeAmount.LOW)
+      pool = await createPool()
       await initializeAtZeroTick(pool)
     })
 
@@ -943,7 +940,7 @@ describe('AlgebraPool', () => {
 
   describe('#collect', () => {
     beforeEach(async () => {
-      pool = await createPool(FeeAmount.LOW)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
     })
 
@@ -1164,7 +1161,7 @@ describe('AlgebraPool', () => {
     const liquidityAmount = expandTo18Decimals(1000)
 
     beforeEach(async () => {
-      pool = await createPool(FeeAmount.LOW)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, liquidityAmount)
     })
@@ -1490,7 +1487,7 @@ describe('AlgebraPool', () => {
 
   describe('#tickSpacing', () => {
       beforeEach('deploy pool', async () => {
-        pool = await createPool(FeeAmount.MEDIUM)
+        pool = await createPool()
       })
       describe('post initialize', () => {
         beforeEach('initialize pool', async () => {
@@ -1536,7 +1533,7 @@ describe('AlgebraPool', () => {
   })
 
   xit('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
-    pool = await createPool(FeeAmount.MEDIUM)
+    pool = await createPool()
     const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest
     const PriceMovementMath = (await (await ethers.getContractFactory('PriceMovementMathTest')).deploy()) as PriceMovementMathTest
     const p0 = (await sqrtTickMath.getSqrtRatioAtTick(-24081)).add(1)
@@ -1650,7 +1647,7 @@ describe('AlgebraPool', () => {
 
     const AMOUNT = 500000000
     it('single huge step after day', async () => {
-      pool = await createPool(FeeAmount.MEDIUM)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
 
@@ -1677,7 +1674,7 @@ describe('AlgebraPool', () => {
     })
 
     it('single huge step after initialization', async () => {
-      pool = await createPool(FeeAmount.MEDIUM)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
 
@@ -1704,7 +1701,7 @@ describe('AlgebraPool', () => {
     })
 
     it('single huge spike after day', async () => {
-      pool = await createPool(FeeAmount.MEDIUM)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
       await pool.advanceTime(DAY)
@@ -1734,7 +1731,7 @@ describe('AlgebraPool', () => {
     })
 
     it('single huge spike after initialization', async () => {
-      pool = await createPool(FeeAmount.MEDIUM)
+      pool = await createPool()
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
 

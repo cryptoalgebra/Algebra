@@ -26,9 +26,9 @@ export enum FeeAmount {
 }
 
 export const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
-  [FeeAmount.LOW]: 60,
+  [FeeAmount.LOW]: 10,
   [FeeAmount.MEDIUM]: 60,
-  [FeeAmount.HIGH]: 60,
+  [FeeAmount.HIGH]: 100,
 }
 
 export function expandTo18Decimals(n: number): BigNumber {
