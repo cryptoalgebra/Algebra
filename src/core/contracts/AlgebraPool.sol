@@ -401,6 +401,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     require(liquidityDesired > 0, 'IL');
+    require(bottomTick % Constants.TICK_SPACING == 0, 'tick is not spaced');
+    require(topTick % Constants.TICK_SPACING == 0, 'tick is not spaced');
+
     {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,

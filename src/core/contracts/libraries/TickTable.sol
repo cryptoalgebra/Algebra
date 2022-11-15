@@ -14,7 +14,6 @@ library TickTable {
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
   function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal returns (bool toggle) {
-    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -48,7 +47,6 @@ library TickTable {
     int24 tick,
     uint256 word
   ) internal returns (uint256 res) {
-    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
     int16 rowNumber;
     uint8 bitNumber;
     res = word;
@@ -131,7 +129,7 @@ library TickTable {
   /// @param tick The starting tick
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function nextTickInTheSameRow(uint256 word, int24 tick) private view returns (int24 nextTick, bool initialized) {
+  function nextTickInTheSameRow(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
     // start from the word of the next tick, since the current tick state doesn't matter
     tick += 1;
     uint8 bitNumber;
