@@ -59,6 +59,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   constructor() PoolImmutables(msg.sender) {
     globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
+    tickSpacing = Constants.INIT_TICK_SPACING;
     ticks.initTickState();
   }
 
@@ -401,10 +402,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     require(liquidityDesired > 0, 'IL');
-    require(bottomTick % Constants.TICK_SPACING == 0, 'tick is not spaced');
-    require(topTick % Constants.TICK_SPACING == 0, 'tick is not spaced');
-
     {
+      int24 _tickSpacing = tickSpacing;
+      require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
+
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
         topTick,
@@ -957,6 +958,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(communityFee <= Constants.MAX_COMMUNITY_FEE);
     globalState.communityFee = communityFee;
     emit CommunityFee(communityFee);
+  }
+
+  //TODO interface and natspec
+  function setTickSpacing(int24 newTickSpacing) external lock {
+    require(msg.sender == IAlgebraFactory(factory).owner());
+    require(newTickSpacing > 0);
+    tickSpacing = newTickSpacing;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

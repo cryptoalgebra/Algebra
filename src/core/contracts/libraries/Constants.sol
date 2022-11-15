@@ -9,7 +9,7 @@ library Constants {
   int256 internal constant Q160 = 0x0010000000000000000000000000000000000000000;
   // fee value in hundredths of a bip, i.e. 1e-6
   uint16 internal constant BASE_FEE = 100;
-  int24 internal constant TICK_SPACING = 1;
+  int24 internal constant INIT_TICK_SPACING = 1;
 
   // max(uint128) / ( (MAX_TICK - MIN_TICK) )
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 40564824043007195767232224305152;

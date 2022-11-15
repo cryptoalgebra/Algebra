@@ -44,6 +44,15 @@ interface IAlgebraPoolState {
   function totalFeeGrowth1Token() external view returns (uint256);
 
   /**
+   * @notice The pool tick spacing
+   * @dev Ticks can only be used at multiples of this value
+   * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+   * This value is an int24 to avoid casting even though it is always positive.
+   * @return The tick spacing
+   */
+  function tickSpacing() external view returns (int24);
+
+  /**
    * @notice The currently in range liquidity available to the pool
    * @dev This value has no relationship to the total liquidity across all ticks.
    * Returned value cannot exceed type(uint128).max
