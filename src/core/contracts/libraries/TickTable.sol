@@ -11,45 +11,39 @@ library TickTable {
   int16 internal constant MIN_ROW_ABS = 3466;
 
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
-  /// @param self The mapping in which to toggle the tick
+  /// @param leafs The mapping of words with ticks
+  /// @param secondLayer The mapping of words with leafs
   /// @param tick The tick to toggle
+  /// @param treeRoot The word with info about active subtrees
   function toggleTick(
-    mapping(int16 => uint256) storage self,
-    mapping(int16 => uint256) storage wordTicks,
+    mapping(int16 => uint256) storage leafs,
+    mapping(int16 => uint256) storage secondLayer,
     int24 tick,
-    uint256 word
-  ) internal returns (uint256 res) {
-    int16 rowNumber;
-    uint8 bitNumber;
-    res = word;
-    assembly {
-      bitNumber := and(tick, 0xFF)
-      rowNumber := sar(8, tick)
-    }
-    uint256 wordBefore = self[rowNumber];
-    self[rowNumber] ^= 1 << bitNumber;
-    if ((self[rowNumber] == 0) != (wordBefore == 0)) {
-      assembly {
-        rowNumber := sar(8, tick)
-      }
-
-      int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
-
-      assembly {
-        bitNumber := and(movedRowNumber, 0xFF)
-        rowNumber := shr(8, movedRowNumber)
-      }
-
-      wordBefore = wordTicks[rowNumber];
-      wordTicks[rowNumber] ^= 1 << bitNumber;
-      if ((wordTicks[rowNumber] == 0) != (wordBefore == 0)) {
-        uint8 wordBitNumber;
+    uint256 treeRoot
+  ) internal returns (uint256 newTreeRoot) {
+    newTreeRoot = treeRoot;
+    (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
+    if (toggledNode) {
+      (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + MIN_ROW_ABS);
+      if (toggledNode) {
         assembly {
-          wordBitNumber := and(rowNumber, 0xFF)
+          newTreeRoot := xor(newTreeRoot, shl(nodeNumber, 1))
         }
-        res ^= 1 << wordBitNumber;
       }
     }
+  }
+
+  function _toggleTickInNode(mapping(int16 => uint256) storage row, int24 tick) private returns (bool toggledNode, int16 nodeNumber) {
+    assembly {
+      nodeNumber := sar(8, tick)
+    }
+    uint256 node = row[nodeNumber];
+    assembly {
+      toggledNode := iszero(node)
+      node := xor(node, shl(and(tick, 0xFF), 1))
+      toggledNode := xor(toggledNode, iszero(node))
+    }
+    row[nodeNumber] = node;
   }
 
   /// @notice get position of single 1-bit
@@ -80,14 +74,14 @@ library TickTable {
     assembly {
       nodeNumber := sar(8, tick)
     }
-    (nextTick, initialized) = nextTickInTheSameRow(row[nodeNumber], tick);
+    (nextTick, initialized) = nextTickInTheSameNode(row[nodeNumber], tick);
   }
 
   function _getFirstTickInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
     assembly {
       nextTick := shl(8, nodeNumber)
     }
-    (nextTick, ) = nextTickInTheSameRow(row[int16(nodeNumber)], nextTick);
+    (nextTick, ) = nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
   }
 
   /// @notice Returns the next initialized tick in tree to the right (gte) of the given tick or `MAX_TICK`
@@ -114,7 +108,7 @@ library TickTable {
     (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + MIN_ROW_ABS + 1);
     if (!initialized) {
       // try to find which subtree has an active leaf
-      (nextTick, initialized) = nextTickInTheSameRow(treeRoot, int24(++nodeNumber));
+      (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
       if (!initialized) return TickMath.MAX_TICK;
       nextTick = _getFirstTickInNode(secondLayer, nextTick);
     }
@@ -128,7 +122,7 @@ library TickTable {
   /// @param tick The starting tick
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function nextTickInTheSameRow(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
+  function nextTickInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
     uint256 bitNumber;
     assembly {
       bitNumber := and(tick, 0xFF)
