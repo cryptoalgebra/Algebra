@@ -10,53 +10,82 @@ contract TickTableEchidnaTest {
   mapping(int16 => uint256) private tickWordsTable;
   mapping(int16 => uint256) private bitmap;
 
+  int24[] initedTicks;
+  mapping(int24 => uint256) initedTicksIndexes;
+
+  int24 private constant TICK_SPACING = 60;
+
   // returns whether the given tick is initialized
-  function isInitialized(int24 tick) private view returns (bool) {
+  function _isInitialized(int24 tick) private view returns (bool) {
     int16 rowNumber;
     uint8 bitNumber;
 
     assembly {
       bitNumber := and(tick, 0xFF)
-      rowNumber := shr(8, tick)
+      rowNumber := sar(8, tick)
     }
     uint256 word0 = bitmap[rowNumber];
     return (word0 & (1 << bitNumber)) > 0;
   }
 
   function toggleTick(int24 tick) external {
-    tick = (tick / 60);
-    tick = tick * 60;
-    if (tick < -887272) tick = -887272;
-    if (tick > 887272) tick = 887272;
-    tick = (tick / 60);
-    tick = tick * 60;
+    tick = (tick / TICK_SPACING) * TICK_SPACING;
+    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+    tick = (tick / TICK_SPACING) * TICK_SPACING;
 
-    assert(tick >= -887272);
-    assert(tick <= 887272);
-    bool before = isInitialized(tick);
+    assert(tick >= TickMath.MIN_TICK);
+    assert(tick <= TickMath.MAX_TICK);
+    bool before = _isInitialized(tick);
     bool toggle = bitmap.toggleTick(tick);
     if (toggle) word = tickWordsTable.writeWord(tick, word);
-    assert(isInitialized(tick) == !before);
+    assert(_isInitialized(tick) == !before);
+
+    if (!before) {
+      initedTicks.push(tick);
+      initedTicksIndexes[tick] = initedTicks.length - 1;
+    } else {
+      uint256 index = initedTicksIndexes[tick];
+      if (index != initedTicks.length - 1) {
+        int24 last = initedTicks[initedTicks.length - 1];
+        initedTicks[index] = last;
+        initedTicksIndexes[last] = index;
+      }
+      initedTicks.pop();
+    }
   }
 
-  function checkNextInitializedTickWithinOneWordInvariants(int24 tick) external view {
-    tick = (tick / 60);
-    tick = tick * 60;
-    if (tick < -887272) tick = -887272;
-    if (tick > 887272) tick = 887272;
-    tick = (tick / 60);
-    tick = tick * 60;
+  function _findNextTickInArray(int24 start) private view returns (int24 num, bool found) {
+    uint256 length = initedTicks.length;
+    if (length == 0) return (TickMath.MAX_TICK, false);
+    num = TickMath.MAX_TICK;
+    for (uint256 i = 0; i < length; i++) {
+      int24 tick = initedTicks[i];
+      if (tick > start) {
+        if (tick <= num) {
+          num = tick;
+          found = true;
+        }
+      }
+    }
+  }
+
+  function checkNextInitializedTickInvariants(int24 tick) external view {
+    tick = (tick / TICK_SPACING) * TICK_SPACING;
+    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+    tick = (tick / TICK_SPACING) * TICK_SPACING;
 
     int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
 
     assert(next > tick);
-    assert((next - tick) <= 2 * 887272);
-    assert(next >= -887272);
-    assert(next <= 887272);
-    if (next != 887272) assert(isInitialized(next));
+    assert((next - tick) <= 2 * TickMath.MAX_TICK);
+    assert(next >= TickMath.MIN_TICK);
+    assert(next <= TickMath.MAX_TICK);
+    if (next != TickMath.MAX_TICK) assert(_isInitialized(next));
     // all the ticks between the input tick and the next tick should be uninitialized
-    //for (int24 i = tick + 60; i < next; i += 60) {
-    //  assert(!isInitialized(i));
-    //}
+    (int24 nextInited, bool found) = _findNextTickInArray(tick);
+    assert(nextInited == next);
+    assert(_isInitialized(next) == found);
   }
 }
