@@ -182,7 +182,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick; // The current tick
     int24 prevInitializedTick;
     uint16 timepointIndex; // The index of the last written timepoint
-    int24 nextTick;
+    uint256 tickTreeRoot;
   }
 
   /**
@@ -220,34 +220,28 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (liquidityDelta != 0) {
       uint32 time = _blockTimestamp();
       (, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
-      if (
-        ticks.update(
-          bottomTick,
-          cache.tick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          secondsPerLiquidityCumulative,
-          time,
-          false // isTopTick
-        )
-      ) {
-        toggledBottom = true;
-      }
-      if (
-        ticks.update(
-          topTick,
-          cache.tick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          secondsPerLiquidityCumulative,
-          time,
-          true // isTopTick
-        )
-      ) {
-        toggledTop = true;
-      }
+
+      toggledBottom = ticks.update(
+        bottomTick,
+        cache.tick,
+        liquidityDelta,
+        _totalFeeGrowth0Token,
+        _totalFeeGrowth1Token,
+        secondsPerLiquidityCumulative,
+        time,
+        false // isTopTick
+      );
+
+      toggledTop = ticks.update(
+        topTick,
+        cache.tick,
+        liquidityDelta,
+        _totalFeeGrowth0Token,
+        _totalFeeGrowth1Token,
+        secondsPerLiquidityCumulative,
+        time,
+        true // isTopTick
+      );
     }
 
     (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
@@ -262,44 +256,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
-      if (liquidityDelta < 0) {
-        if (toggledBottom) {
-          if (cache.prevInitializedTick == bottomTick) {
-            cache.prevInitializedTick = ticks[bottomTick].prevTick;
-            globalState.prevInitializedTick = cache.prevInitializedTick;
-          }
-          ticks.removeTick(bottomTick);
-        }
-        if (toggledTop) {
-          if (cache.prevInitializedTick == topTick) globalState.prevInitializedTick = ticks[topTick].prevTick;
-          ticks.removeTick(topTick);
-        }
-      } else {
-        if (toggledBottom) {
-          {
-            if (cache.prevInitializedTick < bottomTick && bottomTick <= cache.tick) {
-              globalState.prevInitializedTick = bottomTick;
-              ticks.insertTick(bottomTick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
-              cache.prevInitializedTick = bottomTick;
-            } else {
-              cache.nextTick = tickTable.getNextTick(tickWordsTable, word, bottomTick);
-              ticks.insertTick(bottomTick, ticks[cache.nextTick].prevTick, cache.nextTick);
-            }
-            word = tickTable.toggleTick(tickWordsTable, bottomTick, word);
-          }
-        }
-        if (toggledTop) {
-          {
-            if (cache.prevInitializedTick < topTick && topTick <= cache.tick) {
-              globalState.prevInitializedTick = topTick;
-              ticks.insertTick(topTick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
-            } else {
-              cache.nextTick = tickTable.getNextTick(tickWordsTable, word, topTick);
-              ticks.insertTick(topTick, ticks[cache.nextTick].prevTick, cache.nextTick);
-            }
-            word = tickTable.toggleTick(tickWordsTable, topTick, word);
-          }
-        }
+      {
+        cache.tickTreeRoot = tickTreeRoot;
+        if (toggledBottom) _insertOrRemoveTick(cache, bottomTick, liquidityDelta < 0);
+        if (toggledTop) _insertOrRemoveTick(cache, topTick, liquidityDelta < 0);
+
+        if (tickTreeRoot != cache.tickTreeRoot) tickTreeRoot = cache.tickTreeRoot;
+        if (globalState.prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = cache.prevInitializedTick;
       }
 
       int128 globalLiquidityDelta;
@@ -314,6 +277,26 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
     }
+  }
+
+  function _insertOrRemoveTick(
+    UpdatePositionCache memory cache,
+    int24 tick,
+    bool remove
+  ) private {
+    if (remove) {
+      if (cache.prevInitializedTick == tick) cache.prevInitializedTick = ticks[tick].prevTick;
+      ticks.removeTick(tick);
+    } else {
+      if (cache.prevInitializedTick < tick && tick <= cache.tick) {
+        ticks.insertTick(tick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
+        cache.prevInitializedTick = tick;
+      } else {
+        int24 nextTick = tickTable.getNextTick(tickWordsTable, cache.tickTreeRoot, tick);
+        ticks.insertTick(tick, ticks[nextTick].prevTick, nextTick);
+      }
+    }
+    cache.tickTreeRoot = tickTable.toggleTick(tickWordsTable, tick, cache.tickTreeRoot);
   }
 
   function _getAmountsForLiquidity(

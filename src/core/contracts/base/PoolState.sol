@@ -41,7 +41,7 @@ abstract contract PoolState is IAlgebraPoolState {
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
   mapping(int16 => uint256) public override tickWordsTable;
-  uint256 word;
+  uint256 tickTreeRoot;
 
   modifier lock() {
     require(globalState.unlocked, 'LOK');
