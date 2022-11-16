@@ -83,7 +83,37 @@ describe('TickTable', () => {
     })
   })
 
-  describe('#nextTickInTheSameRow', () => {
+  describe.only('#nextTickInTheSameRow special cases', () => {
+    it('works across all positive range', async () => {
+      await initTicks([887272]);
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(0, false)
+      expect(next).to.eq(887272)
+      expect(initialized).to.eq(true)
+    })
+
+    it('works for huge gap', async () => {
+      await initTicks([882636]);
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(0, false)
+      expect(next).to.eq(882636)
+      expect(initialized).to.eq(true)
+    })
+
+    it('works across all possible range', async () => {
+      await initTicks([887272]);
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(-887272, false)
+      expect(next).to.eq(887272)
+      expect(initialized).to.eq(true)
+    })
+
+    it('init is far behind', async () => {
+      await initTicks([292530]);
+      const { next, initialized } = await tickTable.nextTickInTheSameRow(357728, false)
+      expect(next).to.eq(887272)
+      expect(initialized).to.eq(false)
+    })
+
+  })
+  describe.only('#nextTickInTheSameRow', () => {
     beforeEach('set up some ticks', async () => {
       // word boundaries are at multiples of 256
       await initTicks([-70000,-20000,-10000,-300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000])

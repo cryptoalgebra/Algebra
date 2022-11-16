@@ -58,8 +58,9 @@ library TickTable {
 
     assembly {
       bitNumber := and(movedRowNumber, 0xFF)
-      rowNumber := sar(8, movedRowNumber)
+      rowNumber := shr(8, movedRowNumber)
     }
+
     uint256 wordBefore = self[rowNumber];
     self[rowNumber] ^= 1 << bitNumber;
     if ((self[rowNumber] == 0) != (wordBefore == 0)) {
@@ -77,6 +78,7 @@ library TickTable {
     uint256 word,
     int24 tick
   ) internal view returns (int24 nextTick) {
+    tick += 1;
     bool initialized;
     int16 rowNumber;
 
@@ -85,10 +87,10 @@ library TickTable {
     }
     (nextTick, initialized) = nextTickInTheSameRow(self[rowNumber], tick);
     if (!initialized) {
-      int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
+      int16 movedRowNumber = rowNumber + MIN_ROW_ABS + 1;
 
       assembly {
-        rowNumber := sar(8, movedRowNumber)
+        rowNumber := shr(8, movedRowNumber)
       }
       (nextTick, initialized) = nextTickInTheSameRow(wordTicks[rowNumber], movedRowNumber);
 
@@ -97,20 +99,20 @@ library TickTable {
         assembly {
           wordBitNumber := and(rowNumber, 0xFF)
         }
-        (nextTick, initialized) = nextTickInTheSameRow(word, wordBitNumber);
+        (nextTick, initialized) = nextTickInTheSameRow(word, wordBitNumber + 1);
         if (!initialized) return TickMath.MAX_TICK;
         else {
           rowNumber = int16(nextTick);
           assembly {
             nextTick := shl(8, nextTick)
           }
-          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick - 1);
+          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick);
           nextTick -= MIN_ROW_ABS;
           rowNumber = int16(nextTick);
           assembly {
             nextTick := shl(8, nextTick)
           }
-          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick - 1);
+          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
         }
       } else {
         nextTick -= MIN_ROW_ABS;
@@ -118,20 +120,18 @@ library TickTable {
         assembly {
           nextTick := shl(8, nextTick)
         }
-        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick - 1);
+        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
       }
     }
   }
 
-  /// @notice Returns the next initialized tick contained in the same word (or adjacent word) as the tick that is either
-  /// to the left (less than or equal to) or right (greater than) of the given tick
-  /// @param word The mapping in which to compute the next initialized tick
+  /// @notice Returns the next initialized tick contained in the same word as the tick that is
+  /// to the right or at (gte) of the given tick
+  /// @param word The word in which to compute the next initialized tick
   /// @param tick The starting tick
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
   function nextTickInTheSameRow(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
-    // start from the word of the next tick, since the current tick state doesn't matter
-    tick += 1;
     uint8 bitNumber;
     assembly {
       bitNumber := and(tick, 0xFF)

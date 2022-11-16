@@ -16,6 +16,18 @@ contract TickTableTest {
     if (toggle) word = tickWordsTable.writeWord(tick, word);
   }
 
+  function _isInitTick(int24 tick) private view returns (bool) {
+    int16 rowNumber;
+    uint8 bitNumber;
+
+    assembly {
+      bitNumber := and(tick, 0xFF)
+      rowNumber := sar(8, tick)
+    }
+
+    return ((tickTable[rowNumber] & (1 << bitNumber)) > 0);
+  }
+
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     uint256 gasBefore = gasleft();
     tickTable.toggleTick(tick);
@@ -23,7 +35,8 @@ contract TickTableTest {
   }
 
   function nextTickInTheSameRow(int24 tick, bool lte) external view returns (int24 next, bool initialized) {
-    return (tickTable.getNextTick(tickWordsTable, word, tick), true);
+    next = tickTable.getNextTick(tickWordsTable, word, tick);
+    initialized = _isInitTick(next);
   }
 
   function getGasCostOfNextTickInTheSameRow(int24 tick, bool lte) external view returns (uint256) {
@@ -34,8 +47,6 @@ contract TickTableTest {
 
   // returns whether the given tick is initialized
   function isInitialized(int24 tick) external view returns (bool) {
-    int24 next = tickTable.getNextTick(tickWordsTable, word, tick - 1);
-    bool initialized = true;
-    return next == tick ? initialized : false;
+    return _isInitTick(tick);
   }
 }
