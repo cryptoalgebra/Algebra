@@ -37,8 +37,8 @@ contract TickTableEchidnaTest {
     assert(tick >= TickMath.MIN_TICK);
     assert(tick <= TickMath.MAX_TICK);
     bool before = _isInitialized(tick);
-    bool toggle = bitmap.toggleTick(tick);
-    if (toggle) word = tickWordsTable.writeWord(tick, word);
+    word = bitmap.toggleTick(tickWordsTable, tick, word);
+    (tickWordsTable, tick, word);
     assert(_isInitialized(tick) == !before);
 
     if (!before) {

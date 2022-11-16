@@ -13,17 +13,43 @@ library TickTable {
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
-  function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal returns (bool toggle) {
+  function toggleTick(
+    mapping(int16 => uint256) storage self,
+    mapping(int16 => uint256) storage wordTicks,
+    int24 tick,
+    uint256 word
+  ) internal returns (uint256 res) {
     int16 rowNumber;
     uint8 bitNumber;
-
+    res = word;
     assembly {
       bitNumber := and(tick, 0xFF)
       rowNumber := sar(8, tick)
     }
     uint256 wordBefore = self[rowNumber];
     self[rowNumber] ^= 1 << bitNumber;
-    if ((self[rowNumber] == 0) != (wordBefore == 0)) return true;
+    if ((self[rowNumber] == 0) != (wordBefore == 0)) {
+      assembly {
+        rowNumber := sar(8, tick)
+      }
+
+      int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
+
+      assembly {
+        bitNumber := and(movedRowNumber, 0xFF)
+        rowNumber := shr(8, movedRowNumber)
+      }
+
+      wordBefore = wordTicks[rowNumber];
+      wordTicks[rowNumber] ^= 1 << bitNumber;
+      if ((wordTicks[rowNumber] == 0) != (wordBefore == 0)) {
+        uint8 wordBitNumber;
+        assembly {
+          wordBitNumber := and(rowNumber, 0xFF)
+        }
+        res ^= 1 << wordBitNumber;
+      }
+    }
   }
 
   /// @notice get position of single 1-bit
@@ -39,36 +65,6 @@ library TickTable {
       singleBitPos := or(singleBitPos, shl(3, iszero(and(word, 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF))))
       singleBitPos := or(singleBitPos, shl(2, iszero(and(word, 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F))))
       singleBitPos := or(singleBitPos, shl(1, iszero(and(word, 0x3333333333333333333333333333333333333333333333333333333333333333))))
-    }
-  }
-
-  function writeWord(
-    mapping(int16 => uint256) storage self,
-    int24 tick,
-    uint256 word
-  ) internal returns (uint256 res) {
-    int16 rowNumber;
-    uint8 bitNumber;
-    res = word;
-    assembly {
-      rowNumber := sar(8, tick)
-    }
-
-    int16 movedRowNumber = rowNumber + MIN_ROW_ABS;
-
-    assembly {
-      bitNumber := and(movedRowNumber, 0xFF)
-      rowNumber := shr(8, movedRowNumber)
-    }
-
-    uint256 wordBefore = self[rowNumber];
-    self[rowNumber] ^= 1 << bitNumber;
-    if ((self[rowNumber] == 0) != (wordBefore == 0)) {
-      uint8 wordBitNumber;
-      assembly {
-        wordBitNumber := and(rowNumber, 0xFF)
-      }
-      res ^= 1 << wordBitNumber;
     }
   }
 

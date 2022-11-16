@@ -11,9 +11,8 @@ contract TickTableTest {
   mapping(int16 => uint256) public tickTable;
 
   function toggleTick(int24 tick) external {
-    bool toggle = tickTable.toggleTick(tick);
-
-    if (toggle) word = tickWordsTable.writeWord(tick, word);
+    word = tickTable.toggleTick(tickWordsTable, tick, word);
+    (tickWordsTable, tick, word);
   }
 
   function _isInitTick(int24 tick) private view returns (bool) {
@@ -30,7 +29,8 @@ contract TickTableTest {
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     uint256 gasBefore = gasleft();
-    tickTable.toggleTick(tick);
+    word = tickTable.toggleTick(tickWordsTable, tick, word);
+    (tickWordsTable, tick, word);
     return gasBefore - gasleft();
   }
 

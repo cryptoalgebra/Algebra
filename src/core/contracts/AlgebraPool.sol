@@ -285,7 +285,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.nextTick = tickTable.getNextTick(tickWordsTable, word, bottomTick);
               ticks.insertTick(bottomTick, ticks[cache.nextTick].prevTick, cache.nextTick);
             }
-            if (tickTable.toggleTick(bottomTick)) word = tickWordsTable.writeWord(bottomTick, word);
+            word = tickTable.toggleTick(tickWordsTable, bottomTick, word);
           }
         }
         if (toggledTop) {
@@ -297,7 +297,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.nextTick = tickTable.getNextTick(tickWordsTable, word, topTick);
               ticks.insertTick(topTick, ticks[cache.nextTick].prevTick, cache.nextTick);
             }
-            if (tickTable.toggleTick(topTick)) word = tickWordsTable.writeWord(topTick, word);
+            word = tickTable.toggleTick(tickWordsTable, topTick, word);
           }
         }
       }
