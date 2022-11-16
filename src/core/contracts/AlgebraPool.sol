@@ -841,12 +841,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
               cache.secondsPerLiquidityCumulative,
               blockTimestamp
             );
-            cache.prevInitializedTick = ticks[cache.prevInitializedTick].nextTick;
+            cache.prevInitializedTick = step.nextTick;
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         }
 
-        currentTick = zeroToOne ? step.nextTick - 1 : step.nextTick;
+        (currentTick, step.nextTick) = zeroToOne
+          ? (step.nextTick - 1, cache.prevInitializedTick)
+          : (step.nextTick, ticks[cache.prevInitializedTick].nextTick);
       } else if (currentPrice != step.stepSqrtPrice) {
         // if the price has changed but hasn't reached the target
         currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
@@ -855,12 +857,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // check stop condition
       if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
         break;
-      }
-
-      if (step.initialized) {
-        step.nextTick = zeroToOne ? ticks[step.nextTick].prevTick : ticks[step.nextTick].nextTick;
-      } else {
-        step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
       }
     }
 
