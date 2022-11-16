@@ -132,20 +132,16 @@ library TickTable {
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
   function nextTickInTheSameRow(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
-    uint8 bitNumber;
+    uint256 bitNumber;
     assembly {
       bitNumber := and(tick, 0xFF)
     }
-
-    // all the 1s at or to the left of the bitNumber
-    uint256 _row = word >> (bitNumber);
-
-    if (_row != 0) {
-      tick += int24(getSingleSignificantBit(-_row & _row)); // least significant bit
-      return (tick, true);
+    uint256 _row = word >> bitNumber; // all the 1s at or to the left of the bitNumber
+    if (_row == 0) {
+      nextTick = tick + int24(255 - bitNumber);
     } else {
-      tick += int24(255 - bitNumber);
-      return (tick, false);
+      nextTick = tick + int24(getSingleSignificantBit(-_row & _row)); // least significant bit
+      initialized = true;
     }
   }
 }
