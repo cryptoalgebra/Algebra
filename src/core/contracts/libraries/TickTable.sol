@@ -72,57 +72,52 @@ library TickTable {
     }
   }
 
+  function _getNextTickInSameNode(mapping(int16 => uint256) storage row, int24 tick)
+    private
+    view
+    returns (
+      int16 nodeNumber,
+      int24 nextTick,
+      bool initialized
+    )
+  {
+    assembly {
+      nodeNumber := sar(8, tick)
+    }
+    (nextTick, initialized) = nextTickInTheSameRow(row[nodeNumber], tick);
+  }
+
+  function _getFirstTickInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
+    assembly {
+      nextTick := shl(8, nodeNumber)
+    }
+    (nextTick, ) = nextTickInTheSameRow(row[int16(nodeNumber)], nextTick);
+  }
+
   function getNextTick(
-    mapping(int16 => uint256) storage self,
-    mapping(int16 => uint256) storage wordTicks,
-    uint256 word,
+    mapping(int16 => uint256) storage leafs,
+    mapping(int16 => uint256) storage secondLayer,
+    uint256 treeRoot,
     int24 tick
   ) internal view returns (int24 nextTick) {
-    tick += 1;
+    tick++; // start at next tick since current doesn't matter
+    int16 nodeNumber;
     bool initialized;
-    int16 rowNumber;
 
-    assembly {
-      rowNumber := sar(8, tick)
-    }
-    (nextTick, initialized) = nextTickInTheSameRow(self[rowNumber], tick);
+    // try to find initialized tick in the corresponding leaf of the tree
+    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
+    if (initialized) return nextTick;
+
+    // try to find next initialized leaf in the tree
+    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + MIN_ROW_ABS + 1);
     if (!initialized) {
-      int16 movedRowNumber = rowNumber + MIN_ROW_ABS + 1;
-
-      assembly {
-        rowNumber := shr(8, movedRowNumber)
-      }
-      (nextTick, initialized) = nextTickInTheSameRow(wordTicks[rowNumber], movedRowNumber);
-
-      if (!initialized) {
-        uint8 wordBitNumber;
-        assembly {
-          wordBitNumber := and(rowNumber, 0xFF)
-        }
-        (nextTick, initialized) = nextTickInTheSameRow(word, wordBitNumber + 1);
-        if (!initialized) return TickMath.MAX_TICK;
-        else {
-          rowNumber = int16(nextTick);
-          assembly {
-            nextTick := shl(8, nextTick)
-          }
-          (nextTick, ) = nextTickInTheSameRow(wordTicks[rowNumber], nextTick);
-          nextTick -= MIN_ROW_ABS;
-          rowNumber = int16(nextTick);
-          assembly {
-            nextTick := shl(8, nextTick)
-          }
-          (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
-        }
-      } else {
-        nextTick -= MIN_ROW_ABS;
-        rowNumber = int16(nextTick);
-        assembly {
-          nextTick := shl(8, nextTick)
-        }
-        (nextTick, ) = nextTickInTheSameRow(self[rowNumber], nextTick);
-      }
+      // try to find which subtree has an active leaf
+      (nextTick, initialized) = nextTickInTheSameRow(treeRoot, int24(++nodeNumber));
+      if (!initialized) return TickMath.MAX_TICK;
+      nextTick = _getFirstTickInNode(secondLayer, nextTick);
     }
+    // try to find initialized tick in the corresponding leaf of the tree
+    return _getFirstTickInNode(leafs, nextTick - MIN_ROW_ABS);
   }
 
   /// @notice Returns the next initialized tick contained in the same word as the tick that is
