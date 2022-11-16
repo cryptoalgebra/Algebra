@@ -58,14 +58,7 @@ describe('TickTree', () => {
     })
 
     it('reverts only itself', async () => {
-      await TickTree.toggleTick(-240)
-      await TickTree.toggleTick(-300)
-      await TickTree.toggleTick(-180)
-      await TickTree.toggleTick(600)
-      await TickTree.toggleTick(-240)
-      await TickTree.toggleTick(-360)
-      await TickTree.toggleTick(-300)
-
+      await initTicks([-240, -300, -180, 600, -240, -360, -300]);
       expect(await TickTree.isInitialized(-180)).to.eq(true)
       expect(await TickTree.isInitialized(-240)).to.eq(false)
     })

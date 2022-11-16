@@ -150,10 +150,10 @@ library TickManager {
 
   function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
-    Tick memory data = self[tick];
-    require(data.nextTick != data.prevTick, 'next eq prev tick');
-    self[data.prevTick].nextTick = data.nextTick;
-    self[data.nextTick].prevTick = data.prevTick;
+    (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
+    require(prevTick != nextTick, 'next eq prev tick');
+    self[prevTick].nextTick = nextTick;
+    self[nextTick].prevTick = prevTick;
     delete self[tick];
   }
 
