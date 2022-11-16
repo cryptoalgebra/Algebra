@@ -292,11 +292,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         ticks.insertTick(tick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
         cache.prevInitializedTick = tick;
       } else {
-        int24 nextTick = tickTable.getNextTick(tickWordsTable, cache.tickTreeRoot, tick);
+        int24 nextTick = tickTable.getNextTick(tickSecondLayer, cache.tickTreeRoot, tick);
         ticks.insertTick(tick, ticks[nextTick].prevTick, nextTick);
       }
     }
-    cache.tickTreeRoot = tickTable.toggleTick(tickWordsTable, tick, cache.tickTreeRoot);
+    cache.tickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, cache.tickTreeRoot);
   }
 
   function _getAmountsForLiquidity(

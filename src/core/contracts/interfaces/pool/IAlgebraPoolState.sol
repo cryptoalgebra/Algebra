@@ -92,10 +92,8 @@ interface IAlgebraPoolState {
       bool initialized
     );
 
-  /** @notice Returns 256 packed tick initialized boolean values. See TickTable for more information */
+  /** @notice Returns 256 packed tick initialized boolean values. See TickTree for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);
-
-  function tickWordsTable(int16 wordRow) external view returns (uint256);
 
   /**
    * @notice Returns the information about a position by the position's key

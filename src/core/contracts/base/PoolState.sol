@@ -40,8 +40,8 @@ abstract contract PoolState is IAlgebraPoolState {
   mapping(int24 => TickManager.Tick) public override ticks;
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
-  mapping(int16 => uint256) public override tickWordsTable;
-  uint256 tickTreeRoot;
+  mapping(int16 => uint256) internal tickSecondLayer;
+  uint256 internal tickTreeRoot;
 
   modifier lock() {
     require(globalState.unlocked, 'LOK');
