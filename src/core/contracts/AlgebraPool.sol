@@ -11,7 +11,7 @@ import './base/PoolImmutables.sol';
 import './libraries/TokenDeltaMath.sol';
 import './libraries/PriceMovementMath.sol';
 import './libraries/TickManager.sol';
-import './libraries/TickTable.sol';
+import './libraries/TickTree.sol';
 
 import './libraries/LowGasSafeMath.sol';
 import './libraries/SafeCast.sol';
@@ -35,7 +35,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint128;
   using SafeCast for uint256;
   using SafeCast for int256;
-  using TickTable for mapping(int16 => uint256);
+  using TickTree for mapping(int16 => uint256);
   using TickManager for mapping(int24 => TickManager.Tick);
 
   struct Position {

@@ -5,10 +5,10 @@ import './Constants.sol';
 import './TickMath.sol';
 
 /// @title Packed tick initialized state library
-/// @notice Stores a packed mapping of tick index to its initialized state
-/// @dev The mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
-library TickTable {
-  int16 internal constant MIN_ROW_ABS = 3466;
+/// @notice Stores a packed mapping of tick index to its initialized state and search tree
+/// @dev The leafs mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
+library TickTree {
+  int16 internal constant SECOND_LAYER_OFFSET = 3466; // ceil(MAX_TICK / 256)
 
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param leafs The mapping of words with ticks
@@ -24,7 +24,7 @@ library TickTable {
     newTreeRoot = treeRoot;
     (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
     if (toggledNode) {
-      (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + MIN_ROW_ABS);
+      (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET);
       if (toggledNode) {
         assembly {
           newTreeRoot := xor(newTreeRoot, shl(nodeNumber, 1))
@@ -105,7 +105,7 @@ library TickTable {
     if (initialized) return nextTick;
 
     // try to find next initialized leaf in the tree
-    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + MIN_ROW_ABS + 1);
+    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
     if (!initialized) {
       // try to find which subtree has an active leaf
       (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
@@ -113,7 +113,7 @@ library TickTable {
       nextTick = _getFirstTickInNode(secondLayer, nextTick);
     }
     // try to find initialized tick in the corresponding leaf of the tree
-    return _getFirstTickInNode(leafs, nextTick - MIN_ROW_ABS);
+    return _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
   }
 
   /// @notice Returns the next initialized tick contained in the same word as the tick that is

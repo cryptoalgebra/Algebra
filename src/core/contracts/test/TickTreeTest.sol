@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import '../libraries/TickTable.sol';
+import '../libraries/TickTree.sol';
 
-contract TickTableTest {
-  using TickTable for mapping(int16 => uint256);
+contract TickTreeTest {
+  using TickTree for mapping(int16 => uint256);
   uint256 public word;
 
   mapping(int16 => uint256) public tickWordsTable;
-  mapping(int16 => uint256) public tickTable;
+  mapping(int16 => uint256) public tickTree;
 
   function toggleTick(int24 tick) external {
-    word = tickTable.toggleTick(tickWordsTable, tick, word);
+    word = tickTree.toggleTick(tickWordsTable, tick, word);
     (tickWordsTable, tick, word);
   }
 
@@ -24,24 +24,24 @@ contract TickTableTest {
       rowNumber := sar(8, tick)
     }
 
-    return ((tickTable[rowNumber] & (1 << bitNumber)) > 0);
+    return ((tickTree[rowNumber] & (1 << bitNumber)) > 0);
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     uint256 gasBefore = gasleft();
-    word = tickTable.toggleTick(tickWordsTable, tick, word);
+    word = tickTree.toggleTick(tickWordsTable, tick, word);
     (tickWordsTable, tick, word);
     return gasBefore - gasleft();
   }
 
-  function nextTickInTheSameRow(int24 tick, bool lte) external view returns (int24 next, bool initialized) {
-    next = tickTable.getNextTick(tickWordsTable, word, tick);
+  function nextTickInTheSameNode(int24 tick) external view returns (int24 next, bool initialized) {
+    next = tickTree.getNextTick(tickWordsTable, word, tick);
     initialized = _isInitTick(next);
   }
 
-  function getGasCostOfNextTickInTheSameRow(int24 tick, bool lte) external view returns (uint256) {
+  function getGasCostOfNextTickInTheSameNode(int24 tick) external view returns (uint256) {
     uint256 gasBefore = gasleft();
-    tickTable.getNextTick(tickWordsTable, word, tick);
+    tickTree.getNextTick(tickWordsTable, word, tick);
     return gasBefore - gasleft();
   }
 

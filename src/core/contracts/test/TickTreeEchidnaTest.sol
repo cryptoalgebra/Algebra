@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import '../libraries/TickTable.sol';
+import '../libraries/TickTree.sol';
 
-contract TickTableEchidnaTest {
-  using TickTable for mapping(int16 => uint256);
+contract TickTreeEchidnaTest {
+  using TickTree for mapping(int16 => uint256);
   uint256 private word;
 
   mapping(int16 => uint256) private tickWordsTable;
