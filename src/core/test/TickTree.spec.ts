@@ -141,15 +141,35 @@ describe('TickTree', () => {
     it('skips half word', async () => expectNextTickToBe(-200, -100, true))
 
     it('skips half word', async () => expectNextTickToBe(-100, 100, true))
+  })
 
-    it('gas cost on boundary  [ @skip-on-coverage ]', async () => {
+  describe('#nextTickInTheSameNode gas  [ @skip-on-coverage ]', () => {
+    const FULL_PACK = [-70000,-20000,-10000,-300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000];
+    it('gas cost on boundary', async () => {
+      await initTicks(FULL_PACK)
       await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(255*60))
     })
-    it('gas cost just below boundary  [ @skip-on-coverage ]', async () => {
+    it('gas cost on boundary', async () => {
+      await initTicks(FULL_PACK)
+      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(255*60))
+    })
+    it('gas cost just below boundary', async () => {
+      await initTicks(FULL_PACK)
       await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(254*60))
     })
-    it('gas cost for entire word  [ @skip-on-coverage ]', async () => {
+    it('gas cost for entire word', async () => {
+      await initTicks(FULL_PACK)
       await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(768*60))
+    })
+
+    it('gas cost for all possible range', async () => {
+      await initTicks([887272]);
+      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(-887272))
+    })
+
+    it('gas cost for next subtree', async () => {
+      await initTicks([70000]);
+      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(0))
     })
   })
 })

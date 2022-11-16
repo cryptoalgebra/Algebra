@@ -96,24 +96,29 @@ library TickTree {
     uint256 treeRoot,
     int24 tick
   ) internal view returns (int24 nextTick) {
-    tick++; // start at next tick since current doesn't matter
+    tick++;
     int16 nodeNumber;
     bool initialized;
+    assembly {
+      // index in treeRoot
+      nodeNumber := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
+    }
+    if (treeRoot & (1 << uint256(nodeNumber)) != 0) {
+      // if subtree has active ticks
+      // try to find initialized tick in the corresponding leaf of the tree
+      (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
+      if (initialized) return nextTick;
 
-    // try to find initialized tick in the corresponding leaf of the tree
-    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
-    if (initialized) return nextTick;
-
-    // try to find next initialized leaf in the tree
-    (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+      // try to find next initialized leaf in the tree
+      (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+    }
     if (!initialized) {
       // try to find which subtree has an active leaf
       (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
       if (!initialized) return TickMath.MAX_TICK;
       nextTick = _getFirstTickInNode(secondLayer, nextTick);
     }
-    // try to find initialized tick in the corresponding leaf of the tree
-    return _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
+    nextTick = _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
   }
 
   /// @notice Returns the next initialized tick contained in the same word as the tick that is
