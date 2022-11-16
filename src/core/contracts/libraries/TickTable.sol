@@ -94,6 +94,12 @@ library TickTable {
     (nextTick, ) = nextTickInTheSameRow(row[int16(nodeNumber)], nextTick);
   }
 
+  /// @notice Returns the next initialized tick in tree to the right (gte) of the given tick or `MAX_TICK`
+  /// @param leafs The words with ticks
+  /// @param secondLayer The words with info about active leafs
+  /// @param treeRoot The word with info about active subtrees
+  /// @param tick The starting tick
+  /// @return nextTick The next initialized tick or `MAX_TICK`
   function getNextTick(
     mapping(int16 => uint256) storage leafs,
     mapping(int16 => uint256) storage secondLayer,
