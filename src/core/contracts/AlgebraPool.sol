@@ -516,9 +516,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Fee(newFee);
   }
 
+  function _vaultAddress() private view returns (address) {
+    return IAlgebraFactory(factory).vaultAddress();
+  }
+
   function _payCommunityFee(address token, uint256 amount) private {
-    address vault = IAlgebraFactory(factory).vaultAddress();
-    TransferHelper.safeTransfer(token, vault, amount);
+    TransferHelper.safeTransfer(token, _vaultAddress(), amount);
   }
 
   function _writeTimepoint(
@@ -915,7 +918,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     paid1 -= balance1Before;
 
     if (_communityFee != 0) {
-      address vault = IAlgebraFactory(factory).vaultAddress();
+      address vault = _vaultAddress();
       if (paid0 > 0) {
         uint256 fees0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token0, vault, fees0);
