@@ -143,11 +143,16 @@ library TickManager {
     return data.liquidityDelta;
   }
 
+  /// @notice Used for initial setup if ticks list
+  /// @param self The mapping containing all tick information for initialized ticks
   function initTickState(mapping(int24 => Tick) storage self) internal {
     (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     (self[TickMath.MAX_TICK].prevTick, self[TickMath.MAX_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
   }
 
+  /// @notice Removes tick from linked list
+  /// @param self The mapping containing all tick information for initialized ticks
+  /// @param tick The tick that will be removed
   function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
     (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
@@ -157,6 +162,11 @@ library TickManager {
     delete self[tick];
   }
 
+  /// @notice Adds tick to linked list
+  /// @param self The mapping containing all tick information for initialized ticks
+  /// @param tick The tick that will be inserted
+  /// @param prevTick The previous active tick
+  /// @param nextTick The next active tick
   function insertTick(
     mapping(int24 => Tick) storage self,
     int24 tick,

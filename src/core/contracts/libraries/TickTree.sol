@@ -33,6 +33,11 @@ library TickTree {
     }
   }
 
+  /// @notice Calculates the required node and toggles tick in it
+  /// @param row The level of tree
+  /// @param tick The tick to toggle
+  /// @return toggledNode Toggled whole node or not
+  /// @return nodeNumber Number of corresponding node
   function _toggleTickInNode(mapping(int16 => uint256) storage row, int24 tick) private returns (bool toggledNode, int16 nodeNumber) {
     assembly {
       nodeNumber := sar(8, tick)
@@ -44,44 +49,6 @@ library TickTree {
       toggledNode := xor(toggledNode, iszero(node))
     }
     row[nodeNumber] = node;
-  }
-
-  /// @notice get position of single 1-bit
-  /// @dev it is assumed that word contains exactly one 1-bit, otherwise the result will be incorrect
-  /// @param word The word containing only one 1-bit
-  function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
-    assembly {
-      singleBitPos := iszero(and(word, 0x5555555555555555555555555555555555555555555555555555555555555555))
-      singleBitPos := or(singleBitPos, shl(7, iszero(and(word, 0x00000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
-      singleBitPos := or(singleBitPos, shl(6, iszero(and(word, 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF))))
-      singleBitPos := or(singleBitPos, shl(5, iszero(and(word, 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF))))
-      singleBitPos := or(singleBitPos, shl(4, iszero(and(word, 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF))))
-      singleBitPos := or(singleBitPos, shl(3, iszero(and(word, 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF))))
-      singleBitPos := or(singleBitPos, shl(2, iszero(and(word, 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F))))
-      singleBitPos := or(singleBitPos, shl(1, iszero(and(word, 0x3333333333333333333333333333333333333333333333333333333333333333))))
-    }
-  }
-
-  function _getNextTickInSameNode(mapping(int16 => uint256) storage row, int24 tick)
-    private
-    view
-    returns (
-      int16 nodeNumber,
-      int24 nextTick,
-      bool initialized
-    )
-  {
-    assembly {
-      nodeNumber := sar(8, tick)
-    }
-    (nextTick, initialized) = nextTickInTheSameNode(row[nodeNumber], tick);
-  }
-
-  function _getFirstTickInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
-    assembly {
-      nextTick := shl(8, nodeNumber)
-    }
-    (nextTick, ) = nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
   }
 
   /// @notice Returns the next initialized tick in tree to the right (gte) of the given tick or `MAX_TICK`
@@ -121,6 +88,38 @@ library TickTree {
     nextTick = _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
   }
 
+  /// @notice Calculates node with given tick and returns next active tick
+  /// @param row level of search tree
+  /// @param tick The starting tick
+  /// @return nodeNumber Number of corresponding node
+  /// @return nextTick Number of next active tick or last tick in node
+  /// @return initialized Is nextTick initialized or not
+  function _getNextTickInSameNode(mapping(int16 => uint256) storage row, int24 tick)
+    private
+    view
+    returns (
+      int16 nodeNumber,
+      int24 nextTick,
+      bool initialized
+    )
+  {
+    assembly {
+      nodeNumber := sar(8, tick)
+    }
+    (nextTick, initialized) = nextTickInTheSameNode(row[nodeNumber], tick);
+  }
+
+  /// @notice Returns first active tick in given node
+  /// @param row level of search tree
+  /// @param nodeNumber Number of corresponding node
+  /// @return nextTick Number of next active tick or last tick in node
+  function _getFirstTickInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
+    assembly {
+      nextTick := shl(8, nodeNumber)
+    }
+    (nextTick, ) = nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
+  }
+
   /// @notice Returns the next initialized tick contained in the same word as the tick that is
   /// to the right or at (gte) of the given tick
   /// @param word The word in which to compute the next initialized tick
@@ -138,6 +137,22 @@ library TickTree {
     } else {
       nextTick = tick + int24(getSingleSignificantBit(-_row & _row)); // least significant bit
       initialized = true;
+    }
+  }
+
+  /// @notice get position of single 1-bit
+  /// @dev it is assumed that word contains exactly one 1-bit, otherwise the result will be incorrect
+  /// @param word The word containing only one 1-bit
+  function getSingleSignificantBit(uint256 word) internal pure returns (uint8 singleBitPos) {
+    assembly {
+      singleBitPos := iszero(and(word, 0x5555555555555555555555555555555555555555555555555555555555555555))
+      singleBitPos := or(singleBitPos, shl(7, iszero(and(word, 0x00000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(6, iszero(and(word, 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(5, iszero(and(word, 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF))))
+      singleBitPos := or(singleBitPos, shl(4, iszero(and(word, 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF))))
+      singleBitPos := or(singleBitPos, shl(3, iszero(and(word, 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF))))
+      singleBitPos := or(singleBitPos, shl(2, iszero(and(word, 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F))))
+      singleBitPos := or(singleBitPos, shl(1, iszero(and(word, 0x3333333333333333333333333333333333333333333333333333333333333333))))
     }
   }
 }
