@@ -43,10 +43,18 @@ abstract contract PoolState is IAlgebraPoolState {
   mapping(int16 => uint256) internal tickSecondLayer;
   uint256 internal tickTreeRoot;
 
-  modifier lock() {
+  modifier nonReentrant() {
+    _lock();
+    _;
+    _unlock();
+  }
+
+  function _lock() private {
     require(globalState.unlocked, 'LOK');
     globalState.unlocked = false;
-    _;
+  }
+
+  function _unlock() private {
     globalState.unlocked = true;
   }
 

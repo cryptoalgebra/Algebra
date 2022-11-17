@@ -376,7 +376,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   )
     external
     override
-    lock
+    nonReentrant
     onlyValidTicks(bottomTick, topTick)
     returns (
       uint256 amount0,
@@ -465,7 +465,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 amount0Requested,
     uint128 amount1Requested
-  ) external override lock returns (uint128 amount0, uint128 amount1) {
+  ) external override nonReentrant returns (uint128 amount0, uint128 amount1) {
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
     (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
 
@@ -488,7 +488,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 bottomTick,
     int24 topTick,
     uint128 amount
-  ) external override lock onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
+  ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     _syncBalances();
     (Position storage position, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(
       msg.sender,
@@ -567,13 +567,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
-  ) external override returns (int256 amount0, int256 amount1) {
+  ) external override nonReentrant returns (int256 amount0, int256 amount1) {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 feeAmount;
-    // function _calculateSwapAndLock locks globalState.unlocked and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
@@ -596,7 +595,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
-    globalState.unlocked = true; // release after lock in _calculateSwapAndLock
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -607,12 +605,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
-  ) external override returns (int256 amount0, int256 amount1) {
+  ) external override nonReentrant returns (int256 amount0, int256 amount1) {
     if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
-    require(globalState.unlocked, 'LOK');
-    globalState.unlocked = false;
     if (zeroToOne) {
       (uint256 balance0Before, ) = _syncBalances();
       _swapCallback(amountRequired, 0, 0, data);
@@ -625,14 +621,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     }
     require(amountRequired != 0, 'IIA');
-    globalState.unlocked = true;
 
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 feeAmount;
-    // function _calculateSwapAndLock locks 'globalState.unlocked' and does not release
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwapAndLock(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
     uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
     // only transfer to the recipient
@@ -658,7 +652,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
-    globalState.unlocked = true; // release after lock in _calculateSwapAndLock
   }
 
   struct SwapCalculationCache {
@@ -689,8 +682,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 feeAmount; // The total amount of fee earned within a current step
   }
 
-  /// @notice For gas optimization, locks 'globalState.unlocked' and does not release.
-  function _calculateSwapAndLock(
+  function _calculateSwap(
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
@@ -715,10 +707,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       cache.timepointIndex = globalState.timepointIndex;
       cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
-      bool unlocked = globalState.unlocked;
-
-      globalState.unlocked = false; // lock will not be released in this function
-      require(unlocked, 'LOK');
 
       require(amountRequired != 0, 'AS');
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
@@ -889,7 +877,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 amount0,
     uint256 amount1,
     bytes calldata data
-  ) external override lock {
+  ) external override nonReentrant {
     require(liquidity > 0, 'L'); // TODO can be removed!
 
     uint8 _communityFee = globalState.communityFee;
@@ -939,7 +927,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 communityFee) external override lock {
+  function setCommunityFee(uint8 communityFee) external override nonReentrant {
     onlyFactoryOwner();
     require(communityFee <= Constants.MAX_COMMUNITY_FEE);
     globalState.communityFee = communityFee;
@@ -947,7 +935,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   //TODO interface and natspec
-  function setTickSpacing(int24 newTickSpacing) external lock {
+  function setTickSpacing(int24 newTickSpacing) external nonReentrant {
     onlyFactoryOwner();
     require(newTickSpacing > 0);
     tickSpacing = newTickSpacing;
