@@ -7,14 +7,12 @@ import './interfaces/IDataStorageOperator.sol';
 import './interfaces/pool/IAlgebraPoolState.sol';
 
 import './libraries/DataStorage.sol';
-import './libraries/Sqrt.sol';
 import './libraries/AdaptiveFee.sol';
 
 import './libraries/Constants.sol';
 
 contract DataStorageOperator is IDataStorageOperator {
   uint256 constant UINT16_MODULO = 65536;
-  uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 

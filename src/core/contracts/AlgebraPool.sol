@@ -22,7 +22,6 @@ import './libraries/TransferHelper.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 
-import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
