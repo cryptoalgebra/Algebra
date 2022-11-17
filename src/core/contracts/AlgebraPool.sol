@@ -725,9 +725,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       blockTimestamp = _blockTimestamp();
 
       if (blockTimestamp != startPriceUpdated) {
-        startPriceUpdated = blockTimestamp;
         (cache.blockStartTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
         blockStartTickX100 = cache.blockStartTickX100;
+        startPriceUpdated = blockTimestamp;
       } else {
         cache.blockStartTickX100 = blockStartTickX100;
       }
@@ -744,7 +744,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     PriceMovementCache memory step;
-
     step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
     // swap until there is remaining input or output tokens or we reach the price limit
     while (true) {
@@ -877,14 +876,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 amount1,
     bytes calldata data
   ) external override nonReentrant {
+    (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
     uint256 fee0;
-    uint256 balance0Before = balanceToken0();
     if (amount0 > 0) {
       fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token0, recipient, amount0);
     }
     uint256 fee1;
-    uint256 balance1Before = balanceToken1();
     if (amount1 > 0) {
       fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token1, recipient, amount1);
@@ -899,20 +897,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(balance1Before.add(fee1) <= paid1, 'F1');
     paid1 -= balance1Before;
 
-    uint8 _communityFee = globalState.communityFee;
-    if (_communityFee != 0) {
+    uint256 _communityFee = globalState.communityFee;
+    if (_communityFee > 0) {
       address vault = _vaultAddress();
       if (paid0 > 0) {
-        uint256 fees0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
-        TransferHelper.safeTransfer(token0, vault, fees0);
+        TransferHelper.safeTransfer(token0, vault, (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
       }
       if (paid1 > 0) {
-        uint256 fees1 = (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
-        TransferHelper.safeTransfer(token1, vault, fees1);
+        TransferHelper.safeTransfer(token1, vault, (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
       }
     }
 
-    _syncBalances();
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
   }
 
