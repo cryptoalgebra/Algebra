@@ -931,9 +931,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
   }
 
+  function onlyFactoryOwner() private view {
+    require(msg.sender == IAlgebraFactory(factory).owner());
+  }
+
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityFee(uint8 communityFee) external override lock {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+    onlyFactoryOwner();
     require(communityFee <= Constants.MAX_COMMUNITY_FEE);
     globalState.communityFee = communityFee;
     emit CommunityFee(communityFee);
@@ -941,7 +945,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   //TODO interface and natspec
   function setTickSpacing(int24 newTickSpacing) external lock {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+    onlyFactoryOwner();
     require(newTickSpacing > 0);
     tickSpacing = newTickSpacing;
   }
