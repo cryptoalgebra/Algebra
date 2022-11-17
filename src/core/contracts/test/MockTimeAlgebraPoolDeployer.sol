@@ -8,14 +8,23 @@ import './MockTimeAlgebraPool.sol';
 import '../DataStorageOperator.sol';
 
 contract MockTimeAlgebraPoolDeployer {
-  struct Parameters {
-    address dataStorage;
-    address factory;
-    address token0;
-    address token1;
-  }
+  address private dataStorageCache;
+  address private factory;
+  address private token0Cache;
+  address private token1Cache;
 
-  Parameters public parameters;
+  function getDeployParameters()
+    external
+    view
+    returns (
+      address,
+      address,
+      address,
+      address
+    )
+  {
+    return (dataStorageCache, factory, token0Cache, token1Cache);
+  }
 
   event PoolDeployed(address pool);
 
@@ -40,7 +49,7 @@ contract MockTimeAlgebraPoolDeployer {
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
-    parameters = Parameters({dataStorage: address(dataStorage), factory: factory, token0: token0, token1: token1});
+    (dataStorageCache, factory, token0Cache, token1Cache) = (address(dataStorage), factory, token0, token1);
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     emit PoolDeployed(pool);
   }

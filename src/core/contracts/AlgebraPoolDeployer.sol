@@ -13,7 +13,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   address private owner;
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function parameters()
+  function getDeployParameters()
     external
     view
     override
@@ -55,9 +55,8 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     address token0,
     address token1
   ) external override onlyFactory returns (address pool) {
-    dataStorageCache = dataStorage;
-    token0Cache = token0;
-    token1Cache = token1;
+    (dataStorageCache, token0Cache, token1Cache) = (dataStorage, token0, token1);
     pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
+    (dataStorageCache, token0Cache, token1Cache) = (address(0), address(0), address(0));
   }
 }

@@ -24,7 +24,7 @@ interface IAlgebraPoolDeployer {
    * Returns token0 The first token of the pool by address sort order
    * Returns token1 The second token of the pool by address sort order
    */
-  function parameters()
+  function getDeployParameters()
     external
     view
     returns (

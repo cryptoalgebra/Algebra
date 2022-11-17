@@ -22,6 +22,6 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   }
 
   constructor(address deployer) {
-    (dataStorageOperator, factory, token0, token1) = IAlgebraPoolDeployer(deployer).parameters();
+    (dataStorageOperator, factory, token0, token1) = IAlgebraPoolDeployer(deployer).getDeployParameters();
   }
 }

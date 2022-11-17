@@ -13,7 +13,7 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  Parameters public override parameters;
+  Parameters public override getDeployParameters;
 
   address private factory;
   address private owner;
@@ -46,7 +46,7 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
     address token0,
     address token1
   ) external override onlyFactory returns (address pool) {
-    parameters = Parameters({dataStorage: dataStorage, factory: factory, token0: token0, token1: token1});
+    getDeployParameters = Parameters({dataStorage: dataStorage, factory: factory, token0: token0, token1: token1});
     pool = address(new SimulationTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
   }
 }

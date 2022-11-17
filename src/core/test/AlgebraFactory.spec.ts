@@ -11,9 +11,10 @@ import { getCreate2Address } from './shared/utilities'
 
 const { constants } = ethers
 
-const TEST_ADDRESSES: [string, string] = [
+const TEST_ADDRESSES: [string, string, string] = [
   '0x1000000000000000000000000000000000000000',
   '0x2000000000000000000000000000000000000000',
+  '0x3000000000000000000000000000000000000000',
 ]
 
 describe('AlgebraFactory', () => {
@@ -54,7 +55,7 @@ describe('AlgebraFactory', () => {
 
   it('pool bytecode size  [ @skip-on-coverage ]', async () => {
     await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
-    const poolAddress = getCreate2Address(poolDeployer.address, TEST_ADDRESSES, poolBytecode)
+    const poolAddress = getCreate2Address(poolDeployer.address, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]], poolBytecode)
     expect(((await ethers.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot()
   })
 
@@ -81,7 +82,7 @@ describe('AlgebraFactory', () => {
 
   describe('#createPool', () => {
     it('succeeds for pool', async () => {
-      await createAndCheckPool(TEST_ADDRESSES)
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]])
     })
 
     it('succeeds if tokens are passed in reverse', async () => {
@@ -89,7 +90,7 @@ describe('AlgebraFactory', () => {
     })
 
     it('fails if trying to create via pool deployer directly', async () => {
-      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], factory.address, TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted
+      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted
     })
 
     it('fails if token a == token b', async () => {
@@ -104,6 +105,11 @@ describe('AlgebraFactory', () => {
 
     it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]))
+    })
+
+    it('gas for second pool [ @skip-on-coverage ]', async () => {
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[2]))
     })
   })
   describe('Pool deployer', () => {
