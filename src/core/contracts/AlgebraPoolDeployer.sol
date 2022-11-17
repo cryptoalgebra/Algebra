@@ -5,18 +5,27 @@ import './interfaces/IAlgebraPoolDeployer.sol';
 import './AlgebraPool.sol';
 
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
-  struct Parameters {
-    address dataStorage;
-    address factory;
-    address token0;
-    address token1;
-  }
+  address private dataStorageCache;
+  address private factory;
+  address private token0Cache;
+  address private token1Cache;
+
+  address private owner;
 
   /// @inheritdoc IAlgebraPoolDeployer
-  Parameters public override parameters;
-
-  address private factory;
-  address private owner;
+  function parameters()
+    external
+    view
+    override
+    returns (
+      address,
+      address,
+      address,
+      address
+    )
+  {
+    return (dataStorageCache, factory, token0Cache, token1Cache);
+  }
 
   modifier onlyFactory() {
     require(msg.sender == factory);
@@ -36,18 +45,19 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   function setFactory(address _factory) external override onlyOwner {
     require(_factory != address(0));
     require(factory == address(0));
-    emit Factory(_factory);
     factory = _factory;
+    emit Factory(_factory);
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
   function deploy(
     address dataStorage,
-    address _factory,
     address token0,
     address token1
   ) external override onlyFactory returns (address pool) {
-    parameters = Parameters({dataStorage: dataStorage, factory: _factory, token0: token0, token1: token1});
+    dataStorageCache = dataStorage;
+    token0Cache = token0;
+    token1Cache = token1;
     pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
   }
 }

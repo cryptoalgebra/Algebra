@@ -35,17 +35,14 @@ interface IAlgebraPoolDeployer {
     );
 
   /**
-   * @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
-   * clearing it after deploying the pool.
+   * @dev Deploys a pool with the given parameters by transiently setting the parameters in cache.
    * @param dataStorage The pools associated dataStorage
-   * @param factory The contract address of the Algebra factory
    * @param token0 The first token of the pool by address sort order
    * @param token1 The second token of the pool by address sort order
    * @return pool The deployed pool's address
    */
   function deploy(
     address dataStorage,
-    address factory,
     address token0,
     address token1
   ) external returns (address pool);
