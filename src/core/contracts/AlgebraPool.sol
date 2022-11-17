@@ -878,17 +878,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 amount1,
     bytes calldata data
   ) external override nonReentrant {
-    require(liquidity > 0, 'L'); // TODO can be removed!
-
-    uint8 _communityFee = globalState.communityFee;
-
     uint256 fee0;
     uint256 balance0Before = balanceToken0();
     if (amount0 > 0) {
       fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
       TransferHelper.safeTransfer(token0, recipient, amount0);
     }
-
     uint256 fee1;
     uint256 balance1Before = balanceToken1();
     if (amount1 > 0) {
@@ -905,13 +900,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(balance1Before.add(fee1) <= paid1, 'F1');
     paid1 -= balance1Before;
 
+    uint8 _communityFee = globalState.communityFee;
     if (_communityFee != 0) {
       address vault = _vaultAddress();
       if (paid0 > 0) {
         uint256 fees0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token0, vault, fees0);
       }
-
       if (paid1 > 0) {
         uint256 fees1 = (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         TransferHelper.safeTransfer(token1, vault, fees1);

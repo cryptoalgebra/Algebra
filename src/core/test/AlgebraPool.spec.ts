@@ -1784,12 +1784,23 @@ describe('AlgebraPool', () => {
       await expect(flash(100, 0, other.address)).to.be.reverted
       await expect(flash(0, 200, other.address)).to.be.reverted
     })
-    it('fails if no liquidity', async () => {
+    it('fails if no liquidity and reserves', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
-      await expect(flash(100, 200, other.address)).to.be.revertedWith('L')
-      await expect(flash(100, 0, other.address)).to.be.revertedWith('L')
-      await expect(flash(0, 200, other.address)).to.be.revertedWith('L')
+      await expect(flash(100, 200, other.address)).to.be.revertedWith('TF')
+      await expect(flash(100, 0, other.address)).to.be.revertedWith('TF')
+      await expect(flash(0, 200, other.address)).to.be.revertedWith('TF')
     })
+    it('works with zero liquidity', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1))
+      const tickSpacing = await pool.tickSpacing()
+      await mint(wallet.address, -tickSpacing, tickSpacing, initializeLiquidityAmount)
+      await swapExact0For1(initializeLiquidityAmount.mul(10000), wallet.address);
+      expect(await pool.liquidity()).to.be.eq(0);
+      await expect(flash(100, 0, other.address)).to.emit(token0, 'Transfer')
+      .withArgs(pool.address, other.address, 100)
+      await expect(flash(100, 100, other.address)).to.be.revertedWith('TF')
+    })
+
     describe('after liquidity added', () => {
       let balanceToken0: BigNumber
       let balanceToken1: BigNumber
