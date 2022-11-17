@@ -468,10 +468,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
     (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
 
-    amount0 = amount0Requested > positionFees0 ? positionFees0 : amount0Requested;
-    amount1 = amount1Requested > positionFees1 ? positionFees1 : amount1Requested;
+    if (amount0Requested > positionFees0) amount0Requested = positionFees0;
+    if (amount1Requested > positionFees1) amount1Requested = positionFees1;
 
-    if (amount0 | amount1 != 0) {
+    if (amount0Requested | amount1Requested != 0) {
+      (amount0, amount1) = (amount0Requested, amount1Requested);
       // single SSTORE
       (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
 
