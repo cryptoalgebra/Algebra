@@ -29,6 +29,12 @@ library TickManager {
     bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
   }
 
+  function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
+    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
+    require(topTick > bottomTick, 'TLU');
+    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
+  }
+
   /// @notice Retrieves fee growth data
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param bottomTick The lower tick boundary of the position

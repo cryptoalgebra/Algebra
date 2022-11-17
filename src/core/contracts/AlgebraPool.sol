@@ -49,9 +49,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   mapping(bytes32 => Position) public override positions;
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
-    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
-    require(topTick > bottomTick, 'TLU');
-    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
+    TickManager.checkTickRangeValidity(bottomTick, topTick);
     _;
   }
 
