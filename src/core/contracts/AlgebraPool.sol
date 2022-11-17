@@ -608,15 +608,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
-    if (zeroToOne) {
-      (uint256 balance0Before, ) = _syncBalances();
-      _swapCallback(amountRequired, 0, 0, data);
-      int256 amountReceived = int256(balanceToken0().sub(balance0Before));
-      if (amountReceived < amountRequired) amountRequired = amountReceived;
-    } else {
-      (, uint256 balance1Before) = _syncBalances();
-      _swapCallback(0, amountRequired, 0, data);
-      int256 amountReceived = int256(balanceToken1().sub(balance1Before));
+    {
+      (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
+      int256 amountReceived;
+      if (zeroToOne) {
+        _swapCallback(amountRequired, 0, 0, data);
+        amountReceived = int256(balanceToken0().sub(balance0Before));
+      } else {
+        _swapCallback(0, amountRequired, 0, data);
+        amountReceived = int256(balanceToken1().sub(balance1Before));
+      }
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     }
     require(amountRequired != 0, 'IIA');
