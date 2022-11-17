@@ -51,8 +51,8 @@ library PriceMovementMath {
     bool zeroToOne,
     bool fromInput
   ) internal pure returns (uint160 resultPrice) {
-    require(price > 0);
-    require(liquidity > 0);
+    require(price != 0);
+    require(liquidity != 0);
 
     if (zeroToOne == fromInput) {
       // rounding up or down

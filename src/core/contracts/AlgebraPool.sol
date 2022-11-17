@@ -150,7 +150,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (liquidityDelta == 0) {
       // TODO MB REMOVE?
-      require(currentLiquidity > 0, 'NP'); // Do not recalculate the empty ranges
+      require(currentLiquidity != 0, 'NP'); // Do not recalculate the empty ranges
     } else {
       // change position liquidity
       _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
@@ -384,7 +384,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint128 liquidityActual
     )
   {
-    require(liquidityDesired > 0, 'IL');
+    require(liquidityDesired != 0, 'IL');
     {
       int24 _tickSpacing = tickSpacing;
       require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
@@ -407,11 +407,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
       if (amount0 > 0) {
-        require((receivedAmount0 = balanceToken0().sub(receivedAmount0)) > 0, 'IIAM');
+        require((receivedAmount0 = balanceToken0().sub(receivedAmount0)) != 0, 'IIAM');
       } else receivedAmount0 = 0;
 
       if (amount1 > 0) {
-        require((receivedAmount1 = balanceToken1().sub(receivedAmount1)) > 0, 'IIAM');
+        require((receivedAmount1 = balanceToken1().sub(receivedAmount1)) != 0, 'IIAM');
       } else receivedAmount1 = 0;
     }
 
@@ -424,7 +424,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
     }
 
-    require(liquidityActual > 0, 'IIL2');
+    require(liquidityActual != 0, 'IIL2');
 
     {
       (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
