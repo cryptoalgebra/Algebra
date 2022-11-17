@@ -313,18 +313,19 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       int128 globalLiquidityDelta
     )
   {
-    // If current tick is less than the provided bottom one then only the token0 has to be provided
-    if (currentTick < bottomTick) {
-      amount0 = TokenDeltaMath.getToken0Delta(TickMath.getSqrtRatioAtTick(bottomTick), TickMath.getSqrtRatioAtTick(topTick), liquidityDelta);
-    } else if (currentTick < topTick) {
-      amount0 = TokenDeltaMath.getToken0Delta(currentPrice, TickMath.getSqrtRatioAtTick(topTick), liquidityDelta);
-      amount1 = TokenDeltaMath.getToken1Delta(TickMath.getSqrtRatioAtTick(bottomTick), currentPrice, liquidityDelta);
+    uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
+    uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
 
+    if (currentTick < bottomTick) {
+      // If current tick is less than the provided bottom one then only the token0 has to be provided
+      amount0 = TokenDeltaMath.getToken0Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
+    } else if (currentTick < topTick) {
+      amount0 = TokenDeltaMath.getToken0Delta(currentPrice, priceAtTopTick, liquidityDelta);
+      amount1 = TokenDeltaMath.getToken1Delta(priceAtBottomTick, currentPrice, liquidityDelta);
       globalLiquidityDelta = liquidityDelta;
-    }
-    // If current tick is greater than the provided top one then only the token1 has to be provided
-    else {
-      amount1 = TokenDeltaMath.getToken1Delta(TickMath.getSqrtRatioAtTick(bottomTick), TickMath.getSqrtRatioAtTick(topTick), liquidityDelta);
+    } else {
+      // If current tick is greater than the provided top one then only the token1 has to be provided
+      amount1 = TokenDeltaMath.getToken1Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
     }
   }
 
