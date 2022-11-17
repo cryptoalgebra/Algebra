@@ -398,32 +398,29 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       (amount0, amount1) = (uint256(amount0Int), uint256(amount1Int));
     }
-
-    uint256 receivedAmount0;
-    uint256 receivedAmount1;
-    {
-      (receivedAmount0, receivedAmount1) = _syncBalances();
-      IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-
-      if (amount0 > 0) {
-        require((receivedAmount0 = balanceToken0().sub(receivedAmount0)) != 0, 'IIAM');
-      } else receivedAmount0 = 0;
-
-      if (amount1 > 0) {
-        require((receivedAmount1 = balanceToken1().sub(receivedAmount1)) != 0, 'IIAM');
-      } else receivedAmount1 = 0;
-    }
-
     liquidityActual = liquidityDesired;
-    if (receivedAmount0 < amount0) {
-      liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
-    }
-    if (receivedAmount1 < amount1) {
-      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
-      if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+
+    (uint256 receivedAmount0, uint256 receivedAmount1) = _syncBalances();
+    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+
+    if (amount0 == 0) receivedAmount0 = 0;
+    else {
+      receivedAmount0 = balanceToken0().sub(receivedAmount0);
+      if (receivedAmount0 < amount0) {
+        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+      }
     }
 
-    require(liquidityActual != 0, 'IIL2');
+    if (amount1 == 0) receivedAmount1 = 0;
+    else {
+      receivedAmount1 = balanceToken1().sub(receivedAmount1);
+      if (receivedAmount1 < amount1) {
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+      }
+    }
+
+    require(liquidityActual != 0, 'IIAM');
 
     {
       (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
