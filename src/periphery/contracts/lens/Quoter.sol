@@ -56,7 +56,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (, , uint16 fee, , , , ) = pool.globalState();
+        (, , uint16 fee, , , , , ) = pool.globalState();
         console.log('amounts');
         console.log(feeAmount);
         console.log(amountToPay);

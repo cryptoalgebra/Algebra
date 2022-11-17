@@ -16,7 +16,6 @@ interface IAlgebraPoolDerivedState {
    * snapshot is taken and the second snapshot is taken.
    * @param bottomTick The lower tick of the range
    * @param topTick The upper tick of the range
-   * @return innerTickCumulative The snapshot of the tick accumulator for the range
    * @return innerSecondsSpentPerLiquidity The snapshot of seconds per liquidity for the range
    * @return innerSecondsSpent The snapshot of the number of seconds during which the price was in this range
    */
@@ -24,7 +23,6 @@ interface IAlgebraPoolDerivedState {
     external
     view
     returns (
-      int56 innerTickCumulative,
       uint160 innerSecondsSpentPerLiquidity,
       uint32 innerSecondsSpent
     );

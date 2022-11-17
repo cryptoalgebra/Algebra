@@ -10,6 +10,7 @@ interface IAlgebraPoolState {
    * and is exposed as a single method to save gas when accessed externally.
    * @return price The current price of the pool as a sqrt(token1/token0) Q64.96 value;
    * Returns tick The current tick of the pool, i.e. according to the last tick transition that was run;
+   * Returns prevInitializedTick
    * Returns This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
    * boundary;
    * Returns fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
@@ -23,6 +24,7 @@ interface IAlgebraPoolState {
     returns (
       uint160 price,
       int24 tick,
+      int24 prevInitializedTick,
       uint16 fee,
       uint16 timepointIndex,
       uint8 communityFee,
@@ -42,6 +44,15 @@ interface IAlgebraPoolState {
   function totalFeeGrowth1Token() external view returns (uint256);
 
   /**
+   * @notice The pool tick spacing
+   * @dev Ticks can only be used at multiples of this value
+   * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+   * This value is an int24 to avoid casting even though it is always positive.
+   * @return The tick spacing
+   */
+  function tickSpacing() external view returns (int24);
+
+  /**
    * @notice The currently in range liquidity available to the pool
    * @dev This value has no relationship to the total liquidity across all ticks.
    * Returned value cannot exceed type(uint128).max
@@ -57,7 +68,8 @@ interface IAlgebraPoolState {
    * Returns liquidityDelta how much liquidity changes when the pool price crosses the tick;
    * Returns outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0;
    * Returns outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1;
-   * Returns outerTickCumulative the cumulative tick value on the other side of the tick from the current tick;
+   * Returns prevTick;
+   * Returns nextTick;
    * Returns outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick;
    * Returns outerSecondsSpent the seconds spent on the other side of the tick from the current tick;
    * Returns initialized Set to true if the tick is initialized, i.e. liquidityTotal is greater than 0
@@ -73,13 +85,14 @@ interface IAlgebraPoolState {
       int128 liquidityDelta,
       uint256 outerFeeGrowth0Token,
       uint256 outerFeeGrowth1Token,
-      int56 outerTickCumulative,
+      int24 prevTick,
+      int24 nextTick,
       uint160 outerSecondsPerLiquidity,
       uint32 outerSecondsSpent,
       bool initialized
     );
 
-  /** @notice Returns 256 packed tick initialized boolean values. See TickTable for more information */
+  /** @notice Returns 256 packed tick initialized boolean values. See TickTree for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);
 
   /**

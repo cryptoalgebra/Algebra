@@ -48,7 +48,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       const gasTestFixture = async () => {
         const fix = await poolFixture()
 
-        const pool = await fix.createPool(feeAmount)
+        const pool = await fix.createPool()
 
         const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice } = await createPoolFunctions({
           swapTarget: fix.swapTargetCallee,

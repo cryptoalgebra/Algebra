@@ -32,15 +32,6 @@ interface IAlgebraPoolImmutables {
   function token1() external view returns (address);
 
   /**
-   * @notice The pool tick spacing
-   * @dev Ticks can only be used at multiples of this value
-   * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
-   * This value is an int24 to avoid casting even though it is always positive.
-   * @return The tick spacing
-   */
-  function tickSpacing() external view returns (int24);
-
-  /**
    * @notice The maximum amount of position liquidity that can use any tick in the range
    * @dev This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
    * also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool

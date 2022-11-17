@@ -25,7 +25,7 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
 
             IAlgebraPool(pool).initialize(sqrtPriceX96);
         } else {
-            (uint160 sqrtPriceX96Existing, , , , , , ) = IAlgebraPool(pool).globalState();
+            (uint160 sqrtPriceX96Existing, , , , , , , ) = IAlgebraPool(pool).globalState();
             if (sqrtPriceX96Existing == 0) {
                 IAlgebraPool(pool).initialize(sqrtPriceX96);
             }

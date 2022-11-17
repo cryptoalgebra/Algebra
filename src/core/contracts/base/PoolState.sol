@@ -8,6 +8,7 @@ abstract contract PoolState is IAlgebraPoolState {
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
+    int24 prevInitializedTick;
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
     uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
@@ -23,6 +24,8 @@ abstract contract PoolState is IAlgebraPoolState {
 
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override tickSpacing;
 
   int32 blockStartTickX100;
   uint32 startPriceUpdated;
@@ -37,8 +40,9 @@ abstract contract PoolState is IAlgebraPoolState {
   mapping(int24 => TickManager.Tick) public override ticks;
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
+  mapping(int16 => uint256) internal tickSecondLayer;
+  uint256 internal tickTreeRoot;
 
-  /// @dev Reentrancy protection. Implemented in every function of the contract since there are checks of balances.
   modifier lock() {
     require(globalState.unlocked, 'LOK');
     globalState.unlocked = false;
