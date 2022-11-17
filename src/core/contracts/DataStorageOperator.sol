@@ -2,6 +2,7 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import './base/Timestamp.sol';
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/pool/IAlgebraPoolState.sol';
@@ -11,7 +12,7 @@ import './libraries/AdaptiveFee.sol';
 
 import './libraries/Constants.sol';
 
-contract DataStorageOperator is IDataStorageOperator {
+contract DataStorageOperator is IDataStorageOperator, Timestamp {
   uint256 constant UINT16_MODULO = 65536;
 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
@@ -111,10 +112,9 @@ contract DataStorageOperator is IDataStorageOperator {
       uint112[] memory volatilityCumulatives
     )
   {
-    uint32 time = uint32(block.timestamp); // TODO MOVE TO ABSTRACT
     (, int24 tick, , , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
     uint128 liquidity = IAlgebraPoolState(pool).liquidity();
-    return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
+    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, index, liquidity);
   }
 
   /// @inheritdoc IDataStorageOperator

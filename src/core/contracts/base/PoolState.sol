@@ -3,8 +3,9 @@ pragma solidity =0.7.6;
 
 import '../interfaces/pool/IAlgebraPoolState.sol';
 import '../libraries/TickManager.sol';
+import './Timestamp.sol';
 
-abstract contract PoolState is IAlgebraPoolState {
+abstract contract PoolState is IAlgebraPoolState, Timestamp {
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
@@ -56,11 +57,5 @@ abstract contract PoolState is IAlgebraPoolState {
 
   function _unlock() private {
     globalState.unlocked = true;
-  }
-
-  /// @dev This function is created for testing by overriding it.
-  /// @return A timestamp converted to uint32
-  function _blockTimestamp() internal view virtual returns (uint32) {
-    return uint32(block.timestamp); // truncation is desired
   }
 }
