@@ -33,7 +33,7 @@ library TickManager {
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
     require(topTick < TickMath.MAX_TICK + 1, 'TUM');
-    require(topTick > bottomTick, 'TLU');
+    require(topTick >= bottomTick, 'TLU');
     require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
   }
 

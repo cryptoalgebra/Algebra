@@ -47,8 +47,10 @@ abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutabl
 
         pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
 
-        pool.addLimitOrder(
+        pool.mint(
             msg.sender,
+            msg.sender,
+            tick,
             tick,
             amount,
             abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))

@@ -42,13 +42,6 @@ interface IAlgebraPoolActions {
       uint128 liquidityActual
     );
 
-  function addLimitOrder(
-    address recipient,
-    int24 tick,
-    uint128 amount,
-    bytes calldata data
-  ) external;
-
   function removeLimitOrder(address recipient, int24 tick) external returns (uint256 amount0, uint256 amount1);
 
   /**

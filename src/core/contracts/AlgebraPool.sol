@@ -372,7 +372,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     {
       int24 _tickSpacing = tickSpacing;
       require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
-
+    }
+    if (bottomTick == topTick) {
+      address token = globalState.tick > bottomTick ? token1 : token0;
+      (amount0, amount1) = token == token0 ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
+    } else {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
         topTick,
@@ -407,11 +411,35 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     require(liquidityActual != 0, 'IIAM');
 
-    {
-      (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
+    if (bottomTick == topTick) {
+      address token;
+      (token, liquidityActual) = globalState.tick > bottomTick ? (token1, uint128(receivedAmount1)) : (token0, uint128(receivedAmount0));
 
-      require((amount0 = uint256(amount0Int)) <= receivedAmount0, 'IIAM2');
-      require((amount1 = uint256(amount1Int)) <= receivedAmount1, 'IIAM2');
+      if (ticks.addOrRemoveLimitOrder(bottomTick, liquidityActual, true)) tickTable.toggleTick(bottomTick);
+
+      LimitPosition storage _position = getOrCreateLimitPosition(recipient, bottomTick);
+      // TODO handle existing position
+      _position.askCumulative = ticks[bottomTick].spentAskCumulative;
+      _position.amount += liquidityActual;
+      _position.token = token;
+    } else {
+      liquidityActual = liquidityDesired;
+      if (receivedAmount0 < amount0) {
+        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+      }
+      if (receivedAmount1 < amount1) {
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+      }
+
+      require(liquidityActual > 0, 'IIL2');
+
+      {
+        (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
+
+        require((amount0 = uint256(amount0Int)) <= receivedAmount0, 'IIAM2');
+        require((amount1 = uint256(amount1Int)) <= receivedAmount1, 'IIAM2');
+      }
     }
 
     if (amount0 > 0) {
@@ -485,48 +513,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
-  }
-
-  function _mintCallback(
-    uint256 amount0,
-    uint256 amount1,
-    bytes calldata data
-  ) private {
-    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-  }
-
-  function addLimitOrder(
-    address recipient,
-    int24 tick,
-    uint128 amount,
-    bytes calldata data
-  ) external override nonReentrant {
-    address token = globalState.tick > tick ? token1 : token0;
-
-    require(tick % tickSpacing == 0, 'T');
-
-    if (token == token0) {
-      (uint256 balance0Before, ) = _syncBalances();
-      _mintCallback(amount, 0, data);
-      uint256 amountReceived = balanceToken0().sub(balance0Before);
-      if (amountReceived < amount) amount = uint128(amountReceived);
-      reserve0 += amount;
-    } else {
-      (, uint256 balance1Before) = _syncBalances();
-      _mintCallback(0, amount, data);
-      uint256 amountReceived = balanceToken1().sub(balance1Before);
-      if (amountReceived < amount) amount = uint128(amountReceived);
-      reserve1 += amount;
-    }
-
-    bool flipped = ticks.addOrRemoveLimitOrder(tick, amount, true);
-    if (flipped) tickTable.toggleTick(tick);
-
-    LimitPosition storage _position = getOrCreateLimitPosition(recipient, tick);
-    // TODO handle existing position
-    _position.askCumulative = ticks[tick].spentAskCumulative;
-    _position.amount += amount;
-    _position.token = token;
   }
 
   function removeLimitOrder(address recipient, int24 tick) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
