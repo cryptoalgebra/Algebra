@@ -46,16 +46,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 fees1; // The amount of token1 owed to a LP
   }
 
-  struct LimitPosition {
-    uint128 amount; // The amount of tokens to sell
-    uint256 askCumulative;
-    address token;
-  }
-
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
-
-  mapping(bytes32 => LimitPosition) public limitPositions;
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManager.checkTickRangeValidity(bottomTick, topTick);
@@ -324,14 +316,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return positions[key];
   }
 
-  function getOrCreateLimitPosition(address owner, int24 tick) private view returns (LimitPosition storage) {
-    bytes32 key;
-    assembly {
-      key := or(shl(24, owner), and(tick, 0xFFFFFF))
-    }
-    return limitPositions[key];
-  }
-
   function _syncBalances() internal returns (uint256 balance0, uint256 balance1) {
     (balance0, balance1) = (balanceToken0(), balanceToken1());
     uint128 _liquidity = liquidity;
@@ -412,16 +396,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(liquidityActual != 0, 'IIAM');
 
     if (bottomTick == topTick) {
+      Position storage _position = getOrCreatePosition(recipient, bottomTick, bottomTick);
       address token;
       (token, liquidityActual) = globalState.tick > bottomTick ? (token1, uint128(receivedAmount1)) : (token0, uint128(receivedAmount0));
 
       if (ticks.addOrRemoveLimitOrder(bottomTick, liquidityActual, true)) tickTable.toggleTick(bottomTick);
-
-      LimitPosition storage _position = getOrCreateLimitPosition(recipient, bottomTick);
       // TODO handle existing position
-      _position.askCumulative = ticks[bottomTick].spentAskCumulative;
-      _position.amount += liquidityActual;
-      _position.token = token;
+      if (token == token0) {
+        _position.innerFeeGrowth1Token = ticks[bottomTick].spentAsk1Cumulative;
+      } else {
+        _position.innerFeeGrowth0Token = ticks[bottomTick].spentAsk0Cumulative;
+      }
+      _position.liquidity += liquidityActual;
     } else {
       liquidityActual = liquidityDesired;
       if (receivedAmount0 < amount0) {
@@ -516,20 +502,30 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function removeLimitOrder(address recipient, int24 tick) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
-    LimitPosition storage _position = getOrCreateLimitPosition(msg.sender, tick);
+    Position storage _position = getOrCreatePosition(msg.sender, tick, tick);
 
     require(tick % tickSpacing == 0, 'T');
-    require(_position.amount > 0, 'ZP');
+    require(_position.liquidity > 0, 'ZP');
 
-    uint256 amount = FullMath.mulDiv(ticks[tick].spentAskCumulative - _position.askCumulative, _position.amount, Constants.Q128);
+    address inputToken;
+    uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - _position.innerFeeGrowth0Token;
+    if (_cumulativeDelta > 0) inputToken = token1;
+    else {
+      _cumulativeDelta = ticks[tick].spentAsk1Cumulative - _position.innerFeeGrowth1Token; // TODO IF ZERO
+      if (_cumulativeDelta > 0) inputToken = token0;
+      else {
+        inputToken = globalState.tick > tick ? token1 : token0;
+      }
+    }
+
+    uint256 amount = FullMath.mulDiv(_cumulativeDelta, _position.liquidity, Constants.Q128);
 
     uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
     uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
 
-    address inputToken = _position.token;
     uint256 requestedAmount = inputToken == token0
-      ? FullMath.mulDiv(_position.amount, price, Constants.Q96)
-      : FullMath.mulDiv(_position.amount, Constants.Q96, price);
+      ? FullMath.mulDiv(_position.liquidity, price, Constants.Q96)
+      : FullMath.mulDiv(_position.liquidity, Constants.Q96, price);
 
     if (amount >= requestedAmount) {
       if (inputToken == token0) {
@@ -551,11 +547,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
     }
 
-    bool flipped = ticks.addOrRemoveLimitOrder(tick, _position.amount, false);
+    bool flipped = ticks.addOrRemoveLimitOrder(tick, _position.liquidity, false);
     if (flipped) tickTable.toggleTick(tick);
 
     // delete position
-    (_position.amount, _position.askCumulative, _position.token) = (0, 0, address(0));
+    _position.liquidity = 0;
+    if (inputToken == token0) {
+      _position.innerFeeGrowth1Token = 0;
+    } else {
+      _position.innerFeeGrowth0Token = 0;
+    }
   }
 
   /// @dev Returns new fee according combination of sigmoids

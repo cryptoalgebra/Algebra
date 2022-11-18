@@ -28,7 +28,8 @@ library TickManager {
     bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
     uint128 sumOfAsk;
     uint128 spentAsk;
-    uint256 spentAskCumulative;
+    uint256 spentAsk0Cumulative;
+    uint256 spentAsk1Cumulative;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
@@ -249,6 +250,11 @@ library TickManager {
     } else {
       data.spentAsk += uint128(amountOut);
     }
-    data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+
+    if (zto) {
+      data.spentAsk0Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+    } else {
+      data.spentAsk1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+    }
   }
 }

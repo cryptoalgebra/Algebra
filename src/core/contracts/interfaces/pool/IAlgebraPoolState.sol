@@ -88,7 +88,8 @@ interface IAlgebraPoolState {
       bool initialized,
       uint128 sumOfAsk,
       uint128 spentAsk,
-      uint256 spentAskCumulative
+      uint256 spentAsk0Cumulative,
+      uint256 spentAsk1Cumulative
     );
 
   // TODO ADD NATSPEC
