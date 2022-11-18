@@ -487,14 +487,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amount != 0) {
       inputToken = tick > globalState.tick ? token0 : token1;
       _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+      bool flipped;
       if (amount < 0) {
         if (inputToken == token0) {
           amount0 = uint256(-amount);
         } else {
           amount1 = uint256(-amount);
         }
+        flipped = ticks.addOrRemoveLimitOrder(tick, uint128(-amount), false);
+      } else {
+        flipped = ticks.addOrRemoveLimitOrder(tick, uint128(amount), true);
       }
-      bool flipped = ticks.addOrRemoveLimitOrder(tick, _positionLiquidity, (amount > 0));
       if (flipped) tickTable.toggleTick(tick);
     }
     position.liquidity = _positionLiquidity;

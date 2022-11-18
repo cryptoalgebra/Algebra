@@ -138,6 +138,22 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     IAlgebraPool(pool).mint(msg.sender, recipient, tick, tick, amount, abi.encode(msg.sender));
   }
 
+  function decreaseLimitOrder(
+    address pool,
+    int24 tick,
+    uint128 amount
+  ) external returns (uint256 amount0, uint256 amount1) {
+    return IAlgebraPool(pool).burn(tick, tick, amount);
+  }
+
+  function collectLimitOrder(
+    address pool,
+    address recipient,
+    int24 tick
+  ) external returns (uint256 amount0, uint256 amount1) {
+    return IAlgebraPool(pool).collect(recipient, tick, tick, type(uint128).max, type(uint128).max);
+  }
+
   function removeLimitOrder(
     address pool,
     address recipient,

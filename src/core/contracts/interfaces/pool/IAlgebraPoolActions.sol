@@ -42,8 +42,6 @@ interface IAlgebraPoolActions {
       uint128 liquidityActual
     );
 
-  function removeLimitOrder(int24 tick) external returns (uint256 amount0, uint256 amount1);
-
   /**
    * @notice Collects tokens owed to a position
    * @dev Does not recompute fees earned, which must be done either via mint or burn of any amount of liquidity.
