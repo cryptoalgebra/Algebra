@@ -229,7 +229,6 @@ library TickManager {
   {
     Tick storage data = self[tick];
     (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
-
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
 
     if (zto) {
@@ -238,31 +237,26 @@ library TickManager {
       amountOut = FullMath.mulDiv(tokenAmountInput, Constants.Q96, price);
     }
 
-    if (amountOut < sumOfAsk - spentAsk) {
-      data.spentAsk += uint128(amountOut);
-      data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
-    } else if (amountOut == sumOfAsk - spentAsk) {
-      (data.sumOfAsk, data.spentAsk) = (0, 0);
-      data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
-      closed = true;
-    } else {
-      uint256 unspentInputAsk;
-      if (zto) {
-        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, Constants.Q96, price);
-      } else {
-        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, price, Constants.Q96);
-      }
-
-      data.spentAskCumulative += FullMath.mulDiv(unspentInputAsk, Constants.Q128, sumOfAsk);
+    uint256 unspentOutAsk = sumOfAsk - spentAsk;
+    if (amountOut >= unspentOutAsk) {
       (data.sumOfAsk, data.spentAsk) = (0, 0);
       closed = true;
-      amountInputLeft = tokenAmountInput - unspentInputAsk;
-      amountOut = sumOfAsk - spentAsk;
-    }
-
-    if (closed) {
       flipped = data.liquidityTotal == 0;
+      if (amountOut > unspentOutAsk) {
+        uint256 unspentInputAsk;
+        if (zto) {
+          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, Constants.Q96, price);
+        } else {
+          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, price, Constants.Q96);
+        }
+        amountInputLeft = tokenAmountInput - unspentInputAsk;
+        amountOut = unspentOutAsk;
+        tokenAmountInput = unspentInputAsk;
+      }
+    } else {
+      data.spentAsk += uint128(amountOut);
     }
+    data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
   }
 
   function executeLimitOrdersOutput(
@@ -290,30 +284,24 @@ library TickManager {
       amountIn = FullMath.mulDiv(tokenAmountOut, price, Constants.Q96);
     }
 
-    if (tokenAmountOut < sumOfAsk - spentAsk) {
-      data.spentAsk += uint128(tokenAmountOut);
-      data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
-    } else if (tokenAmountOut == sumOfAsk - spentAsk) {
-      (data.sumOfAsk, data.spentAsk) = (0, 0);
-      data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
-      closed = true;
-    } else {
-      uint256 unspentInputAsk;
-      if (zto) {
-        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, Constants.Q96, price);
-      } else {
-        unspentInputAsk = FullMath.mulDivRoundingUp(sumOfAsk - spentAsk, price, Constants.Q96);
-      }
-
-      data.spentAskCumulative += FullMath.mulDiv(unspentInputAsk, Constants.Q128, sumOfAsk);
+    uint256 unspentOutAsk = sumOfAsk - spentAsk;
+    if (tokenAmountOut >= unspentOutAsk) {
       (data.sumOfAsk, data.spentAsk) = (0, 0);
       closed = true;
-      amountOutLeft = tokenAmountOut - (sumOfAsk - spentAsk);
-      amountIn = unspentInputAsk;
-    }
-
-    if (closed) {
       flipped = data.liquidityTotal == 0;
+      if (tokenAmountOut > unspentOutAsk) {
+        uint256 unspentInputAsk;
+        if (zto) {
+          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, Constants.Q96, price);
+        } else {
+          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, price, Constants.Q96);
+        }
+        amountOutLeft = tokenAmountOut - unspentOutAsk;
+        amountIn = unspentInputAsk;
+      }
+    } else {
+      data.spentAsk += uint128(tokenAmountOut);
     }
+    data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
   }
 }
