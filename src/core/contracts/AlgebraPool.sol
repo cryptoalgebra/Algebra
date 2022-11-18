@@ -29,8 +29,6 @@ import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
-import 'hardhat/console.sol';
-
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
