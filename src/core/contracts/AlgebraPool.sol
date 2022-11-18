@@ -519,7 +519,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       reserve1 += amount;
     }
 
-    bool flipped = ticks.addLimitOrder(tick, amount);
+    bool flipped = ticks.addOrRemoveLimitOrder(tick, amount, true);
     if (flipped) tickTable.toggleTick(tick);
 
     LimitPosition storage _position = getOrCreateLimitPosition(recipient, tick);
@@ -565,7 +565,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
     }
 
-    bool flipped = ticks.removeLimitOrder(tick, _position.amount);
+    bool flipped = ticks.addOrRemoveLimitOrder(tick, _position.amount, false);
     if (flipped) tickTable.toggleTick(tick);
 
     // delete position
@@ -825,20 +825,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // TODO fee
         step.feeAmount = 0;
         if (cache.exactInput) {
-          (step.limitOrder, flipped, step.input, step.output) = ticks.executeLimitOrdersInput(
-            step.nextTick,
-            currentPrice,
-            zeroToOne,
-            uint256(amountRequired)
-          );
+          (step.limitOrder, flipped, step.input, step.output) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
           step.input = uint256(amountRequired) - step.input;
         } else {
-          (step.limitOrder, flipped, step.output, step.input) = ticks.executeLimitOrdersOutput(
-            step.nextTick,
-            currentPrice,
-            zeroToOne,
-            uint256(-amountRequired)
-          );
+          (step.limitOrder, flipped, step.output, step.input) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
           step.output = uint256(-amountRequired) - step.output;
         }
         if (flipped) tickTable.toggleTick(step.nextTick);

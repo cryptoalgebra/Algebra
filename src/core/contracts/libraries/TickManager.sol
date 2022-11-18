@@ -180,127 +180,74 @@ library TickManager {
     self[nextTick].prevTick = tick;
   }
 
-  function addLimitOrder(
+  function addOrRemoveLimitOrder(
     mapping(int24 => Tick) storage self,
     int24 tick,
-    uint128 amount
-  ) internal returns (bool flipped) {
-    Tick storage data = self[tick];
-    data.sumOfAsk += amount;
-
-    if (!data.initialized) {
-      data.initialized = true;
-      flipped = true;
-    }
-  }
-
-  function removeLimitOrder(
-    mapping(int24 => Tick) storage self,
-    int24 tick,
-    uint128 amount
+    uint128 amount,
+    bool add
   ) internal returns (bool flipped) {
     Tick storage data = self[tick];
     uint128 sumOfAsk = data.sumOfAsk;
-    if (sumOfAsk == 0) return false;
-
-    sumOfAsk -= amount;
+    sumOfAsk = add ? sumOfAsk + amount : sumOfAsk - amount;
     data.sumOfAsk = sumOfAsk;
 
-    if (sumOfAsk == 0) {
-      data.spentAsk = 0;
-      flipped = data.liquidityTotal == 0;
-    }
-  }
-
-  function executeLimitOrdersInput(
-    mapping(int24 => Tick) storage self,
-    int24 tick,
-    uint160 tickSqrtPrice,
-    bool zto,
-    uint256 tokenAmountInput
-  )
-    internal
-    returns (
-      bool closed,
-      bool flipped,
-      uint256 amountInputLeft,
-      uint256 amountOut
-    )
-  {
-    Tick storage data = self[tick];
-    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
-    uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
-
-    if (zto) {
-      amountOut = FullMath.mulDiv(tokenAmountInput, price, Constants.Q96);
-    } else {
-      amountOut = FullMath.mulDiv(tokenAmountInput, Constants.Q96, price);
-    }
-
-    uint256 unspentOutAsk = sumOfAsk - spentAsk;
-    if (amountOut >= unspentOutAsk) {
-      (data.sumOfAsk, data.spentAsk) = (0, 0);
-      closed = true;
-      flipped = data.liquidityTotal == 0;
-      if (amountOut > unspentOutAsk) {
-        uint256 unspentInputAsk;
-        if (zto) {
-          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, Constants.Q96, price);
-        } else {
-          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, price, Constants.Q96);
-        }
-        amountInputLeft = tokenAmountInput - unspentInputAsk;
-        amountOut = unspentOutAsk;
-        tokenAmountInput = unspentInputAsk;
+    if (add) {
+      if (!data.initialized) {
+        data.initialized = true;
+        flipped = true;
       }
     } else {
-      data.spentAsk += uint128(amountOut);
+      if (sumOfAsk == 0) {
+        data.spentAsk = 0; // TODO can be optimized
+        flipped = data.liquidityTotal == 0;
+      }
     }
-    data.spentAskCumulative += FullMath.mulDiv(tokenAmountInput, Constants.Q128, sumOfAsk);
   }
 
-  function executeLimitOrdersOutput(
+  function executeLimitOrders(
     mapping(int24 => Tick) storage self,
     int24 tick,
     uint160 tickSqrtPrice,
     bool zto,
-    uint256 tokenAmountOut
+    int256 amountRequired
   )
     internal
     returns (
       bool closed,
       bool flipped,
-      uint256 amountOutLeft,
-      uint256 amountIn
+      uint256 amountRequiredLeft,
+      uint256 amount
     )
   {
+    bool exactIn = amountRequired > 0;
+    if (!exactIn) amountRequired = -amountRequired;
+
     Tick storage data = self[tick];
     (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
 
-    if (zto) {
-      amountIn = FullMath.mulDiv(tokenAmountOut, Constants.Q96, price);
-    } else {
-      amountIn = FullMath.mulDiv(tokenAmountOut, price, Constants.Q96);
-    }
+    amount = (zto == exactIn)
+      ? FullMath.mulDiv(uint256(amountRequired), price, Constants.Q96)
+      : FullMath.mulDiv(uint256(amountRequired), Constants.Q96, price);
 
-    uint256 unspentOutAsk = sumOfAsk - spentAsk;
-    if (tokenAmountOut >= unspentOutAsk) {
+    uint256 unspentAsk = sumOfAsk - spentAsk;
+    (uint256 amountOut, uint256 amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
+    if (amountOut >= unspentAsk) {
       (data.sumOfAsk, data.spentAsk) = (0, 0);
       closed = true;
       flipped = data.liquidityTotal == 0;
-      if (tokenAmountOut > unspentOutAsk) {
-        uint256 unspentInputAsk;
-        if (zto) {
-          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, Constants.Q96, price);
-        } else {
-          unspentInputAsk = FullMath.mulDivRoundingUp(unspentOutAsk, price, Constants.Q96);
-        }
-        amountOutLeft = tokenAmountOut - unspentOutAsk;
+      if (amountOut > unspentAsk) {
+        uint256 unspentInputAsk = zto
+          ? FullMath.mulDivRoundingUp(unspentAsk, Constants.Q96, price)
+          : FullMath.mulDivRoundingUp(unspentAsk, price, Constants.Q96);
+
+        (amount, amountRequiredLeft) = exactIn
+          ? (unspentAsk, uint256(amountRequired) - unspentInputAsk)
+          : (unspentInputAsk, uint256(amountRequired) - unspentAsk);
         amountIn = unspentInputAsk;
       }
     } else {
-      data.spentAsk += uint128(tokenAmountOut);
+      data.spentAsk += uint128(amountOut);
     }
     data.spentAskCumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
   }
