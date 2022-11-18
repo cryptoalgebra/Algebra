@@ -42,7 +42,7 @@ interface IAlgebraPoolActions {
       uint128 liquidityActual
     );
 
-  function removeLimitOrder(address recipient, int24 tick) external returns (uint256 amount0, uint256 amount1);
+  function removeLimitOrder(int24 tick) external returns (uint256 amount0, uint256 amount1);
 
   /**
    * @notice Collects tokens owed to a position

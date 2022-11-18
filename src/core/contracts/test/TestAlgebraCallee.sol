@@ -143,7 +143,12 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     address recipient,
     int24 tick
   ) external returns (uint256 amount0, uint256 amount1) {
-    return IAlgebraPool(pool).removeLimitOrder(recipient, tick);
+    IAlgebraPool(pool).burn(tick, tick, 0);
+    (uint128 liquidityLeft, , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
+    if (liquidityLeft > 0) {
+      IAlgebraPool(pool).burn(tick, tick, liquidityLeft);
+    }
+    return IAlgebraPool(pool).collect(recipient, tick, tick, type(uint128).max, type(uint128).max);
   }
 
   event MintCallback(uint256 amount0Owed, uint256 amount1Owed);
@@ -185,5 +190,15 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
     if (pay0 > 0) IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, pay0);
     if (pay1 > 0) IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, pay1);
+  }
+
+  function getPositionKey(
+    address owner,
+    int24 bottomTick,
+    int24 topTick
+  ) private pure returns (bytes32 key) {
+    assembly {
+      key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
+    }
   }
 }

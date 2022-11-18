@@ -358,8 +358,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
     }
     if (bottomTick == topTick) {
-      address token = globalState.tick > bottomTick ? token1 : token0;
-      (amount0, amount1) = token == token0 ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
+      (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
     } else {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,
@@ -396,18 +395,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(liquidityActual != 0, 'IIAM');
 
     if (bottomTick == topTick) {
+      liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
       Position storage _position = getOrCreatePosition(recipient, bottomTick, bottomTick);
-      address token;
-      (token, liquidityActual) = globalState.tick > bottomTick ? (token1, uint128(receivedAmount1)) : (token0, uint128(receivedAmount0));
-
-      if (ticks.addOrRemoveLimitOrder(bottomTick, liquidityActual, true)) tickTable.toggleTick(bottomTick);
-      // TODO handle existing position
-      if (token == token0) {
-        _position.innerFeeGrowth1Token = ticks[bottomTick].spentAsk1Cumulative;
-      } else {
-        _position.innerFeeGrowth0Token = ticks[bottomTick].spentAsk0Cumulative;
-      }
-      _position.liquidity += liquidityActual;
+      _updateLimitOrderPosition(_position, bottomTick, int256(liquidityActual).toInt128());
     } else {
       liquidityActual = liquidityDesired;
       if (receivedAmount0 < amount0) {
@@ -438,6 +428,76 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
     }
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
+  }
+
+  function _updateLimitOrderPosition(
+    Position storage position,
+    int24 tick,
+    int128 amount
+  ) private returns (uint256 amount0, uint256 amount1) {
+    uint128 _positionLiquidity = position.liquidity;
+    address inputToken;
+
+    uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
+    if (_cumulativeDelta > 0) {
+      position.innerFeeGrowth0Token += _cumulativeDelta;
+      inputToken = token1;
+    } else {
+      _cumulativeDelta = ticks[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
+
+      if (_cumulativeDelta > 0) {
+        position.innerFeeGrowth1Token += _cumulativeDelta;
+        inputToken = token0;
+      }
+    }
+
+    if (_cumulativeDelta > 0) {
+      uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidity, Constants.Q128));
+
+      uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+      uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
+
+      uint256 fullAmount;
+      if (inputToken == token0) {
+        fullAmount = FullMath.mulDiv(_positionLiquidity, price, Constants.Q96);
+        if (closedAmount >= fullAmount) {
+          amount1 = fullAmount;
+          _positionLiquidity = 0;
+        } else {
+          amount1 = closedAmount;
+          _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, Constants.Q96, price)); // unspent input
+        }
+      } else {
+        fullAmount = FullMath.mulDiv(_positionLiquidity, Constants.Q96, price);
+        if (closedAmount >= fullAmount) {
+          amount0 = fullAmount;
+          _positionLiquidity = 0;
+        } else {
+          amount0 = closedAmount;
+          _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
+        }
+      }
+
+      if (amount0 | amount1 != 0) {
+        (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
+        (amount0, amount1) = (0, 0);
+      }
+    }
+
+    if (amount != 0) {
+      inputToken = tick > globalState.tick ? token0 : token1;
+      _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+      if (amount < 0) {
+        if (inputToken == token0) {
+          amount0 = uint256(-amount);
+        } else {
+          amount1 = uint256(-amount);
+        }
+      }
+      bool flipped = ticks.addOrRemoveLimitOrder(tick, _positionLiquidity, (amount > 0));
+      if (flipped) tickTable.toggleTick(tick);
+    }
+    position.liquidity = _positionLiquidity;
   }
 
   function _payFromReserve(
@@ -486,77 +546,29 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 amount
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     _syncBalances();
-    (Position storage position, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(
-      msg.sender,
-      bottomTick,
-      topTick,
-      -int256(amount).toInt128()
-    );
 
-    (amount0, amount1) = (uint256(-amount0Int), uint256(-amount1Int));
+    Position storage position;
+
+    if (bottomTick == topTick) {
+      int24 tick = bottomTick;
+      position = getOrCreatePosition(msg.sender, tick, tick);
+
+      require(tick % tickSpacing == 0, 'T');
+      require(position.liquidity > 0, 'ZP');
+
+      (amount0, amount1) = _updateLimitOrderPosition(position, tick, -int256(amount).toInt128());
+    } else {
+      int256 amount0Int;
+      int256 amount1Int;
+      (position, amount0Int, amount1Int) = _updatePositionTicksAndFees(msg.sender, bottomTick, topTick, -int256(amount).toInt128());
+
+      (amount0, amount1) = (uint256(-amount0Int), uint256(-amount1Int));
+    }
 
     if (amount0 | amount1 != 0) {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
-  }
-
-  function removeLimitOrder(address recipient, int24 tick) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
-    Position storage _position = getOrCreatePosition(msg.sender, tick, tick);
-
-    require(tick % tickSpacing == 0, 'T');
-    require(_position.liquidity > 0, 'ZP');
-
-    address inputToken;
-    uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - _position.innerFeeGrowth0Token;
-    if (_cumulativeDelta > 0) inputToken = token1;
-    else {
-      _cumulativeDelta = ticks[tick].spentAsk1Cumulative - _position.innerFeeGrowth1Token; // TODO IF ZERO
-      if (_cumulativeDelta > 0) inputToken = token0;
-      else {
-        inputToken = globalState.tick > tick ? token1 : token0;
-      }
-    }
-
-    uint256 amount = FullMath.mulDiv(_cumulativeDelta, _position.liquidity, Constants.Q128);
-
-    uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-    uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-
-    uint256 requestedAmount = inputToken == token0
-      ? FullMath.mulDiv(_position.liquidity, price, Constants.Q96)
-      : FullMath.mulDiv(_position.liquidity, Constants.Q96, price);
-
-    if (amount >= requestedAmount) {
-      if (inputToken == token0) {
-        _payFromReserve(token1, recipient, requestedAmount);
-        amount1 = requestedAmount;
-      } else {
-        _payFromReserve(token0, recipient, requestedAmount);
-        amount0 = requestedAmount;
-      }
-    } else {
-      if (inputToken == token0) {
-        amount1 = amount;
-        amount0 = FullMath.mulDiv(requestedAmount - amount, Constants.Q96, price); // unspent input
-      } else {
-        amount0 = amount;
-        amount1 = FullMath.mulDiv(requestedAmount - amount, price, Constants.Q96); // unspent input
-      }
-      if (amount0 > 0) _payFromReserve(token0, recipient, amount0);
-      if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
-    }
-
-    bool flipped = ticks.addOrRemoveLimitOrder(tick, _position.liquidity, false);
-    if (flipped) tickTable.toggleTick(tick);
-
-    // delete position
-    _position.liquidity = 0;
-    if (inputToken == token0) {
-      _position.innerFeeGrowth1Token = 0;
-    } else {
-      _position.innerFeeGrowth0Token = 0;
-    }
   }
 
   /// @dev Returns new fee according combination of sigmoids

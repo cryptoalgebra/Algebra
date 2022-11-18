@@ -1781,7 +1781,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe.only('#limitOrdersBuiltIn', async() => {
+  describe('#limitOrdersBuiltIn', async() => {
     describe('success cases', () => {
       let balanceToken0: BigNumber
       let balanceToken1: BigNumber
@@ -1806,32 +1806,32 @@ describe('AlgebraPool', () => {
       })
 
       it('closes limit order at higher price without execution', async() => {
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
-        expect(balance0After).to.be.eq(balance0Before.add(AMOUNT).sub(1)); // rounding
+        expect(balance0After).to.be.eq(balance0Before.add(AMOUNT));
         expect(balance1After).to.be.eq(balance1Before);
       })
 
       it('closes limit order at lower price without execution', async() => {
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
-        expect(balance1After).to.be.eq(balance1Before.add(AMOUNT).sub(1)); // rounding
+        expect(balance1After).to.be.eq(balance1Before.add(AMOUNT));
         expect(balance0After).to.be.eq(balance0Before);
       })
 
       it('closes limit order at higher price with full execution', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         
 
         await swapExact1For0(BigNumber.from(100).pow(18), wallet.address);
@@ -1842,7 +1842,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -1858,7 +1858,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(100).pow(18), wallet.address);
@@ -1869,7 +1869,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -1885,7 +1885,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution exactOut', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swap0ForExact1(BigNumber.from(100).pow(18), wallet.address);
@@ -1896,7 +1896,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -1912,7 +1912,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at higher price with full execution for two users', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         await addLimitOrder(other.address, 60, AMOUNT);
         
 
@@ -1924,7 +1924,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -1935,7 +1935,8 @@ describe('AlgebraPool', () => {
 
         const otherBalance0Before = await token0.balanceOf(other.address) 
         const otherBalance1Before = await token1.balanceOf(other.address) 
-        await pool.connect(other).removeLimitOrder(other.address, 60);
+        await pool.connect(other).burn(60, 60, 0);
+        await pool.connect(other).collect(other.address, 60, 60, MaxUint128, MaxUint128);
         const otherBalance0After = await token0.balanceOf(other.address)
         const otherBalance1After = await token1.balanceOf(other.address)
 
@@ -1952,7 +1953,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(100).pow(18), wallet.address);
@@ -1963,7 +1964,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -1979,7 +1980,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution exactOut', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swap0ForExact1(BigNumber.from(100).pow(18), wallet.address);
@@ -1990,7 +1991,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2007,7 +2008,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at higher price with partial execution', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         
 
         await swapExact1For0(BigNumber.from(10).pow(18), wallet.address);
@@ -2018,7 +2019,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2032,7 +2033,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with partial execution', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(10).pow(18), wallet.address);
@@ -2043,7 +2044,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2057,7 +2058,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at higher price with full execution in two steps', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         
 
         await swapExact1For0(BigNumber.from(10).pow(18), wallet.address);
@@ -2069,7 +2070,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2085,7 +2086,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution in two steps', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(10).pow(18), wallet.address);
@@ -2097,7 +2098,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2113,7 +2114,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at higher price with full execution in three steps', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         
 
         await swapExact1For0(BigNumber.from(10).pow(18), wallet.address);
@@ -2126,7 +2127,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, 60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2142,7 +2143,7 @@ describe('AlgebraPool', () => {
 
       it('closes limit order at lower price with full execution in two steps', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(10).pow(18), wallet.address);
@@ -2155,7 +2156,7 @@ describe('AlgebraPool', () => {
 
         const balance0Before = await token0.balanceOf(wallet.address) 
         const balance1Before = await token1.balanceOf(wallet.address) 
-        await pool.removeLimitOrder(wallet.address, -60);
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, -60);
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
@@ -2171,7 +2172,7 @@ describe('AlgebraPool', () => {
 
       it('partial execution at higher price and return', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, 60, AMOUNT);
+        await addLimitOrder(swapTarget.address, 60, AMOUNT);
         
 
         await swapExact1For0(BigNumber.from(10).pow(18), wallet.address);
@@ -2181,14 +2182,14 @@ describe('AlgebraPool', () => {
 
         console.log('TICK', tickBefore, tick);
 
-        const {amount0, amount1} = await pool.callStatic.removeLimitOrder(wallet.address, 60);
+        const {amount0, amount1} = await swapTarget.callStatic.removeLimitOrder(pool.address, wallet.address, 60);
 
         expect(amount1).to.be.eq('993989927588078640')
         expect(amount0).to.be.eq('11955859495341234')
 
         await swapExact1For0(BigNumber.from(100).pow(18), wallet.address);
 
-        const {amount0: amount0After, amount1: amount1After} = await pool.callStatic.removeLimitOrder(wallet.address, 60);
+        const {amount0: amount0After, amount1: amount1After} = await swapTarget.callStatic.removeLimitOrder(pool.address, wallet.address, 60);
 
         expect(amount1After).to.be.eq('1006017734268818165')
         expect(amount0After).to.be.eq('0')
@@ -2201,7 +2202,7 @@ describe('AlgebraPool', () => {
 
       it('partial execution at lower price and return', async() => {
         const tickBefore = (await pool.globalState()).tick;
-        await addLimitOrder(wallet.address, -60, AMOUNT);
+        await addLimitOrder(swapTarget.address, -60, AMOUNT);
         
 
         await swapExact0For1(BigNumber.from(10).pow(18), wallet.address);
@@ -2211,14 +2212,14 @@ describe('AlgebraPool', () => {
 
         console.log('TICK', tickBefore, tick);
 
-        const {amount0, amount1} = await pool.callStatic.removeLimitOrder(wallet.address, -60);
+        const {amount0, amount1} = await swapTarget.callStatic.removeLimitOrder(pool.address,wallet.address, -60);
 
         expect(amount0).to.be.eq('993989927588078640')
         expect(amount1).to.be.eq('11955859495341234')
 
         await swapExact0For1(BigNumber.from(100).pow(18), wallet.address);
 
-        const {amount0: amount0After, amount1: amount1After} = await pool.callStatic.removeLimitOrder(wallet.address, -60);
+        const {amount0: amount0After, amount1: amount1After} = await swapTarget.callStatic.removeLimitOrder(pool.address, wallet.address, -60);
 
         expect(amount0After).to.be.eq('1006017734268818165')
         expect(amount1After).to.be.eq('0')
