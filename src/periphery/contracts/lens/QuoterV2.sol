@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickTable.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 

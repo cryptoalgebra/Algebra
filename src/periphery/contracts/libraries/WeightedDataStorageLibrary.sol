@@ -3,7 +3,7 @@ pragma solidity >=0.5.0 <0.8.0;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
-import 'algebra/contracts/interfaces/IDataStorageOperator.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IDataStorageOperator.sol';
 
 /// @title Weighted DataStorage library
 /// @notice Provides functions to integrate with different tier dataStorages of the same pool
