@@ -11,6 +11,7 @@ import './base/PoolImmutables.sol';
 import './libraries/TokenDeltaMath.sol';
 import './libraries/PriceMovementMath.sol';
 import './libraries/TickManager.sol';
+import './libraries/LimitOrderManager.sol';
 import './libraries/TickTree.sol';
 
 import './libraries/LowGasSafeMath.sol';
@@ -37,7 +38,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using SafeCast for int256;
   using TickTree for mapping(int16 => uint256);
   using TickManager for mapping(int24 => TickManager.Tick);
-  using TickManager for mapping(int24 => TickManager.LimitOrder);
+  using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
@@ -492,16 +493,20 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       bool flipped;
       {
         _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+        TickManager.Tick storage _tickData = ticks[tick];
         if (amount < 0) {
           if (tick > _globalTick) {
             amount0 = uint256(-amount);
           } else {
             amount1 = uint256(-amount);
           }
-          flipped = limitOrders.addOrRemoveLimitOrder(ticks, tick, uint128(-amount), false);
+          flipped = limitOrders.addOrRemoveLimitOrder(tick, uint128(-amount), false);
+          if (flipped) _tickData.hasLimitOrders = false;
         } else {
-          flipped = limitOrders.addOrRemoveLimitOrder(ticks, tick, uint128(amount), true);
+          flipped = limitOrders.addOrRemoveLimitOrder(tick, uint128(amount), true);
+          if (flipped) _tickData.hasLimitOrders = true;
         }
+        if (flipped) flipped = _tickData.liquidityTotal == 0;
       }
       if (flipped) {
         uint256 _tickTreeRoot = tickTreeRoot;

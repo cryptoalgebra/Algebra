@@ -5,7 +5,6 @@ import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 
 import './TickMath.sol';
-import './FullMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
 
@@ -26,13 +25,6 @@ library TickManager {
     int24 prevTick;
     int24 nextTick;
     bool hasLimitOrders;
-  }
-
-  struct LimitOrder {
-    uint128 sumOfAsk;
-    uint128 spentAsk;
-    uint256 spentAsk0Cumulative;
-    uint256 spentAsk1Cumulative;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
@@ -184,85 +176,5 @@ library TickManager {
     self[tick].nextTick = nextTick;
     self[prevTick].nextTick = tick;
     self[nextTick].prevTick = tick;
-  }
-
-  function addOrRemoveLimitOrder(
-    mapping(int24 => LimitOrder) storage self,
-    mapping(int24 => Tick) storage ticks,
-    int24 tick,
-    uint128 amount,
-    bool add
-  ) internal returns (bool flipped) {
-    LimitOrder storage data = self[tick];
-    uint128 sumOfAskBefore = data.sumOfAsk;
-    uint128 sumOfAskAfter = add ? sumOfAskBefore + amount : sumOfAskBefore - amount;
-    data.sumOfAsk = sumOfAskAfter;
-
-    Tick storage _tickData = ticks[tick];
-    if (add) {
-      if (sumOfAskBefore == 0) {
-        if (_tickData.prevTick == _tickData.nextTick) {
-          flipped = true;
-        }
-        _tickData.hasLimitOrders = true;
-      }
-    } else {
-      if (sumOfAskAfter == 0) {
-        data.spentAsk = 0; // TODO can be optimized
-        flipped = _tickData.liquidityTotal == 0;
-        _tickData.hasLimitOrders = false;
-      }
-    }
-  }
-
-  function executeLimitOrders(
-    mapping(int24 => LimitOrder) storage self,
-    int24 tick,
-    uint160 tickSqrtPrice,
-    bool zto,
-    int256 amountRequired
-  )
-    internal
-    returns (
-      bool closed,
-      uint256 amountRequiredLeft,
-      uint256 amount
-    )
-  {
-    bool exactIn = amountRequired > 0;
-    if (!exactIn) amountRequired = -amountRequired;
-
-    LimitOrder storage data = self[tick];
-    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
-    uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
-
-    amount = (zto == exactIn)
-      ? FullMath.mulDiv(uint256(amountRequired), price, Constants.Q96)
-      : FullMath.mulDiv(uint256(amountRequired), Constants.Q96, price);
-
-    uint256 unspentAsk = sumOfAsk - spentAsk;
-    (uint256 amountOut, uint256 amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
-    if (amountOut >= unspentAsk) {
-      (data.sumOfAsk, data.spentAsk) = (0, 0);
-      closed = true;
-      if (amountOut > unspentAsk) {
-        uint256 unspentInputAsk = zto
-          ? FullMath.mulDivRoundingUp(unspentAsk, Constants.Q96, price)
-          : FullMath.mulDivRoundingUp(unspentAsk, price, Constants.Q96);
-
-        (amount, amountRequiredLeft) = exactIn
-          ? (unspentAsk, uint256(amountRequired) - unspentInputAsk)
-          : (unspentInputAsk, uint256(amountRequired) - unspentAsk);
-        amountIn = unspentInputAsk;
-      }
-    } else {
-      data.spentAsk += uint128(amountOut);
-    }
-
-    if (zto) {
-      data.spentAsk0Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
-    } else {
-      data.spentAsk1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
-    }
   }
 }
