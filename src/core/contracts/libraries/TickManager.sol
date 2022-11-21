@@ -219,7 +219,6 @@ library TickManager {
     internal
     returns (
       bool closed,
-      bool flipped,
       uint256 amountRequiredLeft,
       uint256 amount
     )
@@ -240,7 +239,6 @@ library TickManager {
     if (amountOut >= unspentAsk) {
       (data.sumOfAsk, data.spentAsk) = (0, 0);
       closed = true;
-      flipped = data.liquidityTotal == 0;
       if (amountOut > unspentAsk) {
         uint256 unspentInputAsk = zto
           ? FullMath.mulDivRoundingUp(unspentAsk, Constants.Q96, price)

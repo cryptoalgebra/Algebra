@@ -834,18 +834,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].sumOfAsk != 0) {
-        bool flipped;
         // calculate the amounts from LO
         // TODO fee
         step.feeAmount = 0;
-        if (cache.exactInput) {
-          (step.limitOrder, flipped, step.input, step.output) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
-          step.input = uint256(amountRequired) - step.input;
-        } else {
-          (step.limitOrder, flipped, step.output, step.input) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
-          step.output = uint256(-amountRequired) - step.output;
-        }
-        if (flipped) {
+        uint256 amountLeft;
+        uint256 amountUsed;
+        (step.limitOrder, amountLeft, amountUsed) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
+        (step.input, step.output) = cache.exactInput
+          ? (uint256(amountRequired) - amountLeft, amountUsed)
+          : (amountUsed, uint256(-amountRequired) - amountLeft);
+
+        if (step.limitOrder && ticks[step.nextTick].liquidityTotal == 0) {
           uint256 _tickTreeRoot = tickTreeRoot;
           uint256 _initialTickTreeRoot = _tickTreeRoot;
           int24 newPrevInitializedTick;
