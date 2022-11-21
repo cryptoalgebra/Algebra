@@ -40,7 +40,7 @@ contract MockTimeAlgebraPoolDeployer {
     );
 
   function deployMock(
-    address factory,
+    address _factory,
     address token0,
     address token1
   ) external returns (address pool) {
@@ -49,7 +49,7 @@ contract MockTimeAlgebraPoolDeployer {
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
-    (dataStorageCache, factory, token0Cache, token1Cache) = (address(dataStorage), factory, token0, token1);
+    (dataStorageCache, factory, token0Cache, token1Cache) = (address(dataStorage), _factory, token0, token1);
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     emit PoolDeployed(pool);
   }

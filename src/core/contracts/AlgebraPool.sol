@@ -179,7 +179,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick; // The current tick
     int24 prevInitializedTick;
     uint16 timepointIndex; // The index of the last written timepoint
-    uint256 tickTreeRoot;
   }
 
   /**
@@ -205,61 +204,73 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       globalState.price,
       globalState.tick,
       globalState.prevInitializedTick,
-      globalState.timepointIndex,
-      0
+      globalState.timepointIndex
     );
     position = getOrCreatePosition(owner, bottomTick, topTick);
 
-    (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
-
     bool toggledBottom;
     bool toggledTop;
-    if (liquidityDelta != 0) {
-      uint32 time = _blockTimestamp();
-      (, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
+    {
+      (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
+      if (liquidityDelta != 0) {
+        uint32 time = _blockTimestamp();
+        (, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
 
-      toggledBottom = ticks.update(
+        toggledBottom = ticks.update(
+          bottomTick,
+          cache.tick,
+          liquidityDelta,
+          _totalFeeGrowth0Token,
+          _totalFeeGrowth1Token,
+          secondsPerLiquidityCumulative,
+          time,
+          false // isTopTick
+        );
+
+        toggledTop = ticks.update(
+          topTick,
+          cache.tick,
+          liquidityDelta,
+          _totalFeeGrowth0Token,
+          _totalFeeGrowth1Token,
+          secondsPerLiquidityCumulative,
+          time,
+          true // isTopTick
+        );
+      }
+
+      (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
         bottomTick,
-        cache.tick,
-        liquidityDelta,
-        _totalFeeGrowth0Token,
-        _totalFeeGrowth1Token,
-        secondsPerLiquidityCumulative,
-        time,
-        false // isTopTick
-      );
-
-      toggledTop = ticks.update(
         topTick,
         cache.tick,
-        liquidityDelta,
         _totalFeeGrowth0Token,
-        _totalFeeGrowth1Token,
-        secondsPerLiquidityCumulative,
-        time,
-        true // isTopTick
+        _totalFeeGrowth1Token
       );
+
+      _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
     }
-
-    (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
-      bottomTick,
-      topTick,
-      cache.tick,
-      _totalFeeGrowth0Token,
-      _totalFeeGrowth1Token
-    );
-
-    _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
 
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
-      {
-        cache.tickTreeRoot = tickTreeRoot;
-        if (toggledBottom) _insertOrRemoveTick(cache, bottomTick, liquidityDelta < 0);
-        if (toggledTop) _insertOrRemoveTick(cache, topTick, liquidityDelta < 0);
+      if (toggledBottom || toggledTop) {
+        uint256 _tickTreeRoot = tickTreeRoot;
+        uint256 _initialTickTreeRoot = _tickTreeRoot;
+        int24 _prevInitializedTick = cache.prevInitializedTick;
+        if (toggledBottom) {
+          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(
+            bottomTick,
+            cache.tick,
+            _prevInitializedTick,
+            _tickTreeRoot,
+            liquidityDelta < 0
+          );
+        }
+        if (toggledTop) {
+          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, cache.tick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
+        }
 
-        if (tickTreeRoot != cache.tickTreeRoot) tickTreeRoot = cache.tickTreeRoot;
-        if (globalState.prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = cache.prevInitializedTick;
+        if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+        if (_prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = _prevInitializedTick;
       }
 
       int128 globalLiquidityDelta;
@@ -277,23 +288,26 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function _insertOrRemoveTick(
-    UpdatePositionCache memory cache,
     int24 tick,
+    int24 currentTick,
+    int24 prevInitializedTick,
+    uint256 tickTreeRoot,
     bool remove
-  ) private {
+  ) private returns (int24, uint256) {
     if (remove) {
-      if (cache.prevInitializedTick == tick) cache.prevInitializedTick = ticks[tick].prevTick;
+      if (prevInitializedTick == tick) prevInitializedTick = ticks[tick].prevTick;
       ticks.removeTick(tick);
     } else {
-      if (cache.prevInitializedTick < tick && tick <= cache.tick) {
-        ticks.insertTick(tick, cache.prevInitializedTick, ticks[cache.prevInitializedTick].nextTick);
-        cache.prevInitializedTick = tick;
+      if (prevInitializedTick < tick && tick <= currentTick) {
+        ticks.insertTick(tick, prevInitializedTick, ticks[prevInitializedTick].nextTick);
+        prevInitializedTick = tick;
       } else {
-        int24 nextTick = tickTable.getNextTick(tickSecondLayer, cache.tickTreeRoot, tick);
+        int24 nextTick = tickTable.getNextTick(tickSecondLayer, tickTreeRoot, tick);
         ticks.insertTick(tick, ticks[nextTick].prevTick, nextTick);
       }
     }
-    cache.tickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, cache.tickTreeRoot);
+    tickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, tickTreeRoot);
+    return (prevInitializedTick, tickTreeRoot);
   }
 
   function _getAmountsForLiquidity(
@@ -653,7 +667,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    int56 tickCumulative; // The global tickCumulative at the moment
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool computedLatestTimepoint; //  if we have already fetched _tickCumulative_ and _secondPerLiquidity_ from the DataOperator
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
