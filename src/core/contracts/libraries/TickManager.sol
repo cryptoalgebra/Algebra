@@ -159,7 +159,11 @@ library TickManager {
     require(prevTick != nextTick, 'next eq prev tick');
     self[prevTick].nextTick = nextTick;
     self[nextTick].prevTick = prevTick;
-    delete self[tick];
+
+    Tick storage _tick = self[tick];
+    _tick.outerFeeGrowth0Token = 0;
+    _tick.outerFeeGrowth1Token = 0;
+    (_tick.prevTick, _tick.nextTick, _tick.initialized) = (0, 0, false);
   }
 
   /// @notice Adds tick to linked list

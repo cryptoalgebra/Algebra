@@ -436,70 +436,82 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int128 amount
   ) private returns (uint256 amount0, uint256 amount1) {
     uint128 _positionLiquidity = position.liquidity;
-    address inputToken;
 
-    uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
-    if (_cumulativeDelta > 0) {
-      position.innerFeeGrowth0Token += _cumulativeDelta;
-      inputToken = token1;
-    } else {
-      _cumulativeDelta = ticks[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
+    {
+      address inputToken;
+      uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
+      if (_cumulativeDelta > 0) {
+        position.innerFeeGrowth0Token += _cumulativeDelta;
+        inputToken = token1;
+      } else {
+        _cumulativeDelta = ticks[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
+
+        if (_cumulativeDelta > 0) {
+          position.innerFeeGrowth1Token += _cumulativeDelta;
+          inputToken = token0;
+        }
+      }
 
       if (_cumulativeDelta > 0) {
-        position.innerFeeGrowth1Token += _cumulativeDelta;
-        inputToken = token0;
-      }
-    }
+        uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidity, Constants.Q128));
 
-    if (_cumulativeDelta > 0) {
-      uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidity, Constants.Q128));
+        uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+        uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
 
-      uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-      uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-
-      uint256 fullAmount;
-      if (inputToken == token0) {
-        fullAmount = FullMath.mulDiv(_positionLiquidity, price, Constants.Q96);
-        if (closedAmount >= fullAmount) {
-          amount1 = fullAmount;
-          _positionLiquidity = 0;
+        uint256 fullAmount;
+        if (inputToken == token0) {
+          fullAmount = FullMath.mulDiv(_positionLiquidity, price, Constants.Q96);
+          if (closedAmount >= fullAmount) {
+            amount1 = fullAmount;
+            _positionLiquidity = 0;
+          } else {
+            amount1 = closedAmount;
+            _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, Constants.Q96, price)); // unspent input
+          }
         } else {
-          amount1 = closedAmount;
-          _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, Constants.Q96, price)); // unspent input
+          fullAmount = FullMath.mulDiv(_positionLiquidity, Constants.Q96, price);
+          if (closedAmount >= fullAmount) {
+            amount0 = fullAmount;
+            _positionLiquidity = 0;
+          } else {
+            amount0 = closedAmount;
+            _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
+          }
         }
-      } else {
-        fullAmount = FullMath.mulDiv(_positionLiquidity, Constants.Q96, price);
-        if (closedAmount >= fullAmount) {
-          amount0 = fullAmount;
-          _positionLiquidity = 0;
-        } else {
-          amount0 = closedAmount;
-          _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
-        }
-      }
 
-      if (amount0 | amount1 != 0) {
-        (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
-        (amount0, amount1) = (0, 0);
+        if (amount0 | amount1 != 0) {
+          (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
+          (amount0, amount1) = (0, 0);
+        }
       }
     }
 
     if (amount != 0) {
-      inputToken = tick > globalState.tick ? token0 : token1;
-      _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+      (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
       bool flipped;
-      if (amount < 0) {
-        if (inputToken == token0) {
-          amount0 = uint256(-amount);
+      {
+        _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+        if (amount < 0) {
+          if (tick > _globalTick) {
+            amount0 = uint256(-amount);
+          } else {
+            amount1 = uint256(-amount);
+          }
+          flipped = ticks.addOrRemoveLimitOrder(tick, uint128(-amount), false);
         } else {
-          amount1 = uint256(-amount);
+          flipped = ticks.addOrRemoveLimitOrder(tick, uint128(amount), true);
         }
-        flipped = ticks.addOrRemoveLimitOrder(tick, uint128(-amount), false);
-      } else {
-        flipped = ticks.addOrRemoveLimitOrder(tick, uint128(amount), true);
       }
-      if (flipped) tickTable.toggleTick(tick);
+      if (flipped) {
+        uint256 _tickTreeRoot = tickTreeRoot;
+        uint256 _initTickTreeRoot = _tickTreeRoot;
+        int24 newPrevInitializedTick;
+        (newPrevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(tick, _globalTick, _prevInitializedTick, _tickTreeRoot, amount < 0);
+        if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+        if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
+      }
     }
+
     position.liquidity = _positionLiquidity;
   }
 
@@ -833,11 +845,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           (step.limitOrder, flipped, step.output, step.input) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
           step.output = uint256(-amountRequired) - step.output;
         }
-        if (flipped) tickTable.toggleTick(step.nextTick);
+        if (flipped) {
+          uint256 _tickTreeRoot = tickTreeRoot;
+          uint256 _initialTickTreeRoot = _tickTreeRoot;
+          int24 newPrevInitializedTick;
+          (newPrevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(step.nextTick, currentTick, cache.prevInitializedTick, _tickTreeRoot, true);
+          if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+          if (newPrevInitializedTick != cache.prevInitializedTick) cache.prevInitializedTick = newPrevInitializedTick;
+          step.initialized = false;
+        }
         step.limitOrder = !step.limitOrder;
       } else {
         // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
-
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
           zeroToOne,
           currentPrice,
