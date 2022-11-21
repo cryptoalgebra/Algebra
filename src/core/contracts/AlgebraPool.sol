@@ -37,6 +37,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using SafeCast for int256;
   using TickTree for mapping(int16 => uint256);
   using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManager for mapping(int24 => TickManager.LimitOrder);
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
@@ -439,12 +440,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     {
       address inputToken;
-      uint256 _cumulativeDelta = ticks[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
+      uint256 _cumulativeDelta = limitOrders[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
       if (_cumulativeDelta > 0) {
         position.innerFeeGrowth0Token += _cumulativeDelta;
         inputToken = token1;
       } else {
-        _cumulativeDelta = ticks[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
+        _cumulativeDelta = limitOrders[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
 
         if (_cumulativeDelta > 0) {
           position.innerFeeGrowth1Token += _cumulativeDelta;
@@ -497,9 +498,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           } else {
             amount1 = uint256(-amount);
           }
-          flipped = ticks.addOrRemoveLimitOrder(tick, uint128(-amount), false);
+          flipped = limitOrders.addOrRemoveLimitOrder(ticks, tick, uint128(-amount), false);
         } else {
-          flipped = ticks.addOrRemoveLimitOrder(tick, uint128(amount), true);
+          flipped = limitOrders.addOrRemoveLimitOrder(ticks, tick, uint128(amount), true);
         }
       }
       if (flipped) {
@@ -833,13 +834,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
-      if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].sumOfAsk != 0) {
+      if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].hasLimitOrders) {
         // calculate the amounts from LO
         // TODO fee
         step.feeAmount = 0;
         uint256 amountLeft;
         uint256 amountUsed;
-        (step.limitOrder, amountLeft, amountUsed) = ticks.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
+        (step.limitOrder, amountLeft, amountUsed) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
         (step.input, step.output) = cache.exactInput
           ? (uint256(amountRequired) - amountLeft, amountUsed)
           : (amountUsed, uint256(-amountRequired) - amountLeft);
@@ -896,7 +897,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           }
 
           // we have opened LOs
-          if (ticks[step.nextTick].sumOfAsk != 0) {
+          if (ticks[step.nextTick].hasLimitOrders) {
             currentTick = zeroToOne ? step.nextTick : step.nextTick - 1;
             continue;
           }

@@ -25,7 +25,10 @@ library TickManager {
     uint256 outerFeeGrowth1Token;
     int24 prevTick;
     int24 nextTick;
-    bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
+    bool hasLimitOrders;
+  }
+
+  struct LimitOrder {
     uint128 sumOfAsk;
     uint128 spentAsk;
     uint256 spentAsk0Cumulative;
@@ -119,8 +122,9 @@ library TickManager {
         data.outerFeeGrowth0Token = totalFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token;
       }
-      data.initialized = true;
     }
+
+    if (flipped) flipped = !data.hasLimitOrders;
   }
 
   /// @notice Transitions to next tick as needed by price movement
@@ -160,10 +164,7 @@ library TickManager {
     self[prevTick].nextTick = nextTick;
     self[nextTick].prevTick = prevTick;
 
-    Tick storage _tick = self[tick];
-    _tick.outerFeeGrowth0Token = 0;
-    _tick.outerFeeGrowth1Token = 0;
-    (_tick.prevTick, _tick.nextTick, _tick.initialized) = (0, 0, false);
+    delete self[tick];
   }
 
   /// @notice Adds tick to linked list
@@ -186,31 +187,36 @@ library TickManager {
   }
 
   function addOrRemoveLimitOrder(
-    mapping(int24 => Tick) storage self,
+    mapping(int24 => LimitOrder) storage self,
+    mapping(int24 => Tick) storage ticks,
     int24 tick,
     uint128 amount,
     bool add
   ) internal returns (bool flipped) {
-    Tick storage data = self[tick];
-    uint128 sumOfAsk = data.sumOfAsk;
-    sumOfAsk = add ? sumOfAsk + amount : sumOfAsk - amount;
-    data.sumOfAsk = sumOfAsk;
+    LimitOrder storage data = self[tick];
+    uint128 sumOfAskBefore = data.sumOfAsk;
+    uint128 sumOfAskAfter = add ? sumOfAskBefore + amount : sumOfAskBefore - amount;
+    data.sumOfAsk = sumOfAskAfter;
 
+    Tick storage _tickData = ticks[tick];
     if (add) {
-      if (!data.initialized) {
-        data.initialized = true;
-        flipped = true;
+      if (sumOfAskBefore == 0) {
+        if (_tickData.prevTick == _tickData.nextTick) {
+          flipped = true;
+        }
+        _tickData.hasLimitOrders = true;
       }
     } else {
-      if (sumOfAsk == 0) {
+      if (sumOfAskAfter == 0) {
         data.spentAsk = 0; // TODO can be optimized
-        flipped = data.liquidityTotal == 0;
+        flipped = _tickData.liquidityTotal == 0;
+        _tickData.hasLimitOrders = false;
       }
     }
   }
 
   function executeLimitOrders(
-    mapping(int24 => Tick) storage self,
+    mapping(int24 => LimitOrder) storage self,
     int24 tick,
     uint160 tickSqrtPrice,
     bool zto,
@@ -226,7 +232,7 @@ library TickManager {
     bool exactIn = amountRequired > 0;
     if (!exactIn) amountRequired = -amountRequired;
 
-    Tick storage data = self[tick];
+    LimitOrder storage data = self[tick];
     (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
 
