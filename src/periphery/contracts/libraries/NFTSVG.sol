@@ -2,7 +2,7 @@
 pragma solidity >=0.7.6;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickTable.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
 import 'base64-sol/base64.sol';
 
 /// @title NFTSVG
@@ -400,6 +400,6 @@ library NFTSVG {
 
     function isRare(uint256 tokenId, address poolAddress) internal pure returns (bool) {
         bytes32 h = keccak256(abi.encodePacked(tokenId, poolAddress));
-        return uint256(h) < type(uint256).max / (1 + TickTable.getMostSignificantBit(tokenId) * 2);
+        return uint256(h) < type(uint256).max / (1 + TickTree.getSingleSignificantBit(tokenId) * 2);
     }
 }

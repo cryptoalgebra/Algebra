@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 
 import './interfaces/ILimitOrderManager.sol';
 import './libraries/PositionKey.sol';
@@ -14,8 +15,6 @@ import './base/ERC721Permit.sol';
 import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
-
-import 'hardhat/console.sol';
 
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
@@ -34,8 +33,18 @@ contract LimitOrderManager is
         uint96 nonce;
         address operator;
         uint80 poolId;
-        uint128 amount;
+        uint128 liquidity;
         int24 tick;
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        uint128 tokensOwed0;
+        uint128 tokensOwed1;
+    }
+
+    struct UpdatePositionCache {
+        uint256 cumulativeDelta;
+        uint160 sqrtPrice;
+        uint256 price;
     }
 
     /// @dev IDs of pools assigned by this contract
@@ -70,8 +79,12 @@ contract LimitOrderManager is
             address operator,
             address token0,
             address token1,
-            uint128 amount,
-            int24 tick
+            uint128 liquidity,
+            int24 tick,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            uint128 tokensOwed0,
+            uint128 tokensOwed1
         )
     {
         LimitPosition memory limitPosition = _limitPositions[tokenId];
@@ -82,8 +95,12 @@ contract LimitOrderManager is
             limitPosition.operator,
             poolKey.token0,
             poolKey.token1,
-            limitPosition.amount,
-            limitPosition.tick
+            limitPosition.liquidity,
+            limitPosition.tick,
+            limitPosition.feeGrowthInside0LastX128,
+            limitPosition.feeGrowthInside1LastX128,
+            limitPosition.tokensOwed0,
+            limitPosition.tokensOwed1
         );
     }
 
@@ -100,7 +117,6 @@ contract LimitOrderManager is
         IAlgebraPool pool;
 
         pool = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
-        console.log(msg.sender);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
@@ -109,18 +125,176 @@ contract LimitOrderManager is
             PoolAddress.PoolKey({token0: params.token0, token1: params.token1})
         );
 
+        bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+
         _limitPositions[tokenId] = LimitPosition({
             nonce: 0,
             operator: address(0),
             poolId: poolId,
             tick: params.tick,
-            amount: params.amount
+            liquidity: params.amount,
+            feeGrowthInside0LastX128: feeGrowthInside0LastX128,
+            feeGrowthInside1LastX128: feeGrowthInside1LastX128,
+            tokensOwed0: 0,
+            tokensOwed1: 0
         });
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
         _;
+    }
+
+    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity)
+        external
+        payable
+        override
+        isAuthorizedForToken(tokenId)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        LimitPosition storage position = _limitPositions[tokenId];
+        UpdatePositionCache memory cache;
+
+        uint128 positionLiquidity = position.liquidity;
+        int24 tick = position.tick;
+
+        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
+        // update position state
+        pool.burn(tick, tick, liquidity);
+
+        bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
+        // this is now updated to the current transaction
+        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        // update lomanager position state
+        cache.cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
+        cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+        cache.price = FullMath.mulDiv(cache.sqrtPrice, cache.sqrtPrice, Constants.Q96);
+
+        if (cache.cumulativeDelta > 0) {
+            uint128 closedAmount0 = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                    positionLiquidity,
+                    Constants.Q128
+                )
+            );
+            uint128 closedAmountInToken1 = uint128(FullMath.mulDiv(closedAmount0, Constants.Q96, cache.price));
+            if (closedAmountInToken1 > positionLiquidity) {
+                closedAmountInToken1 = positionLiquidity;
+                closedAmount0 = uint128(FullMath.mulDiv(positionLiquidity, cache.price, Constants.Q96));
+            }
+            positionLiquidity -= closedAmountInToken1;
+            require(positionLiquidity >= liquidity);
+            position.liquidity = positionLiquidity - liquidity;
+            position.tokensOwed0 += closedAmount0;
+            position.tokensOwed1 += liquidity;
+            (amount0, amount1) = (closedAmount0, liquidity);
+        } else {
+            cache.cumulativeDelta = feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128;
+            uint128 closedAmount1 = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                    positionLiquidity,
+                    Constants.Q128
+                )
+            );
+            uint128 closedAmountInToken0 = uint128(FullMath.mulDiv(closedAmount1, cache.price, Constants.Q96));
+            if (closedAmountInToken0 > positionLiquidity) {
+                closedAmountInToken0 = positionLiquidity;
+                closedAmount1 = uint128(FullMath.mulDiv(positionLiquidity, Constants.Q96, cache.price));
+            }
+            positionLiquidity -= closedAmountInToken0;
+            require(positionLiquidity >= liquidity);
+            position.liquidity = positionLiquidity - liquidity;
+            position.tokensOwed1 += closedAmount1;
+            position.tokensOwed0 += liquidity;
+            (amount0, amount1) = (liquidity, closedAmount1);
+        }
+
+        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+    }
+
+    function collectLimitOrder(uint256 tokenId, address recipient)
+        external
+        payable
+        override
+        isAuthorizedForToken(tokenId)
+        returns (uint256 amount0, uint256 amount1)
+    {
+        // allow collecting to the nft position manager address with address 0
+        recipient = recipient == address(0) ? address(this) : recipient;
+
+        LimitPosition storage position = _limitPositions[tokenId];
+        int24 tick = position.tick;
+
+        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+
+        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
+
+        // trigger an update of the position fees owed and fee growth snapshots if it has any liquidity
+        if (position.liquidity > 0) {
+            uint128 positionLiquidity = position.liquidity;
+            pool.burn(tick, tick, 0);
+            bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
+            // this is now updated to the current transaction
+            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+            // update lomanager position state
+            uint256 cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
+            uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+            uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
+
+            if (cumulativeDelta > 0) {
+                uint128 closedAmount0 = uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                        positionLiquidity,
+                        Constants.Q128
+                    )
+                );
+                uint128 closedAmountInToken1 = uint128(FullMath.mulDiv(closedAmount0, Constants.Q96, price));
+                if (closedAmountInToken1 > positionLiquidity) {
+                    closedAmountInToken1 = positionLiquidity;
+                    closedAmount0 = uint128(FullMath.mulDiv(positionLiquidity, price, Constants.Q96));
+                }
+                position.liquidity -= closedAmountInToken1;
+                position.tokensOwed0 += closedAmount0;
+            } else {
+                cumulativeDelta = feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128;
+                uint128 closedAmount1 = uint128(
+                    FullMath.mulDiv(
+                        feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                        positionLiquidity,
+                        Constants.Q128
+                    )
+                );
+                uint128 closedAmountInToken0 = uint128(FullMath.mulDiv(closedAmount1, price, Constants.Q96));
+                if (closedAmountInToken0 > positionLiquidity) {
+                    closedAmountInToken0 = positionLiquidity;
+                    closedAmount1 = uint128(FullMath.mulDiv(positionLiquidity, Constants.Q96, price));
+                }
+                position.liquidity -= closedAmountInToken0;
+                position.tokensOwed1 += closedAmount1;
+            }
+
+            position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+            position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        }
+
+        // compute the arguments to give to the pool#collect method
+        (uint128 amount0Collect, uint128 amount1Collect) = (position.tokensOwed0, position.tokensOwed1);
+
+        // the actual amounts collected are returned
+        (amount0, amount1) = pool.collect(recipient, tick, tick, amount0Collect, amount1Collect);
+
+        // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
+        // instead of the actual amount so we can burn the token
+        (position.tokensOwed0, position.tokensOwed1) = (
+            position.tokensOwed0 - amount0Collect,
+            position.tokensOwed1 - amount1Collect
+        );
     }
 
     // save bytecode by removing implementation of unused method

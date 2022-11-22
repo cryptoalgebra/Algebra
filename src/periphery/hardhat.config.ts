@@ -1,6 +1,7 @@
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-watcher';
 import 'hardhat-dependency-compiler';
+import 'hardhat-contract-sizer';
 import 'solidity-coverage';
 import 'algebra-solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
@@ -51,6 +52,7 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
       'contracts/NonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/LimitOrderManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/MockTimeNonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/NFTDescriptorTest.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,

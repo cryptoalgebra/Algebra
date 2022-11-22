@@ -49,7 +49,7 @@ abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutabl
 
         pool.mint(
             msg.sender,
-            msg.sender,
+            address(this),
             tick,
             tick,
             amount,

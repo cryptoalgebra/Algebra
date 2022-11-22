@@ -25,8 +25,12 @@ interface ILimitOrderManager is
             address operator,
             address token0,
             address token1,
-            uint128 amount,
-            int24 tick
+            uint128 liquidity,
+            int24 tick,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            uint128 tokensOwed0,
+            uint128 tokensOwed1
         );
 
     struct addLimitOrderParams {
@@ -35,6 +39,16 @@ interface ILimitOrderManager is
         uint128 amount;
         int24 tick;
     }
+
+    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity)
+        external
+        payable
+        returns (uint256 amount0, uint256 amount1);
+
+    function collectLimitOrder(uint256 tokenId, address recipient)
+        external
+        payable
+        returns (uint256 amount0, uint256 amount1);
 
     function addLimitOrder(addLimitOrderParams calldata params) external payable returns (uint256 tokenId);
 
