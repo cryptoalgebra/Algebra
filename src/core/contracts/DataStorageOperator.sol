@@ -149,8 +149,12 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     uint32 blockTimestamp,
     int24 tick,
     uint128 liquidity
-  ) external override onlyPool returns (uint16 indexUpdated) {
-    return timepoints.write(index, blockTimestamp, tick, liquidity);
+  ) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
+    indexUpdated = timepoints.write(index, blockTimestamp, tick, liquidity);
+    if (index != indexUpdated) {
+      uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated);
+      newFee = AdaptiveFee.getFee(volatilityAverage / 15, feeConfig);
+    }
   }
 
   /// @inheritdoc IDataStorageOperator

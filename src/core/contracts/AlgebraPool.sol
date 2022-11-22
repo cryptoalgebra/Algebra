@@ -277,10 +277,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
+        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
         if (cache.timepointIndex != newTimepointIndex) {
-          globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex);
+          globalState.fee = newFee;
           globalState.timepointIndex = newTimepointIndex;
+          emit Fee(newFee);
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
@@ -515,16 +516,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
-  /// @dev Returns new fee according combination of sigmoids
-  function _getNewFee(
-    uint32 _time,
-    int24 _tick,
-    uint16 _index
-  ) private returns (uint16 newFee) {
-    newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index);
-    emit Fee(newFee);
-  }
-
   function _vaultAddress() private view returns (address) {
     return IAlgebraFactory(factory).vaultAddress();
   }
@@ -538,7 +529,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint32 blockTimestamp,
     int24 tick,
     uint128 liquidity
-  ) private returns (uint16 newTimepointIndex) {
+  ) private returns (uint16 newTimepointIndex, uint16 newFee) {
     return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity);
   }
 
@@ -735,12 +726,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       cache.activeIncentive = activeIncentive;
 
-      uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
+      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
 
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex);
+        cache.fee = newFee;
+        emit Fee(newFee);
       }
     }
 

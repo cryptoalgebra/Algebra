@@ -127,12 +127,13 @@ interface IDataStorageOperator {
   /// @param tick The active tick at the time of the new timepoint
   /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
+  /// @return newFee The fee in hundredths of a bip, i.e. 1e-6
   function write(
     uint16 index,
     uint32 blockTimestamp,
     int24 tick,
     uint128 liquidity
-  ) external returns (uint16 indexUpdated);
+  ) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
