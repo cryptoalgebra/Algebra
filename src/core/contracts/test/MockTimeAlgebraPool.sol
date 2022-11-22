@@ -29,12 +29,11 @@ contract MockTimeAlgebraPool is AlgebraPool {
     return true;
   }
 
-  function getAverageVolatility() external view returns (uint112 TWVolatilityAverage) {
-    TWVolatilityAverage = IDataStorageOperator(dataStorageOperator).getAverageVolatility(
+  function getAverageVolatility() external view returns (uint112 volatilityAverage) {
+    volatilityAverage = IDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
       globalState.fee,
-      globalState.timepointIndex,
-      liquidity
+      globalState.timepointIndex
     );
   }
 
@@ -48,7 +47,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function getFee() external view returns (uint16 fee) {
-    return IDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
+    return IDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex);
   }
 
   function getKeyForPosition(

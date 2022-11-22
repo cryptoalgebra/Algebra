@@ -118,12 +118,12 @@ library DataStorage {
           ? (lastTickCumulative - startTimepoint.tickCumulative) / (lastTimestamp - startTimepoint.blockTimestamp)
           : tick;
       } else {
-        Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, 0);
+        int56 tickCumulativeAtStart = getTickCumulativeAt(self, time, WINDOW, tick, index, oldestIndex);
 
         //    current-WINDOW  last   current
         // _________*____________*_______*_
         //           ||||||||||||
-        avgTick = (lastTickCumulative - startOfWindow.tickCumulative) / (lastTimestamp - time + WINDOW);
+        avgTick = (lastTickCumulative - tickCumulativeAtStart) / (lastTimestamp - time + WINDOW);
       }
     } else {
       avgTick = (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / (lastTimestamp - oldestTimestamp);
@@ -186,6 +186,93 @@ library DataStorage {
     assert(false);
   }
 
+  function getTickCumulativeAt(
+    Timepoint[UINT16_MODULO] storage self,
+    uint32 time,
+    uint32 secondsAgo,
+    int24 tick,
+    uint16 index,
+    uint16 oldestIndex
+  ) internal view returns (int56 tickCumulative) {
+    uint32 target = time - secondsAgo;
+
+    // if target is newer than last timepoint
+    if (secondsAgo == 0 || lteConsideringOverflow(self[index].blockTimestamp, target, time)) {
+      Timepoint storage last = self[index];
+      (uint32 timestamp, int56 lastTickCumulative) = (last.blockTimestamp, last.tickCumulative);
+      if (timestamp == target) return lastTickCumulative;
+      return (lastTickCumulative + int56(tick) * (target - timestamp));
+    }
+
+    require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
+    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) = binarySearch(self, time, target, index, oldestIndex);
+
+    (uint32 timestampAfter, int56 tickCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.tickCumulative);
+    if (target == timestampAfter) return tickCumulativeAfter; // we're at the right boundary
+
+    (uint32 timestampBefore, int56 tickCumulativeBefore) = (beforeOrAt.blockTimestamp, beforeOrAt.tickCumulative);
+    if (target != timestampBefore) {
+      // we're in the middle
+      uint32 timepointTimeDelta = timestampAfter - timestampBefore;
+      uint32 targetDelta = target - timestampBefore;
+
+      return tickCumulativeBefore + ((tickCumulativeAfter - tickCumulativeBefore) / timepointTimeDelta) * targetDelta;
+    }
+
+    // we're at the left boundary
+    return tickCumulativeBefore;
+  }
+
+  function getVolatilityCumulativeAt(
+    Timepoint[UINT16_MODULO] storage self,
+    uint32 time,
+    uint32 secondsAgo,
+    int24 tick,
+    uint16 index,
+    uint16 oldestIndex
+  ) internal view returns (uint88 volatilityCumulative) {
+    uint32 target = time - secondsAgo;
+
+    // if target is newer than last timepoint
+    if (secondsAgo == 0 || lteConsideringOverflow(self[index].blockTimestamp, target, time)) {
+      Timepoint storage last = self[index];
+      (uint32 timestamp, int56 lastTickCumulative, uint88 lastVolatilityCumulative) = (
+        last.blockTimestamp,
+        last.tickCumulative,
+        last.volatilityCumulative
+      );
+      if (timestamp == target) return lastVolatilityCumulative;
+
+      int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, timestamp, lastTickCumulative));
+      int24 prevTick = tick;
+      if (index != oldestIndex) {
+        Timepoint storage _prevLast = self[index - 1]; // considering index underflow
+        uint32 _prevLastBlockTimestamp = _prevLast.blockTimestamp;
+        int56 _prevLastTickCumulative = _prevLast.tickCumulative;
+        prevTick = int24((last.tickCumulative - _prevLastTickCumulative) / (last.blockTimestamp - _prevLastBlockTimestamp));
+      }
+      return (lastVolatilityCumulative + uint88(_volatilityOnRange(target - timestamp, prevTick, tick, last.averageTick, avgTick)));
+    }
+
+    require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
+    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) = binarySearch(self, time, target, index, oldestIndex);
+
+    (uint32 timestampAfter, uint88 volatilityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.volatilityCumulative);
+    if (target == timestampAfter) return volatilityCumulativeAfter; // we're at the right boundary
+
+    (uint32 timestampBefore, uint88 volatilityCumulativeBefore) = (beforeOrAt.blockTimestamp, beforeOrAt.volatilityCumulative);
+    if (target != timestampBefore) {
+      // we're in the middle
+      uint32 timepointTimeDelta = timestampAfter - timestampBefore;
+      uint32 targetDelta = target - timestampBefore;
+
+      return volatilityCumulativeBefore + ((volatilityCumulativeAfter - volatilityCumulativeBefore) / timepointTimeDelta) * targetDelta;
+    }
+
+    // we're at the left boundary
+    return volatilityCumulativeBefore;
+  }
+
   /// @dev Reverts if an timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
@@ -220,11 +307,10 @@ library DataStorage {
         int24 prevTick = tick;
         {
           if (index != oldestIndex) {
-            Timepoint memory prevLast;
             Timepoint storage _prevLast = self[index - 1]; // considering index underflow
-            prevLast.blockTimestamp = _prevLast.blockTimestamp;
-            prevLast.tickCumulative = _prevLast.tickCumulative;
-            prevTick = int24((last.tickCumulative - prevLast.tickCumulative) / (last.blockTimestamp - prevLast.blockTimestamp));
+            uint32 _prevLastBlockTimestamp = _prevLast.blockTimestamp;
+            int56 _prevLastTickCumulative = _prevLast.tickCumulative;
+            prevTick = int24((last.tickCumulative - _prevLastTickCumulative) / (last.blockTimestamp - _prevLastBlockTimestamp));
           }
         }
         return createNewTimepoint(last, target, tick, prevTick, liquidity, avgTick);
@@ -309,14 +395,12 @@ library DataStorage {
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
   /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
+    uint16 index
   ) internal view returns (uint88 volatilityAverage) {
     uint16 oldestIndex;
     Timepoint storage oldest = self[0];
@@ -326,17 +410,17 @@ library DataStorage {
       oldestIndex = nextIndex;
     }
 
-    Timepoint memory endOfWindow = getSingleTimepoint(self, time, 0, tick, index, oldestIndex, liquidity);
+    uint88 cumulativeVolatilityAtEnd = getVolatilityCumulativeAt(self, time, 0, tick, index, oldestIndex);
 
     uint32 oldestTimestamp = oldest.blockTimestamp;
     if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
-      Timepoint memory startOfWindow = getSingleTimepoint(self, time, WINDOW, tick, index, oldestIndex, liquidity);
-      return ((endOfWindow.volatilityCumulative - startOfWindow.volatilityCumulative) / WINDOW); // sample is big enough to ignore bias of variance
+      uint88 cumulativeVolatilityAtStart = getVolatilityCumulativeAt(self, time, WINDOW, tick, index, oldestIndex);
+      return ((cumulativeVolatilityAtEnd - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
     } else if (time != oldestTimestamp) {
       uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
       uint32 unbiasedDenominator = time - oldestTimestamp;
       if (unbiasedDenominator > 1) unbiasedDenominator--; // Bessel's correction for "small" sample
-      return ((endOfWindow.volatilityCumulative - _oldestVolatilityCumulative) / unbiasedDenominator);
+      return ((cumulativeVolatilityAtEnd - _oldestVolatilityCumulative) / unbiasedDenominator);
     }
   }
 

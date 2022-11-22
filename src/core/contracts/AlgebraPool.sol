@@ -279,7 +279,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint128 liquidityBefore = liquidity;
         uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
         if (cache.timepointIndex != newTimepointIndex) {
-          globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
+          globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex);
           globalState.timepointIndex = newTimepointIndex;
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
@@ -519,10 +519,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _getNewFee(
     uint32 _time,
     int24 _tick,
-    uint16 _index,
-    uint128 _liquidity
+    uint16 _index
   ) private returns (uint16 newFee) {
-    newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
+    newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index);
     emit Fee(newFee);
   }
 
@@ -750,7 +749,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
+        cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex);
       }
     }
 

@@ -106,14 +106,12 @@ interface IDataStorageOperator {
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
-  /// @return TWVolatilityAverage The average volatility in the recent range
+  /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(
     uint32 time,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (uint112 TWVolatilityAverage);
+    uint16 index
+  ) external view returns (uint112 volatilityAverage);
 
   /// @notice Writes an dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
@@ -139,12 +137,10 @@ interface IDataStorageOperator {
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
   /// @return fee The fee in hundredths of a bip, i.e. 1e-6
   function getFee(
     uint32 time,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
+    uint16 index
   ) external view returns (uint16 fee);
 }
