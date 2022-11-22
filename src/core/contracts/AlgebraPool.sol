@@ -30,6 +30,8 @@ import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
+import 'hardhat/console.sol';
+
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
@@ -399,6 +401,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (bottomTick == topTick) {
       liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
       Position storage _position = getOrCreatePosition(recipient, bottomTick, bottomTick);
+      console.log('mint');
+      console.log(liquidityActual);
       _updateLimitOrderPosition(_position, bottomTick, int256(liquidityActual).toInt128());
     } else {
       liquidityActual = liquidityDesired;
@@ -453,6 +457,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           inputToken = token0;
         }
       }
+      console.log('acc0');
+      console.log(position.innerFeeGrowth0Token);
+      console.log('acc1');
+      console.log(position.innerFeeGrowth1Token);
 
       if (_cumulativeDelta > 0) {
         uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidity, Constants.Q128));
@@ -493,6 +501,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       bool flipped;
       {
         _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+
         TickManager.Tick storage _tickData = ticks[tick];
         if (amount < 0) {
           if (tick > _globalTick) {
@@ -519,6 +528,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     position.liquidity = _positionLiquidity;
+    console.log('liq');
+    console.log(_positionLiquidity);
   }
 
   function _payFromReserve(
@@ -576,7 +587,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       require(tick % tickSpacing == 0, 'T');
       require(position.liquidity > 0, 'ZP');
-
+      console.log('burn');
+      console.log(amount);
       (amount0, amount1) = _updateLimitOrderPosition(position, tick, -int256(amount).toInt128());
     } else {
       int256 amount0Int;
