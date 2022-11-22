@@ -160,14 +160,17 @@ library TickManager {
   /// @notice Removes tick from linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
-  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
-    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
+  /// @return prevTick
+  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
     (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
+    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return prevTick;
+
     require(prevTick != nextTick, 'tick not exist');
     self[prevTick].nextTick = nextTick;
     self[nextTick].prevTick = prevTick;
 
     delete self[tick];
+    return prevTick;
   }
 
   /// @notice Adds tick to linked list

@@ -276,21 +276,24 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 prevInitializedTick,
     uint256 tickTreeRoot,
     bool remove
-  ) private returns (int24, uint256) {
+  ) private returns (int24 newPrevInitializedTick, uint256 newTickTreeRoot) {
+    int24 prevTick;
     if (remove) {
-      if (prevInitializedTick == tick) prevInitializedTick = ticks[tick].prevTick;
-      ticks.removeTick(tick);
+      prevTick = ticks.removeTick(tick);
+      if (prevInitializedTick == tick) prevInitializedTick = prevTick;
     } else {
+      int24 nextTick;
       if (prevInitializedTick < tick && tick <= currentTick) {
-        ticks.insertTick(tick, prevInitializedTick, ticks[prevInitializedTick].nextTick);
+        nextTick = ticks[prevInitializedTick].nextTick;
+        prevTick = prevInitializedTick;
         prevInitializedTick = tick;
       } else {
-        int24 nextTick = tickTable.getNextTick(tickSecondLayer, tickTreeRoot, tick);
-        ticks.insertTick(tick, ticks[nextTick].prevTick, nextTick);
+        nextTick = tickTable.getNextTick(tickSecondLayer, tickTreeRoot, tick);
+        prevTick = ticks[nextTick].prevTick;
       }
+      ticks.insertTick(tick, prevTick, nextTick);
     }
-    tickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, tickTreeRoot);
-    return (prevInitializedTick, tickTreeRoot);
+    return (prevInitializedTick, tickTable.toggleTick(tickSecondLayer, tick, tickTreeRoot));
   }
 
   function _getAmountsForLiquidity(
