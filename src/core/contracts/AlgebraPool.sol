@@ -872,20 +872,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // calculate the amounts from LO
         // TODO fee
         step.feeAmount = 0;
-        uint256 amountLeft;
-        uint256 amountUsed;
-        (step.limitOrder, amountLeft, amountUsed) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
-        (step.input, step.output) = cache.exactInput
-          ? (uint256(amountRequired) - amountLeft, amountUsed)
-          : (amountUsed, uint256(-amountRequired) - amountLeft);
-
+        (step.limitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
         if (step.limitOrder && ticks[step.nextTick].liquidityTotal == 0) {
-          uint256 _tickTreeRoot = tickTreeRoot;
-          uint256 _initialTickTreeRoot = _tickTreeRoot;
-          int24 newPrevInitializedTick;
-          (newPrevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(step.nextTick, currentTick, cache.prevInitializedTick, _tickTreeRoot, true);
+          uint256 _initialTickTreeRoot = tickTreeRoot;
+          (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
+            step.nextTick,
+            currentTick,
+            cache.prevInitializedTick,
+            _initialTickTreeRoot,
+            true
+          );
           if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-          if (newPrevInitializedTick != cache.prevInitializedTick) cache.prevInitializedTick = newPrevInitializedTick;
+          cache.prevInitializedTick = newPrevInitializedTick;
           step.initialized = false;
         }
         step.limitOrder = !step.limitOrder;

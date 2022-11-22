@@ -126,7 +126,7 @@ contract AlgebraFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xf78b9f49a3faa7697e28fe41e37abc9e2119bcfa630fcb85fc4f3676c6d0f8d6;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x55b19d4ebd2fda9f99827e594e01e0a7db8cd1425496a28e128ca5657f8f7917;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

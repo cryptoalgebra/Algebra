@@ -45,8 +45,8 @@ library LimitOrderManager {
     internal
     returns (
       bool closed,
-      uint256 amountRequiredLeft,
-      uint256 amount
+      uint256 amountOut,
+      uint256 amountIn
     )
   {
     bool exactIn = amountRequired > 0;
@@ -56,25 +56,21 @@ library LimitOrderManager {
     (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
 
-    amount = (zto == exactIn)
+    uint256 amount = (zto == exactIn)
       ? FullMath.mulDiv(uint256(amountRequired), price, Constants.Q96)
       : FullMath.mulDiv(uint256(amountRequired), Constants.Q96, price);
 
-    uint256 unspentAsk = sumOfAsk - spentAsk;
-    (uint256 amountOut, uint256 amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
-    if (amountOut >= unspentAsk) {
-      (data.sumOfAsk, data.spentAsk) = (0, 0);
+    uint256 unspentOutAsk = sumOfAsk - spentAsk;
+    (amountOut, amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
+    if (amountOut >= unspentOutAsk) {
       closed = true;
-      if (amountOut > unspentAsk) {
-        uint256 unspentInputAsk = zto ? FullMath.mulDiv(unspentAsk, Constants.Q96, price) : FullMath.mulDiv(unspentAsk, price, Constants.Q96);
-
-        (amount, amountRequiredLeft) = exactIn
-          ? (unspentAsk, uint256(amountRequired) - unspentInputAsk)
-          : (unspentInputAsk, uint256(amountRequired) - unspentAsk);
-        amountIn = unspentInputAsk;
+      (data.sumOfAsk, data.spentAsk) = (0, 0);
+      if (amountOut > unspentOutAsk) {
+        amountIn = zto ? FullMath.mulDiv(unspentOutAsk, Constants.Q96, price) : FullMath.mulDiv(unspentOutAsk, price, Constants.Q96);
+        amountOut = unspentOutAsk;
       }
     } else {
-      data.spentAsk += uint128(amountOut);
+      data.spentAsk = spentAsk + uint128(amountOut);
     }
 
     if (zto) {
