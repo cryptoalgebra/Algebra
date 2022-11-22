@@ -174,30 +174,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   /**
    * @dev Updates position's ticks and its fees
-   * @return position The Position object to operate with
-   * @return amount0 The amount of token0 the caller needs to send, negative if the pool needs to send it
-   * @return amount1 The amount of token1 the caller needs to send, negative if the pool needs to send it
+   * @return amount0 The abs amount of token0 that corresponds to liquidityDelta
+   * @return amount1 The abs amount of token1 that corresponds to liquidityDelta
    */
   function _updatePositionTicksAndFees(
-    address owner,
+    Position storage position,
     int24 bottomTick,
     int24 topTick,
     int128 liquidityDelta
-  )
-    private
-    returns (
-      Position storage position,
-      int256 amount0,
-      int256 amount1
-    )
-  {
+  ) private returns (uint256 amount0, uint256 amount1) {
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
       globalState.tick,
       globalState.prevInitializedTick,
       globalState.timepointIndex
     );
-    position = getOrCreatePosition(owner, bottomTick, topTick);
 
     bool toggledBottom;
     bool toggledTop;
@@ -312,25 +303,29 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     private
     pure
     returns (
-      int256 amount0,
-      int256 amount1,
+      uint256 amount0,
+      uint256 amount1,
       int128 globalLiquidityDelta
     )
   {
     uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
     uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
 
+    int256 amount0Int;
+    int256 amount1Int;
     if (currentTick < bottomTick) {
       // If current tick is less than the provided bottom one then only the token0 has to be provided
-      amount0 = TokenDeltaMath.getToken0Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
+      amount0Int = TokenDeltaMath.getToken0Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
     } else if (currentTick < topTick) {
-      amount0 = TokenDeltaMath.getToken0Delta(currentPrice, priceAtTopTick, liquidityDelta);
-      amount1 = TokenDeltaMath.getToken1Delta(priceAtBottomTick, currentPrice, liquidityDelta);
+      amount0Int = TokenDeltaMath.getToken0Delta(currentPrice, priceAtTopTick, liquidityDelta);
+      amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, currentPrice, liquidityDelta);
       globalLiquidityDelta = liquidityDelta;
     } else {
       // If current tick is greater than the provided top one then only the token1 has to be provided
-      amount1 = TokenDeltaMath.getToken1Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
+      amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
     }
+
+    (amount0, amount1) = liquidityDelta < 0 ? (uint256(-amount0Int), uint256(-amount1Int)) : (uint256(amount0Int), uint256(amount1Int));
   }
 
   /**
@@ -396,15 +391,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (bottomTick == topTick) {
       (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
     } else {
-      (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
-        bottomTick,
-        topTick,
-        int256(liquidityDesired).toInt128(),
-        globalState.tick,
-        globalState.price
-      );
-
-      (amount0, amount1) = (uint256(amount0Int), uint256(amount1Int));
+      (amount0, amount1, ) = _getAmountsForLiquidity(bottomTick, topTick, int256(liquidityDesired).toInt128(), globalState.tick, globalState.price);
     }
     liquidityActual = liquidityDesired;
 
@@ -430,38 +417,36 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     require(liquidityActual != 0, 'IIAM');
 
-    if (bottomTick == topTick) {
-      liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
-      Position storage _position = getOrCreatePosition(recipient, bottomTick, bottomTick);
-      _updateLimitOrderPosition(_position, bottomTick, int256(liquidityActual).toInt128());
-    } else {
-      liquidityActual = liquidityDesired;
-      if (receivedAmount0 < amount0) {
-        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
-      }
-      if (receivedAmount1 < amount1) {
-        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
-        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-      }
+    {
+      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
+      if (bottomTick == topTick) {
+        liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
+        _updateLimitOrderPosition(_position, bottomTick, int256(liquidityActual).toInt128());
+      } else {
+        liquidityActual = liquidityDesired;
+        if (receivedAmount0 < amount0) {
+          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+        }
+        if (receivedAmount1 < amount1) {
+          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+          if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+        }
+        require(liquidityActual > 0, 'IIL2');
 
-      require(liquidityActual > 0, 'IIL2');
-
-      {
-        (, int256 amount0Int, int256 amount1Int) = _updatePositionTicksAndFees(recipient, bottomTick, topTick, int256(liquidityActual).toInt128());
-
-        require((amount0 = uint256(amount0Int)) <= receivedAmount0, 'IIAM2');
-        require((amount1 = uint256(amount1Int)) <= receivedAmount1, 'IIAM2');
+        (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int256(liquidityActual).toInt128());
       }
     }
 
     if (amount0 > 0) {
-      reserve0 += amount0;
       if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
+      else require(receivedAmount0 == amount0, 'IIAM2');
+      reserve0 += amount0;
     }
 
     if (amount1 > 0) {
-      reserve1 += amount1;
       if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
+      else require(receivedAmount1 == amount1, 'IIAM2');
+      reserve1 += amount1;
     }
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
@@ -469,9 +454,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _recalculateLimitOrderPosition(
     Position storage position,
     int24 tick,
-    int128 amount
+    int128 liquidityDelta
   ) private {
     (uint256 _positionLiquidity, uint256 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
+    if (_positionLiquidity == 0) require(liquidityDelta > 0, 'NP');
 
     LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
     uint256 _cumulativeDelta = _limitOrder.spentAsk1Cumulative - position.innerFeeGrowth1Token;
@@ -503,9 +489,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
     }
 
-    if (amount != 0) {
-      _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), amount);
-      _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), amount);
+    if (liquidityDelta != 0) {
+      _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
+      _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityDelta);
     }
     if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
     (position.liquidity, position.liquidityInitial) = (uint128(_positionLiquidity), uint128(_positionLiquidityInitial));
@@ -514,15 +500,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _updateLimitOrderPosition(
     Position storage position,
     int24 tick,
-    int128 amount
+    int128 liquidityDelta
   ) private returns (uint256 amount0, uint256 amount1) {
-    _recalculateLimitOrderPosition(position, tick, amount);
+    _recalculateLimitOrderPosition(position, tick, liquidityDelta);
 
-    if (amount != 0) {
-      bool remove = amount < 0;
+    if (liquidityDelta != 0) {
+      bool remove = liquidityDelta < 0;
 
       (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
-      if (limitOrders.addOrRemoveLimitOrder(tick, amount)) {
+      if (limitOrders.addOrRemoveLimitOrder(tick, liquidityDelta)) {
         TickManager.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
         if (_tickData.nextTick == _tickData.prevTick) {
@@ -540,7 +526,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
 
       if (remove) {
-        return (tick > _globalTick) ? (uint256(-amount), uint256(0)) : (uint256(0), uint256(-amount));
+        return (tick > _globalTick) ? (uint256(-liquidityDelta), uint256(0)) : (uint256(0), uint256(-liquidityDelta));
       }
     }
   }
@@ -592,20 +578,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     _syncBalances();
 
-    Position storage position;
-
-    if (bottomTick == topTick) {
-      int24 tick = bottomTick;
-      position = getOrCreatePosition(msg.sender, tick, tick);
-      require(position.liquidity > 0, 'ZP');
-      (amount0, amount1) = _updateLimitOrderPosition(position, tick, -int256(amount).toInt128());
-    } else {
-      int256 amount0Int;
-      int256 amount1Int;
-      (position, amount0Int, amount1Int) = _updatePositionTicksAndFees(msg.sender, bottomTick, topTick, -int256(amount).toInt128());
-
-      (amount0, amount1) = (uint256(-amount0Int), uint256(-amount1Int));
-    }
+    Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
+    int128 liquidityDelta = -int256(amount).toInt128();
+    (amount0, amount1) = (bottomTick == topTick)
+      ? _updateLimitOrderPosition(position, bottomTick, liquidityDelta)
+      : _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
     if (amount0 | amount1 != 0) {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
