@@ -471,51 +471,44 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     int128 amount
   ) private {
-    (uint128 _positionLiquidity, uint128 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
+    (uint256 _positionLiquidity, uint256 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
 
     LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
     uint256 _cumulativeDelta = _limitOrder.spentAsk1Cumulative - position.innerFeeGrowth1Token;
     bool zto = _cumulativeDelta > 0;
-    if (!zto) {
-      _cumulativeDelta = _limitOrder.spentAsk0Cumulative - position.innerFeeGrowth0Token;
-    }
+    if (!zto) _cumulativeDelta = _limitOrder.spentAsk0Cumulative - position.innerFeeGrowth0Token;
 
     if (_cumulativeDelta > 0) {
-      if (zto) {
-        position.innerFeeGrowth1Token += _cumulativeDelta;
-      } else {
-        position.innerFeeGrowth0Token += _cumulativeDelta;
-      }
+      uint256 closedAmount;
       if (_positionLiquidityInitial > 0) {
+        closedAmount = FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128);
+
         uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
         uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-
         (uint256 nominator, uint256 denominator) = zto ? (price, Constants.Q96) : (Constants.Q96, price);
         uint256 fullAmount = FullMath.mulDiv(_positionLiquidity, nominator, denominator);
-        uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128));
-
         if (closedAmount >= fullAmount) {
+          closedAmount = fullAmount;
           _positionLiquidity = 0;
-          closedAmount = uint128(fullAmount);
         } else {
-          _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, denominator, nominator)); // unspent input
+          _positionLiquidity = FullMath.mulDiv(fullAmount - closedAmount, denominator, nominator); // unspent input
         }
-
-        if (zto) {
-          position.fees1 = position.fees1.add128(closedAmount);
-        } else {
-          position.fees0 = position.fees0.add128(closedAmount);
-        }
+      }
+      if (zto) {
+        position.innerFeeGrowth1Token = position.innerFeeGrowth1Token + _cumulativeDelta;
+        if (closedAmount > 0) position.fees1 = position.fees1.add128(uint128(closedAmount));
+      } else {
+        position.innerFeeGrowth0Token = position.innerFeeGrowth0Token + _cumulativeDelta;
+        if (closedAmount > 0) position.fees0 = position.fees0.add128(uint128(closedAmount));
       }
     }
 
     if (amount != 0) {
-      _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
-      _positionLiquidityInitial = LiquidityMath.addDelta(_positionLiquidityInitial, amount);
+      _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), amount);
+      _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), amount);
     }
     if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
-
-    (position.liquidity, position.liquidityInitial) = (_positionLiquidity, _positionLiquidityInitial);
+    (position.liquidity, position.liquidityInitial) = (uint128(_positionLiquidity), uint128(_positionLiquidityInitial));
   }
 
   function _updateLimitOrderPosition(
