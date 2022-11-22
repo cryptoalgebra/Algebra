@@ -22,17 +22,17 @@ library LimitOrderManager {
   ) internal returns (bool flipped) {
     LimitOrder storage data = self[tick];
     uint128 sumOfAskBefore = data.sumOfAsk;
-    uint128 sumOfAskAfter = add ? sumOfAskBefore + amount : sumOfAskBefore - amount;
-    data.sumOfAsk = sumOfAskAfter;
+    uint128 sumOfAskAfter = sumOfAskBefore;
 
     if (add) {
+      sumOfAskAfter += amount;
       flipped = sumOfAskBefore == 0;
     } else {
-      if (sumOfAskAfter == 0) {
-        flipped = true;
-        data.spentAsk = 0; // TODO can be optimized
-      }
+      sumOfAskAfter -= amount;
+      flipped = sumOfAskAfter == 0;
+      if (flipped) data.spentAsk = 0;
     }
+    data.sumOfAsk = sumOfAskAfter;
   }
 
   function executeLimitOrders(
