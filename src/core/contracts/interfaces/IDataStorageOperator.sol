@@ -102,6 +102,13 @@ interface IDataStorageOperator {
       uint112[] memory volatilityCumulatives
     );
 
+  function getSecondsPerLiquidityCumulative(
+    uint32 time,
+    uint32 secondsAgo,
+    uint16 index,
+    uint128 liquidity
+  ) external view returns (uint160 secondsPerLiquidityCumulative);
+
   /// @notice Returns average volatility in the range from time-WINDOW to time
   /// @param time The current block.timestamp
   /// @param tick The current tick

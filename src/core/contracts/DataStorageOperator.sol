@@ -118,6 +118,23 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
+  function getSecondsPerLiquidityCumulative(
+    uint32 time,
+    uint32 secondsAgo,
+    uint16 index,
+    uint128 liquidity
+  ) external view override returns (uint160 secondsPerLiquidityCumulative) {
+    uint16 oldestIndex;
+    // check if we have overflow in the past
+    uint16 nextIndex = index + 1; // considering overflow
+    if (timepoints[nextIndex].initialized) {
+      oldestIndex = nextIndex;
+    }
+
+    return timepoints.getSecondsPerLiquidityCumulativeAt(time, secondsAgo, index, oldestIndex, liquidity);
+  }
+
+  /// @inheritdoc IDataStorageOperator
   function getAverageVolatility(
     uint32 time,
     int24 tick,

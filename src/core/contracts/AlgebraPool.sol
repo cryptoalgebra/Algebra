@@ -104,7 +104,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (currentTick < topTick) {
       uint32 globalTime = _blockTimestamp();
-      (, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(globalTime, 0, currentTick, currentTimepointIndex, liquidity);
+      uint160 globalSecondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(globalTime, 0, currentTimepointIndex, liquidity);
       return (
         globalSecondsPerLiquidityCumulative - lower.outerSecondPerLiquidity - upper.outerSecondPerLiquidity,
         globalTime - lower.outerSecondsSpent - upper.outerSecondsSpent
@@ -214,7 +214,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
         uint32 time = _blockTimestamp();
-        (, uint160 secondsPerLiquidityCumulative, ) = _getSingleTimepoint(time, 0, cache.tick, cache.timepointIndex, liquidity);
+        uint160 secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, 0, cache.timepointIndex, liquidity);
 
         toggledBottom = ticks.update(
           bottomTick,
@@ -542,22 +542,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick, liquidity);
   }
 
-  function _getSingleTimepoint(
+  function _getSecondsPerLiquidityCumulative(
     uint32 blockTimestamp,
     uint32 secondsAgo,
-    int24 startTick,
     uint16 timepointIndex,
     uint128 liquidityStart
-  )
-    private
-    view
-    returns (
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative
-    )
-  {
-    return IDataStorageOperator(dataStorageOperator).getSingleTimepoint(blockTimestamp, secondsAgo, startTick, timepointIndex, liquidityStart);
+  ) private view returns (uint160 secondsPerLiquidityCumulative) {
+    return IDataStorageOperator(dataStorageOperator).getSecondsPerLiquidityCumulative(blockTimestamp, secondsAgo, timepointIndex, liquidityStart);
   }
 
   function _swapCallback(
@@ -804,10 +795,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
           if (!cache.computedLatestTimepoint) {
-            (, cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
+            cache.secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(
               blockTimestamp,
               0,
-              cache.startTick,
               cache.timepointIndex,
               currentLiquidity // currentLiquidity can be changed only after computedLatestTimepoint
             );

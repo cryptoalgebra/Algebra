@@ -223,6 +223,45 @@ library DataStorage {
     return tickCumulativeBefore;
   }
 
+  function getSecondsPerLiquidityCumulativeAt(
+    Timepoint[UINT16_MODULO] storage self,
+    uint32 time,
+    uint32 secondsAgo,
+    uint16 index,
+    uint16 oldestIndex,
+    uint128 liquidity
+  ) internal view returns (uint160 secondsPerLiquidityCumulative) {
+    uint32 target = time - secondsAgo;
+
+    // if target is newer than last timepoint
+    if (secondsAgo == 0 || lteConsideringOverflow(self[index].blockTimestamp, target, time)) {
+      Timepoint storage last = self[index];
+      (uint32 timestamp, uint160 lastSecondsPerLiquidityCumulative) = (last.blockTimestamp, last.secondsPerLiquidityCumulative);
+      if (timestamp == target) return lastSecondsPerLiquidityCumulative;
+      return (lastSecondsPerLiquidityCumulative + ((uint160(timestamp - target) << 128) / (liquidity > 0 ? liquidity : 1)));
+    }
+
+    require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
+    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter) = binarySearch(self, time, target, index, oldestIndex);
+
+    (uint32 timestampAfter, uint160 secondsPerLiquidityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.secondsPerLiquidityCumulative);
+    if (target == timestampAfter) return secondsPerLiquidityCumulativeAfter; // we're at the right boundary
+
+    (uint32 timestampBefore, uint160 secondsPerLiquidityCumulativeBefore) = (beforeOrAt.blockTimestamp, beforeOrAt.secondsPerLiquidityCumulative);
+    if (target != timestampBefore) {
+      // we're in the middle
+      uint32 timepointTimeDelta = timestampAfter - timestampBefore;
+      uint32 targetDelta = target - timestampBefore;
+
+      return
+        secondsPerLiquidityCumulativeBefore +
+        uint160((uint256(secondsPerLiquidityCumulativeAfter - secondsPerLiquidityCumulativeBefore) * targetDelta) / timepointTimeDelta);
+    }
+
+    // we're at the left boundary
+    return secondsPerLiquidityCumulativeBefore;
+  }
+
   function getVolatilityCumulativeAt(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
