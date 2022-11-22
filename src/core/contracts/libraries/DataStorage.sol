@@ -238,7 +238,7 @@ library DataStorage {
       Timepoint storage last = self[index];
       (uint32 timestamp, uint160 lastSecondsPerLiquidityCumulative) = (last.blockTimestamp, last.secondsPerLiquidityCumulative);
       if (timestamp == target) return lastSecondsPerLiquidityCumulative;
-      return (lastSecondsPerLiquidityCumulative + ((uint160(timestamp - target) << 128) / (liquidity > 0 ? liquidity : 1)));
+      return (lastSecondsPerLiquidityCumulative + ((uint160(target - timestamp) << 128) / (liquidity > 0 ? liquidity : 1)));
     }
 
     require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
