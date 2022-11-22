@@ -1781,7 +1781,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe('#limitOrdersBuiltIn', async() => {
+  describe.only('#limitOrdersBuiltIn', async() => {
     describe('success cases', () => {
       let balanceToken0: BigNumber
       let balanceToken1: BigNumber

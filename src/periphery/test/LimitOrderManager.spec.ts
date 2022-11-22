@@ -70,7 +70,7 @@ describe('LimitOrderManager', () => {
   })
 
 
-  describe.only('#mint', () => {
+  describe('#mint', () => {
     it('fails if pool does not exist', async () => {
       await expect(
         lomanager.addLimitOrder({
@@ -269,6 +269,8 @@ describe('LimitOrderManager', () => {
       await tokens[1].approve(router.address, 1000)
       await tokens[0].connect(user2).approve(lomanager.address,10000)
 
+      console.log('\nSWAP 1\n')
+
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
         tokenOut: tokens[0].address,
@@ -278,8 +280,6 @@ describe('LimitOrderManager', () => {
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
-
-
 
       let balanceBefore = await tokens[1].balanceOf(user)
       let amounts = await lomanager.decreaseLimitOrder(1,0)
@@ -291,6 +291,7 @@ describe('LimitOrderManager', () => {
         tick: 60
       })
 
+      console.log('\nSWAP 2\n')
       
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
@@ -318,7 +319,7 @@ describe('LimitOrderManager', () => {
         tokensOwed1
       } = await lomanager.limitPositions(2)
 
-      console.log("stats:",liquidity,tokensOwed0,tokensOwed1)
+      console.log("stats:", liquidity.toString(), tokensOwed0.toString(), tokensOwed1.toString())
       
     })
   })

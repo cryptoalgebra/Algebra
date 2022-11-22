@@ -16,6 +16,8 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
+import 'hardhat/console.sol';
+
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -126,7 +128,7 @@ contract LimitOrderManager is
         );
 
         bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
         _limitPositions[tokenId] = LimitPosition({
             nonce: 0,
@@ -164,9 +166,16 @@ contract LimitOrderManager is
         // update position state
         pool.burn(tick, tick, liquidity);
 
+        {
+            (, int24 poolTick, , , , , ) = pool.globalState();
+            console.log('POOL TICK');
+            console.logInt(poolTick);
+            console.log();
+        }
+
         bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
         // this is now updated to the current transaction
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
         // update lomanager position state
         cache.cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
         cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
@@ -240,7 +249,7 @@ contract LimitOrderManager is
             pool.burn(tick, tick, 0);
             bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
             // this is now updated to the current transaction
-            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+            (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
             // update lomanager position state
             uint256 cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
             uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);

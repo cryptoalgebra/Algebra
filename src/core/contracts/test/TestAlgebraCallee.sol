@@ -160,7 +160,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     int24 tick
   ) external returns (uint256 amount0, uint256 amount1) {
     IAlgebraPool(pool).burn(tick, tick, 0);
-    (uint128 liquidityLeft, , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
+    (uint128 liquidityLeft, , , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
     if (liquidityLeft > 0) {
       IAlgebraPool(pool).burn(tick, tick, liquidityLeft);
     }

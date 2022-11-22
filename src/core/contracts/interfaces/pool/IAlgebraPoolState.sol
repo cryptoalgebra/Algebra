@@ -120,6 +120,7 @@ interface IAlgebraPoolState {
     view
     returns (
       uint128 liquidityAmount,
+      uint128 liquidityInitialAmount,
       uint256 innerFeeGrowth0Token,
       uint256 innerFeeGrowth1Token,
       uint128 fees0,

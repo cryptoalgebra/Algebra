@@ -44,6 +44,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
+    uint128 liquidityInitial;
     uint256 innerFeeGrowth0Token; // The last updated fee growth per unit of liquidity
     uint256 innerFeeGrowth1Token;
     uint128 fees0; // The amount of token0 owed to a LP
@@ -474,67 +475,84 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     int128 amount
   ) private returns (uint256 amount0, uint256 amount1) {
-    uint128 _positionLiquidity = position.liquidity;
-
     {
-      address inputToken;
-      uint256 _cumulativeDelta = limitOrders[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
-      if (_cumulativeDelta > 0) {
-        position.innerFeeGrowth0Token += _cumulativeDelta;
-        inputToken = token1;
-      } else {
-        _cumulativeDelta = limitOrders[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
-
+      uint128 _positionLiquidity = position.liquidity;
+      uint128 _positionLiquidityInitial = position.liquidityInitial;
+      console.log();
+      console.log('UPDATE LO');
+      {
+        address inputToken;
+        uint256 _cumulativeDelta = limitOrders[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
         if (_cumulativeDelta > 0) {
-          position.innerFeeGrowth1Token += _cumulativeDelta;
-          inputToken = token0;
-        }
-      }
-      console.log('acc0');
-      console.log(position.innerFeeGrowth0Token);
-      console.log('acc1');
-      console.log(position.innerFeeGrowth1Token);
-
-      if (_cumulativeDelta > 0) {
-        uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidity, Constants.Q128));
-
-        uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-        uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-
-        uint256 fullAmount;
-        if (inputToken == token0) {
-          fullAmount = FullMath.mulDiv(_positionLiquidity, price, Constants.Q96);
-          if (closedAmount >= fullAmount) {
-            amount1 = fullAmount;
-            _positionLiquidity = 0;
-          } else {
-            amount1 = closedAmount;
-            _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, Constants.Q96, price)); // unspent input
-          }
+          position.innerFeeGrowth0Token += _cumulativeDelta;
+          inputToken = token1;
         } else {
-          fullAmount = FullMath.mulDiv(_positionLiquidity, Constants.Q96, price);
-          if (closedAmount >= fullAmount) {
-            amount0 = fullAmount;
-            _positionLiquidity = 0;
-          } else {
-            amount0 = closedAmount;
-            _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
+          _cumulativeDelta = limitOrders[tick].spentAsk1Cumulative - position.innerFeeGrowth1Token;
+
+          if (_cumulativeDelta > 0) {
+            position.innerFeeGrowth1Token += _cumulativeDelta;
+            inputToken = token0;
           }
         }
+        console.log('acc0');
+        console.log(position.innerFeeGrowth0Token);
+        console.log('acc1');
+        console.log(position.innerFeeGrowth1Token);
 
-        if (amount0 | amount1 != 0) {
-          (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
-          (amount0, amount1) = (0, 0);
+        if (_cumulativeDelta > 0 && _positionLiquidityInitial > 0) {
+          {
+            uint128 closedAmount = uint128(FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128));
+
+            uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+            uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
+
+            uint256 fullAmount;
+            if (inputToken == token0) {
+              fullAmount = FullMath.mulDiv(_positionLiquidity, price, Constants.Q96);
+              if (closedAmount >= fullAmount) {
+                amount1 = fullAmount;
+                _positionLiquidity = 0;
+              } else {
+                amount1 = closedAmount;
+                _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, Constants.Q96, price)); // unspent input
+              }
+            } else {
+              fullAmount = FullMath.mulDiv(_positionLiquidity, Constants.Q96, price);
+              if (closedAmount >= fullAmount) {
+                amount0 = fullAmount;
+                _positionLiquidity = 0;
+              } else {
+                amount0 = closedAmount;
+                _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
+              }
+            }
+
+            console.log('FULL AMOUNT, CLOSED AMOUNT');
+            console.logUint(fullAmount);
+            console.logUint(closedAmount);
+          }
+
+          if (amount0 | amount1 != 0) {
+            (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
+            (amount0, amount1) = (0, 0);
+          }
         }
       }
-    }
 
+      if (amount != 0) {
+        _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
+        if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
+        else _positionLiquidityInitial = LiquidityMath.addDelta(_positionLiquidityInitial, amount);
+      }
+      position.liquidity = _positionLiquidity;
+      position.liquidityInitial = _positionLiquidityInitial;
+      console.log('liq');
+      console.log(_positionLiquidity);
+    }
     if (amount != 0) {
       (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
       bool flipped;
       {
-        _positionLiquidity = LiquidityMath.addDelta(_positionLiquidity, amount);
-
         TickManager.Tick storage _tickData = ticks[tick];
         if (amount < 0) {
           if (tick > _globalTick) {
@@ -559,10 +577,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
       }
     }
-
-    position.liquidity = _positionLiquidity;
-    console.log('liq');
-    console.log(_positionLiquidity);
   }
 
   function _payFromReserve(

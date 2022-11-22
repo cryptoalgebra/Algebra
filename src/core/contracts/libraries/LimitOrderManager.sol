@@ -4,6 +4,8 @@ pragma solidity =0.7.6;
 import './FullMath.sol';
 import './Constants.sol';
 
+import 'hardhat/console.sol';
+
 /// @title LimitOrderManager
 /// @notice Contains functions for managing limit orders and relevant calculations
 library LimitOrderManager {
@@ -62,18 +64,22 @@ library LimitOrderManager {
 
     uint256 unspentAsk = sumOfAsk - spentAsk;
     (uint256 amountOut, uint256 amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
+    console.log();
+    console.log('LO EXECUTION');
+    console.logUint(unspentAsk);
+    console.logUint(amountOut);
     if (amountOut >= unspentAsk) {
       (data.sumOfAsk, data.spentAsk) = (0, 0);
       closed = true;
       if (amountOut > unspentAsk) {
-        uint256 unspentInputAsk = zto
-          ? FullMath.mulDivRoundingUp(unspentAsk, Constants.Q96, price)
-          : FullMath.mulDivRoundingUp(unspentAsk, price, Constants.Q96);
+        uint256 unspentInputAsk = zto ? FullMath.mulDiv(unspentAsk, Constants.Q96, price) : FullMath.mulDiv(unspentAsk, price, Constants.Q96);
 
         (amount, amountRequiredLeft) = exactIn
           ? (unspentAsk, uint256(amountRequired) - unspentInputAsk)
           : (unspentInputAsk, uint256(amountRequired) - unspentAsk);
         amountIn = unspentInputAsk;
+        console.log('unspentInputAsk');
+        console.logUint(unspentInputAsk);
       }
     } else {
       data.spentAsk += uint128(amountOut);
@@ -84,5 +90,9 @@ library LimitOrderManager {
     } else {
       data.spentAsk1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
     }
+
+    console.logUint(amountIn);
+    console.logUint(sumOfAsk);
+    console.log();
   }
 }
