@@ -526,37 +526,28 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     _recalculateLimitOrderPosition(position, tick, amount);
 
     if (amount != 0) {
+      bool remove = amount < 0;
+
       (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
-      bool flipped;
-      bool removed;
-      if (amount < 0) {
-        if (tick > _globalTick) {
-          amount0 = uint256(-amount);
-        } else {
-          amount1 = uint256(-amount);
-        }
-        flipped = limitOrders.addOrRemoveLimitOrder(tick, uint128(-amount), false);
-        removed = flipped;
-      } else {
-        flipped = limitOrders.addOrRemoveLimitOrder(tick, uint128(amount), true);
-      }
-      if (flipped) {
+      if (limitOrders.addOrRemoveLimitOrder(tick, amount)) {
         TickManager.Tick storage _tickData = ticks[tick];
-        flipped = _tickData.nextTick == _tickData.prevTick;
-        _tickData.hasLimitOrders = !removed;
+        _tickData.hasLimitOrders = !remove;
+        if (_tickData.nextTick == _tickData.prevTick) {
+          uint256 _initTickTreeRoot = tickTreeRoot;
+          (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
+            tick,
+            _globalTick,
+            _prevInitializedTick,
+            _initTickTreeRoot,
+            remove
+          );
+          if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+          if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
+        }
       }
 
-      if (flipped) {
-        uint256 _initTickTreeRoot = tickTreeRoot;
-        (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
-          tick,
-          _globalTick,
-          _prevInitializedTick,
-          _initTickTreeRoot,
-          removed
-        );
-        if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-        if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
+      if (remove) {
+        return (tick > _globalTick) ? (uint256(-amount), uint256(0)) : (uint256(0), uint256(-amount));
       }
     }
   }

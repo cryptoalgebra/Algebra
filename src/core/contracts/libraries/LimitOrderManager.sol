@@ -17,18 +17,18 @@ library LimitOrderManager {
   function addOrRemoveLimitOrder(
     mapping(int24 => LimitOrder) storage self,
     int24 tick,
-    uint128 amount,
-    bool add
+    int128 amount
   ) internal returns (bool flipped) {
     LimitOrder storage data = self[tick];
     uint128 sumOfAskBefore = data.sumOfAsk;
     uint128 sumOfAskAfter = sumOfAskBefore;
+    bool add = (amount > 0);
 
     if (add) {
-      sumOfAskAfter += amount;
+      sumOfAskAfter += uint128(amount);
       flipped = sumOfAskBefore == 0;
     } else {
-      sumOfAskAfter -= amount;
+      sumOfAskAfter -= uint128(-amount);
       flipped = sumOfAskAfter == 0;
       if (flipped) data.spentAsk = 0;
     }
@@ -52,23 +52,23 @@ library LimitOrderManager {
     bool exactIn = amountRequired > 0;
     if (!exactIn) amountRequired = -amountRequired;
 
-    LimitOrder storage data = self[tick];
-    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
     uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
-
     uint256 amount = (zto == exactIn)
       ? FullMath.mulDiv(uint256(amountRequired), price, Constants.Q96)
       : FullMath.mulDiv(uint256(amountRequired), Constants.Q96, price);
 
-    uint256 unspentOutAsk = sumOfAsk - spentAsk;
     (amountOut, amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
+
+    LimitOrder storage data = self[tick];
+    (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
+    uint256 unspentOutAsk = sumOfAsk - spentAsk;
     if (amountOut >= unspentOutAsk) {
+      if (amountOut > unspentOutAsk) {
+        amountOut = unspentOutAsk;
+        amountIn = zto ? FullMath.mulDiv(amountOut, Constants.Q96, price) : FullMath.mulDiv(amountOut, price, Constants.Q96);
+      }
       closed = true;
       (data.sumOfAsk, data.spentAsk) = (0, 0);
-      if (amountOut > unspentOutAsk) {
-        amountIn = zto ? FullMath.mulDiv(unspentOutAsk, Constants.Q96, price) : FullMath.mulDiv(unspentOutAsk, price, Constants.Q96);
-        amountOut = unspentOutAsk;
-      }
     } else {
       data.spentAsk = spentAsk + uint128(amountOut);
     }
