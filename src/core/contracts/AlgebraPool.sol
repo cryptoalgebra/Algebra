@@ -30,8 +30,6 @@ import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
-import 'hardhat/console.sol';
-
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
@@ -435,8 +433,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (bottomTick == topTick) {
       liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
       Position storage _position = getOrCreatePosition(recipient, bottomTick, bottomTick);
-      console.log('mint');
-      console.log(liquidityActual);
       _updateLimitOrderPosition(_position, bottomTick, int256(liquidityActual).toInt128());
     } else {
       liquidityActual = liquidityDesired;
@@ -478,8 +474,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     {
       uint128 _positionLiquidity = position.liquidity;
       uint128 _positionLiquidityInitial = position.liquidityInitial;
-      console.log();
-      console.log('UPDATE LO');
       {
         address inputToken;
         uint256 _cumulativeDelta = limitOrders[tick].spentAsk0Cumulative - position.innerFeeGrowth0Token;
@@ -494,10 +488,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             inputToken = token0;
           }
         }
-        console.log('acc0');
-        console.log(position.innerFeeGrowth0Token);
-        console.log('acc1');
-        console.log(position.innerFeeGrowth1Token);
 
         if (_cumulativeDelta > 0 && _positionLiquidityInitial > 0) {
           {
@@ -526,10 +516,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
                 _positionLiquidity = uint128(FullMath.mulDiv(fullAmount - closedAmount, price, Constants.Q96)); // unspent input
               }
             }
-
-            console.log('FULL AMOUNT, CLOSED AMOUNT');
-            console.logUint(fullAmount);
-            console.logUint(closedAmount);
           }
 
           if (amount0 | amount1 != 0) {
@@ -546,8 +532,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       }
       position.liquidity = _positionLiquidity;
       position.liquidityInitial = _positionLiquidityInitial;
-      console.log('liq');
-      console.log(_positionLiquidity);
     }
     if (amount != 0) {
       (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
@@ -634,8 +618,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       require(tick % tickSpacing == 0, 'T');
       require(position.liquidity > 0, 'ZP');
-      console.log('burn');
-      console.log(amount);
       (amount0, amount1) = _updateLimitOrderPosition(position, tick, -int256(amount).toInt128());
     } else {
       int256 amount0Int;
