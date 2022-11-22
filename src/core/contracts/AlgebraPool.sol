@@ -97,7 +97,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     if (currentTick < topTick) {
       uint32 globalTime = _blockTimestamp();
-      (, uint160 globalSecondsPerLiquidityCumulative, ) = _getSingleTimepoint(globalTime, 0, currentTick, currentTimepointIndex, liquidity);
+      uint160 globalSecondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(globalTime, 0, currentTimepointIndex, liquidity);
       return (
         globalSecondsPerLiquidityCumulative - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
         globalTime - lowerOuterSecondsSpent - upperOuterSecondsSpent
@@ -887,10 +887,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (step.initialized) {
           // once at a swap we have to get the last timepoint of the observation
           if (!cache.computedLatestTimepoint) {
-            (, cache.secondsPerLiquidityCumulative, ) = _getSingleTimepoint(
+            cache.secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(
               cache.blockTimestamp,
               0,
-              cache.startTick,
               cache.timepointIndex,
               currentLiquidity // currentLiquidity can be changed only after computedLatestTimepoint
             );
