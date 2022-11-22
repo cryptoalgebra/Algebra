@@ -45,6 +45,6 @@ contract TickTest {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token
   ) external returns (int128 liquidityDelta) {
-    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token);
+    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
   }
 }

@@ -24,6 +24,8 @@ library TickManager {
     uint256 outerFeeGrowth1Token;
     int24 prevTick;
     int24 nextTick;
+    uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
+    uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
     bool hasLimitOrders;
   }
 
@@ -113,6 +115,8 @@ library TickManager {
       if (tick <= currentTick) {
         data.outerFeeGrowth0Token = totalFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token;
+        data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
+        data.outerSecondsSpent = time;
       }
     }
 
@@ -124,14 +128,21 @@ library TickManager {
   /// @param tick The destination tick of the transition
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
+  /// @param secondsPerLiquidityCumulative The current seconds per liquidity
+  /// @param time The current block.timestamp
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
   function cross(
     mapping(int24 => Tick) storage self,
     int24 tick,
     uint256 totalFeeGrowth0Token,
-    uint256 totalFeeGrowth1Token
+    uint256 totalFeeGrowth1Token,
+    uint160 secondsPerLiquidityCumulative,
+    uint32 time
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
+
+    data.outerSecondsSpent = time - data.outerSecondsSpent;
+    data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
 
     data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
     data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;

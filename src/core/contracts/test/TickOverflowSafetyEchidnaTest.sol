@@ -74,10 +74,10 @@ contract TickOverflowSafetyEchidnaTest {
     require(target < MAX_TICK);
     while (tick != target) {
       if (tick < target) {
-        if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token);
+        if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
         tick++;
       } else {
-        if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token);
+        if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
         tick--;
       }
     }

@@ -14,6 +14,13 @@ import './pool/IAlgebraPoolEvents.sol';
  * Credit to Uniswap Labs under GPL-2.0-or-later license:
  * https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
  */
-interface IAlgebraPool is IAlgebraPoolImmutables, IAlgebraPoolState, IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlgebraPoolEvents {
+interface IAlgebraPool is
+  IAlgebraPoolImmutables,
+  IAlgebraPoolState,
+  IAlgebraPoolDerivedState,
+  IAlgebraPoolActions,
+  IAlgebraPoolPermissionedActions,
+  IAlgebraPoolEvents
+{
   // used only for combining interfaces
 }
