@@ -140,7 +140,12 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     int24 tick,
     uint16 index
   ) external view override returns (uint112 TWVolatilityAverage) {
-    return timepoints.getAverageVolatility(time, tick, index);
+    uint16 oldestIndex;
+    uint16 nextIndex = index + 1; // considering overflow
+    if (timepoints[nextIndex].initialized) oldestIndex = nextIndex;
+
+    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(time, 0, tick, index, oldestIndex);
+    return timepoints.getAverageVolatility(time, tick, index, oldestIndex, lastVolatilityCumulative);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -150,9 +155,11 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     int24 tick,
     uint128 liquidity
   ) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
-    indexUpdated = timepoints.write(index, blockTimestamp, tick, liquidity);
+    uint16 oldestIndex;
+    uint88 lastVolatilityCumulative;
+    (indexUpdated, oldestIndex, lastVolatilityCumulative) = timepoints.write(index, blockTimestamp, tick, liquidity);
     if (index != indexUpdated) {
-      uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated);
+      uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
       newFee = AdaptiveFee.getFee(volatilityAverage / 15, feeConfig);
     }
   }
@@ -168,7 +175,13 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     int24 _tick,
     uint16 _index
   ) external view override returns (uint16 fee) {
-    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, _tick, _index);
+    uint16 oldestIndex;
+    uint16 nextIndex = _index + 1; // considering overflow
+    if (timepoints[nextIndex].initialized) oldestIndex = nextIndex;
+
+    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(_time, 0, _tick, _index, oldestIndex);
+
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, _tick, _index, oldestIndex, lastVolatilityCumulative);
     return AdaptiveFee.getFee(volatilityAverage / 15, feeConfig); // TODO CONST
   }
 }

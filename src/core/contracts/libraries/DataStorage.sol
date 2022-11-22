@@ -434,32 +434,26 @@ library DataStorage {
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
+  /// @param oldestIndex TODO
   /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
     int24 tick,
-    uint16 index
+    uint16 index,
+    uint16 oldestIndex,
+    uint88 lastCumulativeVolatility
   ) internal view returns (uint88 volatilityAverage) {
-    uint16 oldestIndex;
-    Timepoint storage oldest = self[0];
-    uint16 nextIndex = index + 1; // considering overflow
-    if (self[nextIndex].initialized) {
-      oldest = self[nextIndex];
-      oldestIndex = nextIndex;
-    }
-
-    uint88 cumulativeVolatilityAtEnd = getVolatilityCumulativeAt(self, time, 0, tick, index, oldestIndex);
-
+    Timepoint storage oldest = self[oldestIndex];
     uint32 oldestTimestamp = oldest.blockTimestamp;
     if (lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
       uint88 cumulativeVolatilityAtStart = getVolatilityCumulativeAt(self, time, WINDOW, tick, index, oldestIndex);
-      return ((cumulativeVolatilityAtEnd - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
+      return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
     } else if (time != oldestTimestamp) {
       uint88 _oldestVolatilityCumulative = oldest.volatilityCumulative;
       uint32 unbiasedDenominator = time - oldestTimestamp;
       if (unbiasedDenominator > 1) unbiasedDenominator--; // Bessel's correction for "small" sample
-      return ((cumulativeVolatilityAtEnd - _oldestVolatilityCumulative) / unbiasedDenominator);
+      return ((lastCumulativeVolatility - _oldestVolatilityCumulative) / unbiasedDenominator);
     }
   }
 
@@ -492,18 +486,24 @@ library DataStorage {
     uint32 blockTimestamp,
     int24 tick,
     uint128 liquidity
-  ) internal returns (uint16 indexUpdated) {
+  )
+    internal
+    returns (
+      uint16 indexUpdated,
+      uint16 oldestIndex,
+      uint88 volatilityCumulative
+    )
+  {
     Timepoint storage _last = self[index];
     // early return if we've already written an timepoint this block
     if (_last.blockTimestamp == blockTimestamp) {
-      return index;
+      return (index, 0, 0);
     }
     Timepoint memory last = _last;
 
     // get next index considering overflow
     indexUpdated = index + 1;
 
-    uint16 oldestIndex;
     // check if we have overflow in the past
     if (self[indexUpdated].initialized) {
       oldestIndex = indexUpdated;
@@ -519,5 +519,6 @@ library DataStorage {
     }
 
     self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick);
+    volatilityCumulative = self[indexUpdated].volatilityCumulative;
   }
 }
