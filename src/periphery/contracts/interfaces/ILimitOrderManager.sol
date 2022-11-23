@@ -26,6 +26,7 @@ interface ILimitOrderManager is
             address token0,
             address token1,
             uint128 liquidity,
+            uint128 liquidityInit,
             int24 tick,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,

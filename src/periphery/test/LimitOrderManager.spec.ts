@@ -263,13 +263,15 @@ describe('LimitOrderManager', () => {
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
-        amount: 100,
+        amount: 1000,
         tick: 60
       })
-      await tokens[1].approve(router.address, 1000)
+      await tokens[1].approve(router.address, 10000)
+      await tokens[0].approve(router.address, 10000)
       await tokens[0].connect(user2).approve(lomanager.address,10000)
+      await tokens[1].connect(user2).approve(lomanager.address,10000)
 
-      console.log('\nSWAP 1\n')
+      console.log('\nSWAP 50 tokens\n')
 
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
@@ -282,29 +284,51 @@ describe('LimitOrderManager', () => {
       })
 
       let balanceBefore = await tokens[1].balanceOf(user)
-      let amounts = await lomanager.decreaseLimitOrder(1,0)
+      await lomanager.decreaseLimitOrder(1,100)
 
-      await lomanager.connect(user2).addLimitOrder({
-        token0: tokens[0].address,
-        token1: tokens[1].address,
-        amount: 100,
-        tick: 60
+      console.log('\nSWAP 25 tokens\n')
+
+      await router.exactInputSingle({
+        tokenIn: tokens[1].address,
+        tokenOut: tokens[0].address,
+        recipient: user,
+        deadline: encodePriceSqrt(2, 1),
+        amountIn: 25,
+        amountOutMinimum: 0,
+        limitSqrtPrice: encodePriceSqrt(100, 1)
       })
 
-      console.log('\nSWAP 2\n')
+
+
+      await lomanager.decreaseLimitOrder(1,100)
+
+      console.log('\nSWAP 25 tokens\n')
+
+      await router.exactInputSingle({
+        tokenIn: tokens[1].address,
+        tokenOut: tokens[0].address,
+        recipient: user,
+        deadline: encodePriceSqrt(2, 1),
+        amountIn: 25,
+        amountOutMinimum: 0,
+        limitSqrtPrice: encodePriceSqrt(100, 1)
+      })
+
+      await lomanager.decreaseLimitOrder(1,0)
+
+      console.log('\nSWAP 100\n')
       
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
         tokenOut: tokens[0].address,
         recipient: user,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 1000,
+        amountIn: 100,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
 
-      amounts = await lomanager.decreaseLimitOrder(1,0)
-      amounts = await lomanager.connect(user2).decreaseLimitOrder(2,0)
+      await lomanager.decreaseLimitOrder(1,0)
 
       const {
         nonce,
@@ -312,14 +336,15 @@ describe('LimitOrderManager', () => {
         token0,
         token1,
         liquidity,
+        liquidityInit,
         tick,
         feeGrowthInside0LastX128,
         feeGrowthInside1LastX128,
         tokensOwed0,
         tokensOwed1
-      } = await lomanager.limitPositions(2)
+      } = await lomanager.limitPositions(1)
 
-      console.log("stats:", liquidity.toString(), tokensOwed0.toString(), tokensOwed1.toString())
+      console.log("stats:", liquidity.toString(), liquidityInit.toString(), tokensOwed0.toString(), tokensOwed1.toString())
       
     })
   })
