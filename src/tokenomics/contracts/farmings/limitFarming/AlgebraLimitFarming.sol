@@ -2,15 +2,14 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
+
 import './interfaces/IAlgebraLimitFarming.sol';
 import './interfaces/IAlgebraLimitVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 import '../../libraries/RewardMath.sol';
-
 import './LimitVirtualPool.sol';
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
-
 import '../AlgebraFarming.sol';
 
 /// @title Algebra incentive (time-limited) farming

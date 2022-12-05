@@ -4,15 +4,13 @@ pragma abicoder v2;
 
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
-import '../../libraries/IncentiveId.sol';
 import './EternalVirtualPool.sol';
+import '../AlgebraFarming.sol';
+import '../../libraries/IncentiveId.sol';
+import '../../libraries/VirtualPoolConstants.sol';
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
-
-import '../AlgebraFarming.sol';
 
 /// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
@@ -192,8 +190,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             );
 
             (reward, bonusReward) = (
-                FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
+                FullMath.mulDiv(
+                    innerRewardGrowth0 - farm.innerRewardGrowth0,
+                    farm.liquidity,
+                    VirtualPoolConstants.Q128
+                ),
+                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
             );
         }
 
@@ -239,8 +241,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         );
 
         (reward, bonusReward) = (
-            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
+            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, VirtualPoolConstants.Q128),
+            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
         );
     }
 
@@ -267,8 +269,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         );
 
         (reward, bonusReward) = (
-            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
+            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, VirtualPoolConstants.Q128),
+            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
         );
 
         farms[tokenId][incentiveId].innerRewardGrowth0 = innerRewardGrowth0;

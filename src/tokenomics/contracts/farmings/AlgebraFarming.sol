@@ -8,13 +8,13 @@ import './IAlgebraVirtualPoolBase.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
+import '../libraries/VirtualPoolConstants.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
@@ -171,10 +171,10 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(
             minimalPositionWidth <=
-                ((int256(TickMath.MAX_TICK) / Constants.TICK_SPACING) *
-                    Constants.TICK_SPACING -
-                    (int256(TickMath.MIN_TICK) / Constants.TICK_SPACING) *
-                    Constants.TICK_SPACING),
+                ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                    VirtualPoolConstants.TICK_SPACING -
+                    (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                    VirtualPoolConstants.TICK_SPACING),
             'minimalPositionWidth too wide'
         );
         newIncentive.virtualPoolAddress = virtualPool;

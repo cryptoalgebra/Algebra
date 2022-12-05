@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-import '@cryptoalgebra/core/contracts/libraries/TickManager.sol';
-
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
 
+import '../../libraries/TickManager.sol';
+import '../../libraries/VirtualPoolConstants.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 
 import '../AlgebraVirtualPoolBase.sol';
@@ -66,13 +65,13 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
                 if (_rewardReserve0 > 0) {
                     uint256 reward0 = _rewardRate0 * timeDelta;
                     if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-                    _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+                    _totalRewardGrowth0 += FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
                 }
 
                 if (_rewardReserve1 > 0) {
                     uint256 reward1 = _rewardRate1 * timeDelta;
                     if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-                    _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+                    _totalRewardGrowth1 += FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
                 }
             }
         }
@@ -98,14 +97,14 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
                 uint256 reward0 = _rewardRate0 * timeDelta;
                 if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
                 rewardReserve0 = _rewardReserve0 - reward0;
-                totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+                totalRewardGrowth0 += FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
             }
 
             if (_rewardReserve1 > 0) {
                 uint256 reward1 = _rewardRate1 * timeDelta;
                 if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
                 rewardReserve1 = _rewardReserve1 - reward1;
-                totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+                totalRewardGrowth1 += FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
             }
             globalSecondsPerLiquidityCumulative += (uint160(timeDelta) << 128) / uint160(_currentLiquidity);
             prevTimestamp = currentTimestamp; // duplicated for gas optimization
