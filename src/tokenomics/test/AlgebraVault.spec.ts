@@ -66,7 +66,7 @@ describe('AlgebraVault', function() {
       await context.factory.setVaultAddress(vault.address)
 
       ALGBPool = poolFactory.attach(context.pool12) as IAlgebraPool
-      await ALGBPool.connect(wallets[0]).setCommunityFee(250,250)
+      await ALGBPool.connect(wallets[0]).setCommunityFee(250)
 
       await ALGB.connect(wallets[0]).approve(context.router.address, constants.MaxUint256)
       await tokens[1].connect(wallets[0]).approve(context.router.address, constants.MaxUint256)
@@ -136,8 +136,8 @@ describe('AlgebraVault', function() {
       const ALGBBalance = await ALGB.balanceOf(vault.address)
       await vault.connect(wallets[2]).transferALGB(800000)
       const stakingBalanceFirst = await ALGB.balanceOf(stakingAddress)
-      expect(stakingBalanceFirst).to.be.eq((Number(ALGBBalance) * 0.8).toFixed(0))
-      expect(await vault.accumulatedALGB()).to.be.eq((Number(ALGBBalance) * 0.2).toFixed(0))
+      expect(stakingBalanceFirst).to.be.eq((Number(ALGBBalance) * 0.8 - 1).toFixed(0))
+      expect(await vault.accumulatedALGB()).to.be.eq((Number(ALGBBalance) * 0.2 + 1).toFixed(0))
 
       const amount = BigNumber.from('1000')
       await ALGB.transfer(vault.address, amount)

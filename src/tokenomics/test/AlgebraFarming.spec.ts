@@ -220,7 +220,7 @@ describe('AlgebraFarming', () => {
 				  bonusReward: bonusReward,
 				  rewardRate:  10,
 				  bonusRewardRate:  10,
-				  minimalPositionWidth: 887272 * 2,
+				  minimalPositionWidth: 887272 * 2 + 1,
 				  multiplierToken: context.rewardToken.address
 				},
 				{
@@ -233,7 +233,7 @@ describe('AlgebraFarming', () => {
 				},
 				
 			  )).to.be.revertedWith('minimalPositionWidth too wide');
-
+			  
 			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
 				{
 				  pool: context.pool01,
@@ -261,7 +261,6 @@ describe('AlgebraFarming', () => {
 				},
 				
 			  )).to.be.not.reverted;
-
 		})
 
 		it('max range can be used as minimal allowed', async () => {
