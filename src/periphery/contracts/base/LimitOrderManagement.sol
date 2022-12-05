@@ -42,12 +42,12 @@ abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutabl
         address token1,
         int24 tick,
         uint128 amount
-    ) internal returns (IAlgebraPool pool) {
+    ) internal returns (IAlgebraPool pool, bool depositedToken) {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
 
         pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
 
-        pool.mint(
+        (, uint256 amount1, ) = pool.mint(
             msg.sender,
             address(this),
             tick,
@@ -55,5 +55,6 @@ abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutabl
             amount,
             abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))
         );
+        depositedToken = amount1 > 0;
     }
 }

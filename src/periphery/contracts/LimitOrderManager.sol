@@ -16,6 +16,8 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
+import 'hardhat/console.sol';
+
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -29,19 +31,6 @@ contract LimitOrderManager is
     PeripheryValidation,
     SelfPermit
 {
-    struct LimitPosition {
-        uint96 nonce;
-        address operator;
-        uint80 poolId;
-        uint128 liquidity;
-        uint128 liquidityInit;
-        int24 tick;
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
-    }
-
     struct UpdatePositionCache {
         uint256 cumulativeDelta;
         uint160 sqrtPrice;
@@ -79,35 +68,15 @@ contract LimitOrderManager is
         view
         override
         returns (
-            uint96 nonce,
-            address operator,
+            LimitPosition memory limitPosition,
             address token0,
-            address token1,
-            uint128 liquidity,
-            uint128 liquidityInit,
-            int24 tick,
-            uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128,
-            uint128 tokensOwed0,
-            uint128 tokensOwed1
+            address token1
         )
     {
-        LimitPosition memory limitPosition = _limitPositions[tokenId];
+        limitPosition = _limitPositions[tokenId];
         require(limitPosition.poolId != 0, 'Invalid token ID');
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[limitPosition.poolId];
-        return (
-            limitPosition.nonce,
-            limitPosition.operator,
-            poolKey.token0,
-            poolKey.token1,
-            limitPosition.liquidity,
-            limitPosition.liquidityInit,
-            limitPosition.tick,
-            limitPosition.feeGrowthInside0LastX128,
-            limitPosition.feeGrowthInside1LastX128,
-            limitPosition.tokensOwed0,
-            limitPosition.tokensOwed1
-        );
+        return (limitPosition, poolKey.token0, poolKey.token1);
     }
 
     /// @dev Caches a pool key
@@ -121,8 +90,9 @@ contract LimitOrderManager is
 
     function addLimitOrder(addLimitOrderParams calldata params) external payable override returns (uint256 tokenId) {
         IAlgebraPool pool;
+        bool depositedToken;
 
-        pool = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
+        (pool, depositedToken) = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
@@ -140,12 +110,16 @@ contract LimitOrderManager is
             ,
 
         ) = pool.positions(positionKey);
-        require(liquidity == liquidityInit, 'partly executed');
+        console.log(liquidity, liquidityInit);
+        require(depositedToken == params.depositedToken, 'depositedToken changed');
+        require(liquidity == liquidityInit || liquidity - params.amount == 0, 'partly executed');
         _limitPositions[tokenId] = LimitPosition({
             nonce: 0,
             operator: address(0),
             poolId: poolId,
             tick: params.tick,
+            depositedToken: depositedToken,
+            depositedAmount: params.amount,
             liquidity: params.amount,
             liquidityInit: liquidityInit,
             feeGrowthInside0LastX128: feeGrowthInside0LastX128,
@@ -187,11 +161,12 @@ contract LimitOrderManager is
             (, , cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
         }
         // update lomanager position state
-        cache.cumulativeDelta = cache.feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
+
         cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
         cache.price = FullMath.mulDiv(cache.sqrtPrice, cache.sqrtPrice, Constants.Q96);
 
-        if (cache.cumulativeDelta > 0) {
+        if (position.depositedToken) {
+            cache.cumulativeDelta = cache.feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
             uint128 closedAmount0 = uint128(
                 FullMath.mulDiv(cache.cumulativeDelta, position.liquidityInit, Constants.Q128)
             );
@@ -259,11 +234,12 @@ contract LimitOrderManager is
                 (, , feeGrowthInside0LastX128, feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
             }
             // update lomanager position state
-            uint256 cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
+            uint256 cumulativeDelta;
             uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
             uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
 
-            if (cumulativeDelta > 0) {
+            if (position.depositedToken) {
+                cumulativeDelta = feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128;
                 uint128 closedAmount0 = uint128(
                     FullMath.mulDiv(cumulativeDelta, position.liquidityInit, Constants.Q128)
                 );

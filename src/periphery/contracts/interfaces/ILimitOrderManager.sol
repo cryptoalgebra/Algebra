@@ -21,22 +21,30 @@ interface ILimitOrderManager is
         external
         view
         returns (
-            uint96 nonce,
-            address operator,
+            LimitPosition memory position,
             address token0,
-            address token1,
-            uint128 liquidity,
-            uint128 liquidityInit,
-            int24 tick,
-            uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128,
-            uint128 tokensOwed0,
-            uint128 tokensOwed1
+            address token1
         );
+
+    struct LimitPosition {
+        uint96 nonce;
+        address operator;
+        uint80 poolId;
+        uint128 liquidity;
+        uint128 liquidityInit;
+        int24 tick;
+        bool depositedToken;
+        uint128 depositedAmount;
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        uint128 tokensOwed0;
+        uint128 tokensOwed1;
+    }
 
     struct addLimitOrderParams {
         address token0;
         address token1;
+        bool depositedToken;
         uint128 amount;
         int24 tick;
     }
