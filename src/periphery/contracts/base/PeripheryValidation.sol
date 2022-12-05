@@ -7,7 +7,11 @@ import './BlockTimestamp.sol';
 /// https://github.com/Uniswap/v3-periphery
 abstract contract PeripheryValidation is BlockTimestamp {
     modifier checkDeadline(uint256 deadline) {
-        require(_blockTimestamp() <= deadline, 'Transaction too old');
+        _checkDeadline(deadline);
         _;
+    }
+
+    function _checkDeadline(uint256 deadline) private view {
+        require(_blockTimestamp() <= deadline, 'Transaction too old');
     }
 }

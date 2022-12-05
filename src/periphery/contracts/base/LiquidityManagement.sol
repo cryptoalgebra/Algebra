@@ -10,6 +10,8 @@ import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 import '../libraries/LiquidityAmounts.sol';
 
+import '../libraries/PoolInteraction.sol';
+
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
 
@@ -18,6 +20,7 @@ import './PeripheryImmutableState.sol';
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutableState, PeripheryPayments {
+    using PoolInteraction for IAlgebraPool;
     struct MintCallbackData {
         PoolAddress.PoolKey poolKey;
         address payer;
@@ -65,7 +68,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
 
         // compute the liquidity amount
         {
-            (uint160 sqrtPriceX96, , , , , , , ) = pool.globalState();
+            uint160 sqrtPriceX96 = pool._getSqrtPrice();
             uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
             uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
 

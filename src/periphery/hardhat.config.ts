@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox';
+import 'hardhat-contract-sizer';
 import 'hardhat-watcher';
 import 'hardhat-dependency-compiler';
 import 'solidity-coverage';
@@ -59,13 +60,6 @@ export default {
   },
   typechain: {
     outDir: 'typechain'
-  },
-  watcher: {
-    test: {
-      tasks: [{ command: 'test', params: { testFiles: ['{path}'] } }],
-      files: ['./test/**/*'],
-      verbose: true,
-    },
   },
   docgen: {
     output: '../../docs/Contracts/Periphery',

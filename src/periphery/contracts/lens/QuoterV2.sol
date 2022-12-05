@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickTable.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
@@ -55,7 +54,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (uint160 sqrtPriceX96After, int24 tickAfter, , , , , , ) = pool.globalState();
+        (uint160 sqrtPriceX96After, int24 tickAfter, , , , , ) = pool.globalState();
 
         if (isExactInput) {
             assembly {
@@ -114,7 +113,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     {
         int24 tickBefore;
         int24 tickAfter;
-        (, tickBefore, , , , , , ) = pool.globalState();
+        (, tickBefore, , , , , ) = pool.globalState();
         (amount, sqrtPriceX96After, tickAfter) = parseRevertReason(reason);
 
         initializedTicksCrossed = pool.countInitializedTicksCrossed(tickBefore, tickAfter);

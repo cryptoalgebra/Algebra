@@ -9,6 +9,7 @@ import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './libraries/PositionKey.sol';
+import './libraries/PoolInteraction.sol';
 import './libraries/PoolAddress.sol';
 import './base/LiquidityManagement.sol';
 import './base/PeripheryImmutableState.sol';
@@ -32,6 +33,8 @@ contract NonfungiblePositionManager is
     PeripheryValidation,
     SelfPermit
 {
+    using PoolInteraction for IAlgebraPool;
+
     // details about the Algebra position
     struct Position {
         uint96 nonce; // the nonce for permits
@@ -96,7 +99,7 @@ contract NonfungiblePositionManager is
     {
         Position memory position = _positions[tokenId];
         require(position.poolId != 0, 'Invalid token ID');
-        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
         return (
             position.nonce,
             position.operator,
@@ -114,11 +117,14 @@ contract NonfungiblePositionManager is
 
     /// @dev Caches a pool key
     function cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
-        poolId = _poolIds[pool];
-        if (poolId == 0) {
+        if ((poolId = _poolIds[pool]) == 0) {
             _poolIds[pool] = (poolId = _nextPoolId++);
             _poolIdToPoolKey[poolId] = poolKey;
         }
+    }
+
+    function getPoolById(uint80 poolId) private view returns (address) {
+        return PoolAddress.computeAddress(poolDeployer, _poolIdToPoolKey[poolId]);
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -152,8 +158,11 @@ contract NonfungiblePositionManager is
 
         _mint(params.recipient, (tokenId = _nextId++));
 
-        bytes32 positionKey = PositionKey.compute(address(this), params.tickLower, params.tickUpper);
-        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, ) = pool._getPositionInPool(
+            address(this),
+            params.tickLower,
+            params.tickUpper
+        );
 
         // idempotent set
         uint80 poolId = cachePoolKey(
@@ -178,8 +187,12 @@ contract NonfungiblePositionManager is
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        _checkAuthorizationForToken(tokenId);
         _;
+    }
+
+    function _checkAuthorizationForToken(uint256 tokenId) private view {
+        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
     }
 
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
@@ -189,6 +202,38 @@ contract NonfungiblePositionManager is
 
     // save bytecode by removing implementation of unused method
     function baseURI() public pure override returns (string memory) {}
+
+    function _updateUncollectedFees(
+        Position storage position,
+        IAlgebraPool pool,
+        address owner,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 positionLiquidity
+    ) private returns (uint128 tokensOwed0, uint128 tokensOwed1) {
+        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, ) = pool._getPositionInPool(
+            owner,
+            tickLower,
+            tickUpper
+        );
+        tokensOwed0 = uint128(
+            FullMath.mulDiv(
+                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                positionLiquidity,
+                Constants.Q128
+            )
+        );
+        tokensOwed1 = uint128(
+            FullMath.mulDiv(
+                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                positionLiquidity,
+                Constants.Q128
+            )
+        );
+
+        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+    }
 
     /// @inheritdoc INonfungiblePositionManager
     function increaseLiquidity(IncreaseLiquidityParams calldata params)
@@ -222,29 +267,20 @@ contract NonfungiblePositionManager is
             })
         );
 
-        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
-
         // this is now updated to the current transaction
-        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
-
-        position.tokensOwed0 += uint128(
-            FullMath.mulDiv(
-                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                position.liquidity,
-                Constants.Q128
-            )
-        );
-        position.tokensOwed1 += uint128(
-            FullMath.mulDiv(
-                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                position.liquidity,
-                Constants.Q128
-            )
+        uint128 positionLiquidity = position.liquidity;
+        (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
+            position,
+            pool,
+            address(this),
+            position.tickLower,
+            position.tickUpper,
+            positionLiquidity
         );
 
-        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
-        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
-        position.liquidity += uint128(actualLiquidity);
+        position.tokensOwed0 += tokensOwed0;
+        position.tokensOwed1 += tokensOwed1;
+        position.liquidity = positionLiquidity + uint128(actualLiquidity);
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
     }
@@ -261,40 +297,31 @@ contract NonfungiblePositionManager is
         require(params.liquidity > 0);
         Position storage position = _positions[params.tokenId];
 
-        uint128 positionLiquidity = position.liquidity;
+        (uint80 poolId, int24 tickLower, int24 tickUpper, uint128 positionLiquidity) = (
+            position.poolId,
+            position.tickLower,
+            position.tickUpper,
+            position.liquidity
+        );
         require(positionLiquidity >= params.liquidity);
 
-        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
-        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
-        (amount0, amount1) = pool.burn(position.tickLower, position.tickUpper, params.liquidity);
+        IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
+        (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
 
-        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
         // this is now updated to the current transaction
-        (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
+            position,
+            pool,
+            address(this),
+            tickLower,
+            tickUpper,
+            positionLiquidity
+        );
+        position.tokensOwed0 += uint128(amount0) + tokensOwed0;
+        position.tokensOwed1 += uint128(amount1) + tokensOwed1;
 
-        position.tokensOwed0 +=
-            uint128(amount0) +
-            uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    positionLiquidity,
-                    Constants.Q128
-                )
-            );
-        position.tokensOwed1 +=
-            uint128(amount1) +
-            uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    positionLiquidity,
-                    Constants.Q128
-                )
-            );
-
-        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
-        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
         // subtraction is safe because we checked positionLiquidity is gte params.liquidity
         position.liquidity = positionLiquidity - params.liquidity;
 
@@ -314,37 +341,28 @@ contract NonfungiblePositionManager is
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;
 
         Position storage position = _positions[params.tokenId];
-
-        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
-
-        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
+        IAlgebraPool pool = IAlgebraPool(getPoolById(position.poolId));
 
         (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
 
         // trigger an update of the position fees owed and fee growth snapshots if it has any liquidity
-        if (position.liquidity > 0) {
-            pool.burn(position.tickLower, position.tickUpper, 0);
-            (, , uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(
-                PositionKey.compute(address(this), position.tickLower, position.tickUpper)
+        (int24 tickLower, int24 tickUpper, uint128 positionLiquidity) = (
+            position.tickLower,
+            position.tickUpper,
+            position.liquidity
+        );
+        if (positionLiquidity > 0) {
+            pool._burnPositionInPool(tickLower, tickUpper, 0);
+            (uint128 _tokensOwed0, uint128 _tokensOwed1) = _updateUncollectedFees(
+                position,
+                pool,
+                address(this),
+                tickLower,
+                tickUpper,
+                positionLiquidity
             );
-
-            tokensOwed0 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    position.liquidity,
-                    Constants.Q128
-                )
-            );
-            tokensOwed1 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    position.liquidity,
-                    Constants.Q128
-                )
-            );
-
-            position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
-            position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+            tokensOwed0 += _tokensOwed0;
+            tokensOwed1 += _tokensOwed1;
         }
 
         // compute the arguments to give to the pool#collect method
@@ -354,13 +372,7 @@ contract NonfungiblePositionManager is
         );
 
         // the actual amounts collected are returned
-        (amount0, amount1) = pool.collect(
-            recipient,
-            position.tickLower,
-            position.tickUpper,
-            amount0Collect,
-            amount1Collect
-        );
+        (amount0, amount1) = pool.collect(recipient, tickLower, tickUpper, amount0Collect, amount1Collect);
 
         // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
         // instead of the actual amount so we can burn the token
@@ -372,7 +384,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
         delete _positions[tokenId];
         _burn(tokenId);
     }
