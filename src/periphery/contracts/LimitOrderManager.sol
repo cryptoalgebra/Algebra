@@ -286,7 +286,9 @@ contract LimitOrderManager is
     function baseURI() public pure override returns (string memory) {}
 
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
+        LimitPosition storage position = _limitPositions[tokenId];
         delete _limitPositions[tokenId];
+        require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, 'Not cleared');
         _burn(tokenId);
     }
 
