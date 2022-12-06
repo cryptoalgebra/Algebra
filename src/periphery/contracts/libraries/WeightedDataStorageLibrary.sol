@@ -6,7 +6,7 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IDataStorageOperator.sol';
 
 /// @title Weighted DataStorage library
-/// @notice Provides functions to integrate with different tier dataStorages of the same pool
+/// @notice Provides functions to integrate with dataStorage of the pool
 library WeightedDataStorageLibrary {
     /// @notice The result of observating a pool across a certain period
     struct PeriodTimepoint {

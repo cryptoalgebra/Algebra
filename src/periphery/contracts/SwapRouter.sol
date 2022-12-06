@@ -45,7 +45,7 @@ contract SwapRouter is
         address _poolDeployer
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
-    /// @dev Returns the pool for the given token pair and fee. The pool contract may or may not exist.
+    /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
     function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {
         return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));
     }
