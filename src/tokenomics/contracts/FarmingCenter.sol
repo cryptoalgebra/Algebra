@@ -67,28 +67,21 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
     }
 
-    /// @notice Upon receiving a Algebra ERC721, creates the token deposit setting owner to `from`.
-    /// @inheritdoc IERC721Receiver
-    function onERC721Received(
-        address,
-        address from,
-        uint256 tokenId,
-        bytes calldata
-    ) external override returns (bytes4) {
-        require(msg.sender == address(nonfungiblePositionManager), 'not an Algebra nft');
+    function lockToken(uint256 tokenId) external override {
+        require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner');
 
         uint256 id = _nextId;
         Deposit storage newDeposit = deposits[tokenId];
-        (newDeposit.L2TokenId, newDeposit.owner) = (id, from);
+        require(newDeposit.L2TokenId == 0, 'already locked');
+        (newDeposit.L2TokenId, newDeposit.owner) = (id, msg.sender);
 
         l2Nfts[id].tokenId = tokenId;
 
-        _mint(from, id);
+        _mint(msg.sender, id);
         _nextId = id + 1;
 
-        emit DepositTransferred(tokenId, address(0), from);
-
-        return this.onERC721Received.selector;
+        nonfungiblePositionManager.changeTokenLock(tokenId, true);
+        emit DepositTransferred(tokenId, address(0), msg.sender);
     }
 
     function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
@@ -155,19 +148,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function collect(INonfungiblePositionManager.CollectParams memory params)
-        external
-        override
-        returns (uint256 amount0, uint256 amount1)
-    {
-        checkAuthorizationForToken(deposits[params.tokenId].L2TokenId);
-        if (params.recipient == address(0)) {
-            params.recipient = address(this);
-        }
-        return nonfungiblePositionManager.collect(params);
-    }
-
-    /// @inheritdoc IFarmingCenter
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
         external
         override
@@ -229,12 +209,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function withdrawToken(
-        uint256 tokenId,
-        address to,
-        bytes memory data
-    ) external override {
-        require(to != address(this), 'cannot withdraw to farming');
+    function unlockToken(uint256 tokenId) external override {
         Deposit storage deposit = deposits[tokenId];
         uint256 l2TokenId = deposit.L2TokenId;
 
@@ -245,8 +220,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _burn(l2TokenId);
         delete deposits[tokenId];
 
+        nonfungiblePositionManager.changeTokenLock(tokenId, false);
         emit DepositTransferred(tokenId, msg.sender, address(0));
-        nonfungiblePositionManager.safeTransferFrom(address(this), to, tokenId, data);
     }
 
     /**

@@ -11,21 +11,12 @@ import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManage
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
 
-import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
-
 import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
 import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 
-interface IFarmingCenter is
-    IAlgebraVirtualPool,
-    IERC721Receiver,
-    IIncentiveKey,
-    IMulticall,
-    IERC721Permit,
-    IPeripheryPayments
-{
+interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IERC721Permit, IPeripheryPayments {
     struct VirtualPoolAddresses {
         address eternalVirtualPool;
         address limitVirtualPool;
@@ -67,6 +58,10 @@ interface IFarmingCenter is
             address owner
         );
 
+    function lockToken(uint256 tokenId) external;
+
+    function unlockToken(uint256 tokenId) external;
+
     /// @notice Updates activeIncentive in AlgebraPool
     /// @dev only farming can do it
     /// @param pool The AlgebraPool for which farming was created
@@ -96,18 +91,6 @@ interface IFarmingCenter is
         bool isLimit
     ) external;
 
-    /// @notice Collects up to a maximum amount of fees owed to a specific position to the recipient
-    /// @dev "proxies" to NonfungiblePositionManager
-    /// @param params tokenId The ID of the NFT for which tokens are being collected,
-    /// recipient The account that should receive the tokens,
-    /// amount0Max The maximum amount of token0 to collect,
-    /// amount1Max The maximum amount of token1 to collect
-    /// @return amount0 The amount of fees collected in token0
-    /// @return amount1 The amount of fees collected in token1
-    function collect(INonfungiblePositionManager.CollectParams calldata params)
-        external
-        returns (uint256 amount0, uint256 amount1);
-
     /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
@@ -130,17 +113,6 @@ interface IFarmingCenter is
         uint256 amountRequestedIncentive,
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
-
-    /// @notice Withdraw Algebra NFT-position token
-    /// @dev can be used via static call to get current rewards for user
-    /// @param tokenId The id of position NFT
-    /// @param to New owner of position NFT
-    /// @param data The additional data for NonfungiblePositionManager
-    function withdrawToken(
-        uint256 tokenId,
-        address to,
-        bytes memory data
-    ) external;
 
     /// @notice Emitted when ownership of a deposit changes
     /// @param tokenId The ID of the deposit (and token) that is being transferred

@@ -54,6 +54,12 @@ interface INonfungiblePositionManager is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
+    function changeTokenLock(uint256 tokenId, bool lock) external;
+
+    function setFarmingCenter(address _farmingCenter) external;
+
+    function setOwner(address _owner) external;
+
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
@@ -63,6 +69,7 @@ interface INonfungiblePositionManager is
     /// @return token1 The address of the token1 for a specific pool
     /// @return tickLower The lower end of the tick range for the position
     /// @return tickUpper The higher end of the tick range for the position
+    /// @return locked The bool
     /// @return liquidity The liquidity of the position
     /// @return feeGrowthInside0LastX128 The fee growth of token0 as of the last action on the individual position
     /// @return feeGrowthInside1LastX128 The fee growth of token1 as of the last action on the individual position
@@ -78,6 +85,7 @@ interface INonfungiblePositionManager is
             address token1,
             int24 tickLower,
             int24 tickUpper,
+            bool locked,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,

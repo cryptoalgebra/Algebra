@@ -42,6 +42,7 @@ contract NonfungiblePositionManager is
         uint80 poolId; // the ID of the pool with which this token is connected
         int24 tickLower; // the tick range of the position
         int24 tickUpper;
+        bool locked;
         uint128 liquidity; // the liquidity of the position
         uint256 feeGrowthInside0LastX128; // the fee growth of the aggregate position as of the last action on the individual position
         uint256 feeGrowthInside1LastX128;
@@ -66,6 +67,9 @@ contract NonfungiblePositionManager is
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
 
+    address public farmingCenter;
+    address public contractOwner;
+
     constructor(
         address _factory,
         address _WNativeToken,
@@ -75,6 +79,7 @@ contract NonfungiblePositionManager is
         ERC721Permit('Algebra Positions NFT-V1', 'ALGB-POS', '1')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
+        contractOwner = msg.sender;
         _tokenDescriptor = _tokenDescriptor_;
     }
 
@@ -90,6 +95,7 @@ contract NonfungiblePositionManager is
             address token1,
             int24 tickLower,
             int24 tickUpper,
+            bool locked,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,
@@ -107,6 +113,7 @@ contract NonfungiblePositionManager is
             poolKey.token1,
             position.tickLower,
             position.tickUpper,
+            position.locked,
             position.liquidity,
             position.feeGrowthInside0LastX128,
             position.feeGrowthInside1LastX128,
@@ -176,6 +183,7 @@ contract NonfungiblePositionManager is
             poolId: poolId,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
+            locked: false,
             liquidity: uint128(actualLiquidity),
             feeGrowthInside0LastX128: feeGrowthInside0LastX128,
             feeGrowthInside1LastX128: feeGrowthInside1LastX128,
@@ -188,6 +196,11 @@ contract NonfungiblePositionManager is
 
     modifier isAuthorizedForToken(uint256 tokenId) {
         _checkAuthorizationForToken(tokenId);
+        _;
+    }
+
+    modifier isLocked(uint256 tokenId) {
+        require(!_positions[tokenId].locked, 'token is locked');
         _;
     }
 
@@ -233,6 +246,22 @@ contract NonfungiblePositionManager is
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+    }
+
+    function changeTokenLock(uint256 tokenId, bool lock) external override {
+        require(msg.sender == farmingCenter, 'only FarmingCenter');
+        Position storage position = _positions[tokenId];
+        position.locked = lock;
+    }
+
+    function setFarmingCenter(address _farmingCenter) external override {
+        require(msg.sender == contractOwner);
+        farmingCenter = _farmingCenter;
+    }
+
+    function setOwner(address _owner) external override {
+        require(msg.sender == contractOwner);
+        contractOwner = _owner;
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -290,6 +319,7 @@ contract NonfungiblePositionManager is
         external
         payable
         override
+        isLocked(params.tokenId)
         isAuthorizedForToken(params.tokenId)
         checkDeadline(params.deadline)
         returns (uint256 amount0, uint256 amount1)
@@ -382,7 +412,7 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
+    function burn(uint256 tokenId) external payable override isLocked(tokenId) isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
         delete _positions[tokenId];
@@ -404,5 +434,13 @@ contract NonfungiblePositionManager is
     function _approve(address to, uint256 tokenId) internal override(ERC721) {
         _positions[tokenId].operator = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721) isLocked(tokenId) {
+        super._beforeTokenTransfer(from, to, tokenId);
     }
 }

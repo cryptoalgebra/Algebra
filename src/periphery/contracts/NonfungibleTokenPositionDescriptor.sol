@@ -38,7 +38,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         override
         returns (string memory)
     {
-        (, , address token0, address token1, int24 tickLower, int24 tickUpper, , , , , ) = positionManager.positions(
+        (, , address token0, address token1, int24 tickLower, int24 tickUpper, , , , , , ) = positionManager.positions(
             tokenId
         );
 
