@@ -49,10 +49,7 @@ interface ILimitOrderManager is
         int24 tick;
     }
 
-    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity)
-        external
-        payable
-        returns (uint256 amount0, uint256 amount1);
+    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity) external payable;
 
     function collectLimitOrder(uint256 tokenId, address recipient)
         external
