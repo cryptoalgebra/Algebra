@@ -37,12 +37,12 @@ contract NonfungiblePositionManager is
 
     // details about the Algebra position
     struct Position {
-        uint96 nonce; // the nonce for permits
+        uint88 nonce; // the nonce for permits
+        bool locked;
         address operator; // the address that is approved for spending this token
         uint80 poolId; // the ID of the pool with which this token is connected
         int24 tickLower; // the tick range of the position
         int24 tickUpper;
-        bool locked;
         uint128 liquidity; // the liquidity of the position
         uint256 feeGrowthInside0LastX128; // the fee growth of the aggregate position as of the last action on the individual position
         uint256 feeGrowthInside1LastX128;
@@ -84,18 +84,20 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function positions(uint256 tokenId)
+    function positions(
+        uint256 tokenId
+    )
         external
         view
         override
         returns (
-            uint96 nonce,
+            uint88 nonce,
+            bool locked,
             address operator,
             address token0,
             address token1,
             int24 tickLower,
             int24 tickUpper,
-            bool locked,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128,
@@ -108,12 +110,12 @@ contract NonfungiblePositionManager is
         PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
         return (
             position.nonce,
+            position.locked,
             position.operator,
             poolKey.token0,
             poolKey.token1,
             position.tickLower,
             position.tickUpper,
-            position.locked,
             position.liquidity,
             position.feeGrowthInside0LastX128,
             position.feeGrowthInside1LastX128,
@@ -135,17 +137,14 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function mint(MintParams calldata params)
+    function mint(
+        MintParams calldata params
+    )
         external
         payable
         override
         checkDeadline(params.deadline)
-        returns (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        )
+        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         IAlgebraPool pool;
         uint256 actualLiquidity;
@@ -265,16 +264,14 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function increaseLiquidity(IncreaseLiquidityParams calldata params)
+    function increaseLiquidity(
+        IncreaseLiquidityParams calldata params
+    )
         external
         payable
         override
         checkDeadline(params.deadline)
-        returns (
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        )
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         Position storage position = _positions[params.tokenId];
 
@@ -315,7 +312,9 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function decreaseLiquidity(DecreaseLiquidityParams calldata params)
+    function decreaseLiquidity(
+        DecreaseLiquidityParams calldata params
+    )
         external
         payable
         override
@@ -359,13 +358,9 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function collect(CollectParams calldata params)
-        external
-        payable
-        override
-        isAuthorizedForToken(params.tokenId)
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function collect(
+        CollectParams calldata params
+    ) external payable override isAuthorizedForToken(params.tokenId) returns (uint256 amount0, uint256 amount1) {
         require(params.amount0Max > 0 || params.amount1Max > 0);
         // allow collecting to the nft position manager address with address 0
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;

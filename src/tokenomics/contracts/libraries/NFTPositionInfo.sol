@@ -20,19 +20,10 @@ library NFTPositionInfo {
         IAlgebraPoolDeployer deployer,
         INonfungiblePositionManager nonfungiblePositionManager,
         uint256 tokenId
-    )
-        internal
-        view
-        returns (
-            IAlgebraPool pool,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity
-        )
-    {
+    ) internal view returns (IAlgebraPool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) {
         address token0;
         address token1;
-        (, , token0, token1, tickLower, tickUpper, , liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
+        (, , , token0, token1, tickLower, tickUpper, liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
 
         pool = IAlgebraPool(
             PoolAddress.computeAddress(address(deployer), PoolAddress.PoolKey({token0: token0, token1: token1}))
