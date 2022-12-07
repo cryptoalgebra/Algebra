@@ -122,9 +122,7 @@ describe('AlgebraFarming', () => {
 			})
 
 			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
-			await context.nft
-			.connect(lpUser3)
-				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
+			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
 			
 
 			await expect(context.farmingCenter
@@ -163,9 +161,7 @@ describe('AlgebraFarming', () => {
 			})
 
 			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
-			await context.nft
-			.connect(lpUser3)
-				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
+			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
 			
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -307,14 +303,9 @@ describe('AlgebraFarming', () => {
 				deadline: (await blockTimestamp()) + 10000,
 			})
 
-			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
-			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenIdCorrect);
-			await context.nft
-			.connect(lpUser3)
-				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenId);
-			await context.nft
-			.connect(lpUser3)
-				['safeTransferFrom(address,address,uint256)'](lpUser3.address, context.farmingCenter.address, tokenIdCorrect);
+
+			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
+			await context.farmingCenter.connect(lpUser3).lockToken(tokenIdCorrect)
 			
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100

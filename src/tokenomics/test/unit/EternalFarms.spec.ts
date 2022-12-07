@@ -88,9 +88,7 @@ describe('unit/EternalFarms', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -204,13 +202,7 @@ describe('unit/EternalFarms', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1_000,
         })
-
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId2, {
-            ...maxGas,
-          })
-
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
         )
@@ -299,9 +291,7 @@ describe('unit/EternalFarms', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       let farmIncentiveKey = {
         
@@ -365,9 +355,7 @@ describe('unit/EternalFarms', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       farmIncentiveKey = {
         
@@ -616,9 +604,7 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         // await Time.setAndMine(timestamps.startTime + 1)
 
@@ -674,7 +660,6 @@ describe('unit/EternalFarms', () => {
           amountDesired.mul(3),
           context.nft.address
         )
-
         tokenId = await mintPosition(context.nft.connect(lpUser0), {
           token0: context.token0.address,
           token1: context.token1.address,
@@ -703,13 +688,9 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 10000,
         })
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenIdOut)
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenIdOut)
 
         await Time.setAndMine(timestamps.startTime + 1)
 
@@ -741,7 +722,6 @@ describe('unit/EternalFarms', () => {
         await Time.setAndMine(timestamps.endTime + 10)
 
         incentiveId = await helpers.getIncentiveId(createIncentiveResult)
-
         subject = (_actor: Wallet) =>
           context.farmingCenter.connect(_actor).exitFarming(
             {
@@ -794,10 +774,6 @@ describe('unit/EternalFarms', () => {
           expect(farmBefore.liquidity).to.gt(0)
           expect(farmAfter.liquidity).to.eq(0)
         })
-    })
-
-    it('owner can exitFarming', async () => {
-      await subject(lpUser0)
     })
 
     it('can exit without rewards', async () => {
@@ -1097,9 +1073,7 @@ describe('unit/EternalFarms', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       context.farmingCenter.connect(lpUser0).enterFarming(
           {

@@ -94,7 +94,6 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
   ])) as [TestERC20, TestERC20, TestERC20,TestERC20]
 
   const nftDescriptorLibrary = await nftDescriptorLibraryFixture()
-
   const linkedBytecode = linkLibraries(
     {
       bytecode: NonfungibleTokenPositionDescriptor.bytecode,
@@ -103,7 +102,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1246,
+              start: 1247,
             },
           ],
         },
@@ -118,13 +117,10 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
 
   const positionDescriptor = await NFTDescriptorFactory.deploy(tokens[0].address);
   
-
-
   const nftFactory = await ethers.getContractFactory(
     NonfungiblePositionManagerJson.abi,
     NonfungiblePositionManagerJson.bytecode
   )
-
   const nft = (await nftFactory.deploy(
     factory.address,
     wnative.address,
@@ -226,16 +222,13 @@ export type AlgebraFixtureType = {
 }
 export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
   const { tokens, nft, factory, deployer, router } = await algebraFactoryFixture()
-
   const wallets = (await ethers.getSigners() as any) as Wallet[];
   const signer = new ActorFixture(wallets, ethers.provider).farmingDeployer()
 
   const incentiveCreator = new ActorFixture(wallets, ethers.provider).incentiveCreator()
   
   const farmingFactory = await ethers.getContractFactory('AlgebraLimitFarming', signer)
-
   const farming = (await farmingFactory.deploy(deployer.address, nft.address, 2 ** 32, 2 ** 32)) as AlgebraLimitFarming
-
   const eternalFarmingFactory = await ethers.getContractFactory('AlgebraEternalFarming', signer)
 
   const eternalFarming = (await eternalFarmingFactory.deploy(deployer.address, nft.address)) as AlgebraEternalFarming
@@ -243,11 +236,12 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
   const farmingCenterVaultFactory = await ethers.getContractFactory('FarmingCenterVault', signer) 
 
   const farmingCenterVault = (await farmingCenterVaultFactory.deploy()) as FarmingCenterVault
-
+  
   const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter', signer) 
 
   const farmingCenter = (await farmingCenterFactory.deploy(farming.address,eternalFarming.address, nft.address, farmingCenterVault.address)) as FarmingCenter
-  
+  await nft.setFarmingCenter(farmingCenter.address)
+
   await eternalFarming.setFarmingCenterAddress(farmingCenter.address)
 
   await eternalFarming.setIncentiveMaker(incentiveCreator.address)

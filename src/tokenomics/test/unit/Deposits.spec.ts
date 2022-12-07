@@ -22,6 +22,7 @@ import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../he
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
+import { contracts } from '@cryptoalgebra/periphery/typechain'
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
@@ -52,7 +53,7 @@ describe('unit/Deposits', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
-  let subject: (tokenId: string, recipient: string) => Promise<any>
+  let subject: (tokenId: string) => Promise<any>
   let tokenId: string
   const SAFE_TRANSFER_FROM_SIGNATURE = 'safeTransferFrom(address,address,uint256,bytes)'
   const INCENTIVE_KEY_ABI =
@@ -119,12 +120,7 @@ describe('unit/Deposits', () => {
       const depositBefore = await context.farmingCenter.deposits(tokenId)
       expect(depositBefore.L2TokenId).to.eq((await context.farmingCenter.l2Nfts(depositBefore.L2TokenId)).tokenId)
       subject = async (data: string, actor: Wallet = lpUser0) => {
-        await context.nft
-          .connect(actor)
-          [SAFE_TRANSFER_FROM_SIGNATURE](actor.address, context.farmingCenter.address, tokenId, data, {
-            ...maxGas,
-            from: actor.address,
-          })
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
       }
     })
 
@@ -241,12 +237,7 @@ describe('unit/Deposits', () => {
 
       it('deposits the token', async () => {
         expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(0)
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId, {
-            ...maxGas,
-            from: lpUser0.address,
-          })
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(1)
       })
@@ -264,12 +255,7 @@ describe('unit/Deposits', () => {
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
         const depositBefore = await context.farmingCenter.deposits(tokenId)
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256,bytes)'](lpUser0.address, context.farmingCenter.address, tokenId, data, {
-            ...maxGas,
-            from: lpUser0.address,
-          })
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
 
@@ -281,28 +267,12 @@ describe('unit/Deposits', () => {
 
       xit('has gas cost [ @skip-on-coverage ]', async () => {
         await snapshotGasCost(
-          context.nft
-            .connect(lpUser0)
-            ['safeTransferFrom(address,address,uint256,bytes)'](
-              lpUser0.address,
-              context.farmingCenter.address,
-              tokenId,
-              data,
-              {
-                ...maxGas,
-                from: lpUser0.address,
-              }
-            )
+          context.farmingCenter.lockToken(tokenId)
         )
       })
     })
 
     xdescribe('on invalid call', async () => {
-      it('reverts when called by contract other than Algebra nonfungiblePositionManager', async () => {
-        await expect(
-          context.farmingCenter.connect(lpUser0).onERC721Received(incentiveCreator.address, lpUser0.address, 1, data)
-        ).to.be.revertedWith('not an Algebra nft')
-      })
 
       it('reverts when staking on invalid incentive', async () => {
         const invalidFarmParams = {
@@ -316,14 +286,7 @@ describe('unit/Deposits', () => {
         let invalidData = ethers.utils.defaultAbiCoder.encode([incentiveKeyAbi], [invalidFarmParams])
 
         await expect(
-          context.nft
-            .connect(lpUser0)
-            ['safeTransferFrom(address,address,uint256,bytes)'](
-              lpUser0.address,
-              context.farmingCenter.address,
-              tokenId,
-              invalidData
-            )
+          context.farmingCenter.lockToken(tokenId)
         ).to.be.revertedWith('non-existent incentive')
       })
     })
@@ -331,51 +294,39 @@ describe('unit/Deposits', () => {
 
   describe('#withdrawToken', () => {
     beforeEach(async () => {
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
-      subject = (L2TokenId, _recipient) => context.farmingCenter.connect(lpUser0).withdrawToken(L2TokenId, _recipient, '0x')
+      subject = (L2TokenId) => context.farmingCenter.connect(lpUser0).unlockToken(L2TokenId)
     })
 
     describe('works and', () => {
-      it('emits a DepositTransferred event', async () =>
-        await expect(subject(tokenId, recipient))
-          .to.emit(context.farmingCenter, 'DepositTransferred')
-          .withArgs(tokenId, recipient, constants.AddressZero))
 
       it('transfers nft ownership', async () => {
-        await subject(tokenId, recipient)
+        await subject(tokenId)
         expect(await context.nft.ownerOf(tokenId)).to.eq(recipient)
       })
 
       it('prevents you from withdrawing twice', async () => {
-        await subject(tokenId, recipient)
+        await subject(tokenId)
         expect(await context.nft.ownerOf(tokenId)).to.eq(recipient)
-        await expect(subject(tokenId, recipient)).to.be.reverted
+        await expect(subject(tokenId)).to.be.reverted
       })
 
       it('deletes deposit upon withdrawal', async () => {
         expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(1)
-        await subject(tokenId, recipient)
+        await subject(tokenId)
         expect((await context.farmingCenter.deposits(tokenId)).L2TokenId).to.equal(0)
       })
 
-      xit('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, recipient)))
+      xit('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId)))
     })
 
     describe('fails if', () => {
       it('you are withdrawing a token that is not yours', async () => {
         const notOwner = actors.traderUser1()
-        await expect(context.farmingCenter.connect(notOwner).withdrawToken(tokenId, notOwner.address, '0x')).to.revertedWith(
+        await expect(context.farmingCenter.connect(notOwner).unlockToken(tokenId)).to.revertedWith(
           'Not approved'
-        )
-      })
-
-      it('you are withdrawing a token to farming center', async () => {
-        
-        await expect(context.farmingCenter.connect(lpUser0).withdrawToken(tokenId, context.farmingCenter.address, '0x')).to.revertedWith(
-          'cannot withdraw to farming'
         )
       })
 
@@ -403,11 +354,53 @@ describe('unit/Deposits', () => {
           LIMIT_FARMING
         )
 
-        await expect(subject(tokenId, lpUser0.address)).to.revertedWith(
+        await expect(subject(tokenId)).to.revertedWith(
           'cannot withdraw token while farmd'
         )
       })
     })
+  })
+
+  describe('#lock',() => {
+    let lpUser1: Wallet     
+
+    it('fails if transfer nft after lock', async () =>{
+      lpUser1 = actors.lpUser1()   
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await expect(context.nft.connect(lpUser0).transferFrom(lpUser0.address, lpUser1.address,tokenId)).to.be.revertedWith("token is locked")
+    })
+    
+    it('fails if burn nft after lock', async () =>{ 
+      await context.nft.connect(lpUser0).decreaseLiquidity({
+        tokenId: tokenId,
+        liquidity: (await context.nft.positions(tokenId)).liquidity,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1_000,
+      })
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await expect(context.nft.burn(tokenId)).to.be.revertedWith("token is locked")
+    })
+
+    it('fails if decrease liquidity after lock', async () =>{ 
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await expect(context.nft.connect(lpUser0).decreaseLiquidity({
+        tokenId: tokenId,
+        liquidity: (await context.nft.positions(tokenId)).liquidity,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1_000,
+      })).to.be.revertedWith("token is locked")
+    })
+
+    it('can transfer nft after unlock', async () =>{
+      lpUser1 = actors.lpUser1()   
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await context.farmingCenter.connect(lpUser0).unlockToken(tokenId)
+      await context.nft.connect(lpUser0).transferFrom(lpUser0.address, lpUser1.address,tokenId)
+      expect( await context.nft.balanceOf(lpUser1.address)).to.eq(1)
+    })
+
   })
 
   describe('#transferNFTL2',  () => {
@@ -419,8 +412,7 @@ describe('unit/Deposits', () => {
 
         await context.nft.connect(lpUser0).approve(lpUser1.address,tokenId)
   
-        await context.nft.connect(lpUser0)['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId,{...maxGas,from: lpUser0.address,})      
-
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       })
 

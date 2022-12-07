@@ -56,10 +56,6 @@ describe('unit/FarmingCenter', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
-  it('cannot call onERC721Received directly', async() => {
-    await expect(context.farmingCenter.onERC721Received(actors.lpUser0().address, actors.lpUser0().address, 1, [])).to.be.revertedWith('not an Algebra nft');
-  })
-
   it('cannot call connectVirtualPool directly', async() => {
     await expect(context.farmingCenter.connectVirtualPool(actors.lpUser0().address, actors.lpUser0().address)).to.be.revertedWith('only farming can call this');
   })
@@ -105,9 +101,7 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       incentiveArgsEternal = {
         rewardToken: context.rewardToken,
@@ -271,11 +265,7 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1_000,
         })
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId2, {
-            ...maxGas,
-          })
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
 
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
@@ -387,9 +377,7 @@ describe('unit/FarmingCenter', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       let farmIncentiveKey = {
         rewardToken: context.rewardToken.address,
@@ -467,9 +455,7 @@ describe('unit/FarmingCenter', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.nft
-        .connect(lpUser0)
-        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       farmIncentiveKey = {
         
@@ -664,43 +650,6 @@ describe('unit/FarmingCenter', () => {
     })
 
     describe('when requesting the full amount', () => {
-      it('collects fees', async () => {
-        const { rewardToken } = context
-        const balance0Before = await context.token0.balanceOf(lpUser0.address);
-        const balance1Before = await context.token1.balanceOf(lpUser0.address);
-
-         await context.farmingCenter.connect(lpUser0).collect({
-          tokenId: Number(tokenId),
-          recipient: lpUser0.address,
-          amount0Max: BN('10').pow(BN('18')),
-          amount1Max: BN('10').pow(BN('18'))
-        })
-
-        const balance0After = await context.token0.balanceOf(lpUser0.address);
-        const balance1After = await context.token1.balanceOf(lpUser0.address);
-
-        //expect(balance0After).to.be.gt(balance0Before);
-        expect(balance1After).to.be.gt(balance1Before);
-      })
-
-      it('collects fees without recipient ', async () => {
-        const { rewardToken } = context
-        const balance0Before = await context.token0.balanceOf(context.farmingCenter.address);
-        const balance1Before = await context.token1.balanceOf(context.farmingCenter.address);
-
-         await context.farmingCenter.connect(lpUser0).collect({
-          tokenId: Number(tokenId),
-          recipient: ZERO_ADDRESS,
-          amount0Max: BN('10').pow(BN('18')),
-          amount1Max: BN('10').pow(BN('18'))
-        })
-
-        const balance0After = await context.token0.balanceOf(context.farmingCenter.address);
-        const balance1After = await context.token1.balanceOf(context.farmingCenter.address);
-
-        //expect(balance0After).to.be.gt(balance0Before);
-        expect(balance1After).to.be.gt(balance1Before);
-      })
 
       it('claim reward', async() => {
         
@@ -1155,9 +1104,7 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         
 
@@ -1261,9 +1208,7 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.nft
-          .connect(lpUser0)
-          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
             {
