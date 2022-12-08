@@ -33,6 +33,11 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IERC
 
     function farmingCenterVault() external view returns (IFarmingCenterVault);
 
+    function increaseLiquidity(
+        IncentiveKey memory key,
+        INonfungiblePositionManager.IncreaseLiquidityParams memory params
+    ) external;
+
     function l2Nfts(uint256)
         external
         view

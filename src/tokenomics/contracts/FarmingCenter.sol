@@ -147,6 +147,43 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         }
     }
 
+    function increaseLiquidity(
+        IncentiveKey memory key,
+        INonfungiblePositionManager.IncreaseLiquidityParams memory params
+    ) external override {
+        (, , address token0, address token1, , , , , , , , ) = nonfungiblePositionManager.positions(params.tokenId);
+        if (params.amount0Desired > 0)
+            TransferHelper.safeTransferFrom(
+                token0,
+                msg.sender,
+                address(nonfungiblePositionManager),
+                params.amount0Desired
+            );
+        if (params.amount1Desired > 0)
+            TransferHelper.safeTransferFrom(
+                token1,
+                msg.sender,
+                address(nonfungiblePositionManager),
+                params.amount1Desired
+            );
+
+        (uint256 amount0, uint256 amount1, ) = nonfungiblePositionManager.increaseLiquidity(params);
+
+        // refund
+        if (params.amount0Desired > amount0)
+            nonfungiblePositionManager.sweepToken(token0, params.amount0Desired - amount0, msg.sender);
+        if (params.amount1Desired > amount1)
+            nonfungiblePositionManager.sweepToken(token1, params.amount1Desired - amount1, msg.sender);
+
+        // get locked token amount
+        bytes32 incentiveId = IncentiveId.compute(key);
+        uint256 lockedAmount = farmingCenterVault.balances(params.tokenId, incentiveId);
+
+        // exit & enter
+        eternalFarming.exitFarming(key, params.tokenId, nonfungiblePositionManager.ownerOf(params.tokenId));
+        eternalFarming.enterFarming(key, params.tokenId, lockedAmount);
+    }
+
     /// @inheritdoc IFarmingCenter
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
         external
