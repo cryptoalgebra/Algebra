@@ -120,7 +120,7 @@ describe('unit/EternalFarms', () => {
         )
     })
 
-    describe.only('increaseLiqudity', () => {
+    describe('increaseLiqudity', () => {
     
       it('liquidity updated correct', async () => {
         await subject(tokenId, lpUser0)

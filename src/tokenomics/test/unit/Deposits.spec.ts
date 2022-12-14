@@ -305,15 +305,8 @@ describe('unit/Deposits', () => {
     })
   })
 
-  describe('#lock',() => {
-    let lpUser1: Wallet     
+  describe('#lock',() => {    
 
-    it('fails if transfer nft after lock', async () =>{
-      lpUser1 = actors.lpUser1()   
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-      await expect(context.nft.connect(lpUser0).transferFrom(lpUser0.address, lpUser1.address,tokenId)).to.be.revertedWith("token is locked")
-    })
-    
     it('fails if burn nft after lock', async () =>{ 
       await context.nft.connect(lpUser0).decreaseLiquidity({
         tokenId: tokenId,
@@ -335,14 +328,6 @@ describe('unit/Deposits', () => {
         amount1Min: 0,
         deadline: (await blockTimestamp()) + 1_000,
       })).to.be.revertedWith("token is locked")
-    })
-
-    it('can transfer nft after unlock', async () =>{
-      lpUser1 = actors.lpUser1()   
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-      await context.farmingCenter.connect(lpUser0).unlockToken(tokenId)
-      await context.nft.connect(lpUser0).transferFrom(lpUser0.address, lpUser1.address,tokenId)
-      expect( await context.nft.balanceOf(lpUser1.address)).to.eq(1)
     })
 
   })
