@@ -136,15 +136,11 @@ describe('unit/EternalFarms', () => {
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.eternalFarming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.farmingCenter.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
         const farmAfter = await context.eternalFarming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.farmingCenter.deposits(tokenId)).L2TokenId
 
         expect(farmBefore.liquidity).to.eq(0)
-        expect(depositFarmsBefore).to.eq(1)
         expect(farmAfter.liquidity).to.eq(liquidity)
-        expect(depositFarmsAfter).to.eq(1)
       })
 
       it('increments the number of farms on the deposit', async () => {
@@ -168,7 +164,7 @@ describe('unit/EternalFarms', () => {
         //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
         await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'Not approved'
+          'not owner'
         )
       })
 
@@ -738,10 +734,10 @@ describe('unit/EternalFarms', () => {
 
       describe('works and', () => {
         it('decrements deposit numberOfFarms by 1', async () => {
-          const { L2TokenId: farmsPre } = await context.farmingCenter.deposits(tokenId)
+          const { numberOfFarms: farmsPre } = await context.farmingCenter.deposits(tokenId)
           await subject(lpUser0)
-          const { L2TokenId: farmsPost } = await context.farmingCenter.deposits(tokenId)
-          expect(farmsPre).to.not.equal(farmsPost.sub(1))
+          const { numberOfFarms: farmsPost } = await context.farmingCenter.deposits(tokenId)
+          expect(farmsPre).to.not.equal(farmsPost - 1)
         })
 
         it('emits an exitFarmingd event', async () => {
@@ -818,7 +814,7 @@ describe('unit/EternalFarms', () => {
 
     describe('fails if', () => {
       it('farm has already been exitFarming', async () => {
-        await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
+        await expect(subject(lpUser0)).to.revertedWith('ERC721: owner query for nonexistent token')
       })
     })
   })

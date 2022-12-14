@@ -60,10 +60,6 @@ describe('unit/FarmingCenter', () => {
     await expect(context.farmingCenter.connectVirtualPool(actors.lpUser0().address, actors.lpUser0().address)).to.be.revertedWith('only farming can call this');
   })
 
-  it('cannot getApproved for nonexistent token', async() => {
-    await expect(context.farmingCenter.getApproved(100)).to.be.revertedWith('ERC721: approved query for nonexistent token');
-  })
-
   describe('#Enter ParallelFarmings', () => {
     let incentiveIdEternal: string
     let incentiveId: string
@@ -179,28 +175,20 @@ describe('unit/FarmingCenter', () => {
         const liquidityEternal = (await context.nft.positions(tokenId)).liquidity
 
         const farmBeforeEternal = await context.eternalFarming.farms(tokenId, incentiveIdEternal)
-        const depositFarmsBeforeEternal = (await context.farmingCenter.deposits(tokenId)).L2TokenId
         await subjectEternal(tokenId, lpUser0)
         const farmAfterEternal = await context.eternalFarming.farms(tokenId, incentiveIdEternal)
-        const depositFarmsAfterEternal = (await context.farmingCenter.deposits(tokenId)).L2TokenId
 
         expect(farmBeforeEternal.liquidity).to.eq(0)
-        expect(depositFarmsBeforeEternal).to.eq(1)
         expect(farmAfterEternal.liquidity).to.eq(liquidityEternal)
-        expect(depositFarmsAfterEternal).to.eq(1)
 
         const liquidity = (await context.nft.positions(tokenId)).liquidity
 
         const farmBefore = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsBefore = (await context.farmingCenter.deposits(tokenId)).L2TokenId
         await subject(tokenId, lpUser0)
         const farmAfter = await context.farming.farms(tokenId, incentiveId)
-        const depositFarmsAfter = (await context.farmingCenter.deposits(tokenId)).L2TokenId
 
         expect(farmBefore.liquidity).to.eq(0)
-        expect(depositFarmsBefore).to.eq(1)
         expect(farmAfter.liquidity).to.eq(liquidity)
-        expect(depositFarmsAfter).to.eq(1)
       })
 
       it('increments the number of farms on the deposit', async () => {
@@ -227,10 +215,10 @@ describe('unit/FarmingCenter', () => {
         //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
         await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'Not approved'
+          'not owner'
         )
         await expect(subjectEternal(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'Not approved'
+          'not owner'
         )
       })
 
@@ -1358,11 +1346,11 @@ describe('unit/FarmingCenter', () => {
     })
 
     describe('fails if', () => {
-      it('farm has already been exitFarmingd', async () => {
+      it('farm has already been exitFarming', async () => {
         // await Time.setAndMine(timestamps.endTime + 1)
         //await subject(lpUser0)
-        await expect(subject(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
-        await expect(subjectEternal(lpUser0)).to.revertedWith('ERC721: operator query for nonexistent token')
+        await expect(subject(lpUser0)).to.revertedWith('ERC721: owner query for nonexistent token')
+        await expect(subjectEternal(lpUser0)).to.revertedWith('ERC721: owner query for nonexistent token')
       })
     })
   })

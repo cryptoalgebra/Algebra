@@ -16,7 +16,7 @@ import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 
-interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IERC721Permit, IPeripheryPayments {
+interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPeripheryPayments {
     struct VirtualPoolAddresses {
         address eternalVirtualPool;
         address limitVirtualPool;
@@ -38,30 +38,11 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IERC
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
     ) external;
 
-    function l2Nfts(uint256)
-        external
-        view
-        returns (
-            uint96 nonce,
-            address operator,
-            uint256 tokenId
-        );
-
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @return L2TokenId The nft layer2 id,
-    /// numberOfFarms The number of farms,
-    /// inLimitFarming The parameter showing if the token is in the limit farm,
-    /// owner The owner of deposit
-    function deposits(uint256 tokenId)
-        external
-        view
-        returns (
-            uint256 L2TokenId,
-            uint32 numberOfFarms,
-            bool inLimitFarming,
-            address owner
-        );
+    /// @return numberOfFarms The number of farms,
+    /// inLimitFarming The parameter showing if the token is in the limit farm
+    function deposits(uint256 tokenId) external view returns (uint32 numberOfFarms, bool inLimitFarming);
 
     function lockToken(uint256 tokenId) external;
 

@@ -9,21 +9,17 @@ import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
-import '@cryptoalgebra/periphery/contracts/base/ERC721Permit.sol';
 
 import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 
 /// @title Algebra main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
-contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPayments {
+contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
     IAlgebraLimitFarming public immutable override limitFarming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
     IFarmingCenterVault public immutable override farmingCenterVault;
-
-    /// @dev The ID of the next token that will be minted. Skips 0
-    uint256 private _nextId = 1;
 
     /// @dev saves addresses of virtual pools for pool
     mapping(address => VirtualPoolAddresses) private _virtualPoolAddresses;
@@ -31,21 +27,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     /// @dev deposits[tokenId] => Deposit
     mapping(uint256 => Deposit) public override deposits;
 
-    mapping(uint256 => L2Nft) public override l2Nfts;
-
     /// @notice Represents the deposit of a liquidity NFT
     struct Deposit {
-        uint256 L2TokenId;
         uint32 numberOfFarms;
         bool inLimitFarming;
-        address owner;
-    }
-
-    /// @notice Represents the nft layer 2
-    struct L2Nft {
-        uint96 nonce; // the nonce for permits
-        address operator; // the address that is approved for spending this token
-        uint256 tokenId;
     }
 
     constructor(
@@ -53,32 +38,21 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         IAlgebraEternalFarming _eternalFarming,
         INonfungiblePositionManager _nonfungiblePositionManager,
         IFarmingCenterVault _farmingCenterVault
-    )
-        ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2')
-        PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken())
-    {
+    ) PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken()) {
         limitFarming = _limitFarming;
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
         farmingCenterVault = _farmingCenterVault;
     }
 
-    function checkAuthorizationForToken(uint256 tokenId) private view {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+    modifier isOwner(uint256 tokenId) {
+        require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner');
+        _;
     }
 
-    function lockToken(uint256 tokenId) external override {
-        require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner');
-
-        uint256 id = _nextId;
+    function lockToken(uint256 tokenId) external override isOwner(tokenId) {
         Deposit storage newDeposit = deposits[tokenId];
-        require(newDeposit.L2TokenId == 0, 'already locked');
-        (newDeposit.L2TokenId, newDeposit.owner) = (id, msg.sender);
-
-        l2Nfts[id].tokenId = tokenId;
-
-        _mint(msg.sender, id);
-        _nextId = id + 1;
+        require(newDeposit.numberOfFarms == 0, 'already locked');
 
         nonfungiblePositionManager.changeTokenLock(tokenId, true);
         emit DepositTransferred(tokenId, address(0), msg.sender);
@@ -94,9 +68,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 tokenId,
         uint256 tokensLocked,
         bool isLimit
-    ) external override {
+    ) external override isOwner(tokenId) {
         Deposit storage _deposit = deposits[tokenId];
-        checkAuthorizationForToken(_deposit.L2TokenId);
         (uint32 numberOfFarms, bool inLimitFarming) = (_deposit.numberOfFarms, _deposit.inLimitFarming);
         numberOfFarms++;
         IAlgebraFarming _farming;
@@ -126,13 +99,11 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         IncentiveKey memory key,
         uint256 tokenId,
         bool isLimit
-    ) external override {
+    ) external override isOwner(tokenId) {
         Deposit storage deposit = deposits[tokenId];
-        checkAuthorizationForToken(deposit.L2TokenId);
         IAlgebraFarming _farming;
 
         deposit.numberOfFarms -= 1;
-        deposit.owner = msg.sender;
         if (isLimit) {
             deposit.inLimitFarming = false;
             _farming = IAlgebraFarming(limitFarming);
@@ -188,9 +159,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function collectRewards(IncentiveKey memory key, uint256 tokenId)
         external
         override
+        isOwner(tokenId)
         returns (uint256 reward, uint256 bonusReward)
     {
-        checkAuthorizationForToken(deposits[tokenId].L2TokenId);
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 
@@ -246,16 +217,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function unlockToken(uint256 tokenId) external override {
+    function unlockToken(uint256 tokenId) external override isOwner(tokenId) {
         Deposit storage deposit = deposits[tokenId];
-        uint256 l2TokenId = deposit.L2TokenId;
-
-        checkAuthorizationForToken(l2TokenId);
-        require(deposit.numberOfFarms == 0, 'cannot withdraw token while farmd');
-
-        delete l2Nfts[l2TokenId];
-        _burn(l2TokenId);
-        delete deposits[tokenId];
+        require(deposit.numberOfFarms == 0, 'cannot unlock token while farmed');
 
         nonfungiblePositionManager.changeTokenLock(tokenId, false);
         emit DepositTransferred(tokenId, msg.sender, address(0));
@@ -280,22 +244,5 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
             _virtualPoolAddresses[pool].limitVirtualPool,
             _virtualPoolAddresses[pool].eternalVirtualPool
         );
-    }
-
-    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
-        return uint256(l2Nfts[tokenId].nonce++);
-    }
-
-    /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
-
-        return l2Nfts[tokenId].operator;
-    }
-
-    /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce
-    function _approve(address to, uint256 tokenId) internal override(ERC721) {
-        l2Nfts[tokenId].operator = to;
-        emit Approval(ownerOf(tokenId), to, tokenId);
     }
 }

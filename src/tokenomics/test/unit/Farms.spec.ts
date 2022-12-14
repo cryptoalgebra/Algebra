@@ -165,7 +165,7 @@ describe('unit/Farms', () => {
         //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
         await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith(
-          'Not approved'
+          'not owner'
         )
       })
 
@@ -823,10 +823,10 @@ describe('unit/Farms', () => {
 
     describe('works and', () => {
       it('decrements deposit numberOfFarms by 1', async () => {
-        const { L2TokenId: farmsPre } = await context.farmingCenter.deposits(tokenId)
+        const { numberOfFarms: farmsPre } = await context.farmingCenter.deposits(tokenId)
         await subject(lpUser0)
-        const { L2TokenId: farmsPost } = await context.farmingCenter.deposits(tokenId)
-        expect(farmsPre).to.not.equal(farmsPost.sub(1))
+        const { numberOfFarms: farmsPost } = await context.farmingCenter.deposits(tokenId)
+        expect(farmsPre).to.not.equal(farmsPost - 1)
       })
 
       it('emits an exitFarmingd event', async () => {
