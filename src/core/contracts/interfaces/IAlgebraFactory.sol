@@ -35,6 +35,8 @@ interface IAlgebraFactory {
 
   event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
 
+  event DefaultCommunityFee(uint8 newDefaultCommunityFee);
+
   /**
    *  @notice Returns the current owner of the factory
    *  @dev Can be changed by the current owner via setOwner
@@ -56,6 +58,8 @@ interface IAlgebraFactory {
   function farmingAddress() external view returns (address);
 
   function vaultAddress() external view returns (address);
+
+  function defaultCommunityFee() external view returns (uint8);
 
   /**
    *  @notice Returns the pool address for a given pair of tokens, or address 0 if it does not exist
@@ -107,6 +111,12 @@ interface IAlgebraFactory {
   function setVaultAddress(address _vaultAddress) external;
 
   /**
+   * @dev updates default community fee for new pools
+   * @param newDefaultCommunityFee The new community fee, _must_ be <= MAX_COMMUNITY_FEE
+   */
+  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external;
+
+  /**
    * @notice Changes initial fee configuration for new pools
    * @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
    * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max
@@ -119,13 +129,5 @@ interface IAlgebraFactory {
    * @param gamma2 horizontal stretch factor for the second sigmoid
    * @param baseFee minimum possible fee
    */
-  function setBaseFeeConfiguration(
-    uint16 alpha1,
-    uint16 alpha2,
-    uint32 beta1,
-    uint32 beta2,
-    uint16 gamma1,
-    uint16 gamma2,
-    uint16 baseFee
-  ) external;
+  function setBaseFeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee) external;
 }

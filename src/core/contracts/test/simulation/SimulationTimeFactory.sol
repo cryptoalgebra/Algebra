@@ -26,6 +26,9 @@ contract SimulationTimeFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override vaultAddress;
 
+  /// @inheritdoc IAlgebraFactory
+  uint8 public override defaultCommunityFee;
+
   // values of constants for sigmoids in fee calculation formula
   AdaptiveFee.Configuration public baseFeeConfiguration =
     AdaptiveFee.Configuration(
@@ -125,7 +128,14 @@ contract SimulationTimeFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x170fc6e93072976ff30746e881fbc8270b578ee621cdde76bdf6b2fa93dff275;
+  /// @inheritdoc IAlgebraFactory
+  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+    require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    emit DefaultCommunityFee(newDefaultCommunityFee);
+    defaultCommunityFee = newDefaultCommunityFee;
+  }
+
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x92bde5a0ccb5bf94d0bab05d794fbd4d4183ed01a6113cf111f0d2efb28d184d;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
