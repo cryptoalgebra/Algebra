@@ -24,6 +24,7 @@ import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 import { IAlgebraVirtualPool } from '@cryptoalgebra/core/typechain'
+import { eternalFarming } from '../../typechain/contracts/farmings'
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
@@ -118,7 +119,72 @@ describe('unit/EternalFarms', () => {
           ETERNAL_FARMING
         )
     })
- 
+
+    describe.only('increaseLiqudity', () => {
+    
+      it('liquidity updated correct', async () => {
+        await subject(tokenId, lpUser0)
+        let farmIncentiveKey = {
+        
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        }
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.token0, context.token1],
+          amountDesired,
+          context.farmingCenter.address
+        )
+
+        let farmBefore = await context.eternalFarming.farms(tokenId, incentiveId)
+        await context.farmingCenter.connect(lpUser0).increaseLiquidity(farmIncentiveKey, {
+          tokenId: tokenId,
+          amount0Desired: amountDesired,
+          amount1Desired: amountDesired,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+        let farmAfter = await context.eternalFarming.farms(tokenId, incentiveId)
+        expect(farmAfter.liquidity.sub(farmBefore.liquidity)).to.eq(amountDesired)
+      })
+
+      it('refund works correct', async () => {
+        await subject(tokenId, lpUser0)
+        let farmIncentiveKey = {
+        
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        }
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.token0, context.token1],
+          amountDesired.mul(2),
+          context.farmingCenter.address
+        )
+
+        let balanceBefore = await context.token1.balanceOf(lpUser0.address)
+        await context.farmingCenter.connect(lpUser0).increaseLiquidity(farmIncentiveKey, {
+          tokenId: tokenId,
+          amount0Desired: amountDesired,
+          amount1Desired: amountDesired.mul(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+        let balanceAfter = await context.token1.balanceOf(lpUser0.address)
+        expect(balanceBefore.sub(balanceAfter)).to.eq(amountDesired)
+      })
+
+
+    })
+
     describe('works and', () => {
       // Make sure the incentive has started
       // beforeEach(async () => {
@@ -1104,4 +1170,5 @@ describe('unit/EternalFarms', () => {
       expect(rewardsAfter.bonusReward.sub(rewardsBefore.bonusReward)).to.eq(BN(5).mul(BN(104)))
     })
   })
+
 })

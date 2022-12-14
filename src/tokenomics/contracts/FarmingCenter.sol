@@ -118,33 +118,28 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         }
     }
 
+    // TODO natspec & support native (delete periphery payments?)
     function increaseLiquidity(
         IncentiveKey memory key,
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
     ) external override {
-        (, , address token0, address token1, , , , , , , , ) = nonfungiblePositionManager.positions(params.tokenId);
-        if (params.amount0Desired > 0)
-            TransferHelper.safeTransferFrom(
-                token0,
-                msg.sender,
-                address(nonfungiblePositionManager),
-                params.amount0Desired
-            );
-        if (params.amount1Desired > 0)
-            TransferHelper.safeTransferFrom(
-                token1,
-                msg.sender,
-                address(nonfungiblePositionManager),
-                params.amount1Desired
-            );
+        (, , , address token0, address token1, , , , , , , ) = nonfungiblePositionManager.positions(params.tokenId);
+        if (params.amount0Desired > 0) {
+            TransferHelper.safeTransferFrom(token0, msg.sender, address(this), params.amount0Desired);
+            TransferHelper.safeApprove(token0, address(nonfungiblePositionManager), params.amount0Desired);
+        }
+        if (params.amount1Desired > 0) {
+            TransferHelper.safeTransferFrom(token1, msg.sender, address(this), params.amount1Desired);
+            TransferHelper.safeApprove(token1, address(nonfungiblePositionManager), params.amount1Desired);
+        }
 
         (uint256 amount0, uint256 amount1, ) = nonfungiblePositionManager.increaseLiquidity(params);
 
         // refund
         if (params.amount0Desired > amount0)
-            nonfungiblePositionManager.sweepToken(token0, params.amount0Desired - amount0, msg.sender);
+            TransferHelper.safeTransfer(token0, msg.sender, params.amount0Desired - amount0);
         if (params.amount1Desired > amount1)
-            nonfungiblePositionManager.sweepToken(token1, params.amount1Desired - amount1, msg.sender);
+            TransferHelper.safeTransfer(token1, msg.sender, params.amount1Desired - amount1);
 
         // get locked token amount
         bytes32 incentiveId = IncentiveId.compute(key);
