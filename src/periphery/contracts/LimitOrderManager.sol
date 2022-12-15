@@ -16,8 +16,6 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
-import 'hardhat/console.sol';
-
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -89,19 +87,19 @@ contract LimitOrderManager is
     }
 
     function addLimitOrder(addLimitOrderParams calldata params) external payable override returns (uint256 tokenId) {
-        IAlgebraPool pool;
+        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
+        IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
         bool depositedToken;
+
+        bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
+        (, uint128 liquidityInitPrev, , , , ) = pool.positions(positionKey);
 
         (pool, depositedToken) = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
-        uint80 poolId = cachePoolKey(
-            address(pool),
-            PoolAddress.PoolKey({token0: params.token0, token1: params.token1})
-        );
+        uint80 poolId = cachePoolKey(address(pool), poolKey);
 
-        bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
         (
             uint128 liquidity,
             uint128 liquidityInit,
@@ -110,9 +108,9 @@ contract LimitOrderManager is
             ,
 
         ) = pool.positions(positionKey);
-        console.log(liquidity, liquidityInit);
         require(depositedToken == params.depositedToken, 'depositedToken changed');
-        require(liquidity == liquidityInit || liquidity - params.amount == 0, 'partly executed');
+
+        liquidityInit -= liquidityInitPrev;
         _limitPositions[tokenId] = LimitPosition({
             nonce: 0,
             operator: address(0),

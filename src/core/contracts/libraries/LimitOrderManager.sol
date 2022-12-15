@@ -35,6 +35,16 @@ library LimitOrderManager {
     data.sumOfAsk = sumOfAskAfter;
   }
 
+  function addVirtualLiquidity(
+    mapping(int24 => LimitOrder) storage self,
+    int24 tick,
+    uint128 amount
+  ) internal {
+    LimitOrder storage data = self[tick];
+    data.sumOfAsk += amount;
+    data.spentAsk += amount;
+  }
+
   function executeLimitOrders(
     mapping(int24 => LimitOrder) storage self,
     int24 tick,

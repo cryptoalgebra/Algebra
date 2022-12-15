@@ -471,7 +471,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       uint256 closedAmount;
       if (_positionLiquidityInitial > 0) {
         closedAmount = FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128);
-
         uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
         uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
         (uint256 nominator, uint256 denominator) = zto ? (price, Constants.Q96) : (Constants.Q96, price);
@@ -493,8 +492,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
 
     if (liquidityDelta != 0) {
-      _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
-      _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityDelta);
+      // add liquidity to tick with partly executed limit order
+      if (liquidityDelta > 0 && _positionLiquidity != _positionLiquidityInitial && _positionLiquidity != 0) {
+        int128 liquidityInitialDelta = int128(FullMath.mulDiv(uint128(liquidityDelta), _positionLiquidityInitial, _positionLiquidity));
+        limitOrders.addVirtualLiquidity(tick, uint128(liquidityInitialDelta - liquidityDelta));
+        _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
+        _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityInitialDelta);
+      } else {
+        _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
+        _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityDelta);
+      }
     }
     if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
     (position.liquidity, position.liquidityInitial) = (uint128(_positionLiquidity), uint128(_positionLiquidityInitial));
