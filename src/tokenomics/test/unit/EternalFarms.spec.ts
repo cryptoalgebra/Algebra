@@ -389,17 +389,73 @@ describe('unit/EternalFarms', () => {
       await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
           trader,
           direction: 'up',
-          desiredValue: 10,
+          desiredValue: 200,
       }))
       await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
         trader,
         direction: 'up',
-        desiredValue: 10,
+        desiredValue: 200,
       }))
       await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
         trader,
         direction: 'up',
-        desiredValue: 10,
+        desiredValue: 200,
+      }))
+    })
+
+    it('swap with cross', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+        tickLower: -60,
+        tickUpper: 60
+      })
+      tokenId = mintResult.tokenId
+
+      await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1]
+      })
+
+      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      let incentiveId = await helpers.getIncentiveId(
+        await helpers.createIncentiveFlow({
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          eternal: true,
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
+        })
+      )
+
+      // await Time.set(timestamps.startTime)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
+      await context.eternalFarming.farms(tokenId, incentiveId)
+
+      const pool = context.poolObj.connect(actors.lpUser0())
+
+      Time.set(timestamps.startTime + 10)
+      //await provider.send('evm_mine', [timestamps.startTime + 100])
+      const trader = actors.traderUser0()
+      await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
+          trader,
+          direction: 'up',
+          desiredValue: 200,
       }))
     })
   })

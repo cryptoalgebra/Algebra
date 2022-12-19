@@ -4,22 +4,17 @@ pragma solidity =0.7.6;
 import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
 
 import '../libraries/TickManager.sol';
-import '../libraries/TickTable.sol';
 
 import './IAlgebraVirtualPoolBase.sol';
 
 /// @title Abstract base contract for Algebra virtual pools
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
-    using TickTable for mapping(int16 => uint256);
-
     address public immutable farmingCenterAddress;
     address public immutable farmingAddress;
     address public immutable pool;
 
     /// @inheritdoc IAlgebraVirtualPoolBase
     mapping(int24 => TickManager.Tick) public override ticks;
-
-    mapping(int16 => uint256) internal tickTable;
 
     /// @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
@@ -44,23 +39,17 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         _;
     }
 
-    constructor(
-        address _farmingCenterAddress,
-        address _farmingAddress,
-        address _pool
-    ) {
+    constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) {
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         pool = _pool;
     }
 
     /// @notice get seconds per liquidity inside range
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint160 innerSecondsSpentPerLiquidity)
-    {
+    function getInnerSecondsPerLiquidity(
+        int24 bottomTick,
+        int24 topTick
+    ) external view override returns (uint160 innerSecondsSpentPerLiquidity) {
         // TODO USE FOR BOTH FARMINGS
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
@@ -126,12 +115,10 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
 
             if (_updateTick(bottomTick, currentTick, liquidityDelta, false)) {
                 flippedBottom = true;
-                tickTable.toggleTick(bottomTick);
             }
 
             if (_updateTick(topTick, currentTick, liquidityDelta, true)) {
                 flippedTop = true;
-                tickTable.toggleTick(topTick);
             }
 
             if (currentTick >= bottomTick && currentTick < topTick) {
