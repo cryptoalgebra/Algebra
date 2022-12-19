@@ -134,6 +134,7 @@ export module HelperTypes {
       direction: 'up' | 'down'
       desiredValue?: number
       trader?: Wallet
+      amountIn?: number
     }
 
     type Result = ContractTransaction

@@ -403,7 +403,7 @@ describe('unit/EternalFarms', () => {
       }))
     })
 
-    it('swap with cross', async () => {
+    it.only('swap with cross', async () => {
       timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
 
       const mintResult = await helpers.mintFlow({
@@ -455,7 +455,7 @@ describe('unit/EternalFarms', () => {
       await snapshotGasCost(helpers.makeSwapGasCHeckFlow({
           trader,
           direction: 'up',
-          desiredValue: 200,
+          amountIn: 150
       }))
     })
   })

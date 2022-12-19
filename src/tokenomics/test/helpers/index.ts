@@ -698,7 +698,7 @@ export class HelperCommands {
     /** If we want to push price down, we need to increase tok0.
     If we want to push price up, we need to increase tok1 */
 
-    const amountIn = BNe18(1)
+    const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1);
 
     const erc20Helper = new ERC20Helper()
     await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
