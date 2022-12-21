@@ -92,7 +92,7 @@ contract LimitOrderManager is
         bool depositedToken;
 
         bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
-        (, uint128 liquidityInitPrev, , , , ) = pool.positions(positionKey);
+        (uint128 liquidityPrev, uint128 liquidityInitPrev, , , , ) = pool.positions(positionKey);
 
         (pool, depositedToken) = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
@@ -109,8 +109,11 @@ contract LimitOrderManager is
 
         ) = pool.positions(positionKey);
         require(depositedToken == params.depositedToken, 'depositedToken changed');
-
-        liquidityInit -= liquidityInitPrev;
+        if (liquidity != liquidityInit && liquidityPrev != 0) {
+            liquidityInit -= liquidityInitPrev;
+        } else {
+            liquidityInit = params.amount;
+        }
         _limitPositions[tokenId] = LimitPosition({
             nonce: 0,
             operator: address(0),
@@ -148,14 +151,23 @@ contract LimitOrderManager is
         IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
         // update position state
         bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
-        (cache.liquidityLast, , cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
-            positionKey
-        );
+        uint128 liquidityInitialPrev;
+        uint128 liquidityInitial;
+        (
+            cache.liquidityLast,
+            liquidityInitialPrev,
+            cache.feeGrowthInside0LastX128,
+            cache.feeGrowthInside1LastX128,
+            ,
+
+        ) = pool.positions(positionKey);
 
         if (cache.liquidityLast > 0) {
             pool.burn(tick, tick, liquidity);
             // this is now updated to the current transaction
-            (, , cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+            (, liquidityInitial, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
+                positionKey
+            );
         }
         // update lomanager position state
         if (position.depositedToken) {
@@ -197,6 +209,7 @@ contract LimitOrderManager is
             }
         }
         position.liquidity = positionLiquidity;
+        position.liquidityInit -= liquidityInitialPrev - liquidityInitial;
     }
 
     function collectLimitOrder(uint256 tokenId, address recipient)

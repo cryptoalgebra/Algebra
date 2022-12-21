@@ -475,6 +475,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
         (uint256 nominator, uint256 denominator) = zto ? (price, Constants.Q96) : (Constants.Q96, price);
         uint256 fullAmount = FullMath.mulDiv(_positionLiquidity, nominator, denominator);
+
         if (closedAmount >= fullAmount) {
           closedAmount = fullAmount;
           _positionLiquidity = 0;
@@ -490,12 +491,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (closedAmount > 0) position.fees0 = position.fees0.add128(uint128(closedAmount));
       }
     }
+    if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
 
     if (liquidityDelta != 0) {
-      // add liquidity to tick with partly executed limit order
-      if (liquidityDelta > 0 && _positionLiquidity != _positionLiquidityInitial && _positionLiquidity != 0) {
-        int128 liquidityInitialDelta = int128(FullMath.mulDiv(uint128(liquidityDelta), _positionLiquidityInitial, _positionLiquidity));
-        limitOrders.addVirtualLiquidity(tick, uint128(liquidityInitialDelta - liquidityDelta));
+      // add/remove liquidity to tick with partly executed limit order
+      if (_positionLiquidity != _positionLiquidityInitial && _positionLiquidity != 0) {
+        int128 liquidityInitialDelta;
+        if (liquidityDelta < 0) {
+          liquidityInitialDelta = -int256(FullMath.mulDiv(uint128(-liquidityDelta), _positionLiquidityInitial, _positionLiquidity)).toInt128();
+        } else {
+          liquidityInitialDelta = int256(FullMath.mulDiv(uint128(liquidityDelta), _positionLiquidityInitial, _positionLiquidity)).toInt128();
+        }
+        limitOrders.addVirtualLiquidity(tick, liquidityInitialDelta - liquidityDelta);
         _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
         _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityInitialDelta);
       } else {

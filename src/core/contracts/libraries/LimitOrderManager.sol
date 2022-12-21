@@ -38,11 +38,17 @@ library LimitOrderManager {
   function addVirtualLiquidity(
     mapping(int24 => LimitOrder) storage self,
     int24 tick,
-    uint128 amount
+    int128 amount
   ) internal {
+    bool add = (amount > 0);
     LimitOrder storage data = self[tick];
-    data.sumOfAsk += amount;
-    data.spentAsk += amount;
+    if (add) {
+      data.sumOfAsk += uint128(amount);
+      data.spentAsk += uint128(amount);
+    } else {
+      data.sumOfAsk -= uint128(-amount);
+      data.spentAsk -= uint128(-amount);
+    }
   }
 
   function executeLimitOrders(
@@ -84,9 +90,9 @@ library LimitOrderManager {
     }
 
     if (zto) {
-      data.spentAsk0Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+      data.spentAsk0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, sumOfAsk);
     } else {
-      data.spentAsk1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, sumOfAsk);
+      data.spentAsk1Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, sumOfAsk);
     }
   }
 }
