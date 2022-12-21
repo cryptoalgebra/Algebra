@@ -12,13 +12,13 @@ import '../AlgebraVirtualPoolBase.sol';
 
 contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPool {
     using TickManager for mapping(int24 => TickManager.Tick);
-    using LowGasSafeMath for uint256;
+    using LowGasSafeMath for uint128;
 
     uint128 public rewardRate0;
     uint128 public rewardRate1;
 
-    uint256 public rewardReserve0;
-    uint256 public rewardReserve1;
+    uint128 public rewardReserve0;
+    uint128 public rewardReserve1;
 
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
@@ -31,10 +31,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         prevTimestamp = uint32(block.timestamp);
     }
 
-    function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+    function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
-        if (token0Amount > 0) rewardReserve0 = rewardReserve0.add(token0Amount);
-        if (token1Amount > 0) rewardReserve1 = rewardReserve1.add(token1Amount);
+        if (token0Amount > 0) rewardReserve0 = rewardReserve0.add128(token0Amount);
+        if (token1Amount > 0) rewardReserve1 = rewardReserve1.add128(token1Amount);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
@@ -44,12 +44,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function getInnerRewardsGrowth(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)
-    {
+    function getInnerRewardsGrowth(
+        int24 bottomTick,
+        int24 topTick
+    ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
         uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
 
         uint256 _totalRewardGrowth0 = totalRewardGrowth0;
@@ -96,14 +94,14 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
             if (_rewardReserve0 > 0) {
                 uint256 reward0 = _rewardRate0 * timeDelta;
                 if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-                rewardReserve0 = _rewardReserve0 - reward0;
+                rewardReserve0 = uint128(_rewardReserve0 - reward0);
                 totalRewardGrowth0 += FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
             }
 
             if (_rewardReserve1 > 0) {
                 uint256 reward1 = _rewardRate1 * timeDelta;
                 if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-                rewardReserve1 = _rewardReserve1 - reward1;
+                rewardReserve1 = uint128(_rewardReserve1 - reward1);
                 totalRewardGrowth1 += FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
             }
             globalSecondsPerLiquidityCumulative += (uint160(timeDelta) << 128) / uint160(_currentLiquidity);

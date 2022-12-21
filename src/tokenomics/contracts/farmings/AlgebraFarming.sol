@@ -25,11 +25,12 @@ import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 abstract contract AlgebraFarming is IAlgebraFarming {
     using SafeCast for int256;
     using LowGasSafeMath for uint256;
+    using LowGasSafeMath for uint128;
 
     /// @notice Represents a farming incentive
     struct Incentive {
-        uint256 totalReward;
-        uint256 bonusReward;
+        uint128 totalReward;
+        uint128 bonusReward;
         address virtualPoolAddress;
         uint24 minimalPositionWidth;
         uint224 totalLiquidity;
@@ -123,44 +124,39 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _receiveRewards(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
+        uint128 reward,
+        uint128 bonusReward,
         Incentive storage incentive
-    ) internal returns (uint256 receivedReward, uint256 receivedBonusReward) {
+    ) internal returns (uint128 receivedReward, uint128 receivedBonusReward) {
         if (reward > 0) {
             IERC20Minimal rewardToken = key.rewardToken;
             uint256 balanceBefore = rewardToken.balanceOf(address(this));
             TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
-            require((receivedReward = rewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedReward -= balanceBefore;
-            incentive.totalReward = incentive.totalReward.add(receivedReward);
+            uint256 balanceAfter = rewardToken.balanceOf(address(this));
+            require(balanceAfter > balanceBefore);
+            receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
+            incentive.totalReward = incentive.totalReward.add128(receivedReward);
         }
         if (bonusReward > 0) {
             IERC20Minimal bonusRewardToken = key.bonusRewardToken;
             uint256 balanceBefore = bonusRewardToken.balanceOf(address(this));
             TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
-            require((receivedBonusReward = bonusRewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedBonusReward -= balanceBefore;
-            incentive.bonusReward = incentive.bonusReward.add(receivedBonusReward);
+            uint256 balanceAfter = bonusRewardToken.balanceOf(address(this));
+            require(balanceAfter > balanceBefore);
+            receivedBonusReward = uint128(balanceAfter - balanceBefore);
+            incentive.bonusReward = incentive.bonusReward.add128(receivedBonusReward);
         }
     }
 
     function _createFarming(
         address virtualPool,
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward,
+        uint128 reward,
+        uint128 bonusReward,
         uint24 minimalPositionWidth,
         address multiplierToken,
         Tiers calldata tiers
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            uint256 receivedReward,
-            uint256 receivedBonusReward
-        )
-    {
+    ) internal returns (bytes32 incentiveId, uint128 receivedReward, uint128 receivedBonusReward) {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
         incentiveId = IncentiveId.compute(key);
@@ -239,16 +235,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            address virtualPool
-        )
-    {
+    ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 

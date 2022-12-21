@@ -7,8 +7,8 @@ import '../../../interfaces/IAlgebraFarming.sol';
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
 interface IAlgebraEternalFarming is IAlgebraFarming {
     struct IncentiveParams {
-        uint256 reward; // The amount of reward tokens to be distributed
-        uint256 bonusReward; // The amount of bonus reward tokens to be distributed
+        uint128 reward; // The amount of reward tokens to be distributed
+        uint128 bonusReward; // The amount of bonus reward tokens to be distributed
         uint128 rewardRate; // The rate of reward distribution per second
         uint128 bonusRewardRate; // The rate of bonus reward distribution per second
         uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
@@ -36,7 +36,10 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// tickUpper The upper tick of position,
     /// innerRewardGrowth0 The last saved reward0 growth inside position,
     /// innerRewardGrowth1 The last saved reward1 growth inside position
-    function farms(uint256 tokenId, bytes32 incentiveId)
+    function farms(
+        uint256 tokenId,
+        bytes32 incentiveId
+    )
         external
         view
         returns (
@@ -58,17 +61,9 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         Tiers calldata tiers
     ) external returns (address virtualPool);
 
-    function addRewards(
-        IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
-    ) external;
+    function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
 
-    function setRates(
-        IncentiveKey memory key,
-        uint128 rewardRate,
-        uint128 bonusRewardRate
-    ) external;
+    function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
 
     function collectRewards(
         IncentiveKey memory key,

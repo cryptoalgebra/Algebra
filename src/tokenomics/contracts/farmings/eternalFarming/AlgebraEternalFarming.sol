@@ -29,9 +29,10 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @param _deployer pool deployer contract address
     /// @param _nonfungiblePositionManager the NFT position manager contract address
-    constructor(IAlgebraPoolDeployer _deployer, INonfungiblePositionManager _nonfungiblePositionManager)
-        AlgebraFarming(_deployer, _nonfungiblePositionManager)
-    {
+    constructor(
+        IAlgebraPoolDeployer _deployer,
+        INonfungiblePositionManager _nonfungiblePositionManager
+    ) AlgebraFarming(_deployer, _nonfungiblePositionManager) {
         // just initialize AlgebraFarming
     }
 
@@ -90,11 +91,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     }
 
     /// @inheritdoc IAlgebraEternalFarming
-    function addRewards(
-        IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
-    ) external override {
+    function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external override {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'non-existent incentive');
@@ -154,11 +151,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external override onlyFarmingCenter {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
@@ -222,12 +215,10 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @notice reward amounts can be outdated, actual amounts could be obtained via static call of `collectRewards` in FarmingCenter
     /// @inheritdoc IAlgebraFarming
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external view override returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];

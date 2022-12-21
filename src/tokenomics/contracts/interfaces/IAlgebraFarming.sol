@@ -39,12 +39,14 @@ interface IAlgebraFarming is IIncentiveKey {
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
-    function incentives(bytes32 incentiveId)
+    function incentives(
+        bytes32 incentiveId
+    )
         external
         view
         returns (
-            uint256 totalReward,
-            uint256 bonusReward,
+            uint128 totalReward,
+            uint128 bonusReward,
             address virtualPoolAddress,
             uint24 minimalPositionWidth,
             uint224 totalLiquidity,
@@ -74,21 +76,13 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param key The key of the incentive for which to enterFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
     /// @param tokensLocked The amount of tokens locked for boost
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
 
     /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
     /// @param _owner Owner of the token
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external;
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external;
 
     /// @notice Transfers `amountRequested` of accrued `rewardToken` rewards from the contract to the recipient `to`
     /// @param rewardToken The token being distributed as a reward
@@ -120,9 +114,10 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param tokenId The ID of the token
     /// @return reward The reward accrued to the NFT for the given incentive thus far
     /// @return bonusReward The bonus reward accrued to the NFT for the given incentive thus far
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        returns (uint256 reward, uint256 bonusReward);
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
     /// @param rewardToken The token being distributed as a reward

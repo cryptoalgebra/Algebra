@@ -104,8 +104,8 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
     function addRewards(
         IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward
+        uint128 reward,
+        uint128 bonusReward
     ) external override onlyIncentiveMaker {
         require(block.timestamp < key.endTime, 'cannot add rewards after endTime');
 
@@ -120,19 +120,19 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
     function decreaseRewardsAmount(
         IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
+        uint128 rewardAmount,
+        uint128 bonusRewardAmount
     ) external override onlyIncentiveMaker {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
-        uint256 _totalReward = incentive.totalReward;
+        uint128 _totalReward = incentive.totalReward;
         if (rewardAmount > _totalReward) rewardAmount = _totalReward;
         incentive.totalReward = _totalReward - rewardAmount;
 
-        uint256 _bonusReward = incentive.bonusReward;
+        uint128 _bonusReward = incentive.bonusReward;
         if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
         incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
@@ -182,11 +182,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external override onlyFarmingCenter {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive
@@ -272,12 +268,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external view override returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];

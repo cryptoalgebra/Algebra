@@ -8,8 +8,8 @@ import '../../../interfaces/IAlgebraFarming.sol';
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraLimitFarming is IAlgebraFarming {
     struct IncentiveParams {
-        uint256 reward; // The amount of reward tokens to be distributed
-        uint256 bonusReward; // The amount of bonus reward tokens to be distributed
+        uint128 reward; // The amount of reward tokens to be distributed
+        uint128 bonusReward; // The amount of bonus reward tokens to be distributed
         uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
         address multiplierToken; // The address of token which can be locked to get liquidity multiplier
         uint32 enterStartTime; // The time when enter should become possible
@@ -27,14 +27,10 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
     /// tickLower The lower end of the tick range for the position,
     /// tickUpper The upper end of the tick range for the position
-    function farms(uint256 tokenId, bytes32 incentiveId)
-        external
-        view
-        returns (
-            uint128 liquidity,
-            int24 tickLower,
-            int24 tickUpper
-        );
+    function farms(
+        uint256 tokenId,
+        bytes32 incentiveId
+    ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper);
 
     function createLimitFarming(
         IncentiveKey memory key,
@@ -42,17 +38,9 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         IncentiveParams memory params
     ) external returns (address virtualPool);
 
-    function addRewards(
-        IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward
-    ) external;
+    function addRewards(IncentiveKey memory key, uint128 reward, uint128 bonusReward) external;
 
-    function decreaseRewardsAmount(
-        IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
-    ) external;
+    function decreaseRewardsAmount(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
