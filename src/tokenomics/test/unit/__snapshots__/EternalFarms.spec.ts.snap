@@ -1,3 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] swap with cross 1`] = `377835`;
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 1`] = `199120`;
+
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 2`] = `205600`;
+
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] 3 swaps 3`] = `206296`;
+
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] swap with cross 1`] = `335266`;
+
+exports[`unit/EternalFarms swap gas [ @skip-on-coverage ] swap with second cross 1`] = `315534`;

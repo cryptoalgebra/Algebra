@@ -20,8 +20,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     uint128 public rewardReserve0;
     uint128 public rewardReserve1;
 
-    uint256 public totalRewardGrowth0;
-    uint256 public totalRewardGrowth1;
+    uint256 public totalRewardGrowth0 = 1;
+    uint256 public totalRewardGrowth1 = 1;
 
     constructor(
         address _farmingCenterAddress,
@@ -78,39 +78,43 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
-        return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, globalSecondsPerLiquidityCumulative, 0, 0);
+        return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, 0);
     }
 
     function _increaseCumulative(uint32 currentTimestamp) internal override returns (bool) {
         uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
+        uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
+
         if (timeDelta == 0) return true; // only once per block
 
-        uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
         if (_currentLiquidity > 0) {
             (uint256 _rewardRate0, uint256 _rewardRate1) = (rewardRate0, rewardRate1);
-            uint256 _rewardReserve0 = _rewardRate0 > 0 ? rewardReserve0 : 0;
-            uint256 _rewardReserve1 = _rewardRate1 > 0 ? rewardReserve1 : 0;
+            (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
 
-            if (_rewardReserve0 > 0) {
+            if (_rewardRate0 > 0) {
                 uint256 reward0 = _rewardRate0 * timeDelta;
                 if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-                rewardReserve0 = uint128(_rewardReserve0 - reward0);
-                totalRewardGrowth0 += FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
+                _rewardReserve0 = uint128(_rewardReserve0 - reward0);
+                if (reward0 > 0)
+                    totalRewardGrowth0 =
+                        totalRewardGrowth0 +
+                        FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
             }
 
-            if (_rewardReserve1 > 0) {
+            if (_rewardRate1 > 0) {
                 uint256 reward1 = _rewardRate1 * timeDelta;
                 if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-                rewardReserve1 = uint128(_rewardReserve1 - reward1);
-                totalRewardGrowth1 += FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
+                _rewardReserve1 = uint128(_rewardReserve1 - reward1);
+                if (reward1 > 0)
+                    totalRewardGrowth1 =
+                        totalRewardGrowth1 +
+                        FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
             }
-            globalSecondsPerLiquidityCumulative += (uint160(timeDelta) << 128) / uint160(_currentLiquidity);
-            prevTimestamp = currentTimestamp; // duplicated for gas optimization
-        } else {
-            timeOutside += uint32(timeDelta);
-            prevTimestamp = currentTimestamp; // duplicated for gas optimization
+
+            (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
         }
 
+        prevTimestamp = currentTimestamp;
         return true;
     }
 
@@ -120,7 +124,6 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         int128 liquidityDelta,
         bool isTopTick
     ) internal override returns (bool updated) {
-        return
-            ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, 0, 0, isTopTick);
+        return ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, isTopTick);
     }
 }

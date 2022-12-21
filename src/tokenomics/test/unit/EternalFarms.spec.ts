@@ -343,7 +343,7 @@ describe('unit/EternalFarms', () => {
     })
   })
 
-  describe('swap gas [ @skip-on-coverage ]', async () => {
+  xdescribe('swap gas [ @skip-on-coverage ]', async () => {
     it('3 swaps', async () => {
       timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
 
@@ -459,7 +459,7 @@ describe('unit/EternalFarms', () => {
       }))
     })
 
-    it.only('swap with second cross', async () => {
+    it('swap with second cross', async () => {
       let totalReward = BigNumber.from('9000000000000')
       let bonusReward = BigNumber.from('9000000000000')
 

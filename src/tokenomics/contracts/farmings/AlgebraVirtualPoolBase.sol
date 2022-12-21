@@ -21,11 +21,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     /// @inheritdoc IAlgebraVirtualPoolBase
     int24 public override globalTick;
     /// @inheritdoc IAlgebraVirtualPoolBase
-    uint32 public override timeOutside;
-
-    /// @inheritdoc IAlgebraVirtualPoolBase
-    uint160 public override globalSecondsPerLiquidityCumulative;
-    /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
@@ -45,24 +40,6 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         pool = _pool;
     }
 
-    /// @notice get seconds per liquidity inside range
-    function getInnerSecondsPerLiquidity(
-        int24 bottomTick,
-        int24 topTick
-    ) external view override returns (uint160 innerSecondsSpentPerLiquidity) {
-        // TODO USE FOR BOTH FARMINGS
-        uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
-        uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
-
-        if (globalTick < bottomTick) {
-            return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else if (globalTick < topTick) {
-            return (globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else {
-            return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
-        }
-    }
-
     /// @dev logic of tick crossing differs in virtual pools
     function _crossTick(int24 nextTick) internal virtual returns (int128 liquidityDelta);
 
@@ -72,9 +49,14 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         if (ticks[nextTick].initialized) {
             int128 liquidityDelta = _crossTick(nextTick);
             if (zeroToOne) liquidityDelta = -liquidityDelta;
-            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+
+            uint128 _newLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+            int24 _newGlobalTick = zeroToOne ? nextTick - 1 : nextTick;
+
+            // single SSTORE
+            currentLiquidity = _newLiquidity;
+            globalTick = _newGlobalTick;
         }
-        globalTick = zeroToOne ? nextTick - 1 : nextTick;
         return true;
     }
 

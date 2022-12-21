@@ -6,11 +6,10 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Base interface for virtual pools
 interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
-    // returns how much time the price was out of any farmd liquidity
-    function timeOutside() external view returns (uint32);
-
     // returns data associated with a tick
-    function ticks(int24 tickId)
+    function ticks(
+        int24 tickId
+    )
         external
         view
         returns (
@@ -18,9 +17,7 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
             int128 liquidityDelta,
             uint256 outerFeeGrowth0Token,
             uint256 outerFeeGrowth1Token,
-            int56 outerTickCumulative,
             uint160 outerSecondsPerLiquidity,
-            uint32 outerSecondsSpent,
             bool initialized
         );
 
@@ -30,20 +27,8 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     // returns the current tick in virtual pool
     function globalTick() external view returns (int24);
 
-    // returns total seconds per farmd liquidity from the moment of initialization of the virtual pool
-    function globalSecondsPerLiquidityCumulative() external view returns (uint160);
-
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
     function prevTimestamp() external view returns (uint32);
-
-    /// @notice This function is used to calculate the seconds per liquidity inside a certain position
-    /// @param bottomTick The bottom tick of a position
-    /// @param topTick The top tick of a position
-    /// @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        returns (uint160 innerSecondsSpentPerLiquidity);
 
     /**
      * @dev This function is called when anyone farms their liquidity. The position in a virtual pool
