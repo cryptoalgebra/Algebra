@@ -55,7 +55,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         require(newDeposit.numberOfFarms == 0, 'already locked');
 
         nonfungiblePositionManager.changeTokenLock(tokenId, true);
-        emit DepositTransferred(tokenId, address(0), msg.sender);
+        emit Lock(tokenId, true);
     }
 
     function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
@@ -217,7 +217,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         require(deposit.numberOfFarms == 0, 'cannot unlock token while farmed');
 
         nonfungiblePositionManager.changeTokenLock(tokenId, false);
-        emit DepositTransferred(tokenId, msg.sender, address(0));
+        emit Lock(tokenId, false);
     }
 
     /**

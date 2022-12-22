@@ -102,7 +102,6 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
 
     /// @notice Emitted when ownership of a deposit changes
     /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @param oldOwner The owner before the deposit was transferred
-    /// @param newOwner The owner after the deposit was transferred
-    event DepositTransferred(uint256 indexed tokenId, address indexed oldOwner, address indexed newOwner);
+    /// @param lock The current status of nft
+    event Lock(uint256 indexed tokenId, bool lock);
 }
