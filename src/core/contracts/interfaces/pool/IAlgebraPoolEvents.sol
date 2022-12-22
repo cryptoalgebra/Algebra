@@ -87,6 +87,12 @@ interface IAlgebraPoolEvents {
   event CommunityFee(uint8 communityFeeNew);
 
   /**
+   * @notice Emitted when the tick spacing changes
+   * @param newTickSpacing The updated value of the new tick spacing
+   */
+  event TickSpacing(int24 newTickSpacing);
+
+  /**
    * @notice Emitted when new activeIncentive is set
    * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
    */
