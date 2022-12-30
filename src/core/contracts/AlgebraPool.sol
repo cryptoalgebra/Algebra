@@ -73,13 +73,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolDerivedState
-  function getInnerCumulatives(int24 bottomTick, int24 topTick)
-    external
-    view
-    override
-    onlyValidTicks(bottomTick, topTick)
-    returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)
-  {
+  function getInnerCumulatives(
+    int24 bottomTick,
+    int24 topTick
+  ) external view override onlyValidTicks(bottomTick, topTick) returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent) {
     (uint160 lowerOuterSecondPerLiquidity, uint32 lowerOuterSecondsSpent) = (
       ticks[bottomTick].outerSecondsPerLiquidity,
       ticks[bottomTick].outerSecondsSpent
@@ -302,15 +299,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int128 liquidityDelta,
     int24 currentTick,
     uint160 currentPrice
-  )
-    private
-    pure
-    returns (
-      uint256 amount0,
-      uint256 amount1,
-      int128 globalLiquidityDelta
-    )
-  {
+  ) private pure returns (uint256 amount0, uint256 amount1, int128 globalLiquidityDelta) {
     uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
     uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
 
@@ -338,11 +327,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
    * @param topTick The position's top tick
    * @return position The Position object
    */
-  function getOrCreatePosition(
-    address owner,
-    int24 bottomTick,
-    int24 topTick
-  ) private view returns (Position storage) {
+  function getOrCreatePosition(address owner, int24 bottomTick, int24 topTick) private view returns (Position storage) {
     bytes32 key;
     assembly {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
@@ -375,17 +360,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 liquidityDesired,
     bytes calldata data
-  )
-    external
-    override
-    nonReentrant
-    onlyValidTicks(bottomTick, topTick)
-    returns (
-      uint256 amount0,
-      uint256 amount1,
-      uint128 liquidityActual
-    )
-  {
+  ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     require(liquidityDesired != 0, 'IL');
     {
       int24 _tickSpacing = tickSpacing;
@@ -454,11 +429,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
-  function _recalculateLimitOrderPosition(
-    Position storage position,
-    int24 tick,
-    int128 liquidityDelta
-  ) private {
+  function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 liquidityDelta) private {
     (uint256 _positionLiquidity, uint256 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
     if (_positionLiquidity == 0) require(liquidityDelta > 0, 'NP');
 
@@ -548,11 +519,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
   }
 
-  function _payFromReserve(
-    address token,
-    address recipient,
-    uint256 amount
-  ) internal {
+  function _payFromReserve(address token, address recipient, uint256 amount) internal {
     TransferHelper.safeTransfer(token, recipient, amount);
     if (token == token0) {
       reserve0 -= amount;
@@ -633,12 +600,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IDataStorageOperator(dataStorageOperator).getSecondsPerLiquidityCumulative(blockTimestamp, secondsAgo, timepointIndex, liquidityStart);
   }
 
-  function _swapCallback(
-    int256 amount0,
-    int256 amount1,
-    uint256 feeAmount,
-    bytes calldata data
-  ) private {
+  function _swapCallback(int256 amount0, int256 amount1, uint256 feeAmount, bytes calldata data) private {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
   }
 
@@ -770,17 +732,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  )
-    private
-    returns (
-      int256 amount0,
-      int256 amount1,
-      uint160 currentPrice,
-      int24 currentTick,
-      uint128 currentLiquidity,
-      uint256 feeAmount
-    )
-  {
+  ) private returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 feeAmount) {
     SwapCalculationCache memory cache;
     {
       // load from one storage slot
@@ -851,18 +803,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // TODO fee
         step.feeAmount = 0;
         (step.limitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
-        if (step.limitOrder && ticks[step.nextTick].liquidityTotal == 0) {
-          uint256 _initialTickTreeRoot = tickTreeRoot;
-          (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
-            step.nextTick,
-            currentTick,
-            cache.prevInitializedTick,
-            _initialTickTreeRoot,
-            true
-          );
-          if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-          cache.prevInitializedTick = newPrevInitializedTick;
-          step.initialized = false;
+        if (step.limitOrder) {
+          ticks[step.nextTick].hasLimitOrders = false;
+          if (ticks[step.nextTick].liquidityTotal == 0) {
+            uint256 _initialTickTreeRoot = tickTreeRoot;
+            (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
+              step.nextTick,
+              currentTick,
+              cache.prevInitializedTick,
+              _initialTickTreeRoot,
+              true
+            );
+            if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+            cache.prevInitializedTick = newPrevInitializedTick;
+            step.initialized = false;
+          }
         }
         step.limitOrder = !step.limitOrder;
       } else {
@@ -983,12 +938,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function flash(
-    address recipient,
-    uint256 amount0,
-    uint256 amount1,
-    bytes calldata data
-  ) external override nonReentrant {
+  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override nonReentrant {
     (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
     uint256 fee0;
     if (amount0 > 0) {
