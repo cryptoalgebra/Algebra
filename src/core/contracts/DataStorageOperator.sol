@@ -145,9 +145,15 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getFee(bool _zto, uint32 _time, int24 _tick, uint16 _index, uint128 _liquidity) external view override onlyPool returns (uint16 fee) {
+  function getFees(
+    uint32 _time,
+    int24 _tick,
+    uint16 _index,
+    uint128 _liquidity
+  ) external view override onlyPool returns (uint16 feeZto, uint16 feeOtz) {
     (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
 
-    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, _zto ? feeConfigZto : feeConfigOtz);
+    feeZto = AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfigZto);
+    feeOtz = AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfigOtz);
   }
 }

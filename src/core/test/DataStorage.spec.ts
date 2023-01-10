@@ -679,7 +679,7 @@ describe('DataStorageOperator external methods', () => {
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.write(10, 100, 2, 4, 2)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getFee(true, 10, 100, 2, 4)).to.be.reverted; // hardhat bugs
+    await expect(dataStorageOperator.getFees(10, 100, 2, 4)).to.be.reverted; // hardhat bugs
   })
 
   describe('#calculateVolumePerLiquidity', () => {

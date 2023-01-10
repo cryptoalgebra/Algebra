@@ -1576,12 +1576,12 @@ describe('AlgebraPool', () => {
     }
 
     it('doesnt change at 0 volume', async () => {
-      let fee1 = (await pool.globalState()).fee;
+      let fee1 = (await pool.globalState()).feeZto;
       await mint(wallet.address, -6000, 6000, liquidity)
-      let fee2 = (await pool.globalState()).fee;
+      let fee2 = (await pool.globalState()).feeZto;
       await pool.advanceTime(DAY + 600);
       await mint(wallet.address, -6000, 6000, 1)
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       expect(fee3).to.be.equal(fee2);
       expect(fee3).to.be.equal(fee1);
     })
@@ -1600,14 +1600,14 @@ describe('AlgebraPool', () => {
       await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       expect(fee3).to.be.equal(2982);
 
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
         let avrges = await pool.getAverages();
-        let fee = (await pool.globalState()).fee;
+        let fee = (await pool.globalState()).feeZto;
         stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
         await pool.advanceTime(60*60)
       }
@@ -1627,14 +1627,14 @@ describe('AlgebraPool', () => {
       await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       expect(fee3).to.be.equal(14911);
 
       let stats = [];
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
         let avrges = await pool.getAverages();
-        let fee = (await pool.globalState()).fee;
+        let fee = (await pool.globalState()).feeZto;
         stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
         await pool.advanceTime(60*60)
       }
@@ -1654,7 +1654,7 @@ describe('AlgebraPool', () => {
       await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       expect(fee3).to.be.equal(2982);
 
       await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
@@ -1664,7 +1664,7 @@ describe('AlgebraPool', () => {
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
         let avrges = await pool.getAverages();
-        let fee = (await pool.globalState()).fee;
+        let fee = (await pool.globalState()).feeZto;
         stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
         await pool.advanceTime(60*60)
       }
@@ -1684,7 +1684,7 @@ describe('AlgebraPool', () => {
       await swapExact0For1(BigNumber.from(100), wallet.address);
       await pool.advanceTime(60)
       await swapExact0For1(BigNumber.from(100), wallet.address);
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       expect(fee3).to.be.equal(14911);
 
       await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
@@ -1694,7 +1694,7 @@ describe('AlgebraPool', () => {
       for (let i = 0; i < 25; i++) {
         await swapExact0For1(BigNumber.from(100), wallet.address);
         let avrges = await pool.getAverages();
-        let fee = (await pool.globalState()).fee;
+        let fee = (await pool.globalState()).feeZto;
         stats.push(`Fee: ${fee}, Avg_volat: ${avrges.TWVolatilityAverage.toString()}, Avg_Vol_per_liq: ${avrges.TWVolumePerLiqAverage.toString()} `);
         await pool.advanceTime(60*60)
       }
@@ -1702,13 +1702,13 @@ describe('AlgebraPool', () => {
     })
 
     xit('changes', async () => {
-      let fee1 = (await pool.globalState()).fee;
+      let fee1 = (await pool.globalState()).feeZto;
       let tick0 = (await pool.globalState()).tick;
       await mint(wallet.address, -6000, 6000, liquidity)
-      let fee2 = (await pool.globalState()).fee;
+      let fee2 = (await pool.globalState()).feeZto;
       await pool.advanceTime(DAY + 600);
       await tradeStable(240, 2, 10, 30);
-      let fee3 = (await pool.globalState()).fee;
+      let fee3 = (await pool.globalState()).feeZto;
       console.log(fee1, fee2, fee3);
       let tick1 = (await pool.globalState()).tick;
       let stats = await getStatistics(DAY);

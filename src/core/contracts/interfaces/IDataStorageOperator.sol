@@ -135,6 +135,7 @@ interface IDataStorageOperator {
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
-  /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(bool _zto, uint32 time, int24 tick, uint16 index, uint128 liquidity) external view returns (uint16 fee);
+  /// @return feeZto The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6
+  /// @return feeOtz The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6
+  function getFees(uint32 time, int24 tick, uint16 index, uint128 liquidity) external view returns (uint16 feeZto, uint16 feeOtz);
 }

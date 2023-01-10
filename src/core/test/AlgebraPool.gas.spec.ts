@@ -114,7 +114,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         })
 
         it('first swap in block, large swap, no initialized crossings', async () => {
-          console.log((await pool.globalState()).fee.toString())
+          console.log((await pool.globalState()).feeZto.toString())
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address))
           expect((await pool.globalState()).tick).to.eq(-35586)
         })

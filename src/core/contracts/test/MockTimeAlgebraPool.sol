@@ -48,7 +48,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function getFee() external view returns (uint16 fee) {
-    return IDataStorageOperator(dataStorageOperator).getFee(true, _blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
+    (fee, ) = IDataStorageOperator(dataStorageOperator).getFees(_blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
   }
 
   function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {

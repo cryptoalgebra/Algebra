@@ -509,9 +509,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   /// @dev Updates fees according combinations of sigmoids
   function _updateFee(uint32 _time, int24 _tick, uint16 _index, uint128 _liquidity) private returns (uint16 newFeeZto, uint16 newFeeOtz) {
-    newFeeZto = IDataStorageOperator(dataStorageOperator).getFee(true, _time, _tick, _index, _liquidity);
-    newFeeOtz = IDataStorageOperator(dataStorageOperator).getFee(false, _time, _tick, _index, _liquidity);
-
+    (newFeeZto, newFeeOtz) = IDataStorageOperator(dataStorageOperator).getFees(_time, _tick, _index, _liquidity);
     (globalState.feeZto, globalState.feeOtz) = (newFeeZto, newFeeOtz);
 
     emit Fee(newFeeZto, newFeeOtz);
