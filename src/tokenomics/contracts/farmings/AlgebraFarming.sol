@@ -153,14 +153,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint24 minimalPositionWidth,
         address multiplierToken,
         Tiers calldata tiers
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            uint256 receivedReward,
-            uint256 receivedBonusReward
-        )
-    {
+    ) internal returns (bytes32 incentiveId, uint256 receivedReward, uint256 receivedBonusReward) {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
         incentiveId = IncentiveId.compute(key);
@@ -239,16 +232,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            address virtualPool
-        )
-    {
+    ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
@@ -263,7 +247,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'invalid pool for token');
         require(liquidity > 0, 'cannot farm token with 0 liquidity');
-        (, int24 tick, , , , , ) = pool.globalState();
+        (, int24 tick, , , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
