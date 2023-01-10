@@ -19,7 +19,7 @@ contract SimulationTimeAlgebraPool is AlgebraPool {
   function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
     (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
       _blockTimestamp(),
-      globalState.fee,
+      globalState.tick,
       globalState.timepointIndex,
       liquidity
     );

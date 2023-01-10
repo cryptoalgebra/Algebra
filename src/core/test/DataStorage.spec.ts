@@ -679,7 +679,7 @@ describe('DataStorageOperator external methods', () => {
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.write(10, 100, 2, 4, 2)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getFee(10, 100, 2, 4)).to.be.reverted; // hardhat bugs
+    await expect(dataStorageOperator.getFee(true, 10, 100, 2, 4)).to.be.reverted; // hardhat bugs
   })
 
   describe('#calculateVolumePerLiquidity', () => {
@@ -716,16 +716,22 @@ describe('DataStorageOperator external methods', () => {
     }
     it('fails if caller is not factory', async () => {
       await expect(dataStorageOperator.connect(other).changeFeeConfiguration(
+        true,
+        configuration
+      )).to.be.reverted;
+      await expect(dataStorageOperator.connect(other).changeFeeConfiguration(
+        false,
         configuration
       )).to.be.reverted;
     })
 
     it('updates baseFeeConfiguration', async () => {
       await dataStorageOperator.changeFeeConfiguration(
+        true,
         configuration
       );
 
-      const newConfig = await dataStorageOperator.feeConfig();
+      const newConfig = await dataStorageOperator.feeConfigZto();
 
       expect(newConfig.alpha1).to.eq(configuration.alpha1);
       expect(newConfig.alpha2).to.eq(configuration.alpha2);
@@ -740,9 +746,20 @@ describe('DataStorageOperator external methods', () => {
 
     it('emits event', async () => {
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         configuration
       )).to.emit(dataStorageOperator, 'FeeConfiguration')
         .withArgs(
+          true,
+          [...Object.values(configuration)]
+        );
+
+      await expect(dataStorageOperator.changeFeeConfiguration(
+        false,
+        configuration
+      )).to.emit(dataStorageOperator, 'FeeConfiguration')
+        .withArgs(
+          false,
           [...Object.values(configuration)]
         );
     })
@@ -753,6 +770,7 @@ describe('DataStorageOperator external methods', () => {
       wrongConfig.alpha2 = 30000;
       wrongConfig.baseFee = 15000;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig
       )).to.be.revertedWith('Max fee exceeded');
     })
@@ -761,18 +779,21 @@ describe('DataStorageOperator external methods', () => {
       let wrongConfig1 = {...configuration};
       wrongConfig1.gamma1 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig1
       )).to.be.revertedWith('Gammas must be > 0');
       
       let wrongConfig2 = {...configuration};
       wrongConfig2.gamma2 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig2
       )).to.be.revertedWith('Gammas must be > 0');
 
       let wrongConfig3 = {...configuration};
       wrongConfig3.volumeGamma = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig3
       )).to.be.revertedWith('Gammas must be > 0');
     })

@@ -64,7 +64,8 @@ contract SimulationTimeFactory is IAlgebraFactory {
 
     IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
 
-    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(true, baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(false, baseFeeConfiguration);
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
 
@@ -113,7 +114,7 @@ contract SimulationTimeFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x900bf8d45a06958144a51da8749d15e2a339e87243bd50bc88d46815c9ec888d;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6df327edae67bba57a2c05e216c52e99d88bb9464b8daf94e776f6ff59275c8b;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

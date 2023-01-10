@@ -12,7 +12,8 @@ interface IAlgebraPoolState {
    * Returns tick The current tick of the pool, i.e. according to the last tick transition that was run;
    * Returns This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
    * boundary;
-   * Returns fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
+   * Returns feeZto The last pool fee value for ZtO swaps in hundredths of a bip, i.e. 1e-6;
+   * Returns feeOtz The last pool fee value for OtZ swaps in hundredths of a bip, i.e. 1e-6;
    * Returns timepointIndex The index of the last written timepoint;
    * Returns communityFeeToken0 The community fee percentage of the swap fee in thousandths (1e-3) for token0;
    * Returns communityFeeToken1 The community fee percentage of the swap fee in thousandths (1e-3) for token1;
@@ -24,7 +25,8 @@ interface IAlgebraPoolState {
     returns (
       uint160 price,
       int24 tick,
-      uint16 fee,
+      uint16 feeZto,
+      uint16 feeOtz,
       uint16 timepointIndex,
       uint8 communityFeeToken0,
       uint8 communityFeeToken1,
@@ -67,7 +69,9 @@ interface IAlgebraPoolState {
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
    */
-  function ticks(int24 tick)
+  function ticks(
+    int24 tick
+  )
     external
     view
     returns (
@@ -95,7 +99,9 @@ interface IAlgebraPoolState {
    * Returns fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke;
    * Returns fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
-  function positions(bytes32 key)
+  function positions(
+    bytes32 key
+  )
     external
     view
     returns (
@@ -121,7 +127,9 @@ interface IAlgebraPoolState {
    * Returns averageTick Time-weighted average tick;
    * Returns volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp;
    */
-  function timepoints(uint256 index)
+  function timepoints(
+    uint256 index
+  )
     external
     view
     returns (

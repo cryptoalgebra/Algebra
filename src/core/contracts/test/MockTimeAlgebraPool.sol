@@ -32,7 +32,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
     (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
       _blockTimestamp(),
-      globalState.fee,
+      globalState.tick,
       globalState.timepointIndex,
       liquidity
     );
@@ -48,14 +48,10 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function getFee() external view returns (uint16 fee) {
-    return IDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
+    return IDataStorageOperator(dataStorageOperator).getFee(true, _blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
   }
 
-  function getKeyForPosition(
-    address owner,
-    int24 bottomTick,
-    int24 topTick
-  ) external pure returns (bytes32 key) {
+  function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {
     assembly {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
     }

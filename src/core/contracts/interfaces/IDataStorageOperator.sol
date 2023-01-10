@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../libraries/AdaptiveFee.sol';
 
 interface IDataStorageOperator {
-  event FeeConfiguration(AdaptiveFee.Configuration feeConfig);
+  event FeeConfiguration(bool zto, AdaptiveFee.Configuration feeConfig);
 
   /**
    * @notice Returns data belonging to a certain timepoint
@@ -19,7 +19,9 @@ interface IDataStorageOperator {
    * averageTick Time-weighted average tick,
    * volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp
    */
-  function timepoints(uint256 index)
+  function timepoints(
+    uint256 index
+  )
     external
     view
     returns (
@@ -56,15 +58,7 @@ interface IDataStorageOperator {
     int24 tick,
     uint16 index,
     uint128 liquidity
-  )
-    external
-    view
-    returns (
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
-    );
+  ) external view returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative, uint256 volumePerAvgLiquidity);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
@@ -124,18 +118,14 @@ interface IDataStorageOperator {
   ) external returns (uint16 indexUpdated);
 
   /// @notice Changes fee configuration for the pool
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
+  function changeFeeConfiguration(bool zto, AdaptiveFee.Configuration calldata feeConfig) external;
 
   /// @notice Calculates gmean(volume/liquidity) for block
   /// @param liquidity The current in-range pool liquidity
   /// @param amount0 Total amount of swapped token0
   /// @param amount1 Total amount of swapped token1
   /// @return volumePerLiquidity gmean(volume/liquidity) capped by 100000 << 64
-  function calculateVolumePerLiquidity(
-    uint128 liquidity,
-    int256 amount0,
-    int256 amount1
-  ) external pure returns (uint128 volumePerLiquidity);
+  function calculateVolumePerLiquidity(uint128 liquidity, int256 amount0, int256 amount1) external pure returns (uint128 volumePerLiquidity);
 
   /// @return windowLength Length of window used to calculate averages
   function window() external view returns (uint32 windowLength);
@@ -146,10 +136,5 @@ interface IDataStorageOperator {
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
   /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(
-    uint32 time,
-    int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (uint16 fee);
+  function getFee(bool _zto, uint32 time, int24 tick, uint16 index, uint128 liquidity) external view returns (uint16 fee);
 }

@@ -95,9 +95,10 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when the fee changes
-   * @param fee The value of the token fee
+   * @param feeZto The value of the token fee for zto swaps
+   * @param feeOtz The value of the token fee for otz swaps
    */
-  event Fee(uint16 fee);
+  event Fee(uint16 feeZto, uint16 feeOtz);
 
   /**
    * @notice Emitted when the LiquidityCooldown changes
