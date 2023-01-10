@@ -24,11 +24,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @inheritdoc IAlgebraMintCallback
-    function algebraMintCallback(
-        uint256 amount0Owed,
-        uint256 amount1Owed,
-        bytes calldata data
-    ) external override {
+    function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
         MintCallbackData memory decoded = abi.decode(data, (MintCallbackData));
         CallbackValidation.verifyCallback(poolDeployer, decoded.poolKey);
 
@@ -49,15 +45,11 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @notice Add liquidity to an initialized pool
-    function addLiquidity(AddLiquidityParams memory params)
+    function addLiquidity(
+        AddLiquidityParams memory params
+    )
         internal
-        returns (
-            uint128 liquidity,
-            uint256 actualLiquidity,
-            uint256 amount0,
-            uint256 amount1,
-            IAlgebraPool pool
-        )
+        returns (uint128 liquidity, uint256 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
 
@@ -65,7 +57,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
 
         // compute the liquidity amount
         {
-            (uint160 sqrtPriceX96, , , , , , ) = pool.globalState();
+            (uint160 sqrtPriceX96, , , , , , , ) = pool.globalState();
             uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
             uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
 

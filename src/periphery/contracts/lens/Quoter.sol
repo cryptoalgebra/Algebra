@@ -39,11 +39,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes memory path
-    ) external view override {
+    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
@@ -53,8 +49,9 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (, , uint16 fee, , , , ) = pool.globalState();
-
+        uint16 fee;
+        (, , uint16 feeZto, uint16 feeOtz, , , , ) = pool.globalState();
+        fee = tokenIn < tokenOut ? feeZto : feeOtz;
         if (isExactInput) {
             assembly {
                 let ptr := mload(0x40)
@@ -111,11 +108,10 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactInput(bytes memory path, uint256 amountIn)
-        external
-        override
-        returns (uint256 amountOut, uint16[] memory fees)
-    {
+    function quoteExactInput(
+        bytes memory path,
+        uint256 amountIn
+    ) external override returns (uint256 amountOut, uint16[] memory fees) {
         fees = new uint16[](path.numPools());
         uint256 i = 0;
         while (true) {
@@ -164,11 +160,10 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactOutput(bytes memory path, uint256 amountOut)
-        external
-        override
-        returns (uint256 amountIn, uint16[] memory fees)
-    {
+    function quoteExactOutput(
+        bytes memory path,
+        uint256 amountOut
+    ) external override returns (uint256 amountIn, uint16[] memory fees) {
         fees = new uint16[](path.numPools());
         uint256 i = 0;
         while (true) {
