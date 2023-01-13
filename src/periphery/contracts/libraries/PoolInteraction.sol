@@ -18,6 +18,7 @@ library PoolInteraction {
         view
         returns (
             uint128 liquidityAmount,
+            uint128 liquidityInitial,
             uint256 innerFeeGrowth0Token,
             uint256 innerFeeGrowth1Token,
             uint128 fees0,

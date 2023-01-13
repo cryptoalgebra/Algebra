@@ -21,15 +21,7 @@ interface IAlgebraPoolState {
   function globalState()
     external
     view
-    returns (
-      uint160 price,
-      int24 tick,
-      int24 prevInitializedTick,
-      uint16 fee,
-      uint16 timepointIndex,
-      uint8 communityFee,
-      bool unlocked
-    );
+    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint16 timepointIndex, uint8 communityFee, bool unlocked);
 
   /**
    * @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
@@ -72,12 +64,12 @@ interface IAlgebraPoolState {
    * Returns nextTick;
    * Returns outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick;
    * Returns outerSecondsSpent the seconds spent on the other side of the tick from the current tick;
-   * Returns initialized Set to true if the tick is initialized, i.e. liquidityTotal is greater than 0
-   * otherwise equal to false. Outside values can only be used if the tick is initialized.
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
    */
-  function ticks(int24 tick)
+  function ticks(
+    int24 tick
+  )
     external
     view
     returns (
@@ -89,8 +81,14 @@ interface IAlgebraPoolState {
       int24 nextTick,
       uint160 outerSecondsPerLiquidity,
       uint32 outerSecondsSpent,
-      bool initialized
+      bool hasLimitOrders
     );
+
+  function limitOrders(
+    int24 tick
+  ) external view returns (uint128 sumOfAsk, uint128 spentAsk, uint256 spentAsk0Cumulative, uint256 spentAsk1Cumulative);
+
+  // TODO ADD NATSPEC
 
   /** @notice Returns 256 packed tick initialized boolean values. See TickTree for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);
@@ -105,11 +103,14 @@ interface IAlgebraPoolState {
    * Returns fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke;
    * Returns fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
-  function positions(bytes32 key)
+  function positions(
+    bytes32 key
+  )
     external
     view
     returns (
       uint128 liquidityAmount,
+      uint128 liquidityInitialAmount,
       uint256 innerFeeGrowth0Token,
       uint256 innerFeeGrowth1Token,
       uint128 fees0,

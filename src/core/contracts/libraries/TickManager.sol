@@ -26,12 +26,12 @@ library TickManager {
     int24 nextTick;
     uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
     uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
-    bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
+    bool hasLimitOrders;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
     require(topTick < TickMath.MAX_TICK + 1, 'TUM');
-    require(topTick > bottomTick, 'TLU');
+    require(topTick >= bottomTick, 'TLU');
     require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
   }
 
@@ -118,8 +118,9 @@ library TickManager {
         data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
         data.outerSecondsSpent = time;
       }
-      data.initialized = true;
     }
+
+    if (flipped) flipped = !data.hasLimitOrders;
   }
 
   /// @notice Transitions to next tick as needed by price movement
@@ -159,13 +160,17 @@ library TickManager {
   /// @notice Removes tick from linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
-  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal {
-    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
+  /// @return prevTick
+  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
     (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
-    require(prevTick != nextTick, 'next eq prev tick');
+    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return prevTick;
+
+    require(prevTick != nextTick, 'tick not exist');
     self[prevTick].nextTick = nextTick;
     self[nextTick].prevTick = prevTick;
+
     delete self[tick];
+    return prevTick;
   }
 
   /// @notice Adds tick to linked list
@@ -173,16 +178,11 @@ library TickManager {
   /// @param tick The tick that will be inserted
   /// @param prevTick The previous active tick
   /// @param nextTick The next active tick
-  function insertTick(
-    mapping(int24 => Tick) storage self,
-    int24 tick,
-    int24 prevTick,
-    int24 nextTick
-  ) internal {
+  function insertTick(mapping(int24 => Tick) storage self, int24 tick, int24 prevTick, int24 nextTick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
-    require(prevTick < tick && nextTick > tick, 'invalid lower value');
-    self[tick].prevTick = prevTick;
-    self[tick].nextTick = nextTick;
+    require(prevTick < tick && nextTick > tick, 'invalid links');
+    (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
+
     self[prevTick].nextTick = tick;
     self[nextTick].prevTick = tick;
   }

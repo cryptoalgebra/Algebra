@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 
 import '../interfaces/pool/IAlgebraPoolState.sol';
 import '../libraries/TickManager.sol';
+import '../libraries/LimitOrderManager.sol';
 import './Timestamp.sol';
 
 abstract contract PoolState is IAlgebraPoolState, Timestamp {
@@ -36,6 +37,8 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManager.Tick) public override ticks;
+  mapping(int24 => LimitOrderManager.LimitOrder) public override limitOrders;
+
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
   mapping(int16 => uint256) internal tickSecondLayer;

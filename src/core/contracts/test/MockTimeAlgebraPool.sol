@@ -50,13 +50,15 @@ contract MockTimeAlgebraPool is AlgebraPool {
     return IDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex);
   }
 
-  function getKeyForPosition(
-    address owner,
-    int24 bottomTick,
-    int24 topTick
-  ) external pure returns (bytes32 key) {
+  function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {
     assembly {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
+    }
+  }
+
+  function getKeyForLimitPosition(address owner, int24 tick) external pure returns (bytes32 key) {
+    assembly {
+      key := or(shl(24, owner), and(tick, 0xFFFFFF))
     }
   }
 }

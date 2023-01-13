@@ -15,8 +15,6 @@ import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Provides quotes for swaps
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -74,8 +72,6 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
 
     /// @dev Parses a revert reason that should contain the numeric quote
     function parseRevertReason(bytes memory reason) private view returns (uint256, uint16) {
-        console.log('reason length');
-        console.log(reason.length);
         if (reason.length != 64) {
             if (reason.length < 68) revert('Unexpected error');
             assembly {
