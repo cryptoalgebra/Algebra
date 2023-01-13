@@ -206,42 +206,4 @@ library TickMath {
 
     tick = tickLow == tickHi ? tickLow : getSqrtRatioAtTick(tickHi) <= price ? tickHi : tickLow;
   }
-
-  function interpolateTick(
-    uint160 price,
-    uint160 priceRoundedDown,
-    bool roundUp
-  ) internal pure returns (uint32 tickFractionalDelta, uint160 priceDelta) {
-    uint160 priceRoundedUp = uint160((uint256(priceRoundedDown) * 10000499987500624960940234) / 10000000000000000000000000); // * sqrt(1.0001)
-
-    // linearly interpolating the fractional part of the tick
-    tickFractionalDelta = uint32((1000 * (price - priceRoundedDown)) / (priceRoundedUp - priceRoundedDown));
-    if (roundUp && tickFractionalDelta % 10 > 0) tickFractionalDelta += 10;
-    tickFractionalDelta /= 10;
-
-    // rounding price to interpolated tick, via sqrt(priceRounded) = sqrt(priceRoundedDown) * 1.0001 ^ (subtick/2)
-    // in the form of a Taylor series up to the second term
-    priceDelta =
-      uint160((uint256(priceRoundedDown) * uint256(tickFractionalDelta)) / (2000100)) +
-      uint160((uint256(priceRoundedDown) * uint256(tickFractionalDelta)**2) / (100010000 * 80000));
-  }
-
-  function getTickX100(
-    int24 tick,
-    uint160 price,
-    bool roundUp
-  ) internal pure returns (int32 tickX100, uint160 priceRounded) {
-    tickX100 = int32(tick) * 100;
-    priceRounded = getSqrtRatioAtTick(tick); // price "rounded" down
-    if (priceRounded < price) {
-      (uint32 tickX100Delta, uint160 priceDelta) = interpolateTick(price, priceRounded, roundUp);
-      tickX100 += int32(tickX100Delta);
-      priceRounded += priceDelta;
-    }
-  }
-
-  function getTickX100AtSqrtRatio(uint160 price, bool roundUp) internal pure returns (int32 tickX100, uint160 priceRounded) {
-    int24 tick = getTickAtSqrtRatio(price);
-    (tickX100, priceRounded) = getTickX100(tick, price, roundUp);
-  }
 }

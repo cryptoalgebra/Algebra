@@ -18,14 +18,13 @@ contract PriceMovementMathEchidnaTest {
     require(feePips < 1e6);
 
     int24 currentTick = TickMath.getTickAtSqrtRatio(sqrtPriceRaw);
-    PriceMovementMath.ElasticFeeData memory data = PriceMovementMath.ElasticFeeData(currentTick * 100, currentTick, feePips);
     (uint160 sqrtQ, uint256 amountIn, uint256 amountOut, uint256 feeAmount) = PriceMovementMath.movePriceTowardsTarget(
       sqrtPriceTargetRaw <= sqrtPriceRaw,
       sqrtPriceRaw,
       sqrtPriceTargetRaw,
       liquidity,
       amountRemaining,
-      data
+      feePips
     );
 
     assert(amountIn <= type(uint256).max - feeAmount);

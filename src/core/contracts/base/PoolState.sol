@@ -28,9 +28,6 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
 
-  int32 blockStartTickX100;
-  uint32 startPriceUpdated;
-
   uint256 public reserve0;
   uint256 public reserve1;
 

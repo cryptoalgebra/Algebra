@@ -17,84 +17,41 @@ import './LiquidityAmounts.sol';
 contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgebraFlashCallback {
   using SafeCast for uint256;
 
-  function swapExact0For1(
-    address pool,
-    uint256 amount0In,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swapExact0For1(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, true, amount0In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swapExact0For1SupportingFee(
-    address pool,
-    uint256 amount0In,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swapExact0For1SupportingFee(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, amount0In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swap0ForExact1(
-    address pool,
-    uint256 amount1Out,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swap0ForExact1(address pool, uint256 amount1Out, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, true, -amount1Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swapExact1For0(
-    address pool,
-    uint256 amount1In,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swapExact1For0(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, false, amount1In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swapExact1For0SupportingFee(
-    address pool,
-    uint256 amount1In,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swapExact1For0SupportingFee(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, amount1In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swap1ForExact0(
-    address pool,
-    uint256 amount0Out,
-    address recipient,
-    uint160 limitSqrtPrice
-  ) external {
+  function swap1ForExact0(address pool, uint256 amount0Out, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, false, -amount0Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
   }
 
-  function swapToLowerSqrtPrice(
-    address pool,
-    uint160 price,
-    address recipient
-  ) external {
+  function swapToLowerSqrtPrice(address pool, uint160 price, address recipient) external {
     IAlgebraPool(pool).swap(recipient, true, type(int256).max, price, abi.encode(msg.sender));
   }
 
-  function swapToHigherSqrtPrice(
-    address pool,
-    uint160 price,
-    address recipient
-  ) external {
+  function swapToHigherSqrtPrice(address pool, uint160 price, address recipient) external {
     IAlgebraPool(pool).swap(recipient, false, type(int256).max, price, abi.encode(msg.sender));
   }
 
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
 
-  function algebraSwapCallback(
-    int256 amount0Delta,
-    int256 amount1Delta,
-    uint256,
-    bytes calldata data
-  ) external override {
+  function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
     address sender = abi.decode(data, (address));
 
     emit SwapCallback(amount0Delta, amount1Delta);
@@ -117,25 +74,14 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
     int24 bottomTick,
     int24 topTick,
     uint128 amount
-  )
-    external
-    returns (
-      uint256 amount0Owed,
-      uint256 amount1Owed,
-      uint256 resultLiquidity
-    )
-  {
+  ) external returns (uint256 amount0Owed, uint256 amount1Owed, uint256 resultLiquidity) {
     (amount0Owed, amount1Owed, resultLiquidity) = IAlgebraPool(pool).mint(msg.sender, recipient, bottomTick, topTick, amount, abi.encode(msg.sender));
     emit MintResult(amount0Owed, amount1Owed, resultLiquidity);
   }
 
   event MintCallback(uint256 amount0Owed, uint256 amount1Owed);
 
-  function algebraMintCallback(
-    uint256 amount0Owed,
-    uint256 amount1Owed,
-    bytes calldata data
-  ) external override {
+  function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
     address sender = abi.decode(data, (address));
 
     if (amount0Owed > 0) IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, amount0Owed);
@@ -146,22 +92,11 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
   event FlashCallback(uint256 fee0, uint256 fee1);
 
-  function flash(
-    address pool,
-    address recipient,
-    uint256 amount0,
-    uint256 amount1,
-    uint256 pay0,
-    uint256 pay1
-  ) external {
+  function flash(address pool, address recipient, uint256 amount0, uint256 amount1, uint256 pay0, uint256 pay1) external {
     IAlgebraPool(pool).flash(recipient, amount0, amount1, abi.encode(msg.sender, pay0, pay1));
   }
 
-  function algebraFlashCallback(
-    uint256 fee0,
-    uint256 fee1,
-    bytes calldata data
-  ) external override {
+  function algebraFlashCallback(uint256 fee0, uint256 fee1, bytes calldata data) external override {
     emit FlashCallback(fee0, fee1);
 
     (address sender, uint256 pay0, uint256 pay1) = abi.decode(data, (address, uint256, uint256));

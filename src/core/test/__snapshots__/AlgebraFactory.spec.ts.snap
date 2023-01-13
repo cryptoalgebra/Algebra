@@ -2,6 +2,8 @@
 
 exports[`AlgebraFactory #createPool gas [ @skip-on-coverage ] 1`] = `6464034`;
 
+exports[`AlgebraFactory #createPool gas for second pool [ @skip-on-coverage ] 1`] = `6190394`;
+
 exports[`AlgebraFactory factory bytecode size  [ @skip-on-coverage ] 1`] = `11784`;
 
 exports[`AlgebraFactory pool bytecode size  [ @skip-on-coverage ] 1`] = `22553`;

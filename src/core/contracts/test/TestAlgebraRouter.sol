@@ -12,24 +12,14 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
   using SafeCast for uint256;
 
   // flash swaps for an exact amount of token0 in the output pool
-  function swapForExact0Multi(
-    address recipient,
-    address poolInput,
-    address poolOutput,
-    uint256 amount0Out
-  ) external {
+  function swapForExact0Multi(address recipient, address poolInput, address poolOutput, uint256 amount0Out) external {
     address[] memory pools = new address[](1);
     pools[0] = poolInput;
     IAlgebraPool(poolOutput).swap(recipient, false, -amount0Out.toInt256(), TickMath.MAX_SQRT_RATIO - 1, abi.encode(pools, msg.sender));
   }
 
   // flash swaps for an exact amount of token1 in the output pool
-  function swapForExact1Multi(
-    address recipient,
-    address poolInput,
-    address poolOutput,
-    uint256 amount1Out
-  ) external {
+  function swapForExact1Multi(address recipient, address poolInput, address poolOutput, uint256 amount1Out) external {
     address[] memory pools = new address[](1);
     pools[0] = poolInput;
     IAlgebraPool(poolOutput).swap(recipient, true, -amount1Out.toInt256(), TickMath.MIN_SQRT_RATIO + 1, abi.encode(pools, msg.sender));
@@ -37,12 +27,7 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
 
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
 
-  function algebraSwapCallback(
-    int256 amount0Delta,
-    int256 amount1Delta,
-    uint256,
-    bytes calldata data
-  ) public override {
+  function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) public override {
     emit SwapCallback(amount0Delta, amount1Delta);
 
     (address[] memory pools, address payer) = abi.decode(data, (address[], address));

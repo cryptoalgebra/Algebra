@@ -74,13 +74,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolDerivedState
-  function getInnerCumulatives(int24 bottomTick, int24 topTick)
-    external
-    view
-    override
-    onlyValidTicks(bottomTick, topTick)
-    returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)
-  {
+  function getInnerCumulatives(
+    int24 bottomTick,
+    int24 topTick
+  ) external view override onlyValidTicks(bottomTick, topTick) returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent) {
     Cumulatives memory lower;
     {
       TickManager.Tick storage _lower = ticks[bottomTick];
@@ -193,14 +190,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 bottomTick,
     int24 topTick,
     int128 liquidityDelta
-  )
-    private
-    returns (
-      Position storage position,
-      int256 amount0,
-      int256 amount1
-    )
-  {
+  ) private returns (Position storage position, int256 amount0, int256 amount1) {
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
       globalState.tick,
@@ -318,15 +308,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int128 liquidityDelta,
     int24 currentTick,
     uint160 currentPrice
-  )
-    private
-    pure
-    returns (
-      int256 amount0,
-      int256 amount1,
-      int128 globalLiquidityDelta
-    )
-  {
+  ) private pure returns (int256 amount0, int256 amount1, int128 globalLiquidityDelta) {
     uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
     uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
 
@@ -350,11 +332,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
    * @param topTick The position's top tick
    * @return position The Position object
    */
-  function getOrCreatePosition(
-    address owner,
-    int24 bottomTick,
-    int24 topTick
-  ) private view returns (Position storage) {
+  function getOrCreatePosition(address owner, int24 bottomTick, int24 topTick) private view returns (Position storage) {
     bytes32 key;
     assembly {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
@@ -387,17 +365,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 liquidityDesired,
     bytes calldata data
-  )
-    external
-    override
-    nonReentrant
-    onlyValidTicks(bottomTick, topTick)
-    returns (
-      uint256 amount0,
-      uint256 amount1,
-      uint128 liquidityActual
-    )
-  {
+  ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     require(liquidityDesired != 0, 'IL');
     {
       int24 _tickSpacing = tickSpacing;
@@ -456,11 +424,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
-  function _payFromReserve(
-    address token,
-    address recipient,
-    uint256 amount
-  ) internal {
+  function _payFromReserve(address token, address recipient, uint256 amount) internal {
     TransferHelper.safeTransfer(token, recipient, amount);
     if (token == token0) {
       reserve0 -= amount;
@@ -543,13 +507,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IDataStorageOperator(dataStorageOperator).getSecondsPerLiquidityCumulative(blockTimestamp, secondsAgo, timepointIndex, liquidityStart);
   }
 
-  function _swapCallback(
-    int256 amount0,
-    int256 amount1,
-    uint256 feeAmount,
-    bytes calldata data
-  ) private {
-    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, feeAmount, data);
+  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) private {
+    IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -563,15 +522,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint256 feeAmount;
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-
-    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
+    uint256 communityFee;
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     if (zeroToOne) {
       (uint256 balanceBefore, ) = _syncBalances();
       if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
-      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
 
       if (communityFee > 0) _payCommunityFee(token0, communityFee);
@@ -579,7 +536,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     } else {
       (, uint256 balanceBefore) = _syncBalances();
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
-      _swapCallback(amount0, amount1, feeAmount, data); // callback to get tokens from the caller
+      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
 
       if (communityFee > 0) _payCommunityFee(token1, communityFee);
@@ -605,10 +562,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
       int256 amountReceived;
       if (zeroToOne) {
-        _swapCallback(amountRequired, 0, 0, data);
+        _swapCallback(amountRequired, 0, data);
         amountReceived = int256(balanceToken0().sub(balance0Before));
       } else {
-        _swapCallback(0, amountRequired, 0, data);
+        _swapCallback(0, amountRequired, data);
         amountReceived = int256(balanceToken1().sub(balance1Before));
       }
       if (amountReceived < amountRequired) amountRequired = amountReceived;
@@ -618,9 +575,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
-    uint256 feeAmount;
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, feeAmount) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-    uint256 communityFee = (feeAmount * globalState.communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
+    uint256 communityFee;
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     // only transfer to the recipient
     if (zeroToOne) {
@@ -658,9 +614,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     address activeIncentive; // Address an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
-    int24 startTick; // The tick at the start of a swap
-    int32 blockStartTickX100; // The tick at the start of a swap
     uint16 timepointIndex; // The index of last written timepoint
+    int24 startTick; // The tick at the start of a swap
     int24 prevInitializedTick;
   }
 
@@ -678,17 +633,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  )
-    private
-    returns (
-      int256 amount0,
-      int256 amount1,
-      uint160 currentPrice,
-      int24 currentTick,
-      uint128 currentLiquidity,
-      uint256 feeAmount
-    )
-  {
+  ) private returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
     uint32 blockTimestamp;
     SwapCalculationCache memory cache;
     {
@@ -717,14 +662,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       blockTimestamp = _blockTimestamp();
 
-      if (blockTimestamp != startPriceUpdated) {
-        (cache.blockStartTickX100, ) = TickMath.getTickX100(currentTick, currentPrice, true);
-        blockStartTickX100 = cache.blockStartTickX100;
-        startPriceUpdated = blockTimestamp;
-      } else {
-        cache.blockStartTickX100 = blockStartTickX100;
-      }
-
       cache.activeIncentive = activeIncentive;
 
       (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, blockTimestamp, cache.startTick, currentLiquidity);
@@ -744,15 +681,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       step.stepSqrtPrice = currentPrice;
       step.initialized = true;
 
-      // TODO SIMPLIFY
-      if (
-        (cache.blockStartTickX100 / 100 < currentTick && step.nextTick < cache.blockStartTickX100 / 100) ||
-        (cache.blockStartTickX100 / 100 > currentTick && step.nextTick > cache.blockStartTickX100 / 100)
-      ) {
-        step.nextTick = int24(cache.blockStartTickX100 / 100);
-        step.initialized = false;
-      }
-
       step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
       // calculate the amounts needed to move the price to the next target if it is possible or as much as possible
@@ -764,7 +692,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           : step.nextTickPrice,
         currentLiquidity,
         amountRequired,
-        PriceMovementMath.ElasticFeeData(cache.blockStartTickX100, currentTick, cache.fee)
+        cache.fee
       );
       if (cache.exactInput) {
         amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
@@ -777,9 +705,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (cache.communityFee > 0) {
         uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
         step.feeAmount -= delta;
+        communityFeeAmount += delta;
       }
-
-      feeAmount += step.feeAmount;
 
       if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
@@ -863,12 +790,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function flash(
-    address recipient,
-    uint256 amount0,
-    uint256 amount1,
-    bytes calldata data
-  ) external override nonReentrant {
+  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override nonReentrant {
     (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
     uint256 fee0;
     if (amount0 > 0) {

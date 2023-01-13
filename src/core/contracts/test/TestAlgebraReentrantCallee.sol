@@ -14,12 +14,7 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     IAlgebraPool(pool).swap(address(0), false, 1, TickMath.MAX_SQRT_RATIO - 1, new bytes(0));
   }
 
-  function algebraSwapCallback(
-    int256,
-    int256,
-    uint256,
-    bytes calldata
-  ) external override {
+  function algebraSwapCallback(int256, int256, bytes calldata) external override {
     // try to reenter swap
     try IAlgebraPool(msg.sender).swap(address(0), false, 1, 0, new bytes(0)) {} catch Error(string memory reason) {
       require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
