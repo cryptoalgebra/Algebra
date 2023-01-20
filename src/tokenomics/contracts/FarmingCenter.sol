@@ -95,11 +95,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
     }
 
     /// @inheritdoc IFarmingCenter
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        bool isLimit
-    ) external override isOwner(tokenId) {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override isOwner(tokenId) {
         Deposit storage deposit = deposits[tokenId];
         IAlgebraFarming _farming;
 
@@ -118,28 +114,38 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         }
     }
 
-    // TODO natspec & support native (delete periphery payments?)
+    /// @inheritdoc IFarmingCenter
     function increaseLiquidity(
         IncentiveKey memory key,
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external override {
+    ) external payable override {
         (, , , address token0, address token1, , , , , , , ) = nonfungiblePositionManager.positions(params.tokenId);
         if (params.amount0Desired > 0) {
-            TransferHelper.safeTransferFrom(token0, msg.sender, address(this), params.amount0Desired);
+            pay(token0, msg.sender, address(this), params.amount0Desired);
             TransferHelper.safeApprove(token0, address(nonfungiblePositionManager), params.amount0Desired);
         }
         if (params.amount1Desired > 0) {
-            TransferHelper.safeTransferFrom(token1, msg.sender, address(this), params.amount1Desired);
+            pay(token1, msg.sender, address(this), params.amount1Desired);
             TransferHelper.safeApprove(token1, address(nonfungiblePositionManager), params.amount1Desired);
         }
 
-        (uint256 amount0, uint256 amount1, ) = nonfungiblePositionManager.increaseLiquidity(params);
+        (, uint256 amount0, uint256 amount1) = nonfungiblePositionManager.increaseLiquidity(params);
 
         // refund
-        if (params.amount0Desired > amount0)
-            TransferHelper.safeTransfer(token0, msg.sender, params.amount0Desired - amount0);
-        if (params.amount1Desired > amount1)
-            TransferHelper.safeTransfer(token1, msg.sender, params.amount1Desired - amount1);
+        if (params.amount0Desired > amount0) {
+            if (token0 == WNativeToken) {
+                unwrapWNativeToken(params.amount0Desired - amount0, msg.sender);
+            } else {
+                pay(token0, address(this), msg.sender, params.amount0Desired - amount0);
+            }
+        }
+        if (params.amount1Desired > amount1) {
+            if (token1 == WNativeToken) {
+                unwrapWNativeToken(params.amount1Desired - amount1, msg.sender);
+            } else {
+                pay(token1, address(this), msg.sender, params.amount1Desired - amount1);
+            }
+        }
 
         // get locked token amount
         bytes32 incentiveId = IncentiveId.compute(key);
@@ -151,12 +157,10 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
     }
 
     /// @inheritdoc IFarmingCenter
-    function collectRewards(IncentiveKey memory key, uint256 tokenId)
-        external
-        override
-        isOwner(tokenId)
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function collectRewards(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external override isOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
 

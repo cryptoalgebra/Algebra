@@ -33,10 +33,18 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
 
     function farmingCenterVault() external view returns (IFarmingCenterVault);
 
+    /// @notice Increasing the liquidity of the position without exiting from farming
+    /// @param key The incentive event key
+    /// @param params tokenId The ID of the token for which liquidity is being increased,
+    /// amount0Desired The desired amount of token0 to be spent,
+    /// amount1Desired The desired amount of token1 to be spent,
+    /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
+    /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
+    /// deadline The time by which the transaction must be included to effect the change
     function increaseLiquidity(
         IncentiveKey memory key,
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external;
+    ) external payable;
 
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
@@ -60,31 +68,23 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
     /// @param tokenId The id of position NFT
     /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
     /// @param isLimit Is incentive time-limited or eternal
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked,
-        bool isLimit
-    ) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked, bool isLimit) external;
 
     /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
     /// @param isLimit Is incentive time-limited or eternal
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        bool isLimit
-    ) external;
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external;
 
     /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
     /// @return reward The amount of collected reward
     /// @return bonusReward The amount of collected  bonus reward
-    function collectRewards(IncentiveKey memory key, uint256 tokenId)
-        external
-        returns (uint256 reward, uint256 bonusReward);
+    function collectRewards(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Used to claim and send rewards from farming(s)
     /// @dev can be used via static call to get current rewards for user
