@@ -199,12 +199,15 @@ contract NonfungiblePositionManager is
     }
 
     modifier isLocked(uint256 tokenId) {
-        require(!_positions[tokenId].locked, 'token is locked');
+        require(!_positions[tokenId].locked || msg.sender == farmingCenter, 'token is locked');
         _;
     }
 
     function _checkAuthorizationForToken(uint256 tokenId) private view {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId) || (_positions[tokenId].locked && msg.sender == farmingCenter),
+            'Not approved'
+        );
     }
 
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {

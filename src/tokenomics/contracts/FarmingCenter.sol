@@ -118,7 +118,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
     function increaseLiquidity(
         IncentiveKey memory key,
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external payable override {
+    ) external payable override returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
         (, , , address token0, address token1, , , , , , , ) = nonfungiblePositionManager.positions(params.tokenId);
         if (params.amount0Desired > 0) {
             pay(token0, msg.sender, address(this), params.amount0Desired);
@@ -129,7 +129,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
             TransferHelper.safeApprove(token1, address(nonfungiblePositionManager), params.amount1Desired);
         }
 
-        (, uint256 amount0, uint256 amount1) = nonfungiblePositionManager.increaseLiquidity(params);
+        (liquidity, amount0, amount1) = nonfungiblePositionManager.increaseLiquidity(params);
 
         // refund
         if (params.amount0Desired > amount0) {
@@ -154,6 +154,46 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         // exit & enter
         eternalFarming.exitFarming(key, params.tokenId, nonfungiblePositionManager.ownerOf(params.tokenId));
         eternalFarming.enterFarming(key, params.tokenId, lockedAmount);
+    }
+
+    function decreaseLiquidity(
+        IncentiveKey memory key,
+        DecreaseLiquidityParams memory params
+    ) external payable override isOwner(params.tokenId) returns (uint256 amount0, uint256 amount1) {
+        nonfungiblePositionManager.decreaseLiquidity(
+            INonfungiblePositionManager.DecreaseLiquidityParams(
+                params.tokenId,
+                params.liquidity,
+                params.amount0Min,
+                params.amount1Min,
+                params.deadline
+            )
+        );
+        address recipient = params.recipient == address(0) ? address(this) : params.recipient;
+        (amount0, amount1) = nonfungiblePositionManager.collect(
+            INonfungiblePositionManager.CollectParams(params.tokenId, recipient, params.amount0Max, params.amount1Max)
+        );
+
+        // get locked token amount
+        bytes32 incentiveId = IncentiveId.compute(key);
+        uint256 lockedAmount = farmingCenterVault.balances(params.tokenId, incentiveId);
+
+        // exit & enter
+        (, , , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(params.tokenId);
+        if (liquidity != 0) {
+            eternalFarming.exitFarming(key, params.tokenId, nonfungiblePositionManager.ownerOf(params.tokenId));
+            eternalFarming.enterFarming(key, params.tokenId, lockedAmount);
+        } else {
+            Deposit storage deposit = deposits[params.tokenId];
+            deposit.numberOfFarms -= 1;
+
+            eternalFarming.exitFarming(key, params.tokenId, nonfungiblePositionManager.ownerOf(params.tokenId));
+
+            (, , , , , address multiplierToken, ) = eternalFarming.incentives(incentiveId);
+            if (multiplierToken != address(0)) {
+                farmingCenterVault.claimTokens(multiplierToken, msg.sender, params.tokenId, incentiveId);
+            }
+        }
     }
 
     /// @inheritdoc IFarmingCenter

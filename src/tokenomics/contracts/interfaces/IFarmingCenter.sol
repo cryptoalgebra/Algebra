@@ -22,6 +22,17 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
         address limitVirtualPool;
     }
 
+    struct DecreaseLiquidityParams {
+        uint256 tokenId;
+        uint128 liquidity;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        uint128 amount0Max;
+        uint128 amount1Max;
+        address recipient;
+        uint256 deadline;
+    }
+
     function virtualPoolAddresses(address) external view returns (address, address);
 
     /// @notice The nonfungible position manager with which this farming contract is compatible
@@ -44,7 +55,12 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
     function increaseLiquidity(
         IncentiveKey memory key,
         INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external payable;
+    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1);
+
+    function decreaseLiquidity(
+        IncentiveKey memory key,
+        DecreaseLiquidityParams memory params
+    ) external payable returns (uint256 amount0, uint256 amount1);
 
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
