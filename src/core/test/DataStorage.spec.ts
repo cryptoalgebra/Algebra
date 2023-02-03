@@ -134,7 +134,7 @@ describe('DataStorage', () => {
     })
 
     it('potential overflow scenario', async () => {
-      const window = Number(await dataStorage.window());
+      const window = 24 * 60 * 60;
       await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
       let avrgTick = await dataStorage.getAverageTick();
       expect(avrgTick).to.be.lt(7300)
@@ -668,10 +668,6 @@ describe('DataStorageOperator external methods', () => {
   beforeEach('deploy DataStorageOperator', async () => {
     const dataStorageOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
     dataStorageOperator = (await dataStorageOperatorFactory.deploy(ethers.constants.AddressZero)) as DataStorageOperator;
-  })
-
-  it('can get WINDOW', async() => {
-    expect(await dataStorageOperator.window()).to.be.eq(24*60*60);
   })
 
   it('cannot call onlyPool methods', async () => {

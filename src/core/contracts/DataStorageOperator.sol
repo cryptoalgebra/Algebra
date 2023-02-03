@@ -129,11 +129,6 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function window() external pure override returns (uint32) {
-    return DataStorage.WINDOW;
-  }
-
-  /// @inheritdoc IDataStorageOperator
   function getFee(uint32 _time, int24 _tick, uint16 _index) external view override returns (uint16 fee) {
     uint16 oldestIndex = _getOldestIndex(_index);
 

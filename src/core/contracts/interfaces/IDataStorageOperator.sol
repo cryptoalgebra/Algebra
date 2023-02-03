@@ -18,7 +18,9 @@ interface IDataStorageOperator {
    * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
    * averageTick Time-weighted average tick
    */
-  function timepoints(uint256 index)
+  function timepoints(
+    uint256 index
+  )
     external
     view
     returns (
@@ -53,14 +55,7 @@ interface IDataStorageOperator {
     int24 tick,
     uint16 index,
     uint128 liquidity
-  )
-    external
-    view
-    returns (
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative
-    );
+  ) external view returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
@@ -78,14 +73,7 @@ interface IDataStorageOperator {
     int24 tick,
     uint16 index,
     uint128 liquidity
-  )
-    external
-    view
-    returns (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives
-    );
+  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
@@ -93,14 +81,9 @@ interface IDataStorageOperator {
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
-  function getTimepoints(uint32[] memory secondsAgos)
-    external
-    view
-    returns (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives
-    );
+  function getTimepoints(
+    uint32[] memory secondsAgos
+  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives);
 
   function getSecondsPerLiquidityCumulative(
     uint32 time,
@@ -114,11 +97,7 @@ interface IDataStorageOperator {
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @return volatilityAverage The average volatility in the recent range
-  function getAverageVolatility(
-    uint32 time,
-    int24 tick,
-    uint16 index
-  ) external view returns (uint112 volatilityAverage);
+  function getAverageVolatility(uint32 time, int24 tick, uint16 index) external view returns (uint112 volatilityAverage);
 
   /// @notice Writes an dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
@@ -128,27 +107,15 @@ interface IDataStorageOperator {
   /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
   /// @return newFee The fee in hundredths of a bip, i.e. 1e-6
-  function write(
-    uint16 index,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 liquidity
-  ) external returns (uint16 indexUpdated, uint16 newFee);
+  function write(uint16 index, uint32 blockTimestamp, int24 tick, uint128 liquidity) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
-
-  /// @return windowLength Length of window used to calculate averages
-  function window() external view returns (uint32 windowLength);
 
   /// @notice Calculates fee based on combination of sigmoids
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(
-    uint32 time,
-    int24 tick,
-    uint16 index
-  ) external view returns (uint16 fee);
+  function getFee(uint32 time, int24 tick, uint16 index) external view returns (uint16 fee);
 }
