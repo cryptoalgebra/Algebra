@@ -261,7 +261,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (cache.timepointIndex != newTimepointIndex) {
           globalState.fee = newFee;
           globalState.timepointIndex = newTimepointIndex;
-          emit Fee(newFee);
+          emit Fee(newFee); // TODO not emit if fee unchanged
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
@@ -780,8 +780,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        cache.fee = newFee;
-        emit Fee(newFee);
+        if (cache.fee != newFee) {
+          cache.fee = newFee;
+          emit Fee(newFee);
+        }
       }
     }
 
