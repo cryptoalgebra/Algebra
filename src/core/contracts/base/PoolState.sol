@@ -28,6 +28,10 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
+  uint32 public communityFeeLastTimestamp;
+
+  uint128 public communityFeePending0;
+  uint128 public communityFeePending1;
 
   uint256 public reserve0;
   uint256 public reserve1;

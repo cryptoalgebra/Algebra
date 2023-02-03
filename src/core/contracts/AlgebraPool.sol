@@ -580,7 +580,26 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function _payCommunityFee(address token, uint256 amount) private {
-    TransferHelper.safeTransfer(token, _vaultAddress(), amount);
+    (uint128 _communityFeePending0, uint128 _communityFeePending1) = (communityFeePending0, communityFeePending1);
+    if (token == token0) _communityFeePending0 += uint128(amount);
+    else _communityFeePending1 += uint128(amount);
+
+    if (_blockTimestamp() - communityFeeLastTimestamp >= 8 hours) {
+      // underflow is desired
+      address vaultAddress = _vaultAddress();
+      if (_communityFeePending0 > 0) {
+        TransferHelper.safeTransfer(token0, vaultAddress, _communityFeePending0);
+        reserve0 -= _communityFeePending0;
+      }
+      if (_communityFeePending1 > 0) {
+        TransferHelper.safeTransfer(token1, vaultAddress, _communityFeePending1);
+        reserve1 -= _communityFeePending1;
+      }
+      (communityFeePending0, communityFeePending1) = (0, 0);
+      communityFeeLastTimestamp = _blockTimestamp();
+    } else {
+      (communityFeePending0, communityFeePending1) = (_communityFeePending0, _communityFeePending1);
+    }
   }
 
   function _writeTimepoint(
@@ -624,17 +643,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
-
+      reserve0 = balanceBefore + uint256(amount0);
       if (communityFee > 0) _payCommunityFee(token0, communityFee);
-      reserve0 = balanceBefore + uint256(amount0) - communityFee;
     } else {
       (, uint256 balanceBefore) = _syncBalances();
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
-
+      reserve1 = balanceBefore + uint256(amount1);
       if (communityFee > 0) _payCommunityFee(token1, communityFee);
-      reserve1 = balanceBefore + uint256(amount1) - communityFee;
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -680,9 +697,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
         amountRequired = int256(amount0);
       }
-
+      reserve0 = reserve0 + uint256(amountRequired);
       if (communityFee > 0) _payCommunityFee(token0, communityFee);
-      reserve0 = reserve0 + uint256(amountRequired) - communityFee;
     } else {
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0));
       // return the leftovers
@@ -690,8 +706,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
         amountRequired = int256(amount1);
       }
+      reserve1 = reserve1 + uint256(amountRequired);
       if (communityFee > 0) _payCommunityFee(token1, communityFee);
-      reserve1 = reserve1 + uint256(amountRequired) - communityFee;
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -940,13 +956,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     uint256 _communityFee = globalState.communityFee;
     if (_communityFee > 0) {
-      address vault = _vaultAddress();
-      if (paid0 > 0) {
-        TransferHelper.safeTransfer(token0, vault, (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-      }
-      if (paid1 > 0) {
-        TransferHelper.safeTransfer(token1, vault, (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-      }
+      // TODO optimize
+      if (paid0 > 0) communityFeePending0 += uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+      if (paid1 > 0) communityFeePending1 += uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
     }
 
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
