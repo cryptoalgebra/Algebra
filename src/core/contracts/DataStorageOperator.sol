@@ -123,8 +123,13 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     uint88 lastVolatilityCumulative;
     (indexUpdated, oldestIndex, lastVolatilityCumulative) = timepoints.write(index, blockTimestamp, tick, liquidity);
     if (index != indexUpdated) {
-      uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
-      newFee = AdaptiveFee.getFee(volatilityAverage / 15, feeConfig);
+      AdaptiveFee.Configuration memory _feeConfig = feeConfig;
+      if (_feeConfig.alpha1 == 0 && _feeConfig.alpha2 == 0) {
+        newFee = _feeConfig.baseFee;
+      } else {
+        uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
+        newFee = AdaptiveFee.getFee(volatilityAverage / 15, _feeConfig);
+      }
     }
   }
 
