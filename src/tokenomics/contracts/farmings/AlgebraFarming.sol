@@ -51,7 +51,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     mapping(bytes32 => Incentive) public override incentives;
 
     address internal incentiveMaker;
-    address internal immutable owner;
+    address internal owner;
 
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
@@ -85,6 +85,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         require(incentiveMaker != _incentiveMaker);
         incentiveMaker = _incentiveMaker;
         emit IncentiveMaker(_incentiveMaker);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function setOwner(address _owner) external override onlyOwner {
+        require(_owner != owner);
+        owner = _owner;
+        emit Owner(_owner);
     }
 
     /// @inheritdoc IAlgebraFarming
