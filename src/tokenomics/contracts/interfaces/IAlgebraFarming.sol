@@ -26,6 +26,10 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param _incentiveMaker The new incentive maker address
     function setIncentiveMaker(address _incentiveMaker) external;
 
+    /// @notice Updates the owner address
+    /// @param owner The new owner address
+    function setOwner(address owner) external;
+
     struct Tiers {
         // amount of token to reach the tier
         uint256 tokenAmountForTier1;
@@ -184,6 +188,10 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice Emitted when the incentive maker is changed
     /// @param incentiveMaker The incentive maker after the address was changed
     event IncentiveMaker(address indexed incentiveMaker);
+
+    /// @notice Emitted when owner is changed
+    /// @param owner The owner after the address was changed
+    event Owner(address indexed owner);
 
     /// @notice Emitted when the farming center is changed
     /// @param farmingCenter The farming center after the address was changed
