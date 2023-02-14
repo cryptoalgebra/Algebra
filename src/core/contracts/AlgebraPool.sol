@@ -585,6 +585,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     else _communityFeePending1 += uint128(amount);
 
     if (_blockTimestamp() - communityFeeLastTimestamp >= 8 hours) {
+      // TODO CONST
       // underflow is desired
       address vaultAddress = _vaultAddress();
       if (_communityFeePending0 > 0) {
@@ -870,6 +871,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
           // every tick cross is needed to be duplicated in a virtual pool
           if (cache.activeIncentive != address(0)) {
+            // TODO
             bool success = IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne);
             if (!success) {
               cache.activeIncentive = address(0);

@@ -375,13 +375,14 @@ library DataStorage {
     uint16 index,
     uint128 liquidity
   ) internal view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives) {
-    tickCumulatives = new int56[](secondsAgos.length);
-    secondsPerLiquidityCumulatives = new uint160[](secondsAgos.length);
-    volatilityCumulatives = new uint112[](secondsAgos.length);
+    uint256 secondsLength = secondsAgos.length;
+    tickCumulatives = new int56[](secondsLength);
+    secondsPerLiquidityCumulatives = new uint160[](secondsLength);
+    volatilityCumulatives = new uint112[](secondsLength);
 
     uint16 oldestIndex = getOldestIndex(self, index);
     Timepoint memory current;
-    for (uint256 i = 0; i < secondsAgos.length; i++) {
+    for (uint256 i = 0; i < secondsLength; ++i) {
       current = getSingleTimepoint(self, time, secondsAgos[i], tick, index, oldestIndex, liquidity);
       (tickCumulatives[i], secondsPerLiquidityCumulatives[i], volatilityCumulatives[i]) = (
         current.tickCumulative,
