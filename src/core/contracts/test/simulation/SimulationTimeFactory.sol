@@ -136,13 +136,13 @@ contract SimulationTimeFactory is IAlgebraFactory {
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0xdf40ea7d11ce1933630eeff2a42ea8d4ed2bf2d8c9c2ac46ce46843fff045a2a;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xdf40ea7d11ce1933630eeff2a42ea8d4ed2bf2d8c9c2ac46ce46843fff045a2a;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool
-  function computeAddress(address token0, address token1) internal view returns (address pool) {
+  function computeAddress(address token0, address token1) private view returns (address pool) {
     pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
   }
 }

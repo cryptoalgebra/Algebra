@@ -138,13 +138,13 @@ contract AlgebraFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x4af9720e9c941d75ec889dce62350f6e20c0a4fef0dedb5c3c755902ac4541fc;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x4af9720e9c941d75ec889dce62350f6e20c0a4fef0dedb5c3c755902ac4541fc;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool
-  function _computeAddress(address token0, address token1) internal view returns (address pool) {
+  function _computeAddress(address token0, address token1) private view returns (address pool) {
     pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
   }
 }
