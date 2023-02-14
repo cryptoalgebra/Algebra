@@ -14,11 +14,7 @@ contract DataStorageEchidnaTest {
     dataStorage = new DataStorageTest();
   }
 
-  function initialize(
-    uint32 time,
-    int24 tick,
-    uint128 liquidity
-  ) external {
+  function initialize(uint32 time, int24 tick, uint128 liquidity) external {
     require(tick % 60 == 0);
     dataStorage.initialize(DataStorageTest.InitializeParams({time: time, tick: tick, liquidity: liquidity}));
     initialized = true;
@@ -34,12 +30,8 @@ contract DataStorageEchidnaTest {
     dataStorage.advanceTime(by);
   }
 
-  // write an timepoint, then change tick and liquidity
-  function update(
-    uint32 advanceTimeBy,
-    int24 tick,
-    uint128 liquidity
-  ) external {
+  // write a timepoint, then change tick and liquidity
+  function update(uint32 advanceTimeBy, int24 tick, uint128 liquidity) external {
     require(initialized);
     limitTimePassed(advanceTimeBy);
     dataStorage.update(DataStorageTest.UpdateParams({advanceTimeBy: advanceTimeBy, tick: tick, liquidity: liquidity}));
@@ -85,13 +77,7 @@ contract DataStorageEchidnaTest {
     return success;
   }
 
-  function checkVolatilityOnRangeNotOverflowUint88(
-    uint32 dt,
-    int24 tick0,
-    int24 tick1,
-    int24 avgTick0,
-    int24 avgTick1
-  ) external view {
+  function checkVolatilityOnRangeNotOverflowUint88(uint32 dt, int24 tick0, int24 tick1, int24 avgTick0, int24 avgTick1) external view {
     uint256 res = dataStorage.volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
     assert(res <= type(uint88).max);
   }

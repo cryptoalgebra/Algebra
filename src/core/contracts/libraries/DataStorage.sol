@@ -296,13 +296,13 @@ library DataStorage {
     return volatilityCumulativeBefore;
   }
 
-  /// @dev Reverts if an timepoint at or before the desired timepoint timestamp does not exist.
+  /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
   /// @param self The stored dataStorage array
   /// @param time The current block timestamp
-  /// @param secondsAgo The amount of time to look back, in seconds, at which point to return an timepoint
+  /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param oldestIndex The index of the oldest timepoint
@@ -360,7 +360,7 @@ library DataStorage {
   /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param self The stored dataStorage array
   /// @param time The current block.timestamp
-  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return an timepoint
+  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
@@ -437,7 +437,7 @@ library DataStorage {
     self[0].averageTick = tick;
   }
 
-  /// @notice Writes an dataStorage timepoint to the array
+  /// @notice Writes a dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
   /// @param self The stored dataStorage array
   /// @param index The index of the timepoint that was most recently written to the timepoints array
@@ -453,7 +453,7 @@ library DataStorage {
     uint128 liquidity
   ) internal returns (uint16 indexUpdated, uint16 oldestIndex, uint88 volatilityCumulative) {
     Timepoint storage _last = self[index];
-    // early return if we've already written an timepoint this block
+    // early return if we've already written a timepoint this block
     if (_last.blockTimestamp == blockTimestamp) return (index, 0, 0);
 
     Timepoint memory last = _last;

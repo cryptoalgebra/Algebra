@@ -38,7 +38,7 @@ contract DataStorageTest {
     uint128 liquidity;
   }
 
-  // write an timepoint, then change tick and liquidity
+  // write a timepoint, then change tick and liquidity
   function update(UpdateParams calldata params) external {
     advanceTime(params.advanceTimeBy);
     (index, , ) = timepoints.write(index, time, tick, liquidity);

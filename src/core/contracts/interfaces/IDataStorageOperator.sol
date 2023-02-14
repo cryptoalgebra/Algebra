@@ -37,12 +37,12 @@ interface IDataStorageOperator {
   /// @param tick Initial tick
   function initialize(uint32 time, int24 tick) external;
 
-  /// @dev Reverts if an timepoint at or before the desired timepoint timestamp does not exist.
+  /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
   /// @param time The current block timestamp
-  /// @param secondsAgo The amount of time to look back, in seconds, at which point to return an timepoint
+  /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
@@ -60,7 +60,7 @@ interface IDataStorageOperator {
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param time The current block.timestamp
-  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return an timepoint
+  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
@@ -77,7 +77,7 @@ interface IDataStorageOperator {
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
-  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return an timepoint
+  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
@@ -99,7 +99,7 @@ interface IDataStorageOperator {
   /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(uint32 time, int24 tick, uint16 index) external view returns (uint112 volatilityAverage);
 
-  /// @notice Writes an dataStorage timepoint to the array
+  /// @notice Writes a dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param blockTimestamp The timestamp of the new timepoint
