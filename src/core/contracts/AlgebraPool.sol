@@ -28,7 +28,6 @@ import './interfaces/IERC20Minimal.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
-import './interfaces/callback/IAlgebraLimitOrderCallback.sol';
 
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
