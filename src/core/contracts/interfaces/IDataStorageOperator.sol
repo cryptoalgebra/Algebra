@@ -2,10 +2,10 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import '../libraries/AdaptiveFee.sol';
+import './IAlgebraFeeConfiguration.sol';
 
 interface IDataStorageOperator {
-  event FeeConfiguration(AdaptiveFee.Configuration feeConfig);
+  event FeeConfiguration(IAlgebraFeeConfiguration.Configuration feeConfig);
 
   /**
    * @notice Returns data belonging to a certain timepoint
@@ -110,7 +110,7 @@ interface IDataStorageOperator {
   function write(uint16 index, uint32 blockTimestamp, int24 tick, uint128 liquidity) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
+  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
 
   /// @notice Calculates fee based on combination of sigmoids
   /// @param time The current block.timestamp

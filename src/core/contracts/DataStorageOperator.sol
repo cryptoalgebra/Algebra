@@ -16,7 +16,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  AdaptiveFee.Configuration public feeConfig;
+  IAlgebraFeeConfiguration.Configuration public feeConfig;
 
   address private immutable pool;
   address private immutable factory;
@@ -37,7 +37,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
+  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
 
     require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
@@ -121,7 +121,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     uint88 lastVolatilityCumulative;
     (indexUpdated, oldestIndex, lastVolatilityCumulative) = timepoints.write(index, blockTimestamp, tick, liquidity);
     if (index != indexUpdated) {
-      AdaptiveFee.Configuration memory _feeConfig = feeConfig;
+      IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfig;
       if (_feeConfig.alpha1 == 0 && _feeConfig.alpha2 == 0) {
         newFee = _feeConfig.baseFee;
       } else {

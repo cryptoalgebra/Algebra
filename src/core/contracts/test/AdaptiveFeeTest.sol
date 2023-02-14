@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
+import '../interfaces/IAlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
-  AdaptiveFee.Configuration public feeConfig =
-    AdaptiveFee.Configuration(
+  IAlgebraFeeConfiguration.Configuration public feeConfig =
+    IAlgebraFeeConfiguration.Configuration(
       3000 - Constants.BASE_FEE, // alpha1
       15000 - 3000, // alpha2
       360, // beta1

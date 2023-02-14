@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../../interfaces/IAlgebraFactory.sol';
 import '../../interfaces/IAlgebraPoolDeployer.sol';
 import '../../interfaces/IDataStorageOperator.sol';
-import '../../libraries/AdaptiveFee.sol';
+import '../../interfaces/IAlgebraFeeConfiguration.sol';
 import '../../libraries/Constants.sol';
 import '../../DataStorageOperator.sol';
 
@@ -31,8 +31,8 @@ contract SimulationTimeFactory is IAlgebraFactory {
   uint8 public override defaultCommunityFee;
 
   // values of constants for sigmoids in fee calculation formula
-  AdaptiveFee.Configuration public baseFeeConfiguration =
-    AdaptiveFee.Configuration(
+  IAlgebraFeeConfiguration.Configuration public baseFeeConfiguration =
+    IAlgebraFeeConfiguration.Configuration(
       3000 - Constants.BASE_FEE, // alpha1
       15000 - 3000, // alpha2
       360, // beta1
@@ -125,7 +125,7 @@ contract SimulationTimeFactory is IAlgebraFactory {
     require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(gamma1 != 0 && gamma2 != 0, 'Gammas must be > 0');
 
-    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
+    baseFeeConfiguration = IAlgebraFeeConfiguration.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
   }
 
