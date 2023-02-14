@@ -544,6 +544,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amount1Requested > positionFees1) amount1Requested = positionFees1;
 
     if (amount0Requested | amount1Requested != 0) {
+      // use one if since fees0 and fees1 are tightly packed
       (amount0, amount1) = (amount0Requested, amount1Requested);
       // single SSTORE
       (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
