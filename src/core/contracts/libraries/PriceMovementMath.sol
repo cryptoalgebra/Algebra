@@ -94,6 +94,7 @@ library PriceMovementMath {
 
   /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
   /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
+  /// @param zeroToOne The direction of price movement
   /// @param currentPrice The current Q64.96 sqrt price of the pool
   /// @param targetPrice The Q64.96 sqrt price that cannot be exceeded, from which the direction of the swap is inferred
   /// @param liquidity The usable liquidity
