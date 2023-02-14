@@ -537,6 +537,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 amount0Requested,
     uint128 amount1Requested
   ) external override nonReentrant returns (uint128 amount0, uint128 amount1) {
+    // we don't check tick range validity, because if ticks are incorrect, the position will be empty
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
     (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
 
