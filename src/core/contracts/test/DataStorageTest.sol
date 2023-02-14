@@ -53,7 +53,7 @@ contract DataStorageTest {
     uint16 _index = index;
     uint32 _time = time;
 
-    for (uint256 i = 0; i < params.length; i++) {
+    for (uint256 i; i < params.length; ++i) {
       _time += params[i].advanceTimeBy;
       (_index, , ) = timepoints.write(_index, _time, _tick, _liquidity);
       _tick = params[i].tick;
@@ -67,15 +67,9 @@ contract DataStorageTest {
     time = _time;
   }
 
-  function getTimepoints(uint32[] calldata secondsAgos)
-    external
-    view
-    returns (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives
-    )
-  {
+  function getTimepoints(
+    uint32[] calldata secondsAgos
+  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives) {
     return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
   }
 
@@ -86,13 +80,7 @@ contract DataStorageTest {
     return gasBefore - gasleft();
   }
 
-  function volatilityOnRange(
-    uint32 dt,
-    int24 tick0,
-    int24 tick1,
-    int24 avgTick0,
-    int24 avgTick1
-  ) external pure returns (uint256) {
+  function volatilityOnRange(uint32 dt, int24 tick0, int24 tick1, int24 avgTick0, int24 avgTick1) external pure returns (uint256) {
     return DataStorage._volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
   }
 

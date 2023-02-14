@@ -58,7 +58,7 @@ contract TickTreeEchidnaTest {
     uint256 length = initedTicks.length;
     if (length == 0) return (TickMath.MAX_TICK, false);
     num = TickMath.MAX_TICK;
-    for (uint256 i = 0; i < length; i++) {
+    for (uint256 i; i < length; ++i) {
       int24 tick = initedTicks[i];
       if (tick > start) {
         if (tick <= num) {

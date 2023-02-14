@@ -382,7 +382,7 @@ library DataStorage {
 
     uint16 oldestIndex = getOldestIndex(self, index);
     Timepoint memory current;
-    for (uint256 i = 0; i < secondsLength; ++i) {
+    for (uint256 i; i < secondsLength; ++i) {
       current = getSingleTimepoint(self, time, secondsAgos[i], tick, index, oldestIndex, liquidity);
       (tickCumulatives[i], secondsPerLiquidityCumulatives[i], volatilityCumulatives[i]) = (
         current.tickCumulative,
