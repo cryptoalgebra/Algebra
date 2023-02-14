@@ -271,7 +271,7 @@ library DataStorage {
       if (timestamp == target) return lastVolatilityCumulative;
 
       int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, timestamp, lastTickCumulative));
-      int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, last, index);
+      int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, index, lastTickCumulative, timestamp);
       return (lastVolatilityCumulative + uint88(_volatilityOnRange(target - timestamp, prevTick, tick, last.averageTick, avgTick)));
     }
 
@@ -324,8 +324,9 @@ library DataStorage {
         return last;
       } else {
         // otherwise, we need to add new timepoint
-        int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
-        int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, last, index);
+        (uint32 lastBlockTimestamp, int56 lastTickCumulative) = (last.blockTimestamp, last.tickCumulative);
+        int24 avgTick = int24(_getAverageTick(self, time, tick, index, oldestIndex, lastBlockTimestamp, lastTickCumulative));
+        int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, index, lastTickCumulative, lastBlockTimestamp);
         return createNewTimepoint(last, target, tick, prevTick, liquidity, avgTick);
       }
     }
@@ -462,17 +463,23 @@ library DataStorage {
     // check if we have overflow in the past
     if (self[indexUpdated].initialized) oldestIndex = indexUpdated;
 
-    int24 avgTick = int24(_getAverageTick(self, blockTimestamp, tick, index, oldestIndex, last.blockTimestamp, last.tickCumulative));
-    int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, last, index);
+    (uint32 lastBlockTimestamp, int56 lastTickCumulative) = (last.blockTimestamp, last.tickCumulative);
+    int24 avgTick = int24(_getAverageTick(self, blockTimestamp, tick, index, oldestIndex, lastBlockTimestamp, lastTickCumulative));
+    int24 prevTick = index == oldestIndex ? tick : _getPrevTick(self, index, lastTickCumulative, lastBlockTimestamp);
 
     self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick);
     volatilityCumulative = self[indexUpdated].volatilityCumulative;
   }
 
-  function _getPrevTick(Timepoint[UINT16_MODULO] storage self, Timepoint memory last, uint16 index) internal view returns (int24 prevTick) {
+  function _getPrevTick(
+    Timepoint[UINT16_MODULO] storage self,
+    uint16 index,
+    int56 lastTickCumulative,
+    uint32 lastBlockTimestamp
+  ) internal view returns (int24 prevTick) {
     Timepoint storage _prevLast = self[index - 1]; // considering index underflow
     uint32 _prevLastBlockTimestamp = _prevLast.blockTimestamp;
     int56 _prevLastTickCumulative = _prevLast.tickCumulative;
-    prevTick = int24((last.tickCumulative - _prevLastTickCumulative) / (last.blockTimestamp - _prevLastBlockTimestamp)); // TODO remove reads
+    prevTick = int24((lastTickCumulative - _prevLastTickCumulative) / (lastBlockTimestamp - _prevLastBlockTimestamp));
   }
 }
