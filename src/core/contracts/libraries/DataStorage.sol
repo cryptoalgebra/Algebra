@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-import './FullMath.sol';
-
 /// @title DataStorage
 /// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array

@@ -6,6 +6,7 @@ import '../../interfaces/IAlgebraFactory.sol';
 import '../../interfaces/IAlgebraPoolDeployer.sol';
 import '../../interfaces/IDataStorageOperator.sol';
 import '../../libraries/AdaptiveFee.sol';
+import '../../libraries/Constants.sol';
 import '../../DataStorageOperator.sol';
 
 /**

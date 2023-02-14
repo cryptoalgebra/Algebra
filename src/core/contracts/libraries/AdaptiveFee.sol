@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-import './Constants.sol';
-
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
@@ -35,23 +33,18 @@ library AdaptiveFee {
   /// @notice calculates α / (1 + e^( (β-x) / γ))
   /// that is a sigmoid with a maximum value of α, x-shifted by β, and stretched by γ
   /// @dev returns uint256 for fuzzy testing. Guaranteed that the result is not greater than alpha
-  function sigmoid(
-    uint256 x,
-    uint16 g,
-    uint16 alpha,
-    uint256 beta
-  ) internal pure returns (uint256 res) {
+  function sigmoid(uint256 x, uint16 g, uint16 alpha, uint256 beta) internal pure returns (uint256 res) {
     if (x > beta) {
       x = x - beta;
       if (x >= 6 * uint256(g)) return alpha; // so x < 19 bits
-      uint256 g4 = uint256(g)**4; // < 64 bits (4*16)
+      uint256 g4 = uint256(g) ** 4; // < 64 bits (4*16)
       uint256 ex = expMul(x, g, g4); // < 155 bits
       res = (alpha * ex) / (g4 + ex); // in worst case: (16 + 155 bits) / 155 bits
       // so res <= alpha
     } else {
       x = beta - x;
       if (x >= 6 * uint256(g)) return 0; // so x < 19 bits
-      uint256 g4 = uint256(g)**4; // < 64 bits (4*16)
+      uint256 g4 = uint256(g) ** 4; // < 64 bits (4*16)
       uint256 ex = g4 + expMul(x, g, g4); // < 156 bits
       res = (alpha * g4) / ex; // in worst case: (16 + 128 bits) / 156 bits
       // g8 <= ex, so res <= alpha
@@ -61,11 +54,7 @@ library AdaptiveFee {
   /// @notice calculates e^(x/g) * g^4 in a series, since (around zero):
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
-  function expMul(
-    uint256 x,
-    uint16 g,
-    uint256 gHighestDegree
-  ) internal pure returns (uint256 res) {
+  function expMul(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
     uint256 closestValue;
     {
       assembly {
