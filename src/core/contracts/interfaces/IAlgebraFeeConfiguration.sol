@@ -6,6 +6,7 @@ pragma solidity >=0.5.0;
  * @dev See the #AdaptiveFee.sol library for details.
  */
 interface IAlgebraFeeConfiguration {
+  // coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
   // alpha1 + alpha2 + baseFee must be <= type(uint16).max
   struct Configuration {
     uint16 alpha1; // max value of the first sigmoid

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
+pragma abicoder v2;
+
+import './IAlgebraFeeConfiguration.sol';
 
 /**
  * @title The interface for the Algebra Factory
@@ -121,13 +124,7 @@ interface IAlgebraFactory {
    * @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
    * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max
    * gammas must be > 0
-   * @param alpha1 max value of the first sigmoid
-   * @param alpha2 max value of the second sigmoid
-   * @param beta1 shift along the x-axis for the first sigmoid
-   * @param beta2 shift along the x-axis for the second sigmoid
-   * @param gamma1 horizontal stretch factor for the first sigmoid
-   * @param gamma2 horizontal stretch factor for the second sigmoid
-   * @param baseFee minimum possible fee
+   * @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
    */
-  function setBaseFeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee) external;
+  function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;
 }

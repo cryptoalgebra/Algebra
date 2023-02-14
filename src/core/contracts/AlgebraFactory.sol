@@ -122,20 +122,12 @@ contract AlgebraFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setBaseFeeConfiguration(
-    uint16 alpha1,
-    uint16 alpha2,
-    uint32 beta1,
-    uint32 beta2,
-    uint16 gamma1,
-    uint16 gamma2,
-    uint16 baseFee
-  ) external override onlyOwner {
-    require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(gamma1 != 0 && gamma2 != 0, 'Gammas must be > 0');
+  function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _config) external override onlyOwner {
+    require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
 
-    baseFeeConfiguration = IAlgebraFeeConfiguration.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
-    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
+    baseFeeConfiguration = _config;
+    emit FeeConfiguration(_config.alpha1, _config.alpha2, _config.beta1, _config.beta2, _config.gamma1, _config.gamma2, _config.baseFee);
   }
 
   bytes32 private constant POOL_INIT_CODE_HASH = 0x15b72ead84cfc5d89bda30e470273d32a67e8889f73b99288ed122abc3105549;
