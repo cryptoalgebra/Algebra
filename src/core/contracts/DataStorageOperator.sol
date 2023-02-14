@@ -10,8 +10,6 @@ import './interfaces/pool/IAlgebraPoolState.sol';
 import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
 
-import './libraries/Constants.sol';
-
 contract DataStorageOperator is IDataStorageOperator, Timestamp {
   uint256 constant UINT16_MODULO = 65536;
 
