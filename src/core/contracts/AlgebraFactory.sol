@@ -77,7 +77,7 @@ contract AlgebraFactory is IAlgebraFactory {
 
   /// @inheritdoc IAlgebraFactory
   function setOwner(address _owner) external override onlyOwner {
-    require(owner != _owner);
+    require(msg.sender != _owner);
     require(_owner != address(0), 'Cannot set 0 address as owner');
     _pendingOwner = _owner;
   }
@@ -92,9 +92,10 @@ contract AlgebraFactory is IAlgebraFactory {
 
   /// @inheritdoc IAlgebraFactory
   function renounceOwnership() external override onlyOwner {
+    // TODO MB ADD TIMELOCK
     delete owner;
     delete _pendingOwner;
-    emit Owner(owner);
+    emit Owner(address(0));
   }
 
   /// @inheritdoc IAlgebraFactory
