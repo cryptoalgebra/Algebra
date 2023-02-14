@@ -41,13 +41,13 @@ contract AlgebraFactory is IAlgebraFactory {
       Constants.BASE_FEE // baseFee
     );
 
+  /// @inheritdoc IAlgebraFactory
+  mapping(address => mapping(address => address)) public override poolByPair;
+
   modifier onlyOwner() {
     require(msg.sender == owner);
     _;
   }
-
-  /// @inheritdoc IAlgebraFactory
-  mapping(address => mapping(address => address)) public override poolByPair;
 
   constructor(address _poolDeployer, address _vaultAddress) {
     owner = msg.sender;
@@ -64,7 +64,7 @@ contract AlgebraFactory is IAlgebraFactory {
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
+    IDataStorageOperator dataStorage = new DataStorageOperator(_computeAddress(token0, token1));
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
@@ -142,7 +142,7 @@ contract AlgebraFactory is IAlgebraFactory {
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool
-  function computeAddress(address token0, address token1) internal view returns (address pool) {
+  function _computeAddress(address token0, address token1) internal view returns (address pool) {
     pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
   }
 }
