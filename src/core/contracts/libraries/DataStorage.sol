@@ -171,7 +171,7 @@ library DataStorage {
     } while (true);
 
     atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
-    assert(false);
+    assert(false); // code is unreachable, used for fuzzy testing
   }
 
   function getTickCumulativeAt(
