@@ -46,7 +46,7 @@ library AdaptiveFee {
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
   function expMul(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
-    uint256 closestValue;
+    uint256 closestValue; // TODO add comments
     {
       assembly {
         let xdg := div(x, g)
