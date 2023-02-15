@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '../libraries/DataStorage.sol';
@@ -81,7 +81,7 @@ contract DataStorageTest {
   }
 
   function volatilityOnRange(uint32 dt, int24 tick0, int24 tick1, int24 avgTick0, int24 avgTick1) external pure returns (uint256) {
-    return DataStorage._volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
+    return DataStorage._volatilityOnRange(int256(uint256(dt)), tick0, tick1, avgTick0, avgTick1);
   }
 
   function getAverageTick() external view returns (int256) {

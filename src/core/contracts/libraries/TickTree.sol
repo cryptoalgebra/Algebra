@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import './Constants.sol';
 import './TickMath.sol';
@@ -21,13 +21,15 @@ library TickTree {
     int24 tick,
     uint256 treeRoot
   ) internal returns (uint256 newTreeRoot) {
-    newTreeRoot = treeRoot;
-    (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
-    if (toggledNode) {
-      (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET);
+    unchecked {
+      newTreeRoot = treeRoot;
+      (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
       if (toggledNode) {
-        assembly {
-          newTreeRoot := xor(newTreeRoot, shl(nodeNumber, 1))
+        (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET);
+        if (toggledNode) {
+          assembly {
+            newTreeRoot := xor(newTreeRoot, shl(nodeNumber, 1))
+          }
         }
       }
     }
@@ -63,29 +65,31 @@ library TickTree {
     uint256 treeRoot,
     int24 tick
   ) internal view returns (int24 nextTick) {
-    tick++;
-    int16 nodeNumber;
-    bool initialized;
-    assembly {
-      // index in treeRoot
-      nodeNumber := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
-    }
-    if (treeRoot & (1 << uint256(nodeNumber)) != 0) {
-      // if subtree has active ticks
-      // try to find initialized tick in the corresponding leaf of the tree
-      (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
-      if (initialized) return nextTick;
+    unchecked {
+      tick++;
+      int16 nodeNumber;
+      bool initialized;
+      assembly {
+        // index in treeRoot
+        nodeNumber := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
+      }
+      if (treeRoot & (1 << uint256(int256(nodeNumber))) != 0) {
+        // if subtree has active ticks
+        // try to find initialized tick in the corresponding leaf of the tree
+        (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
+        if (initialized) return nextTick;
 
-      // try to find next initialized leaf in the tree
-      (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+        // try to find next initialized leaf in the tree
+        (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+      }
+      if (!initialized) {
+        // try to find which subtree has an active leaf
+        (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
+        if (!initialized) return TickMath.MAX_TICK;
+        nextTick = _getFirstTickInNode(secondLayer, nextTick);
+      }
+      nextTick = _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
     }
-    if (!initialized) {
-      // try to find which subtree has an active leaf
-      (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
-      if (!initialized) return TickMath.MAX_TICK;
-      nextTick = _getFirstTickInNode(secondLayer, nextTick);
-    }
-    nextTick = _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
   }
 
   /// @notice Calculates node with given tick and returns next active tick
@@ -94,15 +98,10 @@ library TickTree {
   /// @return nodeNumber Number of corresponding node
   /// @return nextTick Number of next active tick or last tick in node
   /// @return initialized Is nextTick initialized or not
-  function _getNextTickInSameNode(mapping(int16 => uint256) storage row, int24 tick)
-    private
-    view
-    returns (
-      int16 nodeNumber,
-      int24 nextTick,
-      bool initialized
-    )
-  {
+  function _getNextTickInSameNode(
+    mapping(int16 => uint256) storage row,
+    int24 tick
+  ) private view returns (int16 nodeNumber, int24 nextTick, bool initialized) {
     assembly {
       nodeNumber := sar(8, tick)
     }
@@ -127,16 +126,18 @@ library TickTree {
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
   function nextTickInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
-    uint256 bitNumber;
-    assembly {
-      bitNumber := and(tick, 0xFF)
-    }
-    uint256 _row = word >> bitNumber; // all the 1s at or to the left of the bitNumber
-    if (_row == 0) {
-      nextTick = tick + int24(255 - bitNumber);
-    } else {
-      nextTick = tick + int24(getSingleSignificantBit(-_row & _row)); // least significant bit
-      initialized = true;
+    unchecked {
+      uint256 bitNumber;
+      assembly {
+        bitNumber := and(tick, 0xFF)
+      }
+      uint256 _row = word >> bitNumber; // all the 1s at or to the left of the bitNumber
+      if (_row == 0) {
+        nextTick = tick + int24(uint24(255 - bitNumber));
+      } else {
+        nextTick = tick + int24(uint24(getSingleSignificantBit((0 - _row) & _row))); // least significant bit
+        initialized = true;
+      }
     }
   }
 

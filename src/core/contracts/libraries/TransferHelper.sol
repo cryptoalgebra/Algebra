@@ -8,17 +8,15 @@ import '../interfaces/IERC20Minimal.sol';
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/blob/main/contracts/libraries
 library TransferHelper {
+  error TF();
+
   /// @notice Transfers tokens from msg.sender to a recipient
   /// @dev Calls transfer on token contract, errors with TF if transfer fails
   /// @param token The contract address of the token which will be transferred
   /// @param to The recipient of the transfer
   /// @param value The value of the transfer
-  function safeTransfer(
-    address token,
-    address to,
-    uint256 value
-  ) internal {
+  function safeTransfer(address token, address to, uint256 value) internal {
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20Minimal.transfer.selector, to, value));
-    require(success && (data.length == 0 || abi.decode(data, (bool))), 'TF');
+    if (!success || !(data.length == 0 || abi.decode(data, (bool)))) revert TF();
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../libraries/TickManager.sol';
 
@@ -34,11 +34,7 @@ contract TickOverflowSafetyEchidnaTest {
     totalGrowth1 += amount;
   }
 
-  function setPosition(
-    int24 bottomTick,
-    int24 topTick,
-    int128 liquidityDelta
-  ) external {
+  function setPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) external {
     require(bottomTick > MIN_TICK);
     require(topTick < MAX_TICK);
     require(bottomTick < topTick);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import './DataStorageTest.sol';
@@ -51,6 +51,7 @@ contract DataStorageEchidnaTest {
 
     (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
     int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / timeElapsed;
+    int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / int56(uint56(timeElapsed));
     assert(timeWeightedTick <= type(int24).max);
     assert(timeWeightedTick >= type(int24).min);
   }
@@ -91,7 +92,7 @@ contract DataStorageEchidnaTest {
 
     uint32 timeElapsed = blockTimestamp1 - blockTimestamp0;
     assert(timeElapsed > 0);
-    assert((tickCumulative1 - tickCumulative0) % timeElapsed == 0);
+    assert((tickCumulative1 - tickCumulative0) % int56(uint56(timeElapsed)) == 0);
   }
 
   function checkTimeWeightedAveragesAlwaysFitsType(uint32 secondsAgo) external view {
@@ -104,8 +105,8 @@ contract DataStorageEchidnaTest {
 
     // compute the time weighted tick, rounded towards negative infinity
     int56 numerator = tickCumulatives[1] - tickCumulatives[0];
-    int56 timeWeightedTick = numerator / int56(secondsAgo);
-    if (numerator < 0 && numerator % int56(secondsAgo) != 0) {
+    int56 timeWeightedTick = numerator / int56(uint56(secondsAgo));
+    if (numerator < 0 && numerator % int56(uint56(secondsAgo)) != 0) {
       timeWeightedTick--;
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
@@ -13,6 +13,11 @@ import './Constants.sol';
 library TickManager {
   using LowGasSafeMath for int256;
   using SafeCast for int256;
+
+  error TLU();
+  error TLM();
+  error TUM();
+  error LO();
 
   // info stored for each initialized individual tick
   struct Tick {
@@ -30,9 +35,9 @@ library TickManager {
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
-    require(topTick < TickMath.MAX_TICK + 1, 'TUM');
-    require(topTick >= bottomTick, 'TLU');
-    require(bottomTick > TickMath.MIN_TICK - 1, 'TLM');
+    if (topTick > TickMath.MAX_TICK) revert TUM();
+    if (topTick < bottomTick) revert TLU();
+    if (bottomTick < TickMath.MIN_TICK) revert TLM();
   }
 
   /// @notice Retrieves fee growth data
@@ -52,22 +57,24 @@ library TickManager {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token
   ) internal view returns (uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token) {
-    Tick storage lower = self[bottomTick];
-    Tick storage upper = self[topTick];
+    unchecked {
+      Tick storage lower = self[bottomTick];
+      Tick storage upper = self[topTick];
 
-    if (currentTick < topTick) {
-      if (currentTick >= bottomTick) {
-        innerFeeGrowth0Token = totalFeeGrowth0Token - lower.outerFeeGrowth0Token;
-        innerFeeGrowth1Token = totalFeeGrowth1Token - lower.outerFeeGrowth1Token;
+      if (currentTick < topTick) {
+        if (currentTick >= bottomTick) {
+          innerFeeGrowth0Token = totalFeeGrowth0Token - lower.outerFeeGrowth0Token;
+          innerFeeGrowth1Token = totalFeeGrowth1Token - lower.outerFeeGrowth1Token;
+        } else {
+          innerFeeGrowth0Token = lower.outerFeeGrowth0Token;
+          innerFeeGrowth1Token = lower.outerFeeGrowth1Token;
+        }
+        innerFeeGrowth0Token -= upper.outerFeeGrowth0Token;
+        innerFeeGrowth1Token -= upper.outerFeeGrowth1Token;
       } else {
-        innerFeeGrowth0Token = lower.outerFeeGrowth0Token;
-        innerFeeGrowth1Token = lower.outerFeeGrowth1Token;
+        innerFeeGrowth0Token = upper.outerFeeGrowth0Token - lower.outerFeeGrowth0Token;
+        innerFeeGrowth1Token = upper.outerFeeGrowth1Token - lower.outerFeeGrowth1Token;
       }
-      innerFeeGrowth0Token -= upper.outerFeeGrowth0Token;
-      innerFeeGrowth1Token -= upper.outerFeeGrowth1Token;
-    } else {
-      innerFeeGrowth0Token = upper.outerFeeGrowth0Token - lower.outerFeeGrowth0Token;
-      innerFeeGrowth1Token = upper.outerFeeGrowth1Token - lower.outerFeeGrowth1Token;
     }
   }
 
@@ -99,12 +106,12 @@ library TickManager {
     uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-    require(liquidityTotalAfter < Constants.MAX_LIQUIDITY_PER_TICK + 1, 'LO');
+    if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert LO();
 
     // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
     data.liquidityDelta = upper
-      ? int256(liquidityDeltaBefore).sub(liquidityDelta).toInt128()
-      : int256(liquidityDeltaBefore).add(liquidityDelta).toInt128();
+      ? (int256(liquidityDeltaBefore) - liquidityDelta).toInt128()
+      : (int256(liquidityDeltaBefore) + liquidityDelta).toInt128();
 
     data.liquidityTotal = liquidityTotalAfter;
 
@@ -139,15 +146,17 @@ library TickManager {
     uint160 secondsPerLiquidityCumulative,
     uint32 time
   ) internal returns (int128 liquidityDelta) {
-    Tick storage data = self[tick];
+    unchecked {
+      Tick storage data = self[tick];
 
-    data.outerSecondsSpent = time - data.outerSecondsSpent;
-    data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
+      data.outerSecondsSpent = time - data.outerSecondsSpent;
+      data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
 
-    data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
-    data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
+      data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+      data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
 
-    return data.liquidityDelta;
+      return data.liquidityDelta;
+    }
   }
 
   /// @notice Used for initial setup if ticks list

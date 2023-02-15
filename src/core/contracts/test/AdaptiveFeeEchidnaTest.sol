@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../libraries/AdaptiveFee.sol';
 
@@ -7,17 +7,12 @@ contract AdaptiveFeeEchidnaTest {
   function expInvariants(uint256 x, uint16 gamma) external pure {
     require(gamma != 0);
     if (x >= 6 * gamma) return;
-    uint256 g8 = uint256(gamma)**8;
+    uint256 g8 = uint256(gamma) ** 8;
     uint256 exp = AdaptiveFee.expMul(x, gamma, g8);
-    assert(exp < 2**137);
+    assert(exp < 2 ** 137);
   }
 
-  function sigmoidInvariants(
-    uint256 x,
-    uint16 gamma,
-    uint16 alpha,
-    uint256 beta
-  ) external pure {
+  function sigmoidInvariants(uint256 x, uint16 gamma, uint16 alpha, uint256 beta) external pure {
     require(gamma != 0);
     uint256 res = AdaptiveFee.sigmoid(x, gamma, alpha, beta);
     assert(res <= type(uint16).max);

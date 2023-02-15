@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 abstract contract Timestamp {
   /// @dev This function is created for testing by overriding it.
