@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../interfaces/IERC20Minimal.sol';
 
@@ -18,27 +19,31 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   using SafeCast for uint256;
 
   function swapExact0For1(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swap(recipient, true, amount0In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swap(recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swapExact0For1SupportingFee(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, amount0In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap0ForExact1(address pool, uint256 amount1Out, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swap(recipient, true, -amount1Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    unchecked {
+      IAlgebraPool(pool).swap(recipient, true, -amount1Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    }
   }
 
   function swapExact1For0(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swap(recipient, false, amount1In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swap(recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swapExact1For0SupportingFee(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, amount1In.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap1ForExact0(address pool, uint256 amount0Out, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swap(recipient, false, -amount0Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    unchecked {
+      IAlgebraPool(pool).swap(recipient, false, -amount0Out.toInt256(), limitSqrtPrice, abi.encode(msg.sender));
+    }
   }
 
   function swapToLowerSqrtPrice(address pool, uint160 price, address recipient) external {
@@ -52,17 +57,19 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
 
   function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
-    address sender = abi.decode(data, (address));
+    unchecked {
+      address sender = abi.decode(data, (address));
 
-    emit SwapCallback(amount0Delta, amount1Delta);
+      emit SwapCallback(amount0Delta, amount1Delta);
 
-    if (amount0Delta > 0) {
-      IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, uint256(amount0Delta));
-    } else if (amount1Delta > 0) {
-      IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, uint256(amount1Delta));
-    } else {
-      // if both are not gt 0, both must be 0.
-      assert(amount0Delta == 0 && amount1Delta == 0);
+      if (amount0Delta > 0) {
+        IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(sender, msg.sender, uint256(amount0Delta));
+      } else if (amount1Delta > 0) {
+        IERC20Minimal(IAlgebraPool(msg.sender).token1()).transferFrom(sender, msg.sender, uint256(amount1Delta));
+      } else {
+        // if both are not gt 0, both must be 0.
+        assert(amount0Delta == 0 && amount1Delta == 0);
+      }
     }
   }
 

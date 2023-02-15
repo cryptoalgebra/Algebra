@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../libraries/LiquidityMath.sol';
 
@@ -9,8 +10,10 @@ contract LiquidityMathTest {
   }
 
   function getGasCostOfAddDelta(uint128 x, int128 y) external view returns (uint256) {
-    uint256 gasBefore = gasleft();
-    LiquidityMath.addDelta(x, y);
-    return gasBefore - gasleft();
+    unchecked {
+      uint256 gasBefore = gasleft();
+      LiquidityMath.addDelta(x, y);
+      return gasBefore - gasleft();
+    }
   }
 }

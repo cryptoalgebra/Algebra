@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
-pragma abicoder v2;
 
 import '../interfaces/IAlgebraFeeConfiguration.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
@@ -48,6 +47,8 @@ contract MockTimeAlgebraPoolDeployer {
   /// @param token1 second token
   /// @return pool The contract address of the V3 pool
   function computeAddress(bytes32 initCodeHash, address token0, address token1) internal view returns (address pool) {
-    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', address(this), keccak256(abi.encode(token0, token1)), initCodeHash)))));
+    unchecked {
+      pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', address(this), keccak256(abi.encode(token0, token1)), initCodeHash)))));
+    }
   }
 }

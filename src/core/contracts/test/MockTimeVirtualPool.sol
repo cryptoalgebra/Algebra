@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../interfaces/IAlgebraVirtualPool.sol';
 
@@ -23,7 +24,9 @@ contract MockTimeVirtualPool is IAlgebraVirtualPool {
     zeroToOne;
     if (!isExist) return false;
     currentTick = nextTick;
-    if (isStarted) timestamp = uint32(block.timestamp);
+    unchecked {
+      if (isStarted) timestamp = uint32(block.timestamp);
+    }
     return true;
   }
 }

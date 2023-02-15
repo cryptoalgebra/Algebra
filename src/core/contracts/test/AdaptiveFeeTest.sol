@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../interfaces/IAlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
@@ -22,8 +23,10 @@ contract AdaptiveFeeTest {
   }
 
   function getGasCostOfGetFee(uint88 volatility) external view returns (uint256) {
-    uint256 gasBefore = gasleft();
-    AdaptiveFee.getFee(volatility, feeConfig);
-    return gasBefore - gasleft();
+    unchecked {
+      uint256 gasBefore = gasleft();
+      AdaptiveFee.getFee(volatility, feeConfig);
+      return gasBefore - gasleft();
+    }
   }
 }
