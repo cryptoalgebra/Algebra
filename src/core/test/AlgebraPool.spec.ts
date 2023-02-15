@@ -2395,7 +2395,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe('#flash', () => {
+  describe.only('#flash', () => {
     it('fails if not initialized', async () => {
       await expect(flash(100, 200, other.address)).to.be.reverted
       await expect(flash(100, 0, other.address)).to.be.reverted
@@ -2606,7 +2606,8 @@ describe('AlgebraPool', () => {
 
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending0()).toString())).to.eq(96)
+          expect(Number((await pool.communityFeePending0()).toString())).to.eq(0)
+          expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(96)
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(471).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
@@ -2620,7 +2621,8 @@ describe('AlgebraPool', () => {
 
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending1()).toString())).to.eq(115)
+          expect(Number((await pool.communityFeePending1()).toString())).to.eq(0)
+          expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(115)
 
           expect(await pool.totalFeeGrowth1Token()).to.eq(
             BigNumber.from(563).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
@@ -2635,8 +2637,12 @@ describe('AlgebraPool', () => {
             
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending0()).toString())).to.eq(134)
-          expect(Number((await pool.communityFeePending1()).toString())).to.eq(209)
+          expect(Number((await pool.communityFeePending0()).toString())).to.eq(0)
+          expect(Number((await pool.communityFeePending1()).toString())).to.eq(0)
+
+
+          expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(134)
+          expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(209)
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(655).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))

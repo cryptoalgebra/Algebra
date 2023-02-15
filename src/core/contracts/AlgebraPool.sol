@@ -581,10 +581,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return IAlgebraFactory(factory).vaultAddress();
   }
 
-  function _payCommunityFee(address token, uint256 amount) private {
+  function _payCommunityFee(uint256 amount0, uint256 amount1) private {
     (uint128 _communityFeePending0, uint128 _communityFeePending1) = (communityFeePending0, communityFeePending1);
-    if (token == token0) _communityFeePending0 += uint128(amount);
-    else _communityFeePending1 += uint128(amount);
+    if (amount0 > 0) _communityFeePending0 += uint128(amount0);
+    if (amount1 > 0) _communityFeePending1 += uint128(amount1);
 
     if (_blockTimestamp() - communityFeeLastTimestamp >= 8 hours) {
       // TODO CONST
@@ -647,14 +647,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
       reserve0 = balanceBefore + uint256(amount0);
-      if (communityFee > 0) _payCommunityFee(token0, communityFee);
+      if (communityFee > 0) _payCommunityFee(communityFee, 0);
     } else {
       (, uint256 balanceBefore) = _syncBalances();
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
       reserve1 = balanceBefore + uint256(amount1);
-      if (communityFee > 0) _payCommunityFee(token1, communityFee);
+      if (communityFee > 0) _payCommunityFee(0, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -701,7 +701,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         amountRequired = int256(amount0);
       }
       reserve0 = reserve0 + uint256(amountRequired);
-      if (communityFee > 0) _payCommunityFee(token0, communityFee);
+      if (communityFee > 0) _payCommunityFee(communityFee, 0);
     } else {
       if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0));
       // return the leftovers
@@ -710,7 +710,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         amountRequired = int256(amount1);
       }
       reserve1 = reserve1 + uint256(amountRequired);
-      if (communityFee > 0) _payCommunityFee(token1, communityFee);
+      if (communityFee > 0) _payCommunityFee(0, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -966,8 +966,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 _communityFee = globalState.communityFee;
     if (_communityFee > 0) {
       // TODO optimize
-      if (paid0 > 0) communityFeePending0 += uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-      if (paid1 > 0) communityFeePending1 += uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+      uint128 communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+      uint128 communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+      if (communityFee0 > 0) reserve0 += communityFee0;
+      if (communityFee1 > 0) reserve1 += communityFee1;
+      _payCommunityFee(communityFee0, communityFee1);
     }
 
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
