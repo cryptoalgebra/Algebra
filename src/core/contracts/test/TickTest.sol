@@ -40,7 +40,13 @@ contract TickTest {
     delete ticks[tick];
   }
 
-  function cross(int24 tick, uint256 totalFeeGrowth0Token, uint256 totalFeeGrowth1Token) external returns (int128 liquidityDelta) {
-    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
+  function cross(
+    int24 tick,
+    uint256 totalFeeGrowth0Token,
+    uint256 totalFeeGrowth1Token,
+    uint160 secondsPerLiquidityCumulative,
+    uint32 timestamp
+  ) external returns (int128 liquidityDelta) {
+    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, timestamp);
   }
 }

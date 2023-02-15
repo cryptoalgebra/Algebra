@@ -65,6 +65,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
 
   /// @inheritdoc IDataStorageOperator
   function getTimepointsWithParams(
+    // TODO REMOVE TO TEST CONTRACT
     uint32 time,
     uint32[] memory secondsAgos,
     int24 tick,

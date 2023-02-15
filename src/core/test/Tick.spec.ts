@@ -40,7 +40,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -57,7 +57,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -74,7 +74,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -85,7 +85,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -102,7 +102,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -113,7 +113,7 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -144,9 +144,9 @@ describe('Tick', () => {
       expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, 0, 0, false,)).to.eq(false)
     })
     it('reverts if total liquidity gross is greater than max', async () => {
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, false,)
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, true,)
-      await expect(tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, false,)).to.be.revertedWith('LO')
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, false,)
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, true,)
+      await expect(tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, false,)).to.be.revertedWith('LO')
     })
     it('nets the liquidity based on upper flag', async () => {
       await tickTest.update(0, 0, 2, 0, 0, 0, 0, false,)
@@ -158,7 +158,7 @@ describe('Tick', () => {
       expect(liquidityDelta).to.eq(2 - 1 - 3 + 1)
     })
     it('reverts on overflow liquidity gross', async () => {
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2).sub(1), 0, 0, 0, 0, false)
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2).sub(1), 0, 0, 0, 0, false)
       await expect(tickTest.update(0, 0,  MaxUint128.div(2).sub(1), 0, 0, 0, 0, false)).to.be.reverted
     })
     it('assumes all growth happens below ticks lte current tick', async () => {
@@ -168,13 +168,13 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        initialized,
+        hasLimitOrders,
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
       expect(outerSecondsPerLiquidity).to.eq(3)
       expect(outerSecondsSpent).to.eq(5)
-      expect(initialized).to.eq(true)
+      expect(hasLimitOrders).to.eq(false)
     })
     it('does not set any growth fields if tick is already initialized', async () => {
       await tickTest.update(1, 1, 1, 1, 2, 3, 4, false)
@@ -184,13 +184,13 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        initialized,
+        hasLimitOrders,
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
       expect(outerSecondsPerLiquidity).to.eq(3)
       expect(outerSecondsSpent).to.eq(4)
-      expect(initialized).to.eq(true)
+      expect(hasLimitOrders).to.eq(false)
     })
     it('does not set any growth fields for ticks gt current tick', async () => {
       await tickTest.update(2, 1, 1, 1, 2, 3, 4, false)
@@ -199,13 +199,13 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        initialized,
+        hasLimitOrders,
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
       expect(outerSecondsPerLiquidity).to.eq(0)
       expect(outerSecondsSpent).to.eq(0)
-      expect(initialized).to.eq(true)
+      expect(hasLimitOrders).to.eq(false)
     })
   })
 
@@ -219,7 +219,7 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -231,7 +231,7 @@ describe('Tick', () => {
         outerSecondsPerLiquidity,
         liquidityTotal,
         liquidityDelta,
-        initialized,
+        hasLimitOrders,
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
@@ -239,7 +239,7 @@ describe('Tick', () => {
       expect(outerSecondsPerLiquidity).to.eq(0)
       expect(liquidityTotal).to.eq(0)
       expect(liquidityDelta).to.eq(0)
-      expect(initialized).to.eq(false)
+      expect(hasLimitOrders).to.eq(false)
     })
   })
 
@@ -252,7 +252,7 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -276,7 +276,7 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        initialized: true,
+        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })

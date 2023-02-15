@@ -85,6 +85,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       ticks[topTick].outerSecondsSpent
     );
 
+    // TODO uninitialized ticks
     (int24 currentTick, uint16 currentTimepointIndex) = (globalState.tick, globalState.timepointIndex);
 
     if (currentTick < bottomTick) {

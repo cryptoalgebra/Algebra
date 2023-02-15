@@ -7,6 +7,9 @@ import { TestERC20 } from '../../typechain/test/TestERC20'
 
 export const MaxUint128 = BigNumber.from(2).pow(128).sub(1)
 
+export const MIN_TICK = -887272;
+export const MAX_TICK = -MIN_TICK;
+
 export const getMinTick = (tickSpacing: number) => Math.ceil(-887272 / tickSpacing) * tickSpacing
 export const getMaxTick = (tickSpacing: number) => Math.floor(887272 / tickSpacing) * tickSpacing
 
