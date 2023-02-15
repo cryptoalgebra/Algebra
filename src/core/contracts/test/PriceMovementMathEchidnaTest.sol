@@ -11,13 +11,12 @@ contract PriceMovementMathEchidnaTest {
     uint128 liquidity,
     int256 amountRemaining,
     uint16 feePips
-  ) external view {
+  ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
     require(feePips > 0);
     require(feePips < 1e6);
 
-    int24 currentTick = TickMath.getTickAtSqrtRatio(sqrtPriceRaw);
     (uint160 sqrtQ, uint256 amountIn, uint256 amountOut, uint256 feeAmount) = PriceMovementMath.movePriceTowardsTarget(
       sqrtPriceTargetRaw <= sqrtPriceRaw,
       sqrtPriceRaw,
