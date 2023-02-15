@@ -64,23 +64,6 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getTimepointsWithParams(
-    // TODO REMOVE TO TEST CONTRACT
-    uint32 time,
-    uint32[] memory secondsAgos,
-    int24 tick,
-    uint16 index,
-    uint128 liquidity
-  )
-    public
-    view
-    override
-    returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives)
-  {
-    return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
-  }
-
-  /// @inheritdoc IDataStorageOperator
   function getTimepoints(
     uint32[] memory secondsAgos
   )
@@ -102,13 +85,6 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     uint128 liquidity
   ) external view override returns (uint160 secondsPerLiquidityCumulative) {
     return timepoints.getSecondsPerLiquidityCumulativeAt(time, secondsAgo, index, timepoints.getOldestIndex(index), liquidity);
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function getAverageVolatility(uint32 time, int24 tick, uint16 index) external view override returns (uint112 volatilityAverage) {
-    uint16 oldestIndex = timepoints.getOldestIndex(index);
-    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(time, 0, tick, index, oldestIndex);
-    return timepoints.getAverageVolatility(time, tick, index, oldestIndex, lastVolatilityCumulative);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -134,11 +110,13 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
 
   /// @inheritdoc IDataStorageOperator
   function getFee(uint32 _time, int24 _tick, uint16 _index) external view override returns (uint16 fee) {
-    uint16 oldestIndex = timepoints.getOldestIndex(_index);
+    return AdaptiveFee.getFee(getAverageVolatility(_time, _tick, _index) / 15, feeConfig); // TODO CONST
+  }
 
-    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(_time, 0, _tick, _index, oldestIndex);
-
-    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, _tick, _index, oldestIndex, lastVolatilityCumulative);
-    return AdaptiveFee.getFee(volatilityAverage / 15, feeConfig); // TODO CONST
+  /// @inheritdoc IDataStorageOperator
+  function getAverageVolatility(uint32 time, int24 tick, uint16 index) public view override returns (uint88 volatilityAverage) {
+    uint16 oldestIndex = timepoints.getOldestIndex(index);
+    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(time, 0, tick, index, oldestIndex);
+    return timepoints.getAverageVolatility(time, tick, index, oldestIndex, lastVolatilityCumulative);
   }
 }

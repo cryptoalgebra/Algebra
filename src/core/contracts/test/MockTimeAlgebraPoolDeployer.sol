@@ -6,7 +6,7 @@ import '../interfaces/IAlgebraFeeConfiguration.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 
 import './MockTimeAlgebraPool.sol';
-import '../DataStorageOperator.sol';
+import './MockTimeDataStorageOperator.sol';
 
 contract MockTimeAlgebraPoolDeployer {
   address private dataStorageCache;
@@ -33,7 +33,7 @@ contract MockTimeAlgebraPoolDeployer {
 
   function deployMock(address _factory, address token0, address token1) external returns (address pool) {
     bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
-    DataStorageOperator dataStorage = (new DataStorageOperator(computeAddress(initCodeHash, token0, token1)));
+    DataStorageOperator dataStorage = (new MockTimeDataStorageOperator(computeAddress(initCodeHash, token0, token1)));
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 

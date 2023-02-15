@@ -59,24 +59,6 @@ interface IDataStorageOperator {
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
-  /// @param time The current block.timestamp
-  /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
-  /// @param tick The current tick
-  /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
-  /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
-  /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
-  /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
-  function getTimepointsWithParams(
-    uint32 time,
-    uint32[] memory secondsAgos,
-    int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives);
-
-  /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
-  /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
@@ -91,13 +73,6 @@ interface IDataStorageOperator {
     uint16 index,
     uint128 liquidity
   ) external view returns (uint160 secondsPerLiquidityCumulative);
-
-  /// @notice Returns average volatility in the range from time-WINDOW to time
-  /// @param time The current block.timestamp
-  /// @param tick The current tick
-  /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @return volatilityAverage The average volatility in the recent range
-  function getAverageVolatility(uint32 time, int24 tick, uint16 index) external view returns (uint112 volatilityAverage);
 
   /// @notice Writes a dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
@@ -118,4 +93,11 @@ interface IDataStorageOperator {
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @return fee The fee in hundredths of a bip, i.e. 1e-6
   function getFee(uint32 time, int24 tick, uint16 index) external view returns (uint16 fee);
+
+  /// @notice Returns average volatility in the range from time-WINDOW to time
+  /// @param time The current block.timestamp
+  /// @param tick The current tick
+  /// @param index The index of the timepoint that was most recently written to the timepoints array
+  /// @return volatilityAverage The average volatility in the recent range
+  function getAverageVolatility(uint32 time, int24 tick, uint16 index) external view returns (uint88 volatilityAverage);
 }

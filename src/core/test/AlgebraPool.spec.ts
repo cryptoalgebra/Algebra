@@ -35,7 +35,7 @@ import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
-import { DataStorageOperator } from '../typechain/DataStorageOperator';
+import { MockTimeDataStorageOperator } from '../typechain/test/MockTimeDataStorageOperator';
 
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
@@ -49,7 +49,7 @@ describe('AlgebraPool', () => {
 
   let factory: AlgebraFactory
   let pool: MockTimeAlgebraPool
-  let dsOperator: DataStorageOperator
+  let dsOperator: MockTimeDataStorageOperator
 
   let swapTarget: TestAlgebraCallee
 
@@ -108,8 +108,8 @@ describe('AlgebraPool', () => {
     }
 
     pool = await createPool()
-    const dsOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
-    dsOperator = (dsOperatorFactory.attach(await pool.dataStorageOperator())) as DataStorageOperator;
+    const dsOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
+    dsOperator = (dsOperatorFactory.attach(await pool.dataStorageOperator())) as MockTimeDataStorageOperator;
   })
 
   it('constructor initializes immutables', async () => {
@@ -660,6 +660,7 @@ describe('AlgebraPool', () => {
       // moves to tick -1
       await swapExact0For1(1000, wallet.address)
       await pool.advanceTime(4)
+      await dsOperator.advanceTime(4);
       let {
         tickCumulatives: [tickCumulative],
       } = await dsOperator.getTimepoints([0])
@@ -670,13 +671,15 @@ describe('AlgebraPool', () => {
       await swapExact0For1(expandTo18Decimals(1).div(2), wallet.address)
       expect((await pool.globalState()).tick).to.eq(-4463)
       await pool.advanceTime(4)
+      await dsOperator.advanceTime(4);
       await swapExact1For0(expandTo18Decimals(1).div(4), wallet.address)
       expect((await pool.globalState()).tick).to.eq(-1600)
       await pool.advanceTime(6)
+      await dsOperator.advanceTime(6);
       let {
         tickCumulatives: [tickCumulative],
       } = await dsOperator.getTimepoints([0])
-      expect(tickCumulative).to.eq(-27440)
+      expect(tickCumulative).to.eq(-27452)
     })
   })
 
