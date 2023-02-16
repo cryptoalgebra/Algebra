@@ -153,11 +153,10 @@ describe('AlgebraPool', () => {
       expect(timepointIndex).to.eq(0)
       expect((await pool.globalState()).tick).to.eq(-6932)
     })
-    it('initializes the first timepoints slot', async () => {
+    it('initializes timepoints slot', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       checkTimepointEquals(await dsOperator.timepoints(0), {
         initialized: true,
-        secondsPerLiquidityCumulative: 0,
         blockTimestamp: TEST_POOL_START_TIME,
         tickCumulative: 0,
       })
@@ -356,7 +355,6 @@ describe('AlgebraPool', () => {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
-              secondsPerLiquidityCumulative: 0,
             })
             await pool.advanceTime(1)
             await mint(wallet.address, -240, 0, 100)
@@ -364,7 +362,6 @@ describe('AlgebraPool', () => {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
-              secondsPerLiquidityCumulative: 0,
             })
           })
         })
@@ -421,7 +418,6 @@ describe('AlgebraPool', () => {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
-              secondsPerLiquidityCumulative: 0,
             })
             await pool.advanceTime(1)
             await mint(wallet.address, minTick, maxTick, 100)
@@ -429,8 +425,8 @@ describe('AlgebraPool', () => {
               tickCumulative: -23028,
               blockTimestamp: TEST_POOL_START_TIME + 1,
               initialized: true,
-              secondsPerLiquidityCumulative: '107650226801941937191829992860413859',
             })
+            expect(await pool.secondsPerLiquidityCumulative()).to.be.eq('107650226801941937191829992860413859');
           })
         })
 
@@ -476,17 +472,17 @@ describe('AlgebraPool', () => {
             checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
-              initialized: true,
-              secondsPerLiquidityCumulative: 0,
+              initialized: true
             })
+            expect(await pool.secondsPerLiquidityCumulative()).to.be.eq(0);
             await pool.advanceTime(1)
             await mint(wallet.address, -46080, -23040, 100)
             checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
-              secondsPerLiquidityCumulative: 0,
             })
+            expect(await pool.secondsPerLiquidityCumulative()).to.be.eq(0);
           })
         })
       })
@@ -2761,6 +2757,7 @@ describe('AlgebraPool', () => {
         innerSecondsSpentPerLiquidity,
         innerSecondsSpent,
       } = await pool.getInnerCumulatives(bottomTick, topTick)
+
       expect(innerSecondsSpentPerLiquidity).to.eq(BigNumber.from(5).shl(128).div(10))
       expect(innerSecondsSpent).to.eq(5)
     })

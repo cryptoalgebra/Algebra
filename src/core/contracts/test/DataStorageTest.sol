@@ -41,7 +41,7 @@ contract DataStorageTest {
   // write a timepoint, then change tick and liquidity
   function update(UpdateParams calldata params) external {
     advanceTime(params.advanceTimeBy);
-    (index, ) = timepoints.write(index, time, tick, liquidity);
+    (index, ) = timepoints.write(index, time, tick);
     tick = params.tick;
     liquidity = params.liquidity;
   }
@@ -55,7 +55,7 @@ contract DataStorageTest {
 
     for (uint256 i; i < params.length; ++i) {
       _time += params[i].advanceTimeBy;
-      (_index, ) = timepoints.write(_index, _time, _tick, _liquidity);
+      (_index, ) = timepoints.write(_index, _time, _tick);
       _tick = params[i].tick;
       _liquidity = params[i].liquidity;
     }
@@ -69,14 +69,14 @@ contract DataStorageTest {
 
   function getTimepoints(
     uint32[] calldata secondsAgos
-  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives) {
-    return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
+  ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+    return timepoints.getTimepoints(time, secondsAgos, tick, index);
   }
 
   function getGasCostOfGetPoints(uint32[] calldata secondsAgos) external view returns (uint256) {
-    (uint32 _time, int24 _tick, uint128 _liquidity, uint16 _index) = (time, tick, liquidity, index);
+    (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
     uint256 gasBefore = gasleft();
-    timepoints.getTimepoints(_time, secondsAgos, _tick, _index, _liquidity);
+    timepoints.getTimepoints(_time, secondsAgos, _tick, _index);
     return gasBefore - gasleft();
   }
 

@@ -13,7 +13,6 @@ library DataStorage {
     bool initialized; // whether or not the timepoint is initialized
     uint32 blockTimestamp; // the block timestamp of the timepoint
     int56 tickCumulative; // the tick accumulator, i.e. tick * time elapsed since the pool was first initialized
-    uint160 secondsPerLiquidityCumulative; // the seconds per liquidity since the pool was first initialized
     uint88 volatilityCumulative; // the volatility accumulator; overflow after ~34800 years is desired :)
     int24 averageTick; // average tick at this blockTimestamp
   }
@@ -50,7 +49,6 @@ library DataStorage {
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
   /// @param prevTick The active tick at the time of the last timepoint
-  /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @param averageTick The average tick at the time of the new timepoint
   /// @return Timepoint The newly populated timepoint
   function createNewTimepoint(
@@ -58,7 +56,6 @@ library DataStorage {
     uint32 blockTimestamp,
     int24 tick,
     int24 prevTick,
-    uint128 liquidity,
     int24 averageTick
   ) private pure returns (Timepoint memory) {
     uint32 delta = blockTimestamp - last.blockTimestamp;
@@ -66,7 +63,6 @@ library DataStorage {
     last.initialized = true;
     last.blockTimestamp = blockTimestamp;
     last.tickCumulative += int56(tick) * delta;
-    last.secondsPerLiquidityCumulative += ((uint160(delta) << 128) / (liquidity > 0 ? liquidity : 1)); // just timedelta if liquidity == 0
     last.volatilityCumulative += uint88(_volatilityOnRange(delta, prevTick, tick, last.averageTick, averageTick)); // always fits 88 bits
     last.averageTick = averageTick;
 
@@ -236,31 +232,6 @@ library DataStorage {
     return tickCumulativeBefore + ((tickCumulativeAfter - tickCumulativeBefore) / timepointTimeDelta) * targetDelta;
   }
 
-  function getSecondsPerLiquidityCumulativeAt(
-    Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
-    uint32 secondsAgo,
-    uint16 lastIndex,
-    uint16 oldestIndex,
-    uint128 liquidity
-  ) internal view returns (uint160 secondsPerLiquidityCumulative) {
-    uint32 target = time - secondsAgo;
-    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(self, time, target, lastIndex, oldestIndex);
-
-    (uint32 timestampBefore, uint160 secondsPerLiquidityCumulativeBefore) = (beforeOrAt.blockTimestamp, beforeOrAt.secondsPerLiquidityCumulative);
-    if (target == timestampBefore) return secondsPerLiquidityCumulativeBefore; // we're at the left boundary
-    if (!isDifferent) return (secondsPerLiquidityCumulativeBefore + ((uint160(target - timestampBefore) << 128) / (liquidity > 0 ? liquidity : 1))); // if target is newer than last timepoint
-
-    (uint32 timestampAfter, uint160 secondsPerLiquidityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.secondsPerLiquidityCumulative);
-    if (target == timestampAfter) return secondsPerLiquidityCumulativeAfter; // we're at the right boundary
-
-    // we're in the middle
-    (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - timestampBefore, target - timestampBefore);
-    return
-      secondsPerLiquidityCumulativeBefore +
-      uint160((uint256(secondsPerLiquidityCumulativeAfter - secondsPerLiquidityCumulativeBefore) * targetDelta) / timepointTimeDelta);
-  }
-
   function getVolatilityCumulativeAt(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -269,15 +240,10 @@ library DataStorage {
     uint16 lastIndex,
     uint16 oldestIndex
   ) internal view returns (uint88 volatilityCumulative) {
-    (Timepoint memory beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(
-      self,
-      time,
-      time - secondsAgo,
-      lastIndex,
-      oldestIndex
-    );
+    uint32 target = time - secondsAgo;
+    (Timepoint memory beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(self, time, target, lastIndex, oldestIndex);
 
-    if (time - secondsAgo == beforeOrAt.blockTimestamp) return beforeOrAt.volatilityCumulative; // we're at the left boundary
+    if (target == beforeOrAt.blockTimestamp) return beforeOrAt.volatilityCumulative; // we're at the left boundary
     if (!isDifferent) {
       // if target is newer than last timepoint
       (int24 avgTick, int24 prevTick) = getAvgAndPrevTick(
@@ -290,10 +256,8 @@ library DataStorage {
         beforeOrAt.tickCumulative
       );
       return (beforeOrAt.volatilityCumulative +
-        uint88(_volatilityOnRange(time - secondsAgo - beforeOrAt.blockTimestamp, prevTick, tick, beforeOrAt.averageTick, avgTick)));
+        uint88(_volatilityOnRange(target - beforeOrAt.blockTimestamp, prevTick, tick, beforeOrAt.averageTick, avgTick)));
     }
-
-    uint32 target = time - secondsAgo;
 
     (uint32 timestampAfter, uint88 volatilityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.volatilityCumulative);
     if (target == timestampAfter) return volatilityCumulativeAfter; // we're at the right boundary
@@ -314,7 +278,6 @@ library DataStorage {
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param oldestIndex The index of the oldest timepoint
-  /// @param liquidity The current in-range pool liquidity
   /// @return targetTimepoint desired timepoint or it's approximation
   function getSingleTimepoint(
     Timepoint[UINT16_MODULO] storage self,
@@ -322,20 +285,14 @@ library DataStorage {
     uint32 secondsAgo,
     int24 tick,
     uint16 lastIndex,
-    uint16 oldestIndex,
-    uint128 liquidity
+    uint16 oldestIndex
   ) internal view returns (Timepoint memory targetTimepoint) {
-    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(
-      self,
-      time,
-      time - secondsAgo,
-      lastIndex,
-      oldestIndex
-    );
+    uint32 target = time - secondsAgo;
+    (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(self, time, target, lastIndex, oldestIndex);
 
     // TODO MEMORY
     targetTimepoint = beforeOrAt;
-    if (time - secondsAgo == targetTimepoint.blockTimestamp) return targetTimepoint; // we're at the left boundary
+    if (target == targetTimepoint.blockTimestamp) return targetTimepoint; // we're at the left boundary
     if (!isDifferent) {
       // if target is newer than last timepoint
       (int24 avgTick, int24 prevTick) = getAvgAndPrevTick(
@@ -347,10 +304,8 @@ library DataStorage {
         targetTimepoint.blockTimestamp,
         targetTimepoint.tickCumulative
       );
-      return createNewTimepoint(targetTimepoint, time - secondsAgo, tick, prevTick, liquidity, avgTick);
+      return createNewTimepoint(targetTimepoint, time - secondsAgo, tick, prevTick, avgTick);
     }
-
-    uint32 target = time - secondsAgo;
 
     (uint32 timestampAfter, int56 tickCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.tickCumulative);
     if (target == timestampAfter) return atOrAfter; // we're at the right boundary
@@ -359,9 +314,6 @@ library DataStorage {
     (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - targetTimepoint.blockTimestamp, target - targetTimepoint.blockTimestamp);
 
     targetTimepoint.tickCumulative += ((tickCumulativeAfter - targetTimepoint.tickCumulative) / timepointTimeDelta) * targetDelta;
-    targetTimepoint.secondsPerLiquidityCumulative += uint160(
-      (uint256(atOrAfter.secondsPerLiquidityCumulative - targetTimepoint.secondsPerLiquidityCumulative) * targetDelta) / timepointTimeDelta
-    );
     targetTimepoint.volatilityCumulative +=
       ((atOrAfter.volatilityCumulative - targetTimepoint.volatilityCumulative) / timepointTimeDelta) *
       targetDelta;
@@ -374,32 +326,24 @@ library DataStorage {
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
   /// @return tickCumulatives The tick * time elapsed since the pool was first initialized, as of each `secondsAgo`
-  /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
     uint32[] memory secondsAgos,
     int24 tick,
-    uint16 lastIndex,
-    uint128 liquidity
-  ) internal view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives) {
+    uint16 lastIndex
+  ) internal view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
     uint256 secondsLength = secondsAgos.length;
     tickCumulatives = new int56[](secondsLength);
-    secondsPerLiquidityCumulatives = new uint160[](secondsLength);
     volatilityCumulatives = new uint112[](secondsLength);
 
     uint16 oldestIndex = getOldestIndex(self, lastIndex);
     Timepoint memory current;
     for (uint256 i; i < secondsLength; ++i) {
-      current = getSingleTimepoint(self, time, secondsAgos[i], tick, lastIndex, oldestIndex, liquidity);
-      (tickCumulatives[i], secondsPerLiquidityCumulatives[i], volatilityCumulatives[i]) = (
-        current.tickCumulative,
-        current.secondsPerLiquidityCumulative,
-        current.volatilityCumulative
-      );
+      current = getSingleTimepoint(self, time, secondsAgos[i], tick, lastIndex, oldestIndex);
+      (tickCumulatives[i], volatilityCumulatives[i]) = (current.tickCumulative, current.volatilityCumulative);
     }
   }
 
@@ -453,14 +397,12 @@ library DataStorage {
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
-  /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
   function write(
     Timepoint[UINT16_MODULO] storage self,
     uint16 lastIndex,
     uint32 blockTimestamp,
-    int24 tick,
-    uint128 liquidity
+    int24 tick
   ) internal returns (uint16 indexUpdated, uint16 oldestIndex) {
     Timepoint storage _last = self[lastIndex];
     // early return if we've already written a timepoint this block
@@ -476,6 +418,6 @@ library DataStorage {
 
     (int24 avgTick, int24 prevTick) = getAvgAndPrevTick(self, blockTimestamp, tick, lastIndex, oldestIndex, last.blockTimestamp, last.tickCumulative);
 
-    self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick);
+    self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, avgTick);
   }
 }

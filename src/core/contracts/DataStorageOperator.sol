@@ -52,50 +52,24 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     uint32 time,
     uint32 secondsAgo,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view override returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative) {
-    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, timepoints.getOldestIndex(index), liquidity);
-    (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative) = (
-      result.tickCumulative,
-      result.secondsPerLiquidityCumulative,
-      result.volatilityCumulative
-    );
+    uint16 lastIndex
+  ) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
+    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, lastIndex, timepoints.getOldestIndex(lastIndex));
+    (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
   /// @inheritdoc IDataStorageOperator
   function getTimepoints(
     uint32[] memory secondsAgos
-  )
-    external
-    view
-    override
-    returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives)
-  {
+  ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
     (, int24 tick, , , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
-    uint128 liquidity = IAlgebraPoolState(pool).liquidity();
-    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, index, liquidity);
+    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, index);
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getSecondsPerLiquidityCumulative(
-    uint32 time,
-    uint32 secondsAgo,
-    uint16 index,
-    uint128 liquidity
-  ) external view override returns (uint160 secondsPerLiquidityCumulative) {
-    return timepoints.getSecondsPerLiquidityCumulativeAt(time, secondsAgo, index, timepoints.getOldestIndex(index), liquidity);
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function write(
-    uint16 index,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 liquidity
-  ) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
+  function write(uint16 index, uint32 blockTimestamp, int24 tick) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
     uint16 oldestIndex;
-    (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick, liquidity);
+    (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
     if (index != indexUpdated) {
       IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfig;
       if (_feeConfig.alpha1 == 0 && _feeConfig.alpha2 == 0) {

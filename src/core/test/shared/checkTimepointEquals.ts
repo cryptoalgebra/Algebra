@@ -8,17 +8,14 @@ export default function checkTimepointEquals(
     initialized,
     tickCumulative,
     blockTimestamp,
-    secondsPerLiquidityCumulative,
   }: {
     initialized: boolean
     tickCumulative: BigNumber
-    secondsPerLiquidityCumulative: BigNumber
     blockTimestamp: number
   },
   expected: {
     initialized: boolean
     tickCumulative: BigNumberish
-    secondsPerLiquidityCumulative: BigNumberish
     blockTimestamp: number
   }
 ) {
@@ -27,12 +24,10 @@ export default function checkTimepointEquals(
       initialized,
       blockTimestamp,
       tickCumulative: tickCumulative.toString(),
-      secondsPerLiquidityCumulative: secondsPerLiquidityCumulative.toString(),
     },
     `timepoint is equivalent`
   ).to.deep.eq({
     ...expected,
     tickCumulative: expected.tickCumulative.toString(),
-    secondsPerLiquidityCumulative: expected.secondsPerLiquidityCumulative.toString(),
   })
 }

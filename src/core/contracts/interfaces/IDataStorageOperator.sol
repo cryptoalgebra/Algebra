@@ -14,23 +14,12 @@ interface IDataStorageOperator {
    * @return initialized Whether the timepoint has been initialized and the values are safe to use,
    * blockTimestamp The timestamp of the timepoint,
    * tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
-   * secondsPerLiquidityCumulative The seconds per in range liquidity for the life of the pool as of the timepoint timestamp,
    * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
    * averageTick Time-weighted average tick
    */
   function timepoints(
     uint256 index
-  )
-    external
-    view
-    returns (
-      bool initialized,
-      uint32 blockTimestamp,
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint88 volatilityCumulative,
-      int24 averageTick
-    );
+  ) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 averageTick);
 
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
@@ -45,44 +34,30 @@ interface IDataStorageOperator {
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param liquidity The current in-range pool liquidity
   /// @return tickCumulative The cumulative tick since the pool was first initialized, as of `secondsAgo`
-  /// @return secondsPerLiquidityCumulative The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of `secondsAgo`
   /// @return volatilityCumulative The cumulative volatility value since the pool was first initialized, as of `secondsAgo`
   function getSingleTimepoint(
     uint32 time,
     uint32 secondsAgo,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative);
+    uint16 index
+  ) external view returns (int56 tickCumulative, uint112 volatilityCumulative);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
-  /// @return secondsPerLiquidityCumulatives The cumulative seconds / max(1, liquidity) since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
-  function getTimepoints(
-    uint32[] memory secondsAgos
-  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives);
-
-  function getSecondsPerLiquidityCumulative(
-    uint32 time,
-    uint32 secondsAgo,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (uint160 secondsPerLiquidityCumulative);
+  function getTimepoints(uint32[] memory secondsAgos) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives);
 
   /// @notice Writes a dataStorage timepoint to the array
   /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
-  /// @param liquidity The total in-range liquidity at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
   /// @return newFee The fee in hundredths of a bip, i.e. 1e-6
-  function write(uint16 index, uint32 blockTimestamp, int24 tick, uint128 liquidity) external returns (uint16 indexUpdated, uint16 newFee);
+  function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;

@@ -32,9 +32,8 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
     uint32 _time,
     uint32[] memory secondsAgos,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, uint112[] memory volatilityCumulatives) {
-    return timepoints.getTimepoints(_time, secondsAgos, tick, index, liquidity);
+    uint16 lastIndex
+  ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+    return timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
   }
 }

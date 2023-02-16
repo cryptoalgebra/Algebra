@@ -49,11 +49,8 @@ contract DataStorageEchidnaTest {
     secondsAgos[0] = secondsAgo0;
     secondsAgos[1] = secondsAgo1;
 
-    (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
+    (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
     int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / timeElapsed;
-    uint256 timeWeightedHarmonicMeanLiquidity = (uint256(timeElapsed) * type(uint160).max) /
-      (uint256(secondsPerLiquidityCumulatives[1] - secondsPerLiquidityCumulatives[0]) << 32);
-    assert(timeWeightedHarmonicMeanLiquidity <= type(uint128).max);
     assert(timeWeightedTick <= type(int24).max);
     assert(timeWeightedTick >= type(int24).min);
   }
@@ -86,8 +83,8 @@ contract DataStorageEchidnaTest {
     // check that the timepoints are initialized, and that the index is not the oldest timepoint
     require(index < 65536 && index != (dataStorage.index() + 1) % 65536);
 
-    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
-    (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , , ) = dataStorage.timepoints(index);
+    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
+    (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , ) = dataStorage.timepoints(index);
 
     require(initialized0);
     require(initialized1);
@@ -103,7 +100,7 @@ contract DataStorageEchidnaTest {
     uint32[] memory secondsAgos = new uint32[](2);
     secondsAgos[0] = secondsAgo;
     secondsAgos[1] = 0;
-    (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
+    (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
 
     // compute the time weighted tick, rounded towards negative infinity
     int56 numerator = tickCumulatives[1] - tickCumulatives[0];
@@ -114,9 +111,5 @@ contract DataStorageEchidnaTest {
 
     // the time weighted averages fit in their respective accumulated types
     assert(timeWeightedTick <= type(int24).max && timeWeightedTick >= type(int24).min);
-
-    uint256 timeWeightedHarmonicMeanLiquidity = (uint256(secondsAgo) * type(uint160).max) /
-      (uint256(secondsPerLiquidityCumulatives[1] - secondsPerLiquidityCumulatives[0]) << 32);
-    assert(timeWeightedHarmonicMeanLiquidity <= type(uint128).max);
   }
 }

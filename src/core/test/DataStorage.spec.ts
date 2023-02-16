@@ -49,8 +49,7 @@ describe('DataStorage', () => {
       checkTimepointEquals(await dataStorage.timepoints(0), {
         initialized: true,
         blockTimestamp: 1,
-        tickCumulative: 0,
-        secondsPerLiquidityCumulative: 0,
+        tickCumulative: 0
       })
     })
     it('gas  [ @skip-on-coverage ]', async () => {
@@ -672,7 +671,7 @@ describe('DataStorageOperator external methods', () => {
 
   it('cannot call onlyPool methods', async () => {
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.write(10, 100, 2, 4)).to.be.revertedWith('only pool can call this');
+    await expect(dataStorageOperator.write(10, 100, 2)).to.be.revertedWith('only pool can call this');
   })
 
   describe('#changeFeeConfiguration', () => {
