@@ -39,8 +39,8 @@ library DataStorage {
     // so result will be: (k-p)^2 * sumOfSquares + 2(k-p)(b-q)*sumOfSequence + dt*(b-q)^2
     int256 K = (tick1 - tick0) - (avgTick1 - avgTick0); // (k - p)*dt
     int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
-    int256 sumOfSquares = (dt * (dt + 1) * (2 * dt + 1)); // sumOfSquares * 6
-    int256 sumOfSequence = (dt * (dt + 1)); // sumOfSequence * 2
+    int256 sumOfSequence = dt * (dt + 1); // sumOfSequence * 2
+    int256 sumOfSquares = sumOfSequence * (2 * dt + 1); // sumOfSquares * 6
     volatility = uint256((K ** 2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * dt * B ** 2) / (6 * dt ** 2));
   }
 
@@ -461,10 +461,10 @@ library DataStorage {
     uint32 blockTimestamp,
     int24 tick,
     uint128 liquidity
-  ) internal returns (uint16 indexUpdated, uint16 oldestIndex, uint88 volatilityCumulative) {
+  ) internal returns (uint16 indexUpdated, uint16 oldestIndex) {
     Timepoint storage _last = self[lastIndex];
     // early return if we've already written a timepoint this block
-    if (_last.blockTimestamp == blockTimestamp) return (lastIndex, 0, 0);
+    if (_last.blockTimestamp == blockTimestamp) return (lastIndex, 0);
 
     Timepoint memory last = _last;
 
@@ -477,6 +477,5 @@ library DataStorage {
     (int24 avgTick, int24 prevTick) = getAvgAndPrevTick(self, blockTimestamp, tick, lastIndex, oldestIndex, last.blockTimestamp, last.tickCumulative);
 
     self[indexUpdated] = createNewTimepoint(last, blockTimestamp, tick, prevTick, liquidity, avgTick);
-    volatilityCumulative = self[indexUpdated].volatilityCumulative;
   }
 }
