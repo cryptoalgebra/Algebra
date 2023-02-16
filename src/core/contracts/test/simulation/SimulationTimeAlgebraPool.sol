@@ -2,6 +2,7 @@
 pragma solidity =0.7.6;
 
 import '../../AlgebraPool.sol';
+import '../MockTimeDataStorageOperator.sol';
 
 // used for testing time dependent behavior
 contract SimulationTimeAlgebraPool is AlgebraPool {
@@ -17,7 +18,7 @@ contract SimulationTimeAlgebraPool is AlgebraPool {
   }
 
   function getAverageVolatility() external view returns (uint112 volatilityAverage) {
-    volatilityAverage = IDataStorageOperator(dataStorageOperator).getAverageVolatility(
+    volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
       globalState.fee,
       globalState.timepointIndex

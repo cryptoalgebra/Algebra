@@ -36,4 +36,10 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
   ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
     return timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
   }
+
+  function getAverageVolatility(uint32 timestamp, int24 tick, uint16 index) public view returns (uint88 volatilityAverage) {
+    uint16 oldestIndex = timepoints.getOldestIndex(index);
+    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(timestamp, 0, tick, index, oldestIndex);
+    return timepoints.getAverageVolatility(timestamp, tick, index, oldestIndex, lastVolatilityCumulative);
+  }
 }
