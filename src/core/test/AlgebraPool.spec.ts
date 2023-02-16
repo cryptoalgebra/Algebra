@@ -2395,7 +2395,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe.only('#flash', () => {
+  describe('#flash', () => {
     it('fails if not initialized', async () => {
       await expect(flash(100, 200, other.address)).to.be.reverted
       await expect(flash(100, 0, other.address)).to.be.reverted
