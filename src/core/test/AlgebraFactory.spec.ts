@@ -24,11 +24,19 @@ describe('AlgebraFactory', () => {
   let poolDeployer: AlgebraPoolDeployer
   let poolBytecode: string
   const fixture = async () => {
-    const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-    poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
+    const [deployer] = await ethers.getSigners();
+    // precompute
+    const poolDeployerAddress = ethers.utils.getContractAddress({
+      from: deployer.address, 
+      nonce: (await deployer.getTransactionCount()) + 1
+    })
+
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
-    const _factory = (await factoryFactory.deploy(poolDeployer.address)) as AlgebraFactory
-    await poolDeployer.setFactory(_factory.address)
+    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
+
+    const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
+    poolDeployer = (await poolDeployerFactory.deploy(_factory.address)) as AlgebraPoolDeployer
+
     return _factory;
   }
 
@@ -113,26 +121,9 @@ describe('AlgebraFactory', () => {
     })
   })
   describe('Pool deployer', () => {
-    it('cannot change factory after initialization', async () => {
-      await expect(poolDeployer.setFactory(wallet.address)).to.be.reverted
-    })
-
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
-      await expect(_poolDeployer.setFactory(constants.AddressZero)).to.be.reverted
-    })
-
-    it('cannot set factory if caller is not owner', async () => {
-      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
-      await expect(_poolDeployer.connect(other).setFactory(TEST_ADDRESSES[0])).to.be.reverted
-    })
-
-    it('can set factory', async () => {
-      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-      const _poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
-      await expect(_poolDeployer.setFactory(TEST_ADDRESSES[0])).to.be.not.reverted;
+      await expect(poolDeployerFactory.deploy(constants.AddressZero)).to.be.reverted
     })
   })
 

@@ -19,10 +19,19 @@ interface FactoryFixture {
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 async function factoryFixture(): Promise<FactoryFixture> {
-  const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-  const poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
+  const [deployer] = await ethers.getSigners();
+  // precompute
+  const poolDeployerAddress = ethers.utils.getContractAddress({
+    from: deployer.address, 
+    nonce: (await deployer.getTransactionCount()) + 1
+  })
+
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
-  const factory = (await factoryFactory.deploy(poolDeployer.address)) as AlgebraFactory
+  const factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
+
+  const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
+  const poolDeployer = (await poolDeployerFactory.deploy(factory.address)) as AlgebraPoolDeployer
+
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault')
   const vault = (vaultFactory.attach(await factory.communityVault())) as AlgebraCommunityVault;
   return { factory, vault }

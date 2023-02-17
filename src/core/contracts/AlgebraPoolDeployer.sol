@@ -5,28 +5,19 @@ import './interfaces/IAlgebraPoolDeployer.sol';
 import './AlgebraPool.sol';
 
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
-  address private dataStorageCache;
-  address private factory;
+  address private dataStorageCache; // TODO mb is better to store bytes?
   address private token0Cache;
   address private token1Cache;
 
-  address private immutable owner;
+  address private immutable factory;
 
   /// @inheritdoc IAlgebraPoolDeployer
   function getDeployParameters() external view override returns (address, address, address, address) {
     return (dataStorageCache, factory, token0Cache, token1Cache);
   }
 
-  constructor() {
-    owner = msg.sender;
-  }
-
-  /// @inheritdoc IAlgebraPoolDeployer
-  function setFactory(address _factory) external override {
-    require(msg.sender == owner);
+  constructor(address _factory) {
     require(_factory != address(0));
-    require(factory == address(0));
-
     factory = _factory;
     emit Factory(_factory);
   }

@@ -52,6 +52,7 @@ contract AlgebraFactory is IAlgebraFactory {
   }
 
   constructor(address _poolDeployer) {
+    require(_poolDeployer != address(0));
     owner = msg.sender;
     emit Owner(msg.sender);
 
