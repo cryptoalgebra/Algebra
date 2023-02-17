@@ -17,12 +17,6 @@ interface IAlgebraFactory {
   event Owner(address indexed newOwner);
 
   /**
-   *  @notice Emitted when the vault address is changed
-   *  @param newVaultAddress The vault address after the address was changed
-   */
-  event VaultAddress(address indexed newVaultAddress);
-
-  /**
    *  @notice Emitted when a pool is created
    *  @param token0 The first token of the pool by address sort order
    *  @param token1 The second token of the pool by address sort order
@@ -60,7 +54,8 @@ interface IAlgebraFactory {
    */
   function farmingAddress() external view returns (address);
 
-  function vaultAddress() external view returns (address);
+  //TODO
+  function communityVault() external view returns (address);
 
   function defaultCommunityFee() external view returns (uint8);
 
@@ -106,12 +101,6 @@ interface IAlgebraFactory {
    * @param _farmingAddress The new tokenomics contract address
    */
   function setFarmingAddress(address _farmingAddress) external;
-
-  /**
-   * @dev updates vault address on the factory
-   * @param _vaultAddress The new vault contract address
-   */
-  function setVaultAddress(address _vaultAddress) external;
 
   /**
    * @dev updates default community fee for new pools

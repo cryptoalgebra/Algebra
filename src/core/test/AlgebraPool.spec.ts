@@ -9,7 +9,7 @@ import { TestAlgebraSwapPay } from '../typechain/test/TestAlgebraSwapPay'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 
-import { poolFixture, TEST_POOL_START_TIME, vaultAddress} from './shared/fixtures'
+import { poolFixture, TEST_POOL_START_TIME} from './shared/fixtures'
 
 import {
   expandTo18Decimals,
@@ -73,13 +73,16 @@ describe('AlgebraPool', () => {
 
   let createPool: ThenArg<ReturnType<typeof poolFixture>>['createPool']
 
+  let vaultAddress: string;
+
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
   })
 
   beforeEach('deploy fixture', async () => {
-    ;({ token0, token1, token2, factory, createPool, swapTargetCallee: swapTarget } = await loadFixture(poolFixture))
-
+    let vault;
+    ;({ token0, token1, token2, factory, vault, createPool, swapTargetCallee: swapTarget } = await loadFixture(poolFixture))
+    vaultAddress = vault.address;
     const oldCreatePool = createPool
     createPool = async () => {
       const pool = await oldCreatePool()

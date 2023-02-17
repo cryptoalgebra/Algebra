@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
-import { vaultAddress, ZERO_ADDRESS } from "./shared/fixtures";
+import { ZERO_ADDRESS } from "./shared/fixtures";
 import snapshotGasCost from './shared/snapshotGasCost'
 
 import { getCreate2Address } from './shared/utilities'
@@ -27,7 +27,7 @@ describe('AlgebraFactory', () => {
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
     poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
-    const _factory = (await factoryFactory.deploy(poolDeployer.address, vaultAddress)) as AlgebraFactory
+    const _factory = (await factoryFactory.deploy(poolDeployer.address)) as AlgebraFactory
     await poolDeployer.setFactory(_factory.address)
     return _factory;
   }
@@ -189,28 +189,6 @@ describe('AlgebraFactory', () => {
     it('cannot set current address', async () => {
       await factory.setFarmingAddress(other.address);
       await expect(factory.setFarmingAddress(other.address)).to.be.reverted;
-    })
-  })
-
-  describe('#setVaultAddress', () => {
-    it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setVaultAddress(wallet.address)).to.be.reverted;
-    })
-
-    it('updates vaultAddress', async () => {
-      await factory.setVaultAddress(other.address);
-      expect(await factory.vaultAddress()).to.eq(other.address);
-    })
-
-    it('emits event', async () => {
-      await expect(factory.setVaultAddress(other.address))
-        .to.emit(factory, 'VaultAddress')
-        .withArgs(other.address);
-    })
-
-    it('cannot set current address', async () => {
-      await factory.setVaultAddress(other.address);
-      await expect(factory.setVaultAddress(other.address)).to.be.reverted;
     })
   })
 

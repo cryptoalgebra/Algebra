@@ -578,10 +578,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
-  function _vaultAddress() private view returns (address) {
-    return IAlgebraFactory(factory).vaultAddress();
-  }
-
   function _payCommunityFee(uint256 amount0, uint256 amount1) private {
     (uint128 _communityFeePending0, uint128 _communityFeePending1) = (communityFeePending0, communityFeePending1);
     if (amount0 > 0) _communityFeePending0 += uint128(amount0);
@@ -590,13 +586,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (_blockTimestamp() - communityFeeLastTimestamp >= 8 hours) {
       // TODO CONST
       // underflow is desired
-      address vaultAddress = _vaultAddress();
       if (_communityFeePending0 > 0) {
-        TransferHelper.safeTransfer(token0, vaultAddress, _communityFeePending0);
+        TransferHelper.safeTransfer(token0, communityVault, _communityFeePending0);
         reserve0 -= _communityFeePending0;
       }
       if (_communityFeePending1 > 0) {
-        TransferHelper.safeTransfer(token1, vaultAddress, _communityFeePending1);
+        TransferHelper.safeTransfer(token1, communityVault, _communityFeePending1);
         reserve1 -= _communityFeePending1;
       }
       (communityFeePending0, communityFeePending1) = (0, 0);

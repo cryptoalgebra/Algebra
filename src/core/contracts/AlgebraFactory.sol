@@ -8,6 +8,7 @@ import './interfaces/IDataStorageOperator.sol';
 import './interfaces/IAlgebraFeeConfiguration.sol';
 import './libraries/Constants.sol';
 import './DataStorageOperator.sol';
+import './AlgebraCommunityVault.sol';
 
 /**
  * @title Algebra factory
@@ -22,10 +23,10 @@ contract AlgebraFactory is IAlgebraFactory {
   address public immutable override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
-  address public override farmingAddress;
+  address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraFactory
-  address public override vaultAddress;
+  address public override farmingAddress;
 
   /// @inheritdoc IAlgebraFactory
   uint8 public override defaultCommunityFee;
@@ -50,12 +51,12 @@ contract AlgebraFactory is IAlgebraFactory {
     _;
   }
 
-  constructor(address _poolDeployer, address _vaultAddress) {
+  constructor(address _poolDeployer) {
     owner = msg.sender;
     emit Owner(msg.sender);
 
     poolDeployer = _poolDeployer;
-    vaultAddress = _vaultAddress;
+    communityVault = address(new AlgebraCommunityVault());
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -107,14 +108,6 @@ contract AlgebraFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setVaultAddress(address _vaultAddress) external override onlyOwner {
-    require(vaultAddress != _vaultAddress);
-    require(vaultAddress != address(0), 'Cannot set 0 address as vault');
-    emit VaultAddress(_vaultAddress);
-    vaultAddress = _vaultAddress;
-  }
-
-  /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
     emit DefaultCommunityFee(newDefaultCommunityFee);
@@ -130,7 +123,7 @@ contract AlgebraFactory is IAlgebraFactory {
     emit FeeConfiguration(_config.alpha1, _config.alpha2, _config.beta1, _config.beta2, _config.gamma1, _config.gamma2, _config.baseFee);
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xafd7be48ccb154852533825483958362d5befe68196e59d2b5f9ba4caed21725;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xc6144e83848b54660ff89427137f5e4e01bf353b312b541cdc5802088ef73def;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

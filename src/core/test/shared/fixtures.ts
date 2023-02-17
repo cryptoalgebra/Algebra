@@ -3,6 +3,7 @@ import { ethers } from 'hardhat'
 import { MockTimeAlgebraPool } from '../../typechain/test/MockTimeAlgebraPool'
 import { TestERC20 } from '../../typechain/test/TestERC20'
 import { AlgebraFactory } from '../../typechain/AlgebraFactory'
+import { AlgebraCommunityVault } from '../../typechain/AlgebraCommunityVault'
 import { DataStorageOperator } from "../../typechain/DataStorageOperator";
 import { TestAlgebraCallee } from '../../typechain/test/TestAlgebraCallee'
 import { TestAlgebraRouter } from '../../typechain/test/TestAlgebraRouter'
@@ -13,17 +14,18 @@ import { AlgebraPoolDeployer } from "../../typechain/AlgebraPoolDeployer";
 type Fixture<T> = () => Promise<T>;
 interface FactoryFixture {
   factory: AlgebraFactory
+  vault: AlgebraCommunityVault;
 }
-
-export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 async function factoryFixture(): Promise<FactoryFixture> {
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
   const poolDeployer = (await poolDeployerFactory.deploy()) as AlgebraPoolDeployer
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
-  const factory = (await factoryFactory.deploy(poolDeployer.address, vaultAddress)) as AlgebraFactory
-  return { factory }
+  const factory = (await factoryFactory.deploy(poolDeployer.address)) as AlgebraFactory
+  const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault')
+  const vault = (vaultFactory.attach(await factory.communityVault())) as AlgebraCommunityVault;
+  return { factory, vault }
 }
 
 interface DataStorageFixture {
@@ -71,7 +73,7 @@ export const TEST_POOL_START_TIME = 1601906400
 export const TEST_POOL_DAY_BEFORE_START = 1601906400 - 24*60*60
 
 export const poolFixture: Fixture<PoolFixture> = async function (): Promise<PoolFixture> {
-  const { factory } = await factoryFixture()
+  const { factory, vault } = await factoryFixture()
   const { token0, token1, token2 } = await tokensFixture()
   //const { dataStorage } = await dataStorageFixture();
 
@@ -89,6 +91,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
     token1,
     token2,
     factory,
+    vault,
     swapTargetCallee,
     swapTargetRouter,
     createPool: async (firstToken = token0, secondToken = token1) => {
