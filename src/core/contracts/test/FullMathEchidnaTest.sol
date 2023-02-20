@@ -10,10 +10,12 @@ contract FullMathEchidnaTest {
     uint256 ceiled = FullMath.mulDivRoundingUp(x, y, d);
     uint256 floored = FullMath.mulDiv(x, y, d);
 
-    if (mulmod(x, y, d) > 0) {
-      assert(ceiled - floored == 1);
-    } else {
-      assert(ceiled == floored);
+    unchecked {
+      if (mulmod(x, y, d) > 0) {
+        assert(ceiled - floored == 1);
+      } else {
+        assert(ceiled == floored);
+      }
     }
   }
 
@@ -31,8 +33,10 @@ contract FullMathEchidnaTest {
     assert(x2 <= x);
     assert(y2 <= y);
 
-    assert(x - x2 < d);
-    assert(y - y2 < d);
+    unchecked {
+      assert(x - x2 < d);
+      assert(y - y2 < d);
+    }
   }
 
   function checkMulDivRoundingUp(uint256 x, uint256 y, uint256 d) external pure {
@@ -49,7 +53,9 @@ contract FullMathEchidnaTest {
     assert(x2 >= x);
     assert(y2 >= y);
 
-    assert(x2 - x < d);
-    assert(y2 - y < d);
+    unchecked {
+      assert(x2 - x < d);
+      assert(y2 - y < d);
+    }
   }
 }

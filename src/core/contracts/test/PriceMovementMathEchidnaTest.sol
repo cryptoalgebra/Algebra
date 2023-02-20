@@ -26,34 +26,36 @@ contract PriceMovementMathEchidnaTest {
       feePips
     );
 
-    assert(amountIn <= type(uint256).max - feeAmount);
+    unchecked {
+      assert(amountIn <= type(uint256).max - feeAmount);
 
-    if (amountRemaining < 0) {
-      assert(amountOut <= uint256(-amountRemaining));
-    } else {
-      assert(amountIn + feeAmount <= uint256(amountRemaining));
-    }
+      if (amountRemaining < 0) {
+        assert(amountOut <= uint256(-amountRemaining));
+      } else {
+        assert(amountIn + feeAmount <= uint256(amountRemaining));
+      }
 
-    if (sqrtPriceRaw == sqrtPriceTargetRaw) {
-      assert(amountIn == 0);
-      assert(amountOut == 0);
-      assert(feeAmount == 0);
-      assert(sqrtQ == sqrtPriceTargetRaw);
-    }
+      if (sqrtPriceRaw == sqrtPriceTargetRaw) {
+        assert(amountIn == 0);
+        assert(amountOut == 0);
+        assert(feeAmount == 0);
+        assert(sqrtQ == sqrtPriceTargetRaw);
+      }
 
-    // didn't reach price target, entire amount must be consumed
-    if (sqrtQ != sqrtPriceTargetRaw) {
-      if (amountRemaining < 0) assert(amountOut == uint256(-amountRemaining));
-      else assert(amountIn + feeAmount == uint256(amountRemaining));
-    }
+      // didn't reach price target, entire amount must be consumed
+      if (sqrtQ != sqrtPriceTargetRaw) {
+        if (amountRemaining < 0) assert(amountOut == uint256(-amountRemaining));
+        else assert(amountIn + feeAmount == uint256(amountRemaining));
+      }
 
-    // next price is between price and price target
-    if (sqrtPriceTargetRaw <= sqrtPriceRaw) {
-      assert(sqrtQ <= sqrtPriceRaw);
-      assert(sqrtQ >= sqrtPriceTargetRaw);
-    } else {
-      assert(sqrtQ >= sqrtPriceRaw);
-      assert(sqrtQ <= sqrtPriceTargetRaw);
+      // next price is between price and price target
+      if (sqrtPriceTargetRaw <= sqrtPriceRaw) {
+        assert(sqrtQ <= sqrtPriceRaw);
+        assert(sqrtQ >= sqrtPriceTargetRaw);
+      } else {
+        assert(sqrtQ >= sqrtPriceRaw);
+        assert(sqrtQ <= sqrtPriceTargetRaw);
+      }
     }
   }
 }

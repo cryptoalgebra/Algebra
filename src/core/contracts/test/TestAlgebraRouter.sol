@@ -16,14 +16,18 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
   function swapForExact0Multi(address recipient, address poolInput, address poolOutput, uint256 amount0Out) external {
     address[] memory pools = new address[](1);
     pools[0] = poolInput;
-    IAlgebraPool(poolOutput).swap(recipient, false, -amount0Out.toInt256(), TickMath.MAX_SQRT_RATIO - 1, abi.encode(pools, msg.sender));
+    unchecked {
+      IAlgebraPool(poolOutput).swap(recipient, false, -amount0Out.toInt256(), TickMath.MAX_SQRT_RATIO - 1, abi.encode(pools, msg.sender));
+    }
   }
 
   // flash swaps for an exact amount of token1 in the output pool
   function swapForExact1Multi(address recipient, address poolInput, address poolOutput, uint256 amount1Out) external {
     address[] memory pools = new address[](1);
     pools[0] = poolInput;
-    IAlgebraPool(poolOutput).swap(recipient, true, -amount1Out.toInt256(), TickMath.MIN_SQRT_RATIO + 1, abi.encode(pools, msg.sender));
+    unchecked {
+      IAlgebraPool(poolOutput).swap(recipient, true, -amount1Out.toInt256(), TickMath.MIN_SQRT_RATIO + 1, abi.encode(pools, msg.sender));
+    }
   }
 
   event SwapCallback(int256 amount0Delta, int256 amount1Delta);
@@ -39,13 +43,15 @@ contract TestAlgebraRouter is IAlgebraSwapCallback {
       int256 amountToBePaid = amount0Delta > 0 ? amount0Delta : amount1Delta;
 
       bool zeroToOne = tokenToBePaid == IAlgebraPool(pools[0]).token1();
-      IAlgebraPool(pools[0]).swap(
-        msg.sender,
-        zeroToOne,
-        -amountToBePaid,
-        zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
-        abi.encode(new address[](0), payer)
-      );
+      unchecked {
+        IAlgebraPool(pools[0]).swap(
+          msg.sender,
+          zeroToOne,
+          -amountToBePaid,
+          zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
+          abi.encode(new address[](0), payer)
+        );
+      }
     } else {
       if (amount0Delta > 0) {
         IERC20Minimal(IAlgebraPool(msg.sender).token0()).transferFrom(payer, msg.sender, uint256(amount0Delta));

@@ -23,15 +23,19 @@ contract TickOverflowSafetyEchidnaTest {
   uint256 private totalGrowth1 = 0;
 
   function increaseTotalFeeGrowth0Token(uint256 amount) external {
-    require(totalGrowth0 + amount > totalGrowth0); // overflow check
-    totalFeeGrowth0Token += amount; // overflow desired
-    totalGrowth0 += amount;
+    unchecked {
+      require(totalGrowth0 + amount > totalGrowth0); // overflow check
+      totalFeeGrowth0Token += amount; // overflow desired
+      totalGrowth0 += amount;
+    }
   }
 
   function increaseTotalFeeGrowth1Token(uint256 amount) external {
-    require(totalGrowth1 + amount > totalGrowth1); // overflow check
-    totalFeeGrowth1Token += amount; // overflow desired
-    totalGrowth1 += amount;
+    unchecked {
+      require(totalGrowth1 + amount > totalGrowth1); // overflow check
+      totalFeeGrowth1Token += amount; // overflow desired
+      totalGrowth1 += amount;
+    }
   }
 
   function setPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) external {
@@ -55,26 +59,30 @@ contract TickOverflowSafetyEchidnaTest {
       } else assert(ticks[topTick].liquidityTotal > 0);
     }
 
-    totalLiquidity += liquidityDelta;
-    // requires should have prevented this
-    assert(totalLiquidity >= 0);
+    unchecked {
+      totalLiquidity += liquidityDelta;
+      // requires should have prevented this
+      assert(totalLiquidity >= 0);
 
-    if (totalLiquidity == 0) {
-      totalGrowth0 = 0;
-      totalGrowth1 = 0;
+      if (totalLiquidity == 0) {
+        totalGrowth0 = 0;
+        totalGrowth1 = 0;
+      }
     }
   }
 
   function moveToTick(int24 target) external {
     require(target > MIN_TICK);
     require(target < MAX_TICK);
-    while (tick != target) {
-      if (tick < target) {
-        if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
-        tick++;
-      } else {
-        if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
-        tick--;
+    unchecked {
+      while (tick != target) {
+        if (tick < target) {
+          if (ticks[tick + 1].liquidityTotal > 0) ticks.cross(tick + 1, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
+          tick++;
+        } else {
+          if (ticks[tick].liquidityTotal > 0) ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, 0, uint32(block.timestamp));
+          tick--;
+        }
       }
     }
   }

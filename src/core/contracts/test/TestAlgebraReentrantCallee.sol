@@ -11,7 +11,9 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
   string private constant expectedReason = 'LOK';
 
   function swapToReenter(address pool) external {
-    IAlgebraPool(pool).swap(address(0), false, 1, TickMath.MAX_SQRT_RATIO - 1, new bytes(0));
+    unchecked {
+      IAlgebraPool(pool).swap(address(0), false, 1, TickMath.MAX_SQRT_RATIO - 1, new bytes(0));
+    }
   }
 
   function algebraSwapCallback(int256, int256, bytes calldata) external override {
