@@ -986,6 +986,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function setCommunityFee(uint8 communityFee) external override nonReentrant {
     onlyFactoryOwner();
     require(communityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(communityFee != globalState.communityFee);
     globalState.communityFee = communityFee;
     emit CommunityFee(communityFee);
   }
@@ -994,6 +995,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function setTickSpacing(int24 newTickSpacing) external nonReentrant {
     onlyFactoryOwner();
     require(newTickSpacing > 0);
+    require(tickSpacing != newTickSpacing);
     tickSpacing = newTickSpacing;
     emit TickSpacing(newTickSpacing);
   }
