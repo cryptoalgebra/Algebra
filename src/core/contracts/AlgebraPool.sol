@@ -960,11 +960,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     uint256 _communityFee = globalState.communityFee;
     if (_communityFee > 0) {
-      // TODO optimize
-      uint128 communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-      uint128 communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-      if (communityFee0 > 0) reserve0 += communityFee0;
-      if (communityFee1 > 0) reserve1 += communityFee1;
+      uint128 communityFee0;
+      if (paid0 > 0) {
+        communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+        reserve0 += communityFee0;
+      }
+
+      uint128 communityFee1;
+      if (paid1 > 0) {
+        communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+        reserve1 += communityFee1;
+      }
+
       _payCommunityFee(communityFee0, communityFee1);
     }
 
