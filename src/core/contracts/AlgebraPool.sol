@@ -583,8 +583,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amount0 > 0) _communityFeePending0 += uint128(amount0);
     if (amount1 > 0) _communityFeePending1 += uint128(amount1);
 
-    if (_blockTimestamp() - communityFeeLastTimestamp >= 8 hours) {
-      // TODO CONST
+    if (_blockTimestamp() - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
       // underflow is desired
       if (_communityFeePending0 > 0) {
         TransferHelper.safeTransfer(token0, communityVault, _communityFeePending0);
