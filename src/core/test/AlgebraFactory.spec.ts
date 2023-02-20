@@ -34,8 +34,10 @@ describe('AlgebraFactory', () => {
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
     const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
 
+    const vaultAddress = await _factory.communityVault();
+
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-    poolDeployer = (await poolDeployerFactory.deploy(_factory.address)) as AlgebraPoolDeployer
+    poolDeployer = (await poolDeployerFactory.deploy(_factory.address, vaultAddress)) as AlgebraPoolDeployer
 
     return _factory;
   }
@@ -123,7 +125,7 @@ describe('AlgebraFactory', () => {
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-      await expect(poolDeployerFactory.deploy(constants.AddressZero)).to.be.reverted
+      await expect(poolDeployerFactory.deploy(constants.AddressZero, constants.AddressZero)).to.be.reverted
     })
   })
 

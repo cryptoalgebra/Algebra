@@ -8,6 +8,7 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
   struct Parameters {
     address dataStorage;
     address factory;
+    address communityVault;
     address token0;
     address token1;
   }
@@ -16,6 +17,7 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
   Parameters public override getDeployParameters;
 
   address private factory;
+  address private vault;
   address private owner;
 
   modifier onlyFactory() {
@@ -32,16 +34,17 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
     owner = msg.sender;
   }
 
-  function setFactory(address _factory) external onlyOwner {
+  function setFactory(address _factory, address _vault) external onlyOwner {
     require(_factory != address(0));
     require(factory == address(0));
     emit Factory(_factory);
     factory = _factory;
+    vault = _vault;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
   function deploy(address dataStorage, address token0, address token1) external override onlyFactory returns (address pool) {
-    getDeployParameters = Parameters({dataStorage: dataStorage, factory: factory, token0: token0, token1: token1});
+    getDeployParameters = Parameters({dataStorage: dataStorage, factory: factory, communityVault: vault, token0: token0, token1: token1});
     pool = address(new SimulationTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
   }
 }

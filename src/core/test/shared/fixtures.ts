@@ -29,11 +29,13 @@ async function factoryFixture(): Promise<FactoryFixture> {
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
   const factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
 
+  const vaultAddress = await factory.communityVault();
+
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
-  const poolDeployer = (await poolDeployerFactory.deploy(factory.address)) as AlgebraPoolDeployer
+  const poolDeployer = (await poolDeployerFactory.deploy(factory.address, vaultAddress)) as AlgebraPoolDeployer
 
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault')
-  const vault = (vaultFactory.attach(await factory.communityVault())) as AlgebraCommunityVault;
+  const vault = (vaultFactory.attach(vaultAddress)) as AlgebraCommunityVault;
   return { factory, vault }
 }
 
@@ -107,6 +109,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
       const mockTimePoolDeployer = (await MockTimeAlgebraPoolDeployerFactory.deploy()) as MockTimeAlgebraPoolDeployer
       const tx = await mockTimePoolDeployer.deployMock(
         factory.address,
+        vault.address,
         firstToken.address,
         secondToken.address
       )

@@ -11,11 +11,12 @@ import './MockTimeDataStorageOperator.sol';
 contract MockTimeAlgebraPoolDeployer {
   address private dataStorageCache;
   address private factory;
+  address private vault;
   address private token0Cache;
   address private token1Cache;
 
-  function getDeployParameters() external view returns (address, address, address, address) {
-    return (dataStorageCache, factory, token0Cache, token1Cache);
+  function getDeployParameters() external view returns (address, address, address, address, address) {
+    return (dataStorageCache, factory, vault, token0Cache, token1Cache);
   }
 
   event PoolDeployed(address pool);
@@ -31,13 +32,13 @@ contract MockTimeAlgebraPoolDeployer {
       Constants.BASE_FEE // baseFee
     );
 
-  function deployMock(address _factory, address token0, address token1) external returns (address pool) {
+  function deployMock(address _factory, address _vault, address token0, address token1) external returns (address pool) {
     bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
     DataStorageOperator dataStorage = (new MockTimeDataStorageOperator(computeAddress(initCodeHash, token0, token1)));
 
     dataStorage.changeFeeConfiguration(baseFeeConfiguration);
 
-    (dataStorageCache, factory, token0Cache, token1Cache) = (address(dataStorage), _factory, token0, token1);
+    (dataStorageCache, factory, vault, token0Cache, token1Cache) = (address(dataStorage), _factory, _vault, token0, token1);
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     emit PoolDeployed(pool);
   }

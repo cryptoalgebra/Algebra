@@ -3,7 +3,6 @@ pragma solidity =0.7.6;
 
 import '../interfaces/pool/IAlgebraPoolImmutables.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
-import '../interfaces/IAlgebraFactory.sol';
 import '../libraries/Constants.sol';
 
 abstract contract PoolImmutables is IAlgebraPoolImmutables {
@@ -25,9 +24,6 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   }
 
   constructor(address deployer) {
-    address _factory;
-    (dataStorageOperator, _factory, token0, token1) = IAlgebraPoolDeployer(deployer).getDeployParameters();
-    factory = _factory;
-    communityVault = IAlgebraFactory(_factory).communityVault();
+    (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(deployer).getDeployParameters();
   }
 }
