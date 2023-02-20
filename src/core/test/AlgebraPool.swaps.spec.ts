@@ -477,7 +477,9 @@ describe('AlgebraPool swap tests', () => {
         const pool = await createPool()
         const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
         await pool.initialize(poolCase.startingPrice)
-        await pool.setTickSpacing(poolCase.tickSpacing)
+
+        if (poolCase.tickSpacing != 60)
+          await pool.setTickSpacing(poolCase.tickSpacing)
         // mint all positions
         if (isDefl) {
           if (zeroToOne)
