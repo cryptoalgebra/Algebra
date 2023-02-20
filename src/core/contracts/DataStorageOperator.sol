@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import './base/Timestamp.sol';
 import './interfaces/IAlgebraFactory.sol';
@@ -70,6 +69,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   function write(uint16 index, uint32 blockTimestamp, int24 tick) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
     uint16 oldestIndex;
     (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
+
     if (index != indexUpdated) {
       IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfig;
       if (_feeConfig.alpha1 == 0 && _feeConfig.alpha2 == 0) {
@@ -77,7 +77,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
       } else {
         uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;
         uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
-        newFee = AdaptiveFee.getFee(volatilityAverage / 15, _feeConfig);
+        unchecked {
+          newFee = AdaptiveFee.getFee(volatilityAverage / 15, _feeConfig);
+        }
       }
     }
   }

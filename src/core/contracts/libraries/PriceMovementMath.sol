@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import './FullMath.sol';
 import './TokenDeltaMath.sol';
@@ -35,43 +35,45 @@ library PriceMovementMath {
   }
 
   function getNewPrice(uint160 price, uint128 liquidity, uint256 amount, bool zeroToOne, bool fromInput) internal pure returns (uint160 resultPrice) {
-    require(price != 0);
-    require(liquidity != 0);
+    unchecked {
+      require(price != 0);
+      require(liquidity != 0);
 
-    if (zeroToOne == fromInput) {
-      // rounding up or down
-      if (amount == 0) return price;
-      uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
+      if (zeroToOne == fromInput) {
+        // rounding up or down
+        if (amount == 0) return price;
+        uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
-      if (fromInput) {
-        uint256 product;
-        if ((product = amount * price) / amount == price) {
-          uint256 denominator = liquidityShifted + product;
-          if (denominator >= liquidityShifted) return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator)); // always fits in 160 bits
+        if (fromInput) {
+          uint256 product;
+          if ((product = amount * price) / amount == price) {
+            uint256 denominator = liquidityShifted + product;
+            if (denominator >= liquidityShifted) return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator)); // always fits in 160 bits
+          }
+
+          return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
+        } else {
+          uint256 product;
+          require((product = amount * price) / amount == price); // if the product overflows, we know the denominator underflows
+          require(liquidityShifted > product); // in addition, we must check that the denominator does not underflow
+          return FullMath.mulDivRoundingUp(liquidityShifted, price, liquidityShifted - product).toUint160();
         }
-
-        return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
       } else {
-        uint256 product;
-        require((product = amount * price) / amount == price); // if the product overflows, we know the denominator underflows
-        require(liquidityShifted > product); // in addition, we must check that the denominator does not underflow
-        return FullMath.mulDivRoundingUp(liquidityShifted, price, liquidityShifted - product).toUint160();
-      }
-    } else {
-      // if we're adding (subtracting), rounding down requires rounding the quotient down (up)
-      // in both cases, avoid a mulDiv for most inputs
-      if (fromInput) {
-        return
-          uint256(price)
-            .add(amount <= type(uint160).max ? (amount << Constants.RESOLUTION) / liquidity : FullMath.mulDiv(amount, Constants.Q96, liquidity))
-            .toUint160();
-      } else {
-        uint256 quotient = amount <= type(uint160).max
-          ? FullMath.divRoundingUp(amount << Constants.RESOLUTION, liquidity)
-          : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
+        // if we're adding (subtracting), rounding down requires rounding the quotient down (up)
+        // in both cases, avoid a mulDiv for most inputs
+        if (fromInput) {
+          return
+            uint256(price)
+              .add(amount <= type(uint160).max ? (amount << Constants.RESOLUTION) / liquidity : FullMath.mulDiv(amount, Constants.Q96, liquidity))
+              .toUint160();
+        } else {
+          uint256 quotient = amount <= type(uint160).max
+            ? FullMath.divRoundingUp(amount << Constants.RESOLUTION, liquidity)
+            : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
 
-        require(price > quotient);
-        return uint160(price - quotient); // always fits 160 bits
+          require(price > quotient);
+          return uint160(price - quotient); // always fits 160 bits
+        }
       }
     }
   }
@@ -112,49 +114,51 @@ library PriceMovementMath {
     int256 amountAvailable,
     uint16 fee
   ) internal pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
-    function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
+    unchecked {
+      function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
 
-    if (amountAvailable >= 0) {
-      // exactIn or not
-      uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
-      input = getAmountA(targetPrice, currentPrice, liquidity);
-      if (amountAvailableAfterFee >= input) {
-        resultPrice = targetPrice;
-        feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
-      } else {
-        resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
-        if (targetPrice != resultPrice) {
-          input = getAmountA(resultPrice, currentPrice, liquidity);
-
-          // we didn't reach the target, so take the remainder of the maximum input as fee
-          feeAmount = uint256(amountAvailable) - input;
-        } else {
+      if (amountAvailable >= 0) {
+        // exactIn or not
+        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
+        input = getAmountA(targetPrice, currentPrice, liquidity);
+        if (amountAvailableAfterFee >= input) {
+          resultPrice = targetPrice;
           feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+        } else {
+          resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
+          if (targetPrice != resultPrice) {
+            input = getAmountA(resultPrice, currentPrice, liquidity);
+
+            // we didn't reach the target, so take the remainder of the maximum input as fee
+            feeAmount = uint256(amountAvailable) - input;
+          } else {
+            feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+          }
         }
+
+        output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
+      } else {
+        function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
+
+        output = getAmountB(targetPrice, currentPrice, liquidity);
+        amountAvailable = -amountAvailable;
+        if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
+        else {
+          resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
+
+          if (targetPrice != resultPrice) {
+            output = getAmountB(resultPrice, currentPrice, liquidity);
+          }
+
+          // cap the output amount to not exceed the remaining output amount
+          if (output > uint256(amountAvailable)) {
+            output = uint256(amountAvailable);
+          }
+        }
+
+        input = getAmountA(resultPrice, currentPrice, liquidity);
+        feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
       }
-
-      output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
-    } else {
-      function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
-
-      output = getAmountB(targetPrice, currentPrice, liquidity);
-      amountAvailable = -amountAvailable;
-      if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
-      else {
-        resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
-
-        if (targetPrice != resultPrice) {
-          output = getAmountB(resultPrice, currentPrice, liquidity);
-        }
-
-        // cap the output amount to not exceed the remaining output amount
-        if (output > uint256(amountAvailable)) {
-          output = uint256(amountAvailable);
-        }
-      }
-
-      input = getAmountA(resultPrice, currentPrice, liquidity);
-      feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
     }
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '../../interfaces/IAlgebraFactory.sol';
@@ -126,13 +126,13 @@ contract SimulationTimeFactory is IAlgebraFactory {
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xb27333c90d2ca11c89e0517f560b7b37bfb791cf1a9deb36a4106506248f7c85;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xf61ee88c35ddda06fe6af1793526142c60ffaf5d4214216712b035b552b46c12;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool
   function computeAddress(address token0, address token1) private view returns (address pool) {
-    pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
+    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
   }
 }

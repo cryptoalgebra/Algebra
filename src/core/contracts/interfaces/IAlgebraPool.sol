@@ -7,6 +7,7 @@ import './pool/IAlgebraPoolDerivedState.sol';
 import './pool/IAlgebraPoolActions.sol';
 import './pool/IAlgebraPoolPermissionedActions.sol';
 import './pool/IAlgebraPoolEvents.sol';
+import './pool/IAlgebraPoolErrors.sol';
 
 /**
  * @title The interface for a Algebra Pool
@@ -20,7 +21,8 @@ interface IAlgebraPool is
   IAlgebraPoolDerivedState,
   IAlgebraPoolActions,
   IAlgebraPoolPermissionedActions,
-  IAlgebraPoolEvents
+  IAlgebraPoolEvents,
+  IAlgebraPoolErrors
 {
   // used only for combining interfaces
 }

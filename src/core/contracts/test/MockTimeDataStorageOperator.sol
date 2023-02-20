@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import '../DataStorageOperator.sol';
 
@@ -16,7 +15,9 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
   }
 
   function advanceTime(uint256 by) external {
-    time += by;
+    unchecked {
+      time += by;
+    }
   }
 
   function _blockTimestamp() internal view override returns (uint32) {

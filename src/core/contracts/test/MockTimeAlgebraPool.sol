@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../AlgebraPool.sol';
 import './MockTimeDataStorageOperator.sol';
@@ -18,11 +19,15 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function advanceTime(uint256 by) external {
-    time += by;
+    unchecked {
+      time += by;
+    }
   }
 
   function _blockTimestamp() internal view override returns (uint32) {
-    return uint32(time);
+    unchecked {
+      return uint32(time);
+    }
   }
 
   function checkBlockTimestamp() external view returns (bool) {
@@ -33,18 +38,20 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function getAverageVolatility() external view returns (uint112 volatilityAverage) {
     volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
-      globalState.fee,
+      int24(uint24(globalState.fee)),
       globalState.timepointIndex
     );
   }
 
   function getPrevTick() external view returns (int24 tick, int24 currentTick) {
-    if (globalState.timepointIndex > 2) {
-      (, uint32 lastTsmp, int56 tickCum, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
-      (, uint32 plastTsmp, int56 ptickCum, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex - 1);
-      tick = int24((tickCum - ptickCum) / (lastTsmp - plastTsmp));
+    unchecked {
+      if (globalState.timepointIndex > 2) {
+        (, uint32 lastTsmp, int56 tickCum, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
+        (, uint32 plastTsmp, int56 ptickCum, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex - 1);
+        tick = int24((tickCum - ptickCum) / int56(uint56(lastTsmp - plastTsmp)));
+      }
+      currentTick = globalState.tick;
     }
-    currentTick = globalState.tick;
   }
 
   function getFee() external view returns (uint16 fee) {

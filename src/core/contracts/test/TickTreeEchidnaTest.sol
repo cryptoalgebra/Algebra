@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../libraries/TickTree.sol';
 
@@ -25,32 +26,36 @@ contract TickTreeEchidnaTest {
       rowNumber := sar(8, tick)
     }
     uint256 word0 = bitmap[rowNumber];
-    return (word0 & (1 << bitNumber)) > 0;
+    unchecked {
+      return (word0 & (1 << bitNumber)) > 0;
+    }
   }
 
   function toggleTick(int24 tick) external {
-    tick = (tick / TICK_SPACING) * TICK_SPACING;
-    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
-    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
-    tick = (tick / TICK_SPACING) * TICK_SPACING;
+    unchecked {
+      tick = (tick / TICK_SPACING) * TICK_SPACING;
+      if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+      if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+      tick = (tick / TICK_SPACING) * TICK_SPACING;
 
-    assert(tick >= TickMath.MIN_TICK);
-    assert(tick <= TickMath.MAX_TICK);
-    bool before = _isInitialized(tick);
-    word = bitmap.toggleTick(tickWordsTable, tick, word);
-    assert(_isInitialized(tick) == !before);
+      assert(tick >= TickMath.MIN_TICK);
+      assert(tick <= TickMath.MAX_TICK);
+      bool before = _isInitialized(tick);
+      word = bitmap.toggleTick(tickWordsTable, tick, word);
+      assert(_isInitialized(tick) == !before);
 
-    if (!before) {
-      initedTicks.push(tick);
-      initedTicksIndexes[tick] = initedTicks.length - 1;
-    } else {
-      uint256 index = initedTicksIndexes[tick];
-      if (index != initedTicks.length - 1) {
-        int24 last = initedTicks[initedTicks.length - 1];
-        initedTicks[index] = last;
-        initedTicksIndexes[last] = index;
+      if (!before) {
+        initedTicks.push(tick);
+        initedTicksIndexes[tick] = initedTicks.length - 1;
+      } else {
+        uint256 index = initedTicksIndexes[tick];
+        if (index != initedTicks.length - 1) {
+          int24 last = initedTicks[initedTicks.length - 1];
+          initedTicks[index] = last;
+          initedTicksIndexes[last] = index;
+        }
+        initedTicks.pop();
       }
-      initedTicks.pop();
     }
   }
 
@@ -58,33 +63,37 @@ contract TickTreeEchidnaTest {
     uint256 length = initedTicks.length;
     if (length == 0) return (TickMath.MAX_TICK, false);
     num = TickMath.MAX_TICK;
-    for (uint256 i; i < length; ++i) {
-      int24 tick = initedTicks[i];
-      if (tick > start) {
-        if (tick <= num) {
-          num = tick;
-          found = true;
+    unchecked {
+      for (uint256 i; i < length; ++i) {
+        int24 tick = initedTicks[i];
+        if (tick > start) {
+          if (tick <= num) {
+            num = tick;
+            found = true;
+          }
         }
       }
     }
   }
 
   function checkNextInitializedTickInvariants(int24 tick) external view {
-    tick = (tick / TICK_SPACING) * TICK_SPACING;
-    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
-    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
-    tick = (tick / TICK_SPACING) * TICK_SPACING;
+    unchecked {
+      tick = (tick / TICK_SPACING) * TICK_SPACING;
+      if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+      if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+      tick = (tick / TICK_SPACING) * TICK_SPACING;
 
-    int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
+      int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
 
-    assert(next > tick);
-    assert((next - tick) <= 2 * TickMath.MAX_TICK);
-    assert(next >= TickMath.MIN_TICK);
-    assert(next <= TickMath.MAX_TICK);
-    if (next != TickMath.MAX_TICK) assert(_isInitialized(next));
-    // all the ticks between the input tick and the next tick should be uninitialized
-    (int24 nextInited, bool found) = _findNextTickInArray(tick);
-    assert(nextInited == next);
-    assert(_isInitialized(next) == found);
+      assert(next > tick);
+      assert((next - tick) <= 2 * TickMath.MAX_TICK);
+      assert(next >= TickMath.MIN_TICK);
+      assert(next <= TickMath.MAX_TICK);
+      if (next != TickMath.MAX_TICK) assert(_isInitialized(next));
+      // all the ticks between the input tick and the next tick should be uninitialized
+      (int24 nextInited, bool found) = _findNextTickInArray(tick);
+      assert(nextInited == next);
+      assert(_isInitialized(next) == found);
+    }
   }
 }

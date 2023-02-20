@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IERC20Minimal.sol';
@@ -26,8 +26,10 @@ contract AlgebraCommunityVault {
     uint256 tokensLength = tokens.length;
     require(tokensLength == tos.length && tokens.length == amounts.length);
 
-    for (uint256 i; i < tokensLength; ++i) {
-      _withdraw(tokens[i], tos[i], amounts[i]);
+    unchecked {
+      for (uint256 i; i < tokensLength; ++i) {
+        _withdraw(tokens[i], tos[i], amounts[i]);
+      }
     }
   }
 

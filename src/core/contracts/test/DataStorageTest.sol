@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '../libraries/DataStorage.sol';
@@ -29,7 +29,9 @@ contract DataStorageTest {
   }
 
   function advanceTime(uint32 by) public {
-    time += by;
+    unchecked {
+      time += by;
+    }
   }
 
   struct UpdateParams {
@@ -52,12 +54,13 @@ contract DataStorageTest {
     uint128 _liquidity = liquidity;
     uint16 _index = index;
     uint32 _time = time;
-
-    for (uint256 i; i < params.length; ++i) {
-      _time += params[i].advanceTimeBy;
-      (_index, ) = timepoints.write(_index, _time, _tick);
-      _tick = params[i].tick;
-      _liquidity = params[i].liquidity;
+    unchecked {
+      for (uint256 i; i < params.length; ++i) {
+        _time += params[i].advanceTimeBy;
+        (_index, ) = timepoints.write(_index, _time, _tick);
+        _tick = params[i].tick;
+        _liquidity = params[i].liquidity;
+      }
     }
 
     // sstore everything
@@ -75,13 +78,15 @@ contract DataStorageTest {
 
   function getGasCostOfGetPoints(uint32[] calldata secondsAgos) external view returns (uint256) {
     (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
-    uint256 gasBefore = gasleft();
-    timepoints.getTimepoints(_time, secondsAgos, _tick, _index);
-    return gasBefore - gasleft();
+    unchecked {
+      uint256 gasBefore = gasleft();
+      timepoints.getTimepoints(_time, secondsAgos, _tick, _index);
+      return gasBefore - gasleft();
+    }
   }
 
   function volatilityOnRange(uint32 dt, int24 tick0, int24 tick1, int24 avgTick0, int24 avgTick1) external pure returns (uint256) {
-    return DataStorage._volatilityOnRange(dt, tick0, tick1, avgTick0, avgTick1);
+    return DataStorage._volatilityOnRange(int256(uint256(dt)), tick0, tick1, avgTick0, avgTick1);
   }
 
   function getAverageTick() external view returns (int256) {

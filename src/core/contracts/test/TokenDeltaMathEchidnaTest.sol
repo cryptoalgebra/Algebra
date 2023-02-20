@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../libraries/FullMath.sol';
 import '../libraries/TokenDeltaMath.sol';
@@ -8,15 +8,17 @@ import '../libraries/Constants.sol';
 
 contract TokenDeltaMathEchidnaTest {
   function mulDivRoundingUpInvariants(uint256 x, uint256 y, uint256 z) external pure {
-    require(z > 0);
-    uint256 notRoundedUp = FullMath.mulDiv(x, y, z);
-    uint256 roundedUp = FullMath.mulDivRoundingUp(x, y, z);
-    assert(roundedUp >= notRoundedUp);
-    assert(roundedUp - notRoundedUp < 2);
-    if (roundedUp - notRoundedUp == 1) {
-      assert(mulmod(x, y, z) > 0);
-    } else {
-      assert(mulmod(x, y, z) == 0);
+    unchecked {
+      require(z > 0);
+      uint256 notRoundedUp = FullMath.mulDiv(x, y, z);
+      uint256 roundedUp = FullMath.mulDivRoundingUp(x, y, z);
+      assert(roundedUp >= notRoundedUp);
+      assert(roundedUp - notRoundedUp < 2);
+      if (roundedUp - notRoundedUp == 1) {
+        assert(mulmod(x, y, z) > 0);
+      } else {
+        assert(mulmod(x, y, z) == 0);
+      }
     }
   }
 
@@ -99,7 +101,9 @@ contract TokenDeltaMathEchidnaTest {
 
     assert(amount0Down <= amount0Up);
     // diff is 0 or 1
-    assert(amount0Up - amount0Down < 2);
+    unchecked {
+      assert(amount0Up - amount0Down < 2);
+    }
   }
 
   // ensure that chained division is always equal to the full-precision case for
@@ -107,18 +111,22 @@ contract TokenDeltaMathEchidnaTest {
   function getToken0DeltaEquivalency(uint160 sqrtP, uint160 sqrtQ, uint128 liquidity, bool roundUp) external pure {
     require(sqrtP >= sqrtQ);
     require(sqrtP > 0 && sqrtQ > 0);
-    require((sqrtP * sqrtQ) / sqrtP == sqrtQ);
+    unchecked {
+      require((sqrtP * sqrtQ) / sqrtP == sqrtQ);
+    }
 
-    uint256 numerator1 = uint256(liquidity) << Constants.RESOLUTION;
-    uint256 numerator2 = sqrtP - sqrtQ;
-    uint256 denominator = uint256(sqrtP) * sqrtQ;
+    unchecked {
+      uint256 numerator1 = uint256(liquidity) << Constants.RESOLUTION;
+      uint256 numerator2 = sqrtP - sqrtQ;
+      uint256 denominator = uint256(sqrtP) * sqrtQ;
 
-    uint256 safeResult = roundUp
-      ? FullMath.mulDivRoundingUp(numerator1, numerator2, denominator)
-      : FullMath.mulDiv(numerator1, numerator2, denominator);
-    uint256 fullResult = TokenDeltaMath.getToken0Delta(sqrtQ, sqrtP, liquidity, roundUp);
+      uint256 safeResult = roundUp
+        ? FullMath.mulDivRoundingUp(numerator1, numerator2, denominator)
+        : FullMath.mulDiv(numerator1, numerator2, denominator);
+      uint256 fullResult = TokenDeltaMath.getToken0Delta(sqrtQ, sqrtP, liquidity, roundUp);
 
-    assert(safeResult == fullResult);
+      assert(safeResult == fullResult);
+    }
   }
 
   function getToken1DeltaInvariants(uint160 sqrtP, uint160 sqrtQ, uint128 liquidity) external pure {
@@ -131,7 +139,9 @@ contract TokenDeltaMathEchidnaTest {
 
     assert(amount1Down <= amount1Up);
     // diff is 0 or 1
-    assert(amount1Up - amount1Down < 2);
+    unchecked {
+      assert(amount1Up - amount1Down < 2);
+    }
   }
 
   function getToken0DeltaSignedInvariants(uint160 sqrtP, uint160 sqrtQ, int128 liquidity) external pure {

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../interfaces/pool/IAlgebraPoolState.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 import '../libraries/TickManager.sol';
 import '../libraries/LimitOrderManager.sol';
 import './Timestamp.sol';
 
-abstract contract PoolState is IAlgebraPoolState, Timestamp {
+abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp {
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
@@ -58,7 +59,7 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   }
 
   function _lock() private {
-    require(globalState.unlocked, 'LOK');
+    if (!globalState.unlocked) revert LOK();
     globalState.unlocked = false;
   }
 

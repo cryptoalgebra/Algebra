@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '../libraries/TickTree.sol';
 
@@ -28,10 +29,12 @@ contract TickTreeTest {
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
-    uint256 gasBefore = gasleft();
-    word = tickTree.toggleTick(tickWordsTable, tick, word);
-    (tickWordsTable, tick, word);
-    return gasBefore - gasleft();
+    unchecked {
+      uint256 gasBefore = gasleft();
+      word = tickTree.toggleTick(tickWordsTable, tick, word);
+      (tickWordsTable, tick, word);
+      return gasBefore - gasleft();
+    }
   }
 
   function nextTickInTheSameNode(int24 tick) external view returns (int24 next, bool initialized) {
@@ -40,9 +43,11 @@ contract TickTreeTest {
   }
 
   function getGasCostOfNextTickInTheSameNode(int24 tick) external view returns (uint256) {
-    uint256 gasBefore = gasleft();
-    tickTree.getNextTick(tickWordsTable, word, tick);
-    return gasBefore - gasleft();
+    unchecked {
+      uint256 gasBefore = gasleft();
+      tickTree.getNextTick(tickWordsTable, word, tick);
+      return gasBefore - gasleft();
+    }
   }
 
   // returns whether the given tick is initialized

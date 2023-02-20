@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../../AlgebraPool.sol';
 import '../MockTimeDataStorageOperator.sol';
@@ -20,7 +20,7 @@ contract SimulationTimeAlgebraPool is AlgebraPool {
   function getAverageVolatility() external view returns (uint112 volatilityAverage) {
     volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
-      globalState.fee,
+      int24(uint24(globalState.fee)),
       globalState.timepointIndex
     );
   }
