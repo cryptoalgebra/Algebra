@@ -624,16 +624,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     _updateReserves();
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
-    unchecked {
-      int128 liquidityDelta = -int256(uint256(amount)).toInt128();
-      (amount0, amount1) = (bottomTick == topTick)
-        ? _updateLimitOrderPosition(position, bottomTick, liquidityDelta)
-        : _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
+    int128 liquidityDelta = -int128(amount);
+    (amount0, amount1) = (bottomTick == topTick)
+      ? _updateLimitOrderPosition(position, bottomTick, liquidityDelta)
+      : _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
-      if (amount0 | amount1 != 0) {
-        (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
-      }
+    if (amount0 | amount1 != 0) {
+      (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
     }
+
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
