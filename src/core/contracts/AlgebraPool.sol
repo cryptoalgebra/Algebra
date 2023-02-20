@@ -337,21 +337,58 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     return positions[key];
   }
 
-  function _syncBalances() internal returns (uint256 balance0, uint256 balance1) {
+  function _updateReserves() internal returns (uint256 balance0, uint256 balance1) {
     (balance0, balance1) = (balanceToken0(), balanceToken1());
+    if (balance0 > type(uint128).max) {
+      TransferHelper.safeTransfer(token0, communityVault, balance0 - type(uint128).max);
+      balance0 = type(uint128).max;
+    }
+    if (balance1 > type(uint128).max) {
+      TransferHelper.safeTransfer(token1, communityVault, balance1 - type(uint128).max);
+      balance1 = type(uint128).max;
+    }
+
     uint128 _liquidity = liquidity;
     if (_liquidity == 0) return (balance0, balance1);
 
-    uint256 _reserve0 = reserve0;
-    if (balance0 > _reserve0) {
-      totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
-      reserve0 = balance0;
+    (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
+    if (balance0 > _reserve0 || balance1 > _reserve1) {
+      if (balance0 > _reserve0) {
+        totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
+      }
+      if (balance1 > _reserve1) {
+        totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
+      }
+      (reserve0, reserve1) = (uint128(balance0), uint128(balance1)); // TODO SECURITY
     }
-    uint256 _reserve1 = reserve1;
-    if (balance1 > _reserve1) {
-      totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
-      reserve1 = balance1;
+  }
+
+  //TODO name
+  function _addDeltasToReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
+    if (communityFee0 | communityFee1 != 0) {
+      (uint128 _cfPending0, uint128 _cfPending1) = (communityFeePending0, communityFeePending1);
+      _cfPending0 += uint128(communityFee0); // TODO CAST
+      _cfPending1 += uint128(communityFee1);
+
+      // underflow is desired
+      uint32 currentTimestamp = _blockTimestamp();
+      if (currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
+        if (_cfPending0 > 0) TransferHelper.safeTransfer(token0, communityVault, _cfPending0);
+        if (_cfPending1 > 0) TransferHelper.safeTransfer(token1, communityVault, _cfPending1);
+        deltaR0 -= int256(_cfPending0);
+        deltaR1 -= int256(_cfPending1);
+        (communityFeePending0, communityFeePending1) = (0, 0);
+        communityFeeLastTimestamp = currentTimestamp; // TODO OPT
+      } else {
+        (communityFeePending0, communityFeePending1) = (_cfPending0, _cfPending1);
+      }
     }
+
+    if (deltaR0 | deltaR1 == 0) return;
+    (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
+    if (deltaR0 != 0) _reserve0 = uint256(int256(_reserve0) + deltaR0).toUint128(); // TODO OPTIMIZE
+    if (deltaR1 != 0) _reserve1 = uint256(int256(_reserve1) + deltaR1).toUint128();
+    (reserve0, reserve1) = (_reserve0, _reserve1);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -375,7 +412,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
     liquidityActual = liquidityDesired;
 
-    (uint256 receivedAmount0, uint256 receivedAmount1) = _syncBalances();
+    (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
     if (amount0 == 0) receivedAmount0 = 0;
@@ -420,14 +457,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     if (amount0 > 0) {
       if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
       else require(receivedAmount0 == amount0, 'IIAM2');
-      reserve0 += amount0;
     }
 
     if (amount1 > 0) {
       if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
       else require(receivedAmount1 == amount1, 'IIAM2');
-      reserve1 += amount1;
     }
+    _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0); // TODO CAST
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
@@ -521,15 +557,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     }
   }
 
-  function _payFromReserve(address token, address recipient, uint256 amount) internal {
-    TransferHelper.safeTransfer(token, recipient, amount);
-    if (token == token0) {
-      reserve0 -= amount;
-    } else {
-      reserve1 -= amount;
-    }
-  }
-
   /// @inheritdoc IAlgebraPoolActions
   function collect(
     address recipient,
@@ -551,8 +578,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // single SSTORE
       (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
 
-      if (amount0 > 0) _payFromReserve(token0, recipient, amount0);
-      if (amount1 > 0) _payFromReserve(token1, recipient, amount1);
+      if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
+      if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
+      _addDeltasToReserves(-int256(amount0), -int256(amount1), 0, 0);
     }
 
     emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
@@ -564,7 +592,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 amount
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
-    _syncBalances();
+    _updateReserves();
 
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
     int128 liquidityDelta = -int256(amount).toInt128();
@@ -576,28 +604,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
     }
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
-  }
-
-  function _payCommunityFee(uint256 amount0, uint256 amount1) private {
-    (uint128 _communityFeePending0, uint128 _communityFeePending1) = (communityFeePending0, communityFeePending1);
-    if (amount0 > 0) _communityFeePending0 += uint128(amount0);
-    if (amount1 > 0) _communityFeePending1 += uint128(amount1);
-
-    if (_blockTimestamp() - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
-      // underflow is desired
-      if (_communityFeePending0 > 0) {
-        TransferHelper.safeTransfer(token0, communityVault, _communityFeePending0);
-        reserve0 -= _communityFeePending0;
-      }
-      if (_communityFeePending1 > 0) {
-        TransferHelper.safeTransfer(token1, communityVault, _communityFeePending1);
-        reserve1 -= _communityFeePending1;
-      }
-      (communityFeePending0, communityFeePending1) = (0, 0);
-      communityFeeLastTimestamp = _blockTimestamp();
-    } else {
-      (communityFeePending0, communityFeePending1) = (_communityFeePending0, _communityFeePending1);
-    }
   }
 
   function _writeTimepoint(
@@ -641,19 +647,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     if (zeroToOne) {
-      (uint256 balanceBefore, ) = _syncBalances();
-      if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1)); // transfer to recipient
+      (uint256 balanceBefore, ) = _updateReserves();
+      if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
-      reserve0 = balanceBefore + uint256(amount0);
-      if (communityFee > 0) _payCommunityFee(communityFee, 0);
+      _addDeltasToReserves(amount0, amount1, communityFee, 0); // TODO CAST
     } else {
-      (, uint256 balanceBefore) = _syncBalances();
-      if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0)); // transfer to recipient
+      (, uint256 balanceBefore) = _updateReserves();
+      if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
-      reserve1 = balanceBefore + uint256(amount1);
-      if (communityFee > 0) _payCommunityFee(0, communityFee);
+      _addDeltasToReserves(amount0, amount1, 0, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -672,7 +676,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
     {
-      (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
+      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       int256 amountReceived;
       if (zeroToOne) {
         _swapCallback(amountRequired, 0, data);
@@ -693,23 +697,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     // only transfer to the recipient
     if (zeroToOne) {
-      if (amount1 < 0) _payFromReserve(token1, recipient, uint256(-amount1));
+      if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
       // return the leftovers
-      if (amount0 < amountRequired) {
-        TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
-        amountRequired = int256(amount0);
-      }
-      reserve0 = reserve0 + uint256(amountRequired);
-      if (communityFee > 0) _payCommunityFee(communityFee, 0);
+      if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
+
+      _addDeltasToReserves(amount0, amount1, communityFee, 0); // TODO CAST
     } else {
-      if (amount0 < 0) _payFromReserve(token0, recipient, uint256(-amount0));
+      if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
       // return the leftovers
-      if (amount1 < amountRequired) {
-        TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
-        amountRequired = int256(amount1);
-      }
-      reserve1 = reserve1 + uint256(amountRequired);
-      if (communityFee > 0) _payCommunityFee(0, communityFee);
+      if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
+
+      _addDeltasToReserves(amount0, amount1, 0, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -936,7 +934,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   /// @inheritdoc IAlgebraPoolActions
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override nonReentrant {
-    (uint256 balance0Before, uint256 balance1Before) = _syncBalances();
+    (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
     uint256 fee0;
     if (amount0 > 0) {
       fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
@@ -960,18 +958,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 _communityFee = globalState.communityFee;
     if (_communityFee > 0) {
       uint128 communityFee0;
-      if (paid0 > 0) {
-        communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-        reserve0 += communityFee0;
-      }
-
+      if (paid0 > 0) communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
       uint128 communityFee1;
-      if (paid1 > 0) {
-        communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
-        reserve1 += communityFee1;
-      }
+      if (paid1 > 0) communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
 
-      _payCommunityFee(communityFee0, communityFee1);
+      _addDeltasToReserves(communityFee0, communityFee1, communityFee0, communityFee1);
     }
 
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);

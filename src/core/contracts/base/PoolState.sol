@@ -33,8 +33,8 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   uint128 public communityFeePending0;
   uint128 public communityFeePending1;
 
-  uint256 public reserve0; // TODO
-  uint256 public reserve1;
+  uint128 public reserve0; // TODO
+  uint128 public reserve1;
 
   uint32 internal lastTimepointTimestamp; // TODO
   uint160 public secondsPerLiquidityCumulative;

@@ -2852,11 +2852,14 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe('fees overflow scenarios', async () => {
-    it('up to max uint 128', async () => {
+  describe('fees and reserves overflow scenarios', async () => {
+    it('up to max uint 128 - 1', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
-      await flash(0, 0, wallet.address, MaxUint128, MaxUint128)
+      const reserve0before = await pool.reserve0();
+      const reserve1before = await pool.reserve1();
+
+      await flash(0, 0, wallet.address, MaxUint128.sub(1), MaxUint128.sub(1))
 
       await pool.burn(minTick, maxTick, 0)
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
@@ -2864,8 +2867,8 @@ describe('AlgebraPool', () => {
         pool.totalFeeGrowth1Token(),
       ])
       // all 1s in first 128 bits
-      expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128))
-      expect(totalFeeGrowth1Token).to.eq(MaxUint128.shl(128))
+      expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128).sub(reserve0before.shl(128)))
+      expect(totalFeeGrowth1Token).to.eq(MaxUint128.shl(128).sub(reserve1before.shl(128)))
       const { amount0, amount1 } = await pool.callStatic.collect(
         wallet.address,
         minTick,
@@ -2873,13 +2876,16 @@ describe('AlgebraPool', () => {
         MaxUint128,
         MaxUint128
       )
-      expect(amount0).to.eq(MaxUint128)
-      expect(amount1).to.eq(MaxUint128)
+      expect(amount0).to.eq(MaxUint128.sub(1))
+      expect(amount1).to.eq(MaxUint128.sub(1))
     })
 
-    it('overflow max uint 128', async () => {
+    it('reserves overflow max uint 128', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
+      const reserve0before = await pool.reserve0();
+      const reserve1before = await pool.reserve1();
+
       await flash(0, 0, wallet.address, MaxUint128, MaxUint128)
       await flash(0, 0, wallet.address, 1, 1)
 
@@ -2889,8 +2895,8 @@ describe('AlgebraPool', () => {
         pool.totalFeeGrowth1Token(),
       ])
       // all 1s in first 128 bits
-      expect(totalFeeGrowth0Token).to.eq(0)
-      expect(totalFeeGrowth1Token).to.eq(0)
+      expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128).sub(reserve0before.shl(128)))
+      expect(totalFeeGrowth1Token).to.eq(MaxUint128.shl(128).sub(reserve0before.shl(128)))
       const { amount0, amount1 } = await pool.callStatic.collect(
         wallet.address,
         minTick,
@@ -2899,8 +2905,8 @@ describe('AlgebraPool', () => {
         MaxUint128
       )
       // fees burned
-      expect(amount0).to.eq(0)
-      expect(amount1).to.eq(0)
+      expect(amount0).to.eq(MaxUint128.sub(1))
+      expect(amount1).to.eq(MaxUint128.sub(1))
     })
 
     it('overflow max uint 128 after poke burns fees owed to 0', async () => {
@@ -2919,49 +2925,55 @@ describe('AlgebraPool', () => {
         MaxUint128
       )
       // fees burned
-      expect(amount0).to.eq(0)
-      expect(amount1).to.eq(0)
+      expect(amount0).to.eq(MaxUint128.sub(1))
+      expect(amount1).to.eq(MaxUint128.sub(1))
     })
 
     it('two positions at the same snapshot', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
       await mint(other.address, minTick, maxTick, 1)
+      const reserve0before = await pool.reserve0();
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await pool.burn(minTick, maxTick, 0)
       const totalFeeGrowth0Token = await pool.totalFeeGrowth0Token()
-      expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128))
+      expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128).sub(reserve0before.shl(128)).div(2))
       await flash(0, 0, wallet.address, 2, 0)
       await pool.burn(minTick, maxTick, 0)
       await pool.connect(other).burn(minTick, maxTick, 0)
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
-      expect(amount0, 'amount0 of wallet').to.eq(0)
+      expect(amount0, 'amount0 of wallet').to.eq(MaxUint128.div(2).sub(1))
       ;({ amount0 } = await pool
         .connect(other)
         .callStatic.collect(other.address, minTick, maxTick, MaxUint128, MaxUint128))
-      expect(amount0, 'amount0 of other').to.eq(0)
+      expect(amount0, 'amount0 of other').to.eq(MaxUint128.div(2).sub(1))
     })
 
-    it('two positions 1 wei of fees apart overflows exactly once', async () => {
+    it('two positions 1 wei of fees apart', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
       await flash(0, 0, wallet.address, 1, 0)
       await mint(other.address, minTick, maxTick, 1)
+      const totalFeeGrowth0TokenBefore = await pool.totalFeeGrowth0Token()
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await pool.burn(minTick, maxTick, 0)
       const totalFeeGrowth0Token = await pool.totalFeeGrowth0Token()
-      expect(totalFeeGrowth0Token).to.eq(0)
+      expect(totalFeeGrowth0Token).to.eq(
+        totalFeeGrowth0TokenBefore.add(
+          MaxUint128.sub(3).shl(128).div(2)
+        )
+      )
       await flash(0, 0, wallet.address, 2, 0)
       await pool.burn(minTick, maxTick, 0)
       await pool.connect(other).burn(minTick, maxTick, 0)
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
-      expect(amount0, 'amount0 of wallet').to.eq(1)
+      expect(amount0, 'amount0 of wallet').to.eq(MaxUint128.div(2))
       ;({ amount0 } = await pool
         .connect(other)
         .callStatic.collect(other.address, minTick, maxTick, MaxUint128, MaxUint128))
-      expect(amount0, 'amount0 of other').to.eq(0)
+      expect(amount0, 'amount0 of other').to.eq(MaxUint128.div(2).sub(1))
     })
   })
 

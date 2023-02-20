@@ -28,7 +28,8 @@ async function factoryFixture(): Promise<FactoryFixture> {
 
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
   const factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
-
+  await factory.deployed();
+  
   const vaultAddress = await factory.communityVault();
 
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
