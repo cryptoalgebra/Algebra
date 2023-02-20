@@ -991,8 +991,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit CommunityFee(communityFee);
   }
 
-  //TODO interface and natspec
-  function setTickSpacing(int24 newTickSpacing) external nonReentrant {
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
     onlyFactoryOwner();
     require(newTickSpacing > 0);
     require(tickSpacing != newTickSpacing);

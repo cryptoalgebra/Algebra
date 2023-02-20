@@ -19,4 +19,10 @@ interface IAlgebraPoolPermissionedActions {
    * @param virtualPoolAddress The address of a virtual pool associated with the incentive
    */
   function setIncentive(address virtualPoolAddress) external;
+
+  /**
+   * @notice Set the new tick spacing value
+   * @param newTickSpacing The new tick spacing value
+   */
+  function setTickSpacing(int24 newTickSpacing) external;
 }
