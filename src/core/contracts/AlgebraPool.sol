@@ -136,17 +136,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
+    uint128 currentLiquidity = _position.liquidity;
+
+    if (liquidityDelta == 0) {
+      // TODO MB REMOVE?
+      if (currentLiquidity == 0) revert NP(); // Do not recalculate the empty ranges
+    } else {
+      // change position liquidity
+      _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+    }
+
     unchecked {
-      uint128 currentLiquidity = _position.liquidity;
-
-      if (liquidityDelta == 0) {
-        // TODO MB REMOVE?
-        if (currentLiquidity == 0) revert NP(); // Do not recalculate the empty ranges
-      } else {
-        // change position liquidity
-        _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-      }
-
       // update the position
       uint256 _innerFeeGrowth0Token;
       uint128 fees0;
@@ -187,91 +187,89 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     int128 liquidityDelta
   ) private returns (uint256 amount0, uint256 amount1) {
-    unchecked {
-      UpdatePositionCache memory cache = UpdatePositionCache(
-        globalState.price,
-        globalState.tick,
-        globalState.prevInitializedTick,
-        globalState.timepointIndex
-      );
+    UpdatePositionCache memory cache = UpdatePositionCache(
+      globalState.price,
+      globalState.tick,
+      globalState.prevInitializedTick,
+      globalState.timepointIndex
+    );
 
-      bool toggledBottom;
-      bool toggledTop;
-      {
-        (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
-        if (liquidityDelta != 0) {
-          uint32 time = _blockTimestamp();
-          uint160 secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
+    bool toggledBottom;
+    bool toggledTop;
+    {
+      (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
+      if (liquidityDelta != 0) {
+        uint32 time = _blockTimestamp();
+        uint160 secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
 
-          toggledBottom = ticks.update(
-            bottomTick,
-            cache.tick,
-            liquidityDelta,
-            _totalFeeGrowth0Token,
-            _totalFeeGrowth1Token,
-            secondsPerLiquidityCumulative,
-            time,
-            false // isTopTick
-          );
-
-          toggledTop = ticks.update(
-            topTick,
-            cache.tick,
-            liquidityDelta,
-            _totalFeeGrowth0Token,
-            _totalFeeGrowth1Token,
-            secondsPerLiquidityCumulative,
-            time,
-            true // isTopTick
-          );
-        }
-
-        (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
+        toggledBottom = ticks.update(
           bottomTick,
-          topTick,
           cache.tick,
+          liquidityDelta,
           _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token
+          _totalFeeGrowth1Token,
+          secondsPerLiquidityCumulative,
+          time,
+          false // isTopTick
         );
 
-        _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
+        toggledTop = ticks.update(
+          topTick,
+          cache.tick,
+          liquidityDelta,
+          _totalFeeGrowth0Token,
+          _totalFeeGrowth1Token,
+          secondsPerLiquidityCumulative,
+          time,
+          true // isTopTick
+        );
       }
 
-      if (liquidityDelta != 0) {
-        // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
-        if (toggledBottom || toggledTop) {
-          uint256 _tickTreeRoot = tickTreeRoot;
-          uint256 _initialTickTreeRoot = _tickTreeRoot;
-          int24 _prevInitializedTick = cache.prevInitializedTick;
-          if (toggledBottom) {
-            (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(
-              bottomTick,
-              cache.tick,
-              _prevInitializedTick,
-              _tickTreeRoot,
-              liquidityDelta < 0
-            );
-          }
-          if (toggledTop) {
-            (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, cache.tick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
-          }
+      (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
+        bottomTick,
+        topTick,
+        cache.tick,
+        _totalFeeGrowth0Token,
+        _totalFeeGrowth1Token
+      );
 
-          if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-          if (_prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = _prevInitializedTick;
+      _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
+    }
+
+    if (liquidityDelta != 0) {
+      // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
+      if (toggledBottom || toggledTop) {
+        uint256 _tickTreeRoot = tickTreeRoot;
+        uint256 _initialTickTreeRoot = _tickTreeRoot;
+        int24 _prevInitializedTick = cache.prevInitializedTick;
+        if (toggledBottom) {
+          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(
+            bottomTick,
+            cache.tick,
+            _prevInitializedTick,
+            _tickTreeRoot,
+            liquidityDelta < 0
+          );
+        }
+        if (toggledTop) {
+          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, cache.tick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
         }
 
-        int128 globalLiquidityDelta;
-        (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
-        if (globalLiquidityDelta != 0) {
-          uint128 liquidityBefore = liquidity;
-          (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
-          if (cache.timepointIndex != newTimepointIndex) {
-            globalState.fee = newFee;
-            globalState.timepointIndex = newTimepointIndex;
-            emit Fee(newFee); // TODO not emit if fee unchanged
-          }
-          liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
+        if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+        if (_prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = _prevInitializedTick;
+      }
+
+      int128 globalLiquidityDelta;
+      (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
+      if (globalLiquidityDelta != 0) {
+        uint128 liquidityBefore = liquidity;
+        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
+        if (cache.timepointIndex != newTimepointIndex) {
+          globalState.fee = newFee;
+          globalState.timepointIndex = newTimepointIndex;
+          emit Fee(newFee); // TODO not emit if fee unchanged
         }
+        liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
     }
   }
@@ -309,24 +307,24 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 currentTick,
     uint160 currentPrice
   ) private pure returns (uint256 amount0, uint256 amount1, int128 globalLiquidityDelta) {
+    uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
+    uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
+
+    int256 amount0Int;
+    int256 amount1Int;
+    if (currentTick < bottomTick) {
+      // If current tick is less than the provided bottom one then only the token0 has to be provided
+      amount0Int = TokenDeltaMath.getToken0Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
+    } else if (currentTick < topTick) {
+      amount0Int = TokenDeltaMath.getToken0Delta(currentPrice, priceAtTopTick, liquidityDelta);
+      amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, currentPrice, liquidityDelta);
+      globalLiquidityDelta = liquidityDelta;
+    } else {
+      // If current tick is greater than the provided top one then only the token1 has to be provided
+      amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
+    }
+
     unchecked {
-      uint160 priceAtBottomTick = TickMath.getSqrtRatioAtTick(bottomTick);
-      uint160 priceAtTopTick = TickMath.getSqrtRatioAtTick(topTick);
-
-      int256 amount0Int;
-      int256 amount1Int;
-      if (currentTick < bottomTick) {
-        // If current tick is less than the provided bottom one then only the token0 has to be provided
-        amount0Int = TokenDeltaMath.getToken0Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
-      } else if (currentTick < topTick) {
-        amount0Int = TokenDeltaMath.getToken0Delta(currentPrice, priceAtTopTick, liquidityDelta);
-        amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, currentPrice, liquidityDelta);
-        globalLiquidityDelta = liquidityDelta;
-      } else {
-        // If current tick is greater than the provided top one then only the token1 has to be provided
-        amount1Int = TokenDeltaMath.getToken1Delta(priceAtBottomTick, priceAtTopTick, liquidityDelta);
-      }
-
       (amount0, amount1) = liquidityDelta < 0 ? (uint256(-amount0Int), uint256(-amount1Int)) : (uint256(amount0Int), uint256(amount1Int));
     }
   }
@@ -424,7 +422,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (bottomTick == topTick) {
         (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
       } else {
-        (amount0, amount1, ) = _getAmountsForLiquidity(bottomTick, topTick, int256(uint256(liquidityDesired)).toInt128(), globalState.tick, globalState.price);
+        (amount0, amount1, ) = _getAmountsForLiquidity(
+          bottomTick,
+          topTick,
+          int256(uint256(liquidityDesired)).toInt128(),
+          globalState.tick,
+          globalState.price
+        );
       }
       liquidityActual = liquidityDesired;
 
@@ -548,31 +552,31 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 tick,
     int128 liquidityDelta
   ) private returns (uint256 amount0, uint256 amount1) {
-    unchecked {
-      _recalculateLimitOrderPosition(position, tick, liquidityDelta);
+    _recalculateLimitOrderPosition(position, tick, liquidityDelta);
 
-      if (liquidityDelta != 0) {
-        bool remove = liquidityDelta < 0;
+    if (liquidityDelta != 0) {
+      bool remove = liquidityDelta < 0;
 
-        (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
-        if (limitOrders.addOrRemoveLimitOrder(tick, liquidityDelta)) {
-          TickManager.Tick storage _tickData = ticks[tick];
-          _tickData.hasLimitOrders = !remove;
-          if (_tickData.nextTick == _tickData.prevTick) {
-            uint256 _initTickTreeRoot = tickTreeRoot;
-            (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
-              tick,
-              _globalTick,
-              _prevInitializedTick,
-              _initTickTreeRoot,
-              remove
-            );
-            if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-            if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
-          }
+      (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
+      if (limitOrders.addOrRemoveLimitOrder(tick, liquidityDelta)) {
+        TickManager.Tick storage _tickData = ticks[tick];
+        _tickData.hasLimitOrders = !remove;
+        if (_tickData.nextTick == _tickData.prevTick) {
+          uint256 _initTickTreeRoot = tickTreeRoot;
+          (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
+            tick,
+            _globalTick,
+            _prevInitializedTick,
+            _initTickTreeRoot,
+            remove
+          );
+          if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
+          if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
         }
+      }
 
-        if (remove) {
+      if (remove) {
+        unchecked {
           return (tick > _globalTick) ? (uint256(int256(-liquidityDelta)), uint256(0)) : (uint256(0), uint256(int256(-liquidityDelta)));
         }
       }
@@ -587,17 +591,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 amount0Requested,
     uint128 amount1Requested
   ) external override nonReentrant returns (uint128 amount0, uint128 amount1) {
-    unchecked {
-      // we don't check tick range validity, because if ticks are incorrect, the position will be empty
-      Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
-      (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
+    // we don't check tick range validity, because if ticks are incorrect, the position will be empty
+    Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
+    (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
 
-      if (amount0Requested > positionFees0) amount0Requested = positionFees0;
-      if (amount1Requested > positionFees1) amount1Requested = positionFees1;
+    if (amount0Requested > positionFees0) amount0Requested = positionFees0;
+    if (amount1Requested > positionFees1) amount1Requested = positionFees1;
 
-      if (amount0Requested | amount1Requested != 0) {
-        // use one if since fees0 and fees1 are tightly packed
-        (amount0, amount1) = (amount0Requested, amount1Requested);
+    if (amount0Requested | amount1Requested != 0) {
+      // use one if since fees0 and fees1 are tightly packed
+      (amount0, amount1) = (amount0Requested, amount1Requested);
+
+      unchecked {
         // single SSTORE
         (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
 
@@ -605,9 +610,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
         _addDeltasToReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
-
-      emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
+
+    emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -616,10 +621,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 amount
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
-    unchecked {
-      _updateReserves();
+    _updateReserves();
+    Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
-      Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
+    unchecked {
       int128 liquidityDelta = -int256(uint256(amount)).toInt128();
       (amount0, amount1) = (bottomTick == topTick)
         ? _updateLimitOrderPosition(position, bottomTick, liquidityDelta)
@@ -628,8 +633,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (amount0 | amount1 != 0) {
         (position.fees0, position.fees1) = (position.fees0.add128(uint128(amount0)), position.fees1.add128(uint128(amount1)));
       }
-      emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
+    emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
   function _writeTimepoint(
@@ -641,7 +646,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint32 _lastTs = lastTimepointTimestamp;
     if (_lastTs == blockTimestamp) return (timepointIndex, 0);
 
-    secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+    unchecked {
+      secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+    }
     lastTimepointTimestamp = blockTimestamp;
 
     return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick);
@@ -650,8 +657,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) private view returns (uint160 _secPerLiqCumulative) {
     uint32 _lastTs;
     (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
-    if (_lastTs != blockTimestamp)
-      _secPerLiqCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+    unchecked {
+      if (_lastTs != blockTimestamp)
+        _secPerLiqCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+    }
   }
 
   function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) private {
@@ -673,6 +682,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
     unchecked {
+      // TODO
       if (zeroToOne) {
         (uint256 balanceBefore, ) = _updateReserves();
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
@@ -775,50 +785,50 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int256 amountRequired,
     uint160 limitSqrtPrice
   ) private returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
-    unchecked {
-      SwapCalculationCache memory cache;
-      {
-        // load from one storage slot
-        currentPrice = globalState.price;
-        currentTick = globalState.tick;
-        cache.fee = globalState.fee;
-        cache.timepointIndex = globalState.timepointIndex;
-        cache.communityFee = globalState.communityFee;
-        cache.prevInitializedTick = globalState.prevInitializedTick;
+    SwapCalculationCache memory cache;
+    {
+      // load from one storage slot
+      currentPrice = globalState.price;
+      currentTick = globalState.tick;
+      cache.fee = globalState.fee;
+      cache.timepointIndex = globalState.timepointIndex;
+      cache.communityFee = globalState.communityFee;
+      cache.prevInitializedTick = globalState.prevInitializedTick;
 
-        if (amountRequired == 0) revert AS();
-        (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
+      if (amountRequired == 0) revert AS();
+      (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
-        currentLiquidity = liquidity;
+      currentLiquidity = liquidity;
 
-        if (zeroToOne) {
-          if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert SPL();
-          cache.totalFeeGrowth = totalFeeGrowth0Token;
-        } else {
-          if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert SPL();
-          cache.totalFeeGrowth = totalFeeGrowth1Token;
-        }
-
-        cache.startTick = currentTick;
-
-        cache.blockTimestamp = _blockTimestamp();
-
-        cache.activeIncentive = activeIncentive;
-
-        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, cache.startTick, currentLiquidity);
-
-        // new timepoint appears only for first swap/mint/burn in block
-        if (newTimepointIndex != cache.timepointIndex) {
-          cache.timepointIndex = newTimepointIndex;
-          if (cache.fee != newFee) {
-            cache.fee = newFee;
-            emit Fee(newFee);
-          }
-        }
+      if (zeroToOne) {
+        if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert SPL();
+        cache.totalFeeGrowth = totalFeeGrowth0Token;
+      } else {
+        if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert SPL();
+        cache.totalFeeGrowth = totalFeeGrowth1Token;
       }
 
-      PriceMovementCache memory step;
-      step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
+      cache.startTick = currentTick;
+
+      cache.blockTimestamp = _blockTimestamp();
+
+      cache.activeIncentive = activeIncentive;
+
+      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, cache.startTick, currentLiquidity);
+
+      // new timepoint appears only for first swap/mint/burn in block
+      if (newTimepointIndex != cache.timepointIndex) {
+        cache.timepointIndex = newTimepointIndex;
+        if (cache.fee != newFee) {
+          cache.fee = newFee;
+          emit Fee(newFee);
+        }
+      }
+    }
+
+    PriceMovementCache memory step;
+    step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
+    unchecked {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
         step.stepSqrtPrice = currentPrice;
@@ -945,21 +955,21 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less than initially specified (e.g. reached limit)
         ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less than initially specified (e.g. reached limit)
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
+    }
 
-      (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex, globalState.prevInitializedTick) = (
-        currentPrice,
-        currentTick,
-        cache.fee,
-        cache.timepointIndex,
-        cache.prevInitializedTick
-      );
+    (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex, globalState.prevInitializedTick) = (
+      currentPrice,
+      currentTick,
+      cache.fee,
+      cache.timepointIndex,
+      cache.prevInitializedTick
+    );
 
-      liquidity = currentLiquidity;
-      if (zeroToOne) {
-        totalFeeGrowth0Token = cache.totalFeeGrowth;
-      } else {
-        totalFeeGrowth1Token = cache.totalFeeGrowth;
-      }
+    liquidity = currentLiquidity;
+    if (zeroToOne) {
+      totalFeeGrowth0Token = cache.totalFeeGrowth;
+    } else {
+      totalFeeGrowth1Token = cache.totalFeeGrowth;
     }
   }
 

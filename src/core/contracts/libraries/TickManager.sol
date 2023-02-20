@@ -57,10 +57,10 @@ library TickManager {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token
   ) internal view returns (uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token) {
-    unchecked {
-      Tick storage lower = self[bottomTick];
-      Tick storage upper = self[topTick];
+    Tick storage lower = self[bottomTick];
+    Tick storage upper = self[topTick];
 
+    unchecked {
       if (currentTick < topTick) {
         if (currentTick >= bottomTick) {
           innerFeeGrowth0Token = totalFeeGrowth0Token - lower.outerFeeGrowth0Token;
@@ -146,17 +146,16 @@ library TickManager {
     uint160 secondsPerLiquidityCumulative,
     uint32 time
   ) internal returns (int128 liquidityDelta) {
-    unchecked {
-      Tick storage data = self[tick];
+    Tick storage data = self[tick];
 
+    unchecked {
       data.outerSecondsSpent = time - data.outerSecondsSpent;
       data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
 
       data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
       data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
-
-      return data.liquidityDelta;
     }
+    return data.liquidityDelta;
   }
 
   /// @notice Used for initial setup if ticks list

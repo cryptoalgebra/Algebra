@@ -15,12 +15,12 @@ library LimitOrderManager {
   }
 
   function addOrRemoveLimitOrder(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal returns (bool flipped) {
-    unchecked {
-      LimitOrder storage data = self[tick];
-      uint128 sumOfAskBefore = data.sumOfAsk;
-      uint128 sumOfAskAfter = sumOfAskBefore;
-      bool add = (amount > 0);
+    LimitOrder storage data = self[tick];
+    uint128 sumOfAskBefore = data.sumOfAsk;
+    uint128 sumOfAskAfter = sumOfAskBefore;
+    bool add = (amount > 0);
 
+    unchecked {
       if (add) {
         sumOfAskAfter += uint128(amount);
         flipped = sumOfAskBefore == 0;
@@ -34,9 +34,9 @@ library LimitOrderManager {
   }
 
   function addVirtualLiquidity(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal {
+    bool add = (amount > 0);
+    LimitOrder storage data = self[tick];
     unchecked {
-      bool add = (amount > 0);
-      LimitOrder storage data = self[tick];
       if (add) {
         data.sumOfAsk += uint128(amount);
         data.spentAsk += uint128(amount);
