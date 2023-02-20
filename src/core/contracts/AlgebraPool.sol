@@ -414,7 +414,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bytes calldata data
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     unchecked {
-      require(liquidityDesired != 0, 'IL');
+      if (liquidityDesired == 0) revert IL();
       {
         int24 _tickSpacing = tickSpacing;
         require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
@@ -476,12 +476,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       if (amount0 > 0) {
         if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
-        else require(receivedAmount0 == amount0, 'IIAM2');
+        else if (receivedAmount0 != amount0) revert IIAM2();
       }
 
       if (amount1 > 0) {
         if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
-        else require(receivedAmount1 == amount1, 'IIAM2');
+        else if (receivedAmount1 != amount1) revert IIAM2();
       }
       _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0); // TODO CAST
       emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
@@ -687,13 +687,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         (uint256 balanceBefore, ) = _updateReserves();
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        require(balanceBefore.add(uint256(amount0)) <= balanceToken0(), 'IIA');
+        if (balanceBefore.add(uint256(amount0)) > balanceToken0()) revert IIA();
         _addDeltasToReserves(amount0, amount1, communityFee, 0); // TODO CAST
       } else {
         (, uint256 balanceBefore) = _updateReserves();
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        require(balanceBefore.add(uint256(amount1)) <= balanceToken1(), 'IIA');
+        if (balanceBefore.add(uint256(amount1)) > balanceToken1()) revert IIA();
         _addDeltasToReserves(amount0, amount1, 0, communityFee);
       }
     }
@@ -990,9 +990,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
 
     uint256 paid0 = balanceToken0();
-    if (balance0Before + fee0 == paid0) revert F0();
+    if (balance0Before + fee0 > paid0) revert F0();
     uint256 paid1 = balanceToken1();
-    if (balance1Before + fee1 == paid1) revert F1();
+    if (balance1Before + fee1 > paid1) revert F1();
 
     unchecked {
       paid0 -= balance0Before;
