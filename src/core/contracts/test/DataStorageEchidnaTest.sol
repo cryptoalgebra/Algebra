@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
-pragma abicoder v2;
 
 import './DataStorageTest.sol';
 
@@ -21,8 +20,10 @@ contract DataStorageEchidnaTest {
   }
 
   function limitTimePassed(uint32 by) private {
-    require(timePassed + by >= timePassed);
-    timePassed += by;
+    unchecked {
+      require(timePassed + by >= timePassed);
+      timePassed += by;
+    }
   }
 
   function advanceTime(uint32 by) public {
@@ -38,22 +39,23 @@ contract DataStorageEchidnaTest {
   }
 
   function checkTimeWeightedResultAssertions(uint32 secondsAgo0, uint32 secondsAgo1) private view {
-    require(secondsAgo0 != secondsAgo1);
-    require(initialized);
-    // secondsAgo0 should be the larger one
-    if (secondsAgo0 < secondsAgo1) (secondsAgo0, secondsAgo1) = (secondsAgo1, secondsAgo0);
+    unchecked {
+      require(secondsAgo0 != secondsAgo1);
+      require(initialized);
+      // secondsAgo0 should be the larger one
+      if (secondsAgo0 < secondsAgo1) (secondsAgo0, secondsAgo1) = (secondsAgo1, secondsAgo0);
 
-    uint32 timeElapsed = secondsAgo0 - secondsAgo1;
+      uint32 timeElapsed = secondsAgo0 - secondsAgo1;
 
-    uint32[] memory secondsAgos = new uint32[](2);
-    secondsAgos[0] = secondsAgo0;
-    secondsAgos[1] = secondsAgo1;
+      uint32[] memory secondsAgos = new uint32[](2);
+      secondsAgos[0] = secondsAgo0;
+      secondsAgos[1] = secondsAgo1;
 
-    (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
-    int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / timeElapsed;
-    int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / int56(uint56(timeElapsed));
-    assert(timeWeightedTick <= type(int24).max);
-    assert(timeWeightedTick >= type(int24).min);
+      (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
+      int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / int56(uint56(timeElapsed));
+      assert(timeWeightedTick <= type(int24).max);
+      assert(timeWeightedTick >= type(int24).min);
+    }
   }
 
   function echidna_indexAlwaysLtCardinality() external view returns (bool) {
@@ -81,18 +83,20 @@ contract DataStorageEchidnaTest {
   }
 
   function checkTwoAdjacentTimepointsTickCumulativeModTimeElapsedAlways0(uint16 index) external view {
-    // check that the timepoints are initialized, and that the index is not the oldest timepoint
-    require(index < 65536 && index != (dataStorage.index() + 1) % 65536);
+    unchecked {
+      // check that the timepoints are initialized, and that the index is not the oldest timepoint
+      require(index < 65536 && index != (dataStorage.index() + 1) % 65536);
 
-    (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
-    (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , ) = dataStorage.timepoints(index);
+      (bool initialized0, uint32 blockTimestamp0, int56 tickCumulative0, , ) = dataStorage.timepoints(index == 0 ? 65536 - 1 : index - 1);
+      (bool initialized1, uint32 blockTimestamp1, int56 tickCumulative1, , ) = dataStorage.timepoints(index);
 
-    require(initialized0);
-    require(initialized1);
+      require(initialized0);
+      require(initialized1);
 
-    uint32 timeElapsed = blockTimestamp1 - blockTimestamp0;
-    assert(timeElapsed > 0);
-    assert((tickCumulative1 - tickCumulative0) % int56(uint56(timeElapsed)) == 0);
+      uint32 timeElapsed = blockTimestamp1 - blockTimestamp0;
+      assert(timeElapsed > 0);
+      assert((tickCumulative1 - tickCumulative0) % int56(uint56(timeElapsed)) == 0);
+    }
   }
 
   function checkTimeWeightedAveragesAlwaysFitsType(uint32 secondsAgo) external view {
@@ -104,13 +108,15 @@ contract DataStorageEchidnaTest {
     (int56[] memory tickCumulatives, ) = dataStorage.getTimepoints(secondsAgos);
 
     // compute the time weighted tick, rounded towards negative infinity
-    int56 numerator = tickCumulatives[1] - tickCumulatives[0];
-    int56 timeWeightedTick = numerator / int56(uint56(secondsAgo));
-    if (numerator < 0 && numerator % int56(uint56(secondsAgo)) != 0) {
-      timeWeightedTick--;
-    }
+    unchecked {
+      int56 numerator = tickCumulatives[1] - tickCumulatives[0];
+      int56 timeWeightedTick = numerator / int56(uint56(secondsAgo));
+      if (numerator < 0 && numerator % int56(uint56(secondsAgo)) != 0) {
+        timeWeightedTick--;
+      }
 
-    // the time weighted averages fit in their respective accumulated types
-    assert(timeWeightedTick <= type(int24).max && timeWeightedTick >= type(int24).min);
+      // the time weighted averages fit in their respective accumulated types
+      assert(timeWeightedTick <= type(int24).max && timeWeightedTick >= type(int24).min);
+    }
   }
 }
