@@ -30,8 +30,22 @@ interface IAlgebraFactory {
    */
   event FarmingAddress(address indexed newFarmingAddress);
 
+  /**
+   *  @notice Emitted when the fee configuration is changed
+   *  @param alpha1 max value of the first sigmoid
+   *  @param alpha2 max value of the second sigmoid
+   *  @param beta1 shift along the x-axis for the first sigmoid
+   *  @param beta2 shift along the x-axis for the second sigmoid
+   *  @param gamma1 horizontal stretch factor for the first sigmoid
+   *  @param gamma2 horizontal stretch factor for the second sigmoid
+   *  @param baseFee minimum possible fee
+   */
   event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
 
+  /**
+   *  @notice Emitted when the default community fee is changed
+   *  @param newDefaultCommunityFee The new default community fee value
+   */
   event DefaultCommunityFee(uint8 newDefaultCommunityFee);
 
   /**
@@ -54,9 +68,16 @@ interface IAlgebraFactory {
    */
   function farmingAddress() external view returns (address);
 
-  //TODO
+  /**
+   *  @notice Returns the current communityVaultAddress
+   *  @return The address to which community fees are transferred
+   */
   function communityVault() external view returns (address);
 
+  /**
+   *  @notice Returns the default community fee
+   *  @return Fee which will be set at the creation of the pool
+   */
   function defaultCommunityFee() external view returns (uint8);
 
   /**
