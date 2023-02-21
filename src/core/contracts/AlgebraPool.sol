@@ -675,23 +675,23 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint128 currentLiquidity;
     uint256 communityFee;
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-
-    unchecked {
-      // TODO
-      if (zeroToOne) {
-        (uint256 balanceBefore, ) = _updateReserves();
+    (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
+    if (zeroToOne) {
+      unchecked {
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        if (balanceBefore.add(uint256(amount0)) > balanceToken0()) revert insufficientInputAmount();
-        _addDeltasToReserves(amount0, amount1, communityFee, 0);
-      } else {
-        (, uint256 balanceBefore) = _updateReserves();
-        if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        if (balanceBefore.add(uint256(amount1)) > balanceToken1()) revert insufficientInputAmount();
-        _addDeltasToReserves(amount0, amount1, 0, communityFee);
       }
+      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      if (balance0Before + uint256(amount0) > balanceToken0()) revert insufficientInputAmount();
+      _addDeltasToReserves(amount0, amount1, communityFee, 0);
+    } else {
+      unchecked {
+        if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
+      }
+      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+      if (balance1Before + uint256(amount1) > balanceToken1()) revert insufficientInputAmount();
+      _addDeltasToReserves(amount0, amount1, 0, communityFee);
     }
+
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
   }
 
@@ -706,45 +706,47 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
   ) external override nonReentrant returns (int256 amount0, int256 amount1) {
     unchecked {
       if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
-      // Since the pool can get less tokens then sent, firstly we are getting tokens from the
-      // original caller of the transaction. And change the _amountRequired_
-      {
-        (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-        int256 amountReceived;
-        if (zeroToOne) {
-          _swapCallback(amountRequired, 0, data);
-          amountReceived = int256(balanceToken0().sub(balance0Before));
-        } else {
-          _swapCallback(0, amountRequired, data);
-          amountReceived = int256(balanceToken1().sub(balance1Before));
-        }
-        if (amountReceived < amountRequired) amountRequired = amountReceived;
+    }
+
+    // Since the pool can get less tokens then sent, firstly we are getting tokens from the
+    // original caller of the transaction. And change the _amountRequired_
+    {
+      // scope to prevent "stack too deep"
+      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
+      int256 amountReceived;
+      if (zeroToOne) {
+        _swapCallback(amountRequired, 0, data);
+        amountReceived = int256(balanceToken0() - balance0Before);
+      } else {
+        _swapCallback(0, amountRequired, data);
+        amountReceived = int256(balanceToken1() - balance1Before);
       }
-      if (amountRequired == 0) revert insufficientInputAmount();
+      if (amountReceived < amountRequired) amountRequired = amountReceived;
+    }
+    if (amountRequired == 0) revert insufficientInputAmount();
 
-      uint160 currentPrice;
-      int24 currentTick;
-      uint128 currentLiquidity;
-      uint256 communityFee;
-      (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+    uint160 currentPrice;
+    int24 currentTick;
+    uint128 currentLiquidity;
+    uint256 communityFee;
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
 
+    unchecked {
       // only transfer to the recipient
       if (zeroToOne) {
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
         // return the leftovers
         if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
-
         _addDeltasToReserves(amount0, amount1, communityFee, 0);
       } else {
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
         // return the leftovers
         if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
-
         _addDeltasToReserves(amount0, amount1, 0, communityFee);
       }
-
-      emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     }
+
+    emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
   }
 
   struct SwapCalculationCache {
