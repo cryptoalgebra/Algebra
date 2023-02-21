@@ -33,15 +33,16 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
-  // The amounts of token0 and token1 that will be sent to the vault
+  /// @dev The amounts of token0 and token1 that will be sent to the vault
   uint128 internal communityFeePending0;
   uint128 internal communityFeePending1;
 
-  // The tracked token0 and token1 reserves of pool
+  /// @dev The tracked token0 and token1 reserves of pool
   uint128 internal reserve0;
   uint128 internal reserve1;
 
-  uint32 internal lastTimepointTimestamp; // TODO
+  /// @dev The timestamp of the last timepoint write to the DataStorage
+  uint32 internal lastTimepointTimestamp;
   /// @inheritdoc IAlgebraPoolState
   uint160 public override secondsPerLiquidityCumulative;
 

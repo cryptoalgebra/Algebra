@@ -307,7 +307,6 @@ library DataStorage {
       uint32 target = time - secondsAgo;
       (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool isDifferent) = getTimepointsAt(self, time, target, lastIndex, oldestIndex);
 
-      // TODO MEMORY
       targetTimepoint = beforeOrAt;
       if (target == targetTimepoint.blockTimestamp) return targetTimepoint; // we're at the left boundary
       if (!isDifferent) {

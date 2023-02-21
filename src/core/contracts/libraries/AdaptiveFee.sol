@@ -33,14 +33,14 @@ library AdaptiveFee {
         x = x - beta;
         if (x >= 6 * uint256(g)) return alpha; // so x < 19 bits
         uint256 g4 = uint256(g) ** 4; // < 64 bits (4*16)
-        uint256 ex = expMul(x, g, g4); // < 155 bits
+        uint256 ex = expXg4(x, g, g4); // < 155 bits
         res = (alpha * ex) / (g4 + ex); // in worst case: (16 + 155 bits) / 155 bits
         // so res <= alpha
       } else {
         x = beta - x;
         if (x >= 6 * uint256(g)) return 0; // so x < 19 bits
         uint256 g4 = uint256(g) ** 4; // < 64 bits (4*16)
-        uint256 ex = g4 + expMul(x, g, g4); // < 156 bits
+        uint256 ex = g4 + expXg4(x, g, g4); // < 156 bits
         res = (alpha * g4) / ex; // in worst case: (16 + 128 bits) / 156 bits
         // g8 <= ex, so res <= alpha
       }
@@ -50,41 +50,41 @@ library AdaptiveFee {
   /// @notice calculates e^(x/g) * g^4 in a series, since (around zero):
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
-  function expMul(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
-    unchecked {
-      uint256 closestValue; // TODO add comments
-      {
-        assembly {
-          let xdg := div(x, g)
-          switch xdg
-          case 0 {
-            closestValue := 100000000000000000000
-          }
-          case 1 {
-            closestValue := 271828182845904523536
-          }
-          case 2 {
-            closestValue := 738905609893065022723
-          }
-          case 3 {
-            closestValue := 2008553692318766774092
-          }
-          case 4 {
-            closestValue := 5459815003314423907811
-          }
-          default {
-            closestValue := 14841315910257660342111
-          }
-
-          x := mod(x, g)
-        }
-
-        if (x >= g / 2) {
-          x -= g / 2;
-          closestValue = (closestValue * 164872127070012814684) / 100000000000000000000;
-        }
+  function expXg4(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
+    uint256 closestValue; // nearest 'table' value of e^(x/g), multiplied by 10^20
+    assembly {
+      let xdg := div(x, g)
+      switch xdg
+      case 0 {
+        closestValue := 100000000000000000000 // 1
+      }
+      case 1 {
+        closestValue := 271828182845904523536 // ~= e
+      }
+      case 2 {
+        closestValue := 738905609893065022723 // ~= e^2
+      }
+      case 3 {
+        closestValue := 2008553692318766774092 // ~= e^3
+      }
+      case 4 {
+        closestValue := 5459815003314423907811 // ~= e^4
+      }
+      default {
+        closestValue := 14841315910257660342111 // ~= e^5
       }
 
+      x := mod(x, g)
+    }
+
+    unchecked {
+      if (x >= g / 2) {
+        // (x - closestValue) >= 0.5, so closestValue := closestValue * e^0.5
+        x -= g / 2;
+        closestValue = (closestValue * 164872127070012814684) / 1e20;
+      }
+
+      // After calculating the closestValue x/g is <= 0.5, so that the series in the neighborhood of zero converges with sufficient speed
       uint256 xLowestDegree = x;
       res = gHighestDegree; // g**4
 
@@ -93,9 +93,14 @@ library AdaptiveFee {
 
       gHighestDegree /= g; // g**2
       xLowestDegree *= x; // x**2
-      res += ((xLowestDegree * gHighestDegree) * 3 + (xLowestDegree * x * g)) / 6;
+      res += (xLowestDegree * gHighestDegree) / 2;
 
-      res = (res * closestValue) / (100000000000000000000);
+      gHighestDegree /= g; // g
+      xLowestDegree *= x; // x**3
+      res += (xLowestDegree * g * 4 + xLowestDegree * x) / 24;
+
+      // res = g^4 * (1 + x/g + x^2/(2*g^2) + x^3/(6*g^3) + x^4/(24*g^4)) * closestValue / 10^20
+      res = (res * closestValue) / (1e20);
     }
   }
 }

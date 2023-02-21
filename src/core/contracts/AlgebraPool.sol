@@ -376,23 +376,29 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     }
   }
 
-  //TODO name
-  function _addDeltasToReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
+  /**
+   * @notice Applies deltas to reserves and pays communityFees
+   * @param deltaR0 Amount of token0 to add/subtract to/from reserve0
+   * @param deltaR1 Amount of token1 to add/subtract to/from reserve1
+   * @param communityFee0 Amount of token0 to pay as communityFee
+   * @param communityFee1 Amount of token1 to pay as communityFee
+   */
+  function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
     if (communityFee0 | communityFee1 != 0) {
       (uint128 _cfPending0, uint128 _cfPending1) = (communityFeePending0, communityFeePending1);
       unchecked {
         _cfPending0 += uint128(communityFee0); // TODO CAST
         _cfPending1 += uint128(communityFee1);
 
-        // underflow is desired
         uint32 currentTimestamp = _blockTimestamp();
+        // underflow is desired
         if (currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
           if (_cfPending0 > 0) TransferHelper.safeTransfer(token0, communityVault, _cfPending0);
           if (_cfPending1 > 0) TransferHelper.safeTransfer(token1, communityVault, _cfPending1);
           deltaR0 -= int256(uint256(_cfPending0));
           deltaR1 -= int256(uint256(_cfPending1));
           (communityFeePending0, communityFeePending1) = (0, 0);
-          communityFeeLastTimestamp = currentTimestamp; // TODO OPT
+          communityFeeLastTimestamp = currentTimestamp;
         } else {
           (communityFeePending0, communityFeePending1) = (_cfPending0, _cfPending1);
         }
@@ -481,7 +487,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       }
     }
 
-    _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0);
+    _changeReserves(int256(amount0), int256(amount1), 0, 0);
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
@@ -604,7 +610,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
         if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
         if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
-        _addDeltasToReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
+        _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
@@ -682,14 +688,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance0Before + uint256(amount0) > balanceToken0()) revert insufficientInputAmount();
-      _addDeltasToReserves(amount0, amount1, communityFee, 0);
+      _changeReserves(amount0, amount1, communityFee, 0);
     } else {
       unchecked {
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance1Before + uint256(amount1) > balanceToken1()) revert insufficientInputAmount();
-      _addDeltasToReserves(amount0, amount1, 0, communityFee);
+      _changeReserves(amount0, amount1, 0, communityFee);
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -737,12 +743,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
         // return the leftovers
         if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
-        _addDeltasToReserves(amount0, amount1, communityFee, 0);
+        _changeReserves(amount0, amount1, communityFee, 0);
       } else {
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
         // return the leftovers
         if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
-        _addDeltasToReserves(amount0, amount1, 0, communityFee);
+        _changeReserves(amount0, amount1, 0, communityFee);
       }
     }
 
@@ -994,11 +1000,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       uint256 _communityFee = globalState.communityFee;
       if (_communityFee > 0) {
         uint256 communityFee0;
-        if (paid0 > 0) communityFee0 = uint128((paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+        if (paid0 > 0) communityFee0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
         uint256 communityFee1;
-        if (paid1 > 0) communityFee1 = uint128((paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR);
+        if (paid1 > 0) communityFee1 = (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
 
-        _addDeltasToReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
+        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
       }
     }
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);

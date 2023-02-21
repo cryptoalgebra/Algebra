@@ -13,10 +13,10 @@ interface IAlgebraPoolState {
    * This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
    * boundary;
    * @return prevInitializedTick
-   * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
-   * @return timepointIndex The index of the last written timepoint;
-   * @return communityFee The community fee percentage of the swap fee in thousandths (1e-3);
-   * @return unlocked Whether the pool is currently locked to reentrancy;
+   * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
+   * @return timepointIndex The index of the last written timepoint
+   * @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
+   * @return unlocked Whether the pool is currently locked to reentrancy
    */
   function globalState()
     external
@@ -76,7 +76,6 @@ interface IAlgebraPoolState {
 
   /**
    * @notice Look up information about a specific tick in the pool
-   * @dev This is a public structure, so the `return` natspec tags are omitted.
    * @param tick The tick to look up
    * @return liquidityTotal the total amount of position liquidity that uses the pool either as tick lower or
    * tick upper
@@ -120,8 +119,8 @@ interface IAlgebraPoolState {
    * @notice Returns the information about a position by the position's key
    * @dev This is a public mapping of structures, so the `return` natspec tags are omitted.
    * @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
-   * @return liquidityAmount The amount of liquidity in the position
-   * @return liquidityInitialAmount TODO
+   * @return liquidity The amount of liquidity in the position
+   * @return liquidityInitial The amount of initial liquidity (if the position is a limit order)
    * @return innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke
    * @return innerFeeGrowth1Token Fee growth of token1 inside the tick range as of the last mint/burn/poke
    * @return fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke
@@ -132,14 +131,7 @@ interface IAlgebraPoolState {
   )
     external
     view
-    returns (
-      uint128 liquidityAmount,
-      uint128 liquidityInitialAmount,
-      uint256 innerFeeGrowth0Token,
-      uint256 innerFeeGrowth1Token,
-      uint128 fees0,
-      uint128 fees1
-    );
+    returns (uint128 liquidity, uint128 liquidityInitial, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
 
   /**
    * @notice Returns the information about active incentive
