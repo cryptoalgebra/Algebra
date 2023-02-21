@@ -145,7 +145,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _grantRole(DEFAULT_ADMIN_ROLE, owner());
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x650c6038adcf8f042ee739013b6ddc7e1756fffc4ce911dfda176c78250cc276;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xfcc737e6ca36d97a21d1742f792285635b0c7efedc3477843ed6fa0c17a98b70;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

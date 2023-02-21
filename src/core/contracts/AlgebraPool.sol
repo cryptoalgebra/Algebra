@@ -401,7 +401,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
     if (deltaR0 | deltaR1 == 0) return;
     (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
-    if (deltaR0 != 0) _reserve0 = uint128(int128(_reserve0) + int128(deltaR0)); // TODO OPTIMIZE
+    if (deltaR0 != 0) _reserve0 = uint128(int128(_reserve0) + int128(deltaR0));
     if (deltaR1 != 0) _reserve1 = uint128(int128(_reserve1) + int128(deltaR1));
     (reserve0, reserve1) = (_reserve0, _reserve1);
   }
@@ -415,67 +415,61 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint128 liquidityDesired,
     bytes calldata data
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
+    if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
-      if (liquidityDesired == 0) revert zeroLiquidityDesired();
-      {
-        int24 _tickSpacing = tickSpacing;
-        if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
+      int24 _tickSpacing = tickSpacing;
+      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
+    }
+    if (bottomTick == topTick) {
+      (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
+    } else {
+      (amount0, amount1, ) = _getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
+    }
+    liquidityActual = liquidityDesired;
+
+    (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
+    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+
+    if (amount0 == 0) receivedAmount0 = 0;
+    else {
+      receivedAmount0 = balanceToken0() - receivedAmount0;
+      if (receivedAmount0 < amount0) {
+        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
       }
+    }
+
+    if (amount1 == 0) receivedAmount1 = 0;
+    else {
+      receivedAmount1 = balanceToken1() - receivedAmount1;
+      if (receivedAmount1 < amount1) {
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+      }
+    }
+
+    if (liquidityActual == 0) revert insufficientInputAmount();
+    // scope to prevent "stack too deep"
+    {
+      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
       if (bottomTick == topTick) {
-        (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
+        liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
+        _updateLimitOrderPosition(_position, bottomTick, int128(liquidityActual));
       } else {
-        (amount0, amount1, ) = _getAmountsForLiquidity(
-          bottomTick,
-          topTick,
-          int256(uint256(liquidityDesired)).toInt128(),
-          globalState.tick,
-          globalState.price
-        );
-      }
-      liquidityActual = liquidityDesired;
-
-      (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
-      IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
-
-      if (amount0 == 0) receivedAmount0 = 0;
-      else {
-        receivedAmount0 = balanceToken0().sub(receivedAmount0);
+        liquidityActual = liquidityDesired;
         if (receivedAmount0 < amount0) {
           liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
         }
-      }
-
-      if (amount1 == 0) receivedAmount1 = 0;
-      else {
-        receivedAmount1 = balanceToken1().sub(receivedAmount1);
         if (receivedAmount1 < amount1) {
           uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
           if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
         }
+        if (liquidityActual == 0) revert zeroLiquidityActual();
+
+        (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int128(liquidityActual));
       }
+    }
 
-      if (liquidityActual == 0) revert insufficientInputAmount();
-
-      {
-        Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
-        if (bottomTick == topTick) {
-          liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
-          _updateLimitOrderPosition(_position, bottomTick, int256(uint256(liquidityActual)).toInt128());
-        } else {
-          liquidityActual = liquidityDesired;
-          if (receivedAmount0 < amount0) {
-            liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
-          }
-          if (receivedAmount1 < amount1) {
-            uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
-            if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-          }
-          if (liquidityActual == 0) revert zeroLiquidityActual();
-
-          (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int256(uint256(liquidityActual)).toInt128());
-        }
-      }
-
+    unchecked {
       if (amount0 > 0) {
         if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
         else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
@@ -485,9 +479,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
         else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
       }
-      _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0); // TODO CAST
-      emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
     }
+
+    _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0);
+    emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
   function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 liquidityDelta) private {
@@ -764,7 +759,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     uint16 timepointIndex; // The index of last written timepoint
-    int24 startTick; // The tick at the start of a swap
     int24 prevInitializedTick;
     uint32 blockTimestamp;
   }
@@ -808,13 +802,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         cache.totalFeeGrowth = totalFeeGrowth1Token;
       }
 
-      cache.startTick = currentTick;
-
       cache.blockTimestamp = _blockTimestamp();
 
       cache.activeIncentive = activeIncentive;
 
-      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, cache.startTick, currentLiquidity);
+      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
 
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
