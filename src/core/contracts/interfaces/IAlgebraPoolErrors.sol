@@ -57,7 +57,7 @@ interface IAlgebraPoolErrors {
   error tickIsNotInitialized();
   error tickInvalidLinks();
 
-  // ####  TransferHelper errors  ####
+  // ####  SafeTransfer errors  ####
   error transferFailed();
 
   // ####  TickMath errors  ####

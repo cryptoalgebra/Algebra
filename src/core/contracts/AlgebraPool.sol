@@ -21,7 +21,7 @@ import './libraries/SafeCast.sol';
 
 import './libraries/FullMath.sol';
 import './libraries/Constants.sol';
-import './libraries/TransferHelper.sol';
+import './libraries/SafeTransfer.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 
@@ -350,11 +350,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     (balance0, balance1) = (balanceToken0(), balanceToken1());
     unchecked {
       if (balance0 > type(uint128).max) {
-        TransferHelper.safeTransfer(token0, communityVault, balance0 - type(uint128).max);
+        SafeTransfer.safeTransfer(token0, communityVault, balance0 - type(uint128).max);
         balance0 = type(uint128).max;
       }
       if (balance1 > type(uint128).max) {
-        TransferHelper.safeTransfer(token1, communityVault, balance1 - type(uint128).max);
+        SafeTransfer.safeTransfer(token1, communityVault, balance1 - type(uint128).max);
         balance1 = type(uint128).max;
       }
     }
@@ -393,8 +393,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         uint32 currentTimestamp = _blockTimestamp();
         // underflow is desired
         if (currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
-          if (_cfPending0 > 0) TransferHelper.safeTransfer(token0, communityVault, _cfPending0);
-          if (_cfPending1 > 0) TransferHelper.safeTransfer(token1, communityVault, _cfPending1);
+          if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
+          if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
           deltaR0 -= int256(uint256(_cfPending0));
           deltaR1 -= int256(uint256(_cfPending1));
           (communityFeePending0, communityFeePending1) = (0, 0);
@@ -477,12 +477,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
     unchecked {
       if (amount0 > 0) {
-        if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
+        if (receivedAmount0 > amount0) SafeTransfer.safeTransfer(token0, sender, receivedAmount0 - amount0);
         else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
       }
 
       if (amount1 > 0) {
-        if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
+        if (receivedAmount1 > amount1) SafeTransfer.safeTransfer(token1, sender, receivedAmount1 - amount1);
         else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
       }
     }
@@ -608,8 +608,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         // single SSTORE
         (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
 
-        if (amount0 > 0) TransferHelper.safeTransfer(token0, recipient, amount0);
-        if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
+        if (amount0 > 0) SafeTransfer.safeTransfer(token0, recipient, amount0);
+        if (amount1 > 0) SafeTransfer.safeTransfer(token1, recipient, amount1);
         _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
@@ -684,14 +684,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
     if (zeroToOne) {
       unchecked {
-        if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
+        if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance0Before + uint256(amount0) > balanceToken0()) revert insufficientInputAmount();
       _changeReserves(amount0, amount1, communityFee, 0);
     } else {
       unchecked {
-        if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
+        if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance1Before + uint256(amount1) > balanceToken1()) revert insufficientInputAmount();
@@ -740,14 +740,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     unchecked {
       // only transfer to the recipient
       if (zeroToOne) {
-        if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
+        if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
         // return the leftovers
-        if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
+        if (amount0 < amountRequired) SafeTransfer.safeTransfer(token0, sender, uint256(amountRequired - amount0));
         _changeReserves(amount0, amount1, communityFee, 0);
       } else {
-        if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
+        if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
         // return the leftovers
-        if (amount1 < amountRequired) TransferHelper.safeTransfer(token1, sender, uint256(amountRequired - amount1));
+        if (amount1 < amountRequired) SafeTransfer.safeTransfer(token1, sender, uint256(amountRequired - amount1));
         _changeReserves(amount0, amount1, 0, communityFee);
       }
     }
@@ -979,12 +979,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint256 fee0;
     if (amount0 > 0) {
       fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
-      TransferHelper.safeTransfer(token0, recipient, amount0);
+      SafeTransfer.safeTransfer(token0, recipient, amount0);
     }
     uint256 fee1;
     if (amount1 > 0) {
       fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
-      TransferHelper.safeTransfer(token1, recipient, amount1);
+      SafeTransfer.safeTransfer(token1, recipient, amount1);
     }
 
     IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
