@@ -1013,7 +1013,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   function onlyFactoryOwner() private view {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+    require(msg.sender == IAlgebraFactory(factory).owner()); // TODO mb add role?
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

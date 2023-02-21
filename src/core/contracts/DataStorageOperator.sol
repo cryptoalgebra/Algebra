@@ -17,6 +17,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
   IAlgebraFeeConfiguration.Configuration public feeConfig;
 
+  /// @dev The role can be granted in AlgebraFactory
+  bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
+
   address private immutable pool;
   address private immutable factory;
 
@@ -37,7 +40,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
 
   /// @inheritdoc IDataStorageOperator
   function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _feeConfig) external override {
-    require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
+    require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
 
     require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0, 'Gammas must be > 0');

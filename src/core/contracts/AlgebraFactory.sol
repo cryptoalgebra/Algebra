@@ -10,12 +10,13 @@ import './DataStorageOperator.sol';
 import './AlgebraCommunityVault.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
+import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /**
  * @title Algebra factory
  * @notice Is used to deploy pools and its dataStorages
  */
-contract AlgebraFactory is IAlgebraFactory, Ownable2Step {
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
@@ -57,6 +58,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step {
 
   function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
     return super.owner();
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function hasRoleOrOwner(bytes32 role, address account) public view override returns (bool) {
+    return (owner() == account || super.hasRole(role, account));
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -127,6 +133,16 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step {
 
     super.renounceOwnership();
     emit renounceOwnershipFinished(block.timestamp);
+  }
+
+  /**
+   * @dev Transfers ownership of the contract to a new account (`newOwner`).
+   * Modified to fit with the role mechanism.
+   */
+  function _transferOwnership(address newOwner) internal override {
+    _revokeRole(DEFAULT_ADMIN_ROLE, owner());
+    super._transferOwnership(newOwner);
+    _grantRole(DEFAULT_ADMIN_ROLE, owner());
   }
 
   bytes32 private constant POOL_INIT_CODE_HASH = 0x9234468de3d4d7cec9e2b7bef297138ace86bca79a35608de1e8209e7e61825f;

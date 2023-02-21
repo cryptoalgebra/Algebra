@@ -49,6 +49,9 @@ interface IAlgebraFactory {
    */
   event DefaultCommunityFee(uint8 newDefaultCommunityFee);
 
+  /// @dev Returns `true` if `account` has been granted `role` or `account` is owner.
+  function hasRoleOrOwner(bytes32 role, address account) external view returns (bool);
+
   /**
    *  @notice Returns the current owner of the factory
    *  @dev Can be changed by the current owner via transferOwnership(address newOwner)

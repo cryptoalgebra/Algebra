@@ -10,12 +10,13 @@ import '../../libraries/Constants.sol';
 import '../../DataStorageOperator.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
+import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /**
  * @title Algebra factory for simulation
  * @notice Is used to deploy pools and its dataStorages
  */
-contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step {
+contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
@@ -55,6 +56,11 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step {
 
   function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
     return super.owner();
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function hasRoleOrOwner(bytes32 role, address account) public view override returns (bool) {
+    return (owner() == account || super.hasRole(role, account));
   }
 
   /// @inheritdoc IAlgebraFactory
