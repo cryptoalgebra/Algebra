@@ -3,10 +3,10 @@ pragma solidity =0.8.17;
 
 library Constants {
   uint8 internal constant RESOLUTION = 96;
-  uint256 internal constant Q64 = 0x10000000000000000;
-  uint256 internal constant Q96 = 0x1000000000000000000000000;
-  uint256 internal constant Q128 = 0x100000000000000000000000000000000;
-  int256 internal constant Q160 = 0x0010000000000000000000000000000000000000000;
+  uint256 internal constant Q64 = 1 << 64;
+  uint256 internal constant Q96 = 1 << 96;
+  uint256 internal constant Q128 = 1 << 128;
+  int256 internal constant Q160 = 1 << 160;
   // fee value in hundredths of a bip, i.e. 1e-6
   uint16 internal constant BASE_FEE = 100;
   int24 internal constant INIT_TICK_SPACING = 60;

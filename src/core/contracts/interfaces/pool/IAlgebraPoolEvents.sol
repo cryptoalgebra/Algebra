@@ -103,4 +103,10 @@ interface IAlgebraPoolEvents {
    * @param fee The value of the token fee
    */
   event Fee(uint16 fee);
+
+  /**
+   * @notice Emitted in case of an error when trying to write to the DataStorage
+   * @dev This shouldn't happen
+   */
+  event DataStorageFailure();
 }

@@ -636,12 +636,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
-  function _writeTimepoint(
-    uint16 timepointIndex,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 currentLiquidity
-  ) private returns (uint16 newTimepointIndex, uint16 newFee) {
+  function _writeTimepoint(uint16 timepointIndex, uint32 blockTimestamp, int24 tick, uint128 currentLiquidity) private returns (uint16, uint16) {
     uint32 _lastTs = lastTimepointTimestamp;
     if (_lastTs == blockTimestamp) return (timepointIndex, 0);
 
@@ -650,7 +645,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     }
     lastTimepointTimestamp = blockTimestamp;
 
-    return IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick);
+    // Failure should not occur. But in case of failure, the pool will remain operational
+    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 newTimepointIndex, uint16 newFee) {
+      return (newTimepointIndex, newFee);
+    } catch {
+      emit DataStorageFailure();
+      return (timepointIndex, 0);
+    }
   }
 
   function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) private view returns (uint160 _secPerLiqCumulative) {
