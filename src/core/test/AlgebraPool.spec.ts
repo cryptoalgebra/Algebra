@@ -2730,9 +2730,9 @@ describe('AlgebraPool', () => {
       await pool.setCommunityFee(250)
       await expect(pool.setCommunityFee(170)).to.be.emit(pool, 'CommunityFee').withArgs(170)
     })
-    it('emits an event when unchanged', async () => {
+    it('fails if unchanged', async () => {
       await pool.setCommunityFee(200)
-      await expect(pool.setCommunityFee(200)).to.be.emit(pool, 'CommunityFee').withArgs(200)
+      await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
     })
   })
 
@@ -2769,6 +2769,13 @@ describe('AlgebraPool', () => {
     it('throws if tick upper is too high', async () => {
       await expect(pool.getInnerCumulatives(bottomTick, MAX_TICK + 1)).be.reverted
     })
+    it('throws if top tick is not initialized', async () => {
+      await expect(pool.getInnerCumulatives(bottomTick, MAX_TICK-2)).be.revertedWithCustomError(pool, 'tickIsNotInitialized');
+    })
+    it('throws if bottom tick is not initialized', async () => {
+      await expect(pool.getInnerCumulatives(bottomTick+2, topTick)).be.revertedWithCustomError(pool, 'tickIsNotInitialized');
+    })
+
     it('is zero immediately after initialize', async () => {
       const {
         innerSecondsSpentPerLiquidity,

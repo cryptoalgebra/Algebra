@@ -170,7 +170,7 @@ library TickManager {
     (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return prevTick;
 
-    require(prevTick != nextTick, 'tick not exist');
+    if (prevTick == nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
     self[prevTick].nextTick = nextTick;
     self[nextTick].prevTick = prevTick;
 
@@ -185,7 +185,7 @@ library TickManager {
   /// @param nextTick The next active tick
   function insertTick(mapping(int24 => Tick) storage self, int24 tick, int24 prevTick, int24 nextTick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
-    require(prevTick < tick && nextTick > tick, 'invalid links');
+    if (prevTick >= tick || nextTick <= tick) revert IAlgebraPoolErrors.tickInvalidLinks();
     (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
 
     self[prevTick].nextTick = tick;

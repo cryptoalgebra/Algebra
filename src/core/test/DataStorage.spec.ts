@@ -166,7 +166,7 @@ describe('DataStorage', () => {
 
       it('fails if an older timepoint does not exist', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
-        await expect(getSingleTimepoint(1)).to.be.revertedWithCustomError(dataStorage, 'OLD')
+        await expect(getSingleTimepoint(1)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
       })
 
       it('does not fail across overflow boundary', async () => {
@@ -186,7 +186,7 @@ describe('DataStorage', () => {
       it('single timepoint in past but not earlier than secondsAgo', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await dataStorage.advanceTime(3)
-        await expect(getSingleTimepoint(4)).to.be.revertedWithCustomError(dataStorage, 'OLD')
+        await expect(getSingleTimepoint(4)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
       })
 
       it('single timepoint in past at exactly seconds ago', async () => {
@@ -357,9 +357,9 @@ describe('DataStorage', () => {
           expect(tickCumulative).to.eq(-33)
         })
         it('older than oldest reverts', async () => {
-          await expect(getSingleTimepoint(22)).to.be.revertedWithCustomError(dataStorage, 'OLD')
+          await expect(getSingleTimepoint(22)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
           await dataStorage.advanceTime(5)
-          await expect(getSingleTimepoint(27)).to.be.revertedWithCustomError(dataStorage, 'OLD')
+          await expect(getSingleTimepoint(27)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
         })
         it('oldest timepoint', async () => {
           const { tickCumulative } = await getSingleTimepoint(14)

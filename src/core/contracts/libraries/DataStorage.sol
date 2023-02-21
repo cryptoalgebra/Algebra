@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraPoolErrors.sol';
-
 /// @title DataStorage
 /// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
 /// Timepoints are overwritten when the full length of the dataStorage array is populated.
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint()
 library DataStorage {
-  error OLD();
+  error targetIsTooOld();
 
   uint32 internal constant WINDOW = 1 days;
   uint256 private constant UINT16_MODULO = 65536;
@@ -198,7 +196,7 @@ library DataStorage {
           // should be impossible if initial boundaries and `target` are correct
           left = current + 1;
         }
-        current = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
+        current = (left + right) >> 1; // calculating the new "middle" point index after updating the boundsemits an event when unchanged
       } while (true);
 
       atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
@@ -218,7 +216,7 @@ library DataStorage {
       return (self[lastIndex], self[lastIndex], false);
     }
 
-    if (!lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time)) revert OLD();
+    if (!lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time)) revert targetIsTooOld();
     (beforeOrAt, atOrAfter) = binarySearch(self, time, target, lastIndex, oldestIndex);
     return (beforeOrAt, atOrAfter, true);
   }

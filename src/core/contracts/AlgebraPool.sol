@@ -78,18 +78,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     int24 bottomTick,
     int24 topTick
   ) external view override onlyValidTicks(bottomTick, topTick) returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent) {
-    (uint160 lowerOuterSecondPerLiquidity, uint32 lowerOuterSecondsSpent) = (
-      ticks[bottomTick].outerSecondsPerLiquidity,
-      ticks[bottomTick].outerSecondsSpent
-    );
-    (uint160 upperOuterSecondPerLiquidity, uint32 upperOuterSecondsSpent) = (
-      ticks[topTick].outerSecondsPerLiquidity,
-      ticks[topTick].outerSecondsSpent
-    );
+    TickManager.Tick storage _bottomTick = ticks[bottomTick];
+    TickManager.Tick storage _topTick = ticks[topTick];
 
-    // TODO uninitialized ticks
+    if (_bottomTick.nextTick == _bottomTick.prevTick || _topTick.nextTick == _topTick.prevTick) revert tickIsNotInitialized();
+    (uint160 lowerOuterSecondPerLiquidity, uint32 lowerOuterSecondsSpent) = (_bottomTick.outerSecondsPerLiquidity, _bottomTick.outerSecondsSpent);
+    (uint160 upperOuterSecondPerLiquidity, uint32 upperOuterSecondsSpent) = (_topTick.outerSecondsPerLiquidity, _topTick.outerSecondsSpent);
+
     int24 currentTick = globalState.tick;
-
     unchecked {
       if (currentTick < bottomTick) {
         return (lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity, lowerOuterSecondsSpent - upperOuterSecondsSpent);
@@ -423,7 +419,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       if (liquidityDesired == 0) revert zeroLiquidityDesired();
       {
         int24 _tickSpacing = tickSpacing;
-        require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
+        if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
       }
       if (bottomTick == topTick) {
         (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
@@ -1013,31 +1009,29 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
   }
 
-  function onlyFactoryOwner() private view {
-    require(msg.sender == IAlgebraFactory(factory).owner()); // TODO mb add role?
+  function _checkIfFactoryOwner() private view {
+    if (msg.sender != IAlgebraFactory(factory).owner()) revert onlyFactoryOwner(); // TODO mb add role?
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 communityFee) external override nonReentrant {
-    onlyFactoryOwner();
-    require(communityFee <= Constants.MAX_COMMUNITY_FEE);
-    require(communityFee != globalState.communityFee);
-    globalState.communityFee = communityFee;
-    emit CommunityFee(communityFee);
+  function setCommunityFee(uint8 newCommunityFee) external override nonReentrant {
+    _checkIfFactoryOwner();
+    if (newCommunityFee > Constants.MAX_COMMUNITY_FEE || newCommunityFee == globalState.communityFee) revert invalidNewCommunityFee();
+    globalState.communityFee = newCommunityFee;
+    emit CommunityFee(newCommunityFee);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
-    onlyFactoryOwner();
-    require(newTickSpacing > 0 && newTickSpacing < 500);
-    require(tickSpacing != newTickSpacing);
+    _checkIfFactoryOwner();
+    if (newTickSpacing <= 0 || newTickSpacing > 500 || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
     emit TickSpacing(newTickSpacing);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setIncentive(address virtualPoolAddress) external override {
-    require(msg.sender == IAlgebraFactory(factory).farmingAddress());
+    if (msg.sender != IAlgebraFactory(factory).farmingAddress()) revert onlyFarming();
     activeIncentive = virtualPoolAddress;
 
     emit Incentive(virtualPoolAddress);
