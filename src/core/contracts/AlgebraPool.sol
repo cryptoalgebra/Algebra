@@ -608,9 +608,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (amount1 > 0) TransferHelper.safeTransfer(token1, recipient, amount1);
         _addDeltasToReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
+      emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
-
-    emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
   }
 
   /// @inheritdoc IAlgebraPoolActions
