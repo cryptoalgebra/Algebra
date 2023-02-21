@@ -29,22 +29,29 @@ abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp 
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
-  uint32 public communityFeeLastTimestamp;
+  /// @inheritdoc IAlgebraPoolState
+  uint32 public override communityFeeLastTimestamp;
 
-  uint128 public communityFeePending0;
-  uint128 public communityFeePending1;
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override communityFeePending0;
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override communityFeePending1;
 
-  uint128 public reserve0; // TODO
-  uint128 public reserve1;
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override reserve0; // TODO mb getter?
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override reserve1;
 
   uint32 internal lastTimepointTimestamp; // TODO
-  uint160 public secondsPerLiquidityCumulative;
+  /// @inheritdoc IAlgebraPoolState
+  uint160 public override secondsPerLiquidityCumulative;
 
   /// @inheritdoc IAlgebraPoolState
   address public override activeIncentive;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManager.Tick) public override ticks;
+  /// @inheritdoc IAlgebraPoolState
   mapping(int24 => LimitOrderManager.LimitOrder) public override limitOrders;
 
   /// @inheritdoc IAlgebraPoolState

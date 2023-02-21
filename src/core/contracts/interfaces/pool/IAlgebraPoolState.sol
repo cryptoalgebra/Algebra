@@ -36,6 +36,13 @@ interface IAlgebraPoolState {
   function totalFeeGrowth1Token() external view returns (uint256);
 
   /**
+   * @notice The currently in range liquidity available to the pool
+   * @dev This value has no relationship to the total liquidity across all ticks.
+   * Returned value cannot exceed type(uint128).max
+   */
+  function liquidity() external view returns (uint128);
+
+  /**
    * @notice The pool tick spacing
    * @dev Ticks can only be used at multiples of this value
    * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
@@ -45,11 +52,40 @@ interface IAlgebraPoolState {
   function tickSpacing() external view returns (int24);
 
   /**
-   * @notice The currently in range liquidity available to the pool
-   * @dev This value has no relationship to the total liquidity across all ticks.
-   * Returned value cannot exceed type(uint128).max
+   * @notice The timestamp of the last sending of tokens to community vault
    */
-  function liquidity() external view returns (uint128);
+  function communityFeeLastTimestamp() external view returns (uint32);
+
+  /**
+   * @notice The amount of token0 that will be sent to the vault
+   * @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
+   */
+  function communityFeePending0() external view returns (uint128);
+
+  /**
+   * @notice The amount of token1 that will be sent to the vault
+   * @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
+   */
+  function communityFeePending1() external view returns (uint128);
+
+  /**
+   * @notice The tracked token0 reserve of pool
+   * @dev If at any time the real balance is larger, the excess will be directed to liquidity providers.
+   * If the balance exceeds uint128, the excess will be sent to the communityVault.
+   */
+  function reserve0() external view returns (uint128);
+
+  /**
+   * @notice The tracked token1 reserve of pool
+   * @dev If at any time the real balance is larger, the excess will be directed to liquidity providers.
+   * If the balance exceeds uint128, the excess will be sent to the communityVault.
+   */
+  function reserve1() external view returns (uint128);
+
+  /**
+   * @notice The accumulator of seconds per liquidity since the pool was first initialized
+   */
+  function secondsPerLiquidityCumulative() external view returns (uint160);
 
   /**
    * @notice Look up information about a specific tick in the pool
