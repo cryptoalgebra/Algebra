@@ -32,5 +32,8 @@
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "4.8.1"
   }
 }

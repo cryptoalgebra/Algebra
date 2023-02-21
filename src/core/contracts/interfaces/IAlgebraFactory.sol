@@ -10,11 +10,12 @@ import './IAlgebraFeeConfiguration.sol';
  * https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
  */
 interface IAlgebraFactory {
-  /**
-   *  @notice Emitted when the owner of the factory is changed
-   *  @param newOwner The owner after the owner was changed
-   */
-  event Owner(address indexed newOwner);
+  // TODO
+  event renounceOwnershipStarted(uint256 timestamp, uint256 finishTimestamp);
+
+  event renounceOwnershipStopped(uint256 timestamp);
+
+  event renounceOwnershipFinished(uint256 timestamp);
 
   /**
    *  @notice Emitted when a pool is created
@@ -50,7 +51,7 @@ interface IAlgebraFactory {
 
   /**
    *  @notice Returns the current owner of the factory
-   *  @dev Can be changed by the current owner via setOwner
+   *  @dev Can be changed by the current owner via transferOwnership(address newOwner)
    *  @return The address of the factory owner
    */
   function owner() external view returns (address);
@@ -90,6 +91,11 @@ interface IAlgebraFactory {
   function poolByPair(address tokenA, address tokenB) external view returns (address pool);
 
   /**
+   * @return timestamp The timestamp of the beginning of the renounceOwnership process
+   */
+  function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp);
+
+  /**
    *  @notice Creates a pool for the given two tokens
    *  @param tokenA One of the two tokens in the desired pool
    *  @param tokenB The other of the two tokens in the desired pool
@@ -99,23 +105,6 @@ interface IAlgebraFactory {
    *  @return pool The address of the newly created pool
    */
   function createPool(address tokenA, address tokenB) external returns (address pool);
-
-  /**
-   *  @notice Starts the ownership transfer of the contract to a new account
-   *  @dev Must be called by the current owner
-   *  @param _owner The new owner of the factory
-   */
-  function setOwner(address _owner) external;
-
-  /**
-   *  @notice The new owner accepts the ownership transfer
-   */
-  function acceptOwnership() external;
-
-  /**
-   *  @notice Set owner to zero address
-   */
-  function renounceOwnership() external;
 
   /**
    * @dev updates tokenomics address on the factory
@@ -137,4 +126,15 @@ interface IAlgebraFactory {
    * @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
    */
   function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;
+
+  /**
+   * @notice Starts process of renounceOwnership. After that, a certain period
+   * of time must pass before the ownership renounce can be completed.
+   */
+  function startRenounceOwnership() external;
+
+  /**
+   * @notice Stops process of renounceOwnership and removes timer.
+   */
+  function stopRenounceOwnership() external;
 }

@@ -9,15 +9,13 @@ import '../../interfaces/IAlgebraFeeConfiguration.sol';
 import '../../libraries/Constants.sol';
 import '../../DataStorageOperator.sol';
 
+import '@openzeppelin/contracts/access/Ownable2Step.sol';
+
 /**
  * @title Algebra factory for simulation
  * @notice Is used to deploy pools and its dataStorages
  */
-contract SimulationTimeFactory is IAlgebraFactory {
-  address private _pendingOwner;
-  /// @inheritdoc IAlgebraFactory
-  address public override owner;
-
+contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step {
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
@@ -29,6 +27,11 @@ contract SimulationTimeFactory is IAlgebraFactory {
 
   /// @inheritdoc IAlgebraFactory
   uint8 public override defaultCommunityFee;
+
+  /// @inheritdoc IAlgebraFactory
+  uint256 public override renounceOwnershipStartTimestamp;
+
+  uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   // values of constants for sigmoids in fee calculation formula
   IAlgebraFeeConfiguration.Configuration public baseFeeConfiguration =
@@ -42,20 +45,16 @@ contract SimulationTimeFactory is IAlgebraFactory {
       Constants.BASE_FEE // baseFee
     );
 
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
-
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
   constructor(address _poolDeployer, address _vaultAddress) {
-    owner = msg.sender;
-    emit Owner(msg.sender);
-
     poolDeployer = _poolDeployer;
     communityVault = _vaultAddress;
+  }
+
+  function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
+    return super.owner();
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -77,25 +76,32 @@ contract SimulationTimeFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setOwner(address _owner) external override onlyOwner {
-    require(owner != _owner);
-    require(_owner != address(0), 'Cannot set 0 address as owner');
-    _pendingOwner = _owner;
+  function startRenounceOwnership() external override onlyOwner {
+    renounceOwnershipStartTimestamp = block.timestamp;
+    emit renounceOwnershipStarted(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function acceptOwnership() external override {
-    require(_pendingOwner == msg.sender, 'Caller is not the new owner');
-    owner = _pendingOwner;
-    delete _pendingOwner;
-    emit Owner(owner);
+  function stopRenounceOwnership() external override onlyOwner {
+    require(renounceOwnershipStartTimestamp != 0);
+    renounceOwnershipStartTimestamp = 0;
+    emit renounceOwnershipStopped(block.timestamp);
   }
 
-  /// @inheritdoc IAlgebraFactory
-  function renounceOwnership() external override onlyOwner {
-    delete owner;
-    delete _pendingOwner;
-    emit Owner(owner);
+  /**
+   * @dev Leaves the contract without owner. It will not be possible to call
+   * `onlyOwner` functions anymore. Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
+   * have passed since the call to the startRenounceOwnership() function.
+   *
+   * NOTE: Renouncing ownership will leave the factory without an owner,
+   * thereby removing any functionality that is only available to the owner.
+   */
+  function renounceOwnership() public override onlyOwner {
+    require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
+    renounceOwnershipStartTimestamp = 0;
+
+    super.renounceOwnership();
+    emit renounceOwnershipFinished(block.timestamp);
   }
 
   /// @inheritdoc IAlgebraFactory
