@@ -1,6 +1,6 @@
 import { Wallet } from 'ethers'
 import { ethers } from 'hardhat'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
 import { expect } from './shared/expect'
@@ -129,37 +129,49 @@ describe('AlgebraFactory', () => {
     })
   })
 
-  describe('#setOwner', () => {
+  describe('#transferOwnership', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setOwner(wallet.address)).to.be.reverted
+      await expect(factory.connect(other).transferOwnership(wallet.address)).to.be.reverted
     })
 
     it('updates owner', async () => {
-      await factory.setOwner(other.address)
+      await factory.transferOwnership(other.address)
       await factory.connect(other).acceptOwnership()
       expect(await factory.owner()).to.eq(other.address)
     })
 
     it('emits event', async () => {
-      await factory.setOwner(other.address)
+      await factory.transferOwnership(other.address);
       await expect(factory.connect(other).acceptOwnership())
-        .to.emit(factory, 'Owner')
-        .withArgs(other.address)
+        .to.emit(factory, 'OwnershipTransferred')
+        .withArgs(wallet.address, other.address)
     })
 
     it('cannot be called by original owner', async () => {
-      await factory.setOwner(other.address)
-      await expect(factory.setOwner(wallet.address)).to.be.reverted
-    })
-
-    it('cannot set current owner', async () => {
-      await factory.setOwner(other.address);
-      await expect(factory.connect(other).setOwner(other.address)).to.be.reverted;
+      await factory.transferOwnership(other.address);
+      await factory.connect(other).acceptOwnership();
+      await expect(factory.transferOwnership(wallet.address)).to.be.reverted
     })
     
+    it('renounceOwner cannot be used before delay', async () => {
+      await factory.startRenounceOwnership();
+      await expect(factory.renounceOwnership()).to.be.reverted;
+    })
+
     it('renounceOwner set owner to zero address', async () => {
+      await factory.startRenounceOwnership();
+      await time.increase(60*60*24*2);
       await factory.renounceOwnership();
-      await expect(await factory.owner()).to.be.eq(ZERO_ADDRESS);
+      expect(await factory.owner()).to.be.eq(ZERO_ADDRESS);
+    })
+
+    it('renounceOwner set pending to zero address', async () => {
+      await factory.transferOwnership(other.address);
+      await factory.startRenounceOwnership();
+      await time.increase(60*60*24*2)
+      await factory.renounceOwnership();
+      expect(await factory.owner()).to.be.eq(ZERO_ADDRESS);
+      expect(await factory.pendingOwner()).to.be.eq(ZERO_ADDRESS);
     })
   })
 

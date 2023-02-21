@@ -498,7 +498,8 @@ describe('AlgebraPool', () => {
         await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
 
         expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('1700000000000')
-        expect((await pool.communityFeePending1()).toString()).to.eq('170000000000')
+        const [,communityFeePending1] = await pool.getCommunityFeePending();
+        expect((communityFeePending1).toString()).to.eq('170000000000')
       })
 
       it('positions are protected before community fee is turned on', async () => {
@@ -1493,7 +1494,8 @@ describe('AlgebraPool', () => {
       expect(token1FeesNext).to.eq(0)
 
       expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('17000000000000')
-      expect((await pool.communityFeePending0())).to.be.eq('17000000000000');
+      const [communityFeePending0,] = await pool.getCommunityFeePending();
+      expect(communityFeePending0).to.be.eq('17000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
 
       await pool.burn(minTick, maxTick, 0) // poke to update fees
@@ -1501,7 +1503,9 @@ describe('AlgebraPool', () => {
         .to.emit(token0, 'Transfer')
         .withArgs(pool.address, wallet.address, '82999999999999')
       expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('17000000000000')
-      expect((await pool.communityFeePending0())).to.be.eq('17000000000000');
+      
+      const [communityFeePending0After,] = await pool.getCommunityFeePending();
+      expect(communityFeePending0After).to.be.eq('17000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
     })
   })
@@ -1987,8 +1991,9 @@ describe('AlgebraPool', () => {
         expect(balance0After).to.be.eq(balance0Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at current tick with full execution', async() => {
@@ -2013,8 +2018,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at current tick with partial execution', async() => {
@@ -2039,8 +2045,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before.add(AMOUNT.sub(BigNumber.from(100).pow(5))));
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution', async() => {
@@ -2065,8 +2072,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution exactOut', async() => {
@@ -2091,8 +2099,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at higher price with full execution for two users', async() => {
@@ -2131,8 +2140,9 @@ describe('AlgebraPool', () => {
 
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution', async() => {
@@ -2157,8 +2167,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution exactOut', async() => {
@@ -2183,8 +2194,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
 
@@ -2208,8 +2220,9 @@ describe('AlgebraPool', () => {
         expect(balance0After.sub(balance0Before)).to.be.eq('11955100706001975')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with partial execution', async() => {
@@ -2231,8 +2244,9 @@ describe('AlgebraPool', () => {
         expect(balance1After.sub(balance1Before)).to.be.eq('11955100706001975')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at higher price with full execution in two steps', async() => {
@@ -2258,8 +2272,9 @@ describe('AlgebraPool', () => {
         expect(balance0After).to.be.eq(balance0Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution in two steps', async() => {
@@ -2285,8 +2300,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at higher price with full execution in three steps', async() => {
@@ -2313,8 +2329,9 @@ describe('AlgebraPool', () => {
         expect(balance0After).to.be.eq(balance0Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('closes limit order at lower price with full execution in two steps', async() => {
@@ -2341,8 +2358,9 @@ describe('AlgebraPool', () => {
         expect(balance1After).to.be.eq(balance1Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
       it('partial execution at higher price and return', async() => {
@@ -2369,8 +2387,9 @@ describe('AlgebraPool', () => {
         expect(amount0After).to.be.eq('0')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
 
@@ -2398,8 +2417,9 @@ describe('AlgebraPool', () => {
         expect(amount1After).to.be.eq('0')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
-        expect(await pool.reserve0()).to.be.eq(poolBalance0After);
-        expect(await pool.reserve1()).to.be.eq(poolBalance1After);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
       })
 
     })
@@ -2616,7 +2636,8 @@ describe('AlgebraPool', () => {
 
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending0()).toString())).to.eq(0)
+          const [communityFeePending0,] = await pool.getCommunityFeePending();
+          expect(Number((communityFeePending0).toString())).to.eq(0)
           expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(96)
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
@@ -2631,7 +2652,8 @@ describe('AlgebraPool', () => {
 
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending1()).toString())).to.eq(0)
+          const [, communityFeePending1] = await pool.getCommunityFeePending();
+          expect(Number((communityFeePending1).toString())).to.eq(0)
           expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(115)
 
           expect(await pool.totalFeeGrowth1Token()).to.eq(
@@ -2647,8 +2669,9 @@ describe('AlgebraPool', () => {
             
           await pool.burn(minTick, maxTick, 0) 
 
-          expect(Number((await pool.communityFeePending0()).toString())).to.eq(0)
-          expect(Number((await pool.communityFeePending1()).toString())).to.eq(0)
+          const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
+          expect(Number((communityFeePending0).toString())).to.eq(0)
+          expect(Number((communityFeePending1).toString())).to.eq(0)
 
 
           expect(Number((await token0.balanceOf(vaultAddress)).toString())).to.eq(134)
@@ -2867,8 +2890,7 @@ describe('AlgebraPool', () => {
     it('up to max uint 128 - 1', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
-      const reserve0before = await pool.reserve0();
-      const reserve1before = await pool.reserve1();
+      const [reserve0before, reserve1before] = await pool.getReserves();
 
       await flash(0, 0, wallet.address, MaxUint128.sub(1), MaxUint128.sub(1))
 
@@ -2894,8 +2916,7 @@ describe('AlgebraPool', () => {
     it('reserves overflow max uint 128', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
-      const reserve0before = await pool.reserve0();
-      const reserve1before = await pool.reserve1();
+      const [reserve0before, reserve1before] = await pool.getReserves();
 
       await flash(0, 0, wallet.address, MaxUint128, MaxUint128)
       await flash(0, 0, wallet.address, 1, 1)
@@ -2944,7 +2965,7 @@ describe('AlgebraPool', () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
       await mint(other.address, minTick, maxTick, 1)
-      const reserve0before = await pool.reserve0();
+      const [reserve0before,] = await pool.getReserves();
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await pool.burn(minTick, maxTick, 0)
