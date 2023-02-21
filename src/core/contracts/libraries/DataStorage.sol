@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
+
 /// @title DataStorage
 /// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
@@ -216,7 +218,7 @@ library DataStorage {
       return (self[lastIndex], self[lastIndex], false);
     }
 
-    require(lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time), 'OLD');
+    if (!lteConsideringOverflow(self[oldestIndex].blockTimestamp, target, time)) revert OLD();
     (beforeOrAt, atOrAfter) = binarySearch(self, time, target, lastIndex, oldestIndex);
     return (beforeOrAt, atOrAfter, true);
   }

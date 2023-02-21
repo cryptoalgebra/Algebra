@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.4;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
+
 /// @title Math library for computing sqrt prices from ticks and vice versa
 /// @notice Computes sqrt price for ticks of size 1.0001, i.e. sqrt(1.0001^tick) as fixed point Q64.96 numbers. Supports
 /// prices between 2**-128 and 2**128
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/blob/main/contracts/libraries
 library TickMath {
-  error T();
-  error R();
-
   /// @dev The minimum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**-128
   int24 internal constant MIN_TICK = -887272;
   /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**128
@@ -30,7 +29,7 @@ library TickMath {
       // get abs value
       int24 mask = tick >> (24 - 1);
       uint256 absTick = uint256(uint24((tick ^ mask) - mask));
-      if (absTick > uint256(uint24(MAX_TICK))) revert T();
+      if (absTick > uint256(uint24(MAX_TICK))) revert IAlgebraPoolErrors.T();
 
       uint256 ratio = absTick & 0x1 != 0 ? 0xfffcb933bd6fad37aa2d162d1a594001 : 0x100000000000000000000000000000000;
       if (absTick & 0x2 != 0) ratio = (ratio * 0xfff97272373d413259a46990580e213a) >> 128;
@@ -70,7 +69,7 @@ library TickMath {
   function getTickAtSqrtRatio(uint160 price) internal pure returns (int24 tick) {
     unchecked {
       // second inequality must be >= because the price can never reach the price at the max tick
-      if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert R();
+      if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert IAlgebraPoolErrors.R();
       uint256 ratio = uint256(price) << 32;
 
       uint256 r = ratio;

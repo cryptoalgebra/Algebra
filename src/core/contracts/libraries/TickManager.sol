@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
+
 import './LowGasSafeMath.sol';
 import './SafeCast.sol';
 
@@ -13,11 +15,6 @@ import './Constants.sol';
 library TickManager {
   using LowGasSafeMath for int256;
   using SafeCast for int256;
-
-  error TLU();
-  error TLM();
-  error TUM();
-  error LO();
 
   // info stored for each initialized individual tick
   struct Tick {
@@ -35,9 +32,9 @@ library TickManager {
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
-    if (topTick > TickMath.MAX_TICK) revert TUM();
-    if (topTick < bottomTick) revert TLU();
-    if (bottomTick < TickMath.MIN_TICK) revert TLM();
+    if (topTick > TickMath.MAX_TICK) revert IAlgebraPoolErrors.TUM();
+    if (topTick < bottomTick) revert IAlgebraPoolErrors.TLU();
+    if (bottomTick < TickMath.MIN_TICK) revert IAlgebraPoolErrors.TLM();
   }
 
   /// @notice Retrieves fee growth data
@@ -106,7 +103,7 @@ library TickManager {
     uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-    if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert LO();
+    if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.LO();
 
     // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
     data.liquidityDelta = upper

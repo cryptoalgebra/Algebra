@@ -15,4 +15,17 @@ interface IAlgebraPoolErrors {
   error F0();
   error F1();
   error SPL();
+
+  error LS();
+  error LA();
+
+  error TLU();
+  error TLM();
+  error TUM();
+  error LO();
+
+  error TF();
+
+  error T();
+  error R();
 }

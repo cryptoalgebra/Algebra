@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 pragma abicoder v1;
 
 import './interfaces/IAlgebraPool.sol';
+import './interfaces/IAlgebraPoolErrors.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
 
@@ -30,7 +31,7 @@ import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 
-contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
+contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErrors {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
   using LowGasSafeMath for uint128;

@@ -2,14 +2,13 @@
 pragma solidity >=0.8.4;
 
 import '../interfaces/IERC20Minimal.sol';
+import '../interfaces/IAlgebraPoolErrors.sol';
 
 /// @title TransferHelper
 /// @notice Contains helper methods for interacting with ERC20 tokens that do not consistently return true/false
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/blob/main/contracts/libraries
 library TransferHelper {
-  error TF();
-
   /// @notice Transfers tokens from msg.sender to a recipient
   /// @dev Calls transfer on token contract, errors with TF if transfer fails
   /// @param token The contract address of the token which will be transferred
@@ -17,6 +16,6 @@ library TransferHelper {
   /// @param value The value of the transfer
   function safeTransfer(address token, address to, uint256 value) internal {
     (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20Minimal.transfer.selector, to, value));
-    if (!success || !(data.length == 0 || abi.decode(data, (bool)))) revert TF();
+    if (!success || !(data.length == 0 || abi.decode(data, (bool)))) revert IAlgebraPoolErrors.TF();
   }
 }

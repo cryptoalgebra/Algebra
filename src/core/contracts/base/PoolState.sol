@@ -8,7 +8,7 @@ import '../libraries/TickManager.sol';
 import '../libraries/LimitOrderManager.sol';
 import './Timestamp.sol';
 
-abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp {
+abstract contract PoolState is IAlgebraPoolState, Timestamp {
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
@@ -75,7 +75,7 @@ abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp 
   }
 
   function _lock() private {
-    if (!globalState.unlocked) revert LOK();
+    if (!globalState.unlocked) revert IAlgebraPoolErrors.LOK();
     globalState.unlocked = false;
   }
 
