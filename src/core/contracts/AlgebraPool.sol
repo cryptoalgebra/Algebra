@@ -1028,7 +1028,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
     onlyFactoryOwner();
-    require(newTickSpacing > 0);
+    require(newTickSpacing > 0 && newTickSpacing < 500);
     require(tickSpacing != newTickSpacing);
     tickSpacing = newTickSpacing;
     emit TickSpacing(newTickSpacing);
