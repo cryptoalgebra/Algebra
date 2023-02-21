@@ -6,7 +6,6 @@ pragma solidity >=0.8.4;
 interface IAlgebraPoolErrors {
   error LOK();
   error AI();
-  error NP();
   error AS();
   error IIA();
   error IIAM();

@@ -139,8 +139,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 currentLiquidity = _position.liquidity;
 
     if (liquidityDelta == 0) {
-      // TODO MB REMOVE?
-      if (currentLiquidity == 0) revert NP(); // Do not recalculate the empty ranges
+      if (currentLiquidity == 0) return; // Do not recalculate the empty ranges
     } else {
       // change position liquidity
       _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
@@ -491,8 +490,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 liquidityDelta) private {
     unchecked {
       (uint256 _positionLiquidity, uint256 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
-      if (_positionLiquidity == 0)
-        if (liquidityDelta == 0) revert NP();
+      if (_positionLiquidity == 0 && liquidityDelta == 0) return;
 
       LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
       uint256 _cumulativeDelta = _limitOrder.spentAsk1Cumulative - position.innerFeeGrowth1Token;
@@ -633,7 +631,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
     }
 
-    emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
+    if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
   function _writeTimepoint(

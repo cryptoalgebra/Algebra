@@ -514,13 +514,25 @@ describe('AlgebraPool', () => {
         expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
       })
 
-      it('poke is not allowed on uninitialized position', async () => {
+      it('poke is not happened on uninitialized position', async () => {
         await mint(other.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(1))
         await swapExact0For1(expandTo18Decimals(1).div(10), wallet.address)
         await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
 
-        // missing revert reason due to hardhat
-        await expect(pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)).to.be.reverted
+        await expect(pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)).to.be.not.reverted
+        let {
+          liquidity: l0,
+          innerFeeGrowth0Token: ifg0,
+          innerFeeGrowth1Token: ifg1,
+          fees1: f1,
+          fees0: f0,
+        } = await pool.positions(await pool.getKeyForPosition(wallet.address, minTick + tickSpacing, maxTick - tickSpacing))
+
+        expect(l0).to.eq(0)
+        expect(f0, 'tokens owed 0 before np').to.eq(0)
+        expect(f1, 'tokens owed 1 before np').to.eq(0)
+        expect(ifg0).to.eq('0')
+        expect(ifg1).to.eq('0')
 
         await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1)
         let {
