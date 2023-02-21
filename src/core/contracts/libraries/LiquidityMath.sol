@@ -14,9 +14,9 @@ library LiquidityMath {
   function addDelta(uint128 x, int128 y) internal pure returns (uint128 z) {
     unchecked {
       if (y < 0) {
-        if ((z = x - uint128(-y)) >= x) revert IAlgebraPoolErrors.LS();
+        if ((z = x - uint128(-y)) >= x) revert IAlgebraPoolErrors.liquiditySub();
       } else {
-        if ((z = x + uint128(y)) < x) revert IAlgebraPoolErrors.LA();
+        if ((z = x + uint128(y)) < x) revert IAlgebraPoolErrors.liquidityAdd();
       }
     }
   }

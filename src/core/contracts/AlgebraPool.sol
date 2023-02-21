@@ -110,7 +110,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
-    if (globalState.price != 0) revert AI();
+    if (globalState.price != 0) revert alreadyInitialized();
     // getTickAtSqrtRatio checks validity of initialPrice inside
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice);
     IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick);
@@ -420,7 +420,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     bytes calldata data
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     unchecked {
-      if (liquidityDesired == 0) revert IL();
+      if (liquidityDesired == 0) revert zeroLiquidityDesired();
       {
         int24 _tickSpacing = tickSpacing;
         require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced');
@@ -458,7 +458,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         }
       }
 
-      if (liquidityActual == 0) revert IIAM();
+      if (liquidityActual == 0) revert insufficientInputAmount();
 
       {
         Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
@@ -474,7 +474,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
             uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
             if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
           }
-          if (liquidityActual == 0) revert IIL2();
+          if (liquidityActual == 0) revert zeroLiquidityActual();
 
           (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int256(uint256(liquidityActual)).toInt128());
         }
@@ -482,12 +482,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
       if (amount0 > 0) {
         if (receivedAmount0 > amount0) TransferHelper.safeTransfer(token0, sender, receivedAmount0 - amount0);
-        else if (receivedAmount0 != amount0) revert IIAM2();
+        else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
       }
 
       if (amount1 > 0) {
         if (receivedAmount1 > amount1) TransferHelper.safeTransfer(token1, sender, receivedAmount1 - amount1);
-        else if (receivedAmount1 != amount1) revert IIAM2();
+        else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
       }
       _addDeltasToReserves(int256(amount0), int256(amount1), 0, 0); // TODO CAST
       emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
@@ -690,13 +690,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         (uint256 balanceBefore, ) = _updateReserves();
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        if (balanceBefore.add(uint256(amount0)) > balanceToken0()) revert IIA();
+        if (balanceBefore.add(uint256(amount0)) > balanceToken0()) revert insufficientInputAmount();
         _addDeltasToReserves(amount0, amount1, communityFee, 0);
       } else {
         (, uint256 balanceBefore) = _updateReserves();
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-        if (balanceBefore.add(uint256(amount1)) > balanceToken1()) revert IIA();
+        if (balanceBefore.add(uint256(amount1)) > balanceToken1()) revert insufficientInputAmount();
         _addDeltasToReserves(amount0, amount1, 0, communityFee);
       }
     }
@@ -728,7 +728,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         }
         if (amountReceived < amountRequired) amountRequired = amountReceived;
       }
-      if (amountRequired == 0) revert IIA();
+      if (amountRequired == 0) revert insufficientInputAmount();
 
       uint160 currentPrice;
       int24 currentTick;
@@ -798,16 +798,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
 
-      if (amountRequired == 0) revert AS();
+      if (amountRequired == 0) revert zeroAmountRequired();
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       currentLiquidity = liquidity;
 
       if (zeroToOne) {
-        if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert SPL();
+        if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth0Token;
       } else {
-        if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert SPL();
+        if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth1Token;
       }
 
@@ -993,9 +993,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
 
     uint256 paid0 = balanceToken0();
-    if (balance0Before + fee0 > paid0) revert F0();
+    if (balance0Before + fee0 > paid0) revert flashInsufficientPaid0();
     uint256 paid1 = balanceToken1();
-    if (balance1Before + fee1 > paid1) revert F1();
+    if (balance1Before + fee1 > paid1) revert flashInsufficientPaid1();
 
     unchecked {
       paid0 -= balance0Before;

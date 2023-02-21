@@ -75,7 +75,7 @@ abstract contract PoolState is IAlgebraPoolState, Timestamp {
   }
 
   function _lock() private {
-    if (!globalState.unlocked) revert IAlgebraPoolErrors.LOK();
+    if (!globalState.unlocked) revert IAlgebraPoolErrors.locked();
     globalState.unlocked = false;
   }
 

@@ -32,9 +32,9 @@ library TickManager {
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
-    if (topTick > TickMath.MAX_TICK) revert IAlgebraPoolErrors.TUM();
-    if (topTick < bottomTick) revert IAlgebraPoolErrors.TLU();
-    if (bottomTick < TickMath.MIN_TICK) revert IAlgebraPoolErrors.TLM();
+    if (topTick > TickMath.MAX_TICK) revert IAlgebraPoolErrors.topTickAboveMAX();
+    if (topTick < bottomTick) revert IAlgebraPoolErrors.topTickLowerThanBottomTick();
+    if (bottomTick < TickMath.MIN_TICK) revert IAlgebraPoolErrors.bottomTickLowerThanMIN();
   }
 
   /// @notice Retrieves fee growth data
@@ -103,7 +103,7 @@ library TickManager {
     uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-    if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.LO();
+    if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();
 
     // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
     data.liquidityDelta = upper

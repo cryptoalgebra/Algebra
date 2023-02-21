@@ -8,7 +8,7 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 
 contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
-  bytes4 private constant desiredSelector = bytes4(keccak256(bytes('LOK()')));
+  bytes4 private constant desiredSelector = bytes4(keccak256(bytes('locked()')));
 
   function swapToReenter(address pool) external {
     unchecked {

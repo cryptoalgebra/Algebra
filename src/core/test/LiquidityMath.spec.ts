@@ -27,13 +27,13 @@ describe('LiquidityMath', () => {
       expect(await liquidityMath.addDelta(1, 1)).to.eq(2)
     })
     it('2**128-15 + 15 overflows', async () => {
-      await expect(liquidityMath.addDelta(BigNumber.from(2).pow(128).sub(15), 15)).to.be.revertedWithCustomError(liquidityMath, 'LA')
+      await expect(liquidityMath.addDelta(BigNumber.from(2).pow(128).sub(15), 15)).to.be.revertedWithCustomError(liquidityMath, 'liquidityAdd')
     })
     it('0 + -1 underflows', async () => {
-      await expect(liquidityMath.addDelta(0, -1)).to.be.revertedWithCustomError(liquidityMath, 'LS')
+      await expect(liquidityMath.addDelta(0, -1)).to.be.revertedWithCustomError(liquidityMath, 'liquiditySub')
     })
     it('3 + -4 underflows', async () => {
-      await expect(liquidityMath.addDelta(3, -4)).to.be.revertedWithCustomError(liquidityMath, 'LS')
+      await expect(liquidityMath.addDelta(3, -4)).to.be.revertedWithCustomError(liquidityMath, 'liquiditySub')
     })
     it('gas add  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(liquidityMath.getGasCostOfAddDelta(15, 4))

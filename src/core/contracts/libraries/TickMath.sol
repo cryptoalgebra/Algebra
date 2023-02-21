@@ -29,7 +29,7 @@ library TickMath {
       // get abs value
       int24 mask = tick >> (24 - 1);
       uint256 absTick = uint256(uint24((tick ^ mask) - mask));
-      if (absTick > uint256(uint24(MAX_TICK))) revert IAlgebraPoolErrors.T();
+      if (absTick > uint256(uint24(MAX_TICK))) revert IAlgebraPoolErrors.tickOutOfRange();
 
       uint256 ratio = absTick & 0x1 != 0 ? 0xfffcb933bd6fad37aa2d162d1a594001 : 0x100000000000000000000000000000000;
       if (absTick & 0x2 != 0) ratio = (ratio * 0xfff97272373d413259a46990580e213a) >> 128;
@@ -69,7 +69,7 @@ library TickMath {
   function getTickAtSqrtRatio(uint160 price) internal pure returns (int24 tick) {
     unchecked {
       // second inequality must be >= because the price can never reach the price at the max tick
-      if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert IAlgebraPoolErrors.R();
+      if (price < MIN_SQRT_RATIO || price >= MAX_SQRT_RATIO) revert IAlgebraPoolErrors.priceOutOfRange();
       uint256 ratio = uint256(price) << 32;
 
       uint256 r = ratio;
