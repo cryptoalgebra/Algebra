@@ -374,7 +374,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (balance1 > _reserve1) {
           totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
         }
-        (reserve0, reserve1) = (uint128(balance0), uint128(balance1)); // TODO SECURITY
+        (reserve0, reserve1) = (uint128(balance0), uint128(balance1));
       }
     }
   }
@@ -690,7 +690,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (amount1 < 0) TransferHelper.safeTransfer(token1, recipient, uint256(-amount1));
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
         if (balanceBefore.add(uint256(amount0)) > balanceToken0()) revert IIA();
-        _addDeltasToReserves(amount0, amount1, communityFee, 0); // TODO CAST
+        _addDeltasToReserves(amount0, amount1, communityFee, 0);
       } else {
         (, uint256 balanceBefore) = _updateReserves();
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
@@ -741,7 +741,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         // return the leftovers
         if (amount0 < amountRequired) TransferHelper.safeTransfer(token0, sender, uint256(amountRequired - amount0));
 
-        _addDeltasToReserves(amount0, amount1, communityFee, 0); // TODO CAST
+        _addDeltasToReserves(amount0, amount1, communityFee, 0);
       } else {
         if (amount0 < 0) TransferHelper.safeTransfer(token0, recipient, uint256(-amount0));
         // return the leftovers

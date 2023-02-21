@@ -369,7 +369,10 @@ library DataStorage {
     }
   }
 
-  //TODO
+  /// @notice Returns the index of the oldest timepoint
+  /// @param self The stored dataStorage array
+  /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
+  /// @return oldestIndex The index of the oldest timepoint
   function getOldestIndex(Timepoint[UINT16_MODULO] storage self, uint16 lastIndex) internal view returns (uint16 oldestIndex) {
     unchecked {
       uint16 nextIndex = lastIndex + 1; // considering overflow
@@ -382,7 +385,7 @@ library DataStorage {
   /// @param time The current block.timestamp
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
-  /// @param oldestIndex TODO
+  /// @param oldestIndex The index of the oldest timepoint
   /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(
     Timepoint[UINT16_MODULO] storage self,
