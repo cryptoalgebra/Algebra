@@ -170,8 +170,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   struct UpdatePositionCache {
     uint160 price; // The square root of the current price in Q64.96 format
-    int24 tick; // The current tick
     int24 prevInitializedTick;
+    uint16 fee;
     uint16 timepointIndex; // The index of the last written timepoint
   }
 
@@ -188,10 +188,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   ) private returns (uint256 amount0, uint256 amount1) {
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
-      globalState.tick,
       globalState.prevInitializedTick,
+      globalState.fee,
       globalState.timepointIndex
     );
+
+    int24 currentTick = globalState.tick;
 
     bool toggledBottom;
     bool toggledTop;
@@ -203,7 +205,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
         toggledBottom = ticks.update(
           bottomTick,
-          cache.tick,
+          currentTick,
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
@@ -214,7 +216,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
         toggledTop = ticks.update(
           topTick,
-          cache.tick,
+          currentTick,
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
@@ -227,7 +229,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
         bottomTick,
         topTick,
-        cache.tick,
+        currentTick,
         _totalFeeGrowth0Token,
         _totalFeeGrowth1Token
       );
@@ -244,32 +246,36 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         if (toggledBottom) {
           (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(
             bottomTick,
-            cache.tick,
+            currentTick,
             _prevInitializedTick,
             _tickTreeRoot,
             liquidityDelta < 0
           );
         }
         if (toggledTop) {
-          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, cache.tick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
+          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, currentTick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
         }
 
         if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-        if (_prevInitializedTick != cache.prevInitializedTick) globalState.prevInitializedTick = _prevInitializedTick;
+        cache.prevInitializedTick = _prevInitializedTick;
       }
 
       int128 globalLiquidityDelta;
-      (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, cache.tick, cache.price);
+      (amount0, amount1, globalLiquidityDelta) = _getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore);
+        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), currentTick, liquidityBefore);
         if (cache.timepointIndex != newTimepointIndex) {
-          globalState.fee = newFee;
-          globalState.timepointIndex = newTimepointIndex;
-          emit Fee(newFee); // TODO not emit if fee unchanged
+          cache.timepointIndex = newTimepointIndex;
+          if (cache.fee != newFee) {
+            cache.fee = newFee;
+            emit Fee(newFee);
+          }
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
+
+      (globalState.prevInitializedTick, globalState.fee, globalState.timepointIndex) = (cache.prevInitializedTick, cache.fee, cache.timepointIndex);
     }
   }
 
