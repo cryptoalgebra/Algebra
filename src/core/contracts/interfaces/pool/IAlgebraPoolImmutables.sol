@@ -32,6 +32,12 @@ interface IAlgebraPoolImmutables {
   function token1() external view returns (address);
 
   /**
+   * @notice The contract to which community fees are transferred
+   * @return The communityVault address
+   */
+  function communityVault() external view returns (address);
+
+  /**
    * @notice The maximum amount of position liquidity that can use any tick in the range
    * @dev This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
    * also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool

@@ -500,8 +500,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
       LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
       uint256 _cumulativeDelta = _limitOrder.spentAsk1Cumulative - position.innerFeeGrowth1Token;
-      bool zto = _cumulativeDelta > 0;
-      if (!zto) _cumulativeDelta = _limitOrder.spentAsk0Cumulative - position.innerFeeGrowth0Token;
+      bool zeroToOne = _cumulativeDelta > 0;
+      if (!zeroToOne) _cumulativeDelta = _limitOrder.spentAsk0Cumulative - position.innerFeeGrowth0Token;
 
       if (_cumulativeDelta > 0) {
         uint256 closedAmount;
@@ -509,7 +509,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
           closedAmount = FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128);
           uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
           uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-          (uint256 nominator, uint256 denominator) = zto ? (price, Constants.Q96) : (Constants.Q96, price);
+          (uint256 nominator, uint256 denominator) = zeroToOne ? (price, Constants.Q96) : (Constants.Q96, price);
           uint256 fullAmount = FullMath.mulDiv(_positionLiquidity, nominator, denominator);
 
           if (closedAmount >= fullAmount) {
@@ -519,7 +519,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
             _positionLiquidity = FullMath.mulDiv(fullAmount - closedAmount, denominator, nominator); // unspent input
           }
         }
-        if (zto) {
+        if (zeroToOne) {
           position.innerFeeGrowth1Token = position.innerFeeGrowth1Token + _cumulativeDelta;
           if (closedAmount > 0) position.fees1 = position.fees1.add128(uint128(closedAmount));
         } else {

@@ -15,8 +15,8 @@ abstract contract PoolImmutables is IAlgebraPoolImmutables {
   address public immutable override token0;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override token1;
-
-  address public immutable communityVault;
+  /// @inheritdoc IAlgebraPoolImmutables
+  address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraPoolImmutables
   function maxLiquidityPerTick() external pure override returns (uint128) {
