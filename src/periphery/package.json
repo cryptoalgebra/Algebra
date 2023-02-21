@@ -24,10 +24,10 @@
     "!artifacts/contracts/base/**/*"
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "3.4.1-solc-0.7-2",
+    "@openzeppelin/contracts": "4.6.0",
     "@uniswap/v2-core": "1.0.1",
     "@cryptoalgebra/core": "^2.0.0",
-    "base64-sol": "1.0.1"
+    "base64-sol": "1.1.0"
   },
   "devDependencies": {
     "is-svg": "^4.3.1"

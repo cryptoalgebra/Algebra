@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.0;
 
 library AddressStringUtil {
     // converts an address to the uppercase hex string, extracting only len bytes (up to 20, multiple of 2)
@@ -8,7 +8,7 @@ library AddressStringUtil {
         require(len % 2 == 0 && len > 0 && len <= 40, 'AddressStringUtil: INVALID_LEN');
 
         bytes memory s = new bytes(len);
-        uint256 addrNum = uint256(addr);
+        uint256 addrNum = uint256(uint160(addr));
         for (uint256 i = 0; i < len / 2; i++) {
             // shift right and truncate all but the least significant byte to extract the byte at position 19-i
             uint8 b = uint8(addrNum >> (8 * (19 - i)));

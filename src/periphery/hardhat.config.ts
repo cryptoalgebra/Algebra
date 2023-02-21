@@ -8,7 +8,7 @@ import 'algebra-solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.7.6',
+  version: '0.8.17',
   settings: {
     optimizer: {
       enabled: true,
@@ -21,8 +21,9 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
 }
 
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.7.6',
+  version: '0.8.17',
   settings: {
+    viaIR: true,
     optimizer: {
       enabled: true,
       runs: 1_000,
@@ -34,7 +35,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
 }
 
 const DEFAULT_COMPILER_SETTINGS = {
-  version: '0.7.6',
+  version: '0.8.17',
   settings: {
     optimizer: {
       enabled: true,
@@ -58,6 +59,7 @@ export default {
       'contracts/test/NFTDescriptorTest.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/libraries/NFTSVG.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
     },
   },
   typechain: {
@@ -70,7 +72,7 @@ export default {
   },
   dependencyCompiler: {
     paths: [
-      '@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol',
+      '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol',
     ],
   }
 }

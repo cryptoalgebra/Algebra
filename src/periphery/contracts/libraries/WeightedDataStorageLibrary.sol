@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0 <0.8.0;
+pragma solidity >=0.5.0 <0.9.0;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
@@ -29,15 +29,16 @@ library WeightedDataStorageLibrary {
 
         IDataStorageOperator dsOperator = IDataStorageOperator(IAlgebraPool(pool).dataStorageOperator());
 
-        (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s, ) = dsOperator
+        (int56[] memory tickCumulatives, uint112[] memory secondsPerLiquidityCumulativeX128s) = dsOperator
             .getTimepoints(secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
-        uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[1] -
-            secondsPerLiquidityCumulativeX128s[0];
+        uint160 secondsPerLiquidityCumulativesDelta = uint160(secondsPerLiquidityCumulativeX128s[1]) -
+            uint160(secondsPerLiquidityCumulativeX128s[0]);
 
-        timepoint.arithmeticMeanTick = int24(tickCumulativesDelta / period);
+        timepoint.arithmeticMeanTick = int24(tickCumulativesDelta / int56(uint56(period)));
         // Always round to negative infinity
-        if (tickCumulativesDelta < 0 && (tickCumulativesDelta % period != 0)) timepoint.arithmeticMeanTick--;
+        if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(period)) != 0))
+            timepoint.arithmeticMeanTick--;
 
         // We are shifting the liquidity delta to ensure that the result doesn't overflow uint128
         timepoint.harmonicMeanLiquidity = uint128(periodX160 / (uint192(secondsPerLiquidityCumulativesDelta) << 32));
@@ -64,7 +65,7 @@ library WeightedDataStorageLibrary {
         uint256 denominator;
 
         for (uint256 i; i < timepoints.length; i++) {
-            numerator += int256(timepoints[i].harmonicMeanLiquidity) * timepoints[i].arithmeticMeanTick;
+            numerator += int256(uint256(timepoints[i].harmonicMeanLiquidity)) * timepoints[i].arithmeticMeanTick;
             denominator += timepoints[i].harmonicMeanLiquidity;
         }
 

@@ -2,8 +2,8 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol';
 
 import './IERC721Permit.sol';
 import './IPeripheryPayments.sol';
@@ -17,9 +17,14 @@ interface ILimitOrderManager is
     IERC721Enumerable,
     IERC721Permit
 {
-    function limitPositions(
-        uint256 tokenId
-    ) external view returns (LimitPosition memory position, address token0, address token1);
+    function limitPositions(uint256 tokenId)
+        external
+        view
+        returns (
+            LimitPosition memory position,
+            address token0,
+            address token1
+        );
 
     struct LimitPosition {
         uint96 nonce;
@@ -46,10 +51,10 @@ interface ILimitOrderManager is
 
     function decreaseLimitOrder(uint256 tokenId, uint128 liquidity) external payable;
 
-    function collectLimitOrder(
-        uint256 tokenId,
-        address recipient
-    ) external payable returns (uint256 amount0, uint256 amount1);
+    function collectLimitOrder(uint256 tokenId, address recipient)
+        external
+        payable
+        returns (uint256 amount0, uint256 amount1);
 
     function addLimitOrder(addLimitOrderParams calldata params) external payable returns (uint256 tokenId);
 

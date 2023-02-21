@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
@@ -39,7 +39,11 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
+    function algebraSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes memory path
+    ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
@@ -107,10 +111,11 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactInput(
-        bytes memory path,
-        uint256 amountIn
-    ) external override returns (uint256 amountOut, uint16[] memory fees) {
+    function quoteExactInput(bytes memory path, uint256 amountIn)
+        external
+        override
+        returns (uint256 amountOut, uint16[] memory fees)
+    {
         fees = new uint16[](path.numPools());
         uint256 i = 0;
         while (true) {
@@ -159,10 +164,11 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IQuoter
-    function quoteExactOutput(
-        bytes memory path,
-        uint256 amountOut
-    ) external override returns (uint256 amountIn, uint16[] memory fees) {
+    function quoteExactOutput(bytes memory path, uint256 amountOut)
+        external
+        override
+        returns (uint256 amountIn, uint16[] memory fees)
+    {
         fees = new uint16[](path.numPools());
         uint256 i = 0;
         while (true) {

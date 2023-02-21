@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
@@ -46,8 +46,8 @@ contract V3Migrator is IV3Migrator, PeripheryImmutableState, PoolInitializer, Mu
         (uint256 amount0V2, uint256 amount1V2) = IUniswapV2Pair(params.pair).burn(address(this));
 
         // calculate the amounts to migrate to v3
-        uint256 amount0V2ToMigrate = amount0V2.mul(params.percentageToMigrate) / 100;
-        uint256 amount1V2ToMigrate = amount1V2.mul(params.percentageToMigrate) / 100;
+        uint256 amount0V2ToMigrate = (amount0V2 * params.percentageToMigrate) / 100;
+        uint256 amount1V2ToMigrate = (amount1V2 * params.percentageToMigrate) / 100;
 
         // approve the position manager up to the maximum token amounts
         TransferHelper.safeApprove(params.token0, nonfungiblePositionManager, amount0V2ToMigrate);

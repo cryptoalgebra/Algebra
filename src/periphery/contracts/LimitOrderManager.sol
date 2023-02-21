@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
@@ -18,8 +18,6 @@ import './base/PoolInitializer.sol';
 
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
-/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
-/// https://github.com/Uniswap/v3-periphery
 contract LimitOrderManager is
     ILimitOrderManager,
     Multicall,
@@ -61,9 +59,16 @@ contract LimitOrderManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {}
 
-    function limitPositions(
-        uint256 tokenId
-    ) external view override returns (LimitPosition memory limitPosition, address token0, address token1) {
+    function limitPositions(uint256 tokenId)
+        external
+        view
+        override
+        returns (
+            LimitPosition memory limitPosition,
+            address token0,
+            address token1
+        )
+    {
         limitPosition = _limitPositions[tokenId];
         require(limitPosition.poolId != 0, 'Invalid token ID');
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[limitPosition.poolId];
@@ -128,10 +133,12 @@ contract LimitOrderManager is
         _;
     }
 
-    function decreaseLimitOrder(
-        uint256 tokenId,
-        uint128 liquidity
-    ) external payable override isAuthorizedForToken(tokenId) {
+    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity)
+        external
+        payable
+        override
+        isAuthorizedForToken(tokenId)
+    {
         LimitPosition storage position = _limitPositions[tokenId];
         UpdatePositionCache memory cache;
 
@@ -200,13 +207,17 @@ contract LimitOrderManager is
             }
         }
         position.liquidity = positionLiquidity;
+
         position.liquidityInit -= liquidityInitialPrev - liquidityInitial;
     }
 
-    function collectLimitOrder(
-        uint256 tokenId,
-        address recipient
-    ) external payable override isAuthorizedForToken(tokenId) returns (uint256 amount0, uint256 amount1) {
+    function collectLimitOrder(uint256 tokenId, address recipient)
+        external
+        payable
+        override
+        isAuthorizedForToken(tokenId)
+        returns (uint256 amount0, uint256 amount1)
+    {
         // allow collecting to the nft position manager address with address 0
         recipient = recipient == address(0) ? address(this) : recipient;
 
@@ -232,7 +243,7 @@ contract LimitOrderManager is
     }
 
     // save bytecode by removing implementation of unused method
-    function baseURI() public pure override returns (string memory) {}
+    function baseURI() public pure returns (string memory) {}
 
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         LimitPosition storage position = _limitPositions[tokenId];
