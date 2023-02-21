@@ -491,95 +491,87 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
   }
 
-  function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 liquidityDelta) private {
-    unchecked {
-      (uint256 _positionLiquidity, uint256 _positionLiquidityInitial) = (position.liquidity, position.liquidityInitial);
-      if (_positionLiquidity == 0 && liquidityDelta == 0) return;
+  function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 amountToSellDelta) private {
+    (uint256 amountToSell, uint256 amountToSellInitial) = (position.liquidity, position.liquidityInitial);
+    if (amountToSell == 0 && amountToSellDelta == 0) return;
 
-      LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
-      uint256 _cumulativeDelta = _limitOrder.spentAsk1Cumulative - position.innerFeeGrowth1Token;
+    LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
+    unchecked {
+      uint256 _cumulativeDelta = _limitOrder.boughtAmount1Cumulative - position.innerFeeGrowth1Token;
       bool zeroToOne = _cumulativeDelta > 0;
-      if (!zeroToOne) _cumulativeDelta = _limitOrder.spentAsk0Cumulative - position.innerFeeGrowth0Token;
+      if (!zeroToOne) _cumulativeDelta = _limitOrder.boughtAmount0Cumulative - position.innerFeeGrowth0Token;
 
       if (_cumulativeDelta > 0) {
-        uint256 closedAmount;
-        if (_positionLiquidityInitial > 0) {
-          closedAmount = FullMath.mulDiv(_cumulativeDelta, _positionLiquidityInitial, Constants.Q128);
+        uint256 boughtAmount;
+        if (amountToSellInitial > 0) {
+          boughtAmount = FullMath.mulDiv(_cumulativeDelta, amountToSellInitial, Constants.Q128);
           uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
           uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
           (uint256 nominator, uint256 denominator) = zeroToOne ? (price, Constants.Q96) : (Constants.Q96, price);
-          uint256 fullAmount = FullMath.mulDiv(_positionLiquidity, nominator, denominator);
+          uint256 amountToBuy = FullMath.mulDiv(amountToSell, nominator, denominator);
 
-          if (closedAmount >= fullAmount) {
-            closedAmount = fullAmount;
-            _positionLiquidity = 0;
+          if (boughtAmount < amountToBuy) {
+            amountToSell = FullMath.mulDiv(amountToBuy - boughtAmount, denominator, nominator); // unspent input
           } else {
-            _positionLiquidity = FullMath.mulDiv(fullAmount - closedAmount, denominator, nominator); // unspent input
+            boughtAmount = amountToBuy;
+            amountToSell = 0;
           }
         }
         if (zeroToOne) {
           position.innerFeeGrowth1Token = position.innerFeeGrowth1Token + _cumulativeDelta;
-          if (closedAmount > 0) position.fees1 = position.fees1.add128(uint128(closedAmount));
+          if (boughtAmount > 0) position.fees1 = position.fees1.add128(uint128(boughtAmount));
         } else {
           position.innerFeeGrowth0Token = position.innerFeeGrowth0Token + _cumulativeDelta;
-          if (closedAmount > 0) position.fees0 = position.fees0.add128(uint128(closedAmount));
+          if (boughtAmount > 0) position.fees0 = position.fees0.add128(uint128(boughtAmount));
         }
       }
-      if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
+      if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount sold
 
-      if (liquidityDelta != 0) {
+      if (amountToSellDelta != 0) {
+        int128 amountToSellInitialDelta = amountToSellDelta;
         // add/remove liquidity to tick with partly executed limit order
-        if (_positionLiquidity != _positionLiquidityInitial && _positionLiquidity != 0) {
-          int128 liquidityInitialDelta;
-          if (liquidityDelta < 0) {
-            liquidityInitialDelta = -int256(FullMath.mulDiv(uint128(-liquidityDelta), _positionLiquidityInitial, _positionLiquidity)).toInt128();
-          } else {
-            liquidityInitialDelta = int256(FullMath.mulDiv(uint128(liquidityDelta), _positionLiquidityInitial, _positionLiquidity)).toInt128();
-          }
-          limitOrders.addVirtualLiquidity(tick, liquidityInitialDelta - liquidityDelta);
-          _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
-          _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityInitialDelta);
-        } else {
-          _positionLiquidity = LiquidityMath.addDelta(uint128(_positionLiquidity), liquidityDelta);
-          _positionLiquidityInitial = LiquidityMath.addDelta(uint128(_positionLiquidityInitial), liquidityDelta);
+        if (amountToSell != amountToSellInitial && amountToSell != 0) {
+          amountToSellInitialDelta = amountToSellDelta < 0
+            ? -int256(FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell)).toInt128()
+            : int256(FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell)).toInt128();
+
+          limitOrders.addVirtualLiquidity(tick, amountToSellInitialDelta - amountToSellDelta);
         }
+        amountToSell = LiquidityMath.addDelta(uint128(amountToSell), amountToSellDelta);
+        amountToSellInitial = LiquidityMath.addDelta(uint128(amountToSellInitial), amountToSellInitialDelta);
       }
-      if (_positionLiquidity == 0) _positionLiquidityInitial = 0;
-      (position.liquidity, position.liquidityInitial) = (uint128(_positionLiquidity), uint128(_positionLiquidityInitial));
+      if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
+      (position.liquidity, position.liquidityInitial) = (uint128(amountToSell), uint128(amountToSellInitial));
     }
   }
 
   function _updateLimitOrderPosition(
     Position storage position,
     int24 tick,
-    int128 liquidityDelta
+    int128 amountToSellDelta
   ) private returns (uint256 amount0, uint256 amount1) {
-    _recalculateLimitOrderPosition(position, tick, liquidityDelta);
+    _recalculateLimitOrderPosition(position, tick, amountToSellDelta);
 
-    if (liquidityDelta != 0) {
-      bool remove = liquidityDelta < 0;
+    if (amountToSellDelta != 0) {
+      bool remove = amountToSellDelta < 0;
+      (int24 currentTick, int24 prevTick) = (globalState.tick, globalState.prevInitializedTick);
 
-      (int24 _globalTick, int24 _prevInitializedTick) = (globalState.tick, globalState.prevInitializedTick);
-      if (limitOrders.addOrRemoveLimitOrder(tick, liquidityDelta)) {
+      if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
+        // if tick flipped
         TickManager.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
         if (_tickData.nextTick == _tickData.prevTick) {
-          uint256 _initTickTreeRoot = tickTreeRoot;
-          (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
-            tick,
-            _globalTick,
-            _prevInitializedTick,
-            _initTickTreeRoot,
-            remove
-          );
-          if (_initTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-          if (newPrevInitializedTick != _prevInitializedTick) globalState.prevInitializedTick = newPrevInitializedTick;
+          // tick isn't initialized
+          uint256 _tickTreeRoot = tickTreeRoot;
+          (int24 newPrevTick, uint256 newTickTreeRoot) = _insertOrRemoveTick(tick, currentTick, prevTick, _tickTreeRoot, remove);
+          if (_tickTreeRoot != newTickTreeRoot) tickTreeRoot = newTickTreeRoot;
+          if (newPrevTick != prevTick) globalState.prevInitializedTick = newPrevTick;
         }
       }
 
       if (remove) {
         unchecked {
-          return (tick > _globalTick) ? (uint256(int256(-liquidityDelta)), uint256(0)) : (uint256(0), uint256(int256(-liquidityDelta)));
+          return (tick > currentTick) ? (uint256(int256(-amountToSellDelta)), uint256(0)) : (uint256(0), uint256(int256(-amountToSellDelta)));
         }
       }
     }
@@ -779,7 +771,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
-    bool limitOrder;
+    bool inLimitOrder;
   }
 
   function _calculateSwap(
@@ -840,24 +832,24 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
           // calculate the amounts from LO
           // TODO fee
           step.feeAmount = 0;
-          (step.limitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
-          if (step.limitOrder) {
+          (step.inLimitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
+          if (step.inLimitOrder) {
             ticks[step.nextTick].hasLimitOrders = false;
             if (ticks[step.nextTick].liquidityTotal == 0) {
-              uint256 _initialTickTreeRoot = tickTreeRoot;
-              (int24 newPrevInitializedTick, uint256 _tickTreeRoot) = _insertOrRemoveTick(
+              uint256 _tickTreeRoot = tickTreeRoot;
+              (int24 newPrevTick, uint256 newTickTreeRoot) = _insertOrRemoveTick(
                 step.nextTick,
                 currentTick,
                 cache.prevInitializedTick,
-                _initialTickTreeRoot,
+                _tickTreeRoot,
                 true
               );
-              if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-              cache.prevInitializedTick = newPrevInitializedTick;
+              if (_tickTreeRoot != newTickTreeRoot) tickTreeRoot = newTickTreeRoot;
+              cache.prevInitializedTick = newPrevTick;
               step.initialized = false;
             }
           }
-          step.limitOrder = !step.limitOrder;
+          step.inLimitOrder = !step.inLimitOrder;
         } else {
           (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
             zeroToOne,
@@ -887,7 +879,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
         if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
-        if (currentPrice == step.nextTickPrice && !step.limitOrder) {
+        if (currentPrice == step.nextTickPrice && !step.inLimitOrder) {
           // if the reached tick is initialized then we need to cross it
           if (step.initialized) {
             // once at a swap we have to get the last timepoint of the observation

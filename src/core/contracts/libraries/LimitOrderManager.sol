@@ -8,10 +8,10 @@ import './Constants.sol';
 /// @notice Contains functions for managing limit orders and relevant calculations
 library LimitOrderManager {
   struct LimitOrder {
-    uint128 sumOfAsk;
-    uint128 spentAsk;
-    uint256 spentAsk0Cumulative;
-    uint256 spentAsk1Cumulative;
+    uint128 amountToSell;
+    uint128 soldAmount;
+    uint256 boughtAmount0Cumulative;
+    uint256 boughtAmount1Cumulative;
   }
 
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
@@ -21,20 +21,17 @@ library LimitOrderManager {
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
   function addOrRemoveLimitOrder(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal returns (bool flipped) {
     LimitOrder storage data = self[tick];
-    uint128 sumOfAskBefore = data.sumOfAsk;
-    uint128 sumOfAskAfter = sumOfAskBefore;
-    bool add = (amount > 0);
-
+    uint128 _amountToSell = data.amountToSell;
     unchecked {
-      if (add) {
-        sumOfAskAfter += uint128(amount);
-        flipped = sumOfAskBefore == 0;
+      if (amount > 0) {
+        flipped = _amountToSell == 0;
+        _amountToSell += uint128(amount);
       } else {
-        sumOfAskAfter -= uint128(-amount);
-        flipped = sumOfAskAfter == 0;
-        if (flipped) data.spentAsk = 0;
+        _amountToSell -= uint128(-amount);
+        flipped = _amountToSell == 0;
+        if (flipped) data.soldAmount = 0; // reset filled amount if all orders are closed
       }
-      data.sumOfAsk = sumOfAskAfter;
+      data.amountToSell = _amountToSell;
     }
   }
 
@@ -43,15 +40,14 @@ library LimitOrderManager {
   /// @param tick The tick that will be updated
   /// @param amount The amount of liquidity that will be added/removed
   function addVirtualLiquidity(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal {
-    bool add = (amount > 0);
     LimitOrder storage data = self[tick];
     unchecked {
-      if (add) {
-        data.sumOfAsk += uint128(amount);
-        data.spentAsk += uint128(amount);
+      if (amount > 0) {
+        data.amountToSell += uint128(amount);
+        data.soldAmount += uint128(amount);
       } else {
-        data.sumOfAsk -= uint128(-amount);
-        data.spentAsk -= uint128(-amount);
+        data.amountToSell -= uint128(-amount);
+        data.soldAmount -= uint128(-amount);
       }
     }
   }
@@ -61,7 +57,7 @@ library LimitOrderManager {
   /// @param tick Limit order execution tick
   /// @param tickSqrtPrice Limit order execution price
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-  /// @param amountRequired Amount of liquidity that will be swapped
+  /// @param amountA Amount of tokens that will be swapped
   /// @return closed Status of limit order after execution
   /// @return amountOut Amount of token out that user receive after swap
   /// @return amountIn Amount of token in
@@ -70,37 +66,39 @@ library LimitOrderManager {
     int24 tick,
     uint160 tickSqrtPrice,
     bool zeroToOne,
-    int256 amountRequired
+    int256 amountA
   ) internal returns (bool closed, uint256 amountOut, uint256 amountIn) {
     unchecked {
-      bool exactIn = amountRequired > 0;
-      if (!exactIn) amountRequired = -amountRequired;
+      bool exactIn = amountA > 0;
+      if (!exactIn) amountA = -amountA;
 
+      // price is defined as "token1/token0"
       uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
-      uint256 amount = (zeroToOne == exactIn)
-        ? FullMath.mulDiv(uint256(amountRequired), price, Constants.Q96)
-        : FullMath.mulDiv(uint256(amountRequired), Constants.Q96, price);
 
-      (amountOut, amountIn) = exactIn ? (amount, uint256(amountRequired)) : (uint256(amountRequired), amount);
+      uint256 amountB = (zeroToOne == exactIn)
+        ? FullMath.mulDiv(uint256(amountA), price, Constants.Q96) // tokenA is token0
+        : FullMath.mulDiv(uint256(amountA), Constants.Q96, price); // tokenA is token1
+
+      // limit orders buy tokenIn and sell tokenOut
+      (amountOut, amountIn) = exactIn ? (amountB, uint256(amountA)) : (uint256(amountA), amountB);
 
       LimitOrder storage data = self[tick];
-      (uint128 sumOfAsk, uint128 spentAsk) = (data.sumOfAsk, data.spentAsk);
-      uint256 unspentOutAsk = sumOfAsk - spentAsk;
-      if (amountOut >= unspentOutAsk) {
-        if (amountOut > unspentOutAsk) {
-          amountOut = unspentOutAsk;
+      (uint128 amountToSell, uint128 soldAmount) = (data.amountToSell, data.soldAmount);
+      uint256 unsoldAmount = amountToSell - soldAmount;
+      if (amountOut >= unsoldAmount) {
+        if (amountOut > unsoldAmount) {
+          amountOut = unsoldAmount;
           amountIn = zeroToOne ? FullMath.mulDiv(amountOut, Constants.Q96, price) : FullMath.mulDiv(amountOut, price, Constants.Q96);
         }
-        closed = true;
-        (data.sumOfAsk, data.spentAsk) = (0, 0);
+        (closed, data.amountToSell, data.soldAmount) = (true, 0, 0);
       } else {
-        data.spentAsk = spentAsk + uint128(amountOut);
+        data.soldAmount = soldAmount + uint128(amountOut);
       }
 
       if (zeroToOne) {
-        data.spentAsk0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, sumOfAsk);
+        data.boughtAmount0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
       } else {
-        data.spentAsk1Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, sumOfAsk);
+        data.boughtAmount1Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
       }
     }
   }

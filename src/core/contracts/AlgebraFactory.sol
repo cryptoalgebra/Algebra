@@ -86,15 +86,15 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function setFarmingAddress(address _farmingAddress) external override onlyOwner {
     require(farmingAddress != _farmingAddress);
-    emit FarmingAddress(_farmingAddress);
     farmingAddress = _farmingAddress;
+    emit FarmingAddress(_farmingAddress);
   }
 
   /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
-    emit DefaultCommunityFee(newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
+    emit DefaultCommunityFee(newDefaultCommunityFee);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -120,12 +120,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /**
-   * @dev Leaves the contract without owner. It will not be possible to call
-   * `onlyOwner` functions anymore. Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
+   * @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
+   * Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
    * have passed since the call to the startRenounceOwnership() function.
-   *
-   * NOTE: Renouncing ownership will leave the factory without an owner,
-   * thereby removing any functionality that is only available to the owner.
    */
   function renounceOwnership() public override onlyOwner {
     require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
@@ -145,7 +142,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _grantRole(DEFAULT_ADMIN_ROLE, owner());
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x89e1fdac157e66d20330f33f618dd3c53f7fcb5ec7923b21ea0821d3fa0ec92d;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x04c18f7416aa82ddc54e912e6dd12cdf354ae8cc114acd24733c933568e7f6ee;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

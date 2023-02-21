@@ -15,10 +15,7 @@ library AdaptiveFee {
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
         sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
-      if (sumOfSigmoids > type(uint16).max) {
-        // should be impossible, just in case
-        sumOfSigmoids = type(uint16).max;
-      }
+      if (sumOfSigmoids > type(uint16).max) sumOfSigmoids = type(uint16).max; // should be impossible, just in case
 
       return uint16(config.baseFee + sumOfSigmoids); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
     }

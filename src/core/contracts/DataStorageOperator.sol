@@ -29,8 +29,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   constructor(address _pool) {
-    factory = msg.sender;
-    pool = _pool;
+    (factory, pool) = (msg.sender, _pool);
   }
 
   /// @inheritdoc IDataStorageOperator

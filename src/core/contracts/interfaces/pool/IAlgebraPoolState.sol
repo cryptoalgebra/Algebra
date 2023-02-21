@@ -106,18 +106,23 @@ interface IAlgebraPoolState {
       bool hasLimitOrders
     );
 
+  /**
+   * @notice Returns the summary information about a limit orders at tick
+   * @param tick The tick to look up
+   * @return amountToSell The amount of tokens to sell. Has only relative meaning
+   * @return soldAmount The amount of tokens already sold. Has only relative meaning
+   * @return boughtAmount0Cumulative The accumulator of bought tokens0 per amountToSell. Has only relative meaning
+   * @return boughtAmount1Cumulative The accumulator of bought tokens1 per amountToSell. Has only relative meaning
+   */
   function limitOrders(
     int24 tick
-  ) external view returns (uint128 sumOfAsk, uint128 spentAsk, uint256 spentAsk0Cumulative, uint256 spentAsk1Cumulative);
-
-  // TODO ADD NATSPEC
+  ) external view returns (uint128 amountToSell, uint128 soldAmount, uint256 boughtAmount0Cumulative, uint256 boughtAmount1Cumulative);
 
   /** @notice Returns 256 packed tick initialized boolean values. See TickTree for more information */
   function tickTable(int16 wordPosition) external view returns (uint256);
 
   /**
    * @notice Returns the information about a position by the position's key
-   * @dev This is a public mapping of structures, so the `return` natspec tags are omitted.
    * @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
    * @return liquidity The amount of liquidity in the position
    * @return liquidityInitial The amount of initial liquidity (if the position is a limit order)
