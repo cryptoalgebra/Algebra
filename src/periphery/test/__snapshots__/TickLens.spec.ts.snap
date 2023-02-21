@@ -1,5 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TickLens #getPopulatedTicksInWord fully populated ticks [ @skip-on-coverage ] 1`] = `2918745`;
-
-exports[`TickLens #getPopulatedTicksInWord gas for single populated tick [ @skip-on-coverage ] 1`] = `56790`;
+exports[`TickLens #getPopulatedTicksInWord gas for single populated tick [ @skip-on-coverage ] 1`] = `46828`;

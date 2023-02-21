@@ -20,6 +20,7 @@ const completeFixture: () => Promise<{
   lomanager: LimitOrderManager
   tokens: [TestERC20, TestERC20, TestERC20]
 }> = async () => {
+
   const { wnative, factory, router } = await v3RouterFixture()
   const tokenFactory = await ethers.getContractFactory('TestERC20')
   const factoryOwner = await factory.owner()
@@ -28,6 +29,7 @@ const completeFixture: () => Promise<{
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
   ]
+
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy()

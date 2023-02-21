@@ -659,7 +659,7 @@ describe('LimitOrderManager', () => {
       expect(limitPosition.liquidity).to.eq(0)
     })
 
-    it('two los at positive tick', async () => {
+    it.only('two los at positive tick', async () => {
       await nft.createAndInitializePoolIfNecessary(
         tokens[0].address,
         tokens[1].address,
@@ -695,7 +695,7 @@ describe('LimitOrderManager', () => {
 
       await lomanager.decreaseLimitOrder(1, 0)
       await lomanager.decreaseLimitOrder(2, 0)
-
+      
       let pos1 = (await lomanager.limitPositions(1)).limitPosition
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       
