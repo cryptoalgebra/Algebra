@@ -78,17 +78,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
         uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;
         uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
         unchecked {
-          newFee = AdaptiveFee.getFee(volatilityAverage / 15, _feeConfig);
+          newFee = AdaptiveFee.getFee(volatilityAverage, _feeConfig);
         }
       }
     }
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function getFee(uint32 time, int24 tick, uint16 lastIndex) external view override returns (uint16 fee) {
-    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-    uint88 lastVolatilityCumulative = timepoints.getVolatilityCumulativeAt(time, 0, tick, lastIndex, oldestIndex);
-    uint88 volatilityAverage = timepoints.getAverageVolatility(time, tick, lastIndex, oldestIndex, lastVolatilityCumulative);
-    return AdaptiveFee.getFee(volatilityAverage / 15, feeConfig); // TODO CONST
   }
 }

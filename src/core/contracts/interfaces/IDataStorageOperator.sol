@@ -61,11 +61,4 @@ interface IDataStorageOperator {
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
-
-  /// @notice Calculates fee based on combination of sigmoids
-  /// @param time The current block.timestamp
-  /// @param tick The current tick
-  /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(uint32 time, int24 tick, uint16 index) external view returns (uint16 fee);
 }

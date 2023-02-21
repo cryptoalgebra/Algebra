@@ -58,7 +58,7 @@ describe('AdaptiveFee', () => {
       let prev = 0;
       for (let volat of volats) {
         let fee = getFee(volat);
-        let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat))).toString())
+        let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat * 15))).toString())
         expect(cFee).to.be.gte(prev);
         prev = cFee;
         let error = (cFee - fee) * 100 / fee;

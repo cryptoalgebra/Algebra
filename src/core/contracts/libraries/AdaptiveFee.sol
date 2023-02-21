@@ -11,6 +11,7 @@ library AdaptiveFee {
   /// maximum value capped by baseFee + alpha1 + alpha2
   function getFee(uint88 volatility, IAlgebraFeeConfiguration.Configuration memory config) internal pure returns (uint16 fee) {
     unchecked {
+      volatility /= 15; // normalize for 15 sec interval
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
         sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
