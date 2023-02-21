@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.4;
+pragma solidity >=0.5.0;
 
 import './pool/IAlgebraPoolImmutables.sol';
 import './pool/IAlgebraPoolState.sol';
@@ -7,7 +7,6 @@ import './pool/IAlgebraPoolDerivedState.sol';
 import './pool/IAlgebraPoolActions.sol';
 import './pool/IAlgebraPoolPermissionedActions.sol';
 import './pool/IAlgebraPoolEvents.sol';
-import './pool/IAlgebraPoolErrors.sol';
 
 /**
  * @title The interface for a Algebra Pool
@@ -21,8 +20,7 @@ interface IAlgebraPool is
   IAlgebraPoolDerivedState,
   IAlgebraPoolActions,
   IAlgebraPoolPermissionedActions,
-  IAlgebraPoolEvents,
-  IAlgebraPoolErrors
+  IAlgebraPoolEvents
 {
   // used only for combining interfaces
 }

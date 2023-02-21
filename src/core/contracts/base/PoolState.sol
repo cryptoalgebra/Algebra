@@ -2,7 +2,8 @@
 pragma solidity =0.8.17;
 
 import '../interfaces/pool/IAlgebraPoolState.sol';
-import '../interfaces/pool/IAlgebraPoolErrors.sol';
+import '../interfaces/IAlgebraPoolErrors.sol';
+
 import '../libraries/TickManager.sol';
 import '../libraries/LimitOrderManager.sol';
 import './Timestamp.sol';
