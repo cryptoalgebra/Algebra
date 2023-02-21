@@ -57,30 +57,17 @@ interface IAlgebraPoolState {
   function communityFeeLastTimestamp() external view returns (uint32);
 
   /**
-   * @notice The amount of token0 that will be sent to the vault
+   * @notice The amounts of token0 and token1 that will be sent to the vault
    * @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
    */
-  function communityFeePending0() external view returns (uint128);
+  function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
 
   /**
-   * @notice The amount of token1 that will be sent to the vault
-   * @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
-   */
-  function communityFeePending1() external view returns (uint128);
-
-  /**
-   * @notice The tracked token0 reserve of pool
+   * @notice The tracked token0 and token1 reserves of pool
    * @dev If at any time the real balance is larger, the excess will be directed to liquidity providers.
    * If the balance exceeds uint128, the excess will be sent to the communityVault.
    */
-  function reserve0() external view returns (uint128);
-
-  /**
-   * @notice The tracked token1 reserve of pool
-   * @dev If at any time the real balance is larger, the excess will be directed to liquidity providers.
-   * If the balance exceeds uint128, the excess will be sent to the communityVault.
-   */
-  function reserve1() external view returns (uint128);
+  function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
 
   /**
    * @notice The accumulator of seconds per liquidity since the pool was first initialized

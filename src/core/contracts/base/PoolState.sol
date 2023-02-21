@@ -32,15 +32,13 @@ abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp 
   /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
-  /// @inheritdoc IAlgebraPoolState
-  uint128 public override communityFeePending0;
-  /// @inheritdoc IAlgebraPoolState
-  uint128 public override communityFeePending1;
+  // The amounts of token0 and token1 that will be sent to the vault
+  uint128 internal communityFeePending0;
+  uint128 internal communityFeePending1;
 
-  /// @inheritdoc IAlgebraPoolState
-  uint128 public override reserve0; // TODO mb getter?
-  /// @inheritdoc IAlgebraPoolState
-  uint128 public override reserve1;
+  // The tracked token0 and token1 reserves of pool
+  uint128 internal reserve0;
+  uint128 internal reserve1;
 
   uint32 internal lastTimepointTimestamp; // TODO
   /// @inheritdoc IAlgebraPoolState
@@ -63,6 +61,16 @@ abstract contract PoolState is IAlgebraPoolState, IAlgebraPoolErrors, Timestamp 
     _lock();
     _;
     _unlock();
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getCommunityFeePending() external view returns (uint128, uint128) {
+    return (communityFeePending0, communityFeePending1);
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getReserves() external view returns (uint128, uint128) {
+    return (reserve0, reserve1);
   }
 
   function _lock() private {
