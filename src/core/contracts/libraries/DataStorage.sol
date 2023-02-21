@@ -100,7 +100,7 @@ library DataStorage {
   }
 
   /// @dev guaranteed that the result is within the bounds of int24
-  /// returns int256 for fuzzy tests
+  /// @return avgTick int256 for fuzzy tests
   function _getAverageTick(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -114,7 +114,8 @@ library DataStorage {
     unchecked {
       if (!lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
         // if oldest is newer than WINDOW ago
-        return (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / int56(uint56(lastTimestamp - oldestTimestamp));
+        return
+          (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / int56(uint56(lastTimestamp - oldestTimestamp));
       }
 
       if (lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
@@ -329,7 +330,9 @@ library DataStorage {
       // we're in the middle
       (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - targetTimepoint.blockTimestamp, target - targetTimepoint.blockTimestamp);
 
-      targetTimepoint.tickCumulative += ((tickCumulativeAfter - targetTimepoint.tickCumulative) / int56(uint56(timepointTimeDelta))) * int56(uint56(targetDelta));
+      targetTimepoint.tickCumulative +=
+        ((tickCumulativeAfter - targetTimepoint.tickCumulative) / int56(uint56(timepointTimeDelta))) *
+        int56(uint56(targetDelta));
       targetTimepoint.volatilityCumulative +=
         ((atOrAfter.volatilityCumulative - targetTimepoint.volatilityCumulative) / timepointTimeDelta) *
         targetDelta;

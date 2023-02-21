@@ -9,14 +9,14 @@ interface IAlgebraPoolState {
    * @notice The globalState structure in the pool stores many values but requires only one slot
    * and is exposed as a single method to save gas when accessed externally.
    * @return price The current price of the pool as a sqrt(token1/token0) Q64.96 value;
-   * Returns tick The current tick of the pool, i.e. according to the last tick transition that was run;
+   * @return tick The current tick of the pool, i.e. according to the last tick transition that was run;
    * This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
    * boundary;
-   * Returns prevInitializedTick
-   * Returns fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
-   * Returns timepointIndex The index of the last written timepoint;
-   * Returns communityFee The community fee percentage of the swap fee in thousandths (1e-3);
-   * Returns unlocked Whether the pool is currently locked to reentrancy;
+   * @return prevInitializedTick
+   * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6;
+   * @return timepointIndex The index of the last written timepoint;
+   * @return communityFee The community fee percentage of the swap fee in thousandths (1e-3);
+   * @return unlocked Whether the pool is currently locked to reentrancy;
    */
   function globalState()
     external
@@ -56,14 +56,14 @@ interface IAlgebraPoolState {
    * @dev This is a public structure, so the `return` natspec tags are omitted.
    * @param tick The tick to look up
    * @return liquidityTotal the total amount of position liquidity that uses the pool either as tick lower or
-   * tick upper;
-   * Returns liquidityDelta how much liquidity changes when the pool price crosses the tick;
-   * Returns outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0;
-   * Returns outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1;
-   * Returns prevTick;
-   * Returns nextTick;
-   * Returns outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick;
-   * Returns outerSecondsSpent the seconds spent on the other side of the tick from the current tick;
+   * tick upper
+   * @return liquidityDelta how much liquidity changes when the pool price crosses the tick
+   * @return outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0
+   * @return outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1
+   * @return prevTick the previous tick in tick list
+   * @return nextTick the next tick in tick list
+   * @return outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick
+   * @return outerSecondsSpent the seconds spent on the other side of the tick from the current tick
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
    */
@@ -97,11 +97,12 @@ interface IAlgebraPoolState {
    * @notice Returns the information about a position by the position's key
    * @dev This is a public mapping of structures, so the `return` natspec tags are omitted.
    * @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
-   * @return liquidityAmount The amount of liquidity in the position;
-   * Returns innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke;
-   * Returns innerFeeGrowth1Token Fee growth of token1 inside the tick range as of the last mint/burn/poke;
-   * Returns fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke;
-   * Returns fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
+   * @return liquidityAmount The amount of liquidity in the position
+   * @return liquidityInitialAmount TODO
+   * @return innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke
+   * @return innerFeeGrowth1Token Fee growth of token1 inside the tick range as of the last mint/burn/poke
+   * @return fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke
+   * @return fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
   function positions(
     bytes32 key

@@ -19,11 +19,11 @@ interface IAlgebraPoolDeployer {
   /**
    * @notice Get the parameters to be used in constructing the pool, set transiently during pool creation.
    * @dev Called by the pool constructor to fetch the parameters of the pool
-   * Returns dataStorage The pools associated dataStorage
-   * Returns factory The factory address
-   * Returns communityVault The community vault address
-   * Returns token0 The first token of the pool by address sort order
-   * Returns token1 The second token of the pool by address sort order
+   * @return dataStorage The pools associated dataStorage
+   * @return factory The factory address
+   * @return communityVault The community vault address
+   * @return token0 The first token of the pool by address sort order
+   * @return token1 The second token of the pool by address sort order
    */
   function getDeployParameters() external view returns (address dataStorage, address factory, address communityVault, address token0, address token1);
 
