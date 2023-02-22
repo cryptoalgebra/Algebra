@@ -5,32 +5,50 @@ import './interfaces/IAlgebraPoolDeployer.sol';
 import './AlgebraPool.sol';
 
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
-  address private dataStorageCache; // TODO mb is better to store bytes?
-  address private token0Cache;
-  address private token1Cache;
+  /// @dev two storage slots for dense cache packing
+  bytes32 private cache0;
+  bytes32 private cache1;
 
   address private immutable factory;
   address private immutable communityVault;
 
-  /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters() external view override returns (address, address, address, address, address) {
-    return (dataStorageCache, factory, communityVault, token0Cache, token1Cache);
+  constructor(address _factory, address _communityVault) {
+    require(_factory != address(0) && _communityVault != address(0));
+    (factory, communityVault) = (_factory, _communityVault);
+    emit Factory(_factory);
   }
 
-  constructor(address _factory, address _communityVault) {
-    require(_factory != address(0));
-    require(_communityVault != address(0));
-    factory = _factory;
-    communityVault = _communityVault;
-    emit Factory(_factory);
+  /// @inheritdoc IAlgebraPoolDeployer
+  function getDeployParameters() external view override returns (address, address, address, address, address) {
+    (address dataStorage, address token0, address token1) = _readFromCache();
+    return (dataStorage, factory, communityVault, token0, token1);
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
   function deploy(address dataStorage, address token0, address token1) external override returns (address pool) {
     require(msg.sender == factory);
 
-    (dataStorageCache, token0Cache, token1Cache) = (dataStorage, token0, token1);
+    _writeToCache(dataStorage, token0, token1);
     pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
-    (dataStorageCache, token0Cache, token1Cache) = (address(0), address(0), address(0));
+    (cache0, cache1) = (bytes32(0), bytes32(0));
+  }
+
+  /// @notice densely packs three addresses into two storage slots
+  function _writeToCache(address dataStorage, address token0, address token1) private {
+    assembly {
+      token0 := and(token0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // clean higher bits, just in case
+      sstore(cache0.slot, or(shr(64, token0), shl(96, and(dataStorage, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
+      sstore(cache1.slot, or(shl(160, token0), and(token1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)))
+    }
+  }
+
+  /// @notice reads three densely packed addresses from two storage slots
+  function _readFromCache() private view returns (address dataStorage, address token0, address token1) {
+    (bytes32 _cache0, bytes32 _cache1) = (cache0, cache1);
+    assembly {
+      dataStorage := shr(96, _cache0)
+      token0 := or(shl(64, and(_cache0, 0xFFFFFFFFFFFFFFFFFFFFFFFF)), shr(160, _cache1))
+      token1 := and(_cache1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+    }
   }
 }
