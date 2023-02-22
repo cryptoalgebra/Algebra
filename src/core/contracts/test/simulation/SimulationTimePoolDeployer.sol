@@ -37,7 +37,6 @@ contract SimulationTimePoolDeployer is IAlgebraPoolDeployer {
   function setFactory(address _factory, address _vault) external onlyOwner {
     require(_factory != address(0));
     require(factory == address(0));
-    emit Factory(_factory);
     factory = _factory;
     vault = _vault;
   }

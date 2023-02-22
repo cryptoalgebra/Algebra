@@ -15,7 +15,6 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   constructor(address _factory, address _communityVault) {
     require(_factory != address(0) && _communityVault != address(0));
     (factory, communityVault) = (_factory, _communityVault);
-    emit Factory(_factory);
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
@@ -36,6 +35,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @notice densely packs three addresses into two storage slots
   function _writeToCache(address dataStorage, address token0, address token1) private {
     assembly {
+      // cache0 = [dataStorage, token0[0, 96]], cache1 = [token0[0, 64], 0-s x32 , token1]
       token0 := and(token0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // clean higher bits, just in case
       sstore(cache0.slot, or(shr(64, token0), shl(96, and(dataStorage, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
       sstore(cache1.slot, or(shl(160, token0), and(token1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)))

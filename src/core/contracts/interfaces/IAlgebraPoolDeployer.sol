@@ -11,12 +11,6 @@ pragma solidity >=0.5.0;
  */
 interface IAlgebraPoolDeployer {
   /**
-   *  @notice Emitted when the factory address is set
-   *  @param factory The factory address after the address was set
-   */
-  event Factory(address indexed factory);
-
-  /**
    * @notice Get the parameters to be used in constructing the pool, set transiently during pool creation.
    * @dev Called by the pool constructor to fetch the parameters of the pool
    * @return dataStorage The pools associated dataStorage
