@@ -424,7 +424,6 @@ describe('DataStorage', () => {
     const STARTING_TIME = TEST_POOL_START_TIME
 
     const maxedOutDataStorageFixture = async () => {
-      await ethers.provider.send("hardhat_setLoggingEnabled", [false]);
       await ethers.provider.send("hardhat_setBalance", [
         wallet.address,
         "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
@@ -437,13 +436,11 @@ describe('DataStorage', () => {
         const batch = Array(BATCH_SIZE)
           .fill(null)
           .map((_, j) => ({
-            advanceTimeBy: 13,
             tick: -i - j,
             liquidity: i + j,
           }))
-        await dataStorage.batchUpdate(batch)
+        await dataStorage.batchUpdateFixedTimedelta(batch)
       }
-      //await waffle.provider.send("hardhat_setLoggingEnabled", [true]);
       return dataStorage
     }
 

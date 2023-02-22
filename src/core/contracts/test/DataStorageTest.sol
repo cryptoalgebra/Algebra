@@ -70,6 +70,33 @@ contract DataStorageTest {
     time = _time;
   }
 
+  struct UpdateParamsFixedTimedelta {
+    int24 tick;
+    uint128 liquidity;
+  }
+
+  function batchUpdateFixedTimedelta(UpdateParamsFixedTimedelta[] calldata params) external {
+    // sload everything
+    int24 _tick = tick;
+    uint128 _liquidity = liquidity;
+    uint16 _index = index;
+    uint32 _time = time;
+    unchecked {
+      for (uint256 i; i < params.length; ++i) {
+        _time += 13;
+        (_index, ) = timepoints.write(_index, _time, _tick);
+        _tick = params[i].tick;
+        _liquidity = params[i].liquidity;
+      }
+    }
+
+    // sstore everything
+    tick = _tick;
+    liquidity = _liquidity;
+    index = _index;
+    time = _time;
+  }
+
   function getTimepoints(
     uint32[] calldata secondsAgos
   ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
