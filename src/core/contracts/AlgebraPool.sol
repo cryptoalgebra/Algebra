@@ -497,9 +497,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
     LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
     unchecked {
-      uint256 _cumulativeDelta = _limitOrder.boughtAmount1Cumulative - position.innerFeeGrowth1Token;
-      bool zeroToOne = _cumulativeDelta > 0;
-      if (!zeroToOne) _cumulativeDelta = _limitOrder.boughtAmount0Cumulative - position.innerFeeGrowth0Token;
+      uint256 _cumulativeDelta;
+      bool zeroToOne;
+      {
+        uint256 _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
+        if (_bought1Cumulative == 0) {
+          (_limitOrder.boughtAmount0Cumulative, _limitOrder.boughtAmount1Cumulative) = (1, 1); // maker pays for storage slots
+          _bought1Cumulative = 1;
+        }
+        _cumulativeDelta = _bought1Cumulative - position.innerFeeGrowth1Token;
+        zeroToOne = _cumulativeDelta > 0;
+        if (!zeroToOne) _cumulativeDelta = _limitOrder.boughtAmount0Cumulative - position.innerFeeGrowth0Token;
+      }
 
       if (_cumulativeDelta > 0) {
         uint256 boughtAmount;
