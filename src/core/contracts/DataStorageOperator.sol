@@ -74,7 +74,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
 
     if (index != indexUpdated) {
       IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfig;
-      if (_feeConfig.alpha1 == 0 && _feeConfig.alpha2 == 0) {
+      if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
         newFee = _feeConfig.baseFee;
       } else {
         uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;

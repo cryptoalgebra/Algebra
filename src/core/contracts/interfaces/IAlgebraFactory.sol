@@ -78,8 +78,7 @@ interface IAlgebraFactory {
   function poolDeployer() external view returns (address);
 
   /**
-   * @dev Is retrieved from the pools to restrict calling
-   * certain functions not by a tokenomics contract
+   * @dev Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract
    * @return The tokenomics contract address
    */
   function farmingAddress() external view returns (address);
@@ -115,17 +114,16 @@ interface IAlgebraFactory {
    *  @param tokenA One of the two tokens in the desired pool
    *  @param tokenB The other of the two tokens in the desired pool
    *  @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
-   *  The call will revert if the pool already exists or the token arguments
-   *  are invalid.
+   *  The call will revert if the pool already exists or the token arguments are invalid.
    *  @return pool The address of the newly created pool
    */
   function createPool(address tokenA, address tokenB) external returns (address pool);
 
   /**
    * @dev updates tokenomics address on the factory
-   * @param _farmingAddress The new tokenomics contract address
+   * @param newFarmingAddress The new tokenomics contract address
    */
-  function setFarmingAddress(address _farmingAddress) external;
+  function setFarmingAddress(address newFarmingAddress) external;
 
   /**
    * @dev updates default community fee for new pools
@@ -136,8 +134,7 @@ interface IAlgebraFactory {
   /**
    * @notice Changes initial fee configuration for new pools
    * @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-   * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max
-   * gammas must be > 0
+   * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max and gammas must be > 0
    * @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
    */
   function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;

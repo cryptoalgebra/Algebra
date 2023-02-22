@@ -762,8 +762,7 @@ describe('AlgebraPool', () => {
       const bottomTick = -tickSpacing
       const topTick = tickSpacing
       await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1000))
-      // should be 'liquiditySub', hardhat is bugged
-      await expect(pool.burn(bottomTick, topTick, expandTo18Decimals(1001))).to.be.reverted
+      await expect(pool.burn(bottomTick, topTick, expandTo18Decimals(1001))).to.be.revertedWithCustomError(pool, 'liquiditySub')
     })
 
     it('collect fees within the current price after swap', async () => {

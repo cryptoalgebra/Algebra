@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import './LowGasSafeMath.sol';
 import './SafeCast.sol';
-
 import './FullMath.sol';
 import './Constants.sol';
 
 /// @title Functions based on Q64.96 sqrt price and liquidity
 /// @notice Contains the math that uses square root of price as a Q64.96 and liquidity to compute deltas
 library TokenDeltaMath {
-  using LowGasSafeMath for uint256;
   using SafeCast for uint256;
 
   /// @notice Gets the token0 delta between two prices

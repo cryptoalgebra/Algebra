@@ -12,10 +12,10 @@ interface IDataStorageOperator {
    * @param index The index of timepoint in the array
    * @dev There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds
    * @return initialized Whether the timepoint has been initialized and the values are safe to use,
-   * blockTimestamp The timestamp of the timepoint,
-   * tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
-   * volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
-   * averageTick Time-weighted average tick
+   * @return blockTimestamp The timestamp of the timepoint,
+   * @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
+   * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
+   * @return averageTick Time-weighted average tick
    */
   function timepoints(
     uint256 index

@@ -3,26 +3,26 @@ pragma solidity >=0.5.0;
 
 /**
  * @title Permissioned pool actions
- * @notice Contains pool methods that may only be called by the factory owner or tokenomics
+ * @notice Contains pool methods that may only be called by permissioned addresses
  * @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
  * https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
  */
 interface IAlgebraPoolPermissionedActions {
   /**
-   * @notice Set the community's % share of the fees. Cannot exceed 25% (250)
+   * @notice Set the community's % share of the fees. Cannot exceed 25% (250). Only factory owner
    * @param communityFee new community fee percent in thousandths (1e-3)
    */
   function setCommunityFee(uint8 communityFee) external;
 
   /**
-   * @notice Sets an active incentive
-   * @param virtualPoolAddress The address of a virtual pool associated with the incentive
-   */
-  function setIncentive(address virtualPoolAddress) external;
-
-  /**
-   * @notice Set the new tick spacing value
+   * @notice Set the new tick spacing value. Only factory owner
    * @param newTickSpacing The new tick spacing value
    */
   function setTickSpacing(int24 newTickSpacing) external;
+
+  /**
+   * @notice Sets an active incentive. Only farming
+   * @param newIncentiveAddress The address associated with the incentive
+   */
+  function setIncentive(address newIncentiveAddress) external;
 }

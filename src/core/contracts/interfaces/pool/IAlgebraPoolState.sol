@@ -8,11 +8,10 @@ interface IAlgebraPoolState {
   /**
    * @notice The globalState structure in the pool stores many values but requires only one slot
    * and is exposed as a single method to save gas when accessed externally.
-   * @return price The current price of the pool as a sqrt(token1/token0) Q64.96 value;
+   * @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value;
    * @return tick The current tick of the pool, i.e. according to the last tick transition that was run;
-   * This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick
-   * boundary;
-   * @return prevInitializedTick
+   * This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
+   * @return prevInitializedTick The previous initialized tick
    * @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
    * @return timepointIndex The index of the last written timepoint
    * @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
@@ -43,11 +42,11 @@ interface IAlgebraPoolState {
   function liquidity() external view returns (uint128);
 
   /**
-   * @notice The pool tick spacing
+   * @notice The current tick spacing
    * @dev Ticks can only be used at multiples of this value
    * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
    * This value is an int24 to avoid casting even though it is always positive.
-   * @return The tick spacing
+   * @return The current tick spacing
    */
   function tickSpacing() external view returns (int24);
 
@@ -64,7 +63,7 @@ interface IAlgebraPoolState {
 
   /**
    * @notice The tracked token0 and token1 reserves of pool
-   * @dev If at any time the real balance is larger, the excess will be directed to liquidity providers.
+   * @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
    * If the balance exceeds uint128, the excess will be sent to the communityVault.
    */
   function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
@@ -77,15 +76,15 @@ interface IAlgebraPoolState {
   /**
    * @notice Look up information about a specific tick in the pool
    * @param tick The tick to look up
-   * @return liquidityTotal the total amount of position liquidity that uses the pool either as tick lower or
-   * tick upper
-   * @return liquidityDelta how much liquidity changes when the pool price crosses the tick
-   * @return outerFeeGrowth0Token the fee growth on the other side of the tick from the current tick in token0
-   * @return outerFeeGrowth1Token the fee growth on the other side of the tick from the current tick in token1
-   * @return prevTick the previous tick in tick list
-   * @return nextTick the next tick in tick list
-   * @return outerSecondsPerLiquidity the seconds spent per liquidity on the other side of the tick from the current tick
-   * @return outerSecondsSpent the seconds spent on the other side of the tick from the current tick
+   * @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper
+   * @return liquidityDelta How much liquidity changes when the pool price crosses the tick
+   * @return outerFeeGrowth0Token The fee growth on the other side of the tick from the current tick in token0
+   * @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
+   * @return prevTick The previous tick in tick list
+   * @return nextTick The next tick in tick list
+   * @return outerSecondsPerLiquidity The seconds spent per liquidity on the other side of the tick from the current tick
+   * @return outerSecondsSpent The seconds spent on the other side of the tick from the current tick
+   * @return hasLimitOrders Whether there are limit orders on this tick or not
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
    */
@@ -140,8 +139,8 @@ interface IAlgebraPoolState {
 
   /**
    * @notice Returns the information about active incentive
-   * @dev if there is no active incentive at the moment, virtualPool,endTimestamp,startTimestamp would be equal to 0
-   * @return virtualPool The address of a virtual pool associated with the current active incentive
+   * @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)
+   * @return incentiveAddress The address associated with the current active incentive
    */
-  function activeIncentive() external view returns (address virtualPool);
+  function activeIncentive() external view returns (address incentiveAddress);
 }

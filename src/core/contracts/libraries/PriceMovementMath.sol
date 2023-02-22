@@ -2,6 +2,7 @@
 pragma solidity =0.8.17;
 
 import './FullMath.sol';
+import './LowGasSafeMath.sol';
 import './TokenDeltaMath.sol';
 import './TickMath.sol';
 import './Constants.sol';

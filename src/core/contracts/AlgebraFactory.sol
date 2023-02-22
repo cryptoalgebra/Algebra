@@ -84,10 +84,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setFarmingAddress(address _farmingAddress) external override onlyOwner {
-    require(farmingAddress != _farmingAddress);
-    farmingAddress = _farmingAddress;
-    emit FarmingAddress(_farmingAddress);
+  function setFarmingAddress(address newFarmingAddress) external override onlyOwner {
+    require(farmingAddress != newFarmingAddress);
+    farmingAddress = newFarmingAddress;
+    emit FarmingAddress(newFarmingAddress);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -142,7 +142,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _grantRole(DEFAULT_ADMIN_ROLE, owner());
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x04c18f7416aa82ddc54e912e6dd12cdf354ae8cc114acd24733c933568e7f6ee;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xad4d250616a9114d13ecebe1abf6a677a64fbe75a1ff47eaf4f3affb5200143c;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

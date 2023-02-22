@@ -8,6 +8,7 @@ interface IAlgebraPoolActions {
   /**
    * @notice Sets the initial price for the pool
    * @dev Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value
+   * @dev Initialization should be done in one transaction with pool creation to avoid front-running
    * @param price the initial sqrt price of the pool as a Q64.96
    */
   function initialize(uint160 price) external;
@@ -16,7 +17,7 @@ interface IAlgebraPoolActions {
    * @notice Adds liquidity for the given recipient/bottomTick/topTick position
    * @dev The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
    * in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
-   * on bottomTick, topTick, the amount of liquidity, and the current price.
+   * on bottomTick, topTick, the amount of liquidity, and the current price. If bottomTick == topTick position is treated as a limit order
    * @param sender The address which will receive potential surplus of paid tokens
    * @param recipient The address for which the liquidity will be created
    * @param bottomTick The lower tick of the position in which to add liquidity
@@ -34,13 +35,7 @@ interface IAlgebraPoolActions {
     int24 topTick,
     uint128 amount,
     bytes calldata data
-  )
-    external
-    returns (
-      uint256 amount0,
-      uint256 amount1,
-      uint128 liquidityActual
-    );
+  ) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual);
 
   /**
    * @notice Collects tokens owed to a position
@@ -74,44 +69,38 @@ interface IAlgebraPoolActions {
    * @return amount0 The amount of token0 sent to the recipient
    * @return amount1 The amount of token1 sent to the recipient
    */
-  function burn(
-    int24 bottomTick,
-    int24 topTick,
-    uint128 amount
-  ) external returns (uint256 amount0, uint256 amount1);
+  function burn(int24 bottomTick, int24 topTick, uint128 amount) external returns (uint256 amount0, uint256 amount1);
 
   /**
    * @notice Swap token0 for token1, or token1 for token0
-   * @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback# AlgebraSwapCallback
+   * @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
    * @param recipient The address to receive the output of the swap
    * @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-   * @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+   * @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
    * @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
    * value after the swap. If one for zero, the price cannot be greater than this value after the swap
-   * @param data Any data to be passed through to the callback. If using the Router it should contain
-   * SwapRouter#SwapCallbackData
+   * @param data Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData
    * @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
    * @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
    */
   function swap(
     address recipient,
     bool zeroToOne,
-    int256 amountSpecified,
+    int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external returns (int256 amount0, int256 amount1);
 
   /**
    * @notice Swap token0 for token1, or token1 for token0 (tokens that have fee on transfer)
-   * @dev The caller of this method receives a callback in the form of I AlgebraSwapCallback# AlgebraSwapCallback
+   * @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
    * @param sender The address called this function (Comes from the Router)
    * @param recipient The address to receive the output of the swap
    * @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
-   * @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input
+   * @param amountRequired The amount of the swap, which implicitly configures the swap as exact input
    * @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
    * value after the swap. If one for zero, the price cannot be greater than this value after the swap
-   * @param data Any data to be passed through to the callback. If using the Router it should contain
-   * SwapRouter#SwapCallbackData
+   * @param data Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData
    * @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
    * @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
    */
@@ -119,24 +108,20 @@ interface IAlgebraPoolActions {
     address sender,
     address recipient,
     bool zeroToOne,
-    int256 amountSpecified,
+    int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external returns (int256 amount0, int256 amount1);
 
   /**
    * @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
-   * @dev The caller of this method receives a callback in the form of IAlgebraFlashCallback# AlgebraFlashCallback
+   * @dev The caller of this method receives a callback in the form of IAlgebraFlashCallback#AlgebraFlashCallback
    * @dev All excess tokens paid in the callback are distributed to currently in-range liquidity providers as an additional fee.
+   * If there are no in-range liquidity providers, the fee will be transferred to the first active provider in the future
    * @param recipient The address which will receive the token0 and token1 amounts
    * @param amount0 The amount of token0 to send
    * @param amount1 The amount of token1 to send
    * @param data Any data to be passed through to the callback
    */
-  function flash(
-    address recipient,
-    uint256 amount0,
-    uint256 amount1,
-    bytes calldata data
-  ) external;
+  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external;
 }

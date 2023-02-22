@@ -196,7 +196,7 @@ library DataStorage {
           // should be impossible if initial boundaries and `target` are correct
           left = current + 1;
         }
-        current = (left + right) >> 1; // calculating the new "middle" point index after updating the boundsemits an event when unchanged
+        current = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
       } while (true);
 
       atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning

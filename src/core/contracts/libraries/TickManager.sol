@@ -3,9 +3,6 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraPoolErrors.sol';
 
-import './LowGasSafeMath.sol';
-import './SafeCast.sol';
-
 import './TickMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
@@ -13,9 +10,6 @@ import './Constants.sol';
 /// @title TickManager
 /// @notice Contains functions for managing tick processes and relevant calculations
 library TickManager {
-  using LowGasSafeMath for int256;
-  using SafeCast for int256;
-
   // info stored for each initialized individual tick
   struct Tick {
     uint128 liquidityTotal; // the total position liquidity that references this tick
@@ -106,9 +100,7 @@ library TickManager {
     if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();
 
     // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
-    data.liquidityDelta = upper
-      ? (int256(liquidityDeltaBefore) - liquidityDelta).toInt128()
-      : (int256(liquidityDeltaBefore) + liquidityDelta).toInt128();
+    data.liquidityDelta = upper ? int128(int256(liquidityDeltaBefore) - liquidityDelta) : int128(int256(liquidityDeltaBefore) + liquidityDelta);
 
     data.liquidityTotal = liquidityTotalAfter;
 

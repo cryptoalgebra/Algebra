@@ -15,6 +15,7 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when liquidity is minted for a given position
+   * @dev If the top and bottom ticks match, this should be treated as a limit order
    * @param sender The address that minted the liquidity
    * @param owner The owner of the position and recipient of any minted liquidity
    * @param bottomTick The lower tick of the position
@@ -82,7 +83,7 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when the community fee is changed by the pool
-   * @param communityFeeNew The updated value of the community fee percent
+   * @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
    */
   event CommunityFee(uint8 communityFeeNew);
 
@@ -94,13 +95,13 @@ interface IAlgebraPoolEvents {
 
   /**
    * @notice Emitted when new activeIncentive is set
-   * @param virtualPoolAddress The address of a virtual pool associated with the current active incentive
+   * @param newIncentiveAddress The address of the new incentive
    */
-  event Incentive(address indexed virtualPoolAddress);
+  event Incentive(address indexed newIncentiveAddress);
 
   /**
-   * @notice Emitted when the fee changes
-   * @param fee The value of the token fee
+   * @notice Emitted when the fee changes inside the pool
+   * @param fee The current fee in hundredths of a bip, i.e. 1e-6
    */
   event Fee(uint16 fee);
 

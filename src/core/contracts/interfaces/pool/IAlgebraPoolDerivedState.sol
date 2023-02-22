@@ -10,7 +10,7 @@ pragma solidity >=0.5.0;
  */
 interface IAlgebraPoolDerivedState {
   /**
-   * @notice Returns a snapshot of the tick cumulative, seconds per liquidity and seconds inside a tick range
+   * @notice Returns a snapshot of seconds per liquidity and seconds inside a tick range
    * @dev Snapshots must only be compared to other snapshots, taken over a period for which a position existed.
    * I.e., snapshots cannot be compared if a position is not held for the entire period between when the first
    * snapshot is taken and the second snapshot is taken.
@@ -19,11 +19,8 @@ interface IAlgebraPoolDerivedState {
    * @return innerSecondsSpentPerLiquidity The snapshot of seconds per liquidity for the range
    * @return innerSecondsSpent The snapshot of the number of seconds during which the price was in this range
    */
-  function getInnerCumulatives(int24 bottomTick, int24 topTick)
-    external
-    view
-    returns (
-      uint160 innerSecondsSpentPerLiquidity,
-      uint32 innerSecondsSpent
-    );
+  function getInnerCumulatives(
+    int24 bottomTick,
+    int24 topTick
+  ) external view returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent);
 }

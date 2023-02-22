@@ -1023,10 +1023,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setIncentive(address virtualPoolAddress) external override {
+  function setIncentive(address newIncentiveAddress) external override {
     if (msg.sender != IAlgebraFactory(factory).farmingAddress()) revert onlyFarming();
-    activeIncentive = virtualPoolAddress;
+    activeIncentive = newIncentiveAddress;
 
-    emit Incentive(virtualPoolAddress);
+    emit Incentive(newIncentiveAddress);
   }
 }

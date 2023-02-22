@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 /**
- * @title this interface contains the definition of the adaptive commission configuration structure
+ * @title this interface contains the definition of the adaptive fee configuration structure
  * @dev See the #AdaptiveFee.sol library for details.
  */
 interface IAlgebraFeeConfiguration {

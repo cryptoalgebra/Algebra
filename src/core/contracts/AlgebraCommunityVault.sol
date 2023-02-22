@@ -26,7 +26,7 @@ contract AlgebraCommunityVault {
 
   function withdrawTokens(address[] calldata tokens, address[] calldata tos, uint256[] calldata amounts) external onlyWithdrawer {
     uint256 tokensLength = tokens.length;
-    require(tokensLength == tos.length && tokens.length == amounts.length);
+    require(tokensLength == tos.length && tokensLength == amounts.length);
 
     unchecked {
       for (uint256 i; i < tokensLength; ++i) _withdraw(tokens[i], tos[i], amounts[i]);
