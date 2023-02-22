@@ -16,6 +16,7 @@ import {
   createPoolFunctions,
   SwapFunction,
   MintFunction,
+  AddLimitFunction,
   getMaxTick,
   MaxUint128,
   SwapToPriceFunction,
@@ -50,7 +51,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         const pool = await fix.createPool()
 
-        const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice } = await createPoolFunctions({
+        const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice, addLimitOrder } = await createPoolFunctions({
           swapTarget: fix.swapTargetCallee,
           token0: fix.token0,
           token1: fix.token1,
@@ -74,7 +75,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         expect((await pool.globalState()).tick).to.eq(startingTick)
         expect((await pool.globalState()).price).to.eq(startingPrice)
 
-        return { pool, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice }
+        return { pool, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice, addLimitOrder }
       }
 
       let swapExact0For1: SwapFunction
@@ -83,9 +84,10 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapToLowerPrice: SwapToPriceFunction
       let pool: MockTimeAlgebraPool
       let mint: MintFunction
+      let addLimitOrder: AddLimitFunction
 
       beforeEach('load the fixture', async () => {
-        ;({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice, swapToLowerPrice } = await loadFixture(gasTestFixture))
+        ;({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice, swapToLowerPrice, addLimitOrder } = await loadFixture(gasTestFixture))
       })
 
       describe('#swapExact0For1', () => {
@@ -188,6 +190,25 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing) // we crossed the last tick
         })
 
+        it('first swap in block, large swap crossing a single limit order', async () => {
+          await addLimitOrder(wallet.address, startingTick - 2 * tickSpacing, 1000000000)
+          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing) // we crossed the last tick
+        })
+
+        it('first swap in block, large swap crossing several limit orders', async () => {
+          await addLimitOrder(wallet.address, startingTick - 2 * tickSpacing, 1000000000)
+          await addLimitOrder(wallet.address, startingTick - 4 * tickSpacing, 1000000000)
+          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing) // we crossed the last tick
+        })
+        
+        it('first swap in block, partially fill single limit order', async () => {
+          await addLimitOrder(wallet.address, startingTick - 2 * tickSpacing, expandTo18Decimals(2))
+          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          expect((await pool.globalState()).tick).to.be.eq(startingTick - 2 * tickSpacing) // we crossed the last tick
+        })
+
         it('second swap in block, large swap crossing several initialized ticks', async () => {
           await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
           await mint(
@@ -203,6 +224,14 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         it('second swap in block, large swap crossing a single initialized tick', async () => {
           await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1))
+          await swapExact0For1(expandTo18Decimals(1).div(10000), wallet.address)
+          expect((await pool.globalState()).tick).to.be.gt(startingTick - 2 * tickSpacing) // we didn't cross the initialized tick
+          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing) // we crossed the last tick
+        })
+
+        it('second swap in block, large swap crossing a single limit order', async () => {
+          await addLimitOrder(wallet.address, startingTick - 2 * tickSpacing, 1000000000)
           await swapExact0For1(expandTo18Decimals(1).div(10000), wallet.address)
           expect((await pool.globalState()).tick).to.be.gt(startingTick - 2 * tickSpacing) // we didn't cross the initialized tick
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
@@ -276,6 +305,21 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             })
           })
         }
+
+        describe('limit order', ()=> {
+          it('new limit order first in range below', async () => {
+            await snapshotGasCost(addLimitOrder(wallet.address, startingTick - tickSpacing, expandTo18Decimals(1)))
+          })
+
+          it('new limit order first in range above', async () => {
+            await snapshotGasCost(addLimitOrder(wallet.address, startingTick + tickSpacing, expandTo18Decimals(1)))
+          })
+
+          it('add to limit order existing', async () => {
+            addLimitOrder(wallet.address, startingTick + tickSpacing, expandTo18Decimals(1))
+            await snapshotGasCost(addLimitOrder(wallet.address, startingTick + tickSpacing, expandTo18Decimals(1)))
+          })
+        })
       })
 
       describe('#burn', () => {
@@ -358,8 +402,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
         })
         it('tick above', async () => {
-          console.log(swapTarget.address)
-          console.log((await token0.balanceOf(wallet.address)).toString())
           await swapToHigherPrice(MAX_SQRT_RATIO.sub(1), wallet.address)
           await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
         })
