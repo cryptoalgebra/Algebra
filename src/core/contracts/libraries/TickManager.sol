@@ -160,7 +160,11 @@ library TickManager {
   /// @return prevTick
   function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
     (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
-    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return prevTick;
+    if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) {
+      delete self[tick]; // MIN_TICK and MAX_TICK cannot be removed from tick list
+      (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
+      return prevTick;
+    }
 
     if (prevTick == nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
     self[prevTick].nextTick = nextTick;

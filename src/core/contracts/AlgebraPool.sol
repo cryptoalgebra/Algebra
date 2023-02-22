@@ -495,6 +495,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     (uint256 amountToSell, uint256 amountToSellInitial) = (position.liquidity, position.liquidityInitial);
     if (amountToSell == 0 && amountToSellDelta == 0) return;
 
+    if (amountToSell == 0) {
+      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1;
+      if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = 1;
+    }
     LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
     unchecked {
       uint256 _cumulativeDelta;
@@ -843,7 +847,6 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
           step.feeAmount = 0;
           (step.inLimitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
           if (step.inLimitOrder) {
-            ticks[step.nextTick].hasLimitOrders = false;
             if (ticks[step.nextTick].liquidityTotal == 0) {
               uint256 _tickTreeRoot = tickTreeRoot;
               (int24 newPrevTick, uint256 newTickTreeRoot) = _insertOrRemoveTick(
@@ -856,6 +859,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
               if (_tickTreeRoot != newTickTreeRoot) tickTreeRoot = newTickTreeRoot;
               cache.prevInitializedTick = newPrevTick;
               step.initialized = false;
+            } else {
+              ticks[step.nextTick].hasLimitOrders = false;
             }
           }
           step.inLimitOrder = !step.inLimitOrder;
