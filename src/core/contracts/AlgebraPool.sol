@@ -1016,13 +1016,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
   }
 
-  function _checkIfFactoryOwner() private view {
-    if (msg.sender != IAlgebraFactory(factory).owner()) revert onlyFactoryOwner(); // TODO mb add role?
+  /// @dev using function to save bytecode
+  function _checkIfAdministrator() private view {
+    if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityFee(uint8 newCommunityFee) external override nonReentrant {
-    _checkIfFactoryOwner();
+    _checkIfAdministrator();
     if (newCommunityFee > Constants.MAX_COMMUNITY_FEE || newCommunityFee == globalState.communityFee) revert invalidNewCommunityFee();
     globalState.communityFee = newCommunityFee;
     emit CommunityFee(newCommunityFee);
@@ -1030,7 +1031,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
-    _checkIfFactoryOwner();
+    _checkIfAdministrator();
     if (newTickSpacing <= 0 || newTickSpacing > 500 || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
     emit TickSpacing(newTickSpacing);

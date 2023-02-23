@@ -35,8 +35,8 @@ interface IAlgebraPoolErrors {
   /// @notice Tick must be divisible by tickspacing
   error tickIsNotSpaced();
 
-  /// @notice Emitted if a method is called that is accessible only to the factory owner
-  error onlyFactoryOwner();
+  /// @notice Emitted if a method is called that is accessible only to the factory owner or dedicated role
+  error notAllowed();
   /// @notice Emitted if a method is called that is accessible only to the farming
   error onlyFarming();
 

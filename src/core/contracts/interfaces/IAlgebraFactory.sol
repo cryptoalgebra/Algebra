@@ -61,6 +61,11 @@ interface IAlgebraFactory {
    */
   event DefaultCommunityFee(uint8 newDefaultCommunityFee);
 
+  /**
+   * @notice role that can change communityFee and tickspacing in pools
+   */
+  function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
+
   /// @dev Returns `true` if `account` has been granted `role` or `account` is owner.
   function hasRoleOrOwner(bytes32 role, address account) external view returns (bool);
 

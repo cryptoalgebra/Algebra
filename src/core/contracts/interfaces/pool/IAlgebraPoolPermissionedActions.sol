@@ -9,13 +9,13 @@ pragma solidity >=0.5.0;
  */
 interface IAlgebraPoolPermissionedActions {
   /**
-   * @notice Set the community's % share of the fees. Cannot exceed 25% (250). Only factory owner
+   * @notice Set the community's % share of the fees. Cannot exceed 25% (250). Only factory owner or POOLS_ADMINISTRATOR_ROLE role
    * @param communityFee new community fee percent in thousandths (1e-3)
    */
   function setCommunityFee(uint8 communityFee) external;
 
   /**
-   * @notice Set the new tick spacing value. Only factory owner
+   * @notice Set the new tick spacing value. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
    * @param newTickSpacing The new tick spacing value
    */
   function setTickSpacing(int24 newTickSpacing) external;

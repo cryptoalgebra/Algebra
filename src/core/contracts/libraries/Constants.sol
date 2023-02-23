@@ -19,4 +19,6 @@ library Constants {
 
   uint8 internal constant MAX_COMMUNITY_FEE = 250;
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1000;
+  // role that can change communityFee and tickspacing in pools
+  bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
 }

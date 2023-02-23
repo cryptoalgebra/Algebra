@@ -18,6 +18,9 @@ import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
  */
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
+  bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
+
+  /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
@@ -32,6 +35,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   uint256 public override renounceOwnershipStartTimestamp;
 
+  /// @dev time delay before ownership renouncement can be finished
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   // values of constants for sigmoids in fee calculation formula
@@ -56,6 +60,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     communityVault = address(new AlgebraCommunityVault());
   }
 
+  /// @inheritdoc IAlgebraFactory
   function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
     return super.owner();
   }
@@ -142,7 +147,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _grantRole(DEFAULT_ADMIN_ROLE, owner());
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x9216fae1441fa9bcf5bc0dfc654c99c41b3dc7b3aae801ffd7952a4430db4176;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xf741de20df002628e59a50f9650fa75e2005add840e0b9b43c9655f22da825d3;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

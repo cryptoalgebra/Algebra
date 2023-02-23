@@ -18,6 +18,9 @@ import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
  */
 contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
+  bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
+
+  /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
@@ -138,7 +141,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x2006abe9ab9e0ac81ad0953ae051ed78389b50927309ccd29156099b03b3d3b8;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x7b736edf8c5123c502b710df2969fecba7c27286066dcfe5e68342dc8d36cac5;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token
