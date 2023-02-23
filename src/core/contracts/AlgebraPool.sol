@@ -92,11 +92,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       }
 
       if (currentTick < topTick) {
-        uint32 globalTime = _blockTimestamp();
-        uint160 globalSecondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(globalTime, liquidity);
+        uint32 time = _blockTimestamp();
+        uint160 _secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
         return (
-          globalSecondsPerLiquidityCumulative - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
-          globalTime - lowerOuterSecondsSpent - upperOuterSecondsSpent
+          _secondsPerLiquidityCumulative - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
+          time - lowerOuterSecondsSpent - upperOuterSecondsSpent
         );
       }
 
@@ -106,9 +106,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
-    if (globalState.price != 0) revert alreadyInitialized();
-    // getTickAtSqrtRatio checks validity of initialPrice inside
-    int24 tick = TickMath.getTickAtSqrtRatio(initialPrice);
+    if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
+    int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
     IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick);
     lastTimepointTimestamp = _blockTimestamp();
 
@@ -133,13 +132,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
-    uint128 currentLiquidity = _position.liquidity;
+    uint128 liquidityBefore = _position.liquidity;
 
     if (liquidityDelta == 0) {
-      if (currentLiquidity == 0) return; // Do not recalculate the empty ranges
+      if (liquidityBefore == 0) return; // Do not recalculate the empty ranges
     } else {
       // change position liquidity
-      _position.liquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+      _position.liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
     }
 
     unchecked {
@@ -148,13 +147,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       uint128 fees0;
       if ((_innerFeeGrowth0Token = _position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
         _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
-        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, currentLiquidity, Constants.Q128));
+        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
       uint256 _innerFeeGrowth1Token;
       uint128 fees1;
       if ((_innerFeeGrowth1Token = _position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
         _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
-        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, currentLiquidity, Constants.Q128));
+        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
 
       // To avoid overflow owner has to collect fee before it
@@ -195,10 +194,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     bool toggledBottom;
     bool toggledTop;
     {
+      // scope to prevent "stack too deep"
       (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
         uint32 time = _blockTimestamp();
-        uint160 secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
+        uint160 _secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
 
         toggledBottom = ticks.update(
           bottomTick,
@@ -206,9 +206,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
-          secondsPerLiquidityCumulative,
+          _secondsPerLiquidityCumulative,
           time,
-          false // isTopTick
+          false // isTopTick: false
         );
 
         toggledTop = ticks.update(
@@ -217,9 +217,9 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
-          secondsPerLiquidityCumulative,
+          _secondsPerLiquidityCumulative,
           time,
-          true // isTopTick
+          true // isTopTick: true
         );
       }
 
@@ -237,24 +237,18 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        uint256 _tickTreeRoot = tickTreeRoot;
-        uint256 _initialTickTreeRoot = _tickTreeRoot;
-        int24 _prevInitializedTick = cache.prevInitializedTick;
+        uint256 newTickTreeRoot = tickTreeRoot;
+        uint256 oldTickTreeRoot = newTickTreeRoot;
+        int24 previousTick = cache.prevInitializedTick;
         if (toggledBottom) {
-          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(
-            bottomTick,
-            currentTick,
-            _prevInitializedTick,
-            _tickTreeRoot,
-            liquidityDelta < 0
-          );
+          (previousTick, newTickTreeRoot) = _insertOrRemoveTick(bottomTick, currentTick, previousTick, newTickTreeRoot, liquidityDelta < 0);
         }
         if (toggledTop) {
-          (_prevInitializedTick, _tickTreeRoot) = _insertOrRemoveTick(topTick, currentTick, _prevInitializedTick, _tickTreeRoot, liquidityDelta < 0);
+          (previousTick, newTickTreeRoot) = _insertOrRemoveTick(topTick, currentTick, previousTick, newTickTreeRoot, liquidityDelta < 0);
         }
 
-        if (_initialTickTreeRoot != _tickTreeRoot) tickTreeRoot = _tickTreeRoot;
-        cache.prevInitializedTick = _prevInitializedTick;
+        if (oldTickTreeRoot != newTickTreeRoot) tickTreeRoot = newTickTreeRoot;
+        cache.prevInitializedTick = previousTick;
       }
 
       int128 globalLiquidityDelta;
@@ -280,7 +274,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     int24 tick,
     int24 currentTick,
     int24 prevInitializedTick,
-    uint256 tickTreeRoot,
+    uint256 oldTickTreeRoot,
     bool remove
   ) private returns (int24 newPrevInitializedTick, uint256 newTickTreeRoot) {
     int24 prevTick;
@@ -294,12 +288,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         prevTick = prevInitializedTick;
         prevInitializedTick = tick;
       } else {
-        nextTick = tickTable.getNextTick(tickSecondLayer, tickTreeRoot, tick);
+        nextTick = tickTable.getNextTick(tickSecondLayer, oldTickTreeRoot, tick);
         prevTick = ticks[nextTick].prevTick;
       }
       ticks.insertTick(tick, prevTick, nextTick);
     }
-    return (prevInitializedTick, tickTable.toggleTick(tickSecondLayer, tick, tickTreeRoot));
+    return (prevInitializedTick, tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot));
   }
 
   function _getAmountsForLiquidity(
@@ -772,7 +766,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint16 fee; // The current dynamic fee
     uint16 timepointIndex; // The index of last written timepoint
     int24 prevInitializedTick;
-    uint32 blockTimestamp;
+    uint32 blockTimestamp; // TODO
   }
 
   struct PriceMovementCache {
@@ -783,7 +777,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
-    bool inLimitOrder;
+    bool inLimitOrder; // TODO
   }
 
   function _calculateSwap(
