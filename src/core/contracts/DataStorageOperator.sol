@@ -79,9 +79,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
       } else {
         uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;
         uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
-        unchecked {
-          newFee = AdaptiveFee.getFee(volatilityAverage, _feeConfig);
-        }
+        newFee = AdaptiveFee.getFee(volatilityAverage, _feeConfig);
       }
     }
   }

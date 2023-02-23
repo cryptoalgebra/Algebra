@@ -385,23 +385,22 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
    */
   function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
     if (communityFee0 | communityFee1 != 0) {
-      (uint128 _cfPending0, uint128 _cfPending1) = (communityFeePending0, communityFeePending1);
       unchecked {
-        _cfPending0 += uint128(communityFee0); // TODO CAST
-        _cfPending1 += uint128(communityFee1);
-
+        (uint256 _cfPending0, uint256 _cfPending1) = (communityFeePending0 + communityFee0, communityFeePending1 + communityFee1);
         uint32 currentTimestamp = _blockTimestamp();
         // underflow is desired
-        if (currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY) {
+        if (
+          currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY ||
+          _cfPending0 > type(uint128).max ||
+          _cfPending1 > type(uint128).max
+        ) {
           if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
           if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
-          deltaR0 -= int256(uint256(_cfPending0));
-          deltaR1 -= int256(uint256(_cfPending1));
-          (communityFeePending0, communityFeePending1) = (0, 0);
           communityFeeLastTimestamp = currentTimestamp;
-        } else {
-          (communityFeePending0, communityFeePending1) = (_cfPending0, _cfPending1);
+          (deltaR0, deltaR1) = (deltaR0 - int256(_cfPending0), deltaR1 - int256(_cfPending1));
+          (_cfPending0, _cfPending1) = (0, 0);
         }
+        (communityFeePending0, communityFeePending1) = (uint128(_cfPending0), uint128(_cfPending1));
       }
     }
 
@@ -1003,15 +1002,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     unchecked {
       paid0 -= balance0Before;
       paid1 -= balance1Before;
-      uint256 _communityFee = globalState.communityFee;
-      if (_communityFee > 0) {
-        uint256 communityFee0;
-        if (paid0 > 0) communityFee0 = (paid0 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
-        uint256 communityFee1;
-        if (paid1 > 0) communityFee1 = (paid1 * _communityFee) / Constants.COMMUNITY_FEE_DENOMINATOR;
+    }
+    uint256 _communityFee = globalState.communityFee;
+    if (_communityFee > 0) {
+      uint256 communityFee0;
+      if (paid0 > 0) communityFee0 = FullMath.mulDiv(paid0, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
+      uint256 communityFee1;
+      if (paid1 > 0) communityFee1 = FullMath.mulDiv(paid1, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
 
-        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
-      }
+      _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
     }
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
   }
