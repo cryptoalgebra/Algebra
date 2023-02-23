@@ -10,7 +10,7 @@ import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
 
 contract DataStorageOperator is IDataStorageOperator, Timestamp {
-  uint256 constant UINT16_MODULO = 65536;
+  uint256 internal constant UINT16_MODULO = 65536;
 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
