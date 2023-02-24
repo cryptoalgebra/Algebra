@@ -43,7 +43,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   struct Position {
     uint128 liquidity; // The amount of liquidity concentrated in the range
-    uint128 liquidityInitial;
+    uint128 liquidityInitial; // TODO
     uint256 innerFeeGrowth0Token; // The last updated fee growth per unit of liquidity
     uint256 innerFeeGrowth1Token;
     uint128 fees0; // The amount of token0 owed to a LP
@@ -93,9 +93,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
       if (currentTick < topTick) {
         uint32 time = _blockTimestamp();
-        uint160 _secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
         return (
-          _secondsPerLiquidityCumulative - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
+          _getSecondsPerLiquidityCumulative(time, liquidity) - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
           time - lowerOuterSecondsSpent - upperOuterSecondsSpent
         );
       }
@@ -166,8 +165,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   struct UpdatePositionCache {
     uint160 price; // The square root of the current price in Q64.96 format
-    int24 prevInitializedTick;
-    uint16 fee;
+    int24 prevInitializedTick; // The previous initialized tick in linked list
+    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
   }
 
@@ -637,14 +636,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
 
   function _writeTimepoint(uint16 timepointIndex, uint32 blockTimestamp, int24 tick, uint128 currentLiquidity) private returns (uint16, uint16) {
     uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return (timepointIndex, 0);
+    if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
 
     unchecked {
       secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
     }
     lastTimepointTimestamp = blockTimestamp;
 
-    // Failure should not occur. But in case of failure, the pool will remain operational
+    // failure should not occur. But in case of failure, the pool will remain operational
     try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 newTimepointIndex, uint16 newFee) {
       return (newTimepointIndex, newFee);
     } catch {
@@ -662,6 +661,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     }
   }
 
+  /// @dev using function to save bytecode
   function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) private {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
@@ -686,14 +686,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance0Before + uint256(amount0) > balanceToken0()) revert insufficientInputAmount();
-      _changeReserves(amount0, amount1, communityFee, 0);
+      _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
     } else {
       unchecked {
         if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
       }
       _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
       if (balance1Before + uint256(amount1) > balanceToken1()) revert insufficientInputAmount();
-      _changeReserves(amount0, amount1, 0, communityFee);
+      _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
@@ -741,12 +741,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
         // return the leftovers
         if (amount0 < amountRequired) SafeTransfer.safeTransfer(token0, sender, uint256(amountRequired - amount0));
-        _changeReserves(amount0, amount1, communityFee, 0);
+        _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
         // return the leftovers
         if (amount1 < amountRequired) SafeTransfer.safeTransfer(token1, sender, uint256(amountRequired - amount1));
-        _changeReserves(amount0, amount1, 0, communityFee);
+        _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
     }
 
@@ -756,28 +756,28 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
-    bool computedLatestTimepoint; //  if we have already fetched _tickCumulative_ and _secondPerLiquidity_ from the DataOperator
+    bool computedLatestTimepoint; //  If we have already wrote a timepoint in the DataStorageOperator
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
     int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    address activeIncentive; // Address an active incentive at the moment or address(0)
+    address activeIncentive; // Address of an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     uint16 timepointIndex; // The index of last written timepoint
-    int24 prevInitializedTick;
-    uint32 blockTimestamp; // TODO
+    int24 prevInitializedTick; // The previous initialized tick in linked list
+    uint32 blockTimestamp; // The timestamp of current block
   }
 
   struct PriceMovementCache {
     uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
     int24 nextTick; // The tick till the current step goes
-    bool initialized; // True if the _nextTick is initialized
-    uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick
+    bool initialized; // True if the _nextTick_ is initialized
+    uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
-    bool inLimitOrder; // TODO
+    bool inLimitOrder; // If a limit order is currently being executed
   }
 
   function _calculateSwap(
