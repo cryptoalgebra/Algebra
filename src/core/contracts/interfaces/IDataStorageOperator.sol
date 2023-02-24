@@ -21,10 +21,14 @@ interface IDataStorageOperator {
    * @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
    * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
    * @return averageTick Time-weighted average tick
+   * @return windowStartIndex Index of closest timepoint >= WINDOW seconds ago
    */
   function timepoints(
     uint256 index
-  ) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 averageTick);
+  )
+    external
+    view
+    returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 averageTick, uint16 windowStartIndex);
 
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32

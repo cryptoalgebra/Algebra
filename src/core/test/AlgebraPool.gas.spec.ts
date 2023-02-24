@@ -193,6 +193,26 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).tick).to.be.lt(0)
         })
 
+        it('small swap with filled dataStorage', async () => {
+          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+          await mint(
+            wallet.address,
+            startingTick - 4 * tickSpacing,
+            startingTick - 2 * tickSpacing,
+            expandTo18Decimals(1)
+          )
+          expect((await pool.globalState()).tick).to.eq(startingTick)
+          for (let i = 0; i < 100; i++) {
+            if (i % 2 == 0) {
+              await swapExact0For1(expandTo18Decimals(1).div(10000), wallet.address)
+            } else {
+              await swapExact1For0(expandTo18Decimals(1).div(10000), wallet.address)
+            }
+            await pool.advanceTime(60 * 60)
+          }
+          await snapshotGasCost(swapExact0For1(1000, wallet.address))
+        })
+
         it('first swap in block, large swap crossing a single initialized tick', async () => {
           await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1))
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))

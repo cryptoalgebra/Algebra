@@ -126,7 +126,8 @@ contract DataStorageTest {
     }
 
     (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
-    return timepoints._getAverageTick(_time, _tick, _index, oldestIndex, lastTimestamp, lastTickCumulative);
+    (int256 avgTick, ) = timepoints._getAverageTick(_time, _tick, _index, oldestIndex, lastTimestamp, lastTickCumulative);
+    return int24(avgTick);
   }
 
   function window() external pure returns (uint256) {
