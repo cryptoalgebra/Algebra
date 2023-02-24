@@ -263,6 +263,10 @@ library DataStorage {
     }
   }
 
+  /// @notice Calculates average tick for WINDOW seconds at the moment of `time`
+  /// @dev Guaranteed that the result is within the bounds of int24
+  /// @return avgTick int256 for fuzzy tests
+  /// @return windowStartIndex The index of closest timepoint <= WINDOW seconds ago
   function _getAverageTickCasted(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -279,7 +283,7 @@ library DataStorage {
   }
 
   /// @notice Calculates average tick for WINDOW seconds at the moment of `time`
-  /// @dev Guaranteed that the result is within the bounds of int24
+  /// @dev Guaranteed that the result is within the bounds of int24, but result is not casted
   /// @return avgTick int256 for fuzzy tests
   /// @return windowStartIndex The index of closest timepoint <= WINDOW seconds ago
   function _getAverageTick(
