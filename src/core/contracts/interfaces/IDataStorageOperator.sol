@@ -16,10 +16,11 @@ interface IDataStorageOperator {
    * @notice Returns data belonging to a certain timepoint
    * @param index The index of timepoint in the array
    * @dev There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds
-   * @return initialized Whether the timepoint has been initialized and the values are safe to use,
-   * @return blockTimestamp The timestamp of the timepoint,
-   * @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
-   * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp,
+   * @return initialized Whether the timepoint has been initialized and the values are safe to use
+   * @return blockTimestamp The timestamp of the timepoint
+   * @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp
+   * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
+   * @return tick The tick at blockTimestamp
    * @return averageTick Time-weighted average tick
    * @return windowStartIndex Index of closest timepoint >= WINDOW seconds ago
    */
@@ -28,7 +29,15 @@ interface IDataStorageOperator {
   )
     external
     view
-    returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 averageTick, uint16 windowStartIndex);
+    returns (
+      bool initialized,
+      uint32 blockTimestamp,
+      int56 tickCumulative,
+      uint88 volatilityCumulative,
+      int24 tick,
+      int24 averageTick,
+      uint16 windowStartIndex
+    );
 
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32

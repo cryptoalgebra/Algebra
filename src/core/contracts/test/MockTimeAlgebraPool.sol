@@ -46,9 +46,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function getPrevTick() external view returns (int24 tick, int24 currentTick) {
     unchecked {
       if (globalState.timepointIndex > 2) {
-        (, uint32 lastTsmp, int56 tickCum, , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
-        (, uint32 plastTsmp, int56 ptickCum, , , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex - 1);
-        tick = int24((tickCum - ptickCum) / int56(uint56(lastTsmp - plastTsmp)));
+        (, , , , tick, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
       }
       currentTick = globalState.tick;
     }
