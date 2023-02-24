@@ -59,8 +59,8 @@ library LimitOrderManager {
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
   /// @param amountA Amount of tokens that will be swapped
   /// @return closed Status of limit order after execution
-  /// @return amountOut Amount of token out that user receive after swap
-  /// @return amountIn Amount of token in
+  /// @return amountOut Amount of token that user receive after swap
+  /// @return amountIn Amount of token that user need to pay
   function executeLimitOrders(
     mapping(int24 => LimitOrder) storage self,
     int24 tick,
