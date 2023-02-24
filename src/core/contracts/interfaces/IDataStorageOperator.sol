@@ -70,4 +70,10 @@ interface IDataStorageOperator {
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
+
+  /// @notice Fills uninitialized timepoints with nonzero value
+  /// @dev Can be used to reduce the gas cost of future swaps
+  /// @param startIndex The start index, must be not initialized
+  /// @param amount of slots to fill, startIndex + amount must be <= type(uint16).max
+  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external;
 }

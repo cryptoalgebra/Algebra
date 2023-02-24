@@ -83,4 +83,16 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
       }
     }
   }
+
+  /// @inheritdoc IDataStorageOperator
+  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external {
+    require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
+    require(amount > 0 && type(uint16).max - startIndex >= amount);
+
+    unchecked {
+      for (uint256 i = startIndex; i < startIndex + amount; ++i) {
+        timepoints[i].blockTimestamp = 1; // will be overwritten
+      }
+    }
+  }
 }
