@@ -30,7 +30,7 @@ library DataStorage {
   function initialize(Timepoint[UINT16_MODULO] storage self, uint32 time, int24 tick) internal {
     Timepoint storage _zero = self[0];
     require(!_zero.initialized);
-    (_zero.initialized, _zero.blockTimestamp, _zero.averageTick) = (true, time, tick);
+    (_zero.initialized, _zero.blockTimestamp, _zero.tick, _zero.averageTick) = (true, time, tick, tick);
   }
 
   /// @notice Writes a dataStorage timepoint to the array
