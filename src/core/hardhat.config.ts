@@ -17,19 +17,6 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
   },
 }
 
-const LOWEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.17',
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 0,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
-  },
-}
-
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.17',
   settings: {
@@ -58,7 +45,6 @@ if (process.env.RUN_COVERAGE == '1') {
     },
   }
 
-  LOWEST_OPTIMIZER_COMPILER_SETTINGS.settings.details = details;
   HIGHEST_OPTIMIZER_COMPILER_SETTINGS.settings.details = details;
   DEFAULT_COMPILER_SETTINGS.settings.details = details;
 }

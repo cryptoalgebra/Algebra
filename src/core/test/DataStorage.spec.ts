@@ -383,7 +383,7 @@ describe('DataStorage', () => {
             0,
           ])
           expect({
-            tickCumulatives: tickCumulatives.map((tc) => tc.toNumber())
+            tickCumulatives: tickCumulatives.map((tc:any) => tc.toNumber())
           }).to.matchSnapshot()
         })
 
@@ -454,7 +454,7 @@ describe('DataStorage', () => {
 
     async function checkGetPoints(
       secondsAgo: number,
-      expected?: { tickCumulative: BigNumberish; secondsPerLiquidityCumulative: BigNumberish }
+      expected?: { tickCumulative: BigNumberish }
     ) {
       const { tickCumulatives } = await dataStorage.getTimepoints([secondsAgo])
       const check = {
@@ -464,29 +464,25 @@ describe('DataStorage', () => {
         expect(check).to.matchSnapshot()
       } else {
         expect(check).to.deep.eq({
-          tickCumulative: expected.tickCumulative.toString(),
-          secondsPerLiquidityCumulative: expected.secondsPerLiquidityCumulative.toString(),
+          tickCumulative: expected.tickCumulative.toString()
         })
       }
     }
 
     it('can getTimepoints into the ordered portion with exact seconds ago', async () => {
       await checkGetPoints(100 * 13, {
-        secondsPerLiquidityCumulative: '60465049086512033878831623038233202591033',
         tickCumulative: '-27970560813',
       })
     })
 
     it('can getTimepoints into the ordered portion with unexact seconds ago', async () => {
       await checkGetPoints(100 * 13 + 5, {
-        secondsPerLiquidityCumulative: '60465023149565257990964350912969670793706',
         tickCumulative: '-27970232823',
       })
     })
 
     it('can getTimepoints at exactly the latest timepoint', async () => {
       await checkGetPoints(0, {
-        secondsPerLiquidityCumulative: '60471787506468701386237800669810720099776',
         tickCumulative: '-28055903863',
       })
     })
@@ -494,7 +490,6 @@ describe('DataStorage', () => {
     it('can getTimepoints at exactly the latest timepoint after some time passes', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(5, {
-        secondsPerLiquidityCumulative: '60471787506468701386237800669810720099776',
         tickCumulative: '-28055903863',
       })
     })
@@ -502,28 +497,24 @@ describe('DataStorage', () => {
     it('can getTimepoints after the latest timepoint counterfactual', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(3, {
-        secondsPerLiquidityCumulative: '60471797865298117996489508104462919730461',
         tickCumulative: '-28056035261',
       })
     })
 
     it('can getTimepoints into the unordered portion of array at exact seconds ago of timepoint', async () => {
       await checkGetPoints(200 * 13, {
-        secondsPerLiquidityCumulative: '60458300386499273141628780395875293027404',
         tickCumulative: '-27885347763',
       })
     })
 
     it('can getTimepoints into the unordered portion of array at seconds ago between timepoints', async () => {
       await checkGetPoints(200 * 13 + 5, {
-        secondsPerLiquidityCumulative: '60458274409952896081377821330361274907140',
         tickCumulative: '-27885020273',
       })
     })
 
     it('can getTimepoints the oldest timepoint 13*65534 seconds ago', async () => {
       await checkGetPoints(13 * 65534, {
-        secondsPerLiquidityCumulative: '33974356747348039873972993881117400879779',
         tickCumulative: '-175890',
       })
     })
@@ -531,7 +522,6 @@ describe('DataStorage', () => {
     it('can getTimepoints the oldest timepoint 13*65534 + 5 seconds ago if time has elapsed', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(13 * 65534 + 5, {
-        secondsPerLiquidityCumulative: '33974356747348039873972993881117400879779',
         tickCumulative: '-175890',
       })
     })
