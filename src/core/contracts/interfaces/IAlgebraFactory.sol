@@ -44,16 +44,11 @@ interface IAlgebraFactory {
   event FarmingAddress(address indexed newFarmingAddress);
 
   /**
-   *  @notice Emitted when the fee configuration is changed
-   *  @param alpha1 max value of the first sigmoid
-   *  @param alpha2 max value of the second sigmoid
-   *  @param beta1 shift along the x-axis for the first sigmoid
-   *  @param beta2 shift along the x-axis for the second sigmoid
-   *  @param gamma1 horizontal stretch factor for the first sigmoid
-   *  @param gamma2 horizontal stretch factor for the second sigmoid
-   *  @param baseFee minimum possible fee
+   *  @notice Emitted when the default fee configuration is changed
+   *  @param newConfig The structure with dynamic fee parameters
+   *  @dev See the AdaptiveFee library for more details
    */
-  event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
+  event DefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration newConfig);
 
   /**
    *  @notice Emitted when the default community fee is changed
@@ -142,7 +137,7 @@ interface IAlgebraFactory {
    * alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max and gammas must be > 0
    * @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
    */
-  function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;
+  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;
 
   /**
    * @notice Starts process of renounceOwnership. After that, a certain period

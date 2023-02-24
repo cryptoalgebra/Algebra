@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import '../interfaces/IAlgebraFeeConfiguration.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 
+import '../libraries/AdaptiveFee.sol';
+
 import './MockTimeAlgebraPool.sol';
 import './MockTimeDataStorageOperator.sol';
 
@@ -22,22 +24,16 @@ contract MockTimeAlgebraPoolDeployer {
 
   event PoolDeployed(address pool);
 
-  IAlgebraFeeConfiguration.Configuration baseFeeConfiguration =
-    IAlgebraFeeConfiguration.Configuration(
-      3000 - Constants.BASE_FEE, // alpha1
-      15000 - 3000, // alpha2
-      360, // beta1
-      60000, // beta2
-      59, // gamma1
-      8500, // gamma2
-      Constants.BASE_FEE // baseFee
-    );
+  IAlgebraFeeConfiguration.Configuration private defaultFeeConfiguration;
+
+  constructor() {
+    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
+  }
 
   function deployMock(address _factory, address _vault, address token0, address token1) external returns (address pool) {
     bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
     DataStorageOperator dataStorage = (new MockTimeDataStorageOperator(computeAddress(initCodeHash, token0, token1)));
-
-    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
 
     (factory, vault) = (_factory, _vault);
     _writeToCache(address(dataStorage), token0, token1);

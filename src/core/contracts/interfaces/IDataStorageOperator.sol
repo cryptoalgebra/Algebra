@@ -5,6 +5,11 @@ pragma abicoder v2;
 import './IAlgebraFeeConfiguration.sol';
 
 interface IDataStorageOperator {
+  /**
+   *  @notice Emitted when the fee configuration is changed
+   *  @param feeConfig The structure with dynamic fee parameters
+   *  @dev See the AdaptiveFee library for more details
+   */
   event FeeConfiguration(IAlgebraFeeConfiguration.Configuration feeConfig);
 
   /**

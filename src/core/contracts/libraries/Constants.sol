@@ -7,8 +7,8 @@ library Constants {
   uint256 internal constant Q96 = 1 << 96;
   uint256 internal constant Q128 = 1 << 128;
   int256 internal constant Q160 = 1 << 160;
-  // fee value in hundredths of a bip, i.e. 1e-6
-  uint16 internal constant BASE_FEE = 100;
+
+  uint16 internal constant BASE_FEE = 100; // init minimum fee value in hundredths of a bip (0.01%)
   int24 internal constant INIT_TICK_SPACING = 60;
 
   // the frequency with which the accumulated community fees are sent to the vault

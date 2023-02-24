@@ -38,14 +38,12 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _feeConfig) external override {
+  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _config) external override {
     require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
+    AdaptiveFee.validateFeeConfiguration(_config);
 
-    require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0, 'Gammas must be > 0');
-
-    feeConfig = _feeConfig;
-    emit FeeConfiguration(_feeConfig);
+    feeConfig = _config;
+    emit FeeConfiguration(_config);
   }
 
   /// @inheritdoc IDataStorageOperator

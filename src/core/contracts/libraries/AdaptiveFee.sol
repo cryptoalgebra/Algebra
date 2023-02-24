@@ -2,10 +2,31 @@
 pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraFeeConfiguration.sol';
+import './Constants.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
+  /// @notice
+  function initialFeeConfiguration() internal pure returns (IAlgebraFeeConfiguration.Configuration memory) {
+    return
+      IAlgebraFeeConfiguration.Configuration(
+        3000 - Constants.BASE_FEE, // alpha1
+        15000 - 3000, // alpha2
+        360, // beta1
+        60000, // beta2
+        59, // gamma1
+        8500, // gamma2
+        Constants.BASE_FEE // baseFee
+      );
+  }
+
+  /// @notice
+  function validateFeeConfiguration(IAlgebraFeeConfiguration.Configuration memory _config) internal pure {
+    require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
+    require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
+  }
+
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
   /// maximum value capped by baseFee + alpha1 + alpha2

@@ -7,6 +7,7 @@ import '../../interfaces/IAlgebraPoolDeployer.sol';
 import '../../interfaces/IDataStorageOperator.sol';
 import '../../interfaces/IAlgebraFeeConfiguration.sol';
 import '../../libraries/Constants.sol';
+import '../../libraries/AdaptiveFee.sol';
 import '../../DataStorageOperator.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
@@ -38,23 +39,14 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   // values of constants for sigmoids in fee calculation formula
-  IAlgebraFeeConfiguration.Configuration public baseFeeConfiguration =
-    IAlgebraFeeConfiguration.Configuration(
-      3000 - Constants.BASE_FEE, // alpha1
-      15000 - 3000, // alpha2
-      360, // beta1
-      60000, // beta2
-      59, // gamma1
-      8500, // gamma2
-      Constants.BASE_FEE // baseFee
-    );
-
+  IAlgebraFeeConfiguration.Configuration public defaultFeeConfiguration;
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
   constructor(address _poolDeployer, address _vaultAddress) {
     poolDeployer = _poolDeployer;
     communityVault = _vaultAddress;
+    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
   }
 
   function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
@@ -74,8 +66,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     require(poolByPair[token0][token1] == address(0));
 
     IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
-
-    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
 
@@ -126,12 +117,10 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setBaseFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _config) external override onlyOwner {
-    require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
-
-    baseFeeConfiguration = _config;
-    emit FeeConfiguration(_config.alpha1, _config.alpha2, _config.beta1, _config.beta2, _config.gamma1, _config.gamma2, _config.baseFee);
+  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external override onlyOwner {
+    AdaptiveFee.validateFeeConfiguration(newConfig);
+    defaultFeeConfiguration = newConfig;
+    emit DefaultFeeConfiguration(newConfig);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -143,7 +132,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
 
   bytes32 private constant POOL_INIT_CODE_HASH = 0x47fa450526e5946532c3a95d83c848dfbda6ea69fec97235f92dd8b16428afd4;
 
-  /// @notice Deterministically computes the pool address given the factory and PoolKey
+  /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool

@@ -197,7 +197,7 @@ describe('AlgebraFactory', () => {
     })
   })
 
-  describe('#setBaseFeeConfiguration', () => {
+  describe('#setDefaultFeeConfiguration', () => {
     const configuration  = {
       alpha1: 3002,
       alpha2: 10009,
@@ -208,17 +208,17 @@ describe('AlgebraFactory', () => {
       baseFee: 150
     }
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setBaseFeeConfiguration(
+      await expect(factory.connect(other).setDefaultFeeConfiguration(
         configuration
       )).to.be.reverted;
     })
 
-    it('updates baseFeeConfiguration', async () => {
-      await factory.setBaseFeeConfiguration(
+    it('updates defaultFeeConfiguration', async () => {
+      await factory.setDefaultFeeConfiguration(
         configuration
       )
 
-      const newConfig = await factory.baseFeeConfiguration();
+      const newConfig = await factory.defaultFeeConfiguration();
 
       expect(newConfig.alpha1).to.eq(configuration.alpha1);
       expect(newConfig.alpha2).to.eq(configuration.alpha2);
@@ -230,17 +230,19 @@ describe('AlgebraFactory', () => {
     })
 
     it('emits event', async () => {
-      await expect(factory.setBaseFeeConfiguration(
+      await expect(factory.setDefaultFeeConfiguration(
         configuration
-      )).to.emit(factory, 'FeeConfiguration')
+      )).to.emit(factory, 'DefaultFeeConfiguration')
         .withArgs(
-          configuration.alpha1,
-          configuration.alpha2,
-          configuration.beta1,
-          configuration.beta2,
-          configuration.gamma1,
-          configuration.gamma2,
-          configuration.baseFee
+          [
+            configuration.alpha1, 
+            configuration.alpha2, 
+            configuration.beta1, 
+            configuration.beta2, 
+            configuration.gamma1, 
+            configuration.gamma2, 
+            configuration.baseFee
+          ]
         );
     })
 
@@ -249,7 +251,7 @@ describe('AlgebraFactory', () => {
       conf2.alpha1 = 30000;
       conf2.alpha2 = 30000;
       conf2.baseFee = 15000;
-      await expect(factory.setBaseFeeConfiguration(
+      await expect(factory.setDefaultFeeConfiguration(
         conf2
       )).to.be.revertedWith('Max fee exceeded');
     })
@@ -257,20 +259,20 @@ describe('AlgebraFactory', () => {
     it('cannot set zero gamma', async () => {
       let conf2 = {...configuration};
       conf2.gamma1 = 0
-      await expect(factory.setBaseFeeConfiguration(
+      await expect(factory.setDefaultFeeConfiguration(
         conf2
       )).to.be.revertedWith('Gammas must be > 0');
 
       conf2 = {...configuration};
       conf2.gamma2 = 0
-      await expect(factory.setBaseFeeConfiguration(
+      await expect(factory.setDefaultFeeConfiguration(
         conf2
       )).to.be.revertedWith('Gammas must be > 0');
 
       conf2 = {...configuration};
       conf2.gamma1 = 0
       conf2.gamma2 = 0
-      await expect(factory.setBaseFeeConfiguration(
+      await expect(factory.setDefaultFeeConfiguration(
         conf2
       )).to.be.revertedWith('Gammas must be > 0');
     })
