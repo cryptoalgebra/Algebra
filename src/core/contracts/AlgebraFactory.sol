@@ -13,10 +13,8 @@ import './AlgebraCommunityVault.sol';
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
-/**
- * @title Algebra factory
- * @notice Is used to deploy pools and its dataStorages
- */
+/// @title Algebra factory
+/// @notice Is used to deploy pools and its dataStorages
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
@@ -113,11 +111,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     emit renounceOwnershipStopped(block.timestamp);
   }
 
-  /**
-   * @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
-   * Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
-   * have passed since the call to the startRenounceOwnership() function.
-   */
+  /// @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
+  /// Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
+  /// have passed since the call to the startRenounceOwnership() function.
   function renounceOwnership() public override onlyOwner {
     require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
     renounceOwnershipStartTimestamp = 0;
@@ -126,10 +122,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     emit renounceOwnershipFinished(block.timestamp);
   }
 
-  /**
-   * @dev Transfers ownership of the contract to a new account (`newOwner`).
-   * Modified to fit with the role mechanism.
-   */
+  /// @dev Transfers ownership of the contract to a new account (`newOwner`).
+  /// Modified to fit with the role mechanism.
   function _transferOwnership(address newOwner) internal override {
     _revokeRole(DEFAULT_ADMIN_ROLE, owner());
     super._transferOwnership(newOwner);

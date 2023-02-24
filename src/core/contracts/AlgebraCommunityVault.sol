@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import './interfaces/IAlgebraFactory.sol';
 import './libraries/SafeTransfer.sol';
 
+/// @title Algebra community fee vault
+/// @notice Community fee from pools is sent here, if it is enabled
 contract AlgebraCommunityVault {
   event TokensWithdrawn(address indexed token, address indexed to, uint256 amount);
 

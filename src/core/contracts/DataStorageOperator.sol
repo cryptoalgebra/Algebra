@@ -9,6 +9,8 @@ import './interfaces/pool/IAlgebraPoolState.sol';
 import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
 
+/// @title Algebra timepoints data operator
+/// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract DataStorageOperator is IDataStorageOperator, Timestamp {
   uint256 internal constant UINT16_MODULO = 65536;
 

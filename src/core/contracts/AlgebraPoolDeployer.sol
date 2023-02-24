@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './AlgebraPool.sol';
 
+/// @title Algebra pool deployer
+/// @notice Is used by AlgebraFactory to deploy pools
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
