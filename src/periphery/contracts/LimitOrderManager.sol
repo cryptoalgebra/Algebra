@@ -59,16 +59,9 @@ contract LimitOrderManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {}
 
-    function limitPositions(uint256 tokenId)
-        external
-        view
-        override
-        returns (
-            LimitPosition memory limitPosition,
-            address token0,
-            address token1
-        )
-    {
+    function limitPositions(
+        uint256 tokenId
+    ) external view override returns (LimitPosition memory limitPosition, address token0, address token1) {
         limitPosition = _limitPositions[tokenId];
         require(limitPosition.poolId != 0, 'Invalid token ID');
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[limitPosition.poolId];
@@ -90,7 +83,14 @@ contract LimitOrderManager is
         bool depositedToken;
 
         bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
-        (uint128 liquidityPrev, uint128 liquidityInitPrev, , , , ) = pool.positions(positionKey);
+        uint128 liquidityPrev;
+        uint128 liquidityInitPrev;
+
+        unchecked {
+            (uint256 _liquidity, , , , ) = pool.positions(positionKey);
+            liquidityPrev = uint128(_liquidity >> 128);
+            liquidityInitPrev = uint128(_liquidity);
+        }
 
         (pool, depositedToken) = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
@@ -98,14 +98,16 @@ contract LimitOrderManager is
         // idempotent set
         uint80 poolId = cachePoolKey(address(pool), poolKey);
 
-        (
-            uint128 liquidity,
-            uint128 liquidityInit,
-            uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128,
-            ,
+        (uint256 _liquidityAfter, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool
+            .positions(positionKey);
 
-        ) = pool.positions(positionKey);
+        uint128 liquidity;
+        uint128 liquidityInit;
+        unchecked {
+            liquidity = uint128(_liquidityAfter >> 128);
+            liquidityInit = uint128(_liquidityAfter);
+        }
+
         require(depositedToken == params.depositedToken, 'depositedToken changed');
         if (liquidity != liquidityInit && liquidityPrev != 0) {
             liquidityInit -= liquidityInitPrev;
@@ -133,12 +135,10 @@ contract LimitOrderManager is
         _;
     }
 
-    function decreaseLimitOrder(uint256 tokenId, uint128 liquidity)
-        external
-        payable
-        override
-        isAuthorizedForToken(tokenId)
-    {
+    function decreaseLimitOrder(
+        uint256 tokenId,
+        uint128 liquidity
+    ) external payable override isAuthorizedForToken(tokenId) {
         LimitPosition storage position = _limitPositions[tokenId];
         UpdatePositionCache memory cache;
 
@@ -151,21 +151,23 @@ contract LimitOrderManager is
         bytes32 positionKey = PositionKey.compute(address(this), tick, tick);
         uint128 liquidityInitialPrev;
         uint128 liquidityInitial;
-        (
-            cache.liquidityLast,
-            liquidityInitialPrev,
-            cache.feeGrowthInside0LastX128,
-            cache.feeGrowthInside1LastX128,
-            ,
+        uint256 _liquidity;
+        (_liquidity, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
-        ) = pool.positions(positionKey);
+        unchecked {
+            cache.liquidityLast = uint128(_liquidity >> 128);
+            liquidityInitialPrev = uint128(_liquidity);
+        }
 
         if (cache.liquidityLast > 0) {
             pool.burn(tick, tick, liquidity);
             // this is now updated to the current transaction
-            (, liquidityInitial, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
+            (_liquidity, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
                 positionKey
             );
+            unchecked {
+                liquidityInitial = uint128(_liquidity);
+            }
         }
         // update lomanager position state
         if (position.depositedToken) {
@@ -215,13 +217,10 @@ contract LimitOrderManager is
         }
     }
 
-    function collectLimitOrder(uint256 tokenId, address recipient)
-        external
-        payable
-        override
-        isAuthorizedForToken(tokenId)
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function collectLimitOrder(
+        uint256 tokenId,
+        address recipient
+    ) external payable override isAuthorizedForToken(tokenId) returns (uint256 amount0, uint256 amount1) {
         // allow collecting to the nft position manager address with address 0
         recipient = recipient == address(0) ? address(this) : recipient;
 

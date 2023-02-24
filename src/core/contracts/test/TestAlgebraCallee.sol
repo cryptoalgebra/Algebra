@@ -100,9 +100,10 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
 
   function removeLimitOrder(address pool, address recipient, int24 tick) external returns (uint256 amount0, uint256 amount1) {
     IAlgebraPool(pool).burn(tick, tick, 0);
-    (uint128 liquidityLeft, , , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
+    (uint256 liquidityLeft, , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
+    liquidityLeft = liquidityLeft >> 128;
     if (liquidityLeft > 0) {
-      IAlgebraPool(pool).burn(tick, tick, liquidityLeft);
+      IAlgebraPool(pool).burn(tick, tick, uint128(liquidityLeft));
     }
     return IAlgebraPool(pool).collect(recipient, tick, tick, type(uint128).max, type(uint128).max);
   }

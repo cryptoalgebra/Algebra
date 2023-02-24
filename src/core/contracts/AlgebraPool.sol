@@ -44,8 +44,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
   using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
 
   struct Position {
-    uint128 liquidity; // The amount of liquidity concentrated in the range
-    uint128 liquidityInitial; // TODO
+    uint256 liquidity; // The amount of liquidity concentrated in the range
     uint256 innerFeeGrowth0Token; // The last updated fee growth per unit of liquidity
     uint256 innerFeeGrowth1Token;
     uint128 fees0; // The amount of token0 owed to a LP
@@ -133,7 +132,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
-    uint128 liquidityBefore = _position.liquidity;
+    uint128 liquidityBefore = uint128(_position.liquidity);
 
     if (liquidityDelta == 0) {
       if (liquidityBefore == 0) return; // Do not recalculate the empty ranges
@@ -486,7 +485,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
   }
 
   function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 amountToSellDelta) private {
-    (uint256 amountToSell, uint256 amountToSellInitial) = (position.liquidity, position.liquidityInitial);
+    uint256 amountToSell;
+    uint256 amountToSellInitial;
+    unchecked {
+      (amountToSell, amountToSellInitial) = (position.liquidity >> 128, uint128(position.liquidity)); // unpack data
+    }
     if (amountToSell == 0 && amountToSellDelta == 0) return;
 
     if (amountToSell == 0) {
@@ -548,7 +551,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool, IAlgebraPoolErr
         amountToSellInitial = LiquidityMath.addDelta(uint128(amountToSellInitial), amountToSellInitialDelta);
       }
       if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
-      (position.liquidity, position.liquidityInitial) = (uint128(amountToSell), uint128(amountToSellInitial));
+
+      (position.liquidity) = ((amountToSell << 128) | amountToSellInitial); // tightly pack data
     }
   }
 
