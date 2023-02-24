@@ -208,7 +208,11 @@ contract LimitOrderManager is
         }
         position.liquidity = positionLiquidity;
 
-        position.liquidityInit -= liquidityInitialPrev - liquidityInitial;
+        if (positionLiquidity == 0) {
+            position.liquidityInit = 0;
+        } else {
+            position.liquidityInit -= liquidityInitialPrev - liquidityInitial;
+        }
     }
 
     function collectLimitOrder(uint256 tokenId, address recipient)

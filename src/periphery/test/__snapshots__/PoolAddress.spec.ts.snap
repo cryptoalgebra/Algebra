@@ -2,4 +2,4 @@
 
 exports[`PoolAddress #computeAddress gas cost [ @skip-on-coverage ] 1`] = `625`;
 
-exports[`PoolAddress #computeAddress matches example from core repo 1`] = `"0x03F99AC029FA9D7F27e6279B43c92a3d4f58F40D"`;
+exports[`PoolAddress #computeAddress matches example from core repo 1`] = `"0xE9790600569C9A67a545c94DA3832F1CE96d1dF3"`;

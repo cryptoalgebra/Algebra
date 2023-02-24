@@ -78,4 +78,8 @@ contract MockObservable {
 
         return (_tickCumulatives, _secondsPerLiquidityCumulativeX128s, _volatilityCumulatives, _volumeGMCumulatives);
     }
+
+    function dataStorageOperator() external view returns (address) {
+        return address(this);
+    }
 }
