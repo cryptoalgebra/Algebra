@@ -8,7 +8,6 @@ import '../libraries/Constants.sol';
 abstract contract PoolImmutables is IAlgebraPoolImmutables {
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override dataStorageOperator;
-
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables

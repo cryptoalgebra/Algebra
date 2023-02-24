@@ -7,7 +7,7 @@ import './Constants.sol';
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
-  /// @notice
+  /// @notice Returns default initial fee configuration
   function initialFeeConfiguration() internal pure returns (IAlgebraFeeConfiguration.Configuration memory) {
     return
       IAlgebraFeeConfiguration.Configuration(
@@ -21,7 +21,9 @@ library AdaptiveFee {
       );
   }
 
-  /// @notice
+  /// @notice Validates fee configuration.
+  /// @dev Maximum fee value capped by baseFee + alpha1 + alpha2 must be <= <= type(uint16).max
+  /// gammas must be > 0
   function validateFeeConfiguration(IAlgebraFeeConfiguration.Configuration memory _config) internal pure {
     require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
