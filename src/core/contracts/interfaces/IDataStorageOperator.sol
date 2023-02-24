@@ -4,26 +4,24 @@ pragma abicoder v2;
 
 import './IAlgebraFeeConfiguration.sol';
 
+/// @title The interface for the DataStorageOperator
+/// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
 interface IDataStorageOperator {
-  /**
-   * @notice Emitted when the fee configuration is changed
-   * @param feeConfig The structure with dynamic fee parameters
-   * @dev See the AdaptiveFee library for more details
-   */
+  /// @notice Emitted when the fee configuration is changed
+  /// @param feeConfig The structure with dynamic fee parameters
+  /// @dev See the AdaptiveFee library for more details
   event FeeConfiguration(IAlgebraFeeConfiguration.Configuration feeConfig);
 
-  /**
-   * @notice Returns data belonging to a certain timepoint
-   * @param index The index of timepoint in the array
-   * @dev There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds
-   * @return initialized Whether the timepoint has been initialized and the values are safe to use
-   * @return blockTimestamp The timestamp of the timepoint
-   * @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp
-   * @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
-   * @return tick The tick at blockTimestamp
-   * @return averageTick Time-weighted average tick
-   * @return windowStartIndex Index of closest timepoint >= WINDOW seconds ago
-   */
+  /// @notice Returns data belonging to a certain timepoint
+  /// @param index The index of timepoint in the array
+  /// @dev There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds
+  /// @return initialized Whether the timepoint has been initialized and the values are safe to use
+  /// @return blockTimestamp The timestamp of the timepoint
+  /// @return tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp
+  /// @return volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp
+  /// @return tick The tick at blockTimestamp
+  /// @return averageTick Time-weighted average tick
+  /// @return windowStartIndex Index of closest timepoint >= WINDOW seconds ago
   function timepoints(
     uint256 index
   )

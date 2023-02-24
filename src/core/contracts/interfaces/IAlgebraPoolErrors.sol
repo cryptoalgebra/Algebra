@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 /// @title Errors emitted by a pool
-/// @notice Contains errors emitted by the pool
+/// @notice Contains custom errors emitted by the pool
 interface IAlgebraPoolErrors {
   // ####  pool errors  ####
 

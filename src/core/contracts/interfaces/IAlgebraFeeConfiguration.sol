@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/**
- * @title this interface contains the definition of the adaptive fee configuration structure
- * @dev See the #AdaptiveFee.sol library for details.
- */
+/// @title this interface contains the definition of the adaptive fee configuration structure
+/// @dev See the #AdaptiveFee.sol library for details.
 interface IAlgebraFeeConfiguration {
   // coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
   // alpha1 + alpha2 + baseFee must be <= type(uint16).max
