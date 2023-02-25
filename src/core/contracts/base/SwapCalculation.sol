@@ -95,14 +95,17 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       while (true) {
         step.stepSqrtPrice = currentPrice;
         step.initialized = true;
-
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
         if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].hasLimitOrders) {
           // calculate the amounts from LO
-          // TODO fee
-          step.feeAmount = 0;
-          (step.inLimitOrder, step.output, step.input) = limitOrders.executeLimitOrders(step.nextTick, currentPrice, zeroToOne, amountRequired);
+          (step.inLimitOrder, step.output, step.input, step.feeAmount) = limitOrders.executeLimitOrders(
+            step.nextTick,
+            currentPrice,
+            zeroToOne,
+            amountRequired,
+            cache.fee / 2
+          );
           if (step.inLimitOrder) {
             if (ticks[step.nextTick].liquidityTotal == 0) {
               cache.prevInitializedTick = _insertOrRemoveTick(step.nextTick, currentTick, cache.prevInitializedTick, true);
@@ -111,6 +114,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               ticks[step.nextTick].hasLimitOrders = false;
             }
           }
+
           step.inLimitOrder = !step.inLimitOrder;
         } else {
           (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(

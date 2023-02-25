@@ -66,8 +66,9 @@ library LimitOrderManager {
     int24 tick,
     uint160 tickSqrtPrice,
     bool zeroToOne,
-    int256 amountA
-  ) internal returns (bool closed, uint256 amountOut, uint256 amountIn) {
+    int256 amountA,
+    uint16 fee
+  ) internal returns (bool closed, uint256 amountOut, uint256 amountIn, uint256 feeAmount) {
     unchecked {
       bool exactIn = amountA > 0;
       if (!exactIn) amountA = -amountA;
@@ -85,14 +86,26 @@ library LimitOrderManager {
       LimitOrder storage data = self[tick];
       (uint128 amountToSell, uint128 soldAmount) = (data.amountToSell, data.soldAmount);
       uint256 unsoldAmount = amountToSell - soldAmount;
+
+      if (exactIn) {
+        amountOut = FullMath.mulDiv(amountOut, 1e6 - fee, 1e6);
+      }
+
       if (amountOut >= unsoldAmount) {
         if (amountOut > unsoldAmount) {
           amountOut = unsoldAmount;
-          amountIn = zeroToOne ? FullMath.mulDiv(amountOut, Constants.Q96, price) : FullMath.mulDiv(amountOut, price, Constants.Q96);
         }
         (closed, data.amountToSell, data.soldAmount) = (true, 0, 0);
       } else {
         data.soldAmount = soldAmount + uint128(amountOut);
+      }
+
+      amountIn = zeroToOne ? FullMath.mulDivRoundingUp(amountOut, Constants.Q96, price) : FullMath.mulDivRoundingUp(amountOut, price, Constants.Q96);
+
+      if (exactIn) {
+        feeAmount = uint256(amountA) - amountIn;
+      } else {
+        feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6 - fee);
       }
 
       if (zeroToOne) {

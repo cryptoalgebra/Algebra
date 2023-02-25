@@ -116,6 +116,7 @@ abstract contract LimitOrderPositions is Positions {
         int128 amountToSellInitialDelta = amountToSellDelta;
         // add/remove liquidity to tick with partly executed limit order
         if (amountToSell != amountToSellInitial && amountToSell != 0) {
+          // in case of overflow it will be not possible to add tokens for sell until the limit order is fully closed
           amountToSellInitialDelta = amountToSellDelta < 0
             ? -int256(FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell)).toInt128()
             : int256(FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell)).toInt128();
