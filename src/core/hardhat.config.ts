@@ -30,6 +30,20 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   },
 }
 
+const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
+  version: '0.8.17',
+  settings: {
+    optimizer: {
+      enabled: true,
+      runs: 0,
+    },
+    metadata: {
+      bytecodeHash: 'none',
+    },
+  },
+}
+
+
 
 if (process.env.RUN_COVERAGE == '1') {
   /**
@@ -60,6 +74,7 @@ export default {
     overrides: {
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/DataStorageOperator.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/test/simulation/SimulationTimePoolDeployer.sol': LOWEST_COMPILER_SETTINGS
     },
   },
   docgen: {

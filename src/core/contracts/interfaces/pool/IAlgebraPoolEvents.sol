@@ -75,7 +75,7 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the tick spacing changes
   /// @param newTickSpacing The updated value of the new tick spacing
-  /// @param newTickSpacing The updated value of the new tick spacing for limit orders
+  /// @param newTickSpacingLimitOrders The updated value of the new tick spacing for limit orders
   event TickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders);
 
   /// @notice Emitted when new activeIncentive is set
