@@ -4,6 +4,8 @@ pragma solidity =0.8.17;
 import '../libraries/SafeTransfer.sol';
 import './AlgebraPoolBase.sol';
 
+/// @title Algebra reserves management abstract contract
+/// @notice Encapsulates logic for tracking and changing pool reserves
 abstract contract ReservesManager is AlgebraPoolBase {
   /// @dev The tracked token0 and token1 reserves of pool
   uint128 private reserve0;

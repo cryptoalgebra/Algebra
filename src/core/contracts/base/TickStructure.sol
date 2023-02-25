@@ -5,14 +5,30 @@ import '../libraries/TickManager.sol';
 import '../libraries/TickTree.sol';
 import './AlgebraPoolBase.sol';
 
-abstract contract TickDiscovery is AlgebraPoolBase {
+/// @title Algebra tick structure abstract contract
+/// @notice Encapsulates the logic of interaction with the data structure with ticks
+/// @dev Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list
+abstract contract TickStructure is AlgebraPoolBase {
   using TickManager for mapping(int24 => TickManager.Tick);
   using TickTree for mapping(int16 => uint256);
+
+  uint256 internal tickTreeRoot; // The root of bitmap search tree
+  mapping(int16 => uint256) internal tickSecondLayer; // The second layer bitmap search tree
+
+  // the leaves of the tree are stored in `tickTable`
 
   constructor() {
     ticks.initTickState();
   }
 
+  /**
+   * @notice Used to add or remove a tick from a doubly linked list and search tree
+   * @param tick The tick being removed or added now
+   * @param currentTick The current global tick in the pool
+   * @param prevInitializedTick Previous active tick before `currentTick`
+   * @param remove Remove or add the tick
+   * @return newPrevInitializedTick New previous active tick before `currentTick` if changed
+   */
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,

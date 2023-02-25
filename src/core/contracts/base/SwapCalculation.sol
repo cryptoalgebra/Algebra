@@ -8,6 +8,8 @@ import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 
+/// @title Algebra swap calculation abstract contract
+/// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
   using TickManager for mapping(int24 => TickManager.Tick);
   using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);

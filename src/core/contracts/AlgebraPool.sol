@@ -9,9 +9,9 @@ import './base/DerivedState.sol';
 import './base/ReentrancyGuard.sol';
 import './base/Positions.sol';
 import './base/LimitOrderPositions.sol';
-import './base/ReservesManager.sol';
-import './base/TickDiscovery.sol';
 import './base/SwapCalculation.sol';
+import './base/ReservesManager.sol';
+import './base/TickStructure.sol';
 
 import './libraries/FullMath.sol';
 import './libraries/Constants.sol';
@@ -33,7 +33,7 @@ contract AlgebraPool is
   LimitOrderPositions,
   SwapCalculation,
   ReservesManager,
-  TickDiscovery
+  TickStructure
 {
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {

@@ -12,6 +12,8 @@ import '../libraries/LimitOrderManager.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
 
+/// @title Algebra pool base abstract contract
+/// @notice Contains state variables, immutables and common internal functions
 abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
   using TickManager for mapping(int24 => TickManager.Tick);
 
@@ -69,8 +71,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
-  mapping(int16 => uint256) internal tickSecondLayer;
-  uint256 internal tickTreeRoot; // TODO
 
   /// @inheritdoc IAlgebraPoolImmutables
   function maxLiquidityPerTick() external pure override returns (uint128) {
@@ -102,11 +102,12 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     return IERC20Minimal(token1).balanceOf(address(this));
   }
 
-  /// @dev using function to save bytecode
+  /// @dev Using function to save bytecode
   function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
+  /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
   function _writeTimepoint(uint16 timepointIndex, uint32 blockTimestamp, int24 tick, uint128 currentLiquidity) internal returns (uint16, uint16) {
     uint32 _lastTs = lastTimepointTimestamp;
     if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
@@ -125,6 +126,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     }
   }
 
+  /// @dev Get secondsPerLiquidityCumulative accumulator value for current blockTimestamp
   function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal view returns (uint160 _secPerLiqCumulative) {
     uint32 _lastTs;
     (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
@@ -134,6 +136,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     }
   }
 
+  /// @dev Add or remove a tick to the corresponding data structure
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,

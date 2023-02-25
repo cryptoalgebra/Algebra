@@ -7,11 +7,22 @@ import '../libraries/TickMath.sol';
 import '../libraries/SafeCast.sol';
 import './Positions.sol';
 
+/// @title Algebra limit order positions abstract contract
+/// @notice Contains the logic of recalculation and change of limit order positions
+/// @dev For limit orders positions, the same structure is used as for liquidity positions. However, it is interpreted differently
 abstract contract LimitOrderPositions is Positions {
   using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
   using LowGasSafeMath for uint128;
   using SafeCast for int256;
 
+  /**
+   * @dev Updates limit order position inner data and applies `amountToSellDelta`
+   * @param position The position object to operate with
+   * @param tick The tick which price corresponds to the limit order
+   * @param amountToSellDelta The amount of token to be added to the sale or subtracted (in case of cancellation)
+   * @return amount0 The abs amount of token0 that corresponds to amountToSellDelta
+   * @return amount1 The abs amount of token1 that corresponds to amountToSellDelta
+   */
   function _updateLimitOrderPosition(
     Position storage position,
     int24 tick,
@@ -42,6 +53,12 @@ abstract contract LimitOrderPositions is Positions {
     }
   }
 
+  /**
+   * @dev Recalculates how many of the desired amount of tokens have been sold
+   * @param position The position object to operate with
+   * @param tick The tick which price corresponds to the limit order
+   * @param amountToSellDelta The amount of token to be added to the sale or subtracted (in case of cancellation)
+   */
   function _recalculateLimitOrderPosition(Position storage position, int24 tick, int128 amountToSellDelta) private {
     uint256 amountToSell;
     uint256 amountToSellInitial;
@@ -51,7 +68,7 @@ abstract contract LimitOrderPositions is Positions {
     if (amountToSell == 0 && amountToSellDelta == 0) return;
 
     if (amountToSell == 0) {
-      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1;
+      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1; // maker pays for storage slots
       if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = 1;
     }
     LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];

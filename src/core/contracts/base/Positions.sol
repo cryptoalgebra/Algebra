@@ -5,6 +5,8 @@ import './AlgebraPoolBase.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickManager.sol';
 
+/// @title Algebra positions abstract contract
+/// @notice Contains the logic of recalculation and change of liquidity positions
 abstract contract Positions is AlgebraPoolBase {
   using TickManager for mapping(int24 => TickManager.Tick);
 
@@ -52,6 +54,7 @@ abstract contract Positions is AlgebraPoolBase {
     int24 topTick,
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
+    // using memory cache to avoid "stack too deep" error
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
       globalState.prevInitializedTick,
@@ -138,45 +141,45 @@ abstract contract Positions is AlgebraPoolBase {
 
   /**
    * @notice Increases amounts of tokens owed to owner of the position
-   * @param _position The position object to operate with
+   * @param position The position object to operate with
    * @param liquidityDelta The amount on which to increase\decrease the liquidity
    * @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
    * @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
    */
   function _recalculatePosition(
-    Position storage _position,
+    Position storage position,
     int128 liquidityDelta,
     uint256 innerFeeGrowth0Token,
     uint256 innerFeeGrowth1Token
   ) internal {
-    uint128 liquidityBefore = uint128(_position.liquidity);
+    uint128 liquidityBefore = uint128(position.liquidity);
 
     if (liquidityDelta == 0) {
       if (liquidityBefore == 0) return; // Do not recalculate the empty ranges
     } else {
       // change position liquidity
-      _position.liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
+      position.liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
     }
 
     unchecked {
       // update the position
       uint256 _innerFeeGrowth0Token;
       uint128 fees0;
-      if ((_innerFeeGrowth0Token = _position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
-        _position.innerFeeGrowth0Token = innerFeeGrowth0Token;
+      if ((_innerFeeGrowth0Token = position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
+        position.innerFeeGrowth0Token = innerFeeGrowth0Token;
         fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
       uint256 _innerFeeGrowth1Token;
       uint128 fees1;
-      if ((_innerFeeGrowth1Token = _position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
-        _position.innerFeeGrowth1Token = innerFeeGrowth1Token;
+      if ((_innerFeeGrowth1Token = position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
+        position.innerFeeGrowth1Token = innerFeeGrowth1Token;
         fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
 
       // To avoid overflow owner has to collect fee before it
       if (fees0 | fees1 != 0) {
-        _position.fees0 += fees0;
-        _position.fees1 += fees1;
+        position.fees0 += fees0;
+        position.fees1 += fees1;
       }
     }
   }

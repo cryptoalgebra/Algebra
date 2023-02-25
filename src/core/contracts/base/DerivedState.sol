@@ -3,6 +3,8 @@ pragma solidity =0.8.17;
 
 import './AlgebraPoolBase.sol';
 
+/// @title Pool state that is not stored
+/// @notice Contains view functions to provide information about the pool that is computed rather than stored on the blockchain
 abstract contract DerivedState is AlgebraPoolBase {
   /// @inheritdoc IAlgebraPoolDerivedState
   function getInnerCumulatives(
