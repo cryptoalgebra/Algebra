@@ -1,22 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `10639`;
+exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8428`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `8510`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `10342`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `8142`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
 Object {
-  "secondsPerLiquidityCumulatives": Array [
-    "544451787073501541541399371890829138329",
-    "799663562264205389138930327464655296921",
-    "1045423049484883168306923099498710116305",
-    "1423514568285925905488450441089563684590",
-    "2152691068830794041481396028443352709138",
-    "2347138135642758877746181518404363115684",
-    "2395749902345750086812377890894615717321",
-  ],
   "tickCumulatives": Array [
     -13,
     -31,
@@ -29,29 +20,20 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `142813`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `101657`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `23917`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17900`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `8510`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `14938`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10203`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `23499`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17491`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `22551`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `17081`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 fetch many values 1`] = `
 Object {
-  "secondsPerLiquidityCumulatives": Array [
-    "544451787073501541541399371890829138329",
-    "799663562264205389138930327464655296921",
-    "1045423049484883168306923099498710116305",
-    "1423514568285925905488450441089563684590",
-    "2152691068830794041481396028443352709138",
-    "2347138135642758877746181518404363115684",
-    "2395749902345750086812377890894615717321",
-  ],
   "tickCumulatives": Array [
     -13,
     -31,
@@ -64,16 +46,16 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `142465`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `101309`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `23859`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17842`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `8510`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `14967`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10232`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `23470`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17462`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `22493`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `17023`;
 
-exports[`DataStorage #initialize gas  [ @skip-on-coverage ] 1`] = `89994`;
+exports[`DataStorage #initialize gas  [ @skip-on-coverage ] 1`] = `67736`;

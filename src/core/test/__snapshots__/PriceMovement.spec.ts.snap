@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in capped 1`] = `7578`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in capped 1`] = `1677`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in partial 1`] = `13456`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in partial 1`] = `2502`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `7363`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `1481`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `13456`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2502`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `7563`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `1678`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in partial 1`] = `14435`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in partial 1`] = `2703`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `7348`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `1482`;
 
-exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `14435`;
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2703`;
