@@ -479,7 +479,7 @@ describe('AlgebraPool swap tests', () => {
         await pool.initialize(poolCase.startingPrice)
 
         if (poolCase.tickSpacing != 60)
-          await pool.setTickSpacing(poolCase.tickSpacing)
+          await pool.setTickSpacing(poolCase.tickSpacing, poolCase.tickSpacing)
         // mint all positions
         if (isDefl) {
           if (zeroToOne)

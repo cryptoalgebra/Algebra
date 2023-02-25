@@ -61,7 +61,7 @@ contract AlgebraPool is
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
-      int24 _tickSpacing = tickSpacing;
+      int24 _tickSpacing = bottomTick == topTick ? tickSpacingLimitOrders : tickSpacing;
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
     }
     if (bottomTick == topTick) {
@@ -319,11 +319,14 @@ contract AlgebraPool is
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
+  function setTickSpacing(int24 newTickSpacing, int24 newTickspacingLimitOrders) external override nonReentrant {
     _checkIfAdministrator();
     if (newTickSpacing <= 0 || newTickSpacing > 500 || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
+    // newTickspacingLimitOrders isn't limited, so it is possible to forbid new limit orders completely
+    if (newTickspacingLimitOrders <= 0 || tickSpacingLimitOrders == newTickspacingLimitOrders) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
-    emit TickSpacing(newTickSpacing);
+    tickSpacingLimitOrders = newTickspacingLimitOrders;
+    emit TickSpacing(newTickSpacing, newTickspacingLimitOrders);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

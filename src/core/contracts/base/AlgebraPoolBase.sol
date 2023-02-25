@@ -50,6 +50,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
   /// @inheritdoc IAlgebraPoolState
+  int24 public override tickSpacingLimitOrders;
+  /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
@@ -92,6 +94,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
     tickSpacing = Constants.INIT_TICK_SPACING;
+    tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
   }
 
   function _balanceToken0() internal view returns (uint256) {

@@ -101,7 +101,7 @@ describe('AlgebraPool arbitrage tests', () => {
 
             await pool.initialize(startingPrice)
             if (tickSpacing != 60)
-              await pool.setTickSpacing(tickSpacing)
+              await pool.setTickSpacing(tickSpacing, tickSpacing)
             if (communityFee != 0) await pool.setCommunityFee(communityFee)
             await mint(wallet.address, minTick, maxTick, passiveLiquidity)
 

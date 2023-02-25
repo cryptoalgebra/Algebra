@@ -40,6 +40,12 @@ interface IAlgebraPoolState {
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
 
+  /// @notice The current tick spacing for limit orders
+  /// @dev Ticks can only be used for limit orders at multiples of this value
+  /// This value is an int24 to avoid casting even though it is always positive.
+  /// @return The current tick spacing for limit orders
+  function tickSpacingLimitOrders() external view returns (int24);
+
   /// @notice The timestamp of the last sending of tokens to community vault
   function communityFeeLastTimestamp() external view returns (uint32);
 

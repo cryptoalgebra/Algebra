@@ -10,9 +10,9 @@ interface IAlgebraPoolPermissionedActions {
   /// @param communityFee new community fee percent in thousandths (1e-3)
   function setCommunityFee(uint8 communityFee) external;
 
-  /// @notice Set the new tick spacing value. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+  /// @notice Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newTickSpacing The new tick spacing value
-  function setTickSpacing(int24 newTickSpacing) external;
+  function setTickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders) external;
 
   /// @notice Sets an active incentive. Only farming
   /// @param newIncentiveAddress The address associated with the incentive
