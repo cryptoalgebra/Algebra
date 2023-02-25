@@ -101,9 +101,12 @@ library LimitOrderManager {
       }
 
       amountIn = zeroToOne ? FullMath.mulDivRoundingUp(amountOut, Constants.Q96, price) : FullMath.mulDivRoundingUp(amountOut, price, Constants.Q96);
-
       if (exactIn) {
-        feeAmount = uint256(amountA) - amountIn;
+        if (amountOut == unsoldAmount) {
+          feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6);
+        } else {
+          feeAmount = uint256(amountA) - amountIn;
+        }
       } else {
         feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6 - fee);
       }

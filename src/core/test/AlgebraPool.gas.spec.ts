@@ -228,7 +228,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         it('first swap in block, large swap crossing several limit orders', async () => {
           await addLimitOrder(wallet.address, startingTick - 2 * tickSpacing, 1000000000)
           await addLimitOrder(wallet.address, startingTick - 4 * tickSpacing, 1000000000)
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+          await snapshotGasCost(swapExact0For1(expandTo18Decimals(2), wallet.address))
           expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing) // we crossed the last tick
         })
         

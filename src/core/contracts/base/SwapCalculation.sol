@@ -114,7 +114,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               ticks[step.nextTick].hasLimitOrders = false;
             }
           }
-
           step.inLimitOrder = !step.inLimitOrder;
         } else {
           (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
