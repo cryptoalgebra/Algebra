@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import './base/Timestamp.sol';
+import './base/common/Timestamp.sol';
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/pool/IAlgebraPoolState.sol';
