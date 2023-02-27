@@ -66,7 +66,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   constructor() PoolImmutables(msg.sender) {
     globalState.fee = Constants.BASE_FEE;
     globalState.communityFeeToken0 = Constants.MAX_COMMUNITY_FEE;
-    globalState.communityFeeToken0 = Constants.MAX_COMMUNITY_FEE;
+    globalState.communityFeeToken1 = Constants.MAX_COMMUNITY_FEE;
   }
 
   function balanceToken0() private view returns (uint256) {
