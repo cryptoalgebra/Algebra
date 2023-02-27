@@ -26,8 +26,8 @@ interface IAlgebraPoolState {
       int24 tick,
       uint16 fee,
       uint16 timepointIndex,
-      uint8 communityFeeToken0,
-      uint8 communityFeeToken1,
+      uint16 communityFeeToken0,
+      uint16 communityFeeToken1,
       bool unlocked
     );
 

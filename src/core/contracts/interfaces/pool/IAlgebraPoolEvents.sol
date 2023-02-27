@@ -85,7 +85,7 @@ interface IAlgebraPoolEvents {
    * @param communityFee0New The updated value of the token0 community fee percent
    * @param communityFee1New The updated value of the token1 community fee percent
    */
-  event CommunityFee(uint8 communityFee0New, uint8 communityFee1New);
+  event CommunityFee(uint16 communityFee0New, uint16 communityFee1New);
 
   /**
    * @notice Emitted when new activeIncentive is set

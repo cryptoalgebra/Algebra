@@ -13,7 +13,7 @@ interface IAlgebraPoolPermissionedActions {
    * @param communityFee0 new community fee percent for token0 of the pool in thousandths (1e-3)
    * @param communityFee1 new community fee percent for token1 of the pool in thousandths (1e-3)
    */
-  function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external;
+  function setCommunityFee(uint16 communityFee0, uint16 communityFee1) external;
 
   /**
    * @notice Sets an active incentive

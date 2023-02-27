@@ -65,6 +65,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   constructor() PoolImmutables(msg.sender) {
     globalState.fee = Constants.BASE_FEE;
+    globalState.communityFeeToken0 = Constants.MAX_COMMUNITY_FEE;
+    globalState.communityFeeToken0 = Constants.MAX_COMMUNITY_FEE;
   }
 
   function balanceToken0() private view returns (uint256) {
@@ -922,7 +924,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     paid0 -= balance0Before;
 
     if (paid0 > 0) {
-      uint8 _communityFeeToken0 = globalState.communityFeeToken0;
+      uint16 _communityFeeToken0 = globalState.communityFeeToken0;
       uint256 fees0;
       if (_communityFeeToken0 > 0) {
         fees0 = (paid0 * _communityFeeToken0) / Constants.COMMUNITY_FEE_DENOMINATOR;
@@ -936,7 +938,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     paid1 -= balance1Before;
 
     if (paid1 > 0) {
-      uint8 _communityFeeToken1 = globalState.communityFeeToken1;
+      uint16 _communityFeeToken1 = globalState.communityFeeToken1;
       uint256 fees1;
       if (_communityFeeToken1 > 0) {
         fees1 = (paid1 * _communityFeeToken1) / Constants.COMMUNITY_FEE_DENOMINATOR;
@@ -949,7 +951,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external override lock onlyFactoryOwner {
+  function setCommunityFee(uint16 communityFee0, uint16 communityFee1) external override lock onlyFactoryOwner {
     require((communityFee0 <= Constants.MAX_COMMUNITY_FEE) && (communityFee1 <= Constants.MAX_COMMUNITY_FEE));
     (globalState.communityFeeToken0, globalState.communityFeeToken1) = (communityFee0, communityFee1);
     emit CommunityFee(communityFee0, communityFee1);
