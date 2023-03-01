@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import './FullMath.sol';
 
 /// @title Math for computing rewards
 /// @notice Allows computing rewards given some parameters of farms and incentives

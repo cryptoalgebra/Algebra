@@ -4,21 +4,21 @@ pragma abicoder v2;
 
 import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
+import '../interfaces/INonfungiblePositionManager.sol';
 import './IAlgebraVirtualPoolBase.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
 import '../libraries/VirtualPoolConstants.sol';
+import '../libraries/TickMath.sol';
+import '../libraries/LowGasSafeMath.sol';
+import '../libraries/FullMath.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
 /// @title Abstract base contract for Algebra farmings

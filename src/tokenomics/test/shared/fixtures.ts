@@ -1,6 +1,7 @@
 import { constants, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 
+
 import AlgebraPool from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json'
 import AlgebraFactoryJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json'
 import AlgebraPoolDeployerJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
@@ -37,19 +38,22 @@ export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   return { wnative }
 }
 
-const v3CoreDeployerFixture: () => Promise<IAlgebraPoolDeployer> = async () => {
-  const deployerFactory = await ethers.getContractFactory(AlgebraPoolDeployerJson.abi, AlgebraPoolDeployerJson.bytecode);
-  return (await deployerFactory.deploy()) as IAlgebraPoolDeployer
-}
 
 const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory,IAlgebraPoolDeployer]> = async () => {
-  const deployer = await v3CoreDeployerFixture()
-  const factoryFactory = await ethers.getContractFactory(AlgebraFactoryJson.abi, AlgebraFactoryJson.bytecode);
-  const factory = (await factoryFactory.deploy(deployer.address, vaultAddress)) as IAlgebraFactory;
+  const [deployer] = await ethers.getSigners();
+  // precompute
+  const poolDeployerAddress = ethers.utils.getContractAddress({
+    from: deployer.address, 
+    nonce: (await deployer.getTransactionCount()) + 1
+  })
 
-  await deployer.setFactory(factory.address)
+  const v3FactoryFactory = await ethers.getContractFactory(AlgebraFactoryJson.abi,  AlgebraFactoryJson.bytecode);
+  const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as IAlgebraFactory;
 
-  return [factory, deployer]
+  const poolDeployerFactory = await ethers.getContractFactory(AlgebraPoolDeployerJson.abi,  AlgebraPoolDeployerJson.bytecode);
+  const _deployer = await poolDeployerFactory.deploy(_factory.address, vaultAddress) as IAlgebraPoolDeployer;
+
+  return [_factory, _deployer]
 }
 
 
@@ -102,7 +106,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1247,
+              start: 1450,
             },
           ],
         },

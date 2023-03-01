@@ -10,6 +10,7 @@ import './interfaces/IAlgebraLimitVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 import '../../libraries/RewardMath.sol';
 import './LimitVirtualPool.sol';
+
 import '../AlgebraFarming.sol';
 
 /// @title Algebra incentive (time-limited) farming

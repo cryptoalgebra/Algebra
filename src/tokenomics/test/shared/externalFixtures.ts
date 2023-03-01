@@ -39,12 +39,20 @@ export const v2FactoryFixture: () => Promise<{ factory: Contract }> = async () =
 }
 
 const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
-  const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI,  POOL_DEPLOYER_BYTECODE);
-  const poolDeployer = await poolDeployerFactory.deploy();
-  const v3FactoryFactory = await ethers.getContractFactory(FACTORY_ABI,  FACTORY_BYTECODE);
-  const _factory = (await v3FactoryFactory.deploy(poolDeployer.address, vaultAddress)) as IAlgebraFactory;
 
-  poolDeployer.setFactory(_factory.address)
+  const [deployer] = await ethers.getSigners();
+  // precompute
+  const poolDeployerAddress = ethers.utils.getContractAddress({
+    from: deployer.address, 
+    nonce: (await deployer.getTransactionCount()) + 1
+  })
+
+  const v3FactoryFactory = await ethers.getContractFactory(FACTORY_ABI,  FACTORY_BYTECODE);
+  const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as IAlgebraFactory;
+
+  const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI,  POOL_DEPLOYER_BYTECODE);
+  const poolDeployer = await poolDeployerFactory.deploy(_factory.address, vaultAddress);
+
   return _factory
 }
 

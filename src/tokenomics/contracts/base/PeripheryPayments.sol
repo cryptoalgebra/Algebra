@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.7.5;
 
+import '../interfaces/IWNativeToken.sol';
+
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
-import '@cryptoalgebra/periphery/contracts/interfaces/external/IWNativeToken.sol';
 
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 

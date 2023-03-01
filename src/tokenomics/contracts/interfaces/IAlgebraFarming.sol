@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
+import './INonfungiblePositionManager.sol';
 
 import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';

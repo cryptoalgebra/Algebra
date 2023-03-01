@@ -7,9 +7,9 @@ import './interfaces/IFarmingCenterVault.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
-import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
+import './interfaces/INonfungiblePositionManager.sol';
 
+import './base/Multicall.sol';
 import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 

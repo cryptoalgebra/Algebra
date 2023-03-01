@@ -5,12 +5,14 @@ pragma abicoder v2;
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 import './EternalVirtualPool.sol';
-import '../AlgebraFarming.sol';
 import '../../libraries/IncentiveId.sol';
+
 import '../../libraries/VirtualPoolConstants.sol';
+import '../../libraries/FullMath.sol';
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+
+import '../AlgebraFarming.sol';
 
 /// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
