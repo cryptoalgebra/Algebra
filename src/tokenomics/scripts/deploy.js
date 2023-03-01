@@ -49,7 +49,7 @@ async function main() {
   await factory.setFarmingAddress(FarmingCenter.address);
   console.log("Updated farming center address in factory")
 
-  const posManager = await hre.ethers.getContractAt("INonfungiblePositionManager", deploysData.nonfungiblePositionManager)
+  const posManager = await hre.ethers.getContractAt("/contracts/interfaces/INonfungiblePositionManager.sol:INonfungiblePositionManager", deploysData.nonfungiblePositionManager)
   await posManager.setFarmingCenter(FarmingCenter.address);
   // await hre.run("verify:verify", {
   //   address: AlgebraFarming.address,
