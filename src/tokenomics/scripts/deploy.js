@@ -45,12 +45,12 @@ async function main() {
   console.log("Updated farming center address in farming center vault")
 
   const factory = await hre.ethers.getContractAt("IAlgebraFactory",deploysData.factory);
-
+  
   await factory.setFarmingAddress(FarmingCenter.address);
   console.log("Updated farming center address in factory")
 
-  
-
+  const posManager = await hre.ethers.getContractAt("INonfungiblePositionManager", deploysData.nonfungiblePositionManager)
+  await posManager.setFarmingCenter(FarmingCenter.address);
   // await hre.run("verify:verify", {
   //   address: AlgebraFarming.address,
   //   constructorArguments: [
