@@ -14,6 +14,8 @@ import './libraries/CallbackValidation.sol';
 import './libraries/TransferHelper.sol';
 import './interfaces/external/IWNativeToken.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra Swap Router TODO
 /// @notice Router for stateless execution of swaps against Algebra
 contract SwapRouterCompressed is IAlgebraSwapCallback {
@@ -115,6 +117,9 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         }
 
         SwapConfiguration memory swapConfiguration = decodeCalldata(memPointer, callDataLength, word1);
+        if (swapConfiguration.deadline != 0) {
+            require(uint32(block.timestamp) <= swapConfiguration.deadline, 'Transaction too old'); // truncation is desired
+        }
 
         if (!swapConfiguration.hasRecipient && !swapConfiguration.unwrapResultWNative)
             swapConfiguration.recipient = msg.sender;
@@ -226,13 +231,13 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         }
 
         if (callDataLength > offset / 8) {
-            if (callDataLength > offset / 8 + 160) {
+            if (callDataLength >= offset / 8 + 20) {
                 uint160 _recipient;
                 (_recipient, offset) = CompressedEncoding.parse160(memPointer, offset);
                 swapConfiguration.recipient = address(_recipient);
                 swapConfiguration.hasRecipient = true;
             }
-            if (callDataLength > offset / 8) {
+            if (callDataLength >= offset / 8) {
                 (swapConfiguration.deadline, ) = CompressedEncoding.parse32(memPointer, offset);
             }
         }

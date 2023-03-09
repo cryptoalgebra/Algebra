@@ -161,35 +161,49 @@ describe.only('SwapRouterCompressed', function () {
     describe('#exactInput', () => {
       async function exactInput(
         tokens: string[],
-        amountIn: number = 3,
-        amountOutMinimum: number = 1,
-        wrappedNative: boolean = false,
-        unwrapResultWNative: boolean = false
+        params:
+        {
+          amountIn?: number,
+          amountOutMinimum?: number,
+          wrappedNative?: boolean,
+          unwrapResultWNative?: boolean,
+          hasDeadline?: boolean,
+          deadline?: bigint
+        }
       ): Promise<boolean> {
+        let {
+          amountIn,
+          amountOutMinimum,
+          wrappedNative,
+          unwrapResultWNative
+        } = params;
+        if (amountIn === undefined) amountIn = 3;
+        if (amountOutMinimum === undefined) amountOutMinimum = 1;
+
         const inputIsWNativeToken = wnative.address === tokens[0]
         const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
         const value = inputIsWNativeToken ? (wrappedNative ? 0 : amountIn) : 0
         let tokensIndexes: number[] = tokens.map((token: string) => tokensMap[token]);
 
-        const params: EncodeRouterCalldataParams = {
+        const encodeParams: EncodeRouterCalldataParams = {
           exactIn: true,
           hasRecipient: true,
-          hasDeadline: true,
+          hasDeadline: !!params.hasDeadline,
+          deadline: params.deadline ? params.deadline : BigInt(0),
           tokens: tokensIndexes,
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
-          deadline: BigInt(1),
           amountIn: BigInt(amountIn),
           amountOut: BigInt(amountOutMinimum),
           wrappedNative,
           unwrapResultWNative
         };
 
-        await sendPayload(trader, value, params)
+        await sendPayload(trader, value, encodeParams)
 
         // ensure that the swap fails if the limit is any tighter
-        params.amountOut += 1n;
+        encodeParams.amountOut += 1n;
         await expect(
-          sendPayload(trader, value, params)
+          sendPayload(trader, value, encodeParams)
           ).to.be.revertedWith('Too little received')
        return true;
       }
@@ -202,7 +216,32 @@ describe.only('SwapRouterCompressed', function () {
           const poolBefore = await getBalances(pool)
           const traderBefore = await getBalances(trader.address)
 
-          await exactInput(tokens.slice(0, 2).map((token) => token.address))
+          await exactInput(tokens.slice(0, 2).map((token) => token.address), {})
+
+          // get balances after
+          const poolAfter = await getBalances(pool)
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token0).to.be.eq(traderBefore.token0.sub(3))
+          expect(traderAfter.token1).to.be.eq(traderBefore.token1.add(1))
+          expect(poolAfter.token0).to.be.eq(poolBefore.token0.add(3))
+          expect(poolAfter.token1).to.be.eq(poolBefore.token1.sub(1))
+        })
+
+        it('0 -> 1 with deadline', async () => {
+          const pool = await factory.poolByPair(tokens[0].address, tokens[1].address)
+
+          // get balances before
+          const poolBefore = await getBalances(pool)
+          const traderBefore = await getBalances(trader.address)
+
+          await expect(
+            exactInput(tokens.slice(0, 2).map((token) => token.address), {hasDeadline: true, deadline: BigInt(Math.floor(Date.now() / 1000) - 1)})
+          ).to.be.revertedWith('Transaction too old');
+
+          const deadline = BigInt(Math.floor(Date.now() / 1000) + 100000);
+          await exactInput(tokens.slice(0, 2).map((token) => token.address), {hasDeadline: true, deadline})
+
 
           // get balances after
           const poolAfter = await getBalances(pool)
@@ -225,7 +264,7 @@ describe.only('SwapRouterCompressed', function () {
             tokens
               .slice(0, 2)
               .reverse()
-              .map((token) => token.address)
+              .map((token) => token.address), {}
           )
 
           // get balances after
@@ -244,9 +283,24 @@ describe.only('SwapRouterCompressed', function () {
           const traderBefore = await getBalances(trader.address)
           await exactInput(
             tokens.map((token) => token.address),
-            5,
-            1
+            {amountIn: 5, amountOutMinimum: 1}
           )
+          
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token0).to.be.eq(traderBefore.token0.sub(5))
+          expect(traderAfter.token2).to.be.eq(traderBefore.token2.add(1))
+        })
+
+        it('0 -> 1 -> 2 with deadline', async () => {
+          const traderBefore = await getBalances(trader.address)
+
+          await expect(
+            exactInput(tokens.map((token) => token.address), {amountIn: 5, amountOutMinimum: 1, hasDeadline: true, deadline: BigInt(Math.floor(Date.now() / 1000) - 1)})
+          ).to.be.revertedWith('Transaction too old');
+
+          const deadline = BigInt(Math.floor(Date.now() / 1000) + 100000);
+          await exactInput(tokens.map((token) => token.address), {amountIn: 5, amountOutMinimum: 1, hasDeadline: true, deadline})
 
           const traderAfter = await getBalances(trader.address)
 
@@ -257,7 +311,7 @@ describe.only('SwapRouterCompressed', function () {
         it('2 -> 1 -> 0', async () => {
           const traderBefore = await getBalances(trader.address)
 
-          await exactInput(tokens.map((token) => token.address).reverse(), 5, 1)
+          await exactInput(tokens.map((token) => token.address).reverse(), {amountIn: 5, amountOutMinimum: 1})
 
           const traderAfter = await getBalances(trader.address)
 
@@ -279,7 +333,7 @@ describe.only('SwapRouterCompressed', function () {
             const poolBefore = await getBalances(pool)
             const traderBefore = await getBalances(trader.address)
 
-            await exactInput([wnative.address, tokens[0].address])
+            await exactInput([wnative.address, tokens[0].address], {})
 
             // get balances after
             const poolAfter = await getBalances(pool)
@@ -293,7 +347,7 @@ describe.only('SwapRouterCompressed', function () {
           it('WNativeToken -> 0 -> 1', async () => {
             const traderBefore = await getBalances(trader.address)
 
-            await exactInput([wnative.address, tokens[0].address, tokens[1].address], 5)
+            await exactInput([wnative.address, tokens[0].address, tokens[1].address], {amountIn: 5})
 
             const traderAfter = await getBalances(trader.address)
             expect(traderAfter.token1).to.be.eq(traderBefore.token1.add(1))
@@ -315,7 +369,7 @@ describe.only('SwapRouterCompressed', function () {
             const poolBefore = await getBalances(pool)
             const traderBefore = await getBalances(trader.address)
 
-            await exactInput([tokens[0].address, wnative.address], 3, 1, false, true)
+            await exactInput([tokens[0].address, wnative.address], {amountIn: 3, amountOutMinimum: 1, unwrapResultWNative: true})
 
             // get balances after
             const poolAfter = await getBalances(pool)
@@ -332,31 +386,45 @@ describe.only('SwapRouterCompressed', function () {
     describe('#exactInputSupportingFee', () => {
       async function exactInputSupportingFee(
         tokens: string[],
-        amountIn: number = 3,
-        amountOutMinimum: number = 1,
-        wrappedNative: boolean = false,
-        unwrapResultWNative: boolean = false
+        params:
+        {
+          amountIn?: number,
+          amountOutMinimum?: number,
+          wrappedNative?: boolean,
+          unwrapResultWNative?: boolean,
+          hasDeadline?: boolean,
+          deadline?: bigint
+        },
       ): Promise<boolean> {
+        let {
+          amountIn,
+          amountOutMinimum,
+          wrappedNative,
+          unwrapResultWNative
+        } = params;
+        if (amountIn === undefined) amountIn = 3;
+        if (amountOutMinimum === undefined) amountOutMinimum = 1;
+
         const inputIsWNativeToken = wnative.address === tokens[0]
         const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
         const value = inputIsWNativeToken ? (wrappedNative ? 0 : amountIn) : 0
         let tokensIndexes: number[] = tokens.map((token: string) => tokensMap[token]);
 
-        const params: EncodeRouterCalldataParams = {
+        const encodeParams: EncodeRouterCalldataParams = {
           exactIn: true,
           feeOnTransfer: true,
           hasRecipient: true,
-          hasDeadline: true,
+          hasDeadline: !!params.hasDeadline,
+          deadline: params.deadline ? params.deadline : 0n,
           tokens: tokensIndexes,
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
-          deadline: BigInt(1),
           amountIn: BigInt(amountIn),
           amountOut: BigInt(amountOutMinimum),
           wrappedNative,
           unwrapResultWNative
         };
 
-        await sendPayload(trader, value, params)
+        await sendPayload(trader, value, encodeParams)
         return true;
       }
 
@@ -376,7 +444,7 @@ describe.only('SwapRouterCompressed', function () {
           const poolBefore = await getBalances(pool)
           const traderBefore = await getBalances(trader.address)
 
-          await exactInputSupportingFee(tokens.slice(0, 2).map((token) => token.address), 100, 25)
+          await exactInputSupportingFee(tokens.slice(0, 2).map((token) => token.address), {amountIn: 100, amountOutMinimum: 25})
 
           // get balances after
           const poolAfter = await getBalances(pool)
@@ -401,8 +469,7 @@ describe.only('SwapRouterCompressed', function () {
               .slice(0, 2)
               .reverse()
               .map((token) => token.address),
-              100,
-              25
+              {amountIn: 100, amountOutMinimum: 25}
           )
 
           // get balances after
@@ -422,8 +489,7 @@ describe.only('SwapRouterCompressed', function () {
           const traderBefore = await getBalances(trader.address)
           await exactInputSupportingFee(
             tokens.map((token) => token.address),
-            100,
-            10
+            {amountIn: 100, amountOutMinimum: 10}
           )
 
           const traderAfter = await getBalances(trader.address)
@@ -436,7 +502,7 @@ describe.only('SwapRouterCompressed', function () {
           await tokens[2].setDefl();
           const traderBefore = await getBalances(trader.address)
 
-          await exactInputSupportingFee(tokens.map((token) => token.address).reverse(), 100, 10)
+          await exactInputSupportingFee(tokens.map((token) => token.address).reverse(), {amountIn: 100, amountOutMinimum: 10})
 
           const traderAfter = await getBalances(trader.address)
 
@@ -460,7 +526,7 @@ describe.only('SwapRouterCompressed', function () {
             const poolBefore = await getBalances(pool)
             const traderBefore = await getBalances(trader.address)
 
-            await exactInputSupportingFee([tokens[0].address, wnative.address], 100, 10, false, true)
+            await exactInputSupportingFee([tokens[0].address, wnative.address], {amountIn: 100, amountOutMinimum: 10, unwrapResultWNative: true})
 
             // get balances after
             const poolAfter = await getBalances(pool)
@@ -491,10 +557,9 @@ describe.only('SwapRouterCompressed', function () {
         const params: EncodeRouterCalldataParams = {
           exactIn: false,
           hasRecipient: true,
-          hasDeadline: true,
+          hasDeadline: false,
           tokens: tokensIndexes,
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
-          deadline: BigInt(1),
           amountIn: BigInt(amountOut),
           amountOut: BigInt(amountInMaximum),
           wrappedNative,

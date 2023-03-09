@@ -120,13 +120,14 @@ export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string
         OUT = appendValue(OUT, BigInt(recipient), 160n);
     }
     if (params.hasDeadline) {
-        const deadline = params.deadline ? params.deadline : BigInt(0);
-        OUT = appendValue(OUT, deadline, 32n);
+        if (params.deadline) {
+            OUT = appendValue(OUT, params.deadline, 32n);
+        }
     }
 
     const binaryLength = OUT.toString(2).length;
     if (binaryLength % 8 != 0) {
-        let paddedLength = Math.floor(binaryLength/8)*8;
+        let paddedLength = Math.ceil(binaryLength/8)*8;
         OUT = OUT << BigInt(paddedLength - binaryLength);
     }
 

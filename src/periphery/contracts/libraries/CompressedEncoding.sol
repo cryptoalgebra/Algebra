@@ -77,10 +77,8 @@ library CompressedEncoding {
         bytes32 word;
         assembly {
             word := mload(add(memPointer, byteNum))
-        }
-        assembly {
             _offset := add(_offset, 160)
-            value := and(shr(sub(256, _offset), word), sub(shl(161, 2), 1))
+            value := and(shr(sub(256, _offset), word), sub(shl(160, 1), 1))
         }
         newOffset = byteNum * 8 + _offset;
     }
@@ -91,10 +89,8 @@ library CompressedEncoding {
         bytes32 word;
         assembly {
             word := mload(add(memPointer, byteNum))
-        }
-        assembly {
             _offset := add(_offset, 32)
-            value := and(shr(sub(256, _offset), word), sub(shl(33, 2), 1))
+            value := and(shr(sub(256, _offset), word), sub(shl(32, 1), 1))
         }
         newOffset = byteNum * 8 + _offset;
     }
