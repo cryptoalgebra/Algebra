@@ -8,7 +8,7 @@ import {
 } from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
 import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { ethers } from 'hardhat'
-import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter, SwapRouterCompressed } from '../../typechain'
+import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter, SwapRouterCompressedV1 } from '../../typechain'
 
 import WNativeToken from '../contracts/WNativeToken.json'
 import { Contract } from '@ethersproject/contracts'
@@ -59,15 +59,15 @@ export const v3RouterFixture: () => Promise<{
 export const compressedV3RouterFixture: () => Promise<{
   wnative: IWNativeToken
   factory: IAlgebraFactory
-  router: SwapRouterCompressed
+  router: SwapRouterCompressedV1
 }> = async () => {
   const { wnative } = await wnativeFixture()
   const factory = await v3CoreFactoryFixture()
-  const router = (await (await ethers.getContractFactory('SwapRouterCompressed')).deploy(
+  const router = (await (await ethers.getContractFactory('SwapRouterCompressedV1')).deploy(
     factory.address,
     wnative.address,
       await factory.poolDeployer()
-  )) as SwapRouterCompressed
+  )) as SwapRouterCompressedV1
 
   return { factory, wnative, router }
 }

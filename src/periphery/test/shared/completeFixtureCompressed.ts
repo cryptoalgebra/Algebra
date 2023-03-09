@@ -8,13 +8,13 @@ import {
   NonfungibleTokenPositionDescriptor,
   TestERC20,
   IAlgebraFactory,
-  SwapRouterCompressed
+  SwapRouterCompressedV1
 } from '../../typechain'
 
 const completeFixtureCompressed: () => Promise<{
   wnative: IWNativeToken
   factory: IAlgebraFactory
-  router: SwapRouterCompressed
+  router: SwapRouterCompressedV1
   nft: MockTimeNonfungiblePositionManager
   nftDescriptor: NonfungibleTokenPositionDescriptor
   tokens: [TestERC20, TestERC20, TestERC20]

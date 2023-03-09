@@ -1,7 +1,7 @@
 import { BigNumber, constants, Contract, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { IWNativeToken, MockTimeNonfungiblePositionManager, SwapRouterCompressed, TestERC20 } from '../typechain'
+import { IWNativeToken, MockTimeNonfungiblePositionManager, SwapRouterCompressedV1, TestERC20 } from '../typechain'
 import completeFixtureCompressed from './shared/completeFixtureCompressed'
 import { FeeAmount, TICK_SPACINGS } from './shared/constants'
 import { encodePriceSqrt } from './shared/encodePriceSqrt'
@@ -12,7 +12,7 @@ import { getMaxTick, getMinTick } from './shared/ticks'
 import { computePoolAddress } from './shared/computePoolAddress'
 import { encodeRouterCalldata, EncodeRouterCalldataParams } from './shared/encodeRouterCalldata'
 
-describe.only('SwapRouterCompressed', function () {
+describe.only('SwapRouterCompressedV1', function () {
   this.timeout(40000)
   let wallet: Wallet
   let trader: Wallet
@@ -20,7 +20,7 @@ describe.only('SwapRouterCompressed', function () {
   const swapRouterFixture: () => Promise<{
     wnative: IWNativeToken
     factory: Contract
-    router: SwapRouterCompressed
+    router: SwapRouterCompressedV1
     nft: MockTimeNonfungiblePositionManager
     tokens: [TestERC20, TestERC20, TestERC20]
   }> = async () => {
@@ -45,7 +45,7 @@ describe.only('SwapRouterCompressed', function () {
 
   let factory: Contract
   let wnative: IWNativeToken
-  let router: SwapRouterCompressed
+  let router: SwapRouterCompressedV1
   let nft: MockTimeNonfungiblePositionManager
   let tokens: [TestERC20, TestERC20, TestERC20]
   let tokensMap: Record<string, number> = {};

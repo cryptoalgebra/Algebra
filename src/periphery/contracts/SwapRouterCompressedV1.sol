@@ -14,17 +14,17 @@ import './libraries/CallbackValidation.sol';
 import './libraries/TransferHelper.sol';
 import './interfaces/external/IWNativeToken.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra Swap Router TODO
 /// @notice Router for stateless execution of swaps against Algebra
-contract SwapRouterCompressed is IAlgebraSwapCallback {
+contract SwapRouterCompressedV1 is IAlgebraSwapCallback {
     using Path for bytes;
     using SafeCast for uint256;
 
     address private immutable factory;
     address private immutable poolDeployer;
     address private immutable WNativeToken;
+
+    address private immutable owner;
 
     /// @dev Used as the placeholder value for amountInCached, because the computed amount in for an exact output swap
     /// can never actually be this value
@@ -41,11 +41,13 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         factory = _factory;
         WNativeToken = _WNativeToken;
         poolDeployer = _poolDeployer;
+        owner = msg.sender;
 
         indexToToken[0] = _WNativeToken;
     }
 
     function addTokenAddress(address token) external payable {
+        require(msg.sender == owner);
         uint256 index = nextTokenIndex;
         nextTokenIndex++;
         indexToToken[index] = token;
@@ -61,12 +63,22 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
     }
 
     function sweep(address token, uint256 amountMinimum) external {
-        uint256 balanceToken = IERC20(token).balanceOf(address(this));
-        require(balanceToken > amountMinimum && balanceToken > 1, 'Insufficient token');
-        balanceToken -= 1; // do not clean storage slot
+        if (token != address(0)) {
+            uint256 balanceToken = IERC20(token).balanceOf(address(this));
+            require(balanceToken > amountMinimum && balanceToken > 1, 'Insufficient token');
+            balanceToken -= 1; // do not clean storage slot
 
-        if (balanceToken > 0) {
-            TransferHelper.safeTransfer(token, msg.sender, balanceToken);
+            if (balanceToken > 0) {
+                TransferHelper.safeTransfer(token, msg.sender, balanceToken);
+            }
+        } else {
+            uint256 balanceToken = address(this).balance;
+            require(balanceToken > amountMinimum && balanceToken > 1, 'Insufficient token');
+            balanceToken -= 1; // do not clean storage slot
+
+            if (balanceToken > 0) {
+                payable(msg.sender).transfer(balanceToken);
+            }
         }
     }
 
