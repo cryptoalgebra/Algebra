@@ -45,6 +45,7 @@ export type EncodeRouterCalldataParams = {
     recipient?: string,
     limitSqrtPrice?: bigint,
     deadline?: bigint
+    wrappedNative?: boolean
 }
 
 export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string {
@@ -85,14 +86,28 @@ export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string
 
     OUT = appendValue(config, path, BigInt(tokenLength) * BigInt(params.tokens.length) + BigInt(2));
     
-    // encode amountIn
-    const [amountInEncoded, amountInLength] = encodeAmount(params.amountIn);
-    OUT = appendValue(OUT, amountInEncoded, amountInLength);
-    
-    // encode amountOut
-    const [amountOutEncoded, amountOutLength] = encodeAmount(params.amountOut);
-    OUT = appendValue(OUT, amountOutEncoded, amountOutLength);
-    
+    if (params.exactIn) {
+        // encode amountIn
+        if (!(params.tokens[0] == 0 && !params.wrappedNative)) {
+            const [amountInEncoded, amountInLength] = encodeAmount(params.amountIn);
+            OUT = appendValue(OUT, amountInEncoded, amountInLength);
+        }
+        
+        // encode amountOut
+        const [amountOutEncoded, amountOutLength] = encodeAmount(params.amountOut);
+        OUT = appendValue(OUT, amountOutEncoded, amountOutLength);
+    } else {
+        // encode amountIn
+        const [amountInEncoded, amountInLength] = encodeAmount(params.amountIn);
+        OUT = appendValue(OUT, amountInEncoded, amountInLength);
+        
+        if  (!(params.tokens[params.tokens.length - 1] == 0 && !params.wrappedNative)) {
+            // encode amountOut
+            const [amountOutEncoded, amountOutLength] = encodeAmount(params.amountOut);
+            OUT = appendValue(OUT, amountOutEncoded, amountOutLength);
+        }
+    }
+
     // additional stuff
     if (params.hasRecipient) {
         const recipient = params.recipient ? params.recipient : BigInt(0);

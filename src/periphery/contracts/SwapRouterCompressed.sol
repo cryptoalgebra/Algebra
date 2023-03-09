@@ -45,7 +45,7 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         indexToToken[0] = _WNativeToken;
     }
 
-    function addTokenAddress(address token) external {
+    function addTokenAddress(address token) external payable {
         uint256 index = nextTokenIndex;
         nextTokenIndex++;
         indexToToken[index] = token;
@@ -70,7 +70,11 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         }
     }
 
-    fallback() external {
+    receive() external payable {
+        //
+    }
+
+    fallback() external payable {
         uint256 memPointer;
         uint256 callDataLength;
         bytes32 word1;
@@ -154,9 +158,33 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
             pathLength
         );
 
-        // TODO native
-        (swapConfiguration.amountIn, offset) = CompressedEncoding.parseAmount(memPointer, offset);
-        (swapConfiguration.amountOutMin, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+        if (swapConfiguration.exactIn) {
+            if (msg.value == 0) {
+                (swapConfiguration.amountIn, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+            } else {
+                (address inputToken, ) = swapConfiguration.path.decodeFirstPool();
+                if (inputToken == WNativeToken) {
+                    swapConfiguration.amountIn = msg.value;
+                } else {
+                    (swapConfiguration.amountIn, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+                }
+            }
+
+            (swapConfiguration.amountOutMin, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+        } else {
+            (swapConfiguration.amountIn, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+
+            if (msg.value == 0) {
+                (swapConfiguration.amountOutMin, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+            } else {
+                (, address inputToken) = swapConfiguration.path.decodeLastPool();
+                if (inputToken == WNativeToken) {
+                    swapConfiguration.amountOutMin = msg.value;
+                } else {
+                    (swapConfiguration.amountOutMin, offset) = CompressedEncoding.parseAmount(memPointer, offset);
+                }
+            }
+        }
 
         if (swapConfiguration.hasRecipient) {
             uint160 _recipient;

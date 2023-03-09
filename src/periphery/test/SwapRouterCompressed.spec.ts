@@ -66,12 +66,14 @@ describe.only('SwapRouterCompressed', function () {
   // helper for getting wnative and token balances
   beforeEach('load fixture', async () => {
     ;({ router, wnative, factory, tokens, nft } = await loadFixture(swapRouterFixture))
+    tokensMap[wnative.address] = 0;
     let nextTokenIndex = 1;
     for (let token of tokens) {
       tokensMap[token.address] = nextTokenIndex;
       await router.addTokenAddress(token.address);
       nextTokenIndex++;
     }
+
     getBalances = async (who: string) => {
       const balances = await Promise.all([
         wnative.balanceOf(who),
@@ -140,9 +142,9 @@ describe.only('SwapRouterCompressed', function () {
       await createPool(tokens[1].address, tokens[2].address)
     })
 
-    async function sendPayload(from: Wallet, params: EncodeRouterCalldataParams): Promise<boolean> {
+    async function sendPayload(from: Wallet, value: number, params: EncodeRouterCalldataParams): Promise<boolean> {
       let calldata = encodeRouterCalldata(params);
-      let tx = await router.populateTransaction.addTokenAddress(ethers.constants.AddressZero);
+      let tx = await router.populateTransaction.addTokenAddress(ethers.constants.AddressZero, {value: value});
       tx.data = '0x' + calldata;
       tx.from = from.address;
       let txResponse = await from.sendTransaction(tx);
@@ -155,11 +157,12 @@ describe.only('SwapRouterCompressed', function () {
       async function exactInput(
         tokens: string[],
         amountIn: number = 3,
-        amountOutMinimum: number = 1
+        amountOutMinimum: number = 1,
+        wrappedNative: boolean = false
       ): Promise<boolean> {
         const inputIsWNativeToken = wnative.address === tokens[0]
         const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
-        const value = inputIsWNativeToken ? amountIn : 0
+        const value = inputIsWNativeToken ? (wrappedNative ? 0 : amountIn) : 0
         let tokensIndexes: number[] = tokens.map((token: string) => tokensMap[token]);
 
         const params: EncodeRouterCalldataParams = {
@@ -170,15 +173,16 @@ describe.only('SwapRouterCompressed', function () {
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
           deadline: BigInt(1),
           amountIn: BigInt(amountIn),
-          amountOut: BigInt(amountOutMinimum)
+          amountOut: BigInt(amountOutMinimum),
+          wrappedNative
         };
 
-        await sendPayload(trader, params)
+        await sendPayload(trader, value, params)
 
         // ensure that the swap fails if the limit is any tighter
         params.amountOut += 1n;
         await expect(
-          sendPayload(trader, params)
+          sendPayload(trader, value, params)
           ).to.be.revertedWith('Too little received')
        return true;
       }
@@ -255,18 +259,53 @@ describe.only('SwapRouterCompressed', function () {
         })
       })
 
+      describe('Native input', () => {
+        describe('WNativeToken', () => {
+          beforeEach(async () => {
+            await createPoolWNativeToken(tokens[0].address)
+          })
+
+          it('WNativeToken -> 0', async () => {
+            const pool = await factory.poolByPair(wnative.address, tokens[0].address)
+
+            // get balances before
+            const poolBefore = await getBalances(pool)
+            const traderBefore = await getBalances(trader.address)
+
+            await exactInput([wnative.address, tokens[0].address])
+
+            // get balances after
+            const poolAfter = await getBalances(pool)
+            const traderAfter = await getBalances(trader.address)
+
+            expect(traderAfter.token0).to.be.eq(traderBefore.token0.add(1))
+            expect(poolAfter.wnative).to.be.eq(poolBefore.wnative.add(3))
+            expect(poolAfter.token0).to.be.eq(poolBefore.token0.sub(1))
+          })
+
+          it('WNativeToken -> 0 -> 1', async () => {
+            const traderBefore = await getBalances(trader.address)
+
+            await exactInput([wnative.address, tokens[0].address, tokens[1].address], 5)
+
+            const traderAfter = await getBalances(trader.address)
+            expect(traderAfter.token1).to.be.eq(traderBefore.token1.add(1))
+          })
+        })
+      })
     })
 
     describe('#exactOutput', () => {
       async function exactOutput(
         tokens: string[],
         amountOut: number = 1,
-        amountInMaximum: number = 3
+        amountInMaximum: number = 3,
+        wrappedNative: boolean = false
       ): Promise<boolean> {
         const inputIsWNativeToken = tokens[0] === wnative.address
         const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
 
-        const value = inputIsWNativeToken ? amountInMaximum : 0
+        const value = inputIsWNativeToken ? (wrappedNative ? 0 : amountInMaximum) : 0
 
         let tokensIndexes: number[] = tokens.slice().reverse().map((token: string) => tokensMap[token]);
         const params: EncodeRouterCalldataParams = {
@@ -277,14 +316,15 @@ describe.only('SwapRouterCompressed', function () {
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
           deadline: BigInt(1),
           amountIn: BigInt(amountOut),
-          amountOut: BigInt(amountInMaximum)
+          amountOut: BigInt(amountInMaximum),
+          wrappedNative
         };
-        await sendPayload(trader, params);
+        await sendPayload(trader, value, params);
 
         // ensure that the swap fails if the limit is any tighter
         params.amountOut -= 1n;
         await expect(
-          sendPayload(trader, params)
+          sendPayload(trader, value > 0 ? value - 1 : 0, params)
           ).to.be.revertedWith('Too much requested')
        return true;
       }
@@ -362,6 +402,46 @@ describe.only('SwapRouterCompressed', function () {
         })
 
       })
+
+      describe('Native input', () => {
+        describe('WNativeToken', () => {
+          beforeEach(async () => {
+            await createPoolWNativeToken(tokens[0].address)
+            await wnative.deposit({ value: 1000 });
+            await wnative.transfer(trader.address, 1000);
+            await wnative.connect(trader).approve(router.address, 1000);
+          })
+
+          it('WNativeToken -> 0', async () => {
+            const pool = await factory.poolByPair(wnative.address, tokens[0].address)
+
+            // get balances before
+            const poolBefore = await getBalances(pool)
+            const traderBefore = await getBalances(trader.address)
+
+            await exactOutput([wnative.address, tokens[0].address])
+
+            // get balances after
+            const poolAfter = await getBalances(pool)
+            const traderAfter = await getBalances(trader.address)
+
+            expect(traderAfter.token0).to.be.eq(traderBefore.token0.add(1))
+            expect(poolAfter.wnative).to.be.eq(poolBefore.wnative.add(3))
+            expect(poolAfter.token0).to.be.eq(poolBefore.token0.sub(1))
+          })
+
+          it('WNativeToken -> 0 -> 1', async () => {
+            const traderBefore = await getBalances(trader.address)
+
+            await exactOutput([wnative.address, tokens[0].address, tokens[1].address], 1, 5)
+
+            const traderAfter = await getBalances(trader.address)
+
+            expect(traderAfter.token1).to.be.eq(traderBefore.token1.add(1))
+          })
+        })
+      })
+
     })
   })
 })
