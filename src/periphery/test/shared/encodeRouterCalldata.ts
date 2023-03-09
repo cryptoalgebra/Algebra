@@ -114,7 +114,7 @@ export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string
         const limitSqrtPrice = params.limitSqrtPrice ? params.limitSqrtPrice : BigInt(0);
         OUT = appendValue(OUT, limitSqrtPrice, 160n);
     }
-    
+
     if (params.hasRecipient) {
         const recipient = params.recipient ? params.recipient : BigInt(0);
         OUT = appendValue(OUT, BigInt(recipient), 160n);

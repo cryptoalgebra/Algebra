@@ -68,6 +68,36 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         }
     }
 
+    struct SwapCallbackData {
+        bytes path;
+        address payer;
+    }
+
+    /// @inheritdoc IAlgebraSwapCallback
+    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
+        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+        SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
+        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
+        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
+
+        (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
+            ? (tokenIn < tokenOut, uint256(amount0Delta))
+            : (tokenOut < tokenIn, uint256(amount1Delta));
+        if (isExactInput) {
+            pay(tokenIn, data.payer, msg.sender, amountToPay);
+        } else {
+            // either initiate the next swap or pay
+            if (data.path.hasMultiplePools()) {
+                data.path = data.path.skipToken();
+                exactOutputInternal(amountToPay, msg.sender, 0, data);
+            } else {
+                amountInCached = amountToPay;
+                tokenIn = tokenOut; // swap in/out because exact output swaps are reversed
+                pay(tokenIn, data.payer, msg.sender, amountToPay);
+            }
+        }
+    }
+
     receive() external payable {
         //
     }
@@ -213,36 +243,6 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));
     }
 
-    struct SwapCallbackData {
-        bytes path;
-        address payer;
-    }
-
-    /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
-        SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
-        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
-        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
-
-        (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
-            ? (tokenIn < tokenOut, uint256(amount0Delta))
-            : (tokenOut < tokenIn, uint256(amount1Delta));
-        if (isExactInput) {
-            pay(tokenIn, data.payer, msg.sender, amountToPay);
-        } else {
-            // either initiate the next swap or pay
-            if (data.path.hasMultiplePools()) {
-                data.path = data.path.skipToken();
-                exactOutputInternal(amountToPay, msg.sender, 0, data);
-            } else {
-                amountInCached = amountToPay;
-                tokenIn = tokenOut; // swap in/out because exact output swaps are reversed
-                pay(tokenIn, data.payer, msg.sender, amountToPay);
-            }
-        }
-    }
-
     /// @dev Performs a single exact input swap
     function exactInputInternal(
         uint256 amountIn,
@@ -268,13 +268,49 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         return uint256(-(zeroToOne ? amount1 : amount0));
     }
 
-    function exactInputSingle(SwapConfiguration memory params) private returns (uint256 amountOut) {
-        amountOut = exactInputInternal(
-            params.amountIn,
-            params.recipient,
-            params.limitSqrtPrice,
-            SwapCallbackData({path: params.path, payer: msg.sender})
+    /// @dev Performs a single exact input swap supporting fee on transfer tokens
+    function exactInputSupportingFeeInternal(
+        uint256 amountIn,
+        address recipient,
+        uint160 limitSqrtPrice,
+        SwapCallbackData memory data
+    ) private returns (uint256 amountOut) {
+        if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
+
+        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
+        bool zeroToOne = tokenIn < tokenOut;
+
+        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut).swapSupportingFeeOnInputTokens(
+            data.payer,
+            recipient,
+            zeroToOne,
+            amountIn.toInt256(),
+            limitSqrtPrice == 0
+                ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : limitSqrtPrice,
+            abi.encode(data)
         );
+
+        return uint256(-(zeroToOne ? amount1 : amount0));
+    }
+
+    function exactInputSingle(SwapConfiguration memory params) private returns (uint256 amountOut) {
+        if (!params.feeOnTransfer) {
+            amountOut = exactInputInternal(
+                params.amountIn,
+                params.recipient,
+                params.limitSqrtPrice,
+                SwapCallbackData({path: params.path, payer: msg.sender})
+            );
+        } else {
+            amountOut = exactInputSupportingFeeInternal(
+                params.amountIn,
+                params.recipient,
+                params.limitSqrtPrice,
+                SwapCallbackData({path: params.path, payer: msg.sender})
+            );
+        }
+
         require(amountOut >= params.amountOutMin, 'Too little received');
     }
 
@@ -284,16 +320,29 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         while (true) {
             bool hasMultiplePools = params.path.hasMultiplePools();
 
-            // the outputs of prior swaps become the inputs to subsequent ones
-            params.amountIn = exactInputInternal(
-                params.amountIn,
-                hasMultiplePools ? address(this) : params.recipient, // for intermediate swaps, this contract custodies
-                0,
-                SwapCallbackData({
-                    path: params.path.getFirstPool(), // only the first pool in the path is necessary
-                    payer: payer
-                })
-            );
+            if (!params.feeOnTransfer) {
+                // the outputs of prior swaps become the inputs to subsequent ones
+                params.amountIn = exactInputInternal(
+                    params.amountIn,
+                    hasMultiplePools ? address(this) : params.recipient, // for intermediate swaps, this contract custodies
+                    0,
+                    SwapCallbackData({
+                        path: params.path.getFirstPool(), // only the first pool in the path is necessary
+                        payer: payer
+                    })
+                );
+            } else {
+                // the outputs of prior swaps become the inputs to subsequent ones
+                params.amountIn = exactInputSupportingFeeInternal(
+                    params.amountIn,
+                    hasMultiplePools ? address(this) : params.recipient, // for intermediate swaps, this contract custodies
+                    0,
+                    SwapCallbackData({
+                        path: params.path.getFirstPool(), // only the first pool in the path is necessary
+                        payer: payer
+                    })
+                );
+            }
 
             // decide whether to continue or terminate
             if (hasMultiplePools) {

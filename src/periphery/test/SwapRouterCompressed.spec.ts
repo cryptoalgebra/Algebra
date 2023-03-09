@@ -329,6 +329,151 @@ describe.only('SwapRouterCompressed', function () {
       })
     })
 
+    describe('#exactInputSupportingFee', () => {
+      async function exactInputSupportingFee(
+        tokens: string[],
+        amountIn: number = 3,
+        amountOutMinimum: number = 1,
+        wrappedNative: boolean = false,
+        unwrapResultWNative: boolean = false
+      ): Promise<boolean> {
+        const inputIsWNativeToken = wnative.address === tokens[0]
+        const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
+        const value = inputIsWNativeToken ? (wrappedNative ? 0 : amountIn) : 0
+        let tokensIndexes: number[] = tokens.map((token: string) => tokensMap[token]);
+
+        const params: EncodeRouterCalldataParams = {
+          exactIn: true,
+          feeOnTransfer: true,
+          hasRecipient: true,
+          hasDeadline: true,
+          tokens: tokensIndexes,
+          recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
+          deadline: BigInt(1),
+          amountIn: BigInt(amountIn),
+          amountOut: BigInt(amountOutMinimum),
+          wrappedNative,
+          unwrapResultWNative
+        };
+
+        await sendPayload(trader, value, params)
+        return true;
+      }
+
+      beforeEach(async () => {
+        for (let token of tokens) {
+          await token.transfer(trader.address, 110);
+          await token.connect(trader).approve(router.address, 110);
+        }
+      })
+
+      describe('single-pool', () => {
+        it('0 -> 1', async () => {
+          await tokens[0].setDefl();
+          const pool = await factory.poolByPair(tokens[0].address, tokens[1].address)
+
+          // get balances before
+          const poolBefore = await getBalances(pool)
+          const traderBefore = await getBalances(trader.address)
+
+          await exactInputSupportingFee(tokens.slice(0, 2).map((token) => token.address), 100, 25)
+
+          // get balances after
+          const poolAfter = await getBalances(pool)
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token0).to.be.eq(traderBefore.token0.sub(100))
+          expect(traderAfter.token1).to.be.gt(traderBefore.token1.add(25))
+          expect(poolAfter.token0).to.be.eq(poolBefore.token0.add(95))
+          expect(poolAfter.token1).to.be.lt(poolBefore.token1)
+        })
+
+        it('1 -> 0', async () => {
+          await tokens[1].setDefl();
+          const pool = await factory.poolByPair(tokens[1].address, tokens[0].address)
+
+          // get balances before
+          const poolBefore = await getBalances(pool)
+          const traderBefore = await getBalances(trader.address)
+
+          await exactInputSupportingFee(
+            tokens
+              .slice(0, 2)
+              .reverse()
+              .map((token) => token.address),
+              100,
+              25
+          )
+
+          // get balances after
+          const poolAfter = await getBalances(pool)
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token0).to.be.gt(traderBefore.token0.add(25))
+          expect(traderAfter.token1).to.be.eq(traderBefore.token1.sub(100))
+          expect(poolAfter.token0).to.be.lt(poolBefore.token0.sub(25))
+          expect(poolAfter.token1).to.be.eq(poolBefore.token1.add(95))
+        })
+      })
+
+      describe('multi-pool', () => {
+        it('0 -> 1 -> 2', async () => {
+          await tokens[0].setDefl();
+          const traderBefore = await getBalances(trader.address)
+          await exactInputSupportingFee(
+            tokens.map((token) => token.address),
+            100,
+            10
+          )
+
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token0).to.be.eq(traderBefore.token0.sub(100))
+          expect(traderAfter.token2).to.be.gt(traderBefore.token2.add(10))
+        })
+
+        it('2 -> 1 -> 0', async () => {
+          await tokens[2].setDefl();
+          const traderBefore = await getBalances(trader.address)
+
+          await exactInputSupportingFee(tokens.map((token) => token.address).reverse(), 100, 10)
+
+          const traderAfter = await getBalances(trader.address)
+
+          expect(traderAfter.token2).to.be.eq(traderBefore.token2.sub(100))
+          expect(traderAfter.token0).to.be.gt(traderBefore.token0.add(10))
+        })
+      })
+
+      describe('Native output', () => {
+        describe('WNativeToken', () => {
+          beforeEach(async () => {
+            await createPoolWNativeToken(tokens[0].address)
+            await createPoolWNativeToken(tokens[1].address)
+          })
+
+          it('0 -> WNativeToken', async () => {
+            await tokens[0].setDefl();
+            const pool = await factory.poolByPair(tokens[0].address, wnative.address)
+
+            // get balances before
+            const poolBefore = await getBalances(pool)
+            const traderBefore = await getBalances(trader.address)
+
+            await exactInputSupportingFee([tokens[0].address, wnative.address], 100, 10, false, true)
+
+            // get balances after
+            const poolAfter = await getBalances(pool)
+            const traderAfter = await getBalances(trader.address)
+
+            expect(traderAfter.token0).to.be.eq(traderBefore.token0.sub(100))
+            expect(poolAfter.wnative).to.be.lt(poolBefore.wnative.sub(10))
+            expect(poolAfter.token0).to.be.eq(poolBefore.token0.add(95))
+          })
+        })
+      })
+    })
+
     describe('#exactOutput', () => {
       async function exactOutput(
         tokens: string[],
