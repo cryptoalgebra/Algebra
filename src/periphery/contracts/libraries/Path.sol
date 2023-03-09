@@ -11,9 +11,6 @@ library Path {
 
     /// @dev The length of the bytes encoded address
     uint256 private constant ADDR_SIZE = 20;
-    /// @dev The length of the bytes encoded fee
-    uint256 private constant FEE_SIZE = 3;
-
     /// @dev The offset of a single token address and pool fee
     uint256 private constant NEXT_OFFSET = ADDR_SIZE;
     /// @dev The offset of an encoded pool key
