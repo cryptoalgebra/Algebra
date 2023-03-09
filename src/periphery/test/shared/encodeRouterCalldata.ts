@@ -36,6 +36,7 @@ function encodeAmount(amount: bigint): [bigint, bigint] {
 export type EncodeRouterCalldataParams = {
     exactIn?: boolean, 
     feeOnTransfer?: boolean,
+    unwrapResultWNative?: boolean;
     hasRecipient?: boolean,
     hasLimitSqrtPrice?: boolean,
     hasDeadline?: boolean,
@@ -55,7 +56,7 @@ export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string
     let config = 1n << 7n;
     if (params.exactIn) config = config | (1n << 6n);
     if (params.feeOnTransfer) config = config | (BigInt(1) << BigInt(5));
-    if (params.hasRecipient) config = config | (BigInt(1) << BigInt(4));
+    if (params.unwrapResultWNative) config = config | (BigInt(1) << BigInt(4));
     if (params.hasLimitSqrtPrice) config = config | (BigInt(1) << BigInt(3));
     config = config | BigInt(params.tokens.length);
     
@@ -109,13 +110,14 @@ export function encodeRouterCalldata(params: EncodeRouterCalldataParams): string
     }
 
     // additional stuff
-    if (params.hasRecipient) {
-        const recipient = params.recipient ? params.recipient : BigInt(0);
-        OUT = appendValue(OUT, BigInt(recipient), 160n);
-    }
     if (params.hasLimitSqrtPrice) {
         const limitSqrtPrice = params.limitSqrtPrice ? params.limitSqrtPrice : BigInt(0);
         OUT = appendValue(OUT, limitSqrtPrice, 160n);
+    }
+    
+    if (params.hasRecipient) {
+        const recipient = params.recipient ? params.recipient : BigInt(0);
+        OUT = appendValue(OUT, BigInt(recipient), 160n);
     }
     if (params.hasDeadline) {
         const deadline = params.deadline ? params.deadline : BigInt(0);

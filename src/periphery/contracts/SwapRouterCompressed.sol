@@ -14,8 +14,6 @@ import './libraries/CallbackValidation.sol';
 import './libraries/TransferHelper.sol';
 import './interfaces/external/IWNativeToken.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra Swap Router TODO
 /// @notice Router for stateless execution of swaps against Algebra
 contract SwapRouterCompressed is IAlgebraSwapCallback {
@@ -88,7 +86,8 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
 
         SwapConfiguration memory swapConfiguration = decodeCalldata(memPointer, callDataLength, word1);
 
-        if (!swapConfiguration.hasRecipient) swapConfiguration.recipient = msg.sender;
+        if (!swapConfiguration.hasRecipient && !swapConfiguration.unwrapResultWNative)
+            swapConfiguration.recipient = msg.sender;
 
         if (swapConfiguration.exactIn) {
             if (swapConfiguration.path.numPools() > 1) {
@@ -103,12 +102,18 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
                 exactOutputSingle(swapConfiguration);
             }
         }
+
+        if (swapConfiguration.unwrapResultWNative) {
+            if (!swapConfiguration.hasRecipient) swapConfiguration.recipient = msg.sender;
+            unwrapWNativeToken(swapConfiguration.recipient);
+        }
     }
 
     struct SwapConfiguration {
         bool exactIn;
         bool feeOnTransfer;
         bool hasRecipient;
+        bool unwrapResultWNative;
         bool hasLimitSqrtPrice;
         uint256 amountIn;
         uint256 amountOutMin;
@@ -130,7 +135,7 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         {
             bool exactIn;
             bool feeOnTransfer;
-            bool hasRecipient;
+            bool unwrapResultWNative;
             bool hasLimitSqrtPrice;
 
             assembly {
@@ -139,12 +144,12 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
                 tokenAddressEncoding := and(shr(246, word1), 0x3)
                 exactIn := iszero(and(config, shl(6, 1)))
                 feeOnTransfer := iszero(and(config, shl(5, 1)))
-                hasRecipient := iszero(and(config, shl(4, 1)))
+                unwrapResultWNative := iszero(and(config, shl(4, 1)))
                 hasLimitSqrtPrice := iszero(and(config, shl(3, 1)))
             }
             swapConfiguration.exactIn = !exactIn;
             swapConfiguration.feeOnTransfer = !feeOnTransfer;
-            swapConfiguration.hasRecipient = !hasRecipient;
+            swapConfiguration.unwrapResultWNative = !unwrapResultWNative;
             swapConfiguration.hasLimitSqrtPrice = !hasLimitSqrtPrice;
         }
 
@@ -186,18 +191,20 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
             }
         }
 
-        if (swapConfiguration.hasRecipient) {
-            uint160 _recipient;
-            (_recipient, offset) = CompressedEncoding.parse160(memPointer, offset);
-            swapConfiguration.recipient = address(_recipient);
-        }
-
         if (swapConfiguration.hasLimitSqrtPrice) {
             (swapConfiguration.limitSqrtPrice, offset) = CompressedEncoding.parse160(memPointer, offset);
         }
 
         if (callDataLength > offset / 8) {
-            (swapConfiguration.deadline, ) = CompressedEncoding.parse32(memPointer, offset);
+            if (callDataLength > offset / 8 + 160) {
+                uint160 _recipient;
+                (_recipient, offset) = CompressedEncoding.parse160(memPointer, offset);
+                swapConfiguration.recipient = address(_recipient);
+                swapConfiguration.hasRecipient = true;
+            }
+            if (callDataLength > offset / 8) {
+                (swapConfiguration.deadline, ) = CompressedEncoding.parse32(memPointer, offset);
+            }
         }
     }
 
@@ -375,6 +382,16 @@ contract SwapRouterCompressed is IAlgebraSwapCallback {
         } else {
             // pull payment
             TransferHelper.safeTransferFrom(token, payer, recipient, value);
+        }
+    }
+
+    function unwrapWNativeToken(address recipient) internal {
+        uint256 balanceWNativeToken = IWNativeToken(WNativeToken).balanceOf(address(this));
+        require(balanceWNativeToken >= 2, 'Insufficient WNativeToken');
+        balanceWNativeToken -= 1;
+        if (balanceWNativeToken > 0) {
+            IWNativeToken(WNativeToken).withdraw(balanceWNativeToken);
+            TransferHelper.safeTransferNative(recipient, balanceWNativeToken);
         }
     }
 }

@@ -513,8 +513,8 @@ describe('SwapRouter', function () {
           path: encodePath(tokens.slice().reverse()),
           recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
           deadline: 1,
-          amountIn: amountOut,
-          amountOutMin: amountInMaximum,
+          amountOut,
+          amountInMaximum,
         }
 
         const data = [router.interface.encodeFunctionData('exactOutput', [params])]
