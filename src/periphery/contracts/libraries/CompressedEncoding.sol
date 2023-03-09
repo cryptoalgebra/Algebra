@@ -35,7 +35,8 @@ library CompressedEncoding {
 
             _tokens[i] = indexToToken[tokenIndex];
         }
-        return (tightlyPackTokens(_tokens), offset);
+        if (_pathLength == 2) return (abi.encodePacked(_tokens[0], _tokens[1]), offset);
+        else return (tightlyPackTokens(_tokens), offset);
     }
 
     function parseAmount(uint256 memPointer, uint256 offset) internal pure returns (uint128 amount, uint256 newOffset) {
