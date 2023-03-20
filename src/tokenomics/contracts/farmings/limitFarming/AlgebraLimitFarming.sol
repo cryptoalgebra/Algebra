@@ -132,15 +132,16 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
         uint256 _totalReward = incentive.totalReward;
-        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
+        if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
         incentive.totalReward = _totalReward - rewardAmount;
 
         uint256 _bonusReward = incentive.bonusReward;
         if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
         incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (bonusRewardAmount > 0)
+            TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
 
         emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }

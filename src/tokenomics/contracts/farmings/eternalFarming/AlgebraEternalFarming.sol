@@ -106,18 +106,20 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-        uint256 _totalReward = virtualPool.rewardReserve0();
-        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
-        incentive.totalReward = incentive.totalReward - rewardAmount; // TODO remove?
+        uint256 rewardReserve0 = virtualPool.rewardReserve0();
+        if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
+        if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
+        incentive.totalReward = incentive.totalReward - rewardAmount;
 
-        uint256 _bonusReward = virtualPool.rewardReserve1();
-        if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
+        uint256 rewardReserve1 = virtualPool.rewardReserve1();
+        if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
         incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
 
         virtualPool.decreaseRewards(rewardAmount, bonusRewardAmount);
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (bonusRewardAmount > 0)
+            TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
 
         emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }

@@ -320,15 +320,15 @@ describe('unit/Incentives', async () => {
       })
 
       it('decrease rewards completely', async () => {
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, rewardAmount.mul(2), bonusRewardAmount.mul(2))
       
-        rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         
-        expect(rewardAmount).to.eq(0)
+        expect(rewardAmount).to.eq(1)
         expect(bonusRewardAmount).to.eq(0)
       })
 
