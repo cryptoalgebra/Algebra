@@ -243,7 +243,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             if (incentive.deactivated) {
                 tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
             } else {
-                (, tick, , , , , ) = key.pool.globalState(); // TODO remove?
+                (, tick, , , , , ) = key.pool.globalState();
             }
 
             virtualPool.applyLiquidityDeltaToPosition(

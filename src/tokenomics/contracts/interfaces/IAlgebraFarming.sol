@@ -7,7 +7,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';
 
 /// @title Algebra Farming Interface
@@ -15,9 +14,6 @@ import './IIncentiveKey.sol';
 interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
-
-    /// @notice The farming Center
-    function farmingCenter() external view returns (IFarmingCenter);
 
     /// @notice The pool deployer
     function deployer() external returns (IAlgebraPoolDeployer);

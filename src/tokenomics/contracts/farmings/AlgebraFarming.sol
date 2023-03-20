@@ -44,8 +44,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     IAlgebraPoolDeployer public immutable override deployer;
 
-    /// @inheritdoc IAlgebraFarming
-    IFarmingCenter public override farmingCenter;
+    IFarmingCenter public farmingCenter;
 
     /// @dev bytes32 refers to the return value of IncentiveId.compute
     /// @inheritdoc IAlgebraFarming

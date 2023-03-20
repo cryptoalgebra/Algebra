@@ -201,7 +201,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             if (incentive.deactivated) {
                 tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
             } else {
-                (, tick, , , , , ) = key.pool.globalState(); // TODO remove?
+                (, tick, , , , , ) = key.pool.globalState();
             }
 
             // update rewards, as ticks may be cleared when liquidity decreases
