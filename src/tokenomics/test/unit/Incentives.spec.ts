@@ -188,7 +188,7 @@ describe('unit/Incentives', async () => {
       })
     })
 
-    describe('attach/detach incentive', () => {
+    describe('deactivate incentive', () => {
       let incentiveArgs: HelperTypes.CreateIncentive.Args
       let incentiveKey: ContractParams.IncentiveKey
       let virtualPool: Contract
@@ -221,29 +221,15 @@ describe('unit/Incentives', async () => {
 
       })
 
-      it('detach incentive', async () => {
+      it('deactivate incentive', async () => {
         
         let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
+        await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
         let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
         expect(activeIncentiveBefore).to.equal(virtualPool.address)
         expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
 
-      })
-
-      it('attach incentive', async () => {
-
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
-        
-        let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        await context.farming.connect(incentiveCreator).attachIncentive(incentiveKey)
-
-        let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        expect(activeIncentiveBefore).to.equal(ZERO_ADDRESS)
-        expect(activeIncentiveAfter).to.equal(virtualPool.address) 
       })
     })
     

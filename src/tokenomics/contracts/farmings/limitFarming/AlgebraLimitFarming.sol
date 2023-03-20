@@ -144,15 +144,9 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+    function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentiveVirtualPool);
-    }
-
-    /// @inheritdoc IAlgebraFarming
-    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentiveVirtualPool);
+        _deactivateIncentive(key, _incentiveVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -183,11 +177,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external override onlyFarmingCenter {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive
@@ -247,7 +237,12 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            (, int24 tick, , , , , ) = key.pool.globalState();
+            int24 tick;
+            if (incentive.deactivated) {
+                tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
+            } else {
+                (, tick, , , , , ) = key.pool.globalState(); // TODO remove?
+            }
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),
@@ -273,12 +268,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external view override returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
