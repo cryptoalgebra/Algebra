@@ -103,6 +103,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
     }
 
+    /// @inheritdoc IAlgebraFarming
     function addRewards(
         IncentiveKey memory key,
         uint256 reward,
@@ -119,6 +120,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         }
     }
 
+    /// @inheritdoc IAlgebraFarming
     function decreaseRewardsAmount(
         IncentiveKey memory key,
         uint256 rewardAmount,

@@ -18,8 +18,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     uint128 public rewardRate0;
     uint128 public rewardRate1;
 
-    uint256 public rewardReserve0;
-    uint256 public rewardReserve1;
+    uint256 public override rewardReserve0;
+    uint256 public override rewardReserve1;
 
     uint256 public totalRewardGrowth0;
     uint256 public totalRewardGrowth1;
@@ -32,10 +32,18 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         prevTimestamp = uint32(block.timestamp);
     }
 
+    // @inheritdoc IAlgebraEternalVirtualPool
     function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
         if (token0Amount > 0) rewardReserve0 = rewardReserve0.add(token0Amount);
         if (token1Amount > 0) rewardReserve1 = rewardReserve1.add(token1Amount);
+    }
+
+    // @inheritdoc IAlgebraEternalVirtualPool
+    function decreaseRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
+        if (token0Amount > 0) rewardReserve0 = rewardReserve0.sub(token0Amount);
+        if (token1Amount > 0) rewardReserve1 = rewardReserve1.sub(token1Amount);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
@@ -45,12 +53,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function getInnerRewardsGrowth(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)
-    {
+    function getInnerRewardsGrowth(
+        int24 bottomTick,
+        int24 topTick
+    ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
         return ticks.getInnerFeeGrowth(bottomTick, topTick, globalTick, totalRewardGrowth0, totalRewardGrowth1);
     }
 
