@@ -15,8 +15,8 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     using TickManager for mapping(int24 => TickManager.Tick);
     using LowGasSafeMath for uint256;
 
-    uint128 public rewardRate0;
-    uint128 public rewardRate1;
+    uint128 public override rewardRate0;
+    uint128 public override rewardRate1;
 
     uint256 public override rewardReserve0;
     uint256 public override rewardReserve1;

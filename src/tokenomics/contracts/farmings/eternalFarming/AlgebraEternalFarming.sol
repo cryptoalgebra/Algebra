@@ -83,6 +83,13 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraFarming
     function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
+
+        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(_eternalVirtualPool);
+        if (virtualPool.rewardRate0() != 0 || virtualPool.rewardRate1() != 0) {
+            virtualPool.setRates(0, 0);
+            emit RewardsRatesChanged(0, 0, IncentiveId.compute(key));
+        }
+
         _deactivateIncentive(key, _eternalVirtualPool);
     }
 
