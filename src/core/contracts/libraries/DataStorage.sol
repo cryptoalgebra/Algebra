@@ -40,6 +40,7 @@ library DataStorage {
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
+  /// @return oldestIndex The index of the oldest timepoint
   function write(
     Timepoint[UINT16_MODULO] storage self,
     uint16 lastIndex,
