@@ -115,6 +115,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
   /// have passed since the call to the startRenounceOwnership() function.
   function renounceOwnership() public override onlyOwner {
+    require(renounceOwnershipStartTimestamp != 0);
     require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
     renounceOwnershipStartTimestamp = 0;
 
