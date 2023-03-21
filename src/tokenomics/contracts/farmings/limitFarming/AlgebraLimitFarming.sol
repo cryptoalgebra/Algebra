@@ -103,6 +103,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
     }
 
+    /// @inheritdoc IAlgebraFarming
     function addRewards(
         IncentiveKey memory key,
         uint256 reward,
@@ -119,6 +120,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         }
     }
 
+    /// @inheritdoc IAlgebraFarming
     function decreaseRewardsAmount(
         IncentiveKey memory key,
         uint256 rewardAmount,
@@ -130,29 +132,24 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
         uint256 _totalReward = incentive.totalReward;
-        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
+        if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
         incentive.totalReward = _totalReward - rewardAmount;
 
         uint256 _bonusReward = incentive.bonusReward;
         if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
         incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (bonusRewardAmount > 0)
+            TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
 
         emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
-    function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+    function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentiveVirtualPool);
-    }
-
-    /// @inheritdoc IAlgebraFarming
-    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentiveVirtualPool);
+        _deactivateIncentive(key, _incentiveVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -183,11 +180,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external override onlyFarmingCenter {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         // anyone can call exitFarming if the block time is after the end time of the incentive
@@ -247,7 +240,12 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            (, int24 tick, , , , , ) = key.pool.globalState();
+            int24 tick;
+            if (incentive.deactivated) {
+                tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
+            } else {
+                (, tick, , , , , ) = key.pool.globalState();
+            }
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),
@@ -273,12 +271,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external view override returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];

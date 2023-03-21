@@ -971,7 +971,7 @@ describe('unit/FarmingCenter', () => {
 
     }) 
 
-    it('collect rewards after eternalFarming detach', async() => {
+    it('collect rewards after eternalFarming deactivate', async() => {
       
       let balanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
@@ -1004,7 +1004,7 @@ describe('unit/FarmingCenter', () => {
         desiredValue: 10,
       })
 
-      await context.eternalFarming.connect(incentiveCreator).detachIncentive( 
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive( 
       {    
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
@@ -1025,8 +1025,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
       
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199099))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99249)) 
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199199))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99299)) 
 
     }) 
 
