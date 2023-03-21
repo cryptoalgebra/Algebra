@@ -27,32 +27,16 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
     /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
     /// tickLower The lower end of the tick range for the position,
     /// tickUpper The upper end of the tick range for the position
-    function farms(uint256 tokenId, bytes32 incentiveId)
-        external
-        view
-        returns (
-            uint128 liquidity,
-            int24 tickLower,
-            int24 tickUpper
-        );
+    function farms(
+        uint256 tokenId,
+        bytes32 incentiveId
+    ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper);
 
     function createLimitFarming(
         IncentiveKey memory key,
         Tiers calldata tiers,
         IncentiveParams memory params
     ) external returns (address virtualPool);
-
-    function addRewards(
-        IncentiveKey memory key,
-        uint256 reward,
-        uint256 bonusReward
-    ) external;
-
-    function decreaseRewardsAmount(
-        IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
-    ) external;
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
@@ -79,6 +63,4 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         uint24 minimalAllowedPositionWidth,
         uint32 enterStartTime
     );
-
-    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId);
 }

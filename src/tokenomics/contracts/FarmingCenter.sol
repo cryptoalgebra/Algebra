@@ -115,7 +115,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
         if (tokensLocked > 0) {
             uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
@@ -129,11 +129,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        bool isLimit
-    ) external override {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override {
         Deposit storage deposit = deposits[tokenId];
         checkAuthorizationForToken(deposit.L2TokenId);
         IAlgebraFarming _farming;
@@ -148,18 +144,16 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _farming.exitFarming(key, tokenId, msg.sender);
 
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
         }
     }
 
     /// @inheritdoc IFarmingCenter
-    function collect(INonfungiblePositionManager.CollectParams memory params)
-        external
-        override
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function collect(
+        INonfungiblePositionManager.CollectParams memory params
+    ) external override returns (uint256 amount0, uint256 amount1) {
         checkAuthorizationForToken(deposits[params.tokenId].L2TokenId);
         if (params.recipient == address(0)) {
             params.recipient = address(this);
@@ -168,11 +162,10 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function collectRewards(IncentiveKey memory key, uint256 tokenId)
-        external
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function collectRewards(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external override returns (uint256 reward, uint256 bonusReward) {
         checkAuthorizationForToken(deposits[tokenId].L2TokenId);
         address _virtualPool = _virtualPoolAddresses[address(key.pool)].eternalVirtualPool;
         if (_virtualPool != address(0)) {
@@ -233,11 +226,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function withdrawToken(
-        uint256 tokenId,
-        address to,
-        bytes memory data
-    ) external override {
+    function withdrawToken(uint256 tokenId, address to, bytes memory data) external override {
         require(to != address(this), 'cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
         uint256 l2TokenId = deposit.L2TokenId;
