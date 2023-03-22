@@ -101,14 +101,14 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function startRenounceOwnership() external override onlyOwner {
     renounceOwnershipStartTimestamp = block.timestamp;
-    emit renounceOwnershipStarted(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
+    emit RenounceOwnershipStart(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
 
   /// @inheritdoc IAlgebraFactory
   function stopRenounceOwnership() external override onlyOwner {
     require(renounceOwnershipStartTimestamp != 0);
     renounceOwnershipStartTimestamp = 0;
-    emit renounceOwnershipStopped(block.timestamp);
+    emit RenounceOwnershipStop(block.timestamp);
   }
 
   /// @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
@@ -120,7 +120,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     renounceOwnershipStartTimestamp = 0;
 
     super.renounceOwnership();
-    emit renounceOwnershipFinished(block.timestamp);
+    emit RenounceOwnershipFinish(block.timestamp);
   }
 
   /// @dev Transfers ownership of the contract to a new account (`newOwner`).

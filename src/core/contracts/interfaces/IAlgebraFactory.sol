@@ -11,15 +11,15 @@ interface IAlgebraFactory {
   /// @notice Emitted when a process of ownership renounce is started
   /// @param timestamp The timestamp of event
   /// @param finishTimestamp The timestamp when ownership renounce will be possible to finish
-  event renounceOwnershipStarted(uint256 timestamp, uint256 finishTimestamp);
+  event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp);
 
   /// @notice Emitted when a process of ownership renounce cancelled
   /// @param timestamp The timestamp of event
-  event renounceOwnershipStopped(uint256 timestamp);
+  event RenounceOwnershipStop(uint256 timestamp);
 
   /// @notice Emitted when a process of ownership renounce finished
   /// @param timestamp The timestamp of ownership renouncement
-  event renounceOwnershipFinished(uint256 timestamp);
+  event RenounceOwnershipFinish(uint256 timestamp);
 
   /// @notice Emitted when a pool is created
   /// @param token0 The first token of the pool by address sort order

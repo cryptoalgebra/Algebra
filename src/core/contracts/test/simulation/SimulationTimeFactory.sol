@@ -78,14 +78,14 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   /// @inheritdoc IAlgebraFactory
   function startRenounceOwnership() external override onlyOwner {
     renounceOwnershipStartTimestamp = block.timestamp;
-    emit renounceOwnershipStarted(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
+    emit RenounceOwnershipStart(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
 
   /// @inheritdoc IAlgebraFactory
   function stopRenounceOwnership() external override onlyOwner {
     require(renounceOwnershipStartTimestamp != 0);
     renounceOwnershipStartTimestamp = 0;
-    emit renounceOwnershipStopped(block.timestamp);
+    emit RenounceOwnershipStop(block.timestamp);
   }
 
   /**
@@ -101,7 +101,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     renounceOwnershipStartTimestamp = 0;
 
     super.renounceOwnership();
-    emit renounceOwnershipFinished(block.timestamp);
+    emit RenounceOwnershipFinish(block.timestamp);
   }
 
   /// @inheritdoc IAlgebraFactory
