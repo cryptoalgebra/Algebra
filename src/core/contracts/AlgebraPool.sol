@@ -321,7 +321,7 @@ contract AlgebraPool is
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setTickSpacing(int24 newTickSpacing, int24 newTickspacingLimitOrders) external override nonReentrant {
     _checkIfAdministrator();
-    if (newTickSpacing <= 0 || newTickSpacing > 500 || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
+    if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
     // newTickspacingLimitOrders isn't limited, so it is possible to forbid new limit orders completely
     if (newTickspacingLimitOrders <= 0 || tickSpacingLimitOrders == newTickspacingLimitOrders) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
