@@ -106,20 +106,22 @@ library AdaptiveFee {
 
       // After calculating the closestValue x/g is <= 0.5, so that the series in the neighborhood of zero converges with sufficient speed
       uint256 xLowestDegree = x;
-      res = gHighestDegree; // g**4
+      res = gHighestDegree; // g**4, res < 64 bits
 
       gHighestDegree /= g; // g**3
-      res += xLowestDegree * gHighestDegree;
+      res += xLowestDegree * gHighestDegree; // g**4 + x*g**3, res < 68
 
       gHighestDegree /= g; // g**2
       xLowestDegree *= x; // x**2
+      // g**4 + x * g**3 + (x**2 * g**2) / 2, res < 71
       res += (xLowestDegree * gHighestDegree) / 2;
 
       gHighestDegree /= g; // g
       xLowestDegree *= x; // x**3
+      // g^4 + x * g^3 + (x^2 * g^2)/2 + x^3(g*4 + x)/24, res < 73
       res += (xLowestDegree * g * 4 + xLowestDegree * x) / 24;
 
-      // res = g^4 * (1 + x/g + x^2/(2*g^2) + x^3/(6*g^3) + x^4/(24*g^4)) * closestValue / 10^20
+      // res = g^4 * (1 + x/g + x^2/(2*g^2) + x^3/(6*g^3) + x^4/(24*g^4)) * closestValue / 10^20, closestValue < 75 bits, res < 155
       res = (res * closestValue) / (1e20);
     }
   }
