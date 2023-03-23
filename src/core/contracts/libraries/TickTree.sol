@@ -84,7 +84,7 @@ library TickTree {
       }
       if (!initialized) {
         // try to find which subtree has an active leaf
-        (nextTick, initialized) = nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
+        (nextTick, initialized) = _nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
         if (!initialized) return TickMath.MAX_TICK;
         nextTick = _getFirstTickInNode(secondLayer, nextTick);
       }
@@ -105,7 +105,7 @@ library TickTree {
     assembly {
       nodeNumber := sar(8, tick)
     }
-    (nextTick, initialized) = nextTickInTheSameNode(row[nodeNumber], tick);
+    (nextTick, initialized) = _nextTickInTheSameNode(row[nodeNumber], tick);
   }
 
   /// @notice Returns first active tick in given node
@@ -116,7 +116,7 @@ library TickTree {
     assembly {
       nextTick := shl(8, nodeNumber)
     }
-    (nextTick, ) = nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
+    (nextTick, ) = _nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
   }
 
   /// @notice Returns the next initialized tick contained in the same word as the tick that is
@@ -125,7 +125,7 @@ library TickTree {
   /// @param tick The starting tick
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function nextTickInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
+  function _nextTickInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
     uint256 bitNumber;
     assembly {
       bitNumber := and(tick, 0xFF)
