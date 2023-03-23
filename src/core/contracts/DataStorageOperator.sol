@@ -65,7 +65,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   function getTimepoints(
     uint32[] memory secondsAgos
   ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
-    (, int24 tick, , , , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
+    (, int24 tick, , , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, index);
   }
 

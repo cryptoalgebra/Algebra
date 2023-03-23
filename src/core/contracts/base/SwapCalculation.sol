@@ -57,7 +57,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       cache.fee = zeroToOne ? globalState.feeZtO : globalState.feeOtZ;
       cache.timepointIndex = globalState.timepointIndex;
       cache.communityFee = globalState.communityFee;
-      cache.prevInitializedTick = globalState.prevInitializedTick;
+      cache.prevInitializedTick = prevInitializedTick;
 
       if (amountRequired == 0) revert zeroAmountRequired();
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
@@ -221,14 +221,10 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
     }
 
-    (globalState.price, globalState.tick, globalState.timepointIndex, globalState.prevInitializedTick) = (
-      currentPrice,
-      currentTick,
-      cache.timepointIndex,
-      cache.prevInitializedTick
-    );
+    (globalState.price, globalState.tick, globalState.timepointIndex) = (currentPrice, currentTick, cache.timepointIndex);
 
     liquidity = currentLiquidity;
+    prevInitializedTick = cache.prevInitializedTick;
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {

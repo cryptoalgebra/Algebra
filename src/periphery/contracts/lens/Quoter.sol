@@ -49,7 +49,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (, , , uint16 feeZtO, uint16 feeOtZ, , , ) = pool.globalState();
+        (, , uint16 feeZtO, uint16 feeOtZ, , , ) = pool.globalState();
 
         uint16 fee = tokenIn < tokenOut ? feeZtO : feeOtZ;
         if (isExactInput) {

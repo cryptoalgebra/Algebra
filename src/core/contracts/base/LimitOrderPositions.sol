@@ -32,7 +32,7 @@ abstract contract LimitOrderPositions is Positions {
 
     if (amountToSellDelta != 0) {
       bool remove = amountToSellDelta < 0;
-      (int24 currentTick, int24 prevTick) = (globalState.tick, globalState.prevInitializedTick);
+      (int24 currentTick, int24 prevTick) = (globalState.tick, prevInitializedTick);
 
       if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
         // if tick flipped
@@ -41,7 +41,7 @@ abstract contract LimitOrderPositions is Positions {
         if (_tickData.nextTick == _tickData.prevTick) {
           // tick isn't initialized
           int24 newPrevTick = _insertOrRemoveTick(tick, currentTick, prevTick, remove);
-          if (newPrevTick != prevTick) globalState.prevInitializedTick = newPrevTick;
+          if (newPrevTick != prevTick) prevInitializedTick = newPrevTick;
         }
       }
 

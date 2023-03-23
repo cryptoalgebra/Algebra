@@ -29,7 +29,7 @@ library PoolInteraction {
     }
 
     function _getSqrtPrice(IAlgebraPool pool) internal view returns (uint160 sqrtPriceX96) {
-        (sqrtPriceX96, , , , , , , ) = pool.globalState();
+        (sqrtPriceX96, , , , , , ) = pool.globalState();
     }
 
     function _burnPositionInPool(

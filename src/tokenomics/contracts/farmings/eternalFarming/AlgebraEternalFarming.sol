@@ -166,7 +166,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 bonusReward;
 
         {
-            (, int24 tick, , , , , , ) = key.pool.globalState();
+            (, int24 tick, , , , , ) = key.pool.globalState();
 
             // update rewards, as ticks may be cleared when liquidity decreases
             virtualPool.applyLiquidityDeltaToPosition(uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);

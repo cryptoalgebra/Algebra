@@ -10,7 +10,6 @@ interface IAlgebraPoolState {
   /// @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value;
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run;
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
-  /// @return prevInitializedTick The previous initialized tick
   /// @return feeZtO The last pool fee value for ZtO swaps in hundredths of a bip, i.e. 1e-6;
   /// @return feeOtZ The last pool fee value for OtZ swaps in hundredths of a bip, i.e. 1e-6;
   /// @return timepointIndex The index of the last written timepoint
@@ -19,16 +18,7 @@ interface IAlgebraPoolState {
   function globalState()
     external
     view
-    returns (
-      uint160 price,
-      int24 tick,
-      int24 prevInitializedTick,
-      uint16 feeZtO,
-      uint16 feeOtZ,
-      uint16 timepointIndex,
-      uint8 communityFee,
-      bool unlocked
-    );
+    returns (uint160 price, int24 tick, uint16 feeZtO, uint16 feeOtZ, uint16 timepointIndex, uint8 communityFee, bool unlocked);
 
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256
@@ -58,6 +48,9 @@ interface IAlgebraPoolState {
 
   /// @notice The timestamp of the last sending of tokens to community vault
   function communityFeeLastTimestamp() external view returns (uint32);
+
+  /// @notice The previous active tick
+  function prevInitializedTick() external view returns (int24);
 
   /// @notice The amounts of token0 and token1 that will be sent to the vault
   /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp

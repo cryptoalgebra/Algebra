@@ -20,7 +20,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
-    int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 feeZtO; // The current fee for ZtO swap in hundredths of a bip, i.e. 1e-6
     uint16 feeOtZ; // The current fee for OtZ swap in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
@@ -54,6 +53,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   int24 public override tickSpacingLimitOrders;
   /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public prevInitializedTick;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
   uint128 internal communityFeePending0;
@@ -94,7 +95,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
     globalState.feeZtO = Constants.BASE_FEE;
     globalState.feeOtZ = Constants.BASE_FEE;
-    globalState.prevInitializedTick = TickMath.MIN_TICK;
+    prevInitializedTick = TickMath.MIN_TICK;
     tickSpacing = Constants.INIT_TICK_SPACING;
     tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
   }

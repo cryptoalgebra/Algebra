@@ -58,7 +58,7 @@ abstract contract Positions is AlgebraPoolBase {
     // using memory cache to avoid "stack too deep" error
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
-      globalState.prevInitializedTick,
+      prevInitializedTick,
       globalState.feeZtO,
       globalState.feeOtZ,
       globalState.timepointIndex
@@ -142,13 +142,8 @@ abstract contract Positions is AlgebraPoolBase {
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
-
-      (globalState.prevInitializedTick, globalState.feeZtO, globalState.feeOtZ, globalState.timepointIndex) = (
-        cache.prevInitializedTick,
-        cache.feeZtO,
-        cache.feeOtZ,
-        cache.timepointIndex
-      );
+      prevInitializedTick = cache.prevInitializedTick;
+      (globalState.feeZtO, globalState.feeOtZ, globalState.timepointIndex) = (cache.feeZtO, cache.feeOtZ, cache.timepointIndex);
     }
   }
 

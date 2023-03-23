@@ -25,14 +25,14 @@ abstract contract TickStructure is AlgebraPoolBase {
    * @notice Used to add or remove a tick from a doubly linked list and search tree
    * @param tick The tick being removed or added now
    * @param currentTick The current global tick in the pool
-   * @param prevInitializedTick Previous active tick before `currentTick`
+   * @param _prevInitializedTick Previous active tick before `currentTick`
    * @param remove Remove or add the tick
    * @return newPrevInitializedTick New previous active tick before `currentTick` if changed
    */
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,
-    int24 prevInitializedTick,
+    int24 _prevInitializedTick,
     bool remove
   ) internal override returns (int24 newPrevInitializedTick) {
     uint256 oldTickTreeRoot = tickTreeRoot;
@@ -40,13 +40,13 @@ abstract contract TickStructure is AlgebraPoolBase {
     int24 prevTick;
     if (remove) {
       prevTick = ticks.removeTick(tick);
-      if (prevInitializedTick == tick) prevInitializedTick = prevTick;
+      if (_prevInitializedTick == tick) _prevInitializedTick = prevTick;
     } else {
       int24 nextTick;
-      if (prevInitializedTick < tick && tick <= currentTick) {
-        nextTick = ticks[prevInitializedTick].nextTick;
-        prevTick = prevInitializedTick;
-        prevInitializedTick = tick;
+      if (_prevInitializedTick < tick && tick <= currentTick) {
+        nextTick = ticks[_prevInitializedTick].nextTick;
+        prevTick = _prevInitializedTick;
+        _prevInitializedTick = tick;
       } else {
         nextTick = tickTable.getNextTick(tickSecondLayer, oldTickTreeRoot, tick);
         prevTick = ticks[nextTick].prevTick;
@@ -56,6 +56,6 @@ abstract contract TickStructure is AlgebraPoolBase {
 
     uint256 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
     if (newTickTreeRoot != oldTickTreeRoot) tickTreeRoot = newTickTreeRoot;
-    return prevInitializedTick;
+    return _prevInitializedTick;
   }
 }
