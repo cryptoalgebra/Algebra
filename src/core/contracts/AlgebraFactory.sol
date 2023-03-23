@@ -68,7 +68,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(poolByPair[token0][token1] == address(0));
 
     IDataStorageOperator dataStorage = new DataStorageOperator(_computeAddress(token0, token1));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
+
+    dataStorage.changeFeeConfiguration(true, defaultFeeConfiguration); // for ZtO direction
+    dataStorage.changeFeeConfiguration(false, defaultFeeConfiguration); // for OtZ direction
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
 
@@ -132,7 +134,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x1bbbd9eac56e232b6ad22cdfec7803b6380d08de61d413342690f11a4977c1b1;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x856aaa2c59a6c38ea337c89ff0916cf00ac72a5436cfdbcf75ff00d982e72498;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

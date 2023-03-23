@@ -54,7 +54,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
-      cache.fee = globalState.fee;
+      cache.fee = zeroToOne ? globalState.feeZtO : globalState.feeOtZ;
       cache.timepointIndex = globalState.timepointIndex;
       cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
@@ -76,14 +76,21 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
       cache.activeIncentive = activeIncentive;
 
-      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
+      (uint16 newTimepointIndex, uint16 newFeeZtO, uint16 newFeeOtZ) = _writeTimepoint(
+        cache.timepointIndex,
+        cache.blockTimestamp,
+        currentTick,
+        currentLiquidity
+      );
 
       // new timepoint appears only for first swap/mint/burn in block
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
-        if (cache.fee != newFee) {
-          cache.fee = newFee;
-          emit Fee(newFee);
+        if (globalState.feeZtO != newFeeZtO || globalState.feeOtZ != newFeeOtZ) {
+          globalState.feeZtO = newFeeZtO;
+          globalState.feeOtZ = newFeeOtZ;
+          cache.fee = zeroToOne ? newFeeZtO : newFeeOtZ;
+          emit Fee(newFeeZtO, newFeeOtZ);
         }
       }
     }
@@ -214,10 +221,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
     }
 
-    (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex, globalState.prevInitializedTick) = (
+    (globalState.price, globalState.tick, globalState.timepointIndex, globalState.prevInitializedTick) = (
       currentPrice,
       currentTick,
-      cache.fee,
       cache.timepointIndex,
       cache.prevInitializedTick
     );

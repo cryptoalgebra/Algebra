@@ -66,7 +66,8 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     require(poolByPair[token0][token1] == address(0));
 
     IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
+    dataStorage.changeFeeConfiguration(true, defaultFeeConfiguration);
+    dataStorage.changeFeeConfiguration(false, defaultFeeConfiguration);
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
 
@@ -130,7 +131,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x75888c0f6540254dc01559f56d4c9558c53c53f274dd47a76b15cc268a0d4ee2;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x69ff259f1658bdccb1d378ee1b87e0cc49024dfd328f16cb3f9ef0b7ce19c810;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

@@ -39,7 +39,8 @@ abstract contract Positions is AlgebraPoolBase {
   struct UpdatePositionCache {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
+    uint16 feeZtO; // The current fee for ZtO swaps in hundredths of a bip, i.e. 1e-6
+    uint16 feeOtZ; // The current fee for OtZ swaps in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
   }
 
@@ -58,7 +59,8 @@ abstract contract Positions is AlgebraPoolBase {
     UpdatePositionCache memory cache = UpdatePositionCache(
       globalState.price,
       globalState.prevInitializedTick,
-      globalState.fee,
+      globalState.feeZtO,
+      globalState.feeOtZ,
       globalState.timepointIndex
     );
 
@@ -124,18 +126,29 @@ abstract contract Positions is AlgebraPoolBase {
       (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), currentTick, liquidityBefore);
+        (uint16 newTimepointIndex, uint16 newFeeZtO, uint16 newFeeOtZ) = _writeTimepoint(
+          cache.timepointIndex,
+          _blockTimestamp(),
+          currentTick,
+          liquidityBefore
+        );
         if (cache.timepointIndex != newTimepointIndex) {
           cache.timepointIndex = newTimepointIndex;
-          if (cache.fee != newFee) {
-            cache.fee = newFee;
-            emit Fee(newFee);
+          if (cache.feeZtO != newFeeZtO || cache.feeOtZ != newFeeOtZ) {
+            cache.feeZtO = newFeeZtO;
+            cache.feeOtZ = newFeeOtZ;
+            emit Fee(newFeeZtO, newFeeOtZ);
           }
         }
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
 
-      (globalState.prevInitializedTick, globalState.fee, globalState.timepointIndex) = (cache.prevInitializedTick, cache.fee, cache.timepointIndex);
+      (globalState.prevInitializedTick, globalState.feeZtO, globalState.feeOtZ, globalState.timepointIndex) = (
+        cache.prevInitializedTick,
+        cache.feeZtO,
+        cache.feeOtZ,
+        cache.timepointIndex
+      );
     }
   }
 

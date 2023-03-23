@@ -21,7 +21,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
     int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
+    uint16 feeZtO; // The current fee for ZtO swap in hundredths of a bip, i.e. 1e-6
+    uint16 feeOtZ; // The current fee for OtZ swap in hundredths of a bip, i.e. 1e-6
     uint16 timepointIndex; // The index of the last written timepoint
     uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
@@ -91,7 +92,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   constructor() {
     (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
-    globalState.fee = Constants.BASE_FEE;
+    globalState.feeZtO = Constants.BASE_FEE;
+    globalState.feeOtZ = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
     tickSpacing = Constants.INIT_TICK_SPACING;
     tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
@@ -111,9 +113,14 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeTimepoint(uint16 timepointIndex, uint32 blockTimestamp, int24 tick, uint128 currentLiquidity) internal returns (uint16, uint16) {
+  function _writeTimepoint(
+    uint16 timepointIndex,
+    uint32 blockTimestamp,
+    int24 tick,
+    uint128 currentLiquidity
+  ) internal returns (uint16, uint16, uint16) {
     uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
+    if (_lastTs == blockTimestamp) return (timepointIndex, 0, 0); // writing should only happen once per block
 
     unchecked {
       secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
@@ -121,11 +128,15 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     lastTimepointTimestamp = blockTimestamp;
 
     // failure should not occur. But in case of failure, the pool will remain operational
-    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 newTimepointIndex, uint16 newFee) {
-      return (newTimepointIndex, newFee);
+    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (
+      uint16 newTimepointIndex,
+      uint16 newFeeZtO,
+      uint16 newFeeOtZ
+    ) {
+      return (newTimepointIndex, newFeeZtO, newFeeOtZ);
     } catch {
       emit DataStorageFailure();
-      return (timepointIndex, 0);
+      return (timepointIndex, 0, 0);
     }
   }
 

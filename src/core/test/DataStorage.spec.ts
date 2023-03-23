@@ -582,16 +582,18 @@ describe('DataStorageOperator external methods', () => {
     }
     it('fails if caller is not factory', async () => {
       await expect(dataStorageOperator.connect(other).changeFeeConfiguration(
+        true, 
         configuration
       )).to.be.reverted;
     })
 
     it('updates baseFeeConfiguration', async () => {
       await dataStorageOperator.changeFeeConfiguration(
+        true,
         configuration
       );
 
-      const newConfig = await dataStorageOperator.feeConfig();
+      const newConfig = await dataStorageOperator.feeConfigZtO();
 
       expect(newConfig.alpha1).to.eq(configuration.alpha1);
       expect(newConfig.alpha2).to.eq(configuration.alpha2);
@@ -604,9 +606,11 @@ describe('DataStorageOperator external methods', () => {
 
     it('emits event', async () => {
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         configuration
       )).to.emit(dataStorageOperator, 'FeeConfiguration')
         .withArgs(
+          true,
           [...Object.values(configuration)]
         );
     })
@@ -617,6 +621,7 @@ describe('DataStorageOperator external methods', () => {
       wrongConfig.alpha2 = 30000;
       wrongConfig.baseFee = 15000;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig
       )).to.be.revertedWith('Max fee exceeded');
     })
@@ -625,12 +630,14 @@ describe('DataStorageOperator external methods', () => {
       let wrongConfig1 = {...configuration};
       wrongConfig1.gamma1 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig1
       )).to.be.revertedWith('Gammas must be > 0');
       
       let wrongConfig2 = {...configuration};
       wrongConfig2.gamma2 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
+        true,
         wrongConfig2
       )).to.be.revertedWith('Gammas must be > 0');
     })

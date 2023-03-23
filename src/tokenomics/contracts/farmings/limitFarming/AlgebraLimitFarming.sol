@@ -243,7 +243,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            (, int24 tick, , , , , ) = key.pool.globalState();
+            (, int24 tick, , , , , , ) = key.pool.globalState();
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),

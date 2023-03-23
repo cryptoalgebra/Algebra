@@ -11,14 +11,24 @@ interface IAlgebraPoolState {
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run;
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
   /// @return prevInitializedTick The previous initialized tick
-  /// @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
+  /// @return feeZtO The last pool fee value for ZtO swaps in hundredths of a bip, i.e. 1e-6;
+  /// @return feeOtZ The last pool fee value for OtZ swaps in hundredths of a bip, i.e. 1e-6;
   /// @return timepointIndex The index of the last written timepoint
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
   function globalState()
     external
     view
-    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint16 timepointIndex, uint8 communityFee, bool unlocked);
+    returns (
+      uint160 price,
+      int24 tick,
+      int24 prevInitializedTick,
+      uint16 feeZtO,
+      uint16 feeOtZ,
+      uint16 timepointIndex,
+      uint8 communityFee,
+      bool unlocked
+    );
 
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256

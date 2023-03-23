@@ -53,7 +53,14 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
     uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
     uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_time, 0, tick, lastIndex, oldestIndex);
     uint88 volatilityAverage = timepoints.getAverageVolatility(_time, tick, lastIndex, oldestIndex, lastVolatilityCumulative);
-    return AdaptiveFee.getFee(volatilityAverage, feeConfig);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfigZtO);
+  }
+
+  function getFeeOtZ(uint32 _time, int24 tick, uint16 lastIndex) external view returns (uint16 fee) {
+    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+    uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_time, 0, tick, lastIndex, oldestIndex);
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, tick, lastIndex, oldestIndex, lastVolatilityCumulative);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfigOtZ);
   }
 
   /// @dev pay for storage slots

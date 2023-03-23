@@ -8,9 +8,10 @@ import './IAlgebraFeeConfiguration.sol';
 /// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
 interface IDataStorageOperator {
   /// @notice Emitted when the fee configuration is changed
+  /// @param zto Direction for new feeConfig (ZtO or OtZ)
   /// @param feeConfig The structure with dynamic fee parameters
   /// @dev See the AdaptiveFee library for more details
-  event FeeConfiguration(IAlgebraFeeConfiguration.Configuration feeConfig);
+  event FeeConfiguration(bool zto, IAlgebraFeeConfiguration.Configuration feeConfig);
 
   /// @notice Returns data belonging to a certain timepoint
   /// @param index The index of timepoint in the array
@@ -72,11 +73,12 @@ interface IDataStorageOperator {
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
   /// @return indexUpdated The new index of the most recently written element in the dataStorage array
-  /// @return newFee The fee in hundredths of a bip, i.e. 1e-6
-  function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee);
+  /// @return newFeeZtO The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6
+  /// @return newFeeOtZ The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6
+  function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFeeZtO, uint16 newFeeOtZ);
 
   /// @notice Changes fee configuration for the pool
-  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
+  function changeFeeConfiguration(bool zto, IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
 
   /// @notice Fills uninitialized timepoints with nonzero value
   /// @dev Can be used to reduce the gas cost of future swaps

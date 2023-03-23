@@ -20,7 +20,7 @@ contract SimulationTimeAlgebraPool is AlgebraPool {
   function getAverageVolatility() external view returns (uint112 volatilityAverage) {
     volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
       _blockTimestamp(),
-      int24(uint24(globalState.fee)),
+      int24(uint24(globalState.feeZtO)),
       globalState.timepointIndex
     );
   }

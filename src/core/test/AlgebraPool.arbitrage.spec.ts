@@ -83,7 +83,7 @@ describe('AlgebraPool arbitrage tests', () => {
               swapToLowerPrice,
               swapExact1For0,
               mint,
-            } = await createPoolFunctions({
+            } =  createPoolFunctions({
               swapTarget: fix.swapTargetCallee,
               token0: fix.token0,
               token1: fix.token1,

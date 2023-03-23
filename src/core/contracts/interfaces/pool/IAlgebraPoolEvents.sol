@@ -83,8 +83,9 @@ interface IAlgebraPoolEvents {
   event Incentive(address indexed newIncentiveAddress);
 
   /// @notice Emitted when the fee changes inside the pool
-  /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
-  event Fee(uint16 fee);
+  /// @param feeZtO The current fee for ZtO swaps in hundredths of a bip, i.e. 1e-6
+  /// @param feeOtZ The current fee for OtZ swaps in hundredths of a bip, i.e. 1e-6
+  event Fee(uint16 feeZtO, uint16 feeOtZ);
 
   /// @notice Emitted in case of an error when trying to write to the DataStorage
   /// @dev This shouldn't happen

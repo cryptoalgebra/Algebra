@@ -32,12 +32,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     }
 
     /// @inheritdoc INonfungibleTokenPositionDescriptor
-    function tokenURI(INonfungiblePositionManager positionManager, uint256 tokenId)
-        external
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        INonfungiblePositionManager positionManager,
+        uint256 tokenId
+    ) external view override returns (string memory) {
         (, , , address token0, address token1, int24 tickLower, int24 tickUpper, , , , , ) = positionManager.positions(
             tokenId
         );
@@ -52,7 +50,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         bool _flipRatio = flipRatio(token0, token1, ChainId.get());
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
         address baseTokenAddress = !_flipRatio ? token0 : token1;
-        (, int24 tick, , , , , ) = pool.globalState();
+        (, int24 tick, , , , , , ) = pool.globalState();
 
         return
             NFTDescriptor.constructTokenURI(
@@ -78,11 +76,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             );
     }
 
-    function flipRatio(
-        address token0,
-        address token1,
-        uint256 chainId
-    ) public view returns (bool) {
+    function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool) {
         return tokenRatioPriority(token0, chainId) > tokenRatioPriority(token1, chainId);
     }
 
