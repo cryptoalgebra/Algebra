@@ -49,6 +49,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountRequired,
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
+    if (amountRequired == 0) revert zeroAmountRequired();
     SwapCalculationCache memory cache;
     {
       // load from one storage slot
@@ -59,7 +60,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
 
-      if (amountRequired == 0) revert zeroAmountRequired();
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       currentLiquidity = liquidity;
