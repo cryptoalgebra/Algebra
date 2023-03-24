@@ -9,6 +9,9 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted by the reentrancy guard
   error locked();
 
+  /// @notice Emitted if arithmetic error occurred
+  error arithmeticError();
+
   /// @notice Emitted if an attempt is made to initialize the pool twice
   error alreadyInitialized();
 

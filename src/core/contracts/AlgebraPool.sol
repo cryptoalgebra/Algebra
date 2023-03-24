@@ -121,6 +121,7 @@ contract AlgebraPool is
     int24 topTick,
     uint128 amount
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
+    if (amount > uint128(type(int128).max)) revert arithmeticError();
     _updateReserves();
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
