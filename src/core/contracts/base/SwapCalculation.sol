@@ -165,7 +165,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
               try IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne) returns (bool success) {
                 isIncentiveActive = success;
-              } catch {}
+              } catch {
+                // pool will reset activeIncentive in this case
+              }
               if (!isIncentiveActive) {
                 cache.activeIncentive = address(0);
                 activeIncentive = address(0);
