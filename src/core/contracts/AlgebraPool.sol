@@ -78,7 +78,7 @@ contract AlgebraPool is
     else {
       receivedAmount0 = _balanceToken0() - receivedAmount0;
       if (receivedAmount0 < amount0) {
-        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
       }
     }
 
@@ -86,7 +86,7 @@ contract AlgebraPool is
     else {
       receivedAmount1 = _balanceToken1() - receivedAmount1;
       if (receivedAmount1 < amount1) {
-        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
         if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
       }
     }
@@ -101,10 +101,10 @@ contract AlgebraPool is
       } else {
         liquidityActual = liquidityDesired;
         if (receivedAmount0 < amount0) {
-          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
         }
         if (receivedAmount1 < amount1) {
-          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
           if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
         }
         if (liquidityActual == 0) revert zeroLiquidityActual();
