@@ -84,7 +84,7 @@ library TickTree {
       }
       if (!initialized) {
         // try to find which subtree has an active leaf
-        (nextTick, initialized) = _nextTickInTheSameNode(treeRoot, int24(++nodeNumber));
+        (nextTick, initialized) = _nextTickInTheSameNode(treeRoot, ++nodeNumber);
         if (!initialized) return TickMath.MAX_TICK;
         nextTick = _getFirstTickInNode(secondLayer, nextTick);
       }
