@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 import './Constants.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
   /// @notice Returns default initial fee configuration
-  function initialFeeConfiguration() internal pure returns (IAlgebraFeeConfiguration.Configuration memory) {
+  function initialFeeConfiguration() internal pure returns (AlgebraFeeConfiguration memory) {
     return
-      IAlgebraFeeConfiguration.Configuration(
+      AlgebraFeeConfiguration(
         3000 - Constants.BASE_FEE, // alpha1
         15000 - 3000, // alpha2
         360, // beta1
@@ -24,7 +24,7 @@ library AdaptiveFee {
   /// @notice Validates fee configuration.
   /// @dev Maximum fee value capped by baseFee + alpha1 + alpha2 must be <= <= type(uint16).max
   /// gammas must be > 0
-  function validateFeeConfiguration(IAlgebraFeeConfiguration.Configuration memory _config) internal pure {
+  function validateFeeConfiguration(AlgebraFeeConfiguration memory _config) internal pure {
     require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
   }
@@ -32,7 +32,7 @@ library AdaptiveFee {
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
   /// maximum value capped by baseFee + alpha1 + alpha2
-  function getFee(uint88 volatility, IAlgebraFeeConfiguration.Configuration memory config) internal pure returns (uint16 fee) {
+  function getFee(uint88 volatility, AlgebraFeeConfiguration memory config) internal pure returns (uint16 fee) {
     unchecked {
       volatility /= 15; // normalize for 15 sec interval
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +

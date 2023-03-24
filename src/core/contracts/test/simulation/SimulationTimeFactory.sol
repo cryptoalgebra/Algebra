@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../../interfaces/IAlgebraFactory.sol';
 import '../../interfaces/IAlgebraPoolDeployer.sol';
 import '../../interfaces/IDataStorageOperator.sol';
-import '../../interfaces/IAlgebraFeeConfiguration.sol';
+import '../../base/AlgebraFeeConfiguration.sol';
 import '../../libraries/Constants.sol';
 import '../../libraries/AdaptiveFee.sol';
 import '../../DataStorageOperator.sol';
@@ -39,7 +39,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   // values of constants for sigmoids in fee calculation formula
-  IAlgebraFeeConfiguration.Configuration public defaultFeeConfiguration;
+  AlgebraFeeConfiguration public defaultFeeConfiguration;
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
@@ -117,7 +117,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external override onlyOwner {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
