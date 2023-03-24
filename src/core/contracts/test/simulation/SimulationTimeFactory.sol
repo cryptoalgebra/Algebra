@@ -130,7 +130,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xec4f36f107f324c3e45a92f9d302de8e50e55c5d71d68209ebf46a91ad492084;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x496a8d55f889068273865452c49e9a8cdac91f3c3421afd3064720a588ba66a2;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

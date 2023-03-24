@@ -188,21 +188,22 @@ describe('AlgebraPool', () => {
           })
 
           it('fails if token0 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
+            await expect(payer.mint(pool.address, wallet.address, -22980, 0, 10000, 0, 100)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           }) 
 
           it('fails if token1 payed 0', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, Math.floor((-23028 - tickSpacing) / tickSpacing)*tickSpacing, 10000, 100, 0)).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, Math.floor((-23028 - tickSpacing) / tickSpacing)*tickSpacing, 10000, 100, 0)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           }) 
 
           it('fails if token0 hardly underpayed', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 1, expandTo18Decimals(100))).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 1, expandTo18Decimals(100))).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           })     
 
           it('fails if token1 hardly underpayed', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -22980, BigNumber.from('11505743598341114571880798222544994'), expandTo18Decimals(100), 1)).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+            await swapToHigherPrice(encodePriceSqrt(10, 1), wallet.address);
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, expandTo18Decimals(100), 1)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           })          
         })
 

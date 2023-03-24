@@ -69,39 +69,25 @@ contract AlgebraPool is
     } else {
       (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
     }
-    liquidityActual = liquidityDesired;
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
-    if (amount0 == 0) receivedAmount0 = 0;
-    else {
-      receivedAmount0 = _balanceToken0() - receivedAmount0;
-      if (receivedAmount0 < amount0) {
-        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
-      }
-    }
+    receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
+    receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
 
-    if (amount1 == 0) receivedAmount1 = 0;
-    else {
-      receivedAmount1 = _balanceToken1() - receivedAmount1;
-      if (receivedAmount1 < amount1) {
-        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
-        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-      }
-    }
-
-    if (liquidityActual == 0) revert insufficientInputAmount();
     // scope to prevent "stack too deep"
     {
       Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
       if (bottomTick == topTick) {
         liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
+        if (liquidityActual == 0) revert insufficientInputAmount();
         _updateLimitOrderPosition(_position, bottomTick, int128(liquidityActual));
       } else {
-        liquidityActual = liquidityDesired;
         if (receivedAmount0 < amount0) {
           liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
+        } else {
+          liquidityActual = liquidityDesired;
         }
         if (receivedAmount1 < amount1) {
           uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
