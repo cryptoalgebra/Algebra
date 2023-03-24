@@ -73,7 +73,7 @@ library TickTree {
         // index in treeRoot
         nodeNumber := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
       }
-      if (treeRoot & (1 << uint256(int256(nodeNumber))) != 0) {
+      if (treeRoot & (1 << uint16(nodeNumber)) != 0) {
         // if subtree has active ticks
         // try to find initialized tick in the corresponding leaf of the tree
         (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
