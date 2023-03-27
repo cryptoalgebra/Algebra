@@ -22,7 +22,6 @@ interface INonfungiblePositionManager {
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
     /// @return nonce The nonce for permits
-    /// @return farmed Is position used in farming or not
     /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
@@ -40,7 +39,6 @@ interface INonfungiblePositionManager {
         view
         returns (
             uint88 nonce,
-            bool farmed,
             address operator,
             address token0,
             address token1,
@@ -141,4 +139,9 @@ interface INonfungiblePositionManager {
     /// must be collected first.
     /// @param tokenId The ID of the token that is being burned
     function burn(uint256 tokenId) external payable;
+
+    /// @notice Changes approval of token ID for farming.
+    /// @param tokenId The ID of the token that is being approved / unapproved
+    /// @param approve New status of approval
+    function approveForFarming(uint256 tokenId, bool approve) external payable;
 }

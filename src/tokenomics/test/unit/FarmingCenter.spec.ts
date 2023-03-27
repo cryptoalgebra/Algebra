@@ -122,6 +122,7 @@ describe('unit/FarmingCenter', () => {
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       subjectEternal = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterFarming(
@@ -242,6 +243,8 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
+
+        await context.nft.connect(lpUser0).approveForFarming(tokenId2, true);
 
         await context.nft.connect(lpUser0).decreaseLiquidity({
           tokenId: tokenId2,
@@ -436,6 +439,8 @@ describe('unit/FarmingCenter', () => {
         tickUpper: 240,
       })
       tokenId = mintResult.tokenId
+
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       farmIncentiveKey = {
         
@@ -1084,6 +1089,7 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
         
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
           {
@@ -1184,6 +1190,8 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
+
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
             {

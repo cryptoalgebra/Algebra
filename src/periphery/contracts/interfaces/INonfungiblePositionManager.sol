@@ -40,12 +40,14 @@ interface INonfungiblePositionManager is
         uint256 amount1,
         address pool
     );
+
     /// @notice Emitted when liquidity is decreased for a position NFT
     /// @param tokenId The ID of the token for which liquidity was decreased
     /// @param liquidity The amount by which liquidity for the NFT position was decreased
     /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
     /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
     event DecreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
     /// @param tokenId The ID of the token for which underlying tokens were collected
@@ -54,17 +56,19 @@ interface INonfungiblePositionManager is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
+    /// @notice Emitted if farming failed in call from NonfungiblePositionManager.
+    /// @dev Should never be emitted
+    /// @param tokenId The ID of corresponding token
+    event FarmingFailed(uint256 indexed tokenId);
+
     function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
 
     function setFarmingCenter(address _farmingCenter) external;
-
-    function setOwner(address _owner) external;
 
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
     /// @return nonce The nonce for permits
-    /// @return farmed Is position used in farming or not
     /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
@@ -82,7 +86,6 @@ interface INonfungiblePositionManager is
         view
         returns (
             uint88 nonce,
-            bool farmed,
             address operator,
             address token0,
             address token1,
@@ -183,4 +186,9 @@ interface INonfungiblePositionManager is
     /// must be collected first.
     /// @param tokenId The ID of the token that is being burned
     function burn(uint256 tokenId) external payable;
+
+    /// @notice Changes approval of token ID for farming.
+    /// @param tokenId The ID of the token that is being approved / unapproved
+    /// @param approve New status of approval
+    function approveForFarming(uint256 tokenId, bool approve) external payable;
 }

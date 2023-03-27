@@ -106,7 +106,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1450,
+              start: 1467,
             },
           ],
         },

@@ -130,7 +130,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
     }
 
     /// @inheritdoc IPositionFollower
-    function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
+    function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override returns (bool success) {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
@@ -144,14 +144,15 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
             eternalFarming.exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
             eternalFarming.enterFarming(key, tokenId, lockedAmount);
         }
+        return true;
     }
 
     /// @inheritdoc IPositionFollower
-    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
+    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override returns (bool success) {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
-        require(deposit.limitIncentiveId == bytes32(0), 'position locked in farm');
+        if (deposit.limitIncentiveId != bytes32(0)) return false;
 
         if (deposit.eternalIncentiveId != bytes32(0)) {
             // get locked token amount
@@ -163,19 +164,22 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
             eternalFarming.exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
             eternalFarming.enterFarming(key, tokenId, lockedAmount);
         }
+        return true;
     }
 
     /// @inheritdoc IPositionFollower
-    function burnPosition(uint256 tokenId) external override {
+    function burnPosition(uint256 tokenId) external override returns (bool success) {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
-        require(deposit.limitIncentiveId == bytes32(0), 'position locked in farm');
+
+        if (deposit.limitIncentiveId != bytes32(0)) return false;
 
         if (deposit.eternalIncentiveId != bytes32(0)) {
             bytes32 incentiveId = deposit.eternalIncentiveId;
             IncentiveKey memory key = incentiveKeys[incentiveId];
             _exitFarming(key, tokenId, false);
         }
+        return true;
     }
 
     /// @inheritdoc IFarmingCenter

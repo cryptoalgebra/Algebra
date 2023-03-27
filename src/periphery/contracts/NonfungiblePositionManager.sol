@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
@@ -39,7 +40,6 @@ contract NonfungiblePositionManager is
     // details about the Algebra position
     struct Position {
         uint88 nonce; // the nonce for permits
-        bool farmed;
         address operator; // the address that is approved for spending this token
         uint80 poolId; // the ID of the pool with which this token is connected
         int24 tickLower; // the tick range of the position
@@ -69,7 +69,11 @@ contract NonfungiblePositionManager is
     address private immutable _tokenDescriptor;
 
     address public farmingCenter;
-    address public contractOwner;
+    mapping(uint256 => address) public farmingApprovals;
+    mapping(uint256 => address) public tokenFarmedIn;
+
+    bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
+        keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
 
     constructor(
         address _factory,
@@ -80,7 +84,6 @@ contract NonfungiblePositionManager is
         ERC721Permit('Algebra Positions NFT-V2', 'ALGB-POS', '2')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
-        contractOwner = msg.sender;
         _tokenDescriptor = _tokenDescriptor_;
     }
 
@@ -93,7 +96,6 @@ contract NonfungiblePositionManager is
         override
         returns (
             uint88 nonce,
-            bool farmed,
             address operator,
             address token0,
             address token1,
@@ -111,7 +113,6 @@ contract NonfungiblePositionManager is
         PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
         return (
             position.nonce,
-            position.farmed,
             position.operator,
             poolKey.token0,
             poolKey.token1,
@@ -187,7 +188,6 @@ contract NonfungiblePositionManager is
             poolId: poolId,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
-            farmed: false,
             liquidity: uint128(actualLiquidity),
             feeGrowthInside0LastX128: feeGrowthInside0LastX128,
             feeGrowthInside1LastX128: feeGrowthInside1LastX128,
@@ -249,20 +249,21 @@ contract NonfungiblePositionManager is
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
     }
 
-    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external override {
-        require(msg.sender == farmingCenter, 'only FarmingCenter');
-        Position storage position = _positions[tokenId];
-        position.farmed = isFarmed;
+    function switchFarmingStatus(uint256 tokenId, bool toFarming) external override {
+        address _farmingCenter = farmingCenter;
+        bool accessAllowed = msg.sender == _farmingCenter;
+        if (toFarming) {
+            require(farmingApprovals[tokenId] == _farmingCenter, 'not approved for farming');
+        } else {
+            accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
+        }
+        require(accessAllowed, 'only FarmingCenter');
+        tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
     }
 
-    function setFarmingCenter(address _farmingCenter) external override {
-        require(msg.sender == contractOwner);
-        farmingCenter = _farmingCenter;
-    }
-
-    function setOwner(address _owner) external override {
-        require(msg.sender == contractOwner);
-        contractOwner = _owner;
+    function setFarmingCenter(address newFarmingCenter) external override {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+        farmingCenter = newFarmingCenter;
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -312,8 +313,8 @@ contract NonfungiblePositionManager is
             position.liquidity = positionLiquidity + uint128(actualLiquidity);
         }
 
-        if (position.farmed && farmingCenter != address(0)) {
-            IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity); // TODO try catch
+        if (tokenFarmedIn[params.tokenId] == farmingCenter && farmingCenter != address(0)) {
+            IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity);
         }
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
@@ -346,26 +347,35 @@ contract NonfungiblePositionManager is
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
 
-        // this is now updated to the current transaction
-        (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
-            position,
-            pool,
-            address(this),
-            tickLower,
-            tickUpper,
-            positionLiquidity
-        );
+        // scope to prevent stack-too-deep
+        {
+            // this is now updated to the current transaction
+            (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
+                position,
+                pool,
+                address(this),
+                tickLower,
+                tickUpper,
+                positionLiquidity
+            );
 
-        unchecked {
-            position.tokensOwed0 += uint128(amount0) + tokensOwed0;
-            position.tokensOwed1 += uint128(amount1) + tokensOwed1;
+            unchecked {
+                position.tokensOwed0 += uint128(amount0) + tokensOwed0;
+                position.tokensOwed1 += uint128(amount1) + tokensOwed1;
 
-            // subtraction is safe because we checked positionLiquidity is gte params.liquidity
-            position.liquidity = positionLiquidity - params.liquidity;
+                // subtraction is safe because we checked positionLiquidity is gte params.liquidity
+                position.liquidity = positionLiquidity - params.liquidity;
+            }
         }
 
-        if (position.farmed && farmingCenter != address(0)) {
-            IPositionFollower(farmingCenter).decreaseLiquidity(params.tokenId, params.liquidity);
+        if (tokenFarmedIn[params.tokenId] == farmingCenter && farmingCenter != address(0)) {
+            try IPositionFollower(farmingCenter).decreaseLiquidity(params.tokenId, params.liquidity) returns (
+                bool res
+            ) {
+                require(res, 'position locked in farm');
+            } catch {
+                emit FarmingFailed(params.tokenId);
+            }
         }
 
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
@@ -430,12 +440,30 @@ contract NonfungiblePositionManager is
         Position storage position = _positions[tokenId];
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
 
-        if (position.farmed && farmingCenter != address(0)) {
-            IPositionFollower(farmingCenter).burnPosition(tokenId); // TODO try catch
+        if (tokenFarmedIn[tokenId] == farmingCenter && farmingCenter != address(0)) {
+            try IPositionFollower(farmingCenter).burnPosition(tokenId) returns (bool res) {
+                require(res, 'position locked in farm');
+            } catch {
+                emit FarmingFailed(tokenId);
+            }
         }
 
         delete _positions[tokenId];
+        delete farmingApprovals[tokenId];
+        delete tokenFarmedIn[tokenId];
         _burn(tokenId);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function approveForFarming(uint256 tokenId, bool approve) external payable override isAuthorizedForToken(tokenId) {
+        farmingApprovals[tokenId] = approve ? farmingCenter : address(0);
+    }
+
+    /// @inheritdoc IERC721
+    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
+        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+
+        return _positions[tokenId].operator;
     }
 
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
@@ -444,11 +472,10 @@ contract NonfungiblePositionManager is
         }
     }
 
-    /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
-
-        return _positions[tokenId].operator;
+    /// @dev Overrides _transfer to clear farming approval
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        delete farmingApprovals[tokenId];
+        super._transfer(from, to, tokenId);
     }
 
     /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce

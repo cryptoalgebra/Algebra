@@ -370,8 +370,7 @@ export class HelperCommands {
     await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
 
     // The LP approves and farms their NFT
-    await this.nft.connect(params.lp).approve(this.farmingCenter.address, tokenId)
-    const l2tokenId = (await this.farmingCenter.deposits(tokenId)).L2TokenId
+    await this.nft.connect(params.lp).approveForFarming(tokenId, true);
 
     if(params.tokensLocked){
       await params.createIncentiveResult.rewardToken
@@ -400,7 +399,7 @@ export class HelperCommands {
   }
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approve(this.farmingCenter.address, params.tokenId)
+    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true);
   }
 
   mintFlow: HelperTypes.Mint.Command = async (params) => {

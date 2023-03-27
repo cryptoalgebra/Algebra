@@ -221,7 +221,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-
         _checkIsIncentiveExist(incentive);
         require(!incentive.deactivated, 'incentive stopped');
 
