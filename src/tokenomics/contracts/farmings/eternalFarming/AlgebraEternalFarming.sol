@@ -96,8 +96,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraFarming
     function decreaseRewardsAmount(
         IncentiveKey memory key,
-        uint256 rewardAmount,
-        uint256 bonusRewardAmount
+        uint128 rewardAmount,
+        uint128 bonusRewardAmount
     ) external override onlyOwner {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
@@ -106,12 +106,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-        uint256 rewardReserve0 = virtualPool.rewardReserve0();
+        uint128 rewardReserve0 = virtualPool.rewardReserve0();
         if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
         if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
         incentive.totalReward = incentive.totalReward - rewardAmount;
 
-        uint256 rewardReserve1 = virtualPool.rewardReserve1();
+        uint128 rewardReserve1 = virtualPool.rewardReserve1();
         if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
         incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
 
@@ -125,7 +125,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external override {
+    function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external override {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         require(incentive.totalReward > 0, 'non-existent incentive');

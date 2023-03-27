@@ -189,7 +189,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
 
             eternalFarming.exitFarming(key, params.tokenId, nonfungiblePositionManager.ownerOf(params.tokenId));
 
-            (, , , , , address multiplierToken, ) = eternalFarming.incentives(incentiveId);
+            (, , , , , address multiplierToken, , ) = eternalFarming.incentives(incentiveId);
             if (multiplierToken != address(0)) {
                 farmingCenterVault.claimTokens(multiplierToken, msg.sender, params.tokenId, incentiveId);
             }

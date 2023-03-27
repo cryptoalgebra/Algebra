@@ -12,7 +12,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
 
     function addRewards(uint128 token0Amount, uint128 token1Amount) external;
 
-    function decreaseRewards(uint256 token0Amount, uint256 token1Amount) external;
+    function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external;
 
     function getInnerRewardsGrowth(
         int24 bottomTick,
@@ -23,7 +23,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
 
     function rewardRate1() external returns (uint128);
 
-    function rewardReserve0() external returns (uint256);
+    function rewardReserve0() external returns (uint128);
 
-    function rewardReserve1() external returns (uint256);
+    function rewardReserve1() external returns (uint128);
 }

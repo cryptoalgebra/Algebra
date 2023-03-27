@@ -37,10 +37,10 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function decreaseRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+    function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
-        if (token0Amount > 0) rewardReserve0 = rewardReserve0.sub(token0Amount);
-        if (token1Amount > 0) rewardReserve1 = rewardReserve1.sub(token1Amount);
+        if (token0Amount > 0) rewardReserve0 = rewardReserve0.sub128(token0Amount);
+        if (token1Amount > 0) rewardReserve1 = rewardReserve1.sub128(token1Amount);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool

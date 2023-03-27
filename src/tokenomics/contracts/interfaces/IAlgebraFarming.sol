@@ -55,9 +55,9 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param key The key of the incentive
     function deactivateIncentive(IncentiveKey memory key) external;
 
-    function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external;
+    function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
 
-    function decreaseRewardsAmount(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external;
+    function decreaseRewardsAmount(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
 
     /// @notice Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
     /// @param owner The owner for which the rewards owed are checked

@@ -39,14 +39,26 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
         int24 bottomTick,
         int24 topTick
     ) external view override returns (uint160 innerSecondsSpentPerLiquidity) {
-        // TODO USE FOR BOTH FARMINGS
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
 
         if (globalTick < bottomTick) {
             return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
         } else if (globalTick < topTick) {
-            return (globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
+            uint32 currentTimestamp = uint32(block.timestamp);
+            if (currentTimestamp > desiredEndTimestamp) currentTimestamp = desiredEndTimestamp;
+            uint160 _globalSecondsPerLiquidityCumulative = globalSecondsPerLiquidityCumulative;
+
+            if (currentTimestamp > prevTimestamp) {
+                uint128 _currentLiquidity = currentLiquidity;
+                if (_currentLiquidity > 0) {
+                    _globalSecondsPerLiquidityCumulative +=
+                        (uint160(currentTimestamp - prevTimestamp) << 128) /
+                        _currentLiquidity;
+                }
+            }
+
+            return (_globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
         } else {
             return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
         }

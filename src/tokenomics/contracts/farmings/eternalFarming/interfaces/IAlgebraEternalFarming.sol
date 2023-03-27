@@ -61,8 +61,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         Tiers calldata tiers
     ) external returns (address virtualPool);
 
-    function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
-
     function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
 
     function collectRewards(

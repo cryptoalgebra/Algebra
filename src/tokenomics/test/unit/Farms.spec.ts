@@ -493,7 +493,7 @@ describe('unit/Farms', () => {
       await helpers.makeTickGoFlow({
           trader,
           direction: 'up',
-          desiredValue: 10,
+          desiredValue: 1,
       })
 
       Time.set(timestamps.endTime - 10)
@@ -501,10 +501,16 @@ describe('unit/Farms', () => {
       await helpers.makeTickGoFlow({
           trader,
           direction: 'up',
-          desiredValue: 100,
+          desiredValue: 1,
       })
 
       Time.set(timestamps.endTime + 10)
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 1,
+    })
 
       const rewardInfo = await context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
 
