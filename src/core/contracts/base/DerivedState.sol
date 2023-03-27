@@ -30,9 +30,7 @@ abstract contract DerivedState is AlgebraPoolBase {
           _getSecondsPerLiquidityCumulative(time, liquidity) - lowerOuterSecondPerLiquidity - upperOuterSecondPerLiquidity,
           time - lowerOuterSecondsSpent - upperOuterSecondsSpent
         );
-      }
-
-      return (upperOuterSecondPerLiquidity - lowerOuterSecondPerLiquidity, upperOuterSecondsSpent - lowerOuterSecondsSpent);
+      } else return (upperOuterSecondPerLiquidity - lowerOuterSecondPerLiquidity, upperOuterSecondsSpent - lowerOuterSecondsSpent);
     }
   }
 }
