@@ -255,25 +255,6 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function switchFarmingStatus(uint256 tokenId, bool toFarming) external override {
-        address _farmingCenter = farmingCenter;
-        bool accessAllowed = msg.sender == _farmingCenter;
-        if (toFarming) {
-            require(farmingApprovals[tokenId] == _farmingCenter, 'not approved for farming');
-        } else {
-            accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
-        }
-        require(accessAllowed, 'only FarmingCenter');
-        tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
-    }
-
-    /// @inheritdoc INonfungiblePositionManager
-    function setFarmingCenter(address newFarmingCenter) external override {
-        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
-        farmingCenter = newFarmingCenter;
-    }
-
-    /// @inheritdoc INonfungiblePositionManager
     function increaseLiquidity(
         IncreaseLiquidityParams calldata params
     )
@@ -320,7 +301,7 @@ contract NonfungiblePositionManager is
             position.liquidity = positionLiquidity + uint128(actualLiquidity);
         }
 
-        if (tokenFarmedIn[params.tokenId] == farmingCenter && farmingCenter != address(0)) {
+        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
             try IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity) {
                 // do nothing
             } catch {
@@ -379,7 +360,7 @@ contract NonfungiblePositionManager is
             }
         }
 
-        if (tokenFarmedIn[params.tokenId] == farmingCenter && farmingCenter != address(0)) {
+        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
             try IPositionFollower(farmingCenter).decreaseLiquidity(params.tokenId, params.liquidity) returns (
                 bool res
             ) {
@@ -451,7 +432,7 @@ contract NonfungiblePositionManager is
         Position storage position = _positions[tokenId];
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
 
-        if (tokenFarmedIn[tokenId] == farmingCenter && farmingCenter != address(0)) {
+        if (farmingCenter != address(0) && tokenFarmedIn[tokenId] == farmingCenter) {
             try IPositionFollower(farmingCenter).burnPosition(tokenId) returns (bool res) {
                 require(res, 'position locked in farm');
             } catch {
@@ -468,6 +449,25 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function approveForFarming(uint256 tokenId, bool approve) external payable override isAuthorizedForToken(tokenId) {
         farmingApprovals[tokenId] = approve ? farmingCenter : address(0);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function switchFarmingStatus(uint256 tokenId, bool toFarming) external override {
+        address _farmingCenter = farmingCenter;
+        bool accessAllowed = msg.sender == _farmingCenter;
+        if (toFarming) {
+            require(farmingApprovals[tokenId] == _farmingCenter, 'not approved for farming');
+        } else {
+            accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
+        }
+        require(accessAllowed, 'only FarmingCenter');
+        tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setFarmingCenter(address newFarmingCenter) external override {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+        farmingCenter = newFarmingCenter;
     }
 
     /// @inheritdoc IERC721
