@@ -76,7 +76,7 @@ contract NonfungiblePositionManager is
         address _tokenDescriptor_,
         address _poolDeployer
     )
-        ERC721Permit('Algebra Positions NFT-V1', 'ALGB-POS', '1')
+        ERC721Permit('Algebra Positions NFT-V2', 'ALGB-POS', '2')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         contractOwner = msg.sender;
@@ -127,7 +127,9 @@ contract NonfungiblePositionManager is
     /// @dev Caches a pool key
     function cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
         if ((poolId = _poolIds[pool]) == 0) {
-            _poolIds[pool] = (poolId = _nextPoolId++);
+            unchecked {
+                _poolIds[pool] = (poolId = _nextPoolId++);
+            }
             _poolIdToPoolKey[poolId] = poolKey;
         }
     }
@@ -162,7 +164,9 @@ contract NonfungiblePositionManager is
             })
         );
 
-        _mint(params.recipient, (tokenId = _nextId++));
+        unchecked {
+            _mint(params.recipient, (tokenId = _nextId++));
+        }
 
         (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool._getPositionInPool(
             address(this),
@@ -231,20 +235,22 @@ contract NonfungiblePositionManager is
             tickLower,
             tickUpper
         );
-        tokensOwed0 = uint128(
-            FullMath.mulDiv(
-                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                positionLiquidity,
-                Constants.Q128
-            )
-        );
-        tokensOwed1 = uint128(
-            FullMath.mulDiv(
-                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                positionLiquidity,
-                Constants.Q128
-            )
-        );
+        unchecked {
+            tokensOwed0 = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                    positionLiquidity,
+                    Constants.Q128
+                )
+            );
+            tokensOwed1 = uint128(
+                FullMath.mulDiv(
+                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                    positionLiquidity,
+                    Constants.Q128
+                )
+            );
+        }
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
@@ -307,9 +313,11 @@ contract NonfungiblePositionManager is
             positionLiquidity
         );
 
-        position.tokensOwed0 += tokensOwed0;
-        position.tokensOwed1 += tokensOwed1;
-        position.liquidity = positionLiquidity + uint128(actualLiquidity);
+        unchecked {
+            position.tokensOwed0 += tokensOwed0;
+            position.tokensOwed1 += tokensOwed1;
+            position.liquidity = positionLiquidity + uint128(actualLiquidity);
+        }
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
     }
@@ -351,11 +359,14 @@ contract NonfungiblePositionManager is
             tickUpper,
             positionLiquidity
         );
-        position.tokensOwed0 += uint128(amount0) + tokensOwed0;
-        position.tokensOwed1 += uint128(amount1) + tokensOwed1;
 
-        // subtraction is safe because we checked positionLiquidity is gte params.liquidity
-        position.liquidity = positionLiquidity - params.liquidity;
+        unchecked {
+            position.tokensOwed0 += uint128(amount0) + tokensOwed0;
+            position.tokensOwed1 += uint128(amount1) + tokensOwed1;
+
+            // subtraction is safe because we checked positionLiquidity is gte params.liquidity
+            position.liquidity = positionLiquidity - params.liquidity;
+        }
 
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
     }
@@ -389,8 +400,11 @@ contract NonfungiblePositionManager is
                 tickUpper,
                 positionLiquidity
             );
-            tokensOwed0 += _tokensOwed0;
-            tokensOwed1 += _tokensOwed1;
+
+            unchecked {
+                tokensOwed0 += _tokensOwed0;
+                tokensOwed1 += _tokensOwed1;
+            }
         }
 
         // compute the arguments to give to the pool#collect method
@@ -404,7 +418,9 @@ contract NonfungiblePositionManager is
 
         // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
         // instead of the actual amount so we can burn the token
-        (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
+        unchecked {
+            (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
+        }
 
         emit Collect(params.tokenId, recipient, amount0Collect, amount1Collect);
     }
@@ -418,7 +434,9 @@ contract NonfungiblePositionManager is
     }
 
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
-        return uint256(_positions[tokenId].nonce++);
+        unchecked {
+            return uint256(_positions[tokenId].nonce++);
+        }
     }
 
     /// @inheritdoc IERC721
