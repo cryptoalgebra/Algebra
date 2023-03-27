@@ -133,7 +133,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xeb1666d7df739a70f005c056cde3856d0245b3e22663e67d5c87f1cd3d6cb0fd;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x1e9b3c2d38f67af3bb1d6fed2253af38ce6fd66df24e493dea3672976ee74a30;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token
