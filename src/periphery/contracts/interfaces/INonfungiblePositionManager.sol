@@ -61,10 +61,6 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of corresponding token
     event FarmingFailed(uint256 indexed tokenId);
 
-    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
-
-    function setFarmingCenter(address _farmingCenter) external;
-
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
@@ -191,4 +187,15 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of the token that is being approved / unapproved
     /// @param approve New status of approval
     function approveForFarming(uint256 tokenId, bool approve) external payable;
+
+    /// @notice Changes farming status of token to 'farmed' or 'not farmed'
+    /// @dev can be called only by farmingCenter
+    /// @param tokenId tokenId The ID of the token
+    /// @param tokenId isFarmed The new status
+    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
+
+    /// @notice Changes address of farmingCenter
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param newFarmingCenter The new address of farmingCenter
+    function setFarmingCenter(address newFarmingCenter) external;
 }

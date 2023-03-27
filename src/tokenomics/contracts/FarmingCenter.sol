@@ -130,7 +130,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
     }
 
     /// @inheritdoc IPositionFollower
-    function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override returns (bool success) {
+    function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
@@ -144,7 +144,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
             eternalFarming.exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
             eternalFarming.enterFarming(key, tokenId, lockedAmount);
         }
-        return true;
     }
 
     /// @inheritdoc IPositionFollower

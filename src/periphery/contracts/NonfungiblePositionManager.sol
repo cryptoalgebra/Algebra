@@ -68,8 +68,13 @@ contract NonfungiblePositionManager is
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
 
+    /// @dev The address of the farming center contract, which handles farmings logic
     address public farmingCenter;
+
+    /// @dev mapping tokenId => farmingCenter
     mapping(uint256 => address) public farmingApprovals;
+
+    /// @dev mapping tokenId => farmingCenter
     mapping(uint256 => address) public tokenFarmedIn;
 
     bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
@@ -249,6 +254,7 @@ contract NonfungiblePositionManager is
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
     }
 
+    /// @inheritdoc INonfungiblePositionManager
     function switchFarmingStatus(uint256 tokenId, bool toFarming) external override {
         address _farmingCenter = farmingCenter;
         bool accessAllowed = msg.sender == _farmingCenter;
@@ -261,6 +267,7 @@ contract NonfungiblePositionManager is
         tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
     }
 
+    /// @inheritdoc INonfungiblePositionManager
     function setFarmingCenter(address newFarmingCenter) external override {
         require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
         farmingCenter = newFarmingCenter;
@@ -314,7 +321,11 @@ contract NonfungiblePositionManager is
         }
 
         if (tokenFarmedIn[params.tokenId] == farmingCenter && farmingCenter != address(0)) {
-            IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity);
+            try IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity) {
+                // do nothing
+            } catch {
+                emit FarmingFailed(params.tokenId);
+            }
         }
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
