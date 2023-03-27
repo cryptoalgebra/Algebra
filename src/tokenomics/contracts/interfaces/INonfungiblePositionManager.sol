@@ -12,7 +12,7 @@ interface INonfungiblePositionManager {
 
     function ownerOf(uint256 tokenId) external view returns (address);
 
-    function changeTokenLock(uint256 tokenId, bool lock) external;
+    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
 
     function setFarmingCenter(address _farmingCenter) external;
 
@@ -22,7 +22,7 @@ interface INonfungiblePositionManager {
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
     /// @return nonce The nonce for permits
-    /// @return locked The bool
+    /// @return farmed Is position used in farming or not
     /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
@@ -40,7 +40,7 @@ interface INonfungiblePositionManager {
         view
         returns (
             uint88 nonce,
-            bool locked,
+            bool farmed,
             address operator,
             address token0,
             address token1,

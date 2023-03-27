@@ -526,7 +526,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier cant be less than DENOMINATOR')
+          ).to.be.revertedWith('Multiplier is too low')
         })
 
         it('multiplier gt 50000', async () => {
@@ -565,7 +565,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier cant be greater than MAX_MULTIPLIER')
+          ).to.be.revertedWith('Multiplier is too high')
         })
       })
 

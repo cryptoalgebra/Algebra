@@ -54,7 +54,7 @@ interface INonfungiblePositionManager is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    function changeTokenLock(uint256 tokenId, bool lock) external;
+    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
 
     function setFarmingCenter(address _farmingCenter) external;
 
@@ -64,7 +64,7 @@ interface INonfungiblePositionManager is
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
     /// @return nonce The nonce for permits
-    /// @return locked The bool
+    /// @return farmed Is position used in farming or not
     /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
@@ -75,12 +75,14 @@ interface INonfungiblePositionManager is
     /// @return feeGrowthInside1LastX128 The fee growth of token1 as of the last action on the individual position
     /// @return tokensOwed0 The uncollected amount of token0 owed to the position as of the last computation
     /// @return tokensOwed1 The uncollected amount of token1 owed to the position as of the last computation
-    function positions(uint256 tokenId)
+    function positions(
+        uint256 tokenId
+    )
         external
         view
         returns (
             uint88 nonce,
-            bool locked,
+            bool farmed,
             address operator,
             address token0,
             address token1,
@@ -114,15 +116,9 @@ interface INonfungiblePositionManager is
     /// @return liquidity The amount of liquidity for this position
     /// @return amount0 The amount of token0
     /// @return amount1 The amount of token1
-    function mint(MintParams calldata params)
-        external
-        payable
-        returns (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        );
+    function mint(
+        MintParams calldata params
+    ) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 
     struct IncreaseLiquidityParams {
         uint256 tokenId;
@@ -143,14 +139,9 @@ interface INonfungiblePositionManager is
     /// @return liquidity The new liquidity amount as a result of the increase
     /// @return amount0 The amount of token0 to achieve resulting liquidity
     /// @return amount1 The amount of token1 to achieve resulting liquidity
-    function increaseLiquidity(IncreaseLiquidityParams calldata params)
-        external
-        payable
-        returns (
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        );
+    function increaseLiquidity(
+        IncreaseLiquidityParams calldata params
+    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1);
 
     struct DecreaseLiquidityParams {
         uint256 tokenId;
@@ -168,10 +159,9 @@ interface INonfungiblePositionManager is
     /// deadline The time by which the transaction must be included to effect the change
     /// @return amount0 The amount of token0 accounted to the position's tokens owed
     /// @return amount1 The amount of token1 accounted to the position's tokens owed
-    function decreaseLiquidity(DecreaseLiquidityParams calldata params)
-        external
-        payable
-        returns (uint256 amount0, uint256 amount1);
+    function decreaseLiquidity(
+        DecreaseLiquidityParams calldata params
+    ) external payable returns (uint256 amount0, uint256 amount1);
 
     struct CollectParams {
         uint256 tokenId;

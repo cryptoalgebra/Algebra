@@ -180,14 +180,14 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier2Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier3Multiplier <= LiquidityTier.MAX_MULTIPLIER,
-            'Multiplier cant be greater than MAX_MULTIPLIER'
+            'Multiplier is too high'
         );
 
         require(
             tiers.tier1Multiplier >= LiquidityTier.DENOMINATOR &&
                 tiers.tier2Multiplier >= LiquidityTier.DENOMINATOR &&
                 tiers.tier3Multiplier >= LiquidityTier.DENOMINATOR,
-            'Multiplier cant be less than DENOMINATOR'
+            'Multiplier is too low'
         );
 
         newIncentive.tiers = tiers;
@@ -222,7 +222,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        _checkIsIncentiveExist(incentive);
         require(!incentive.deactivated, 'incentive stopped');
 
         IAlgebraPool pool;
@@ -270,5 +270,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+    }
+
+    function _checkIsIncentiveExist(Incentive storage incentive) internal view {
+        require(incentive.totalReward > 0, 'non-existent incentive');
     }
 }

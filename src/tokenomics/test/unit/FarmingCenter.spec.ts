@@ -97,8 +97,6 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       incentiveArgsEternal = {
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -253,8 +251,6 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1_000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
-
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
         )
@@ -365,8 +361,6 @@ describe('unit/FarmingCenter', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       let farmIncentiveKey = {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
@@ -442,8 +436,6 @@ describe('unit/FarmingCenter', () => {
         tickUpper: 240,
       })
       tokenId = mintResult.tokenId
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       farmIncentiveKey = {
         
@@ -1091,9 +1083,6 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
         
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -1195,8 +1184,6 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
             {

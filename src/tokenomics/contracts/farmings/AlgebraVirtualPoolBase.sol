@@ -24,12 +24,12 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
     modifier onlyFromPool() {
-        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool can call this function');
+        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool');
         _;
     }
 
     modifier onlyFarming() {
-        require(msg.sender == farmingAddress, 'only farming can call this function');
+        require(msg.sender == farmingAddress, 'only farming');
         _;
     }
 

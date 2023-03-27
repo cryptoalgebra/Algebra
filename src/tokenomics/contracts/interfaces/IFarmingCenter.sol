@@ -44,33 +44,15 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
 
     function farmingCenterVault() external view returns (IFarmingCenterVault);
 
-    /// @notice Increasing the liquidity of the position without exiting from farming
-    /// @param key The incentive event key
-    /// @param params tokenId The ID of the token for which liquidity is being increased,
-    /// amount0Desired The desired amount of token0 to be spent,
-    /// amount1Desired The desired amount of token1 to be spent,
-    /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
-    /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
-    /// deadline The time by which the transaction must be included to effect the change
-    function increaseLiquidity(
-        IncentiveKey memory key,
-        INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1);
-
-    function decreaseLiquidity(
-        IncentiveKey memory key,
-        DecreaseLiquidityParams memory params
-    ) external payable returns (uint256 amount0, uint256 amount1);
-
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @return numberOfFarms The number of farms,
+    /// @return numberOfFarms The number of farms
+    /// @return limitIncentiveId The id of limit incentive that is active for this NFT
+    /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
     /// inLimitFarming The parameter showing if the token is in the limit farm
-    function deposits(uint256 tokenId) external view returns (uint32 numberOfFarms, bool inLimitFarming);
-
-    function lockToken(uint256 tokenId) external;
-
-    function unlockToken(uint256 tokenId) external;
+    function deposits(
+        uint256 tokenId
+    ) external view returns (uint32 numberOfFarms, bytes32 limitIncentiveId, bytes32 eternalIncentiveId);
 
     /// @notice Updates activeIncentive in AlgebraPool
     /// @dev only farming can do it
@@ -115,9 +97,4 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
         uint256 amountRequestedIncentive,
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
-
-    /// @notice Emitted when ownership of a deposit changes
-    /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @param lock The current status of nft
-    event Lock(uint256 indexed tokenId, bool lock);
 }

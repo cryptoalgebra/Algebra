@@ -88,8 +88,6 @@ describe('unit/Farms', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       incentiveArgs = {
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -200,8 +198,6 @@ describe('unit/Farms', () => {
           deadline: (await blockTimestamp()) + 1_000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
-
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
         )
@@ -284,8 +280,6 @@ describe('unit/Farms', () => {
         tokens: [context.token0, context.token1],
       })
       tokenId = mintResult.tokenId
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       let farmIncentiveKey = {
         
@@ -457,8 +451,6 @@ describe('unit/Farms', () => {
         tokens: [context.token0, context.token1],
       })
       tokenId = mintResult.tokenId
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       farmIncentiveKey = {
         
@@ -701,8 +693,6 @@ describe('unit/Farms', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
         // await Time.setAndMine(timestamps.startTime + 1)
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -777,10 +767,6 @@ describe('unit/Farms', () => {
         amount1Min: 0,
         deadline: (await blockTimestamp()) + 10000,
       })
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenIdOut)
 
       // await Time.setAndMine(timestamps.startTime + 1)
 

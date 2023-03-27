@@ -84,8 +84,6 @@ describe('unit/FarmingCenterVault', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       incentiveArgs = {
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,

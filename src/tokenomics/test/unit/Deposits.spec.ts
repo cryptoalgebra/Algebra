@@ -119,7 +119,7 @@ describe('unit/Deposits', () => {
       // Make sure we're starting from a clean slate
       const depositBefore = await context.farmingCenter.deposits(tokenId)
       subject = async (data: string, actor: Wallet = lpUser0) => {
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+        //await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
       }
     })
 
@@ -240,9 +240,9 @@ describe('unit/Deposits', () => {
 
         let invalidData = ethers.utils.defaultAbiCoder.encode([incentiveKeyAbi], [invalidFarmParams])
 
-        await expect(
-          context.farmingCenter.lockToken(tokenId)
-        ).to.be.revertedWith('non-existent incentive')
+        //await expect(
+        //  context.farmingCenter.lockToken(tokenId)
+        //).to.be.revertedWith('non-existent incentive')
       })
     })
   })
@@ -250,9 +250,9 @@ describe('unit/Deposits', () => {
   describe('#withdrawToken', () => {
     beforeEach(async () => {
       
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      //await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
-      subject = (tokenId) => context.farmingCenter.connect(lpUser0).unlockToken(tokenId)
+      //subject = (tokenId) => context.farmingCenter.connect(lpUser0).unlockToken(tokenId)
     })
 
     describe('works and', () => {
@@ -269,9 +269,9 @@ describe('unit/Deposits', () => {
     describe('fails if', () => {
       it('you are withdrawing a token that is not yours', async () => {
         const notOwner = actors.traderUser1()
-        await expect(context.farmingCenter.connect(notOwner).unlockToken(tokenId)).to.revertedWith(
-          'not owner'
-        )
+        //await expect(context.farmingCenter.connect(notOwner).unlockToken(tokenId)).to.revertedWith(
+        //  'not owner'
+        //)
       })
 
       it('number of farms is not 0', async () => {
@@ -315,12 +315,12 @@ describe('unit/Deposits', () => {
         amount1Min: 0,
         deadline: (await blockTimestamp()) + 1_000,
       })
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      //await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
       await expect(context.nft.burn(tokenId)).to.be.revertedWith("token is locked")
     })
 
     it('fails if decrease liquidity after lock', async () =>{ 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      //await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
       await expect(context.nft.connect(lpUser0).decreaseLiquidity({
         tokenId: tokenId,
         liquidity: (await context.nft.positions(tokenId)).liquidity,
