@@ -38,10 +38,6 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         IncentiveParams memory params
     ) external returns (address virtualPool);
 
-    function addRewards(IncentiveKey memory key, uint128 reward, uint128 bonusReward) external;
-
-    function decreaseRewardsAmount(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
-
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
     /// @param bonusRewardToken The token being distributed as a bonus reward
@@ -67,6 +63,4 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         uint24 minimalAllowedPositionWidth,
         uint32 enterStartTime
     );
-
-    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId);
 }

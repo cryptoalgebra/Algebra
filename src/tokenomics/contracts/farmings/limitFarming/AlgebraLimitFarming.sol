@@ -103,6 +103,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
     }
 
+    /// @inheritdoc IAlgebraFarming
     function addRewards(
         IncentiveKey memory key,
         uint128 reward,
@@ -119,6 +120,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         }
     }
 
+    /// @inheritdoc IAlgebraFarming
     function decreaseRewardsAmount(
         IncentiveKey memory key,
         uint128 rewardAmount,
@@ -130,29 +132,24 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
         uint128 _totalReward = incentive.totalReward;
-        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
+        if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
         incentive.totalReward = _totalReward - rewardAmount;
 
         uint128 _bonusReward = incentive.bonusReward;
         if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
         incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (bonusRewardAmount > 0)
+            TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
 
         emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
-    function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+    function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
         (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentiveVirtualPool);
-    }
-
-    /// @inheritdoc IAlgebraFarming
-    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentiveVirtualPool);
+        _deactivateIncentive(key, _incentiveVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -243,7 +240,12 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            (, int24 tick, , , , , ) = key.pool.globalState();
+            int24 tick;
+            if (incentive.deactivated) {
+                tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
+            } else {
+                (, tick, , , , , ) = key.pool.globalState();
+            }
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),

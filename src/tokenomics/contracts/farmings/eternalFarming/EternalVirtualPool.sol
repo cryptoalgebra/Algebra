@@ -13,11 +13,11 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     using TickManager for mapping(int24 => TickManager.Tick);
     using LowGasSafeMath for uint128;
 
-    uint128 public rewardRate0;
-    uint128 public rewardRate1;
+    uint128 public override rewardRate0;
+    uint128 public override rewardRate1;
 
-    uint128 public rewardReserve0;
-    uint128 public rewardReserve1;
+    uint128 public override rewardReserve0;
+    uint128 public override rewardReserve1;
 
     uint256 public totalRewardGrowth0 = 1;
     uint256 public totalRewardGrowth1 = 1;
@@ -34,6 +34,13 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         _increaseCumulative(uint32(block.timestamp));
         if (token0Amount > 0) rewardReserve0 = rewardReserve0.add128(token0Amount);
         if (token1Amount > 0) rewardReserve1 = rewardReserve1.add128(token1Amount);
+    }
+
+    // @inheritdoc IAlgebraEternalVirtualPool
+    function decreaseRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
+        if (token0Amount > 0) rewardReserve0 = rewardReserve0.sub(token0Amount);
+        if (token1Amount > 0) rewardReserve1 = rewardReserve1.sub(token1Amount);
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool

@@ -81,7 +81,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
         if (tokensLocked > 0) {
             uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
@@ -108,7 +108,7 @@ contract FarmingCenter is IFarmingCenter, Multicall, PeripheryPayments {
         _farming.exitFarming(key, tokenId, msg.sender);
 
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
         }
