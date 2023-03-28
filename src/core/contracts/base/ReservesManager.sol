@@ -33,12 +33,14 @@ abstract contract ReservesManager is AlgebraPoolBase {
     if (_liquidity == 0) return (balance0, balance1);
 
     (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
-    if (balance0 > _reserve0 || balance1 > _reserve1) {
+    bool isBalance0MoreReserve0 = balance0 > _reserve0;
+    bool isBalance1MoreReserve1 = balance1 > _reserve1;
+    if (isBalance0MoreReserve0 || isBalance1MoreReserve1) {
       unchecked {
-        if (balance0 > _reserve0) {
+        if (isBalance0MoreReserve0) {
           totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
         }
-        if (balance1 > _reserve1) {
+        if (isBalance1MoreReserve1) {
           totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
         }
         (reserve0, reserve1) = (uint128(balance0), uint128(balance1));
