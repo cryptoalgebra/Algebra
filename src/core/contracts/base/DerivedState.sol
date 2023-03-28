@@ -11,8 +11,8 @@ abstract contract DerivedState is AlgebraPoolBase {
     int24 bottomTick,
     int24 topTick
   ) external view override onlyValidTicks(bottomTick, topTick) returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent) {
-    TickManager.Tick storage _bottomTick = ticks[bottomTick];
-    TickManager.Tick storage _topTick = ticks[topTick];
+    TickManagement.Tick storage _bottomTick = ticks[bottomTick];
+    TickManagement.Tick storage _topTick = ticks[topTick];
 
     if (_bottomTick.nextTick == _bottomTick.prevTick || _topTick.nextTick == _topTick.prevTick) revert tickIsNotInitialized();
     (uint160 lowerOuterSecondPerLiquidity, uint32 lowerOuterSecondsSpent) = (_bottomTick.outerSecondsPerLiquidity, _bottomTick.outerSecondsSpent);

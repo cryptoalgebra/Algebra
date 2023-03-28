@@ -55,7 +55,7 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if liquidity overflows
   error liquidityAdd();
 
-  // ####  TickManager errors  ####
+  // ####  TickManagement errors  ####
   error topTickLowerThanBottomTick();
   error bottomTickLowerThanMIN();
   error topTickAboveMAX();

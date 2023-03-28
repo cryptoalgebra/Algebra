@@ -7,9 +7,9 @@ import './TickMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
 
-/// @title TickManager
+/// @title TickManagement
 /// @notice Contains functions for managing tick processes and relevant calculations
-library TickManager {
+library TickManagement {
   // info stored for each initialized individual tick
   struct Tick {
     uint128 liquidityTotal; // the total position liquidity that references this tick

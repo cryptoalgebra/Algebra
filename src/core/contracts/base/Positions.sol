@@ -3,12 +3,12 @@ pragma solidity =0.8.17;
 
 import './AlgebraPoolBase.sol';
 import '../libraries/LiquidityMath.sol';
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
 abstract contract Positions is AlgebraPoolBase {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
   struct Position {
     uint256 liquidity; // The amount of liquidity concentrated in the range

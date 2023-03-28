@@ -7,7 +7,7 @@ import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IDataStorageOperator.sol';
 import '../interfaces/IERC20Minimal.sol';
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 import '../libraries/LimitOrderManager.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
@@ -15,7 +15,7 @@ import './common/Timestamp.sol';
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
 abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
@@ -67,7 +67,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   address public override activeIncentive;
 
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManager.Tick) public override ticks;
+  mapping(int24 => TickManagement.Tick) public override ticks;
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => LimitOrderManager.LimitOrder) public override limitOrders;
 
@@ -85,7 +85,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
-    TickManager.checkTickRangeValidity(bottomTick, topTick);
+    TickManagement.checkTickRangeValidity(bottomTick, topTick);
     _;
   }
 

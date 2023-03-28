@@ -36,7 +36,7 @@ abstract contract LimitOrderPositions is Positions {
 
       if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
         // if tick flipped
-        TickManager.Tick storage _tickData = ticks[tick];
+        TickManagement.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
         if (_tickData.nextTick == _tickData.prevTick) {
           // tick isn't initialized
