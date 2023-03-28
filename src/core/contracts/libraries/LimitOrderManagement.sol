@@ -99,6 +99,7 @@ library LimitOrderManagement {
         }
         (closed, data.amountToSell, data.soldAmount) = (true, 0, 0);
       } else {
+        // overflow is desired since we do not support tokens with totalSupply > type(uint128).max
         data.soldAmount = soldAmount + uint128(amountOut);
       }
 

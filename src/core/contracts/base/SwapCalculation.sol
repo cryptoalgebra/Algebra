@@ -22,7 +22,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool computedLatestTimepoint; //  If we have already wrote a timepoint in the DataStorageOperator
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
-    int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
+    int256 amountCalculated; // The additive amount of total output\input calculated through the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
     address activeIncentive; // Address of an active incentive at the moment or address(0)
