@@ -258,12 +258,12 @@ contract AlgebraPool is
     (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
     uint256 fee0;
     if (amount0 > 0) {
-      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
+      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
       SafeTransfer.safeTransfer(token0, recipient, amount0);
     }
     uint256 fee1;
     if (amount1 > 0) {
-      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
+      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
       SafeTransfer.safeTransfer(token1, recipient, amount1);
     }
 

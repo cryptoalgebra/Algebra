@@ -9,6 +9,7 @@ library Constants {
   int256 internal constant Q160 = 1 << 160;
 
   uint16 internal constant BASE_FEE = 100; // init minimum fee value in hundredths of a bip (0.01%)
+  uint24 internal constant FEE_DENOMINATOR = 1e6;
   int24 internal constant INIT_TICK_SPACING = 60;
   int24 internal constant MAX_TICK_SPACING = 500;
 

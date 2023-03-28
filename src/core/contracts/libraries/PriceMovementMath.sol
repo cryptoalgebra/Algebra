@@ -121,11 +121,11 @@ library PriceMovementMath {
 
       if (amountAvailable >= 0) {
         // exactIn or not
-        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
+        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
         input = getAmountA(targetPrice, currentPrice, liquidity);
         if (amountAvailableAfterFee >= input) {
           resultPrice = targetPrice;
-          feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+          feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
           resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
           if (targetPrice != resultPrice) {
@@ -134,7 +134,7 @@ library PriceMovementMath {
             // we didn't reach the target, so take the remainder of the maximum input as fee
             feeAmount = uint256(amountAvailable) - input;
           } else {
-            feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+            feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
           }
         }
 
@@ -161,7 +161,7 @@ library PriceMovementMath {
         }
 
         input = getAmountA(resultPrice, currentPrice, liquidity);
-        feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+        feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
       }
     }
   }

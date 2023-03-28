@@ -90,7 +90,7 @@ library LimitOrderManagement {
       uint256 unsoldAmount = amountToSell - soldAmount;
 
       if (exactIn) {
-        amountOut = FullMath.mulDiv(amountOut, 1e6 - fee, 1e6);
+        amountOut = FullMath.mulDiv(amountOut, Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
       }
 
       if (amountOut >= unsoldAmount) {
@@ -105,12 +105,12 @@ library LimitOrderManagement {
       amountIn = zeroToOne ? FullMath.mulDivRoundingUp(amountOut, Constants.Q96, price) : FullMath.mulDivRoundingUp(amountOut, price, Constants.Q96);
       if (exactIn) {
         if (amountOut == unsoldAmount) {
-          feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6);
+          feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR);
         } else {
           feeAmount = uint256(amountA) - amountIn;
         }
       } else {
-        feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6 - fee);
+        feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR - fee);
       }
 
       if (zeroToOne) {
