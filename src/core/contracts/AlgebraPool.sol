@@ -210,9 +210,7 @@ contract AlgebraPool is
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override nonReentrant returns (int256 amount0, int256 amount1) {
-    unchecked {
-      if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
-    }
+    if (amountRequired < 0) revert invalidAmountRequired(); // we support only exactInput here
 
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
