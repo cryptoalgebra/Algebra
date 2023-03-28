@@ -16,6 +16,7 @@ import './base/TickStructure.sol';
 import './libraries/FullMath.sol';
 import './libraries/Constants.sol';
 import './libraries/SafeTransfer.sol';
+import './libraries/SafeCast.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 
@@ -35,6 +36,8 @@ contract AlgebraPool is
   ReservesManager,
   TickStructure
 {
+  using SafeCast for uint256;
+
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
@@ -217,14 +220,17 @@ contract AlgebraPool is
     {
       // scope to prevent "stack too deep"
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      int256 amountReceived;
+      uint256 balanceBefore;
+      uint256 balanceAfter;
       if (zeroToOne) {
         _swapCallback(amountRequired, 0, data);
-        amountReceived = int256(_balanceToken0() - balance0Before);
+        (balanceBefore, balanceAfter) = (balance0Before, _balanceToken0());
       } else {
         _swapCallback(0, amountRequired, data);
-        amountReceived = int256(_balanceToken1() - balance1Before);
+        (balanceBefore, balanceAfter) = (balance1Before, _balanceToken1());
       }
+
+      int256 amountReceived = (balanceAfter - balanceBefore).toInt256();
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     }
     if (amountRequired == 0) revert insufficientInputAmount();
