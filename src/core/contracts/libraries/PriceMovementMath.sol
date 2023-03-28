@@ -53,7 +53,7 @@ library PriceMovementMath {
             if (denominator >= liquidityShifted) return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator)); // always fits in 160 bits
           }
 
-          return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
+          return uint160(FullMath.unsafeDivRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount))); // denominator always > 0
         } else {
           uint256 product;
           require((product = amount * price) / amount == price); // if the product overflows, we know the denominator underflows
@@ -70,7 +70,7 @@ library PriceMovementMath {
               .toUint160();
         } else {
           uint256 quotient = amount <= type(uint160).max
-            ? FullMath.divRoundingUp(amount << Constants.RESOLUTION, liquidity)
+            ? FullMath.unsafeDivRoundingUp(amount << Constants.RESOLUTION, liquidity) // denominator always > 0
             : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
 
           require(price > quotient);

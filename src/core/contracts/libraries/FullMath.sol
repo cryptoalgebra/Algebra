@@ -125,7 +125,7 @@ library FullMath {
   /// @param x The dividend
   /// @param y The divisor
   /// @return z The quotient, ceil(x / y)
-  function divRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+  function unsafeDivRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
     assembly {
       z := add(div(x, y), gt(mod(x, y), 0))
     }
