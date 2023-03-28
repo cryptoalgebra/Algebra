@@ -20,7 +20,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
-    bool computedLatestTimepoint; //  If we have already wrote a timepoint in the DataStorageOperator
+    bool crossedAnyTick; //  If we have already crossed at least one active tick
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
     int256 amountCalculated; // The additive amount of total output\input calculated through the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
@@ -150,17 +150,16 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         if (currentPrice == step.nextTickPrice && !step.inLimitOrder) {
           // if the reached tick is initialized then we need to cross it
           if (step.initialized) {
-            // once at a swap we have to get the last timepoint of the observation
-            if (!cache.computedLatestTimepoint) {
-              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
-              cache.computedLatestTimepoint = true;
-              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
-            }
-
             // we have opened LOs
             if (ticks[step.nextTick].hasLimitOrders) {
               currentTick = zeroToOne ? step.nextTick : step.nextTick - 1;
               continue;
+            }
+
+            if (!cache.crossedAnyTick) {
+              cache.crossedAnyTick = true;
+              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
+              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
             }
 
             // every tick cross is needed to be duplicated in a virtual pool
