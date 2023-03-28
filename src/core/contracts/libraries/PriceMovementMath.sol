@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './LowGasSafeMath.sol';
 import './TokenDeltaMath.sol';
@@ -143,6 +144,8 @@ library PriceMovementMath {
 
         output = getAmountB(targetPrice, currentPrice, liquidity);
         amountAvailable = -amountAvailable;
+        if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
+
         if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
         else {
           resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);

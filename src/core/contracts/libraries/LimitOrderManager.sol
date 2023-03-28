@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './Constants.sol';
 
@@ -72,6 +73,7 @@ library LimitOrderManager {
     unchecked {
       bool exactIn = amountA > 0;
       if (!exactIn) amountA = -amountA;
+      if (amountA < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
       // price is defined as "token1/token0"
       uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
