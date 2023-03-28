@@ -128,6 +128,7 @@ abstract contract LimitOrderPositions is Positions {
       }
       if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
 
+      require(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
       (position.liquidity) = ((amountToSell << 128) | amountToSellInitial); // tightly pack data
     }
   }
