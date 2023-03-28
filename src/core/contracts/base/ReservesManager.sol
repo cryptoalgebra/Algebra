@@ -19,8 +19,12 @@ abstract contract ReservesManager is AlgebraPoolBase {
     return (reserve0, reserve1);
   }
 
+  /// @dev updates reserves data and distributes excess in the form of fee to liquidity providers.
+  /// If any of the balances is greater than uint128, the excess is sent to the communityVault
   function _updateReserves() internal returns (uint256 balance0, uint256 balance1) {
     (balance0, balance1) = (_balanceToken0(), _balanceToken1());
+    // we do not support tokens with totalSupply > type(uint128).max, so any excess will be sent to communityVault
+    // this situation can only occur if the tokens are sent directly to the pool from outside
     unchecked {
       if (balance0 > type(uint128).max) {
         SafeTransfer.safeTransfer(token0, communityVault, balance0 - type(uint128).max);
@@ -36,16 +40,11 @@ abstract contract ReservesManager is AlgebraPoolBase {
     if (_liquidity == 0) return (balance0, balance1);
 
     (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
-    bool isBalance0MoreReserve0 = balance0 > _reserve0;
-    bool isBalance1MoreReserve1 = balance1 > _reserve1;
-    if (isBalance0MoreReserve0 || isBalance1MoreReserve1) {
+    (bool hasExcessToken0, bool hasExcessToken1) = (balance0 > _reserve0, balance1 > _reserve1);
+    if (hasExcessToken0 || hasExcessToken1) {
       unchecked {
-        if (isBalance0MoreReserve0) {
-          totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
-        }
-        if (isBalance1MoreReserve1) {
-          totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
-        }
+        if (hasExcessToken0) totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
+        if (hasExcessToken1) totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
         (reserve0, reserve1) = (uint128(balance0), uint128(balance1));
       }
     }
