@@ -59,6 +59,7 @@ library LimitOrderManagement {
   /// @param tickSqrtPrice Limit order execution price
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
   /// @param amountA Amount of tokens that will be swapped
+  /// @param fee The fee taken from the input amount, expressed in hundredths of a bip
   /// @return closed Status of limit order after execution
   /// @return amountOut Amount of token that user receive after swap
   /// @return amountIn Amount of token that user need to pay
@@ -87,7 +88,7 @@ library LimitOrderManagement {
 
       LimitOrder storage data = self[tick];
       (uint128 amountToSell, uint128 soldAmount) = (data.amountToSell, data.soldAmount);
-      uint256 unsoldAmount = amountToSell - soldAmount;
+      uint256 unsoldAmount = amountToSell - soldAmount; // safe since soldAmount always < amountToSell
 
       if (exactIn) {
         amountOut = FullMath.mulDiv(amountOut, Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
@@ -114,6 +115,7 @@ library LimitOrderManagement {
         feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR - fee);
       }
 
+      // overflows are desired since there are relative accumulators
       if (zeroToOne) {
         data.boughtAmount0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
       } else {
