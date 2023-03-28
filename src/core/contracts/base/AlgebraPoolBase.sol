@@ -121,6 +121,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
 
     unchecked {
+      // just timedelta if liquidity == 0
       secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
     }
     lastTimepointTimestamp = blockTimestamp;
@@ -140,6 +141,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
     unchecked {
       if (_lastTs != blockTimestamp)
+        // just timedelta if liquidity == 0
         _secPerLiqCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
     }
   }
