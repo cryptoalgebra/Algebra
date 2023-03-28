@@ -28,8 +28,8 @@ library TickMath {
     unchecked {
       // get abs value
       int24 mask = tick >> (24 - 1);
-      uint256 absTick = uint256(uint24((tick ^ mask) - mask));
-      if (absTick > uint256(uint24(MAX_TICK))) revert IAlgebraPoolErrors.tickOutOfRange();
+      uint256 absTick = uint24((tick ^ mask) - mask);
+      if (absTick > uint24(MAX_TICK)) revert IAlgebraPoolErrors.tickOutOfRange();
 
       uint256 ratio = absTick & 0x1 != 0 ? 0xfffcb933bd6fad37aa2d162d1a594001 : 0x100000000000000000000000000000000;
       if (absTick & 0x2 != 0) ratio = (ratio * 0xfff97272373d413259a46990580e213a) >> 128;
