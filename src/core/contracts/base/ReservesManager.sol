@@ -2,11 +2,14 @@
 pragma solidity =0.8.17;
 
 import '../libraries/SafeTransfer.sol';
+import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 abstract contract ReservesManager is AlgebraPoolBase {
+  using SafeCast for uint256;
+
   /// @dev The tracked token0 and token1 reserves of pool
   uint128 private reserve0;
   uint128 private reserve1;
@@ -77,9 +80,9 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
 
     if (deltaR0 | deltaR1 == 0) return;
-    (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
-    if (deltaR0 != 0) _reserve0 = uint128(int128(_reserve0) + int128(deltaR0));
-    if (deltaR1 != 0) _reserve1 = uint128(int128(_reserve1) + int128(deltaR1));
-    (reserve0, reserve1) = (_reserve0, _reserve1);
+    (uint256 _reserve0, uint256 _reserve1) = (reserve0, reserve1);
+    if (deltaR0 != 0) _reserve0 = (uint256(int256(_reserve0) + deltaR0)).toUint128();
+    if (deltaR1 != 0) _reserve1 = (uint256(int256(_reserve1) + deltaR1)).toUint128();
+    (reserve0, reserve1) = (uint128(_reserve0), uint128(_reserve1));
   }
 }
