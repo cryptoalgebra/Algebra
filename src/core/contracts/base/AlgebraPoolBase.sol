@@ -111,7 +111,12 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeTimepoint(uint16 timepointIndex, uint32 blockTimestamp, int24 tick, uint128 currentLiquidity) internal returns (uint16, uint16) {
+  function _writeTimepoint(
+    uint16 timepointIndex,
+    uint32 blockTimestamp,
+    int24 tick,
+    uint128 currentLiquidity
+  ) internal returns (uint16 newTimepointIndex, uint16 newFee) {
     uint32 _lastTs = lastTimepointTimestamp;
     if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
 
@@ -121,8 +126,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     lastTimepointTimestamp = blockTimestamp;
 
     // failure should not occur. But in case of failure, the pool will remain operational
-    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 newTimepointIndex, uint16 newFee) {
-      return (newTimepointIndex, newFee);
+    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 _newTimepointIndex, uint16 _newFee) {
+      return (_newTimepointIndex, _newFee);
     } catch {
       emit DataStorageFailure();
       return (timepointIndex, 0);
