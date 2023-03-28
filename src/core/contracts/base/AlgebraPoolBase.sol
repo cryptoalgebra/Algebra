@@ -122,6 +122,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
     unchecked {
       // just timedelta if liquidity == 0
+      // overflow and underflow are desired
       secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
     }
     lastTimepointTimestamp = blockTimestamp;
@@ -142,6 +143,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     unchecked {
       if (_lastTs != blockTimestamp)
         // just timedelta if liquidity == 0
+        // overflow and underflow are desired
         _secPerLiqCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
     }
   }
