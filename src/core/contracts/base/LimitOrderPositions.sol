@@ -14,6 +14,7 @@ abstract contract LimitOrderPositions is Positions {
   using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using LowGasSafeMath for uint128;
   using SafeCast for int256;
+  using SafeCast for uint256;
 
   /**
    * @dev Updates limit order position inner data and applies `amountToSellDelta`
@@ -102,6 +103,7 @@ abstract contract LimitOrderPositions is Positions {
             amountToSell = 0;
           }
         }
+        // casts aren't checked since boughtAmount must be <= type(uint128).max (we are not supporting tokens with totalSupply > type(uint128).max)
         if (zeroToOne) {
           position.innerFeeGrowth1Token = position.innerFeeGrowth1Token + _cumulativeDelta;
           if (boughtAmount > 0) position.fees1 = position.fees1.add128(uint128(boughtAmount));
@@ -118,8 +120,8 @@ abstract contract LimitOrderPositions is Positions {
         if (amountToSell != amountToSellInitial && amountToSell != 0) {
           // in case of overflow it will be not possible to add tokens for sell until the limit order is fully closed
           amountToSellInitialDelta = amountToSellDelta < 0
-            ? -int256(FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell)).toInt128()
-            : int256(FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell)).toInt128();
+            ? (-FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell).toInt256()).toInt128()
+            : FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell).toInt256().toInt128();
 
           limitOrders.addVirtualLiquidity(tick, amountToSellInitialDelta - amountToSellDelta);
         }
