@@ -53,17 +53,19 @@ abstract contract ReservesManager is AlgebraPoolBase {
 
   /**
    * @notice Applies deltas to reserves and pays communityFees
-   * @param deltaR0 Amount of token0 to add/subtract to/from reserve0
-   * @param deltaR1 Amount of token1 to add/subtract to/from reserve1
-   * @param communityFee0 Amount of token0 to pay as communityFee
-   * @param communityFee1 Amount of token1 to pay as communityFee
+   * @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
+   * @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
+   * @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
+   * @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
    */
   function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
     if (communityFee0 | communityFee1 != 0) {
       unchecked {
-        (uint256 _cfPending0, uint256 _cfPending1) = (communityFeePending0 + communityFee0, communityFeePending1 + communityFee1);
+        // overflow is desired since we do not support tokens with totalSupply > type(uint128).max
+        uint256 _cfPending0 = uint256(communityFeePending0) + communityFee0;
+        uint256 _cfPending1 = uint256(communityFeePending1) + communityFee1;
         uint32 currentTimestamp = _blockTimestamp();
-        // underflow is desired
+        // underflow in timestamps is desired
         if (
           currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY ||
           _cfPending0 > type(uint128).max ||
@@ -72,9 +74,10 @@ abstract contract ReservesManager is AlgebraPoolBase {
           if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
           if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
           communityFeeLastTimestamp = currentTimestamp;
-          (deltaR0, deltaR1) = (deltaR0 - int256(_cfPending0), deltaR1 - int256(_cfPending1));
+          (deltaR0, deltaR1) = (deltaR0 - _cfPending0.toInt256(), deltaR1 - _cfPending1.toInt256());
           (_cfPending0, _cfPending1) = (0, 0);
         }
+        // the previous block guarantees that no overflow occurs
         (communityFeePending0, communityFeePending1) = (uint128(_cfPending0), uint128(_cfPending1));
       }
     }
