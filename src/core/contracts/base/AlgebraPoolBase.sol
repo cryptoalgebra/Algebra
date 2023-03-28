@@ -8,7 +8,7 @@ import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IDataStorageOperator.sol';
 import '../interfaces/IERC20Minimal.sol';
 import '../libraries/TickManagement.sol';
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
 
@@ -69,7 +69,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => LimitOrderManager.LimitOrder) public override limitOrders;
+  mapping(int24 => LimitOrderManagement.LimitOrder) public override limitOrders;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;

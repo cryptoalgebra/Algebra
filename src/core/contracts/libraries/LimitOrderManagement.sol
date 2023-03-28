@@ -5,9 +5,9 @@ import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './Constants.sol';
 
-/// @title LimitOrderManager
+/// @title LimitOrderManagement
 /// @notice Contains functions for managing limit orders and relevant calculations
-library LimitOrderManager {
+library LimitOrderManagement {
   struct LimitOrder {
     uint128 amountToSell;
     uint128 soldAmount;

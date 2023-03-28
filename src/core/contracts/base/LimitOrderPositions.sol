@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/TickMath.sol';
 import '../libraries/SafeCast.sol';
@@ -11,7 +11,7 @@ import './Positions.sol';
 /// @notice Contains the logic of recalculation and change of limit order positions
 /// @dev For limit orders positions, the same structure is used as for liquidity positions. However, it is interpreted differently
 abstract contract LimitOrderPositions is Positions {
-  using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
+  using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using LowGasSafeMath for uint128;
   using SafeCast for int256;
 
@@ -71,7 +71,7 @@ abstract contract LimitOrderPositions is Positions {
       if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1; // maker pays for storage slots
       if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = 1;
     }
-    LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
+    LimitOrderManagement.LimitOrder storage _limitOrder = limitOrders[tick];
     unchecked {
       uint256 _cumulativeDelta;
       bool zeroToOne;

@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../libraries/PriceMovementMath.sol';
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
@@ -12,7 +12,7 @@ import './AlgebraPoolBase.sol';
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
-  using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
+  using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using SafeCast for uint256;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
