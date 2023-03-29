@@ -69,7 +69,7 @@ abstract contract LimitOrderPositions is Positions {
     if (amountToSell == 0 && amountToSellDelta == 0) return;
 
     if (amountToSell == 0) {
-      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1; // maker pays for storage slots
+      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1; // maker pays for storage slots in LimitOrder struct
       if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = 1;
     }
     LimitOrderManagement.LimitOrder storage _limitOrder = limitOrders[tick];
@@ -77,10 +77,13 @@ abstract contract LimitOrderPositions is Positions {
       uint256 _cumulativeDelta;
       bool zeroToOne;
       {
-        uint256 _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
-        if (_bought1Cumulative == 0) {
-          (_limitOrder.boughtAmount0Cumulative, _limitOrder.boughtAmount1Cumulative) = (1, 1); // maker pays for storage slots
+        uint256 _bought1Cumulative;
+        if (!_limitOrder.initialized) {
+          // maker pays for storage slots
+          (_limitOrder.boughtAmount0Cumulative, _limitOrder.boughtAmount1Cumulative, _limitOrder.initialized) = (1, 1, true);
           _bought1Cumulative = 1;
+        } else {
+          _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
         }
         _cumulativeDelta = _bought1Cumulative - position.innerFeeGrowth1Token;
         zeroToOne = _cumulativeDelta > 0;

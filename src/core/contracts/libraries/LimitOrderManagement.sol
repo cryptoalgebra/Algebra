@@ -13,6 +13,7 @@ library LimitOrderManagement {
     uint128 soldAmount;
     uint256 boughtAmount0Cumulative;
     uint256 boughtAmount1Cumulative;
+    bool initialized;
   }
 
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
