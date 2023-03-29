@@ -2043,8 +2043,8 @@ describe('AlgebraPool', () => {
 
         const receivedAmount = balance0After.sub(balance0Before);
 
-        expect(receivedAmount).to.be.eq('9999500000')
-        expect(balance1After).to.be.eq(balance1Before.add(AMOUNT.sub('9999500000')));
+        expect(receivedAmount).to.be.eq('9999499999')
+        expect(balance1After).to.be.eq(balance1Before.add(AMOUNT.sub('9999499999')));
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
         const [reserve0, reserve1] = await pool.getReserves();
@@ -2246,8 +2246,8 @@ describe('AlgebraPool', () => {
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
-        expect(balance1After.sub(balance1Before)).to.be.eq('993940991409063329')
-        expect(balance0After.sub(balance0Before)).to.be.eq('12004502950966675')
+        expect(balance1After.sub(balance1Before)).to.be.eq('993940991409063328')
+        expect(balance0After.sub(balance0Before)).to.be.eq('12004502950966676')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
         const [reserve0, reserve1] = await pool.getReserves();
@@ -2270,8 +2270,8 @@ describe('AlgebraPool', () => {
         const balance0After = await token0.balanceOf(wallet.address)
         const balance1After = await token1.balanceOf(wallet.address)
 
-        expect(balance0After.sub(balance0Before)).to.be.eq('993940991409063329')
-        expect(balance1After.sub(balance1Before)).to.be.eq('12004502950966675')
+        expect(balance0After.sub(balance0Before)).to.be.eq('993940991409063328')
+        expect(balance1After.sub(balance1Before)).to.be.eq('12004502950966676')
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
         const [reserve0, reserve1] = await pool.getReserves();
@@ -2434,8 +2434,8 @@ describe('AlgebraPool', () => {
 
         const {amount0, amount1} = await swapTarget.callStatic.removeLimitOrder(pool.address, wallet.address, 60);
 
-        expect(amount1).to.be.eq('993940991409063329')
-        expect(amount0).to.be.eq('12004502950966675')
+        expect(amount1).to.be.eq('993940991409063328')
+        expect(amount0).to.be.eq('12004502950966676')
 
         await swapExact1For0(BigNumber.from(100).pow(18), wallet.address);
 
@@ -2464,8 +2464,8 @@ describe('AlgebraPool', () => {
 
         const {amount0, amount1} = await swapTarget.callStatic.removeLimitOrder(pool.address,wallet.address, -60);
 
-        expect(amount0).to.be.eq('993940991409063329')
-        expect(amount1).to.be.eq('12004502950966675')
+        expect(amount0).to.be.eq('993940991409063328')
+        expect(amount1).to.be.eq('12004502950966676')
 
         await swapExact0For1(BigNumber.from(100).pow(18), wallet.address);
 
@@ -3200,7 +3200,8 @@ describe('AlgebraPool', () => {
 
       expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
 
-      expect(await virtualPoolMock.currentTick()).to.be.eq(-120);
+      const tick = (await pool.globalState()).tick;
+      expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
       expect(await virtualPoolMock.timestamp()).to.be.gt(0);
     })
 
@@ -3229,8 +3230,9 @@ describe('AlgebraPool', () => {
 
       await swapToLowerPrice(encodePriceSqrt(1, 2), wallet.address);
 
+      const tick = (await pool.globalState()).tick;
       expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
-      expect(await virtualPoolMock.currentTick()).to.be.eq(-120);
+      expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
       expect(await virtualPoolMock.timestamp()).to.be.eq(0);
     })
   })
