@@ -97,7 +97,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     globalState.feeOtZ = Constants.BASE_FEE;
     prevInitializedTick = TickMath.MIN_TICK;
     tickSpacing = Constants.INIT_TICK_SPACING;
-    tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
+    tickSpacingLimitOrders = type(int24).max; // disabled by default
   }
 
   function _balanceToken0() internal view returns (uint256) {
