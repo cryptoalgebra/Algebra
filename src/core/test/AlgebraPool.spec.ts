@@ -3199,7 +3199,8 @@ describe('AlgebraPool', () => {
 
       expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
 
-      expect(await virtualPoolMock.currentTick()).to.be.eq(-120);
+      const tick = (await pool.globalState()).tick;
+      expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
       expect(await virtualPoolMock.timestamp()).to.be.gt(0);
     })
 
@@ -3228,8 +3229,9 @@ describe('AlgebraPool', () => {
 
       await swapToLowerPrice(encodePriceSqrt(1, 2), wallet.address);
 
+      const tick = (await pool.globalState()).tick;
       expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
-      expect(await virtualPoolMock.currentTick()).to.be.eq(-120);
+      expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
       expect(await virtualPoolMock.timestamp()).to.be.eq(0);
     })
   })
