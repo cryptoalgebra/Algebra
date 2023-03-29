@@ -70,6 +70,7 @@ library AdaptiveFee {
   /// @notice calculates e^(x/g) * g^4 in a series, since (around zero):
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
+  /// @dev has good accuracy only if x/g < 6
   function expXg4(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
     uint256 closestValue; // nearest 'table' value of e^(x/g), multiplied by 10^20
     assembly {
