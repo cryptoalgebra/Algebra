@@ -66,6 +66,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         if (communityFee != 0)
           await pool.setCommunityFee(communityFee)
+        await pool.setTickSpacing(60, 60);
         await pool.advanceTime(1)
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2))
 

@@ -72,6 +72,8 @@ export default {
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
+      'contracts/AlgebraPool.sol': LOWEST_COMPILER_SETTINGS,
+      'contracts/AlgebraPoolDeployer.sol': LOWEST_COMPILER_SETTINGS,
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/DataStorageOperator.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/simulation/SimulationTimePoolDeployer.sol': LOWEST_COMPILER_SETTINGS
