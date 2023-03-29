@@ -42,14 +42,12 @@ library LimitOrderManagement {
   /// @param amount The amount of liquidity that will be added/removed
   function addVirtualLiquidity(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal {
     LimitOrder storage data = self[tick];
-    unchecked {
-      if (amount > 0) {
-        data.amountToSell += uint128(amount);
-        data.soldAmount += uint128(amount);
-      } else {
-        data.amountToSell -= uint128(-amount);
-        data.soldAmount -= uint128(-amount);
-      }
+    if (amount > 0) {
+      data.amountToSell += uint128(amount);
+      data.soldAmount += uint128(amount);
+    } else {
+      data.amountToSell -= uint128(-amount);
+      data.soldAmount -= uint128(-amount);
     }
   }
 
