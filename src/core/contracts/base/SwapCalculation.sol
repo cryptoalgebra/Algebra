@@ -25,7 +25,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountCalculated; // The additive amount of total output\input calculated through the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    address activeIncentive; // Address of an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     uint16 timepointIndex; // The index of last written timepoint
@@ -74,8 +73,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       }
 
       cache.blockTimestamp = _blockTimestamp();
-
-      cache.activeIncentive = activeIncentive;
 
       (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
 
@@ -162,20 +159,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
             }
 
-            // every tick cross is needed to be duplicated in a virtual pool
-            if (cache.activeIncentive != address(0)) {
-              bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
-              try IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne) returns (bool success) {
-                isIncentiveActive = success;
-              } catch {
-                // pool will reset activeIncentive in this case
-              }
-              if (!isIncentiveActive) {
-                cache.activeIncentive = address(0);
-                activeIncentive = address(0);
-                emit Incentive(address(0));
-              }
-            }
             int128 liquidityDelta;
             if (zeroToOne) {
               liquidityDelta = -ticks.cross(
@@ -210,6 +193,23 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         // check stop condition
         if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
           break;
+        }
+      }
+
+      if (cache.crossedAnyTick) {
+        // ticks cross data is needed to be duplicated in a virtual pool
+        address _activeIncentive = activeIncentive;
+        if (_activeIncentive != address(0)) {
+          bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
+          try IAlgebraVirtualPool(_activeIncentive).crossTo(currentTick, zeroToOne) returns (bool success) {
+            isIncentiveActive = success;
+          } catch {
+            // pool will reset activeIncentive in this case
+          }
+          if (!isIncentiveActive) {
+            activeIncentive = address(0);
+            emit Incentive(address(0));
+          }
         }
       }
 
