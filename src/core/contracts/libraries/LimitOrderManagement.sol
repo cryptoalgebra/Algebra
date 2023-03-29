@@ -116,9 +116,9 @@ library LimitOrderManagement {
 
       // overflows are desired since there are relative accumulators
       if (zeroToOne) {
-        data.boughtAmount0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
+        data.boughtAmount0Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, amountToSell);
       } else {
-        data.boughtAmount1Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
+        data.boughtAmount1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, amountToSell);
       }
     }
   }
