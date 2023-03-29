@@ -26,7 +26,7 @@ const tickSpacing = 60
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 
-describe('AlgebraPool', () => {
+describe('AlgebraPoolRouter', () => {
   let wallet: Wallet, other: Wallet
 
   let token0: TestERC20
@@ -57,11 +57,10 @@ describe('AlgebraPool', () => {
     ))
 
     const createPoolWrapped = async (
-      amount: number,
       firstToken: TestERC20,
       secondToken: TestERC20
     ): Promise<[MockTimeAlgebraPool, any]> => {
-      const pool = await createPool(amount, firstToken, secondToken)
+      const pool = await createPool(firstToken, secondToken)
       const poolFunctions = createPoolFunctions({
         swapTarget: swapTargetCallee,
         token0: firstToken,
@@ -74,8 +73,8 @@ describe('AlgebraPool', () => {
     }
 
     // default to the 30 bips pool
-    ;[pool0, pool0Functions] = await createPoolWrapped(feeAmount, token0, token1)
-    ;[pool1, pool1Functions] = await createPoolWrapped(feeAmount, token1, token2)
+    ;[pool0, pool0Functions] = await createPoolWrapped(token0, token1)
+    ;[pool1, pool1Functions] = await createPoolWrapped(token1, token2)
   })
 
   it('constructor initializes immutables', async () => {
