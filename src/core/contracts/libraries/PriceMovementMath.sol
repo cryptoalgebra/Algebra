@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './LowGasSafeMath.sol';
 import './TokenDeltaMath.sol';
@@ -52,7 +53,7 @@ library PriceMovementMath {
             if (denominator >= liquidityShifted) return uint160(FullMath.mulDivRoundingUp(liquidityShifted, price, denominator)); // always fits in 160 bits
           }
 
-          return uint160(FullMath.divRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount)));
+          return uint160(FullMath.unsafeDivRoundingUp(liquidityShifted, (liquidityShifted / price).add(amount))); // denominator always > 0
         } else {
           uint256 product;
           require((product = amount * price) / amount == price); // if the product overflows, we know the denominator underflows
@@ -69,7 +70,7 @@ library PriceMovementMath {
               .toUint160();
         } else {
           uint256 quotient = amount <= type(uint160).max
-            ? FullMath.divRoundingUp(amount << Constants.RESOLUTION, liquidity)
+            ? FullMath.unsafeDivRoundingUp(amount << Constants.RESOLUTION, liquidity) // denominator always > 0
             : FullMath.mulDivRoundingUp(amount, Constants.Q96, liquidity);
 
           require(price > quotient);
@@ -120,11 +121,11 @@ library PriceMovementMath {
 
       if (amountAvailable >= 0) {
         // exactIn or not
-        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), 1e6 - fee, 1e6);
+        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
         input = getAmountA(targetPrice, currentPrice, liquidity);
         if (amountAvailableAfterFee >= input) {
           resultPrice = targetPrice;
-          feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+          feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
           resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
           if (targetPrice != resultPrice) {
@@ -133,7 +134,7 @@ library PriceMovementMath {
             // we didn't reach the target, so take the remainder of the maximum input as fee
             feeAmount = uint256(amountAvailable) - input;
           } else {
-            feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+            feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
           }
         }
 
@@ -143,6 +144,8 @@ library PriceMovementMath {
 
         output = getAmountB(targetPrice, currentPrice, liquidity);
         amountAvailable = -amountAvailable;
+        if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
+
         if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
         else {
           resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
@@ -158,7 +161,7 @@ library PriceMovementMath {
         }
 
         input = getAmountA(resultPrice, currentPrice, liquidity);
-        feeAmount = FullMath.mulDivRoundingUp(input, fee, 1e6 - fee);
+        feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
       }
     }
   }

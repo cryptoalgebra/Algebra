@@ -26,12 +26,16 @@ contract AlgebraCommunityVault {
     _withdraw(token, to, amount);
   }
 
-  function withdrawTokens(address[] calldata tokens, address[] calldata tos, uint256[] calldata amounts) external onlyWithdrawer {
-    uint256 tokensLength = tokens.length;
-    require(tokensLength == tos.length && tokensLength == amounts.length);
+  struct WithdrawTokensParams {
+    address token;
+    address to;
+    uint256 amount;
+  }
 
+  function withdrawTokens(WithdrawTokensParams[] calldata params) external onlyWithdrawer {
+    uint256 paramsLength = params.length;
     unchecked {
-      for (uint256 i; i < tokensLength; ++i) _withdraw(tokens[i], tos[i], amounts[i]);
+      for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, params[i].to, params[i].amount);
     }
   }
 

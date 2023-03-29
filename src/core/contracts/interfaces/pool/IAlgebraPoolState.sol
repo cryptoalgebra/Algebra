@@ -100,9 +100,13 @@ interface IAlgebraPoolState {
   /// @return soldAmount The amount of tokens already sold. Has only relative meaning
   /// @return boughtAmount0Cumulative The accumulator of bought tokens0 per amountToSell. Has only relative meaning
   /// @return boughtAmount1Cumulative The accumulator of bought tokens1 per amountToSell. Has only relative meaning
+  /// @return initialized Will be true if a limit order was created at least once on this tick
   function limitOrders(
     int24 tick
-  ) external view returns (uint128 amountToSell, uint128 soldAmount, uint256 boughtAmount0Cumulative, uint256 boughtAmount1Cumulative);
+  )
+    external
+    view
+    returns (uint128 amountToSell, uint128 soldAmount, uint256 boughtAmount0Cumulative, uint256 boughtAmount1Cumulative, bool initialized);
 
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
   function tickTable(int16 wordPosition) external view returns (uint256);

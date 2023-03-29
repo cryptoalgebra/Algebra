@@ -7,15 +7,15 @@ import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IDataStorageOperator.sol';
 import '../interfaces/IERC20Minimal.sol';
-import '../libraries/TickManager.sol';
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/TickManagement.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
 abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
@@ -69,9 +69,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   address public override activeIncentive;
 
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManager.Tick) public override ticks;
+  mapping(int24 => TickManagement.Tick) public override ticks;
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => LimitOrderManager.LimitOrder) public override limitOrders;
+  mapping(int24 => LimitOrderManagement.LimitOrder) public override limitOrders;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
@@ -87,7 +87,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
-    TickManager.checkTickRangeValidity(bottomTick, topTick);
+    TickManagement.checkTickRangeValidity(bottomTick, topTick);
     _;
   }
 
@@ -119,22 +119,24 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     uint32 blockTimestamp,
     int24 tick,
     uint128 currentLiquidity
-  ) internal returns (uint16, uint16, uint16) {
+  ) internal returns (uint16 newTimepointIndex, uint16 newFeeZtO, uint16 newFeeOtZ) {
     uint32 _lastTs = lastTimepointTimestamp;
     if (_lastTs == blockTimestamp) return (timepointIndex, 0, 0); // writing should only happen once per block
 
     unchecked {
-      secondsPerLiquidityCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+      // just timedelta if liquidity == 0
+      // overflow and underflow are desired
+      secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
     }
     lastTimepointTimestamp = blockTimestamp;
 
     // failure should not occur. But in case of failure, the pool will remain operational
     try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (
-      uint16 newTimepointIndex,
-      uint16 newFeeZtO,
-      uint16 newFeeOtZ
+      uint16 _newTimepointIndex,
+      uint16 _newFeeZtO,
+      uint16 _newFeeOtZ
     ) {
-      return (newTimepointIndex, newFeeZtO, newFeeOtZ);
+      return (_newTimepointIndex, _newFeeZtO, _newFeeOtZ);
     } catch {
       emit DataStorageFailure();
       return (timepointIndex, 0, 0);
@@ -147,7 +149,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
     unchecked {
       if (_lastTs != blockTimestamp)
-        _secPerLiqCumulative += ((uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1));
+        // just timedelta if liquidity == 0
+        // overflow and underflow are desired
+        _secPerLiqCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
     }
   }
 

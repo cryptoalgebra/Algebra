@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../../interfaces/IAlgebraFactory.sol';
 import '../../interfaces/IAlgebraPoolDeployer.sol';
 import '../../interfaces/IDataStorageOperator.sol';
-import '../../interfaces/IAlgebraFeeConfiguration.sol';
+import '../../base/AlgebraFeeConfiguration.sol';
 import '../../libraries/Constants.sol';
 import '../../libraries/AdaptiveFee.sol';
 import '../../DataStorageOperator.sol';
@@ -39,7 +39,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   // values of constants for sigmoids in fee calculation formula
-  IAlgebraFeeConfiguration.Configuration public defaultFeeConfiguration;
+  AlgebraFeeConfiguration public defaultFeeConfiguration;
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
@@ -118,7 +118,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external override onlyOwner {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
@@ -131,7 +131,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x9b06c88011a9a353ba57389bc0cc676becccf91d5ba3ccf998180c81adc5a302;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x054e971d2847726a1e3f5fd2507c76f9f35fa2b1898e1850e77b3f028d71e085;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

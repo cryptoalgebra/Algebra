@@ -16,6 +16,7 @@ import './base/TickStructure.sol';
 import './libraries/FullMath.sol';
 import './libraries/Constants.sol';
 import './libraries/SafeTransfer.sol';
+import './libraries/SafeCast.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 
@@ -35,6 +36,8 @@ contract AlgebraPool is
   ReservesManager,
   TickStructure
 {
+  using SafeCast for uint256;
+
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
@@ -69,42 +72,28 @@ contract AlgebraPool is
     } else {
       (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
     }
-    liquidityActual = liquidityDesired;
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
-    if (amount0 == 0) receivedAmount0 = 0;
-    else {
-      receivedAmount0 = _balanceToken0() - receivedAmount0;
-      if (receivedAmount0 < amount0) {
-        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
-      }
-    }
+    receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
+    receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
 
-    if (amount1 == 0) receivedAmount1 = 0;
-    else {
-      receivedAmount1 = _balanceToken1() - receivedAmount1;
-      if (receivedAmount1 < amount1) {
-        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
-        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-      }
-    }
-
-    if (liquidityActual == 0) revert insufficientInputAmount();
     // scope to prevent "stack too deep"
     {
       Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
       if (bottomTick == topTick) {
         liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
+        if (liquidityActual == 0) revert insufficientInputAmount();
         _updateLimitOrderPosition(_position, bottomTick, int128(liquidityActual));
       } else {
-        liquidityActual = liquidityDesired;
         if (receivedAmount0 < amount0) {
-          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
+        } else {
+          liquidityActual = liquidityDesired;
         }
         if (receivedAmount1 < amount1) {
-          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
           if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
         }
         if (liquidityActual == 0) revert zeroLiquidityActual();
@@ -135,6 +124,7 @@ contract AlgebraPool is
     int24 topTick,
     uint128 amount
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
+    if (amount > uint128(type(int128).max)) revert arithmeticError();
     _updateReserves();
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
@@ -223,23 +213,24 @@ contract AlgebraPool is
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override nonReentrant returns (int256 amount0, int256 amount1) {
-    unchecked {
-      if (amountRequired < 0) amountRequired = -amountRequired; // we support only exactInput here
-    }
+    if (amountRequired < 0) revert invalidAmountRequired(); // we support only exactInput here
 
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
     {
       // scope to prevent "stack too deep"
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      int256 amountReceived;
+      uint256 balanceBefore;
+      uint256 balanceAfter;
       if (zeroToOne) {
         _swapCallback(amountRequired, 0, data);
-        amountReceived = int256(_balanceToken0() - balance0Before);
+        (balanceBefore, balanceAfter) = (balance0Before, _balanceToken0());
       } else {
         _swapCallback(0, amountRequired, data);
-        amountReceived = int256(_balanceToken1() - balance1Before);
+        (balanceBefore, balanceAfter) = (balance1Before, _balanceToken1());
       }
+
+      int256 amountReceived = (balanceAfter - balanceBefore).toInt256();
       if (amountReceived < amountRequired) amountRequired = amountReceived;
     }
     if (amountRequired == 0) revert insufficientInputAmount();
@@ -273,12 +264,12 @@ contract AlgebraPool is
     (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
     uint256 fee0;
     if (amount0 > 0) {
-      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, 1e6);
+      fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
       SafeTransfer.safeTransfer(token0, recipient, amount0);
     }
     uint256 fee1;
     if (amount1 > 0) {
-      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, 1e6);
+      fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
       SafeTransfer.safeTransfer(token1, recipient, amount1);
     }
 

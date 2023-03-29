@@ -2,14 +2,14 @@
 pragma solidity =0.8.17;
 pragma abicoder v2;
 
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 
 contract TickTest {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
-  mapping(int24 => TickManager.Tick) public ticks;
+  mapping(int24 => TickManagement.Tick) public ticks;
 
-  function setTick(int24 tick, TickManager.Tick memory data) external {
+  function setTick(int24 tick, TickManagement.Tick memory data) external {
     ticks[tick] = data;
   }
 

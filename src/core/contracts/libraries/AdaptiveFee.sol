@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 import './Constants.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
   /// @notice Returns default initial fee configuration
-  function initialFeeConfiguration() internal pure returns (IAlgebraFeeConfiguration.Configuration memory) {
+  function initialFeeConfiguration() internal pure returns (AlgebraFeeConfiguration memory) {
     return
-      IAlgebraFeeConfiguration.Configuration(
-        3000 - Constants.BASE_FEE, // alpha1
-        15000 - 3000, // alpha2
-        360, // beta1
-        60000, // beta2
-        59, // gamma1
-        8500, // gamma2
-        Constants.BASE_FEE // baseFee
+      AlgebraFeeConfiguration(
+        3000 - Constants.BASE_FEE, // alpha1, max value of the first sigmoid in hundredths of a bip, i.e. 1e-6
+        15000 - 3000, // alpha2, max value of the second sigmoid in hundredths of a bip, i.e. 1e-6
+        360, // beta1, shift along the x-axis (volatility) for the first sigmoid
+        60000, // beta2, shift along the x-axis (volatility) for the second sigmoid
+        59, // gamma1, horizontal stretch factor for the first sigmoid
+        8500, // gamma2, horizontal stretch factor for the second sigmoid
+        Constants.BASE_FEE // baseFee in hundredths of a bip, i.e. 1e-6
       );
   }
 
   /// @notice Validates fee configuration.
-  /// @dev Maximum fee value capped by baseFee + alpha1 + alpha2 must be <= <= type(uint16).max
+  /// @dev Maximum fee value capped by baseFee + alpha1 + alpha2 must be <= type(uint16).max
   /// gammas must be > 0
-  function validateFeeConfiguration(IAlgebraFeeConfiguration.Configuration memory _config) internal pure {
+  function validateFeeConfiguration(AlgebraFeeConfiguration memory _config) internal pure {
     require(uint256(_config.alpha1) + uint256(_config.alpha2) + uint256(_config.baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(_config.gamma1 != 0 && _config.gamma2 != 0, 'Gammas must be > 0');
   }
@@ -32,7 +32,7 @@ library AdaptiveFee {
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
   /// maximum value capped by baseFee + alpha1 + alpha2
-  function getFee(uint88 volatility, IAlgebraFeeConfiguration.Configuration memory config) internal pure returns (uint16 fee) {
+  function getFee(uint88 volatility, AlgebraFeeConfiguration memory config) internal pure returns (uint16 fee) {
     unchecked {
       volatility /= 15; // normalize for 15 sec interval
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
@@ -70,6 +70,7 @@ library AdaptiveFee {
   /// @notice calculates e^(x/g) * g^4 in a series, since (around zero):
   /// e^x = 1 + x + x^2/2 + ... + x^n/n! + ...
   /// e^(x/g) = 1 + x/g + x^2/(2*g^2) + ... + x^(n)/(g^n * n!) + ...
+  /// @dev has good accuracy only if x/g < 6
   function expXg4(uint256 x, uint16 g, uint256 gHighestDegree) internal pure returns (uint256 res) {
     uint256 closestValue; // nearest 'table' value of e^(x/g), multiplied by 10^20
     assembly {

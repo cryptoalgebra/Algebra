@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
-import './interfaces/IAlgebraFeeConfiguration.sol';
+import './base/AlgebraFeeConfiguration.sol';
 import './libraries/Constants.sol';
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
@@ -38,7 +38,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   /// @dev values of constants for sigmoids in fee calculation formula
-  IAlgebraFeeConfiguration.Configuration public defaultFeeConfiguration;
+  AlgebraFeeConfiguration public defaultFeeConfiguration;
 
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
@@ -89,12 +89,13 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(defaultCommunityFee != newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
     emit DefaultCommunityFee(newDefaultCommunityFee);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external override onlyOwner {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
@@ -134,7 +135,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xd38d9b4df9f5fc3af8eb97ab712dd1f100db59d0c9adb32b602f9cff7c4cb411;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xb5b5d9011c6f5c3bb83440e7f4174b2940f720568ab92db36aa9d974457d92fe;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

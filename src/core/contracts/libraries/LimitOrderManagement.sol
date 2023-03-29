@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './Constants.sol';
 
-/// @title LimitOrderManager
+/// @title LimitOrderManagement
 /// @notice Contains functions for managing limit orders and relevant calculations
-library LimitOrderManager {
+library LimitOrderManagement {
   struct LimitOrder {
     uint128 amountToSell;
     uint128 soldAmount;
     uint256 boughtAmount0Cumulative;
     uint256 boughtAmount1Cumulative;
+    bool initialized;
   }
 
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
@@ -41,14 +43,12 @@ library LimitOrderManager {
   /// @param amount The amount of liquidity that will be added/removed
   function addVirtualLiquidity(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal {
     LimitOrder storage data = self[tick];
-    unchecked {
-      if (amount > 0) {
-        data.amountToSell += uint128(amount);
-        data.soldAmount += uint128(amount);
-      } else {
-        data.amountToSell -= uint128(-amount);
-        data.soldAmount -= uint128(-amount);
-      }
+    if (amount > 0) {
+      data.amountToSell += uint128(amount);
+      data.soldAmount += uint128(amount);
+    } else {
+      data.amountToSell -= uint128(-amount);
+      data.soldAmount -= uint128(-amount);
     }
   }
 
@@ -58,6 +58,7 @@ library LimitOrderManager {
   /// @param tickSqrtPrice Limit order execution price
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
   /// @param amountA Amount of tokens that will be swapped
+  /// @param fee The fee taken from the input amount, expressed in hundredths of a bip
   /// @return closed Status of limit order after execution
   /// @return amountOut Amount of token that user receive after swap
   /// @return amountIn Amount of token that user need to pay
@@ -72,6 +73,7 @@ library LimitOrderManager {
     unchecked {
       bool exactIn = amountA > 0;
       if (!exactIn) amountA = -amountA;
+      if (amountA < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
       // price is defined as "token1/token0"
       uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
@@ -85,10 +87,10 @@ library LimitOrderManager {
 
       LimitOrder storage data = self[tick];
       (uint128 amountToSell, uint128 soldAmount) = (data.amountToSell, data.soldAmount);
-      uint256 unsoldAmount = amountToSell - soldAmount;
+      uint256 unsoldAmount = amountToSell - soldAmount; // safe since soldAmount always < amountToSell
 
       if (exactIn) {
-        amountOut = FullMath.mulDiv(amountOut, 1e6 - fee, 1e6);
+        amountOut = FullMath.mulDiv(amountOut, Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
       }
 
       if (amountOut >= unsoldAmount) {
@@ -97,24 +99,26 @@ library LimitOrderManager {
         }
         (closed, data.amountToSell, data.soldAmount) = (true, 0, 0);
       } else {
+        // overflow is desired since we do not support tokens with totalSupply > type(uint128).max
         data.soldAmount = soldAmount + uint128(amountOut);
       }
 
       amountIn = zeroToOne ? FullMath.mulDivRoundingUp(amountOut, Constants.Q96, price) : FullMath.mulDivRoundingUp(amountOut, price, Constants.Q96);
       if (exactIn) {
         if (amountOut == unsoldAmount) {
-          feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6);
+          feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR);
         } else {
           feeAmount = uint256(amountA) - amountIn;
         }
       } else {
-        feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, 1e6 - fee);
+        feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR - fee);
       }
 
+      // overflows are desired since there are relative accumulators
       if (zeroToOne) {
-        data.boughtAmount0Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
+        data.boughtAmount0Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, amountToSell);
       } else {
-        data.boughtAmount1Cumulative += FullMath.mulDivRoundingUp(amountIn, Constants.Q128, amountToSell);
+        data.boughtAmount1Cumulative += FullMath.mulDiv(amountIn, Constants.Q128, amountToSell);
       }
     }
   }

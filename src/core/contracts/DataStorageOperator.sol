@@ -17,8 +17,8 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  IAlgebraFeeConfiguration.Configuration public feeConfigZtO;
-  IAlgebraFeeConfiguration.Configuration public feeConfigOtZ;
+  AlgebraFeeConfiguration public feeConfigZtO;
+  AlgebraFeeConfiguration public feeConfigOtZ;
 
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
@@ -41,7 +41,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(bool zto, IAlgebraFeeConfiguration.Configuration calldata _config) external override {
+  function changeFeeConfiguration(bool zto, AlgebraFeeConfiguration calldata _config) external override {
     require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
@@ -81,7 +81,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     if (index != indexUpdated) {
       uint88 volatilityAverage;
       bool hasCalculatedVolatility;
-      IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfigZtO;
+      AlgebraFeeConfiguration memory _feeConfig = feeConfigZtO;
       if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
         newFeeZtO = _feeConfig.baseFee;
       } else {

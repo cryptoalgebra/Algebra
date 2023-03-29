@@ -24,7 +24,7 @@ library TokenDeltaMath {
       uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
       token0Delta = roundUp
-        ? FullMath.divRoundingUp(FullMath.mulDivRoundingUp(priceDelta, liquidityShifted, priceUpper), priceLower)
+        ? FullMath.unsafeDivRoundingUp(FullMath.mulDivRoundingUp(priceDelta, liquidityShifted, priceUpper), priceLower) // denominator always > 0
         : FullMath.mulDiv(priceDelta, liquidityShifted, priceUpper) / priceLower;
     }
   }
