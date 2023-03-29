@@ -76,19 +76,19 @@ library TickTree {
       if (treeRoot & (1 << uint16(nodeNumber)) != 0) {
         // if subtree has active ticks
         // try to find initialized tick in the corresponding leaf of the tree
-        (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(leafs, tick);
+        (nodeNumber, nextTick, initialized) = _getNextActiveBitInSameNode(leafs, tick);
         if (initialized) return nextTick;
 
         // try to find next initialized leaf in the tree
-        (nodeNumber, nextTick, initialized) = _getNextTickInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+        (nodeNumber, nextTick, initialized) = _getNextActiveBitInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
       }
       if (!initialized) {
         // try to find which subtree has an active leaf
-        (nextTick, initialized) = _nextTickInTheSameNode(treeRoot, ++nodeNumber);
+        (nextTick, initialized) = _nextActiveBitInTheSameNode(treeRoot, ++nodeNumber);
         if (!initialized) return TickMath.MAX_TICK;
-        nextTick = _getFirstTickInNode(secondLayer, nextTick);
+        nextTick = _getFirstActiveBitInNode(secondLayer, nextTick);
       }
-      nextTick = _getFirstTickInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
+      nextTick = _getFirstActiveBitInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
     }
   }
 
@@ -98,25 +98,25 @@ library TickTree {
   /// @return nodeNumber Number of corresponding node
   /// @return nextTick Number of next active tick or last tick in node
   /// @return initialized Is nextTick initialized or not
-  function _getNextTickInSameNode(
+  function _getNextActiveBitInSameNode(
     mapping(int16 => uint256) storage row,
     int24 tick
   ) private view returns (int16 nodeNumber, int24 nextTick, bool initialized) {
     assembly {
       nodeNumber := sar(8, tick)
     }
-    (nextTick, initialized) = _nextTickInTheSameNode(row[nodeNumber], tick);
+    (nextTick, initialized) = _nextActiveBitInTheSameNode(row[nodeNumber], tick);
   }
 
   /// @notice Returns first active tick in given node
   /// @param row level of search tree
   /// @param nodeNumber Number of corresponding node
   /// @return nextTick Number of next active tick or last tick in node
-  function _getFirstTickInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
+  function _getFirstActiveBitInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
     assembly {
       nextTick := shl(8, nodeNumber)
     }
-    (nextTick, ) = _nextTickInTheSameNode(row[int16(nodeNumber)], nextTick);
+    (nextTick, ) = _nextActiveBitInTheSameNode(row[int16(nodeNumber)], nextTick);
   }
 
   /// @notice Returns the next initialized tick contained in the same word as the tick that is
@@ -125,7 +125,7 @@ library TickTree {
   /// @param tick The starting tick
   /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
   /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function _nextTickInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
+  function _nextActiveBitInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
     uint256 bitNumber;
     assembly {
       bitNumber := and(tick, 0xFF)

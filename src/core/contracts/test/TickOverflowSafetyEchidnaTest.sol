@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 
 contract TickOverflowSafetyEchidnaTest {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
   int24 private constant MIN_TICK = -16;
   int24 private constant MAX_TICK = 16;
   uint128 private constant MAX_LIQUIDITY = type(uint128).max / 32;
 
-  mapping(int24 => TickManager.Tick) private ticks;
+  mapping(int24 => TickManagement.Tick) private ticks;
   int24 private tick = 0;
 
   // used to track how much total liquidity has been added. should never be negative

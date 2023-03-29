@@ -69,6 +69,7 @@ library DataStorage {
       last.tickCumulative
     );
     self[indexUpdated] = _createNewTimepoint(last, blockTimestamp, tick, avgTick, windowStartIndex);
+    if (oldestIndex == indexUpdated) oldestIndex++; // previous oldest index has been overwritten
   }
 
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/TickMath.sol';
 import '../libraries/SafeCast.sol';
@@ -11,9 +11,10 @@ import './Positions.sol';
 /// @notice Contains the logic of recalculation and change of limit order positions
 /// @dev For limit orders positions, the same structure is used as for liquidity positions. However, it is interpreted differently
 abstract contract LimitOrderPositions is Positions {
-  using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
+  using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using LowGasSafeMath for uint128;
   using SafeCast for int256;
+  using SafeCast for uint256;
 
   /**
    * @dev Updates limit order position inner data and applies `amountToSellDelta`
@@ -36,7 +37,7 @@ abstract contract LimitOrderPositions is Positions {
 
       if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
         // if tick flipped
-        TickManager.Tick storage _tickData = ticks[tick];
+        TickManagement.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
         if (_tickData.nextTick == _tickData.prevTick) {
           // tick isn't initialized
@@ -67,19 +68,23 @@ abstract contract LimitOrderPositions is Positions {
     }
     if (amountToSell == 0 && amountToSellDelta == 0) return;
 
-    if (amountToSell == 0) {
-      if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = 1; // maker pays for storage slots
-      if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = 1;
-    }
-    LimitOrderManager.LimitOrder storage _limitOrder = limitOrders[tick];
+    LimitOrderManagement.LimitOrder storage _limitOrder = limitOrders[tick];
     unchecked {
       uint256 _cumulativeDelta;
       bool zeroToOne;
       {
-        uint256 _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
-        if (_bought1Cumulative == 0) {
-          (_limitOrder.boughtAmount0Cumulative, _limitOrder.boughtAmount1Cumulative) = (1, 1); // maker pays for storage slots
+        uint256 _bought1Cumulative;
+        if (!_limitOrder.initialized) {
+          // maker pays for storage slots
+          (_limitOrder.boughtAmount0Cumulative, _limitOrder.boughtAmount1Cumulative, _limitOrder.initialized) = (1, 1, true);
           _bought1Cumulative = 1;
+        } else {
+          _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
+        }
+        if (amountToSell == 0) {
+          // initial value isn't zero, but accumulators can overflow
+          if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = _limitOrder.boughtAmount0Cumulative;
+          if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = _limitOrder.boughtAmount1Cumulative;
         }
         _cumulativeDelta = _bought1Cumulative - position.innerFeeGrowth1Token;
         zeroToOne = _cumulativeDelta > 0;
@@ -102,6 +107,7 @@ abstract contract LimitOrderPositions is Positions {
             amountToSell = 0;
           }
         }
+        // casts aren't checked since boughtAmount must be <= type(uint128).max (we are not supporting tokens with totalSupply > type(uint128).max)
         if (zeroToOne) {
           position.innerFeeGrowth1Token = position.innerFeeGrowth1Token + _cumulativeDelta;
           if (boughtAmount > 0) position.fees1 = position.fees1.add128(uint128(boughtAmount));
@@ -118,8 +124,8 @@ abstract contract LimitOrderPositions is Positions {
         if (amountToSell != amountToSellInitial && amountToSell != 0) {
           // in case of overflow it will be not possible to add tokens for sell until the limit order is fully closed
           amountToSellInitialDelta = amountToSellDelta < 0
-            ? -int256(FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell)).toInt128()
-            : int256(FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell)).toInt128();
+            ? (-FullMath.mulDiv(uint128(-amountToSellDelta), amountToSellInitial, amountToSell).toInt256()).toInt128()
+            : FullMath.mulDiv(uint128(amountToSellDelta), amountToSellInitial, amountToSell).toInt256().toInt128();
 
           limitOrders.addVirtualLiquidity(tick, amountToSellInitialDelta - amountToSellDelta);
         }
@@ -128,6 +134,7 @@ abstract contract LimitOrderPositions is Positions {
       }
       if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
 
+      require(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
       (position.liquidity) = ((amountToSell << 128) | amountToSellInitial); // tightly pack data
     }
   }

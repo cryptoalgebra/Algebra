@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../libraries/PriceMovementMath.sol';
-import '../libraries/LimitOrderManager.sol';
+import '../libraries/LimitOrderManagement.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
@@ -11,8 +11,8 @@ import './AlgebraPoolBase.sol';
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
-  using TickManager for mapping(int24 => TickManager.Tick);
-  using LimitOrderManager for mapping(int24 => LimitOrderManager.LimitOrder);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
+  using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using SafeCast for uint256;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
@@ -20,12 +20,11 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
     uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
-    bool computedLatestTimepoint; //  If we have already wrote a timepoint in the DataStorageOperator
+    bool crossedAnyTick; //  If we have already crossed at least one active tick
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
-    int256 amountCalculated; // The additive amount of total output\input calculated trough the swap
+    int256 amountCalculated; // The additive amount of total output\input calculated through the swap
     uint256 totalFeeGrowth; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthB;
-    address activeIncentive; // Address of an active incentive at the moment or address(0)
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     uint16 timepointIndex; // The index of last written timepoint
@@ -50,6 +49,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
     if (amountRequired == 0) revert zeroAmountRequired();
+    if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
     SwapCalculationCache memory cache;
     {
       // load from one storage slot
@@ -74,8 +74,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
       cache.blockTimestamp = _blockTimestamp();
 
-      cache.activeIncentive = activeIncentive;
-
       (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
 
       // new timepoint appears only for first swap/mint/burn in block
@@ -98,23 +96,25 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
         if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].hasLimitOrders) {
+          step.inLimitOrder = true;
+          bool isLimitOrderExecuted = false;
           // calculate the amounts from LO
-          (step.inLimitOrder, step.output, step.input, step.feeAmount) = limitOrders.executeLimitOrders(
+          (isLimitOrderExecuted, step.output, step.input, step.feeAmount) = limitOrders.executeLimitOrders(
             step.nextTick,
             currentPrice,
             zeroToOne,
             amountRequired,
             cache.fee / 2
           );
-          if (step.inLimitOrder) {
+          if (isLimitOrderExecuted) {
             if (ticks[step.nextTick].liquidityTotal == 0) {
               cache.prevInitializedTick = _insertOrRemoveTick(step.nextTick, currentTick, cache.prevInitializedTick, true);
               step.initialized = false;
             } else {
               ticks[step.nextTick].hasLimitOrders = false;
             }
+            step.inLimitOrder = false;
           }
-          step.inLimitOrder = !step.inLimitOrder;
         } else {
           (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
             zeroToOne,
@@ -147,33 +147,18 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         if (currentPrice == step.nextTickPrice && !step.inLimitOrder) {
           // if the reached tick is initialized then we need to cross it
           if (step.initialized) {
-            // once at a swap we have to get the last timepoint of the observation
-            if (!cache.computedLatestTimepoint) {
-              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
-              cache.computedLatestTimepoint = true;
-              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
-            }
-
             // we have opened LOs
             if (ticks[step.nextTick].hasLimitOrders) {
               currentTick = zeroToOne ? step.nextTick : step.nextTick - 1;
               continue;
             }
 
-            // every tick cross is needed to be duplicated in a virtual pool
-            if (cache.activeIncentive != address(0)) {
-              bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
-              try IAlgebraVirtualPool(cache.activeIncentive).cross(step.nextTick, zeroToOne) returns (bool success) {
-                isIncentiveActive = success;
-              } catch {
-                // pool will reset activeIncentive in this case
-              }
-              if (!isIncentiveActive) {
-                cache.activeIncentive = address(0);
-                activeIncentive = address(0);
-                emit Incentive(address(0));
-              }
+            if (!cache.crossedAnyTick) {
+              cache.crossedAnyTick = true;
+              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
+              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
             }
+
             int128 liquidityDelta;
             if (zeroToOne) {
               liquidityDelta = -ticks.cross(
@@ -208,6 +193,23 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         // check stop condition
         if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
           break;
+        }
+      }
+
+      if (cache.crossedAnyTick) {
+        // ticks cross data is needed to be duplicated in a virtual pool
+        address _activeIncentive = activeIncentive;
+        if (_activeIncentive != address(0)) {
+          bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
+          try IAlgebraVirtualPool(_activeIncentive).crossTo(currentTick, zeroToOne) returns (bool success) {
+            isIncentiveActive = success;
+          } catch {
+            // pool will reset activeIncentive in this case
+          }
+          if (!isIncentiveActive) {
+            activeIncentive = address(0);
+            emit Incentive(address(0));
+          }
         }
       }
 

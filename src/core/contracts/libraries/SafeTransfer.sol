@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.4;
+pragma solidity >=0.8.4 <0.9.0;
 
 import '../interfaces/IAlgebraPoolErrors.sol';
 
@@ -23,9 +23,9 @@ library SafeTransfer {
       // now we use 0x00 - 0x44 bytes (68), freeMemoryPointer is dirty
       success := call(gas(), token, 0, 0, 0x44, 0, 0x20)
       success := and(
-        success,
         // set success to true if call isn't reverted and returned exactly 1 (can't just be non-zero data) or nothing
-        or(and(eq(mload(0), 1), gt(returndatasize(), 31)), iszero(returndatasize()))
+        or(and(eq(mload(0), 1), eq(returndatasize(), 32)), iszero(returndatasize())),
+        success
       )
       mstore(0x40, freeMemoryPointer) // restore the freeMemoryPointer
     }

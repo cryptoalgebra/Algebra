@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.4;
+pragma solidity >=0.8.4 <0.9.0;
 
 /// @title Errors emitted by a pool
 /// @notice Contains custom errors emitted by the pool
@@ -17,6 +17,9 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if 0 is passed as amountRequired to swap function
   error zeroAmountRequired();
+
+  /// @notice Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
+  error invalidAmountRequired();
 
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
@@ -52,7 +55,7 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if liquidity overflows
   error liquidityAdd();
 
-  // ####  TickManager errors  ####
+  // ####  TickManagement errors  ####
   error topTickLowerThanBottomTick();
   error bottomTickLowerThanMIN();
   error topTickAboveMAX();
