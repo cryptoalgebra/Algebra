@@ -1811,6 +1811,7 @@ describe('AlgebraPool', () => {
       beforeEach('init pool', async () => {
         await initializeAtZeroTick(pool)
         ;[balanceToken0, balanceToken1] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)])
+        await pool.setTickSpacing(60, 60);
       })
 
       it('creates limit order at higher price', async() => {
