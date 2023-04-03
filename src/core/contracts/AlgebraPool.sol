@@ -318,7 +318,7 @@ contract AlgebraPool is
       (tickSpacing == newTickSpacing && tickSpacingLimitOrders == newTickspacingLimitOrders)
     ) revert invalidNewTickSpacing();
     // newTickspacingLimitOrders isn't limited, so it is possible to forbid new limit orders completely
-    if (newTickspacingLimitOrders <= 0 || tickSpacingLimitOrders == newTickspacingLimitOrders) revert invalidNewTickSpacing();
+    if (newTickspacingLimitOrders <= 0) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
     tickSpacingLimitOrders = newTickspacingLimitOrders;
     emit TickSpacing(newTickSpacing, newTickspacingLimitOrders);
