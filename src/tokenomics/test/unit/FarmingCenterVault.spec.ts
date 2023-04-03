@@ -84,7 +84,7 @@ describe('unit/FarmingCenterVault', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       incentiveArgs = {
         rewardToken: context.rewardToken,

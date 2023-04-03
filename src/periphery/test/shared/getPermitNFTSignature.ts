@@ -13,7 +13,7 @@ export default async function getPermitNFTSignature(
   const [nonce, name, version, chainId] = await Promise.all([
     permitConfig?.nonce ?? positionManager.positions(tokenId).then((p) => p.nonce),
     permitConfig?.name ?? positionManager.name(),
-    permitConfig?.version ?? '1',
+    permitConfig?.version ?? '2',
     permitConfig?.chainId ?? wallet.getChainId(),
   ])
 

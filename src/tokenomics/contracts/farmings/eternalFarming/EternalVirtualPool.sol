@@ -13,11 +13,11 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
     using TickManager for mapping(int24 => TickManager.Tick);
     using LowGasSafeMath for uint128;
 
-    uint128 public rewardRate0;
-    uint128 public rewardRate1;
+    uint128 public override rewardRate0;
+    uint128 public override rewardRate1;
 
-    uint128 public rewardReserve0;
-    uint128 public rewardReserve1;
+    uint128 public override rewardReserve0;
+    uint128 public override rewardReserve1;
 
     uint256 public totalRewardGrowth0 = 1;
     uint256 public totalRewardGrowth1 = 1;
@@ -32,8 +32,23 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
 
     function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
-        if (token0Amount > 0) rewardReserve0 = rewardReserve0.add128(token0Amount);
-        if (token1Amount > 0) rewardReserve1 = rewardReserve1.add128(token1Amount);
+        if (token0Amount | token1Amount != 0) {
+            (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+            _rewardReserve0 = _rewardReserve0.add128(token0Amount);
+            _rewardReserve1 = _rewardReserve1.add128(token1Amount);
+            (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+        }
+    }
+
+    // @inheritdoc IAlgebraEternalVirtualPool
+    function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
+        if (token0Amount | token1Amount != 0) {
+            (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+            _rewardReserve0 = _rewardReserve0.sub128(token0Amount);
+            _rewardReserve1 = _rewardReserve1.sub128(token1Amount);
+            (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+        }
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool

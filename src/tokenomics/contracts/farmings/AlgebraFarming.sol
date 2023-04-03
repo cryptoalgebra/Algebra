@@ -35,6 +35,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint24 minimalPositionWidth;
         uint224 totalLiquidity;
         address multiplierToken;
+        bool deactivated;
         Tiers tiers;
     }
 
@@ -44,8 +45,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     IAlgebraPoolDeployer public immutable override deployer;
 
-    /// @inheritdoc IAlgebraFarming
-    IFarmingCenter public override farmingCenter;
+    IFarmingCenter public farmingCenter;
 
     /// @dev bytes32 refers to the return value of IncentiveId.compute
     /// @inheritdoc IAlgebraFarming
@@ -180,52 +180,35 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier2Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
                 tiers.tier3Multiplier <= LiquidityTier.MAX_MULTIPLIER,
-            'Multiplier cant be greater than MAX_MULTIPLIER'
+            'Multiplier is too high'
         );
 
         require(
             tiers.tier1Multiplier >= LiquidityTier.DENOMINATOR &&
                 tiers.tier2Multiplier >= LiquidityTier.DENOMINATOR &&
                 tiers.tier3Multiplier >= LiquidityTier.DENOMINATOR,
-            'Multiplier cant be less than DENOMINATOR'
+            'Multiplier is too low'
         );
 
         newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
     }
 
-    function _detachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
+    function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
         require(currentVirtualPool != address(0), 'Farming do not exist');
 
-        require(
-            incentives[IncentiveId.compute(key)].virtualPoolAddress == currentVirtualPool,
-            'Another farming is active'
-        );
+        Incentive storage incentive = incentives[IncentiveId.compute(key)];
+        require(incentive.virtualPoolAddress == currentVirtualPool, 'Another farming is active');
+        require(!incentive.deactivated, 'Already deactivated');
+        incentive.deactivated = true;
+
         _connectPoolToVirtualPool(key.pool, address(0));
 
-        emit IncentiveDetached(
+        emit IncentiveDeactivated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
             currentVirtualPool,
-            key.startTime,
-            key.endTime
-        );
-    }
-
-    function _attachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
-        require(currentVirtualPool == address(0), 'Farming already exists');
-
-        address virtualPoolAddress = incentives[IncentiveId.compute(key)].virtualPoolAddress;
-        require(virtualPoolAddress != address(0), 'Invalid farming');
-
-        _connectPoolToVirtualPool(key.pool, virtualPoolAddress);
-
-        emit IncentiveAttached(
-            key.rewardToken,
-            key.bonusRewardToken,
-            key.pool,
-            virtualPoolAddress,
             key.startTime,
             key.endTime
         );
@@ -238,8 +221,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        _checkIsIncentiveExist(incentive);
+        require(!incentive.deactivated, 'incentive stopped');
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -286,5 +269,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+    }
+
+    function _checkIsIncentiveExist(Incentive storage incentive) internal view {
+        require(incentive.totalReward > 0, 'non-existent incentive');
     }
 }

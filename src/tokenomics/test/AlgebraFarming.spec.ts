@@ -121,9 +121,8 @@ describe('AlgebraFarming', () => {
 				deadline: (await blockTimestamp()) + 10000,
 			})
 
-			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
-			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
-			
+			await context.nft.connect(lpUser3).approveForFarming(tokenId, true);
+
 
 			await expect(context.farmingCenter
 			.connect(lpUser3)
@@ -160,8 +159,7 @@ describe('AlgebraFarming', () => {
 				deadline: (await blockTimestamp()) + 10000,
 			})
 
-			await context.nft.connect(lpUser3).approve(context.farmingCenter.address, tokenId);
-			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
+			await context.nft.connect(lpUser3).approveForFarming(tokenId, true);
 			
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
@@ -302,11 +300,10 @@ describe('AlgebraFarming', () => {
 				amount1Min: 0,
 				deadline: (await blockTimestamp()) + 10000,
 			})
-
-
-			await context.farmingCenter.connect(lpUser3).lockToken(tokenId)
-			await context.farmingCenter.connect(lpUser3).lockToken(tokenIdCorrect)
 			
+			await context.nft.connect(lpUser3).approveForFarming(tokenId, true);
+			await context.nft.connect(lpUser3).approveForFarming(tokenIdCorrect, true);
+
 			const epoch = await blockTimestamp()
 			const startTime = epoch + 100
 			const endTime = startTime + duration

@@ -97,8 +97,6 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       incentiveArgsEternal = {
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -124,6 +122,7 @@ describe('unit/FarmingCenter', () => {
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       subjectEternal = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterFarming(
@@ -245,6 +244,8 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
+        await context.nft.connect(lpUser0).approveForFarming(tokenId2, true);
+
         await context.nft.connect(lpUser0).decreaseLiquidity({
           tokenId: tokenId2,
           liquidity: (await context.nft.positions(tokenId2)).liquidity,
@@ -252,8 +253,6 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1_000,
         })
-
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
 
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
@@ -365,8 +364,6 @@ describe('unit/FarmingCenter', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       let farmIncentiveKey = {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
@@ -443,7 +440,7 @@ describe('unit/FarmingCenter', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       farmIncentiveKey = {
         
@@ -908,7 +905,7 @@ describe('unit/FarmingCenter', () => {
 
     }) 
 
-    it('collect rewards after eternalFarming detach', async() => {
+    it('collect rewards after eternalFarming deactivate', async() => {
       
       let balanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
@@ -941,7 +938,7 @@ describe('unit/FarmingCenter', () => {
         desiredValue: 10,
       })
 
-      await context.eternalFarming.connect(incentiveCreator).detachIncentive( 
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive( 
       {    
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
@@ -962,8 +959,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
       
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199099))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99249)) 
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199199))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99299)) 
 
     }) 
 
@@ -1091,10 +1088,8 @@ describe('unit/FarmingCenter', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
         })
-
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
         
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
           {
@@ -1196,7 +1191,7 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
             {

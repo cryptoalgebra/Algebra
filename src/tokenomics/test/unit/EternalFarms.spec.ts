@@ -89,7 +89,6 @@ describe('unit/EternalFarms', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -105,6 +104,7 @@ describe('unit/EternalFarms', () => {
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
 
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
       subject = (L2TokenId: string, _actor: Wallet) =>
         context.farmingCenter.connect(_actor).enterFarming(
           {
@@ -121,68 +121,27 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('increaseLiqudity', () => {
-    
       it('liquidity updated correct', async () => {
         await subject(tokenId, lpUser0)
-        let farmIncentiveKey = {
-        
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
-          pool: context.pool01,
-          ...timestamps,
-        }
-
         await erc20Helper.ensureBalancesAndApprovals(
           lpUser0,
           [context.token0, context.token1],
           amountDesired,
-          context.farmingCenter.address
+          context.nft.address
         )
 
         let farmBefore = await context.eternalFarming.farms(tokenId, incentiveId)
-        await context.farmingCenter.connect(lpUser0).increaseLiquidity(farmIncentiveKey, {
+        await context.nft.connect(lpUser0).increaseLiquidity({
           tokenId: tokenId,
           amount0Desired: amountDesired,
           amount1Desired: amountDesired,
           amount0Min: 0,
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1000,
-        })
+        });
         let farmAfter = await context.eternalFarming.farms(tokenId, incentiveId)
         expect(farmAfter.liquidity.sub(farmBefore.liquidity)).to.eq(amountDesired)
       })
-
-      it('refund works correct', async () => {
-        await subject(tokenId, lpUser0)
-        let farmIncentiveKey = {
-        
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
-          pool: context.pool01,
-          ...timestamps,
-        }
-
-        await erc20Helper.ensureBalancesAndApprovals(
-          lpUser0,
-          [context.token0, context.token1],
-          amountDesired.mul(2),
-          context.farmingCenter.address
-        )
-
-        let balanceBefore = await context.token1.balanceOf(lpUser0.address)
-        await context.farmingCenter.connect(lpUser0).increaseLiquidity(farmIncentiveKey, {
-          tokenId: tokenId,
-          amount0Desired: amountDesired,
-          amount1Desired: amountDesired.mul(2),
-          amount0Min: 0,
-          amount1Min: 0,
-          deadline: (await blockTimestamp()) + 1000,
-        })
-        let balanceAfter = await context.token1.balanceOf(lpUser0.address)
-        expect(balanceBefore.sub(balanceAfter)).to.eq(amountDesired)
-      })
-
-
     })
 
     describe('works and', () => {
@@ -257,6 +216,8 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
+        await context.nft.connect(lpUser0).approveForFarming(tokenId2, true);
+
         await context.nft.connect(lpUser0).decreaseLiquidity({
           tokenId: tokenId2,
           liquidity: (await context.nft.positions(tokenId2)).liquidity,
@@ -264,7 +225,6 @@ describe('unit/EternalFarms', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1_000,
         })
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId2)
         await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
           'cannot farm token with 0 liquidity'
         )
@@ -353,8 +313,6 @@ describe('unit/EternalFarms', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       let farmIncentiveKey = {
         
         rewardToken: context.rewardToken.address,
@@ -419,8 +377,6 @@ describe('unit/EternalFarms', () => {
         tokens: [context.token0, context.token1]
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       let farmIncentiveKey = {
         
         rewardToken: context.rewardToken.address,
@@ -477,8 +433,6 @@ describe('unit/EternalFarms', () => {
         lp: lpUser0,
         tokens: [context.token0, context.token1]
       })
-
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
 
       let farmIncentiveKey = {
         
@@ -543,8 +497,6 @@ describe('unit/EternalFarms', () => {
       })
       tokenId = mintResult.tokenId
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
       farmIncentiveKey = {
         
         rewardToken: context.rewardToken.address,
@@ -568,6 +520,7 @@ describe('unit/EternalFarms', () => {
       )
 
       // await Time.set(timestamps.startTime)
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
       await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
       await context.eternalFarming.farms(tokenId, incentiveId)
     })
@@ -792,9 +745,8 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
         // await Time.setAndMine(timestamps.startTime + 1)
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
         await context.farmingCenter.connect(lpUser0).enterFarming(
           {
@@ -876,12 +828,10 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 10000,
         })
 
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
-
-        await context.farmingCenter.connect(lpUser0).lockToken(tokenIdOut)
-
         await Time.setAndMine(timestamps.startTime + 1)
 
+        await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
+        await context.nft.connect(lpUser0).approveForFarming(tokenIdOut, true);
         await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             
@@ -997,7 +947,7 @@ describe('unit/EternalFarms', () => {
           },
           tokenId,
           ETERNAL_FARMING
-        )).to.be.revertedWith("farm does not exist")
+        )).to.be.revertedWith("invalid incentiveId")
       })
 
       //it('calculates the right secondsPerLiquidity')
@@ -1078,7 +1028,7 @@ describe('unit/EternalFarms', () => {
     })
   })
 
-  describe('attach/detach incentive', () => {
+  describe('deactivate incentive', () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args
     let incentiveKey: ContractParams.IncentiveKey
     let virtualPool: Contract
@@ -1112,30 +1062,16 @@ describe('unit/EternalFarms', () => {
 
     })
 
-    it('detach incentive', async () => {
+    it('deactivate incentive', async () => {
       
       let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
-      await context.eternalFarming.connect(incentiveCreator).detachIncentive(incentiveKey)
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
       let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
       expect(activeIncentiveBefore).to.equal(virtualPool.address)
       expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
 
-    })
-
-    it('attach incentive', async () => {
-
-      await context.eternalFarming.connect(incentiveCreator).detachIncentive(incentiveKey)
-      
-      let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
-      
-      await context.eternalFarming.connect(incentiveCreator).attachIncentive(incentiveKey)
-
-      let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
-      
-      expect(activeIncentiveBefore).to.equal(ZERO_ADDRESS)
-      expect(activeIncentiveAfter).to.equal(virtualPool.address) 
     })
   })
 
@@ -1261,7 +1197,7 @@ describe('unit/EternalFarms', () => {
         deadline: (await blockTimestamp()) + 1000,
       })
 
-      await context.farmingCenter.connect(lpUser0).lockToken(tokenId)
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
       context.farmingCenter.connect(lpUser0).enterFarming(
           {

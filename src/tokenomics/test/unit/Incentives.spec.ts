@@ -188,7 +188,7 @@ describe('unit/Incentives', async () => {
       })
     })
 
-    describe('attach/detach incentive', () => {
+    describe('deactivate incentive', () => {
       let incentiveArgs: HelperTypes.CreateIncentive.Args
       let incentiveKey: ContractParams.IncentiveKey
       let virtualPool: Contract
@@ -221,29 +221,15 @@ describe('unit/Incentives', async () => {
 
       })
 
-      it('detach incentive', async () => {
+      it('deactivate incentive', async () => {
         
         let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
+        await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
         let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
         expect(activeIncentiveBefore).to.equal(virtualPool.address)
         expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
 
-      })
-
-      it('attach incentive', async () => {
-
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
-        
-        let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        await context.farming.connect(incentiveCreator).attachIncentive(incentiveKey)
-
-        let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        expect(activeIncentiveBefore).to.equal(ZERO_ADDRESS)
-        expect(activeIncentiveAfter).to.equal(virtualPool.address) 
       })
     })
     
@@ -286,9 +272,9 @@ describe('unit/Incentives', async () => {
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
       
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
         
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         
         expect(rewardAmount).to.eq(BNe18(90))
         expect(bonusRewardAmount).to.eq(BNe18(90))
@@ -300,8 +286,8 @@ describe('unit/Incentives', async () => {
         let amount = BNe18(10)
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
       
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         
         expect(rewardAmount).to.eq(BNe18(90))
         expect(bonusRewardAmount).to.eq(BNe18(90))
@@ -334,15 +320,15 @@ describe('unit/Incentives', async () => {
       })
 
       it('decrease rewards completely', async () => {
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, rewardAmount.mul(2), bonusRewardAmount.mul(2))
       
-        rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         
-        expect(rewardAmount).to.eq(0)
+        expect(rewardAmount).to.eq(1)
         expect(bonusRewardAmount).to.eq(0)
       })
 
@@ -358,8 +344,8 @@ describe('unit/Incentives', async () => {
 
         await context.farming.connect(incentiveCreator).addRewards(incentiveKey, amount, amount)
 
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         expect(rewardAmount).to.eq(BNe18(110))
         expect(bonusRewardAmount).to.eq(BNe18(110))
       })
@@ -388,13 +374,13 @@ describe('unit/Incentives', async () => {
           BNe18(10),
           context.farming.address
         )
-        let rewardAmountBefore = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmountBefore = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmountBefore = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmountBefore = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
         await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, 0, 0)).to.not.emit(context.farming, 'RewardsAdded');
 
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         expect(rewardAmount).to.eq(rewardAmountBefore)
         expect(bonusRewardAmount).to.eq(bonusRewardAmountBefore)
       })
@@ -540,7 +526,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier cant be less than DENOMINATOR')
+          ).to.be.revertedWith('Multiplier is too low')
         })
 
         it('multiplier gt 50000', async () => {
@@ -579,7 +565,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier cant be greater than MAX_MULTIPLIER')
+          ).to.be.revertedWith('Multiplier is too high')
         })
       })
 
