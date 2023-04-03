@@ -49,7 +49,7 @@ Returns the lock time for added liquidity
 Returns the information about active incentive
 
 *Developer note: if there is no active incentive at the moment, virtualPool,endTimestamp,startTimestamp would be equal to 0*
-### mapping(int24 &#x3D;&gt; struct TickManager.Tick) ticks 
+### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
 
 Look up information about a specific tick in the pool
 

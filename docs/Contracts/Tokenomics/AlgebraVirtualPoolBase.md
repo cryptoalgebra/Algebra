@@ -41,7 +41,7 @@ only pool (or FarmingCenter as &quot;proxy&quot;) can call
 
 
 
-### mapping(int24 &#x3D;&gt; struct TickManager.Tick) ticks 
+### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
 
 
 

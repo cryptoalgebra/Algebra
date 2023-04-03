@@ -20,9 +20,14 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters() external view override returns (address, address, address, address, address) {
-    (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, communityVault, token0, token1);
+  function getDeployParameters()
+    external
+    view
+    override
+    returns (address _dataStorage, address _factory, address _communityVault, address _token0, address _token1)
+  {
+    (_dataStorage, _token0, _token1) = _readFromCache();
+    (_factory, _communityVault) = (factory, communityVault);
   }
 
   /// @inheritdoc IAlgebraPoolDeployer

@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import './IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 
 /// @title The interface for the DataStorageOperator
 /// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
@@ -10,7 +10,7 @@ interface IDataStorageOperator {
   /// @notice Emitted when the fee configuration is changed
   /// @param feeConfig The structure with dynamic fee parameters
   /// @dev See the AdaptiveFee library for more details
-  event FeeConfiguration(IAlgebraFeeConfiguration.Configuration feeConfig);
+  event FeeConfiguration(AlgebraFeeConfiguration feeConfig);
 
   /// @notice Returns data belonging to a certain timepoint
   /// @param index The index of timepoint in the array
@@ -76,7 +76,7 @@ interface IDataStorageOperator {
   function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
-  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata feeConfig) external;
+  function changeFeeConfiguration(AlgebraFeeConfiguration calldata feeConfig) external;
 
   /// @notice Fills uninitialized timepoints with nonzero value
   /// @dev Can be used to reduce the gas cost of future swaps

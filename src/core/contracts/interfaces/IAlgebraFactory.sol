@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import './IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,15 +11,15 @@ interface IAlgebraFactory {
   /// @notice Emitted when a process of ownership renounce is started
   /// @param timestamp The timestamp of event
   /// @param finishTimestamp The timestamp when ownership renounce will be possible to finish
-  event renounceOwnershipStarted(uint256 timestamp, uint256 finishTimestamp);
+  event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp);
 
   /// @notice Emitted when a process of ownership renounce cancelled
   /// @param timestamp The timestamp of event
-  event renounceOwnershipStopped(uint256 timestamp);
+  event RenounceOwnershipStop(uint256 timestamp);
 
   /// @notice Emitted when a process of ownership renounce finished
   /// @param timestamp The timestamp of ownership renouncement
-  event renounceOwnershipFinished(uint256 timestamp);
+  event RenounceOwnershipFinish(uint256 timestamp);
 
   /// @notice Emitted when a pool is created
   /// @param token0 The first token of the pool by address sort order
@@ -34,7 +34,7 @@ interface IAlgebraFactory {
   /// @notice Emitted when the default fee configuration is changed
   /// @param newConfig The structure with dynamic fee parameters
   /// @dev See the AdaptiveFee library for more details
-  event DefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration newConfig);
+  event DefaultFeeConfiguration(AlgebraFeeConfiguration newConfig);
 
   /// @notice Emitted when the default community fee is changed
   /// @param newDefaultCommunityFee The new default community fee value
@@ -97,7 +97,7 @@ interface IAlgebraFactory {
   /// @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
   /// alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max and gammas must be > 0
   /// @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
-  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external;
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
   /// of time must pass before the ownership renounce can be completed.

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 
 import '../libraries/AdaptiveFee.sol';
@@ -24,7 +24,7 @@ contract MockTimeAlgebraPoolDeployer {
 
   event PoolDeployed(address pool);
 
-  IAlgebraFeeConfiguration.Configuration private defaultFeeConfiguration;
+  AlgebraFeeConfiguration private defaultFeeConfiguration;
 
   constructor() {
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();

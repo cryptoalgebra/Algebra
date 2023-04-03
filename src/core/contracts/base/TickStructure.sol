@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 import '../libraries/TickTree.sol';
 import './AlgebraPoolBase.sol';
 
@@ -9,7 +9,7 @@ import './AlgebraPoolBase.sol';
 /// @notice Encapsulates the logic of interaction with the data structure with ticks
 /// @dev Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list
 abstract contract TickStructure is AlgebraPoolBase {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
   using TickTree for mapping(int16 => uint256);
 
   uint256 internal tickTreeRoot; // The root of bitmap search tree

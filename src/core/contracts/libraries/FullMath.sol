@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.0;
 
 /// @title Contains 512-bit math functions
 /// @notice Facilitates multiplication and division that can have overflow of an intermediate value without any loss of precision
@@ -125,7 +125,7 @@ library FullMath {
   /// @param x The dividend
   /// @param y The divisor
   /// @return z The quotient, ceil(x / y)
-  function divRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
+  function unsafeDivRoundingUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
     assembly {
       z := add(div(x, y), gt(mod(x, y), 0))
     }

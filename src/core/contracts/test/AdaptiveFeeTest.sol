@@ -2,12 +2,12 @@
 pragma solidity =0.8.17;
 pragma abicoder v1;
 
-import '../interfaces/IAlgebraFeeConfiguration.sol';
+import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
-  IAlgebraFeeConfiguration.Configuration public feeConfig;
+  AlgebraFeeConfiguration public feeConfig;
 
   constructor() {
     feeConfig = AdaptiveFee.initialFeeConfiguration();

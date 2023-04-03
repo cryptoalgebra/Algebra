@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
-import './interfaces/IAlgebraFeeConfiguration.sol';
+import './base/AlgebraFeeConfiguration.sol';
 import './libraries/Constants.sol';
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
@@ -38,7 +38,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
   /// @dev values of constants for sigmoids in fee calculation formula
-  IAlgebraFeeConfiguration.Configuration public defaultFeeConfiguration;
+  AlgebraFeeConfiguration public defaultFeeConfiguration;
 
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
@@ -87,12 +87,13 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(defaultCommunityFee != newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
     emit DefaultCommunityFee(newDefaultCommunityFee);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata newConfig) external override onlyOwner {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
@@ -101,25 +102,26 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function startRenounceOwnership() external override onlyOwner {
     renounceOwnershipStartTimestamp = block.timestamp;
-    emit renounceOwnershipStarted(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
+    emit RenounceOwnershipStart(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
 
   /// @inheritdoc IAlgebraFactory
   function stopRenounceOwnership() external override onlyOwner {
     require(renounceOwnershipStartTimestamp != 0);
     renounceOwnershipStartTimestamp = 0;
-    emit renounceOwnershipStopped(block.timestamp);
+    emit RenounceOwnershipStop(block.timestamp);
   }
 
   /// @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
   /// Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
   /// have passed since the call to the startRenounceOwnership() function.
   function renounceOwnership() public override onlyOwner {
+    require(renounceOwnershipStartTimestamp != 0);
     require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
     renounceOwnershipStartTimestamp = 0;
 
     super.renounceOwnership();
-    emit renounceOwnershipFinished(block.timestamp);
+    emit RenounceOwnershipFinish(block.timestamp);
   }
 
   /// @dev Transfers ownership of the contract to a new account (`newOwner`).
@@ -131,7 +133,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x9a6810113806533f58ba03fd4242aeacec87dbc6b15d932f991a4b43ef5dd546;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xe72bebd8b70e089fdcb38ed7e5940e8839837b4cdd27c69ff2461ff057192b81;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

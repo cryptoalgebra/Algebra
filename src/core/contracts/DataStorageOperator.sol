@@ -17,7 +17,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  IAlgebraFeeConfiguration.Configuration public feeConfig;
+  AlgebraFeeConfiguration public feeConfig;
 
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
@@ -40,7 +40,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(IAlgebraFeeConfiguration.Configuration calldata _config) external override {
+  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
     require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
@@ -73,7 +73,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
     (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
 
     if (index != indexUpdated) {
-      IAlgebraFeeConfiguration.Configuration memory _feeConfig = feeConfig;
+      AlgebraFeeConfiguration memory _feeConfig = feeConfig;
       if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
         newFee = _feeConfig.baseFee;
       } else {
