@@ -18,11 +18,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
         int24 topTick
     ) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1);
 
-    function rewardRate0() external returns (uint128);
+    function rewardReserves() external view returns (uint128 reserve0, uint128 reserve1);
 
-    function rewardRate1() external returns (uint128);
-
-    function rewardReserve0() external returns (uint128);
-
-    function rewardReserve1() external returns (uint128);
+    function rewardRates() external view returns (uint128 rate0, uint128 rate1);
 }

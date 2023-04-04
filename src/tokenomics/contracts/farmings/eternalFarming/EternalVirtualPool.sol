@@ -13,11 +13,11 @@ import '../../base/VirtualTickStructure.sol';
 contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAlgebraEternalVirtualPool {
     using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
 
-    uint128 public override rewardRate0;
-    uint128 public override rewardRate1;
+    uint128 internal rewardRate0;
+    uint128 internal rewardRate1;
 
-    uint128 public override rewardReserve0;
-    uint128 public override rewardReserve1;
+    uint128 internal rewardReserve0;
+    uint128 internal rewardReserve1;
 
     uint256 public totalRewardGrowth0 = 1;
     uint256 public totalRewardGrowth1 = 1;
@@ -28,6 +28,14 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
         address _pool
     ) AlgebraVirtualPoolBase(_farmingCenterAddress, _farmingAddress, _pool) {
         prevTimestamp = uint32(block.timestamp);
+    }
+
+    function rewardReserves() external view override returns (uint128 reserve0, uint128 reserve1) {
+        return (rewardReserve0, rewardReserve1);
+    }
+
+    function rewardRates() external view override returns (uint128 rate0, uint128 rate1) {
+        return (rewardRate0, rewardRate1);
     }
 
     function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {

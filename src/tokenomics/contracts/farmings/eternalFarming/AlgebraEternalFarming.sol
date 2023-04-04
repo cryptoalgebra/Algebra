@@ -86,7 +86,9 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(_eternalVirtualPool);
-        if (virtualPool.rewardRate0() != 0 || virtualPool.rewardRate1() != 0) {
+
+        (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
+        if (rewardRate0 | rewardRate1 != 0) {
             _setRewardRates(virtualPool, 0, 0, IncentiveId.compute(key));
         }
 
@@ -107,12 +109,11 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
         unchecked {
-            uint128 rewardReserve0 = virtualPool.rewardReserve0();
+            (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
             if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
             if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
             incentive.totalReward = incentive.totalReward - rewardAmount;
 
-            uint128 rewardReserve1 = virtualPool.rewardReserve1();
             if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
             incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
         }
@@ -208,11 +209,18 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             if (incentive.deactivated) {
                 tick = virtualPool.globalTick();
             } else {
-                (, tick, , , , , ) = key.pool.globalState();
+                tick = _getTickInPool(key.pool);
             }
 
             // update rewards, as ticks may be cleared when liquidity decreases
-            virtualPool.applyLiquidityDeltaToPosition(uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
+            _updatePositionInVirtualPool(
+                address(virtualPool),
+                uint32(block.timestamp),
+                farm.tickLower,
+                farm.tickUpper,
+                0,
+                tick
+            );
 
             (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = _getInnerRewardsGrowth(
                 virtualPool,
@@ -221,7 +229,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             );
 
             unchecked {
-                virtualPool.applyLiquidityDeltaToPosition(
+                _updatePositionInVirtualPool(
+                    address(virtualPool),
                     uint32(block.timestamp),
                     farm.tickLower,
                     farm.tickUpper,

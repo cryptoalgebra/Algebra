@@ -129,9 +129,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     ) internal returns (uint128 receivedReward, uint128 receivedBonusReward) {
         if (reward > 0) {
             IERC20Minimal rewardToken = key.rewardToken;
-            uint256 balanceBefore = rewardToken.balanceOf(address(this));
+            uint256 balanceBefore = _balanceOf(rewardToken);
             TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
-            uint256 balanceAfter = rewardToken.balanceOf(address(this));
+            uint256 balanceAfter = _balanceOf(rewardToken);
             require(balanceAfter > balanceBefore);
             unchecked {
                 receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
@@ -140,9 +140,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         }
         if (bonusReward > 0) {
             IERC20Minimal bonusRewardToken = key.bonusRewardToken;
-            uint256 balanceBefore = bonusRewardToken.balanceOf(address(this));
+            uint256 balanceBefore = _balanceOf(bonusRewardToken);
             TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
-            uint256 balanceAfter = bonusRewardToken.balanceOf(address(this));
+            uint256 balanceAfter = _balanceOf(bonusRewardToken);
             require(balanceAfter > balanceBefore);
             unchecked {
                 receivedBonusReward = uint128(balanceAfter - balanceBefore);
@@ -235,7 +235,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         if (pool != key.pool) revert invalidPool();
         if (liquidity == 0) revert zeroLiquidity();
 
-        (, int24 tick, , , , , ) = pool.globalState();
+        int24 tick = _getTickInPool(pool);
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
@@ -249,7 +249,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
                 revert positionIsTooNarrow();
         }
 
-        IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
+        _updatePositionInVirtualPool(
+            virtualPool,
             uint32(block.timestamp),
             tickLower,
             tickUpper,
@@ -279,5 +280,30 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _checkIsIncentiveExist(Incentive storage incentive) internal view {
         if (incentive.totalReward == 0) revert incentiveNotExist();
+    }
+
+    function _balanceOf(IERC20Minimal token) internal view returns (uint256) {
+        return token.balanceOf(address(this));
+    }
+
+    function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
+        (, tick, , , , , ) = pool.globalState();
+    }
+
+    function _updatePositionInVirtualPool(
+        address virtualPool,
+        uint32 timestamp,
+        int24 tickLower,
+        int24 tickUpper,
+        int128 liquidityDelta,
+        int24 currentTick
+    ) internal {
+        IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
+            timestamp,
+            tickLower,
+            tickUpper,
+            liquidityDelta,
+            currentTick
+        );
     }
 }
