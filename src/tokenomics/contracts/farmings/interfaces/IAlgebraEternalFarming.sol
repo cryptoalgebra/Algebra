@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.17;
-import '../../../interfaces/IAlgebraFarming.sol';
+import '../../interfaces/IAlgebraFarming.sol';
 
 /// @title Algebra Eternal Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time

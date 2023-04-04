@@ -4,11 +4,11 @@ pragma solidity =0.8.17;
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
-import '../../libraries/VirtualTickManagement.sol';
+import '../libraries/VirtualTickManagement.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 
-import '../../base/AlgebraVirtualPoolBase.sol';
-import '../../base/VirtualTickStructure.sol';
+import '../base/AlgebraVirtualPoolBase.sol';
+import '../base/VirtualTickStructure.sol';
 
 contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAlgebraEternalVirtualPool {
     using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);

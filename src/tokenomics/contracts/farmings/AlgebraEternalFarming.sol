@@ -4,13 +4,13 @@ pragma solidity =0.8.17;
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 import './EternalVirtualPool.sol';
-import '../../libraries/IncentiveId.sol';
+import '../libraries/IncentiveId.sol';
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
-import '../../base/AlgebraFarming.sol';
+import '../base/AlgebraFarming.sol';
 
 /// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
@@ -42,7 +42,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         IncentiveParams memory params,
         Tiers calldata tiers
     ) external override onlyIncentiveMaker returns (address virtualPool) {
-        (, address _incentive) = _getCurrentVirtualPools(key.pool);
+        address _incentive = _getCurrentVirtualPools(key.pool);
         if (_incentive != address(0)) revert farmingAlreadyExists();
 
         virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
@@ -82,7 +82,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @inheritdoc IAlgebraFarming
     function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
+        address _eternalVirtualPool = _getCurrentVirtualPools(key.pool);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(_eternalVirtualPool);
 
