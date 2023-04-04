@@ -1,6 +1,6 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { TestContext } from './types'
-import { AlgebraEternalFarming, TestERC20 } from '../typechain'
+import { AlgebraEternalFarming, TestERC20, AlgebraLimitFarming } from '../typechain'
 import { ethers } from 'hardhat'
 import {
 	BigNumber,
@@ -126,7 +126,7 @@ describe('AlgebraFarming', () => {
 
 			await expect(context.farmingCenter
 			.connect(lpUser3)
-			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, LIMIT_FARMING)).to.be.revertedWith('position too narrow')
+			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, LIMIT_FARMING)).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'positionIsTooNarrow')
 		})
 
 		it('too wide range cannot be used as minimal allowed', async () => {
@@ -198,7 +198,7 @@ describe('AlgebraFarming', () => {
 				  tier3Multiplier: 10000,
 				},
 				
-			  )).to.be.revertedWith('minimalPositionWidth too wide');
+			  )).to.be.revertedWithCustomError((context.eternalFarming as AlgebraEternalFarming), 'minimalPositionWidthTooWide');
 
 			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
 				{
@@ -226,7 +226,7 @@ describe('AlgebraFarming', () => {
 				  tier3Multiplier: 10000,
 				},
 				
-			  )).to.be.revertedWith('minimalPositionWidth too wide');
+			  )).to.be.revertedWithCustomError((context.eternalFarming as AlgebraEternalFarming), 'minimalPositionWidthTooWide');
 			  
 			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
 				{
@@ -321,7 +321,7 @@ describe('AlgebraFarming', () => {
 
 			await expect(context.farmingCenter
 			.connect(lpUser3)
-			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, ETERNAL_FARMING)).to.be.revertedWith('position too narrow')
+			.enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId, 0, ETERNAL_FARMING)).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'positionIsTooNarrow')
 
 			await expect(context.farmingCenter
 				.connect(lpUser3)
