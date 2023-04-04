@@ -9,14 +9,12 @@ import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
 import './INonfungiblePositionManager.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
-
 import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
 import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
 import './IIncentiveKey.sol';
 
-interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPeripheryPayments {
+interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall {
     struct VirtualPoolAddresses {
         address eternalVirtualPool;
         address limitVirtualPool;

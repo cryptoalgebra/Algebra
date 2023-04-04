@@ -8,14 +8,14 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
 import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
+import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 import './interfaces/INonfungiblePositionManager.sol'; // TODO
 
-import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 
 /// @title Algebra main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
-contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, PeripheryPayments {
+contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     IAlgebraLimitFarming public immutable override limitFarming;
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -41,7 +41,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
         IAlgebraEternalFarming _eternalFarming,
         INonfungiblePositionManager _nonfungiblePositionManager,
         IFarmingCenterVault _farmingCenterVault
-    ) PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken()) {
+    ) {
         limitFarming = _limitFarming;
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
