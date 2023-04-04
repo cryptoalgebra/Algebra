@@ -2,9 +2,9 @@
 pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
 import '../../libraries/VirtualTickManagement.sol';
-import '../../libraries/VirtualPoolConstants.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
 
 import '../../base/AlgebraVirtualPoolBase.sol';
@@ -86,13 +86,13 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
                     if (_rewardReserve0 > 0) {
                         uint256 reward0 = _rewardRate0 * timeDelta;
                         if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-                        _totalRewardGrowth0 += FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
+                        _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
                     }
 
                     if (_rewardReserve1 > 0) {
                         uint256 reward1 = _rewardRate1 * timeDelta;
                         if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-                        _totalRewardGrowth1 += FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
+                        _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
                     }
                 }
             }
@@ -123,7 +123,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
                     if (reward0 > 0)
                         totalRewardGrowth0 =
                             totalRewardGrowth0 +
-                            FullMath.mulDiv(reward0, VirtualPoolConstants.Q128, _currentLiquidity);
+                            FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
                 }
 
                 if (_rewardRate1 > 0) {
@@ -133,7 +133,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
                     if (reward1 > 0)
                         totalRewardGrowth1 =
                             totalRewardGrowth1 +
-                            FullMath.mulDiv(reward1, VirtualPoolConstants.Q128, _currentLiquidity);
+                            FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
                 }
 
                 (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.17;
 
-import '../../../base/IAlgebraVirtualPoolBase.sol';
+import '../../../interfaces/IAlgebraVirtualPoolBase.sol';
 
 interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
     /// @notice Change reward rates

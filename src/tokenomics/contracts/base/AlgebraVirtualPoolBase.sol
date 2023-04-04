@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
 
 import '../libraries/VirtualTickManagement.sol';
-import './IAlgebraVirtualPoolBase.sol';
+import '../interfaces/IAlgebraVirtualPoolBase.sol';
 
 /// @title Abstract base contract for Algebra virtual pools
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {

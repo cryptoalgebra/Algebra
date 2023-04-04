@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.17;
 
-import './IAlgebraVirtualPoolBase.sol';
+import '../interfaces/IAlgebraVirtualPoolBase.sol';
 import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
-import '../libraries/VirtualPoolConstants.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
@@ -169,13 +168,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
         unchecked {
-            if (
-                int256(uint256(minimalPositionWidth)) >
-                ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                    VirtualPoolConstants.TICK_SPACING -
-                    (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                    VirtualPoolConstants.TICK_SPACING)
-            ) revert minimalPositionWidthTooWide();
+            if (int256(uint256(minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)))
+                revert minimalPositionWidthTooWide();
         }
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.minimalPositionWidth = minimalPositionWidth;
