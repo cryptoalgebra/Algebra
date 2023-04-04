@@ -68,7 +68,7 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAlge
     }
 
     /// @inheritdoc IAlgebraLimitVirtualPool
-    function finish() external override onlyFarming returns (bool wasFinished, uint32 activeTime) {
+    function finish() external override onlyFromFarming returns (bool wasFinished, uint32 activeTime) {
         wasFinished = isFinished;
         if (!wasFinished) {
             isFinished = true;

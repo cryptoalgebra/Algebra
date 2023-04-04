@@ -136,7 +136,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             unchecked {
                 receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
             }
-            incentive.totalReward = incentive.totalReward.add128(receivedReward);
+            incentive.totalReward = incentive.totalReward + receivedReward;
         }
         if (bonusReward > 0) {
             IERC20Minimal bonusRewardToken = key.bonusRewardToken;
@@ -147,7 +147,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             unchecked {
                 receivedBonusReward = uint128(balanceAfter - balanceBefore);
             }
-            incentive.bonusReward = incentive.bonusReward.add128(receivedBonusReward);
+            incentive.bonusReward = incentive.bonusReward + receivedBonusReward;
         }
     }
 
@@ -168,42 +168,39 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
         unchecked {
-            require(
-                int256(uint256(minimalPositionWidth)) <=
-                    ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                        VirtualPoolConstants.TICK_SPACING -
-                        (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                        VirtualPoolConstants.TICK_SPACING),
-                'minimalPositionWidth too wide'
-            );
+            if (
+                int256(uint256(minimalPositionWidth)) >
+                ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                    VirtualPoolConstants.TICK_SPACING -
+                    (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                    VirtualPoolConstants.TICK_SPACING)
+            ) revert minimalPositionWidthTooWide();
         }
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.minimalPositionWidth = minimalPositionWidth;
 
-        require(
-            tiers.tier1Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
-                tiers.tier2Multiplier <= LiquidityTier.MAX_MULTIPLIER &&
-                tiers.tier3Multiplier <= LiquidityTier.MAX_MULTIPLIER,
-            'Multiplier is too high'
-        );
+        if (
+            tiers.tier1Multiplier > LiquidityTier.MAX_MULTIPLIER ||
+            tiers.tier2Multiplier > LiquidityTier.MAX_MULTIPLIER ||
+            tiers.tier3Multiplier > LiquidityTier.MAX_MULTIPLIER
+        ) revert multiplierIsTooHigh();
 
-        require(
-            tiers.tier1Multiplier >= LiquidityTier.DENOMINATOR &&
-                tiers.tier2Multiplier >= LiquidityTier.DENOMINATOR &&
-                tiers.tier3Multiplier >= LiquidityTier.DENOMINATOR,
-            'Multiplier is too low'
-        );
+        if (
+            tiers.tier1Multiplier < LiquidityTier.DENOMINATOR ||
+            tiers.tier2Multiplier < LiquidityTier.DENOMINATOR ||
+            tiers.tier3Multiplier < LiquidityTier.DENOMINATOR
+        ) revert multiplierIsTooLow();
 
         newIncentive.tiers = tiers;
         newIncentive.multiplierToken = multiplierToken;
     }
 
     function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
-        require(currentVirtualPool != address(0), 'Farming do not exist');
+        if (currentVirtualPool == address(0)) revert incentiveNotExist();
 
         Incentive storage incentive = incentives[IncentiveId.compute(key)];
-        require(incentive.virtualPoolAddress == currentVirtualPool, 'Another farming is active');
-        require(!incentive.deactivated, 'Already deactivated');
+        if (incentive.virtualPoolAddress != currentVirtualPool) revert anotherFarmingIsActive();
+        if (incentive.deactivated) revert incentiveStopped();
         incentive.deactivated = true;
 
         _connectPoolToVirtualPool(key.pool, address(0));
@@ -226,7 +223,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
         _checkIsIncentiveExist(incentive);
-        require(!incentive.deactivated, 'incentive stopped');
+        if (incentive.deactivated) revert incentiveStopped();
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -235,8 +232,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             tokenId
         );
 
-        require(pool == key.pool, 'invalid pool for token');
-        require(liquidity > 0, 'cannot farm token with 0 liquidity');
+        if (pool != key.pool) revert invalidPool();
+        if (liquidity == 0) revert zeroLiquidity();
+
         (, int24 tick, , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
@@ -247,10 +245,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         virtualPool = incentive.virtualPoolAddress;
         uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
         unchecked {
-            require(
-                int256(tickUpper) - int256(tickLower) >= int256(uint256(minimalAllowedTickWidth)),
-                'position too narrow'
-            );
+            if (int256(tickUpper) - int256(tickLower) < int256(uint256(minimalAllowedTickWidth)))
+                revert positionIsTooNarrow();
         }
 
         IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
@@ -282,6 +278,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     }
 
     function _checkIsIncentiveExist(Incentive storage incentive) internal view {
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        if (incentive.totalReward == 0) revert incentiveNotExist();
     }
 }

@@ -30,7 +30,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
         prevTimestamp = uint32(block.timestamp);
     }
 
-    function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
+    function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
         _increaseCumulative(uint32(block.timestamp));
         if (token0Amount | token1Amount != 0) {
             (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
@@ -41,7 +41,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFarming {
+    function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
         _increaseCumulative(uint32(block.timestamp));
         if (token0Amount | token1Amount != 0) {
             (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
@@ -52,7 +52,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
     }
 
     // @inheritdoc IAlgebraEternalVirtualPool
-    function setRates(uint128 rate0, uint128 rate1) external override onlyFarming {
+    function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
         _increaseCumulative(uint32(block.timestamp));
         (rewardRate0, rewardRate1) = (rate0, rate1);
     }

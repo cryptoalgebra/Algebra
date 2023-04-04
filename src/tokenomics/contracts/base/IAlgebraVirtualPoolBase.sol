@@ -5,6 +5,9 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Base interface for virtual pools
 interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
+    error onlyPool();
+    error onlyFarming();
+
     // returns data associated with a tick
     function ticks(
         int24 tickId

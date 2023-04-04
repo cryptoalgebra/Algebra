@@ -12,6 +12,21 @@ import './IIncentiveKey.sol';
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
 interface IAlgebraFarming is IIncentiveKey {
+    error farmingAlreadyExists();
+    error farmDoesNotExist();
+    error tokenAlreadyFarmed();
+    error incentiveNotExist();
+    error incentiveStopped();
+    error anotherFarmingIsActive();
+
+    error multiplierIsTooHigh();
+    error multiplierIsTooLow();
+    error minimalPositionWidthTooWide();
+
+    error positionIsTooNarrow();
+    error zeroLiquidity();
+    error invalidPool();
+
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 

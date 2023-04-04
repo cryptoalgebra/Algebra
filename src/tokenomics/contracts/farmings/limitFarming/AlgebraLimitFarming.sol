@@ -58,10 +58,9 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             _activeEndTimestamp = IAlgebraLimitVirtualPool(_incentive).desiredEndTimestamp();
         }
 
-        require(
-            _activeEndTimestamp < block.timestamp && (activeIncentive != _incentive || _incentive == address(0)),
-            'already has active incentive'
-        );
+        if (_activeEndTimestamp >= block.timestamp || (activeIncentive == _incentive && _incentive != address(0)))
+            revert farmingAlreadyExists();
+
         require(params.reward > 0, 'reward must be positive');
         require(block.timestamp <= key.startTime, 'start time too low');
         unchecked {
@@ -170,7 +169,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
 
         mapping(bytes32 => Farm) storage farmsForToken = farms[tokenId];
-        require(farmsForToken[incentiveId].liquidity == 0, 'token already farmed');
+        if (farmsForToken[incentiveId].liquidity != 0) revert tokenAlreadyFarmed();
 
         Incentive storage incentive = incentives[incentiveId];
         uint224 _currentTotalLiquidity = incentive.totalLiquidity;
@@ -193,7 +192,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
         Farm memory farm = farms[tokenId][incentiveId];
 
-        require(farm.liquidity != 0, 'farm does not exist');
+        if (farm.liquidity == 0) revert farmDoesNotExist();
 
         uint256 reward;
         uint256 bonusReward;
@@ -287,7 +286,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity != 0, 'farm does not exist');
+        if (farm.liquidity == 0) revert farmDoesNotExist();
 
         Incentive storage incentive = incentives[incentiveId];
 

@@ -27,12 +27,12 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
     modifier onlyFromPool() {
-        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool');
+        if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
         _;
     }
 
-    modifier onlyFarming() {
-        require(msg.sender == farmingAddress, 'only farming');
+    modifier onlyFromFarming() {
+        if (msg.sender != farmingAddress) revert onlyFarming();
         _;
     }
 
@@ -91,7 +91,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (bool success);
 
     /// @inheritdoc IAlgebraVirtualPoolBase
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFarming {
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFromFarming {
         _increaseCumulative(currentTimestamp);
     }
 
@@ -110,7 +110,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         int24 topTick,
         int128 liquidityDelta,
         int24 currentTick
-    ) external override onlyFarming {
+    ) external override onlyFromFarming {
         globalTick = currentTick;
 
         if (currentTimestamp > prevTimestamp) {
