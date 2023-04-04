@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
+
 import './interfaces/IFarmingCenter.sol';
 import './interfaces/IFarmingCenterVault.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
+import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
+import './interfaces/INonfungiblePositionManager.sol'; // TODO
 
-import './interfaces/INonfungiblePositionManager.sol';
-
-import './base/Multicall.sol';
 import './base/PeripheryPayments.sol';
 import './libraries/IncentiveId.sol';
 
@@ -73,7 +72,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
         if (_deposit.numberOfFarms == 0) {
             nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
         }
-        _deposit.numberOfFarms += 1;
+        unchecked {
+            _deposit.numberOfFarms += 1;
+        }
         IAlgebraFarming _farming;
         if (isLimit) {
             require(_deposit.limitIncentiveId == bytes32(0), 'token already farmed');
@@ -90,7 +91,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
             uint256 balanceAfter = _getTokenBalanceOfVault(multiplierToken);
             require(balanceAfter > balanceBefore, 'Insufficient tokens locked');
-            tokensLocked = balanceAfter - balanceBefore;
+            unchecked {
+                tokensLocked = balanceAfter - balanceBefore;
+            }
             farmingCenterVault.lockTokens(tokenId, incentiveId, tokensLocked);
         }
 
@@ -106,7 +109,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
         Deposit storage deposit = deposits[tokenId];
         IAlgebraFarming _farming;
 
-        deposit.numberOfFarms -= 1;
+        unchecked {
+            deposit.numberOfFarms -= 1;
+        }
         if (deposit.numberOfFarms == 0) {
             nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
         }
@@ -205,11 +210,13 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
         uint256 amountRequestedIncentive,
         uint256 amountRequestedEternal
     ) external override returns (uint256 reward) {
-        if (amountRequestedIncentive != 0) {
-            reward = _claimRewardFromFarming(limitFarming, rewardToken, to, amountRequestedIncentive);
-        }
-        if (amountRequestedEternal != 0) {
-            reward += _claimRewardFromFarming(eternalFarming, rewardToken, to, amountRequestedEternal);
+        unchecked {
+            if (amountRequestedIncentive != 0) {
+                reward = _claimRewardFromFarming(limitFarming, rewardToken, to, amountRequestedIncentive);
+            }
+            if (amountRequestedEternal != 0) {
+                reward += _claimRewardFromFarming(eternalFarming, rewardToken, to, amountRequestedEternal);
+            }
         }
     }
 
@@ -242,14 +249,14 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall, Peripher
 
     /**
      * @dev This function is called by the main pool when an initialized tick is crossed and two farmings are active at same time.
-     * @param nextTick The crossed tick
+     * @param targetTick The crossed tick
      * @param zeroToOne The direction
      */
-    function cross(int24 nextTick, bool zeroToOne) external override returns (bool) {
+    function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).cross(nextTick, zeroToOne);
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).crossTo(targetTick, zeroToOne);
+        IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).crossTo(targetTick, zeroToOne);
         // TODO handle "false" from virtual pool?
         return true;
     }

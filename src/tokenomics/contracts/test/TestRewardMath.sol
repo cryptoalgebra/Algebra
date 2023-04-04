@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraFarming.sol';
 
 import '../libraries/RewardMath.sol';
 
-/// @dev Test contract for RewardMatrh
+/// @dev Test contract for RewardMath
 contract TestRewardMath {
     function computeRewardAmount(
         uint256 totalReward,
@@ -16,12 +15,14 @@ contract TestRewardMath {
         uint224 totalLiquidity,
         uint160 secondsPerLiquidityInsideX128
     ) public pure returns (uint256 reward) {
-        reward = RewardMath.computeRewardAmount(
-            totalReward,
-            endTime - startTime,
-            liquidity,
-            totalLiquidity,
-            secondsPerLiquidityInsideX128
-        );
+        unchecked {
+            reward = RewardMath.computeRewardAmount(
+                totalReward,
+                endTime - startTime,
+                liquidity,
+                totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+        }
     }
 }

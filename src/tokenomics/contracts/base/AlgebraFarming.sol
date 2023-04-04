@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
+import './IAlgebraVirtualPoolBase.sol';
 import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
 import '../interfaces/INonfungiblePositionManager.sol';
-import './IAlgebraVirtualPoolBase.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
 import '../libraries/VirtualPoolConstants.sol';
-import '../libraries/TickMath.sol';
-import '../libraries/LowGasSafeMath.sol';
-import '../libraries/FullMath.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
@@ -134,7 +133,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
             uint256 balanceAfter = rewardToken.balanceOf(address(this));
             require(balanceAfter > balanceBefore);
-            receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
+            unchecked {
+                receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
+            }
             incentive.totalReward = incentive.totalReward.add128(receivedReward);
         }
         if (bonusReward > 0) {
@@ -143,7 +144,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
             TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
             uint256 balanceAfter = bonusRewardToken.balanceOf(address(this));
             require(balanceAfter > balanceBefore);
-            receivedBonusReward = uint128(balanceAfter - balanceBefore);
+            unchecked {
+                receivedBonusReward = uint128(balanceAfter - balanceBefore);
+            }
             incentive.bonusReward = incentive.bonusReward.add128(receivedBonusReward);
         }
     }
@@ -164,15 +167,16 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         Incentive storage newIncentive = incentives[incentiveId];
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
-
-        require(
-            minimalPositionWidth <=
-                ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                    VirtualPoolConstants.TICK_SPACING -
-                    (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
-                    VirtualPoolConstants.TICK_SPACING),
-            'minimalPositionWidth too wide'
-        );
+        unchecked {
+            require(
+                int256(uint256(minimalPositionWidth)) <=
+                    ((int256(TickMath.MAX_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                        VirtualPoolConstants.TICK_SPACING -
+                        (int256(TickMath.MIN_TICK) / VirtualPoolConstants.TICK_SPACING) *
+                        VirtualPoolConstants.TICK_SPACING),
+                'minimalPositionWidth too wide'
+            );
+        }
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.minimalPositionWidth = minimalPositionWidth;
 
@@ -242,13 +246,18 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         virtualPool = incentive.virtualPoolAddress;
         uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
-        require(int256(tickUpper) - int256(tickLower) >= int256(minimalAllowedTickWidth), 'position too narrow');
+        unchecked {
+            require(
+                int256(tickUpper) - int256(tickLower) >= int256(uint256(minimalAllowedTickWidth)),
+                'position too narrow'
+            );
+        }
 
         IAlgebraVirtualPoolBase(virtualPool).applyLiquidityDeltaToPosition(
             uint32(block.timestamp),
             tickLower,
             tickUpper,
-            int256(liquidity).toInt128(),
+            int256(uint256(liquidity)).toInt128(),
             tick
         );
     }
@@ -264,8 +273,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         if (amountRequested == 0 || amountRequested > reward) {
             amountRequested = reward;
         }
-
-        rewards[from][rewardToken] = reward - amountRequested;
+        unchecked {
+            rewards[from][rewardToken] = reward - amountRequested;
+        }
         TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);

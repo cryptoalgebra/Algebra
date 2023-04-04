@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 import './interfaces/IFarmingCenterVault.sol';
@@ -14,11 +15,7 @@ contract FarmingCenterVault is IFarmingCenterVault {
         owner = msg.sender;
     }
 
-    function lockTokens(
-        uint256 tokenId,
-        bytes32 incentiveId,
-        uint256 tokenAmount
-    ) external override {
+    function lockTokens(uint256 tokenId, bytes32 incentiveId, uint256 tokenAmount) external override {
         require(msg.sender == farmingCenter, 'onlyFarming');
         balances[tokenId][incentiveId] = tokenAmount;
     }
@@ -29,12 +26,7 @@ contract FarmingCenterVault is IFarmingCenterVault {
         farmingCenter = _farmingCenter;
     }
 
-    function claimTokens(
-        address multiplierToken,
-        address to,
-        uint256 tokenId,
-        bytes32 incentiveId
-    ) external override {
+    function claimTokens(address multiplierToken, address to, uint256 tokenId, bytes32 incentiveId) external override {
         require(msg.sender == farmingCenter, 'onlyFarming');
 
         uint256 balance = balances[tokenId][incentiveId];

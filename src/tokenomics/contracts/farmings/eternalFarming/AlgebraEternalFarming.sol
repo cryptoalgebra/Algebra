@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import './interfaces/IAlgebraEternalFarming.sol';
 import './interfaces/IAlgebraEternalVirtualPool.sol';
@@ -8,11 +7,11 @@ import './EternalVirtualPool.sol';
 import '../../libraries/IncentiveId.sol';
 
 import '../../libraries/VirtualPoolConstants.sol';
-import '../../libraries/FullMath.sol';
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
-import '../AlgebraFarming.sol';
+import '../../base/AlgebraFarming.sol';
 
 /// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
@@ -107,14 +106,16 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-        uint128 rewardReserve0 = virtualPool.rewardReserve0();
-        if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
-        if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
-        incentive.totalReward = incentive.totalReward - rewardAmount;
+        unchecked {
+            uint128 rewardReserve0 = virtualPool.rewardReserve0();
+            if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
+            if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
+            incentive.totalReward = incentive.totalReward - rewardAmount;
 
-        uint128 rewardReserve1 = virtualPool.rewardReserve1();
-        if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
-        incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
+            uint128 rewardReserve1 = virtualPool.rewardReserve1();
+            if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
+            incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
+        }
 
         virtualPool.decreaseRewards(rewardAmount, bonusRewardAmount);
 
@@ -219,30 +220,38 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
                 farm.tickUpper
             );
 
-            virtualPool.applyLiquidityDeltaToPosition(
-                uint32(block.timestamp),
-                farm.tickLower,
-                farm.tickUpper,
-                -int256(farm.liquidity).toInt128(),
-                tick
-            );
+            unchecked {
+                virtualPool.applyLiquidityDeltaToPosition(
+                    uint32(block.timestamp),
+                    farm.tickLower,
+                    farm.tickUpper,
+                    -int256(uint256(farm.liquidity)).toInt128(),
+                    tick
+                );
 
-            (reward, bonusReward) = (
-                FullMath.mulDiv(
-                    innerRewardGrowth0 - farm.innerRewardGrowth0,
-                    farm.liquidity,
-                    VirtualPoolConstants.Q128
-                ),
-                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
-            );
+                (reward, bonusReward) = (
+                    FullMath.mulDiv(
+                        innerRewardGrowth0 - farm.innerRewardGrowth0,
+                        farm.liquidity,
+                        VirtualPoolConstants.Q128
+                    ),
+                    FullMath.mulDiv(
+                        innerRewardGrowth1 - farm.innerRewardGrowth1,
+                        farm.liquidity,
+                        VirtualPoolConstants.Q128
+                    )
+                );
+            }
         }
 
         mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
-        if (reward != 0) {
-            rewardBalances[key.rewardToken] += reward; // user must claim before overflow
-        }
-        if (bonusReward != 0) {
-            rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+        unchecked {
+            if (reward != 0) {
+                rewardBalances[key.rewardToken] += reward; // user must claim before overflow
+            }
+            if (bonusReward != 0) {
+                rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+            }
         }
 
         delete farms[tokenId][incentiveId];
@@ -277,10 +286,16 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             farm.tickUpper
         );
 
-        (reward, bonusReward) = (
-            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, VirtualPoolConstants.Q128),
-            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
-        );
+        unchecked {
+            (reward, bonusReward) = (
+                FullMath.mulDiv(
+                    innerRewardGrowth0 - farm.innerRewardGrowth0,
+                    farm.liquidity,
+                    VirtualPoolConstants.Q128
+                ),
+                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
+            );
+        }
     }
 
     /// @notice reward amounts should be updated before calling this method
@@ -306,20 +321,28 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             farm.tickUpper
         );
 
-        (reward, bonusReward) = (
-            FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, VirtualPoolConstants.Q128),
-            FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
-        );
+        unchecked {
+            (reward, bonusReward) = (
+                FullMath.mulDiv(
+                    innerRewardGrowth0 - farm.innerRewardGrowth0,
+                    farm.liquidity,
+                    VirtualPoolConstants.Q128
+                ),
+                FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, VirtualPoolConstants.Q128)
+            );
+        }
 
         farms[tokenId][incentiveId].innerRewardGrowth0 = innerRewardGrowth0;
         farms[tokenId][incentiveId].innerRewardGrowth1 = innerRewardGrowth1;
 
         mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
-        if (reward != 0) {
-            rewardBalances[key.rewardToken] += reward; // user must claim before overflow
-        }
-        if (bonusReward != 0) {
-            rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+        unchecked {
+            if (reward != 0) {
+                rewardBalances[key.rewardToken] += reward; // user must claim before overflow
+            }
+            if (bonusReward != 0) {
+                rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+            }
         }
 
         emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);

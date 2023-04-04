@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import './LowGasSafeMath.sol';
-import './LiquidityMath.sol';
-import './VirtualPoolConstants.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolErrors.sol';
 
-/// @title TickManager
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+
+/// @title VirtualTickManagement
 /// @notice Contains functions for managing tick processes and relevant calculations
-library TickManager {
-    using LowGasSafeMath for int256;
-    using SafeCast for int256;
-
+library VirtualTickManagement {
     // info stored for each initialized individual tick
     struct Tick {
         uint128 liquidityTotal; // the total position liquidity that references this tick
@@ -20,8 +18,9 @@ library TickManager {
         // only has relative meaning, not absolute — the value depends on when the tick is initialized
         uint256 outerFeeGrowth0Token;
         uint256 outerFeeGrowth1Token;
+        int24 prevTick;
+        int24 nextTick;
         uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
-        bool initialized; // these 8 bits are set to prevent fresh sstores when crossing newly initialized ticks
     }
 
     /// @notice Retrieves fee growth data
@@ -44,19 +43,21 @@ library TickManager {
         Tick storage lower = self[bottomTick];
         Tick storage upper = self[topTick];
 
-        if (currentTick < topTick) {
-            if (currentTick >= bottomTick) {
-                innerFeeGrowth0Token = totalFeeGrowth0Token - lower.outerFeeGrowth0Token;
-                innerFeeGrowth1Token = totalFeeGrowth1Token - lower.outerFeeGrowth1Token;
+        unchecked {
+            if (currentTick < topTick) {
+                if (currentTick >= bottomTick) {
+                    innerFeeGrowth0Token = totalFeeGrowth0Token - lower.outerFeeGrowth0Token;
+                    innerFeeGrowth1Token = totalFeeGrowth1Token - lower.outerFeeGrowth1Token;
+                } else {
+                    innerFeeGrowth0Token = lower.outerFeeGrowth0Token;
+                    innerFeeGrowth1Token = lower.outerFeeGrowth1Token;
+                }
+                innerFeeGrowth0Token -= upper.outerFeeGrowth0Token;
+                innerFeeGrowth1Token -= upper.outerFeeGrowth1Token;
             } else {
-                innerFeeGrowth0Token = lower.outerFeeGrowth0Token;
-                innerFeeGrowth1Token = lower.outerFeeGrowth1Token;
+                innerFeeGrowth0Token = upper.outerFeeGrowth0Token - lower.outerFeeGrowth0Token;
+                innerFeeGrowth1Token = upper.outerFeeGrowth1Token - lower.outerFeeGrowth1Token;
             }
-            innerFeeGrowth0Token -= upper.outerFeeGrowth0Token;
-            innerFeeGrowth1Token -= upper.outerFeeGrowth1Token;
-        } else {
-            innerFeeGrowth0Token = upper.outerFeeGrowth0Token - lower.outerFeeGrowth0Token;
-            innerFeeGrowth1Token = upper.outerFeeGrowth1Token - lower.outerFeeGrowth1Token;
         }
     }
 
@@ -83,15 +84,15 @@ library TickManager {
         Tick storage data = self[tick];
 
         int128 liquidityDeltaBefore = data.liquidityDelta;
-        uint128 liquidityTotalBefore = data.liquidityTotal;
+        uint128 liquidityTotalBefore = data.liquidityTotal; // TODO redundant?
 
         uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
-        require(liquidityTotalAfter < VirtualPoolConstants.MAX_LIQUIDITY_PER_TICK + 1, 'LO');
+        if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();
 
         // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
         data.liquidityDelta = upper
-            ? int256(liquidityDeltaBefore).sub(liquidityDelta).toInt128()
-            : int256(liquidityDeltaBefore).add(liquidityDelta).toInt128();
+            ? int128(int256(liquidityDeltaBefore) - liquidityDelta)
+            : int128(int256(liquidityDeltaBefore) + liquidityDelta);
 
         data.liquidityTotal = liquidityTotalAfter;
 
@@ -104,7 +105,6 @@ library TickManager {
                 data.outerFeeGrowth1Token = totalFeeGrowth1Token;
                 data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
             }
-            data.initialized = true;
         }
     }
 
@@ -124,13 +124,53 @@ library TickManager {
     ) internal returns (int128 liquidityDelta) {
         Tick storage data = self[tick];
 
-        uint160 _outerSecondsPerLiquidity = data.outerSecondsPerLiquidity;
-        if (secondsPerLiquidityCumulative - _outerSecondsPerLiquidity != _outerSecondsPerLiquidity)
-            data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - _outerSecondsPerLiquidity;
+        unchecked {
+            data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
 
-        data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
-        data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
-
+            data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
+            data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
+        }
         return data.liquidityDelta;
+    }
+
+    /// @notice Used for initial setup if ticks list
+    /// @param self The mapping containing all tick information for initialized ticks
+    function initTickState(mapping(int24 => Tick) storage self) internal {
+        (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
+        (self[TickMath.MAX_TICK].prevTick, self[TickMath.MAX_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
+    }
+
+    /// @notice Removes tick from linked list
+    /// @param self The mapping containing all tick information for initialized ticks
+    /// @param tick The tick that will be removed
+    /// @return prevTick
+    function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
+        (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
+        delete self[tick];
+
+        if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) {
+            // MIN_TICK and MAX_TICK cannot be removed from tick list
+            (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
+            return prevTick;
+        } else {
+            if (prevTick == nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
+            self[prevTick].nextTick = nextTick;
+            self[nextTick].prevTick = prevTick;
+            return prevTick;
+        }
+    }
+
+    /// @notice Adds tick to linked list
+    /// @param self The mapping containing all tick information for initialized ticks
+    /// @param tick The tick that will be inserted
+    /// @param prevTick The previous active tick
+    /// @param nextTick The next active tick
+    function insertTick(mapping(int24 => Tick) storage self, int24 tick, int24 prevTick, int24 nextTick) internal {
+        if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
+        if (prevTick >= tick || nextTick <= tick) revert IAlgebraPoolErrors.tickInvalidLinks();
+        (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
+
+        self[prevTick].nextTick = tick;
+        self[nextTick].prevTick = tick;
     }
 }

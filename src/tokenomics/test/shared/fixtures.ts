@@ -11,7 +11,7 @@ import NonfungibleTokenPositionDescriptor from '@cryptoalgebra/periphery/artifac
 import SwapRouter from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
 import WNativeToken from './external/WNativeToken.json'
 import { linkLibraries } from './linkLibraries'
-import { ISwapRouter,IWNativeToken,NFTDescriptor } from '@cryptoalgebra/periphery/typechain'
+import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/periphery/typechain'
 import {
   AlgebraLimitFarming,
   AlgebraEternalFarming,

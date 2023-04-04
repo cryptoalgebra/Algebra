@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 
@@ -17,8 +16,9 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
             int128 liquidityDelta,
             uint256 outerFeeGrowth0Token,
             uint256 outerFeeGrowth1Token,
-            uint160 outerSecondsPerLiquidity,
-            bool initialized
+            int24 prevTick,
+            int24 nextTick,
+            uint160 outerSecondsPerLiquidity
         );
 
     // returns the current liquidity in virtual pool
