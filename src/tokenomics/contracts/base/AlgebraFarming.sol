@@ -4,7 +4,6 @@ pragma solidity =0.8.17;
 import './IAlgebraVirtualPoolBase.sol';
 import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
-import '../interfaces/INonfungiblePositionManager.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 import '../libraries/LiquidityTier.sol';
@@ -12,6 +11,7 @@ import '../libraries/VirtualPoolConstants.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
@@ -41,8 +41,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
-    /// @inheritdoc IAlgebraFarming
-    IAlgebraPoolDeployer public immutable override deployer;
+    IAlgebraPoolDeployer private immutable deployer;
+    IAlgebraFactory private immutable factory;
 
     IFarmingCenter public farmingCenter;
 
@@ -50,20 +50,20 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     mapping(bytes32 => Incentive) public override incentives;
 
-    address internal incentiveMaker;
-    address internal immutable owner;
+    bytes32 public constant INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
+    bytes32 public constant FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
     mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
 
     modifier onlyIncentiveMaker() {
-        _checkIsIncentiveMaker();
+        _checkHasRole(INCENTIVE_MAKER_ROLE);
         _;
     }
 
-    modifier onlyOwner() {
-        _checkIsOwner();
+    modifier onlyAdministrator() {
+        _checkHasRole(FARMINGS_ADMINISTRATOR_ROLE);
         _;
     }
 
@@ -75,32 +75,21 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @param _deployer pool deployer contract address
     /// @param _nonfungiblePositionManager the NFT position manager contract address
     constructor(IAlgebraPoolDeployer _deployer, INonfungiblePositionManager _nonfungiblePositionManager) {
-        owner = msg.sender;
         deployer = _deployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+        factory = IAlgebraFactory(_nonfungiblePositionManager.factory());
     }
 
     function _checkIsFarmingCenter() internal view {
         require(msg.sender == address(farmingCenter));
     }
 
-    function _checkIsOwner() internal view {
-        require(msg.sender == owner);
-    }
-
-    function _checkIsIncentiveMaker() internal view {
-        require(msg.sender == incentiveMaker);
+    function _checkHasRole(bytes32 role) internal view {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(role, msg.sender));
     }
 
     /// @inheritdoc IAlgebraFarming
-    function setIncentiveMaker(address _incentiveMaker) external override onlyOwner {
-        require(incentiveMaker != _incentiveMaker);
-        incentiveMaker = _incentiveMaker;
-        emit IncentiveMaker(_incentiveMaker);
-    }
-
-    /// @inheritdoc IAlgebraFarming
-    function setFarmingCenterAddress(address _farmingCenter) external override onlyOwner {
+    function setFarmingCenterAddress(address _farmingCenter) external override onlyAdministrator {
         require(_farmingCenter != address(farmingCenter));
         farmingCenter = IFarmingCenter(_farmingCenter);
         emit FarmingCenter(_farmingCenter);

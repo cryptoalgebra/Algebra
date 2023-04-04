@@ -33,7 +33,6 @@ describe('unit/Deployment', () => {
       2 ** 32
     )) as AlgebraLimitFarming
 
-    expect(await farming.deployer()).to.equal(context.deployer.address)
     expect(await farming.nonfungiblePositionManager()).to.equal(context.nft.address)
     expect(await farming.maxIncentiveDuration()).to.equal(2 ** 32)
     expect(await farming.maxIncentiveStartLeadTime()).to.equal(2 ** 32)

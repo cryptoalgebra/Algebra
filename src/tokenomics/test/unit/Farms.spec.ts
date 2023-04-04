@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20, AlgebraLimitFarming } from '../../typechain'
+import { TestERC20, AlgebraLimitFarming, IAccessControl } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -329,24 +329,15 @@ describe('unit/Farms', () => {
   })
 
   describe('permissioned actions', () => {
-    it('#setIncentiveMaker', async() => {
-      await expect(context.farming.connect(actors.farmingDeployer()).setIncentiveMaker(actors.lpUser1().address))
-      .to.emit(context.farming, 'IncentiveMaker')
-      .withArgs(actors.lpUser1().address)
-
-      await expect(context.farming.connect(actors.farmingDeployer()).setIncentiveMaker(actors.lpUser1().address)).to.be.reverted;
-    })
-
     it('#setFarmingCenterAddress', async() => {
-      await expect(context.farming.connect(actors.farmingDeployer()).setFarmingCenterAddress(actors.lpUser1().address))
+      await expect(context.farming.connect(context.ownerSigner).setFarmingCenterAddress(actors.lpUser1().address))
       .to.emit(context.farming, 'FarmingCenter')
       .withArgs(actors.lpUser1().address)
 
-      await expect(context.farming.connect(actors.farmingDeployer()).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
+      await expect(context.farming.connect(context.ownerSigner).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
     })
 
     it('onlyOwner fails if not owner', async() => {
-      await expect(context.farming.connect(actors.lpUser1()).setIncentiveMaker(actors.lpUser1().address)).to.be.reverted;
       await expect(context.farming.connect(actors.lpUser1()).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
     })
 

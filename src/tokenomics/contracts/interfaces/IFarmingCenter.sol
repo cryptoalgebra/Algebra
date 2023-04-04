@@ -7,7 +7,7 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
-import './INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import '../base/IncentiveKey.sol';
 import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';

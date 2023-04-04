@@ -100,7 +100,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         IncentiveKey memory key,
         uint128 rewardAmount,
         uint128 bonusRewardAmount
-    ) external override onlyOwner {
+    ) external override onlyAdministrator {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
 

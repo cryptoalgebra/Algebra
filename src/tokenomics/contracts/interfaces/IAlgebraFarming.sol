@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import './INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import '../base/IncentiveKey.sol';
 
@@ -29,13 +29,6 @@ interface IAlgebraFarming {
 
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
-
-    /// @notice The pool deployer
-    function deployer() external returns (IAlgebraPoolDeployer);
-
-    /// @notice Updates the incentive maker
-    /// @param _incentiveMaker The new incentive maker address
-    function setIncentiveMaker(address _incentiveMaker) external;
 
     struct Tiers {
         // amount of token to reach the tier
