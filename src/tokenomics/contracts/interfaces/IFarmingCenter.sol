@@ -20,17 +20,6 @@ interface IFarmingCenter is IAlgebraVirtualPool, IMulticall {
         address limitVirtualPool;
     }
 
-    struct DecreaseLiquidityParams {
-        uint256 tokenId;
-        uint128 liquidity;
-        uint256 amount0Min;
-        uint256 amount1Min;
-        uint128 amount0Max;
-        uint128 amount1Max;
-        address recipient;
-        uint256 deadline;
-    }
-
     function virtualPoolAddresses(address) external view returns (address, address);
 
     /// @notice The nonfungible position manager with which this farming contract is compatible
@@ -47,7 +36,6 @@ interface IFarmingCenter is IAlgebraVirtualPool, IMulticall {
     /// @return numberOfFarms The number of farms
     /// @return limitIncentiveId The id of limit incentive that is active for this NFT
     /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
-    /// inLimitFarming The parameter showing if the token is in the limit farm
     function deposits(
         uint256 tokenId
     ) external view returns (uint32 numberOfFarms, bytes32 limitIncentiveId, bytes32 eternalIncentiveId);
@@ -86,13 +74,13 @@ interface IFarmingCenter is IAlgebraVirtualPool, IMulticall {
     /// @dev can be used via static call to get current rewards for user
     /// @param rewardToken The token that is a reward
     /// @param to The address to be rewarded
-    /// @param amountRequestedIncentive Amount to claim in incentive (limit) farming
+    /// @param amountRequestedLimit Amount to claim in limit farming
     /// @param amountRequestedEternal Amount to claim in eternal farming
     /// @return reward The summary amount of claimed rewards
     function claimReward(
         IERC20Minimal rewardToken,
         address to,
-        uint256 amountRequestedIncentive,
+        uint256 amountRequestedLimit,
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 }
