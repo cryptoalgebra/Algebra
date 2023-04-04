@@ -102,10 +102,10 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
     /// @inheritdoc IFarmingCenter
     function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override isOwner(tokenId) {
-        _exitFarming(key, tokenId, isLimit);
+        _exitFarming(key, tokenId, isLimit, msg.sender);
     }
 
-    function _exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) private {
+    function _exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit, address tokenOwner) private {
         Deposit storage deposit = deposits[tokenId];
         IAlgebraFarming _farming;
 
@@ -126,11 +126,11 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
             _farming = IAlgebraFarming(eternalFarming);
         }
 
-        _farming.exitFarming(key, tokenId, msg.sender);
+        _farming.exitFarming(key, tokenId, tokenOwner);
 
         (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
         if (multiplierToken != address(0)) {
-            farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
+            farmingCenterVault.claimTokens(multiplierToken, tokenOwner, tokenId, incentiveId);
         }
     }
 
@@ -139,15 +139,19 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
-        if (deposit.eternalIncentiveId != bytes32(0)) {
-            // get locked token amount
-            bytes32 incentiveId = deposit.eternalIncentiveId;
-            uint256 lockedAmount = farmingCenterVault.balances(tokenId, incentiveId);
+        bytes32 _limitIncentiveId = deposit.limitIncentiveId;
+        bytes32 _eternalIncentiveId = deposit.eternalIncentiveId;
+        if (_limitIncentiveId != bytes32(0) || _eternalIncentiveId != bytes32(0)) {
+            address tokenOwner = nonfungiblePositionManager.ownerOf(tokenId);
+            (, , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
 
-            // exit & enter
-            IncentiveKey memory key = incentiveKeys[incentiveId];
-            eternalFarming.exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
-            eternalFarming.enterFarming(key, tokenId, lockedAmount);
+            if (_limitIncentiveId != bytes32(0)) {
+                _reenterToFarming(_limitIncentiveId, tokenId, tokenOwner, liquidity, true);
+            }
+
+            if (_eternalIncentiveId != bytes32(0)) {
+                _reenterToFarming(_eternalIncentiveId, tokenId, tokenOwner, liquidity, false);
+            }
         }
     }
 
@@ -156,18 +160,41 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
-        if (deposit.limitIncentiveId != bytes32(0)) return false;
+        bytes32 _limitIncentiveId = deposit.limitIncentiveId;
+        bytes32 _eternalIncentiveId = deposit.eternalIncentiveId;
+        if (_limitIncentiveId != bytes32(0) || _eternalIncentiveId != bytes32(0)) {
+            address tokenOwner = nonfungiblePositionManager.ownerOf(tokenId);
+            (, , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
 
-        if (deposit.eternalIncentiveId != bytes32(0)) {
-            // get locked token amount
-            bytes32 incentiveId = deposit.eternalIncentiveId;
-            uint256 lockedAmount = farmingCenterVault.balances(tokenId, incentiveId);
+            if (_limitIncentiveId != bytes32(0)) {
+                bool res = _reenterToFarming(_limitIncentiveId, tokenId, tokenOwner, liquidity, true);
+                if (!res) return false;
+            }
 
-            // exit & enter
-            IncentiveKey memory key = incentiveKeys[incentiveId];
-            eternalFarming.exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
-            eternalFarming.enterFarming(key, tokenId, lockedAmount);
+            if (_eternalIncentiveId != bytes32(0)) {
+                _reenterToFarming(_eternalIncentiveId, tokenId, tokenOwner, liquidity, false);
+            }
         }
+        return true;
+    }
+
+    function _reenterToFarming(
+        bytes32 incentiveId,
+        uint256 tokenId,
+        address tokenOwner,
+        uint128 liquidity,
+        bool isLimit
+    ) private returns (bool) {
+        IAlgebraFarming _farming = isLimit ? IAlgebraFarming(limitFarming) : IAlgebraFarming(eternalFarming);
+        IncentiveKey memory key = incentiveKeys[incentiveId];
+        if (isLimit && block.timestamp >= key.startTime) return false;
+        if (liquidity == 0) {
+            _exitFarming(key, tokenId, isLimit, tokenOwner);
+        } else {
+            _farming.exitFarming(key, tokenId, tokenOwner);
+            _farming.enterFarming(key, tokenId, farmingCenterVault.balances(tokenId, incentiveId));
+        }
+
         return true;
     }
 
@@ -179,9 +206,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         if (deposit.limitIncentiveId != bytes32(0)) return false;
 
         if (deposit.eternalIncentiveId != bytes32(0)) {
-            bytes32 incentiveId = deposit.eternalIncentiveId;
-            IncentiveKey memory key = incentiveKeys[incentiveId];
-            _exitFarming(key, tokenId, false);
+            IncentiveKey memory key = incentiveKeys[deposit.eternalIncentiveId];
+            _exitFarming(key, tokenId, false, nonfungiblePositionManager.ownerOf(tokenId));
         }
         return true;
     }
