@@ -7,11 +7,11 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import './INonfungiblePositionManager.sol';
 
-import './IIncentiveKey.sol';
+import '../base/IncentiveKey.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming is IIncentiveKey {
+interface IAlgebraFarming {
     error farmingAlreadyExists();
     error farmDoesNotExist();
     error tokenAlreadyFarmed();
