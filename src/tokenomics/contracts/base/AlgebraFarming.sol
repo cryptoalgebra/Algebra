@@ -210,21 +210,15 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
         if (currentVirtualPool == address(0)) revert incentiveNotExist();
 
-        Incentive storage incentive = incentives[IncentiveId.compute(key)];
+        bytes32 incentiveId = IncentiveId.compute(key);
+        Incentive storage incentive = incentives[incentiveId];
         if (incentive.virtualPoolAddress != currentVirtualPool) revert anotherFarmingIsActive();
         if (incentive.deactivated) revert incentiveStopped();
         incentive.deactivated = true;
 
         _connectPoolToVirtualPool(key.pool, address(0));
 
-        emit IncentiveDeactivated(
-            key.rewardToken,
-            key.bonusRewardToken,
-            key.pool,
-            currentVirtualPool,
-            key.startTime,
-            key.endTime
-        );
+        emit IncentiveDeactivated(incentiveId);
     }
 
     function _enterFarming(

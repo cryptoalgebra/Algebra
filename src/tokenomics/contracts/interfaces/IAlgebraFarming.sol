@@ -132,20 +132,8 @@ interface IAlgebraFarming {
     ) external returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
-    /// @param rewardToken The token being distributed as a reward
-    /// @param bonusRewardToken The token being distributed as a bonus reward
-    /// @param pool The Algebra pool
-    /// @param virtualPool The detached virtual pool address
-    /// @param startTime The time when the incentive program begins
-    /// @param endTime The time when rewards stop accruing
-    event IncentiveDeactivated(
-        IERC20Minimal indexed rewardToken,
-        IERC20Minimal indexed bonusRewardToken,
-        IAlgebraPool indexed pool,
-        address virtualPool,
-        uint256 startTime,
-        uint256 endTime
-    );
+    /// @param incentiveId The stopped incentive
+    event IncentiveDeactivated(bytes32 indexed incentiveId);
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
