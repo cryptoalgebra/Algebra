@@ -194,15 +194,39 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraFarming
     function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
-
         Farm memory farm = farms[tokenId][incentiveId];
         if (farm.liquidity == 0) revert farmDoesNotExist();
 
+        (uint256 reward, uint256 bonusReward) = _updatePosition(
+            farm,
+            key,
+            incentiveId,
+            _owner,
+            -int256(uint256(farm.liquidity)).toInt128()
+        );
+
+        delete farms[tokenId][incentiveId];
+
+        emit FarmEnded(
+            tokenId,
+            incentiveId,
+            address(key.rewardToken),
+            address(key.bonusRewardToken),
+            _owner,
+            reward,
+            bonusReward
+        );
+    }
+
+    function _updatePosition(
+        Farm memory farm,
+        IncentiveKey memory key,
+        bytes32 incentiveId,
+        address _owner,
+        int128 liquidityDelta
+    ) internal returns (uint256 reward, uint256 bonusReward) {
         Incentive storage incentive = incentives[incentiveId];
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-
-        uint256 reward;
-        uint256 bonusReward;
 
         {
             int24 tick;
@@ -229,14 +253,16 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             );
 
             unchecked {
-                _updatePositionInVirtualPool(
-                    address(virtualPool),
-                    uint32(block.timestamp),
-                    farm.tickLower,
-                    farm.tickUpper,
-                    -int256(uint256(farm.liquidity)).toInt128(),
-                    tick
-                );
+                if (liquidityDelta != 0) {
+                    _updatePositionInVirtualPool(
+                        address(virtualPool),
+                        uint32(block.timestamp),
+                        farm.tickLower,
+                        farm.tickUpper,
+                        liquidityDelta,
+                        tick
+                    );
+                }
 
                 (reward, bonusReward) = (
                     FullMath.mulDiv(
@@ -262,18 +288,6 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
                 rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
             }
         }
-
-        delete farms[tokenId][incentiveId];
-
-        emit FarmEnded(
-            tokenId,
-            incentiveId,
-            address(key.rewardToken),
-            address(key.bonusRewardToken),
-            _owner,
-            reward,
-            bonusReward
-        );
     }
 
     /// @notice reward amounts can be outdated, actual amounts could be obtained via static call of `collectRewards` in FarmingCenter

@@ -59,31 +59,25 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
 
             if (zeroToOne) {
                 while (true) {
+                    if (targetTick >= previousTick) break;
                     // TODO inf
-                    if (targetTick < previousTick) {
-                        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -_crossTick(previousTick));
-                        _globalTick = previousTick - 1;
-                        previousTick = ticks[previousTick].prevTick;
-                    } else {
-                        _globalTick = targetTick;
-                        break;
-                    }
+
+                    _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -_crossTick(previousTick));
+                    _globalTick = previousTick - 1;
+                    previousTick = ticks[previousTick].prevTick;
                 }
             } else {
                 while (true) {
                     int24 nextTick = ticks[previousTick].nextTick;
-                    if (targetTick >= nextTick) {
-                        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, _crossTick(nextTick));
-                        _globalTick = nextTick;
-                        previousTick = nextTick;
-                    } else {
-                        _globalTick = targetTick;
-                        break;
-                    }
+                    if (targetTick < nextTick) break;
+
+                    _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, _crossTick(nextTick));
+                    _globalTick = nextTick;
+                    previousTick = nextTick;
                 }
             }
 
-            globalTick = _globalTick;
+            globalTick = targetTick;
             currentLiquidity = _currentLiquidity;
             globalPrevInitializedTick = previousTick;
         }
