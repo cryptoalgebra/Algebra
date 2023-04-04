@@ -58,17 +58,17 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
 
     modifier onlyIncentiveMaker() {
-        require(msg.sender == incentiveMaker);
+        _checkIsIncentiveMaker();
         _;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        _checkIsOwner();
         _;
     }
 
     modifier onlyFarmingCenter() {
-        require(msg.sender == address(farmingCenter));
+        _checkIsFarmingCenter();
         _;
     }
 
@@ -78,6 +78,18 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         owner = msg.sender;
         deployer = _deployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+    }
+
+    function _checkIsFarmingCenter() internal view {
+        require(msg.sender == address(farmingCenter));
+    }
+
+    function _checkIsOwner() internal view {
+        require(msg.sender == owner);
+    }
+
+    function _checkIsIncentiveMaker() internal view {
+        require(msg.sender == incentiveMaker);
     }
 
     /// @inheritdoc IAlgebraFarming

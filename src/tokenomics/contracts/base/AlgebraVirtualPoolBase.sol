@@ -31,7 +31,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     }
 
     modifier onlyFromFarming() {
-        if (msg.sender != farmingAddress) revert onlyFarming();
+        _checkIsFromFarming();
         _;
     }
 
@@ -40,6 +40,10 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         pool = _pool;
+    }
+
+    function _checkIsFromFarming() internal view {
+        if (msg.sender != farmingAddress) revert onlyFarming();
     }
 
     /// @dev logic of tick crossing differs in virtual pools
