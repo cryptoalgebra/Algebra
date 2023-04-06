@@ -11,7 +11,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint128 rewardRate; // The rate of reward distribution per second
         uint128 bonusRewardRate; // The rate of bonus reward distribution per second
         uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
-        address multiplierToken; // The address of token which can be locked to get liquidity multiplier
     }
 
     /// @notice Event emitted when reward rates were changed
@@ -36,8 +35,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param endTime The time when rewards stop accruing
     /// @param reward The amount of reward tokens to be distributed
     /// @param bonusReward The amount of bonus reward tokens to be distributed
-    /// @param tiers The amounts of locked token for liquidity multipliers
-    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
     /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
     event EternalFarmingCreated(
         IERC20Minimal indexed rewardToken,
@@ -48,8 +45,6 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 endTime,
         uint256 reward,
         uint256 bonusReward,
-        Tiers tiers,
-        address multiplierToken,
         uint24 minimalAllowedPositionWidth
     );
 
@@ -78,12 +73,10 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @notice Creates a new liquidity mining incentive program
     /// @param key Details of the incentive to create
     /// @param params Params of incentive
-    /// @param tiers The amounts of locked token for liquidity multipliers
     /// @return virtualPool The virtual pool
     function createEternalFarming(
         IncentiveKey memory key,
-        IncentiveParams memory params,
-        Tiers calldata tiers
+        IncentiveParams memory params
     ) external returns (address virtualPool);
 
     function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;

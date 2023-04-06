@@ -39,8 +39,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraEternalFarming
     function createEternalFarming(
         IncentiveKey memory key,
-        IncentiveParams memory params,
-        Tiers calldata tiers
+        IncentiveParams memory params
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         address _incentive = _getCurrentVirtualPools(key.pool);
         if (_incentive != address(0)) revert farmingAlreadyExists();
@@ -52,9 +51,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             key,
             params.reward,
             params.bonusReward,
-            params.minimalPositionWidth,
-            params.multiplierToken,
-            tiers
+            params.minimalPositionWidth
         );
 
         emit EternalFarmingCreated(
@@ -66,8 +63,6 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             key.endTime,
             params.reward,
             params.bonusReward,
-            tiers,
-            params.multiplierToken,
             params.minimalPositionWidth
         );
 
@@ -157,18 +152,14 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external override onlyFarmingCenter {
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
         (
             bytes32 incentiveId,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
             address virtualPoolAddress
-        ) = _enterFarming(key, tokenId, tokensLocked);
+        ) = _enterFarming(key, tokenId);
 
         mapping(bytes32 => Farm) storage farmsForToken = farms[tokenId];
         if (farmsForToken[incentiveId].liquidity != 0) revert tokenAlreadyFarmed();
@@ -187,7 +178,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             innerRewardGrowth1: innerRewardGrowth1
         });
 
-        emit FarmEntered(tokenId, incentiveId, liquidity, tokensLocked);
+        emit FarmEntered(tokenId, incentiveId, liquidity);
     }
 
     /// @inheritdoc IAlgebraFarming

@@ -10,7 +10,6 @@ import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManage
 
 import '../base/IncentiveKey.sol';
 import '../farmings/interfaces/IAlgebraEternalFarming.sol';
-import './IFarmingCenterVault.sol';
 
 interface IFarmingCenter is IMulticall {
     struct VirtualPoolAddresses {
@@ -35,8 +34,6 @@ interface IFarmingCenter is IMulticall {
 
     function eternalFarming() external view returns (IAlgebraEternalFarming);
 
-    function farmingCenterVault() external view returns (IFarmingCenterVault);
-
     /// @notice Returns information about a deposited NFT
     /// @param tokenId The ID of the deposit (and token) that is being transferred
     /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
@@ -52,8 +49,7 @@ interface IFarmingCenter is IMulticall {
     /// @dev token must be deposited in FarmingCenter
     /// @param key The incentive event key
     /// @param tokenId The id of position NFT
-    /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
     /// @param key The incentive event key

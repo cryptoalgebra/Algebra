@@ -6,7 +6,6 @@ import '../interfaces/IAlgebraFarming.sol';
 import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
-import '../libraries/LiquidityTier.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
@@ -32,9 +31,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         address virtualPoolAddress;
         uint24 minimalPositionWidth;
         uint224 totalLiquidity;
-        address multiplierToken;
         bool deactivated;
-        Tiers tiers;
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -156,9 +153,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint128 reward,
         uint128 bonusReward,
-        uint24 minimalPositionWidth,
-        address multiplierToken,
-        Tiers calldata tiers
+        uint24 minimalPositionWidth
     ) internal returns (bytes32 incentiveId, uint128 receivedReward, uint128 receivedBonusReward) {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
@@ -173,21 +168,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         }
         newIncentive.virtualPoolAddress = virtualPool;
         newIncentive.minimalPositionWidth = minimalPositionWidth;
-
-        if (
-            tiers.tier1Multiplier > LiquidityTier.MAX_MULTIPLIER ||
-            tiers.tier2Multiplier > LiquidityTier.MAX_MULTIPLIER ||
-            tiers.tier3Multiplier > LiquidityTier.MAX_MULTIPLIER
-        ) revert multiplierIsTooHigh();
-
-        if (
-            tiers.tier1Multiplier < LiquidityTier.DENOMINATOR ||
-            tiers.tier2Multiplier < LiquidityTier.DENOMINATOR ||
-            tiers.tier3Multiplier < LiquidityTier.DENOMINATOR
-        ) revert multiplierIsTooLow();
-
-        newIncentive.tiers = tiers;
-        newIncentive.multiplierToken = multiplierToken;
     }
 
     function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
@@ -206,8 +186,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _enterFarming(
         IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
+        uint256 tokenId
     ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
@@ -225,11 +204,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         if (liquidity == 0) revert zeroLiquidity();
 
         int24 tick = _getTickInPool(pool);
-
-        uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
-        uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
-        require(liquidityAmountWithMultiplier <= type(uint128).max);
-        liquidity = uint128(liquidityAmountWithMultiplier);
 
         virtualPool = incentive.virtualPoolAddress;
         uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;

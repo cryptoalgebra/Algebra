@@ -19,8 +19,6 @@ interface IAlgebraFarming {
     error incentiveStopped();
     error anotherFarmingIsActive();
 
-    error multiplierIsTooHigh();
-    error multiplierIsTooLow();
     error minimalPositionWidthTooWide();
 
     error positionIsTooNarrow();
@@ -29,17 +27,6 @@ interface IAlgebraFarming {
 
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
-
-    struct Tiers {
-        // amount of token to reach the tier
-        uint256 tokenAmountForTier1;
-        uint256 tokenAmountForTier2;
-        uint256 tokenAmountForTier3;
-        // 1 = 0.01%
-        uint32 tier1Multiplier;
-        uint32 tier2Multiplier;
-        uint32 tier3Multiplier;
-    }
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
@@ -54,9 +41,7 @@ interface IAlgebraFarming {
             address virtualPoolAddress,
             uint24 minimalPositionWidth,
             uint224 totalLiquidity,
-            address multiplierToken,
-            bool deactivated,
-            Tiers memory tiers
+            bool deactivated
         );
 
     /// @notice Detach incentive from the pool and deactivate it
@@ -80,8 +65,7 @@ interface IAlgebraFarming {
     /// @notice enter farming for Algebra LP token
     /// @param key The key of the incentive for which to enterFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
-    /// @param tokensLocked The amount of tokens locked for boost
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
     /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
@@ -132,8 +116,7 @@ interface IAlgebraFarming {
     /// @param tokenId The unique identifier of an Algebra LP token
     /// @param incentiveId The incentive in which the token is farming
     /// @param liquidity The amount of liquidity farmd
-    /// @param tokensLocked The amount of tokens locked for multiplier
-    event FarmEntered(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity, uint256 tokensLocked);
+    event FarmEntered(uint256 indexed tokenId, bytes32 indexed incentiveId, uint128 liquidity);
 
     /// @notice Event emitted when a Algebra LP token has been exitFarmingd
     /// @param tokenId The unique identifier of an Algebra LP token

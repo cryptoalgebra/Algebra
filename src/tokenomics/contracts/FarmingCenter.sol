@@ -2,7 +2,6 @@
 pragma solidity =0.8.17;
 
 import './interfaces/IFarmingCenter.sol';
-import './interfaces/IFarmingCenterVault.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
@@ -18,7 +17,6 @@ import './libraries/IncentiveId.sol';
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     IAlgebraEternalFarming public immutable override eternalFarming;
     INonfungiblePositionManager public immutable override nonfungiblePositionManager;
-    IFarmingCenterVault public immutable override farmingCenterVault;
 
     /// @dev saves addresses of virtual pools for pool
     mapping(address => VirtualPoolAddresses) private _virtualPoolAddresses;
@@ -33,14 +31,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         bytes32 eternalIncentiveId;
     }
 
-    constructor(
-        IAlgebraEternalFarming _eternalFarming,
-        INonfungiblePositionManager _nonfungiblePositionManager,
-        IFarmingCenterVault _farmingCenterVault
-    ) {
+    constructor(IAlgebraEternalFarming _eternalFarming, INonfungiblePositionManager _nonfungiblePositionManager) {
         eternalFarming = _eternalFarming;
         nonfungiblePositionManager = _nonfungiblePositionManager;
-        farmingCenterVault = _farmingCenterVault;
     }
 
     modifier isOwner(uint256 tokenId) {
@@ -48,16 +41,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         _;
     }
 
-    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
-        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
-    }
-
     /// @inheritdoc IFarmingCenter
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external override isOwner(tokenId) {
+    function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
         Deposit storage _deposit = deposits[tokenId];
         bytes32 incentiveId = IncentiveId.compute(key);
         if (address(incentiveKeys[incentiveId].pool) == address(0)) {
@@ -69,19 +54,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
         _deposit.eternalIncentiveId = incentiveId;
         nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
-        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
-        if (tokensLocked > 0) {
-            uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
-            TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
-            uint256 balanceAfter = _getTokenBalanceOfVault(multiplierToken);
-            require(balanceAfter > balanceBefore, 'Insufficient tokens locked');
-            unchecked {
-                tokensLocked = balanceAfter - balanceBefore;
-            }
-            farmingCenterVault.lockTokens(tokenId, incentiveId, tokensLocked);
-        }
-
-        _farming.enterFarming(key, tokenId, tokensLocked);
+        _farming.enterFarming(key, tokenId);
     }
 
     /// @inheritdoc IFarmingCenter
@@ -99,11 +72,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
         IAlgebraFarming _farming = IAlgebraFarming(eternalFarming);
         _farming.exitFarming(key, tokenId, tokenOwner);
-
-        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
-        if (multiplierToken != address(0)) {
-            farmingCenterVault.claimTokens(multiplierToken, tokenOwner, tokenId, incentiveId);
-        }
     }
 
     /// @inheritdoc IPositionFollower
@@ -143,7 +111,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
             _exitFarming(key, tokenId, tokenOwner);
         } else {
             _farming.exitFarming(key, tokenId, tokenOwner);
-            _farming.enterFarming(key, tokenId, farmingCenterVault.balances(tokenId, incentiveId));
+            _farming.enterFarming(key, tokenId);
         }
     }
 
