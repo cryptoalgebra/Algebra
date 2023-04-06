@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import '../../../interfaces/IAlgebraFarming.sol';
 
@@ -14,29 +13,6 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         address multiplierToken; // The address of token which can be locked to get liquidity multiplier
         uint32 enterStartTime; // The time when enter should become possible
     }
-
-    /// @notice The max duration of an incentive in seconds
-    function maxIncentiveDuration() external view returns (uint256);
-
-    /// @notice The max amount of seconds into the future the incentive startTime can be set
-    function maxIncentiveStartLeadTime() external view returns (uint256);
-
-    /// @notice Returns information about a farmd liquidity NFT
-    /// @param tokenId The ID of the farmd token
-    /// @param incentiveId The ID of the incentive for which the token is farmd
-    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
-    /// tickLower The lower end of the tick range for the position,
-    /// tickUpper The upper end of the tick range for the position
-    function farms(
-        uint256 tokenId,
-        bytes32 incentiveId
-    ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper);
-
-    function createLimitFarming(
-        IncentiveKey memory key,
-        Tiers calldata tiers,
-        IncentiveParams memory params
-    ) external returns (address virtualPool);
 
     /// @notice Event emitted when a liquidity mining incentive has been created
     /// @param rewardToken The token being distributed as a reward
@@ -63,4 +39,27 @@ interface IAlgebraLimitFarming is IAlgebraFarming {
         uint24 minimalAllowedPositionWidth,
         uint32 enterStartTime
     );
+
+    /// @notice The max duration of an incentive in seconds
+    function maxIncentiveDuration() external view returns (uint256);
+
+    /// @notice The max amount of seconds into the future the incentive startTime can be set
+    function maxIncentiveStartLeadTime() external view returns (uint256);
+
+    /// @notice Returns information about a farmd liquidity NFT
+    /// @param tokenId The ID of the farmd token
+    /// @param incentiveId The ID of the incentive for which the token is farmd
+    /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
+    /// tickLower The lower end of the tick range for the position,
+    /// tickUpper The upper end of the tick range for the position
+    function farms(
+        uint256 tokenId,
+        bytes32 incentiveId
+    ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper);
+
+    function createLimitFarming(
+        IncentiveKey memory key,
+        Tiers calldata tiers,
+        IncentiveParams memory params
+    ) external returns (address virtualPool);
 }

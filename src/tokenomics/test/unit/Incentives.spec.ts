@@ -19,6 +19,7 @@ import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 import { Contract, Wallet} from 'ethers'
+import { AlgebraLimitFarming } from '../../typechain';
 
 const LIMIT_FARMING = true;
 const ETERNAL_FARMING = false;
@@ -451,7 +452,7 @@ describe('unit/Incentives', async () => {
             eternal: false
           }
   
-          await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWith("already has active incentive")
+          await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'farmingAlreadyExists')
         })
       })
 
@@ -526,7 +527,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier is too low')
+          ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'multiplierIsTooLow')
         })
 
         it('multiplier gt 50000', async () => {
@@ -565,7 +566,7 @@ describe('unit/Incentives', async () => {
               }
 
             )
-          ).to.be.revertedWith('Multiplier is too high')
+          ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'multiplierIsTooHigh')
         })
       })
 

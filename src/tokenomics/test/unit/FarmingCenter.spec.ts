@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Contract, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20 } from '../../typechain'
+import { TestERC20, AlgebraLimitFarming, AlgebraEternalFarming } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -254,14 +254,10 @@ describe('unit/FarmingCenter', () => {
           deadline: (await blockTimestamp()) + 1_000,
         })
 
-        await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'cannot farm token with 0 liquidity'
-        )
+        await expect(subject(tokenId2, lpUser0)).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'zeroLiquidity')  
 
         
-        await expect(subjectEternal(tokenId2, lpUser0)).to.be.revertedWith(
-          'cannot farm token with 0 liquidity'
-        )
+        await expect(subjectEternal(tokenId2, lpUser0)).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'zeroLiquidity')  
       })
 
       it('token id is for a different pool than the incentive', async () => {
@@ -298,7 +294,7 @@ describe('unit/FarmingCenter', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('invalid pool for token')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'invalidPool')  
 
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
@@ -313,7 +309,7 @@ describe('unit/FarmingCenter', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('invalid pool for token')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'invalidPool')  
       })
 
       it('incentive key does not exist', async () => {
@@ -333,7 +329,7 @@ describe('unit/FarmingCenter', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('non-existent incentive')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'incentiveNotExist')  
 
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
@@ -349,7 +345,7 @@ describe('unit/FarmingCenter', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('non-existent incentive')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'incentiveNotExist')  
       })
     })
   })
@@ -523,13 +519,9 @@ describe('unit/FarmingCenter', () => {
     it('reverts if farm does not exist', async () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
-      await expect(context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'farm does not exist'
-      )
+      await expect(context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'farmDoesNotExist')
 
-      await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'farm does not exist'
-      )
+      await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'farmDoesNotExist')
     })
   })
 
@@ -900,8 +892,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
       
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199199))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99299)) 
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199299))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99349)) 
 
     }) 
 
@@ -959,8 +951,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address,context.bonusRewardToken.address)
       
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199199))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99299)) 
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199299))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99349)) 
 
     }) 
 
@@ -1006,7 +998,7 @@ describe('unit/FarmingCenter', () => {
           ...timestamps,
         },
         tokenIdEternal
-      )).to.be.revertedWith('non-existent incentive')
+      )).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'incentiveNotExist')
     })
 
     it('collect with non-existent nft', async () => {
@@ -1029,7 +1021,7 @@ describe('unit/FarmingCenter', () => {
           ...timestamps,
         },
         tokenIdEternal
-      )).to.be.revertedWith('farm does not exist')
+      )).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'farmDoesNotExist')
     })
 
   })

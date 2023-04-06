@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
-import '../libraries/LiquidityMath.sol';
-import '../libraries/TickManager.sol';
+import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
 
-import './IAlgebraVirtualPoolBase.sol';
+import '../libraries/VirtualTickManagement.sol';
+import '../interfaces/IAlgebraVirtualPoolBase.sol';
 
 /// @title Abstract base contract for Algebra virtual pools
 abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
@@ -13,7 +13,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     address public immutable pool;
 
     /// @inheritdoc IAlgebraVirtualPoolBase
-    mapping(int24 => TickManager.Tick) public override ticks;
+    mapping(int24 => VirtualTickManagement.Tick) public override ticks;
 
     /// @inheritdoc IAlgebraVirtualPoolBase
     uint128 public override currentLiquidity;
@@ -22,39 +22,64 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
 
+    int24 internal globalPrevInitializedTick;
+
     /// @notice only pool (or FarmingCenter as "proxy") can call
     modifier onlyFromPool() {
-        require(msg.sender == farmingCenterAddress || msg.sender == pool, 'only pool');
+        if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
         _;
     }
 
-    modifier onlyFarming() {
-        require(msg.sender == farmingAddress, 'only farming');
+    modifier onlyFromFarming() {
+        _checkIsFromFarming();
         _;
     }
 
     constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) {
+        globalPrevInitializedTick = TickMath.MIN_TICK;
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         pool = _pool;
+    }
+
+    function _checkIsFromFarming() internal view {
+        if (msg.sender != farmingAddress) revert onlyFarming();
     }
 
     /// @dev logic of tick crossing differs in virtual pools
     function _crossTick(int24 nextTick) internal virtual returns (int128 liquidityDelta);
 
     /// @inheritdoc IAlgebraVirtualPool
-    function cross(int24 nextTick, bool zeroToOne) external override onlyFromPool returns (bool) {
+    function crossTo(int24 targetTick, bool zeroToOne) external override onlyFromPool returns (bool) {
         if (!_increaseCumulative(uint32(block.timestamp))) return false;
-        if (ticks[nextTick].initialized) {
-            int128 liquidityDelta = _crossTick(nextTick);
-            if (zeroToOne) liquidityDelta = -liquidityDelta;
+        unchecked {
+            int24 previousTick = globalPrevInitializedTick;
+            uint128 _currentLiquidity = currentLiquidity;
+            int24 _globalTick = globalTick;
 
-            uint128 _newLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-            int24 _newGlobalTick = zeroToOne ? nextTick - 1 : nextTick;
+            if (zeroToOne) {
+                while (true) {
+                    if (targetTick >= previousTick) break;
+                    // TODO inf
 
-            // single SSTORE
-            currentLiquidity = _newLiquidity;
-            globalTick = _newGlobalTick;
+                    _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -_crossTick(previousTick));
+                    _globalTick = previousTick - 1;
+                    previousTick = ticks[previousTick].prevTick;
+                }
+            } else {
+                while (true) {
+                    int24 nextTick = ticks[previousTick].nextTick;
+                    if (targetTick < nextTick) break;
+
+                    _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, _crossTick(nextTick));
+                    _globalTick = nextTick;
+                    previousTick = nextTick;
+                }
+            }
+
+            globalTick = targetTick;
+            currentLiquidity = _currentLiquidity;
+            globalPrevInitializedTick = previousTick;
         }
         return true;
     }
@@ -63,7 +88,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (bool success);
 
     /// @inheritdoc IAlgebraVirtualPoolBase
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFarming {
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFromFarming {
         _increaseCumulative(currentTimestamp);
     }
 
@@ -82,7 +107,7 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         int24 topTick,
         int128 liquidityDelta,
         int24 currentTick
-    ) external override onlyFarming {
+    ) external override onlyFromFarming {
         globalTick = currentTick;
 
         if (currentTimestamp > prevTimestamp) {
@@ -106,6 +131,17 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
                 currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
             }
 
+            if (flippedBottom || flippedTop) {
+                int24 previousTick = globalPrevInitializedTick;
+                if (flippedBottom) {
+                    previousTick = _insertOrRemoveTick(bottomTick, currentTick, previousTick, liquidityDelta < 0);
+                }
+                if (flippedTop) {
+                    previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
+                }
+                globalPrevInitializedTick = previousTick;
+            }
+
             // clear any tick data that is no longer needed
             if (liquidityDelta < 0) {
                 if (flippedBottom) {
@@ -117,4 +153,11 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
             }
         }
     }
+
+    function _insertOrRemoveTick(
+        int24 tick,
+        int24 currentTick,
+        int24 prevInitializedTick,
+        bool remove
+    ) internal virtual returns (int24 newPrevInitializedTick);
 }

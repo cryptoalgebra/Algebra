@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
+pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
@@ -7,30 +7,17 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
-import './INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
-
+import '../base/IncentiveKey.sol';
 import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
 import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
 import './IFarmingCenterVault.sol';
-import './IIncentiveKey.sol';
 
-interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPeripheryPayments {
+interface IFarmingCenter is IAlgebraVirtualPool, IMulticall {
     struct VirtualPoolAddresses {
         address eternalVirtualPool;
         address limitVirtualPool;
-    }
-
-    struct DecreaseLiquidityParams {
-        uint256 tokenId;
-        uint128 liquidity;
-        uint256 amount0Min;
-        uint256 amount1Min;
-        uint128 amount0Max;
-        uint128 amount1Max;
-        address recipient;
-        uint256 deadline;
     }
 
     function virtualPoolAddresses(address) external view returns (address, address);
@@ -49,7 +36,6 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
     /// @return numberOfFarms The number of farms
     /// @return limitIncentiveId The id of limit incentive that is active for this NFT
     /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
-    /// inLimitFarming The parameter showing if the token is in the limit farm
     function deposits(
         uint256 tokenId
     ) external view returns (uint32 numberOfFarms, bytes32 limitIncentiveId, bytes32 eternalIncentiveId);
@@ -88,13 +74,13 @@ interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPer
     /// @dev can be used via static call to get current rewards for user
     /// @param rewardToken The token that is a reward
     /// @param to The address to be rewarded
-    /// @param amountRequestedIncentive Amount to claim in incentive (limit) farming
+    /// @param amountRequestedLimit Amount to claim in limit farming
     /// @param amountRequestedEternal Amount to claim in eternal farming
     /// @return reward The summary amount of claimed rewards
     function claimReward(
         IERC20Minimal rewardToken,
         address to,
-        uint256 amountRequestedIncentive,
+        uint256 amountRequestedLimit,
         uint256 amountRequestedEternal
     ) external returns (uint256 reward);
 }

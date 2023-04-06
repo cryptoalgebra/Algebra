@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
-import '../../libraries/TickManager.sol';
+import '../../libraries/VirtualTickManagement.sol';
 
 import './interfaces/IAlgebraLimitVirtualPool.sol';
 
-import '../AlgebraVirtualPoolBase.sol';
+import '../../base/AlgebraVirtualPoolBase.sol';
+import '../../base/VirtualTickStructure.sol';
 
-contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
-    using TickManager for mapping(int24 => TickManager.Tick);
+contract LimitVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAlgebraLimitVirtualPool {
+    using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
 
     /// @inheritdoc IAlgebraLimitVirtualPool
     bool public override isFinished;
@@ -42,36 +43,40 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
 
-        if (globalTick < bottomTick) {
-            return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else if (globalTick < topTick) {
-            uint32 currentTimestamp = uint32(block.timestamp);
-            if (currentTimestamp > desiredEndTimestamp) currentTimestamp = desiredEndTimestamp;
-            uint160 _globalSecondsPerLiquidityCumulative = globalSecondsPerLiquidityCumulative;
+        unchecked {
+            if (globalTick < bottomTick) {
+                return (lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
+            } else if (globalTick < topTick) {
+                uint32 currentTimestamp = uint32(block.timestamp);
+                if (currentTimestamp > desiredEndTimestamp) currentTimestamp = desiredEndTimestamp;
+                uint160 _globalSecondsPerLiquidityCumulative = globalSecondsPerLiquidityCumulative;
 
-            if (currentTimestamp > prevTimestamp) {
-                uint128 _currentLiquidity = currentLiquidity;
-                if (_currentLiquidity > 0) {
-                    _globalSecondsPerLiquidityCumulative +=
-                        (uint160(currentTimestamp - prevTimestamp) << 128) /
-                        _currentLiquidity;
+                if (currentTimestamp > prevTimestamp) {
+                    uint128 _currentLiquidity = currentLiquidity;
+                    if (_currentLiquidity > 0) {
+                        _globalSecondsPerLiquidityCumulative +=
+                            (uint160(currentTimestamp - prevTimestamp) << 128) /
+                            _currentLiquidity;
+                    }
                 }
-            }
 
-            return (_globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
-        } else {
-            return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
+                return (_globalSecondsPerLiquidityCumulative - lowerSecondsPerLiquidity - upperSecondsPerLiquidity);
+            } else {
+                return (upperSecondsPerLiquidity - lowerSecondsPerLiquidity);
+            }
         }
     }
 
     /// @inheritdoc IAlgebraLimitVirtualPool
-    function finish() external override onlyFarming returns (bool wasFinished, uint32 activeTime) {
+    function finish() external override onlyFromFarming returns (bool wasFinished, uint32 activeTime) {
         wasFinished = isFinished;
         if (!wasFinished) {
             isFinished = true;
             _increaseCumulative(desiredEndTimestamp);
         }
-        activeTime = desiredEndTimestamp - timeOutside - desiredStartTimestamp;
+        unchecked {
+            activeTime = desiredEndTimestamp - timeOutside - desiredStartTimestamp;
+        }
     }
 
     function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
@@ -86,17 +91,19 @@ contract LimitVirtualPool is AlgebraVirtualPoolBase, IAlgebraLimitVirtualPool {
             return false; // return "not successful"
         }
 
-        uint32 _previousTimestamp = prevTimestamp;
-        if (currentTimestamp > _previousTimestamp) {
-            uint128 _currentLiquidity = currentLiquidity;
-            if (_currentLiquidity > 0) {
-                globalSecondsPerLiquidityCumulative +=
-                    (uint160(currentTimestamp - _previousTimestamp) << 128) /
-                    _currentLiquidity;
-                prevTimestamp = currentTimestamp;
-            } else {
-                timeOutside += currentTimestamp - _previousTimestamp;
-                prevTimestamp = currentTimestamp;
+        unchecked {
+            uint32 _previousTimestamp = prevTimestamp;
+            if (currentTimestamp > _previousTimestamp) {
+                uint128 _currentLiquidity = currentLiquidity;
+                if (_currentLiquidity > 0) {
+                    globalSecondsPerLiquidityCumulative +=
+                        (uint160(currentTimestamp - _previousTimestamp) << 128) /
+                        _currentLiquidity;
+                    prevTimestamp = currentTimestamp;
+                } else {
+                    timeOutside += currentTimestamp - _previousTimestamp;
+                    prevTimestamp = currentTimestamp;
+                }
             }
         }
 

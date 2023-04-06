@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
@@ -46,11 +47,7 @@ contract TestERC20 is IERC20Minimal {
         isDeflationary = true;
     }
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         uint256 allowanceBefore = allowance[sender][msg.sender];
         require(allowanceBefore >= amount, 'allowance insufficient');
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 import '../../../interfaces/IAlgebraFarming.sol';
 
 /// @title Algebra Eternal Farming Interface
@@ -27,6 +26,32 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
     /// @param rewardAmount Collected amount of reward
     /// @param bonusRewardAmount Collected amount of bonus reward
     event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount);
+
+    /// @notice Event emitted when a liquidity mining incentive has been created
+    /// @param rewardToken The token being distributed as a reward
+    /// @param bonusRewardToken The token being distributed as a bonus reward
+    /// @param pool The Algebra pool
+    /// @param virtualPool The virtual pool address
+    /// @param startTime The time when the incentive program begins
+    /// @param endTime The time when rewards stop accruing
+    /// @param reward The amount of reward tokens to be distributed
+    /// @param bonusReward The amount of bonus reward tokens to be distributed
+    /// @param tiers The amounts of locked token for liquidity multipliers
+    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
+    /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
+    event EternalFarmingCreated(
+        IERC20Minimal indexed rewardToken,
+        IERC20Minimal indexed bonusRewardToken,
+        IAlgebraPool indexed pool,
+        address virtualPool,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 reward,
+        uint256 bonusReward,
+        Tiers tiers,
+        address multiplierToken,
+        uint24 minimalAllowedPositionWidth
+    );
 
     /// @notice Returns information about a farmd liquidity NFT
     /// @param tokenId The ID of the farmd token
@@ -68,30 +93,4 @@ interface IAlgebraEternalFarming is IAlgebraFarming {
         uint256 tokenId,
         address _owner
     ) external returns (uint256 reward, uint256 bonusReward);
-
-    /// @notice Event emitted when a liquidity mining incentive has been created
-    /// @param rewardToken The token being distributed as a reward
-    /// @param bonusRewardToken The token being distributed as a bonus reward
-    /// @param pool The Algebra pool
-    /// @param virtualPool The virtual pool address
-    /// @param startTime The time when the incentive program begins
-    /// @param endTime The time when rewards stop accruing
-    /// @param reward The amount of reward tokens to be distributed
-    /// @param bonusReward The amount of bonus reward tokens to be distributed
-    /// @param tiers The amounts of locked token for liquidity multipliers
-    /// @param multiplierToken The address of token which can be locked to get liquidity multiplier
-    /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
-    event EternalFarmingCreated(
-        IERC20Minimal indexed rewardToken,
-        IERC20Minimal indexed bonusRewardToken,
-        IAlgebraPool indexed pool,
-        address virtualPool,
-        uint256 startTime,
-        uint256 endTime,
-        uint256 reward,
-        uint256 bonusReward,
-        Tiers tiers,
-        address multiplierToken,
-        uint24 minimalAllowedPositionWidth
-    );
 }

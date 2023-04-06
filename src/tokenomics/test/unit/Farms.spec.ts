@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20 } from '../../typechain'
+import { TestERC20, AlgebraLimitFarming, IAccessControl } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -201,9 +201,7 @@ describe('unit/Farms', () => {
           deadline: (await blockTimestamp()) + 1_000,
         })
 
-        await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'cannot farm token with 0 liquidity'
-        )
+        await expect(subject(tokenId2, lpUser0)).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'zeroLiquidity')
       })
 
       it('token id is for a different pool than the incentive', async () => {
@@ -236,7 +234,7 @@ describe('unit/Farms', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('invalid pool for token')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'invalidPool')
       })
 
       it('incentive key does not exist', async () => {
@@ -256,7 +254,7 @@ describe('unit/Farms', () => {
             0,
             LIMIT_FARMING
           )
-        ).to.be.revertedWith('non-existent incentive')
+        ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'incentiveNotExist')
       })
 
       it('is past the end time', async () => {
@@ -331,24 +329,15 @@ describe('unit/Farms', () => {
   })
 
   describe('permissioned actions', () => {
-    it('#setIncentiveMaker', async() => {
-      await expect(context.farming.connect(actors.farmingDeployer()).setIncentiveMaker(actors.lpUser1().address))
-      .to.emit(context.farming, 'IncentiveMaker')
-      .withArgs(actors.lpUser1().address)
-
-      await expect(context.farming.connect(actors.farmingDeployer()).setIncentiveMaker(actors.lpUser1().address)).to.be.reverted;
-    })
-
     it('#setFarmingCenterAddress', async() => {
-      await expect(context.farming.connect(actors.farmingDeployer()).setFarmingCenterAddress(actors.lpUser1().address))
+      await expect(context.farming.connect(context.ownerSigner).setFarmingCenterAddress(actors.lpUser1().address))
       .to.emit(context.farming, 'FarmingCenter')
       .withArgs(actors.lpUser1().address)
 
-      await expect(context.farming.connect(actors.farmingDeployer()).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
+      await expect(context.farming.connect(context.ownerSigner).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
     })
 
     it('onlyOwner fails if not owner', async() => {
-      await expect(context.farming.connect(actors.lpUser1()).setIncentiveMaker(actors.lpUser1().address)).to.be.reverted;
       await expect(context.farming.connect(actors.lpUser1()).setFarmingCenterAddress(actors.lpUser1().address)).to.be.reverted;
     })
 
@@ -525,9 +514,7 @@ describe('unit/Farms', () => {
     it('reverts if farm does not exist', async () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
-      await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'farm does not exist'
-      )
+      await expect(context.farming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'farmDoesNotExist')
     })
   })
 

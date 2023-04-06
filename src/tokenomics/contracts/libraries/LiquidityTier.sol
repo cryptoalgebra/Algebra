@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraFarming.sol';
 
@@ -13,11 +13,10 @@ library LiquidityTier {
     /// @param tokenAmount The amount of locked tokens
     /// @param tiers The structure showing the dependence of the multiplier on the amount of locked tokens
     /// @return multiplier The value represent percent of liquidity in ten thousands(1 = 0.01%)
-    function getLiquidityMultiplier(uint256 tokenAmount, IAlgebraFarming.Tiers memory tiers)
-        internal
-        pure
-        returns (uint32 multiplier)
-    {
+    function getLiquidityMultiplier(
+        uint256 tokenAmount,
+        IAlgebraFarming.Tiers memory tiers
+    ) internal pure returns (uint32 multiplier) {
         if (tokenAmount >= tiers.tokenAmountForTier3) {
             return tiers.tier3Multiplier;
         } else if (tokenAmount >= tiers.tokenAmountForTier2) {

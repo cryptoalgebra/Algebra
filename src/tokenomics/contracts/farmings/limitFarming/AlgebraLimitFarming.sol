@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
@@ -11,7 +10,7 @@ import '../../libraries/IncentiveId.sol';
 import '../../libraries/RewardMath.sol';
 import './LimitVirtualPool.sol';
 
-import '../AlgebraFarming.sol';
+import '../../base/AlgebraFarming.sol';
 
 /// @title Algebra incentive (time-limited) farming
 contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
@@ -59,15 +58,16 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             _activeEndTimestamp = IAlgebraLimitVirtualPool(_incentive).desiredEndTimestamp();
         }
 
-        require(
-            _activeEndTimestamp < block.timestamp && (activeIncentive != _incentive || _incentive == address(0)),
-            'already has active incentive'
-        );
+        if (_activeEndTimestamp >= block.timestamp || (activeIncentive == _incentive && _incentive != address(0)))
+            revert farmingAlreadyExists();
+
         require(params.reward > 0, 'reward must be positive');
         require(block.timestamp <= key.startTime, 'start time too low');
-        require(key.startTime - block.timestamp <= maxIncentiveStartLeadTime, 'start time too far into future');
-        require(key.startTime < key.endTime, 'start must be before end time');
-        require(key.endTime - key.startTime <= maxIncentiveDuration, 'incentive duration is too long');
+        unchecked {
+            require(key.startTime - block.timestamp <= maxIncentiveStartLeadTime, 'start time too far into future');
+            require(key.startTime < key.endTime, 'start must be before end time');
+            require(key.endTime - key.startTime <= maxIncentiveDuration, 'incentive duration is too long');
+        }
 
         virtualPool = address(
             new LimitVirtualPool(
@@ -131,13 +131,15 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
-        uint128 _totalReward = incentive.totalReward;
-        if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
-        incentive.totalReward = _totalReward - rewardAmount;
+        unchecked {
+            uint128 _totalReward = incentive.totalReward;
+            if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
+            incentive.totalReward = _totalReward - rewardAmount;
 
-        uint128 _bonusReward = incentive.bonusReward;
-        if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
-        incentive.bonusReward = _bonusReward - bonusRewardAmount;
+            uint128 _bonusReward = incentive.bonusReward;
+            if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
+            incentive.bonusReward = _bonusReward - bonusRewardAmount;
+        }
 
         if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
         if (bonusRewardAmount > 0)
@@ -167,12 +169,14 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
 
         mapping(bytes32 => Farm) storage farmsForToken = farms[tokenId];
-        require(farmsForToken[incentiveId].liquidity == 0, 'token already farmed');
+        if (farmsForToken[incentiveId].liquidity != 0) revert tokenAlreadyFarmed();
 
         Incentive storage incentive = incentives[incentiveId];
         uint224 _currentTotalLiquidity = incentive.totalLiquidity;
-        require(_currentTotalLiquidity + liquidity >= _currentTotalLiquidity, 'liquidity overflow');
-        incentive.totalLiquidity = _currentTotalLiquidity + liquidity;
+        unchecked {
+            require(_currentTotalLiquidity + liquidity >= _currentTotalLiquidity, 'liquidity overflow');
+            incentive.totalLiquidity = _currentTotalLiquidity + liquidity;
+        }
 
         farmsForToken[incentiveId] = Farm({liquidity: liquidity, tickLower: tickLower, tickUpper: tickUpper});
 
@@ -188,7 +192,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
         Farm memory farm = farms[tokenId][incentiveId];
 
-        require(farm.liquidity != 0, 'farm does not exist');
+        if (farm.liquidity == 0) revert farmDoesNotExist();
 
         uint256 reward;
         uint256 bonusReward;
@@ -223,20 +227,22 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             );
 
             mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
-            if (reward > 0) {
-                rewardBalances[key.rewardToken] += reward; // user must claim before overflow
-            }
+            unchecked {
+                if (reward > 0) {
+                    rewardBalances[key.rewardToken] += reward; // user must claim before overflow
+                }
 
-            if (incentive.bonusReward != 0) {
-                bonusReward = RewardMath.computeRewardAmount(
-                    incentive.bonusReward,
-                    activeTime,
-                    farm.liquidity,
-                    _totalLiquidity,
-                    secondsPerLiquidityInsideX128
-                );
-                if (bonusReward > 0) {
-                    rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+                if (incentive.bonusReward != 0) {
+                    bonusReward = RewardMath.computeRewardAmount(
+                        incentive.bonusReward,
+                        activeTime,
+                        farm.liquidity,
+                        _totalLiquidity,
+                        secondsPerLiquidityInsideX128
+                    );
+                    if (bonusReward > 0) {
+                        rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+                    }
                 }
             }
         } else {
@@ -244,17 +250,20 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
             if (incentive.deactivated) {
                 tick = IAlgebraVirtualPoolBase(incentive.virtualPoolAddress).globalTick();
             } else {
-                (, tick, , , , , ) = key.pool.globalState();
+                tick = _getTickInPool(key.pool);
             }
 
-            virtualPool.applyLiquidityDeltaToPosition(
-                uint32(block.timestamp),
-                farm.tickLower,
-                farm.tickUpper,
-                -int256(farm.liquidity).toInt128(),
-                tick
-            );
-            incentive.totalLiquidity -= farm.liquidity;
+            unchecked {
+                _updatePositionInVirtualPool(
+                    address(virtualPool),
+                    uint32(block.timestamp),
+                    farm.tickLower,
+                    farm.tickUpper,
+                    -int256(uint256(farm.liquidity)).toInt128(),
+                    tick
+                );
+                incentive.totalLiquidity -= farm.liquidity;
+            }
         }
 
         delete farms[tokenId][incentiveId];
@@ -278,29 +287,31 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];
-        require(farm.liquidity != 0, 'farm does not exist');
+        if (farm.liquidity == 0) revert farmDoesNotExist();
 
         Incentive storage incentive = incentives[incentiveId];
 
         IAlgebraLimitVirtualPool virtualPool = IAlgebraLimitVirtualPool(incentive.virtualPoolAddress);
         uint160 secondsPerLiquidityInsideX128 = virtualPool.getInnerSecondsPerLiquidity(farm.tickLower, farm.tickUpper);
 
-        uint256 activeTime = key.endTime - virtualPool.timeOutside() - key.startTime;
+        unchecked {
+            uint256 activeTime = key.endTime - virtualPool.timeOutside() - key.startTime;
 
-        uint224 _totalLiquidity = activeTime > 0 ? 0 : incentive.totalLiquidity; // used only if no one was active in incentive
-        reward = RewardMath.computeRewardAmount(
-            incentive.totalReward,
-            activeTime,
-            farm.liquidity,
-            _totalLiquidity,
-            secondsPerLiquidityInsideX128
-        );
-        bonusReward = RewardMath.computeRewardAmount(
-            incentive.bonusReward,
-            activeTime,
-            farm.liquidity,
-            _totalLiquidity,
-            secondsPerLiquidityInsideX128
-        );
+            uint224 _totalLiquidity = activeTime > 0 ? 0 : incentive.totalLiquidity; // used only if no one was active in incentive
+            reward = RewardMath.computeRewardAmount(
+                incentive.totalReward,
+                activeTime,
+                farm.liquidity,
+                _totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+            bonusReward = RewardMath.computeRewardAmount(
+                incentive.bonusReward,
+                activeTime,
+                farm.liquidity,
+                _totalLiquidity,
+                secondsPerLiquidityInsideX128
+            );
+        }
     }
 }

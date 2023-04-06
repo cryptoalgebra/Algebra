@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Contract, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20, TestIncentiveId } from '../../typechain'
+import { TestERC20, TestIncentiveId, AlgebraEternalFarming, AlgebraLimitFarming } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
@@ -225,9 +225,7 @@ describe('unit/EternalFarms', () => {
           amount1Min: 0,
           deadline: (await blockTimestamp()) + 1_000,
         })
-        await expect(subject(tokenId2, lpUser0)).to.be.revertedWith(
-          'cannot farm token with 0 liquidity'
-        )
+        await expect(subject(tokenId2, lpUser0)).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'zeroLiquidity')
       })
 
       it('token id is for a different pool than the incentive', async () => {
@@ -260,7 +258,7 @@ describe('unit/EternalFarms', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('invalid pool for token')
+        ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'invalidPool')
       })
 
       it('incentive key does not exist', async () => {
@@ -280,7 +278,7 @@ describe('unit/EternalFarms', () => {
             0,
             ETERNAL_FARMING
           )
-        ).to.be.revertedWith('non-existent incentive')
+        ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'incentiveNotExist')
       })
 
       it('create second eternal farming for one pool', async () => {
@@ -297,7 +295,7 @@ describe('unit/EternalFarms', () => {
           bonusRewardRate: BigNumber.from('50')
         }
   
-        await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWith('Farming already exists')
+        await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'farmingAlreadyExists')
 
       }) 
     })
@@ -564,9 +562,7 @@ describe('unit/EternalFarms', () => {
     it('reverts if farm does not exist', async () => {
       // await Time.setAndMine(timestamps.endTime + 1)
 
-      await expect(context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWith(
-        'farm does not exist'
-      )
+      await expect(context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, '100')).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'farmDoesNotExist')
     })
   })
 
@@ -1171,7 +1167,7 @@ describe('unit/EternalFarms', () => {
         pool: context.pool12,
       }
       
-      await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 0)).to.be.revertedWith("non-existent incentive")      
+      await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 0)).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'incentiveNotExist')    
     })
 
     it('#setRates', async () => {

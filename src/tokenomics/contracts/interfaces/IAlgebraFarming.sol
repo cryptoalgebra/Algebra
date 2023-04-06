@@ -1,26 +1,34 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import './INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import './IIncentiveKey.sol';
+import '../base/IncentiveKey.sol';
 
 /// @title Algebra Farming Interface
 /// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming is IIncentiveKey {
+interface IAlgebraFarming {
+    error farmingAlreadyExists();
+    error farmDoesNotExist();
+    error tokenAlreadyFarmed();
+    error incentiveNotExist();
+    error incentiveStopped();
+    error anotherFarmingIsActive();
+
+    error multiplierIsTooHigh();
+    error multiplierIsTooLow();
+    error minimalPositionWidthTooWide();
+
+    error positionIsTooNarrow();
+    error zeroLiquidity();
+    error invalidPool();
+
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
-
-    /// @notice The pool deployer
-    function deployer() external returns (IAlgebraPoolDeployer);
-
-    /// @notice Updates the incentive maker
-    /// @param _incentiveMaker The new incentive maker address
-    function setIncentiveMaker(address _incentiveMaker) external;
 
     struct Tiers {
         // amount of token to reach the tier
@@ -117,20 +125,8 @@ interface IAlgebraFarming is IIncentiveKey {
     ) external returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
-    /// @param rewardToken The token being distributed as a reward
-    /// @param bonusRewardToken The token being distributed as a bonus reward
-    /// @param pool The Algebra pool
-    /// @param virtualPool The detached virtual pool address
-    /// @param startTime The time when the incentive program begins
-    /// @param endTime The time when rewards stop accruing
-    event IncentiveDeactivated(
-        IERC20Minimal indexed rewardToken,
-        IERC20Minimal indexed bonusRewardToken,
-        IAlgebraPool indexed pool,
-        address virtualPool,
-        uint256 startTime,
-        uint256 endTime
-    );
+    /// @param incentiveId The stopped incentive
+    event IncentiveDeactivated(bytes32 indexed incentiveId);
 
     /// @notice Event emitted when a Algebra LP token has been farmd
     /// @param tokenId The unique identifier of an Algebra LP token
