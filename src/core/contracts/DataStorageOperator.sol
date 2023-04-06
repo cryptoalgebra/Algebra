@@ -35,7 +35,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function initialize(uint32 time, int24 tick) external override onlyPool {
+  function initialize(uint32 time, int24 tick) external override {
     return timepoints.initialize(time, tick);
   }
 
