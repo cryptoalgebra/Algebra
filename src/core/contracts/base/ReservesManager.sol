@@ -70,8 +70,10 @@ abstract contract ReservesManager is AlgebraPoolBase {
           _cfPending0 > type(uint128).max ||
           _cfPending1 > type(uint128).max
         ) {
-          if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
-          if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
+          
+          // _patched_:
+          // if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
+          // if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
           communityFeeLastTimestamp = currentTimestamp;
           (deltaR0, deltaR1) = (deltaR0 - _cfPending0.toInt256(), deltaR1 - _cfPending1.toInt256());
           (_cfPending0, _cfPending1) = (0, 0);

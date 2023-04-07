@@ -30,6 +30,8 @@ interface IAlgebraPoolActions {
     int24 bottomTick,
     int24 topTick,
     uint128 amount,
+    uint256 receivedAmount0,
+    uint256 receivedAmount1,
     bytes calldata data
   ) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual);
 

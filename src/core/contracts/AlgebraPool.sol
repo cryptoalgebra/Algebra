@@ -60,6 +60,8 @@ contract AlgebraPool is
     int24 bottomTick,
     int24 topTick,
     uint128 liquidityDesired,
+    uint256 receivedAmount0,
+    uint256 receivedAmount1,
     bytes calldata data
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
@@ -73,11 +75,12 @@ contract AlgebraPool is
       (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
     }
 
-    (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
-    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+    // _patched_:
+    // (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
+    // IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
 
-    receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
-    receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
+    // receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
+    // receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
 
     // scope to prevent "stack too deep"
     {
@@ -102,17 +105,17 @@ contract AlgebraPool is
       }
     }
 
-    unchecked {
-      if (amount0 > 0) {
-        if (receivedAmount0 > amount0) SafeTransfer.safeTransfer(token0, sender, receivedAmount0 - amount0);
-        else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
-      }
+    // unchecked {
+    //   if (amount0 > 0) {
+    //     if (receivedAmount0 > amount0) SafeTransfer.safeTransfer(token0, sender, receivedAmount0 - amount0);
+    //     else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
+    //   }
 
-      if (amount1 > 0) {
-        if (receivedAmount1 > amount1) SafeTransfer.safeTransfer(token1, sender, receivedAmount1 - amount1);
-        else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
-      }
-    }
+    //   if (amount1 > 0) {
+    //     if (receivedAmount1 > amount1) SafeTransfer.safeTransfer(token1, sender, receivedAmount1 - amount1);
+    //     else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
+    //   }
+    // }
 
     _changeReserves(int256(amount0), int256(amount1), 0, 0);
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
@@ -184,22 +187,22 @@ contract AlgebraPool is
     uint128 currentLiquidity;
     uint256 communityFee;
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-    (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-    if (zeroToOne) {
-      unchecked {
-        if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
-      }
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-      if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
-      _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
-    } else {
-      unchecked {
-        if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
-      }
-      _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
-      if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
-      _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
-    }
+    // (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
+    // if (zeroToOne) {
+    //   unchecked {
+    //     if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
+    //   }
+    //   _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+    //   if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
+    //   _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
+    // } else {
+    //   unchecked {
+    //     if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
+    //   }
+    //   _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+    //   if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
+    //   _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
+    // }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
   }
