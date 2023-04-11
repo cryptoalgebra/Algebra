@@ -75,21 +75,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     }
 
     /// @inheritdoc IPositionFollower
-    function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
-        require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
-        Deposit storage deposit = deposits[tokenId];
-
-        bytes32 _eternalIncentiveId = deposit.eternalIncentiveId;
-        if (_eternalIncentiveId != bytes32(0)) {
-            address tokenOwner = nonfungiblePositionManager.ownerOf(tokenId);
-            (, , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
-
-            _reenterToFarming(_eternalIncentiveId, tokenId, tokenOwner, liquidity);
-        }
-    }
-
-    /// @inheritdoc IPositionFollower
-    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
+    function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external override {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 

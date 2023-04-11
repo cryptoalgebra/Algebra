@@ -302,7 +302,7 @@ contract NonfungiblePositionManager is
         }
 
         if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity) {
+            try IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, int256(actualLiquidity)) {
                 // do nothing
             } catch {
                 emit FarmingFailed(params.tokenId);
@@ -361,7 +361,9 @@ contract NonfungiblePositionManager is
         }
 
         if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).decreaseLiquidity(params.tokenId, params.liquidity) {
+            try
+                IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, -int256(uint256(params.liquidity)))
+            {
                 // do nothing
             } catch {
                 emit FarmingFailed(params.tokenId);
