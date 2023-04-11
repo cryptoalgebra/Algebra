@@ -39,22 +39,20 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
   }
 
   function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
-    _increaseCumulative(uint32(block.timestamp));
-    if (token0Amount | token1Amount != 0) {
-      (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
-      _rewardReserve0 = _rewardReserve0 + token0Amount;
-      _rewardReserve1 = _rewardReserve1 + token1Amount;
-      (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
-    }
+    _applyRewardsDelta(true, token0Amount, token1Amount);
   }
 
   // @inheritdoc IAlgebraEternalVirtualPool
   function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
+    _applyRewardsDelta(false, token0Amount, token1Amount);
+  }
+
+  function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
     _increaseCumulative(uint32(block.timestamp));
-    if (token0Amount | token1Amount != 0) {
+    if (token0Delta | token1Delta != 0) {
       (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
-      _rewardReserve0 = _rewardReserve0 - token0Amount;
-      _rewardReserve1 = _rewardReserve1 - token1Amount;
+      _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
+      _rewardReserve1 = add ? _rewardReserve1 + token1Delta : _rewardReserve1 - token1Delta;
       (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
     }
   }
@@ -72,28 +70,19 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
   ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
     unchecked {
       uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
-
-      uint256 _totalRewardGrowth0 = totalRewardGrowth0;
-      uint256 _totalRewardGrowth1 = totalRewardGrowth1;
+      (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
 
       if (timeDelta > 0) {
         uint128 _currentLiquidity = currentLiquidity;
         if (_currentLiquidity > 0) {
-          (uint256 _rewardRate0, uint256 _rewardRate1) = (rewardRate0, rewardRate1);
-          uint256 _rewardReserve0 = _rewardRate0 > 0 ? rewardReserve0 : 0;
-          uint256 _rewardReserve1 = _rewardRate1 > 0 ? rewardReserve1 : 0;
+          (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
+          (uint256 _rewardReserve0, uint256 _rewardReserve1) = (rewardReserve0, rewardReserve1);
 
-          if (_rewardReserve0 > 0) {
-            uint256 reward0 = _rewardRate0 * timeDelta;
-            if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-            _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
-          }
+          if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
+          if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
 
-          if (_rewardReserve1 > 0) {
-            uint256 reward1 = _rewardRate1 * timeDelta;
-            if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-            _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
-          }
+          if (reward0 > 0) _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+          if (reward1 > 0) _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
         }
       }
 
@@ -108,29 +97,29 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
   function _increaseCumulative(uint32 currentTimestamp) internal override returns (bool) {
     unchecked {
       uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
-      uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
-
       if (timeDelta == 0) return true; // only once per block
 
+      uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
       if (_currentLiquidity > 0) {
-        (uint256 _rewardRate0, uint256 _rewardRate1) = (rewardRate0, rewardRate1);
+        (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
         (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
 
-        if (_rewardRate0 > 0) {
-          uint256 reward0 = _rewardRate0 * timeDelta;
-          if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-          _rewardReserve0 = uint128(_rewardReserve0 - reward0);
-          if (reward0 > 0) totalRewardGrowth0 = totalRewardGrowth0 + FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
-        }
+        if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
+        if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
 
-        if (_rewardRate1 > 0) {
-          uint256 reward1 = _rewardRate1 * timeDelta;
-          if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
-          _rewardReserve1 = uint128(_rewardReserve1 - reward1);
-          if (reward1 > 0) totalRewardGrowth1 = totalRewardGrowth1 + FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
-        }
+        if (reward0 | reward1 != 0) {
+          if (reward0 > 0) {
+            _rewardReserve0 = uint128(_rewardReserve0 - reward0);
+            totalRewardGrowth0 = totalRewardGrowth0 + FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+          }
 
-        (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+          if (reward1 > 0) {
+            _rewardReserve1 = uint128(_rewardReserve1 - reward1);
+            totalRewardGrowth1 = totalRewardGrowth1 + FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+          }
+
+          (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+        }
       }
     }
 

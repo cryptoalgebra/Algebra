@@ -45,9 +45,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
     Deposit storage _deposit = deposits[tokenId];
     bytes32 incentiveId = IncentiveId.compute(key);
-    if (address(incentiveKeys[incentiveId].pool) == address(0)) {
-      incentiveKeys[incentiveId] = key;
-    }
+    if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
     IAlgebraFarming _farming = IAlgebraFarming(eternalFarming);
     require(_deposit.eternalIncentiveId == bytes32(0), 'token already farmed');
@@ -128,20 +126,16 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter
   function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external override returns (uint256 reward) {
     unchecked {
-      if (amountRequested != 0) {
-        reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
-      }
+      if (amountRequested != 0) reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
     }
   }
 
   /// @inheritdoc IFarmingCenter
   function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
     require(msg.sender == address(eternalFarming), 'only farming can call this');
-
-    VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
     pool.setIncentive(newVirtualPool);
 
-    virtualPools.eternalVirtualPool = newVirtualPool;
+    _virtualPoolAddresses[address(pool)].eternalVirtualPool = newVirtualPool;
   }
 
   function virtualPoolAddresses(address pool) external view override returns (address eternalVP) {

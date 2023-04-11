@@ -120,27 +120,20 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     uint128 bonusReward,
     Incentive storage incentive
   ) internal returns (uint128 receivedReward, uint128 receivedBonusReward) {
-    if (reward > 0) {
-      IERC20Minimal rewardToken = key.rewardToken;
-      uint256 balanceBefore = _balanceOf(rewardToken);
-      TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
-      uint256 balanceAfter = _balanceOf(rewardToken);
-      require(balanceAfter > balanceBefore);
-      unchecked {
-        receivedReward = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
-      }
-      incentive.totalReward = incentive.totalReward + receivedReward;
-    }
-    if (bonusReward > 0) {
-      IERC20Minimal bonusRewardToken = key.bonusRewardToken;
-      uint256 balanceBefore = _balanceOf(bonusRewardToken);
-      TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
-      uint256 balanceAfter = _balanceOf(bonusRewardToken);
-      require(balanceAfter > balanceBefore);
-      unchecked {
-        receivedBonusReward = uint128(balanceAfter - balanceBefore);
-      }
-      incentive.bonusReward = incentive.bonusReward + receivedBonusReward;
+    if (reward > 0) receivedReward = _receiveToken(key.rewardToken, reward);
+    if (bonusReward > 0) receivedBonusReward = _receiveToken(key.bonusRewardToken, bonusReward);
+
+    incentive.totalReward = incentive.totalReward + receivedReward;
+    incentive.bonusReward = incentive.bonusReward + receivedBonusReward;
+  }
+
+  function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128 received) {
+    uint256 balanceBefore = _balanceOf(token);
+    TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
+    uint256 balanceAfter = _balanceOf(token);
+    require(balanceAfter > balanceBefore);
+    unchecked {
+      received = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
     }
   }
 
@@ -154,15 +147,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     _connectPoolToVirtualPool(key.pool, virtualPool);
 
     incentiveId = IncentiveId.compute(key);
-
     Incentive storage newIncentive = incentives[incentiveId];
 
     (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
     unchecked {
       if (int256(uint256(minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK))) revert minimalPositionWidthTooWide();
     }
-    newIncentive.virtualPoolAddress = virtualPool;
-    newIncentive.minimalPositionWidth = minimalPositionWidth;
+    (newIncentive.virtualPoolAddress, newIncentive.minimalPositionWidth) = (virtualPool, minimalPositionWidth);
   }
 
   function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
@@ -175,7 +166,6 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     incentive.deactivated = true;
 
     _connectPoolToVirtualPool(key.pool, address(0));
-
     emit IncentiveDeactivated(incentiveId);
   }
 
@@ -208,14 +198,11 @@ abstract contract AlgebraFarming is IAlgebraFarming {
   function _claimReward(IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) internal returns (uint256 reward) {
     reward = rewards[from][rewardToken];
 
-    if (amountRequested == 0 || amountRequested > reward) {
-      amountRequested = reward;
-    }
+    if (amountRequested == 0 || amountRequested > reward) amountRequested = reward;
     unchecked {
       rewards[from][rewardToken] = reward - amountRequested;
     }
     TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
-
     emit RewardClaimed(to, amountRequested, address(rewardToken), from);
   }
 
