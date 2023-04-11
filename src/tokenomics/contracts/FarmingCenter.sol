@@ -8,7 +8,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
-import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
 import './libraries/IncentiveId.sol';
 

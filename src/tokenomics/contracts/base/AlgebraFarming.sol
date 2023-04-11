@@ -14,7 +14,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
