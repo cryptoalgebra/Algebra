@@ -11,9 +11,9 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 /// @param startTime The time when the incentive program begins
 /// @param endTime The time when rewards stop accruing
 struct IncentiveKey {
-    IERC20Minimal rewardToken;
-    IERC20Minimal bonusRewardToken;
-    IAlgebraPool pool;
-    uint256 startTime;
-    uint256 endTime;
+  IERC20Minimal rewardToken;
+  IERC20Minimal bonusRewardToken;
+  IAlgebraPool pool;
+  uint256 startTime;
+  uint256 endTime;
 }

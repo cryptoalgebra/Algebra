@@ -1,31 +1,20 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
-import {
-  expect,
-  blockTimestamp,
-  BN,
-  BNe18,
-  snapshotGasCost,
-  ActorFixture,
-  erc20Wrap,
-  makeTimestamps,
-  days,
-  ZERO_ADDRESS
-} from '../shared'
-import {  provider } from '../shared/provider'
+import { expect, blockTimestamp, BN, BNe18, snapshotGasCost, ActorFixture, erc20Wrap, makeTimestamps, days, ZERO_ADDRESS } from '../shared'
+import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper } from '../helpers'
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
-import { Contract, Wallet} from 'ethers'
-import { AlgebraLimitFarming } from '../../typechain';
+import { Contract, Wallet } from 'ethers'
+import { AlgebraLimitFarming } from '../../typechain'
 
-const LIMIT_FARMING = true;
-const ETERNAL_FARMING = false;
+const LIMIT_FARMING = true
+const ETERNAL_FARMING = false
 
 describe('unit/Incentives', async () => {
-  let actors: ActorFixture;
+  let actors: ActorFixture
   let lpUser0: Wallet
   let incentiveCreator: Wallet
   const totalReward = BNe18(100)
@@ -38,10 +27,10 @@ describe('unit/Incentives', async () => {
   let timestamps: ContractParams.Timestamps
 
   before('loader', async () => {
-    const wallets = (await ethers.getSigners() as any) as Wallet[];
+    const wallets = (await ethers.getSigners()) as any as Wallet[]
     actors = new ActorFixture(wallets, provider)
-    lpUser0 = actors.lpUser0();
-    incentiveCreator = actors.incentiveCreator();
+    lpUser0 = actors.lpUser0()
+    incentiveCreator = actors.incentiveCreator()
   })
 
   beforeEach('create fixture loader', async () => {
@@ -77,7 +66,6 @@ describe('unit/Incentives', async () => {
             pool: context.pool01,
             startTime: params.startTime || startTime,
             endTime: params.endTime || endTime,
-            
           },
           {
             tokenAmountForTier1: 0,
@@ -85,14 +73,14 @@ describe('unit/Incentives', async () => {
             tokenAmountForTier3: 0,
             tier1Multiplier: 10000,
             tier2Multiplier: 10000,
-            tier3Multiplier: 10000
+            tier3Multiplier: 10000,
           },
           {
             reward: params.reward || 100,
             bonusReward: params.bonusReward || 100,
             minimalPositionWidth: 0,
             multiplierToken: params.rewardToken || context.rewardToken.address,
-            enterStartTime:  0,
+            enterStartTime: 0,
           }
         )
       }
@@ -124,14 +112,14 @@ describe('unit/Incentives', async () => {
       })
 
       it('does not override the existing numberOfFarms', async () => {
-        const testTimestamps = makeTimestamps(await blockTimestamp() + 100)
+        const testTimestamps = makeTimestamps((await blockTimestamp()) + 100)
         const rewardToken = context.token0
         const bonusRewardToken = context.token1
         const incentiveKey = {
           ...testTimestamps,
           rewardToken: rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
-          
+
           pool: context.pool01,
         }
         const tiers = {
@@ -147,12 +135,12 @@ describe('unit/Incentives', async () => {
           bonusReward: BN(100),
           minimalPositionWidth: 0,
           multiplierToken: context.rewardToken.address,
-          enterStartTime:  0,
-        } 
+          enterStartTime: 0,
+        }
 
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), rewardToken, BN(100), context.farming.address)
         await erc20Helper.ensureBalancesAndApprovals(actors.incentiveCreator(), bonusRewardToken, BN(100), context.farming.address)
-        await context.farming.connect(actors.incentiveCreator()).createLimitFarming(incentiveKey,tiers, incentiveParams)
+        await context.farming.connect(actors.incentiveCreator()).createLimitFarming(incentiveKey, tiers, incentiveParams)
         const incentiveId = await context.testIncentiveId.compute(incentiveKey)
         expect(await rewardToken.balanceOf(context.farming.address)).to.eq(100)
         const { tokenId } = await helpers.mintFlow({
@@ -164,23 +152,17 @@ describe('unit/Incentives', async () => {
           tokenId,
         })
 
-        let { numberOfFarms } = await context.farmingCenter.deposits(
-          tokenId
-        )
+        let { numberOfFarms } = await context.farmingCenter.deposits(tokenId)
         expect(numberOfFarms).to.equal(0)
 
         await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
-        await context.farmingCenter
-          .connect(actors.lpUser0())
-          .multicall([
-            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
-          ])
-        ;({ numberOfFarms } = await context.farmingCenter
-          .connect(actors.lpUser0())
-          .deposits(tokenId))
+        await context.farmingCenter.connect(actors.lpUser0()).multicall([
+          //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
+          context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
+        ])
+        ;({ numberOfFarms } = await context.farmingCenter.connect(actors.lpUser0()).deposits(tokenId))
         expect(numberOfFarms).to.equal(1)
       })
 
@@ -194,7 +176,6 @@ describe('unit/Incentives', async () => {
       let incentiveKey: ContractParams.IncentiveKey
       let virtualPool: Contract
 
-
       beforeEach(async () => {
         /** We will be doing a lot of time-testing here, so leave some room between
           and when the incentive starts */
@@ -207,89 +188,85 @@ describe('unit/Incentives', async () => {
           bonusReward,
           poolAddress: context.poolObj.address,
           ...timestamps,
-          eternal: false
+          eternal: false,
         }
 
         incentiveKey = {
           ...timestamps,
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
-          
+
           pool: context.pool01,
         }
 
         virtualPool = await (await helpers.createIncentiveFlow(incentiveArgs)).virtualPool
-
       })
 
       it('deactivate incentive', async () => {
-        
         let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
         await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
         let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
         expect(activeIncentiveBefore).to.equal(virtualPool.address)
-        expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
-
+        expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS)
       })
     })
-    
+
     describe('increase/decrease rewards', () => {
-        let incentiveArgs: HelperTypes.CreateIncentive.Args
-        let incentiveKey: ContractParams.IncentiveKey
-        let incentiveId: string
-  
+      let incentiveArgs: HelperTypes.CreateIncentive.Args
+      let incentiveKey: ContractParams.IncentiveKey
+      let incentiveId: string
+
       beforeEach(async () => {
-          /** We will be doing a lot of time-testing here, so leave some room between
+        /** We will be doing a lot of time-testing here, so leave some room between
             and when the incentive starts */
-          timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
-  
-          incentiveArgs = {
-            rewardToken: context.rewardToken,
-            bonusRewardToken: context.bonusRewardToken,
-            totalReward,
-            bonusReward,
-            poolAddress: context.poolObj.address,
-            ...timestamps,
-            eternal: false
-          }
-  
-          incentiveKey = {
-            ...timestamps,
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
-            
-            pool: context.pool01,
-          }
-  
-          incentiveId = await context.testIncentiveId.compute(incentiveKey)
-  
-          await helpers.createIncentiveWithMultiplierFlow(incentiveArgs)
-  
+        timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+        incentiveArgs = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          eternal: false,
+        }
+
+        incentiveKey = {
+          ...timestamps,
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+
+          pool: context.pool01,
+        }
+
+        incentiveId = await context.testIncentiveId.compute(incentiveKey)
+
+        await helpers.createIncentiveWithMultiplierFlow(incentiveArgs)
       })
-      
+
       it('decrease rewards', async () => {
         let amount = BNe18(10)
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
-      
+
         let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        
+
         let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
-        
+
         expect(rewardAmount).to.eq(BNe18(90))
         expect(bonusRewardAmount).to.eq(BNe18(90))
       })
 
       it('can decrease rewards after end if 0 liquidity', async () => {
-        await Time.setAndMine(incentiveKey.endTime + 100);
+        await Time.setAndMine(incentiveKey.endTime + 100)
 
         let amount = BNe18(10)
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
-      
+
         let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
         let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
-        
+
         expect(rewardAmount).to.eq(BNe18(90))
         expect(bonusRewardAmount).to.eq(BNe18(90))
       })
@@ -307,28 +284,28 @@ describe('unit/Incentives', async () => {
         //await erc20Helper.ensureBalancesAndApprovals(actors.lpUser0(), incentiveKey.rewardToken, BN(50), context.farming.address)
 
         //await Time.set(testTimestamps.startTime)
-        await context.farmingCenter
-          .connect(actors.lpUser0())
-          .multicall([
-            //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
-            context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
-          ])
+        await context.farmingCenter.connect(actors.lpUser0()).multicall([
+          //context.tokenomics.interface.encodeFunctionData('createIncentive', [incentiveKey, 50]), TODO
+          context.farmingCenter.interface.encodeFunctionData('enterFarming', [incentiveKey, tokenId, 0, LIMIT_FARMING]),
+        ])
 
-        await Time.setAndMine(incentiveKey.endTime + 100);
-        
+        await Time.setAndMine(incentiveKey.endTime + 100)
+
         let amount = BNe18(10)
-        await expect(context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)).to.be.revertedWith('incentive finished');
+        await expect(context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)).to.be.revertedWith(
+          'incentive finished'
+        )
       })
 
       it('decrease rewards completely', async () => {
-        let rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, rewardAmount.mul(2), bonusRewardAmount.mul(2))
-      
-        rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
-        
+
+        rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+
         expect(rewardAmount).to.eq(1)
         expect(bonusRewardAmount).to.eq(0)
       })
@@ -360,11 +337,12 @@ describe('unit/Incentives', async () => {
           BNe18(10),
           context.farming.address
         )
-        
-        await Time.setAndMine(incentiveKey.endTime + 100);
-        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, amount, amount)).to.be.revertedWith('cannot add rewards after endTime');
-      })
 
+        await Time.setAndMine(incentiveKey.endTime + 100)
+        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, amount, amount)).to.be.revertedWith(
+          'cannot add rewards after endTime'
+        )
+      })
 
       it('increase rewards with 0 amount do not emit event', async () => {
         let amount = BNe18(10)
@@ -378,14 +356,13 @@ describe('unit/Incentives', async () => {
         let rewardAmountBefore = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
         let bonusRewardAmountBefore = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
-        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, 0, 0)).to.not.emit(context.farming, 'RewardsAdded');
+        await expect(context.farming.connect(incentiveCreator).addRewards(incentiveKey, 0, 0)).to.not.emit(context.farming, 'RewardsAdded')
 
         let rewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
         let bonusRewardAmount = (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         expect(rewardAmount).to.eq(rewardAmountBefore)
         expect(bonusRewardAmount).to.eq(bonusRewardAmountBefore)
       })
-
     })
 
     describe('fails when', () => {
@@ -401,36 +378,27 @@ describe('unit/Incentives', async () => {
 
           expect(now).to.be.lessThan(params.endTime, 'test setup: after end time')
 
-          await expect(subject(params)).to.be.revertedWith(
-            'start time too low'
-          )
+          await expect(subject(params)).to.be.revertedWith('start time too low')
         })
 
         it('end time is before start time', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime - 10
-          await expect(subject(params)).to.be.revertedWith(
-            'start must be before end time'
-          )
+          await expect(subject(params)).to.be.revertedWith('start must be before end time')
         })
 
         it('start time is too far into the future', async () => {
           const params = makeTimestamps((await blockTimestamp()) + 2 ** 32 + 1)
-          await expect(subject(params)).to.be.revertedWith(
-            'start time too far into future'
-          )
+          await expect(subject(params)).to.be.revertedWith('start time too far into future')
         })
 
         it('end time is within valid duration of start time', async () => {
           const params = makeTimestamps(await blockTimestamp())
           params.endTime = params.startTime + 2 ** 32 + 1
-          await expect(subject(params)).to.be.revertedWith(
-            'incentive duration is too long'
-          )
+          await expect(subject(params)).to.be.revertedWith('incentive duration is too long')
         })
 
         it('creates an second incentive without swap after first incentive end', async () => {
-
           const params = makeTimestamps(await blockTimestamp())
 
           await subject({
@@ -440,8 +408,8 @@ describe('unit/Incentives', async () => {
 
           await Time.set(params.startTime + days(1))
 
-          timestamps = makeTimestamps(await blockTimestamp() + 100)
-  
+          timestamps = makeTimestamps((await blockTimestamp()) + 100)
+
           let incentiveArgs = {
             rewardToken: context.rewardToken,
             bonusRewardToken: context.bonusRewardToken,
@@ -449,10 +417,13 @@ describe('unit/Incentives', async () => {
             bonusReward,
             poolAddress: context.poolObj.address,
             ...timestamps,
-            eternal: false
+            eternal: false,
           }
-  
-          await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'farmingAlreadyExists')
+
+          await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWithCustomError(
+            context.farming as AlgebraLimitFarming,
+            'farmingAlreadyExists'
+          )
         })
       })
 
@@ -466,7 +437,7 @@ describe('unit/Incentives', async () => {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,
                 pool: context.pool01,
-                
+
                 ...makeTimestamps(now, 1_000),
               },
               {
@@ -482,9 +453,8 @@ describe('unit/Incentives', async () => {
                 bonusReward: BNe18(0),
                 minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
-                enterStartTime:  0,
+                enterStartTime: 0,
               }
-
             )
           ).to.be.revertedWith('reward must be positive')
         })
@@ -507,7 +477,7 @@ describe('unit/Incentives', async () => {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,
                 pool: context.pool01,
-                
+
                 ...makeTimestamps(now, 1_000),
               },
               {
@@ -523,9 +493,8 @@ describe('unit/Incentives', async () => {
                 bonusReward: BNe18(1),
                 minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
-                enterStartTime:  0,
+                enterStartTime: 0,
               }
-
             )
           ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'multiplierIsTooLow')
         })
@@ -546,7 +515,7 @@ describe('unit/Incentives', async () => {
                 rewardToken: context.rewardToken.address,
                 bonusRewardToken: context.bonusRewardToken.address,
                 pool: context.pool01,
-                
+
                 ...makeTimestamps(now, 1_000),
               },
               {
@@ -562,14 +531,12 @@ describe('unit/Incentives', async () => {
                 bonusReward: BNe18(1),
                 minimalPositionWidth: 0,
                 multiplierToken: context.rewardToken.address,
-                enterStartTime:  0,
+                enterStartTime: 0,
               }
-
             )
           ).to.be.revertedWithCustomError(context.farming as AlgebraLimitFarming, 'multiplierIsTooHigh')
         })
       })
-
     })
   })
 
@@ -593,7 +560,7 @@ describe('unit/Incentives', async () => {
   //         pool: context.pool01,
   //         startTime: params.startTime || timestamps.startTime,
   //         endTime: params.endTime || timestamps.endTime,
-  //         
+  //
   //       })
   //     }
   //   })

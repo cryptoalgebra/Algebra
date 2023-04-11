@@ -15,7 +15,7 @@ export module HelperTypes {
       totalReward: BigNumber
       bonusReward: BigNumber
       enterStartTime?: BigNumber
-      
+
       algbAmountForTier1?: BigNumber
       algbAmountForTier2?: BigNumber
       algbAmountForTier3?: BigNumber
@@ -24,8 +24,8 @@ export module HelperTypes {
       tier3Multiplier?: BigNumber
       multiplierToken?: string
 
-      eternal? : boolean
-      rewardRate?: BigNumber,
+      eternal?: boolean
+      rewardRate?: BigNumber
       bonusRewardRate?: BigNumber
       minimalPositionWidth?: number
     }
@@ -39,7 +39,6 @@ export module HelperTypes {
       endTime: number
       virtualPool: Contract
     }
-
 
     export type Command = CommandFunction<Args, Result>
   }

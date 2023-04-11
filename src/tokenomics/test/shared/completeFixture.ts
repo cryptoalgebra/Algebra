@@ -18,7 +18,7 @@ import {
   abi as NFT_ABI,
   bytecode as NFT_BYTECODE,
 } from '@cryptoalgebra/periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
-type Fixture<T> = () => Promise<T>;
+type Fixture<T> = () => Promise<T>
 
 const completeFixture: Fixture<{
   wnative: IWNativeToken
@@ -43,16 +43,14 @@ const completeFixture: Fixture<{
       NFTDescriptor: nftDescriptorLibrary.address,
     },
   })
-  const nftDescriptor = (await positionDescriptorFactory.deploy(
-    tokens[0].address
-  )) as NonfungibleTokenPositionDescriptor
+  const nftDescriptor = (await positionDescriptorFactory.deploy(tokens[0].address)) as NonfungibleTokenPositionDescriptor
 
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager')
   const nft = (await positionManagerFactory.deploy(
     factory.address,
     wnative.address,
     nftDescriptor.address,
-      await factory.poolDeployer()
+    await factory.poolDeployer()
   )) as MockTimeNonfungiblePositionManager
 
   tokens.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1))

@@ -21,9 +21,9 @@ import {
   AlgebraEternalFarming,
   IAlgebraPool,
   TestIncentiveId,
-  FarmingCenter
+  FarmingCenter,
 } from '../../typechain'
-import abi from '../../artifacts/contracts/farmings/limitFarming/LimitVirtualPool.sol/LimitVirtualPool.json';
+import abi from '../../artifacts/contracts/farmings/limitFarming/LimitVirtualPool.sol/LimitVirtualPool.json'
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition } from '../shared/fixtures'
@@ -32,8 +32,8 @@ import { ethers } from 'hardhat'
 import { ContractParams } from '../../types/contractParams'
 import { TestContext } from '../types'
 
-const LIMIT_FARMING = true;
-const ETERNAL_FARMING = false;
+const LIMIT_FARMING = true
+const ETERNAL_FARMING = false
 
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
@@ -66,7 +66,7 @@ export class HelperCommands {
     pool,
     actors,
     testIncentiveId,
-    farmingCenter
+    farmingCenter,
   }: {
     provider: any
     farming: AlgebraLimitFarming
@@ -99,7 +99,7 @@ export class HelperCommands {
       eternalFarming: context.eternalFarming,
       pool: context.poolObj,
       testIncentiveId: context.testIncentiveId,
-      farmingCenter: context.farmingCenter
+      farmingCenter: context.farmingCenter,
     })
   }
 
@@ -129,9 +129,8 @@ export class HelperCommands {
       await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward)
     }
 
-
-    let txResult;
-    let virtualPoolAddress;
+    let txResult
+    let virtualPoolAddress
     if (params.eternal) {
       await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
@@ -142,15 +141,14 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          
         },
-        { 
+        {
           reward: params.totalReward,
           bonusReward: params.bonusReward,
           rewardRate: params.rewardRate || 10,
           bonusRewardRate: params.bonusRewardRate || 10,
           minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address
+          multiplierToken: params.rewardToken.address,
         },
         {
           tokenAmountForTier1: 0,
@@ -159,11 +157,10 @@ export class HelperCommands {
           tier1Multiplier: 10000,
           tier2Multiplier: 10000,
           tier3Multiplier: 10000,
-        },
-        
+        }
       )
-       // @ts-ignore
-       virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+      // @ts-ignore
+      virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
@@ -174,7 +171,6 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          
         },
         {
           tokenAmountForTier1: 0,
@@ -198,17 +194,15 @@ export class HelperCommands {
         bonusRewardToken: params.bonusRewardToken.address,
         pool: params.poolAddress,
         ...times,
-        
       })
       virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
-
     }
-    
+
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       ...times,
-      
-      virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0())
+
+      virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0()),
     }
   }
 
@@ -232,9 +226,8 @@ export class HelperCommands {
       await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward)
     }
 
-
-    let txResult;
-    let virtualPoolAddress;
+    let txResult
+    let virtualPoolAddress
     if (params.eternal) {
       await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
@@ -245,15 +238,14 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          
         },
-        { 
+        {
           reward: params.totalReward,
           bonusReward: params.bonusReward,
           rewardRate: params.rewardRate || 10,
           bonusRewardRate: params.bonusRewardRate || 10,
           minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address
+          multiplierToken: params.rewardToken.address,
         },
         {
           tokenAmountForTier1: 1000,
@@ -262,21 +254,19 @@ export class HelperCommands {
           tier1Multiplier: 10000,
           tier2Multiplier: 10000,
           tier3Multiplier: 10000,
-        },
+        }
       )
-       // @ts-ignore
-       const incentiveId = await testIncentiveId.compute({
+      // @ts-ignore
+      const incentiveId = await testIncentiveId.compute({
         rewardToken: params.rewardToken.address,
         bonusRewardToken: params.bonusRewardToken.address,
         pool: params.poolAddress,
         ...times,
-        
       })
-      let txres = await txResult.wait(1);
+      let txres = await txResult.wait(1)
       if (txres.events && txres.events[3].args) {
         virtualPoolAddress = txres.events[3].args['virtualPool']
-      } else throw new Error("Unable to get virtual pool address from event");
-      
+      } else throw new Error('Unable to get virtual pool address from event')
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
@@ -287,7 +277,6 @@ export class HelperCommands {
           rewardToken: params.rewardToken.address,
           bonusRewardToken: params.bonusRewardToken.address,
           ...times,
-          
         },
         {
           tokenAmountForTier1: params.algbAmountForTier1 || 1000,
@@ -311,17 +300,15 @@ export class HelperCommands {
         bonusRewardToken: params.bonusRewardToken.address,
         pool: params.poolAddress,
         ...times,
-        
       })
       virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
-      
     }
-    
+
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       ...times,
-      
-      virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0())
+
+      virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0()),
     }
   }
 
@@ -370,16 +357,16 @@ export class HelperCommands {
     await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
 
     // The LP approves and farms their NFT
-    await this.nft.connect(params.lp).approveForFarming(tokenId, true);
+    await this.nft.connect(params.lp).approveForFarming(tokenId, true)
 
-    if(params.tokensLocked){
+    if (params.tokensLocked) {
       await params.createIncentiveResult.rewardToken
         // .connect(tokensOwner)
         .transfer(params.lp.address, params.tokensLocked)
-      await params.createIncentiveResult.rewardToken.connect(params.lp).approve(this.farmingCenter.address, params.tokensLocked )
+      await params.createIncentiveResult.rewardToken.connect(params.lp).approve(this.farmingCenter.address, params.tokensLocked)
     }
 
-    if(params.eternal) {
+    if (params.eternal) {
       await this.farmingCenter
         .connect(params.lp)
         .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0, ETERNAL_FARMING)
@@ -399,7 +386,7 @@ export class HelperCommands {
   }
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true);
+    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true)
   }
 
   mintFlow: HelperTypes.Mint.Command = async (params) => {
@@ -432,22 +419,15 @@ export class HelperCommands {
   }
 
   exitFarmingCollectBurnFlow: HelperTypes.exitFarmingCollectBurn.Command = async (params) => {
-    await this.farmingCenter.connect(params.lp).exitFarming(
-      incentiveResultToFarmAdapter(params.createIncentiveResult),
-      params.tokenId,
-      LIMIT_FARMING,
-      maxGas
-    )
+    await this.farmingCenter
+      .connect(params.lp)
+      .exitFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), params.tokenId, LIMIT_FARMING, maxGas)
 
     const exitFarmingdAt = await blockTimestamp()
 
-    await this.farming
-      .connect(params.lp)
-      .claimReward(params.createIncentiveResult.rewardToken.address, params.lp.address, BN('0'))
+    await this.farming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken.address, params.lp.address, BN('0'))
 
-    await this.farming
-      .connect(params.lp)
-      .claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
+    await this.farming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
 
     const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId)
 
@@ -523,7 +503,6 @@ export class HelperCommands {
       pool: params.poolAddress,
       startTime: params.startTime,
       endTime: params.endTime,
-      
     })
   }
 
@@ -548,10 +527,7 @@ export class HelperCommands {
       }
     }
 
-    const [tok0Address, tok1Address] = await Promise.all([
-      this.pool.connect(actor).token0(),
-      this.pool.connect(actor).token1(),
-    ])
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
     const erc20 = await ethers.getContractFactory('TestERC20')
 
     const tok0 = erc20.attach(tok0Address) as TestERC20
@@ -567,7 +543,6 @@ export class HelperCommands {
       await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
 
       const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
-
 
       await this.router.connect(actor).exactInput(
         {
@@ -614,10 +589,7 @@ export class HelperCommands {
       }
     }
 
-    const [tok0Address, tok1Address] = await Promise.all([
-      this.pool.connect(actor).token0(),
-      this.pool.connect(actor).token1(),
-    ])
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
     const erc20 = await ethers.getContractFactory('TestERC20')
 
     const tok0 = erc20.attach(tok0Address) as TestERC20
@@ -633,7 +605,6 @@ export class HelperCommands {
       await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
 
       const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
-
 
       await this.router.connect(actor).exactInput(
         {
@@ -679,10 +650,7 @@ export class HelperCommands {
       }
     }
 
-    const [tok0Address, tok1Address] = await Promise.all([
-      this.pool.connect(actor).token0(),
-      this.pool.connect(actor).token1(),
-    ])
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
     const erc20 = await ethers.getContractFactory('TestERC20')
 
     const tok0 = erc20.attach(tok0Address) as TestERC20
@@ -691,13 +659,12 @@ export class HelperCommands {
     /** If we want to push price down, we need to increase tok0.
     If we want to push price up, we need to increase tok1 */
 
-    const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1);
+    const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1)
 
     const erc20Helper = new ERC20Helper()
     await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
 
     const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
-
 
     return this.router.connect(actor).exactInput(
       {
@@ -713,12 +680,7 @@ export class HelperCommands {
 }
 
 export class ERC20Helper {
-  ensureBalancesAndApprovals = async (
-    actor: Wallet,
-    tokens: TestERC20 | Array<TestERC20>,
-    balance: BigNumber,
-    spender?: string
-  ) => {
+  ensureBalancesAndApprovals = async (actor: Wallet, tokens: TestERC20 | Array<TestERC20>, balance: BigNumber, spender?: string) => {
     for (let token of arrayWrap(tokens)) {
       await this.ensureBalance(actor, token, balance)
       if (spender) {
@@ -758,5 +720,4 @@ export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = (params) => ({
   pool: params.poolAddress,
   startTime: params.startTime,
   endTime: params.endTime,
-  
 })
