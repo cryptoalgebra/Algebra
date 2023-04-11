@@ -2,33 +2,24 @@
 pragma solidity =0.8.17;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
-import '../libraries/LiquidityAmounts.sol';
 
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
 
-/// @title Liquidity management functions
-/// @notice Internal functions for safely managing liquidity in Algebra
-/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
-/// https://github.com/Uniswap/v3-periphery
-abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutableState, PeripheryPayments {
+/// @title Limit orders management functions
+/// @notice Internal functions for safely managing limit orders in Algebra V2
+abstract contract LimitOrderManagement is IAlgebraMintCallback, PeripheryImmutableState, PeripheryPayments {
     struct MintCallbackData {
         PoolAddress.PoolKey poolKey;
         address payer;
     }
 
     /// @inheritdoc IAlgebraMintCallback
-    function algebraMintCallback(
-        uint256 amount0Owed,
-        uint256 amount1Owed,
-        bytes calldata data
-    ) external override {
+    function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
         MintCallbackData memory decoded = abi.decode(data, (MintCallbackData));
         CallbackValidation.verifyCallback(poolDeployer, decoded.poolKey);
 
@@ -37,7 +28,7 @@ abstract contract LimitOrderManagment is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @notice Add liquidity to an initialized pool
-    function createLimitOrder(
+    function _createLimitOrder(
         address token0,
         address token1,
         int24 tick,
