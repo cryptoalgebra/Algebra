@@ -12,11 +12,9 @@ interface IPositionFollower {
     /// @notice Report a decrease in liquidity
     /// @param tokenId The ID of the token for which liquidity is being subtracted
     /// @param liquidityDelta The amount of subtracted liquidity
-    /// @return success Does the farming center agree with the change or not
-    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external returns (bool success);
+    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external;
 
     /// @notice Report a burn of position token
     /// @param tokenId The ID of the token which is being burned
-    /// @return success Does the farming center agree with the change or not
-    function burnPosition(uint256 tokenId) external returns (bool success);
+    function burnPosition(uint256 tokenId) external;
 }

@@ -89,7 +89,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     }
 
     /// @inheritdoc IPositionFollower
-    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override returns (bool success) {
+    function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external override {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
@@ -100,7 +100,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
             _reenterToFarming(_eternalIncentiveId, tokenId, tokenOwner, liquidity);
         }
-        return true;
     }
 
     function _reenterToFarming(bytes32 incentiveId, uint256 tokenId, address tokenOwner, uint128 liquidity) private {
@@ -116,7 +115,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     }
 
     /// @inheritdoc IPositionFollower
-    function burnPosition(uint256 tokenId) external override returns (bool success) {
+    function burnPosition(uint256 tokenId) external override {
         require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
         Deposit storage deposit = deposits[tokenId];
 
@@ -124,7 +123,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
             IncentiveKey memory key = incentiveKeys[deposit.eternalIncentiveId];
             _exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
         }
-        return true;
     }
 
     /// @inheritdoc IFarmingCenter
