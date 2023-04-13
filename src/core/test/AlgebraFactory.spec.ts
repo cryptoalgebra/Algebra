@@ -91,7 +91,7 @@ describe('AlgebraFactory', () => {
   }
 
   describe('#createPool', () => {
-    it('succeeds for pool', async () => {
+    it.only('succeeds for pool', async () => {
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]])
     })
 

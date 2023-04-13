@@ -1,4 +1,6 @@
 artifacts/
+artifacts-zk/
+cache-zk/
 cache/
 crytic-export/
 node_modules/

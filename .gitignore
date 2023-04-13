@@ -1,7 +1,9 @@
 node_modules
 **/.env
 **/cache
+**/cache-zk
 **/artifacts
+**/artifacts-zk
 **/typechain
 .idea
 .vscode

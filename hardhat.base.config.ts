@@ -62,7 +62,26 @@ export default {
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
-    }
+    },
+    fantom: {
+      url: `https://rpc.ankr.com/fantom/`,
+      chainId: 250,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    zkSync: {
+      url: `https://mainnet.era.zksync.io`,
+      chainId: 324,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      zksync: true,
+    },
+    zkSyncTestnet: {
+      url: `https://testnet.era.zksync.dev`,
+      ethNetwork: `https://rpc.ankr.com/eth_goerli`,
+      gasPrice: 100_000_000,
+      chainId: 280,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      zksync: true,
+    },
   },
   etherscan: {
     // Your API key for Etherscan

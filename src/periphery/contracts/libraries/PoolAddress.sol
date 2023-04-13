@@ -5,8 +5,8 @@ pragma solidity >=0.5.0;
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 library PoolAddress {
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0xa360004fb86ddf4cd7fe9aa67d0c6a7f7812d9069142659003dc503e1d7d241f;
-
+    bytes32 private constant POOL_INIT_CODE_HASH = 0x0f4350602018582eac4d9243e2a8c4d873706da815e0934bf4ad435a61a8d9aa;
+    bytes32 private constant EMPTY_HASH = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
     /// @notice The identifying key of the pool
     struct PoolKey {
         address token0;
@@ -28,15 +28,17 @@ library PoolAddress {
     /// @return pool The contract address of the Algebra pool
     function computeAddress(address poolDeployer, PoolKey memory key) internal pure returns (address pool) {
         require(key.token0 < key.token1);
+        bytes32 prefix = keccak256('zksyncCreate2');
         pool = address(
             uint160(
                 uint256(
                     keccak256(
-                        abi.encodePacked(
-                            hex'ff',
+                        abi.encode(
+                            prefix,
                             poolDeployer,
                             keccak256(abi.encode(key.token0, key.token1)),
-                            POOL_INIT_CODE_HASH
+                            POOL_INIT_CODE_HASH,
+                            EMPTY_HASH
                         )
                     )
                 )
