@@ -6,7 +6,6 @@ export * from './actors'
 export * from './logging'
 export * from './ticks'
 
-import { FeeAmount } from './external/v3-periphery/constants'
 import { provider } from './provider'
 import { BigNumber, BigNumberish, Contract, ContractTransaction } from 'ethers'
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider'

@@ -25,9 +25,6 @@ import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
-const LIMIT_FARMING = true
-const ETERNAL_FARMING = false
-
 describe('unit/FarmingCenter', () => {
   let actors: ActorFixture
   let lpUser0: Wallet
@@ -41,7 +38,6 @@ describe('unit/FarmingCenter', () => {
   let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
   let tokenId: string
-  let L2tokenId: string
 
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[]
@@ -136,7 +132,6 @@ describe('unit/FarmingCenter', () => {
   })
 
   describe('#collectRewards', () => {
-    let createIncentiveResult: HelperTypes.CreateIncentive.Result
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result
     // The amount the user should be able to claim
     let claimableEternal: BigNumber

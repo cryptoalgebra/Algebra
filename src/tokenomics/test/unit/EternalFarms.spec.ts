@@ -26,9 +26,6 @@ import { HelperTypes } from '../helpers/types'
 import { IAlgebraVirtualPool } from '@cryptoalgebra/core/typechain'
 import { AlgebraEternalFarming } from '../../typechain/contracts/farmings'
 
-const LIMIT_FARMING = true
-const ETERNAL_FARMING = false
-
 describe('unit/EternalFarms', () => {
   let actors: ActorFixture
   let lpUser0: Wallet
@@ -972,7 +969,7 @@ describe('unit/EternalFarms', () => {
         pool: context.pool01,
       }
 
-      virtualPool = (await helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).virtualPool
+      virtualPool = (await helpers.createIncentiveFlow(incentiveArgs)).virtualPool
     })
 
     it('deactivate incentive', async () => {
@@ -1016,7 +1013,7 @@ describe('unit/EternalFarms', () => {
         pool: context.pool01,
       }
 
-      incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveWithMultiplierFlow(incentiveArgs))
+      incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
     })
 
     it('#addRewards', async () => {

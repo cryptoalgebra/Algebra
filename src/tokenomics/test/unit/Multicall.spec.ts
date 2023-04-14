@@ -85,17 +85,8 @@ describe('unit/Multicall', () => {
         ...makeTimestamps(currentTime + 100),
       },
       {
-        tokenAmountForTier1: 0,
-        tokenAmountForTier2: 0,
-        tokenAmountForTier3: 0,
-        tier1Multiplier: 10000,
-        tier2Multiplier: 10000,
-        tier3Multiplier: 10000,
-      },
-      {
         reward: totalReward,
         bonusReward: bonusReward,
-        multiplierToken: context.rewardToken.address,
         enterStartTime: 0,
       }
     ])
