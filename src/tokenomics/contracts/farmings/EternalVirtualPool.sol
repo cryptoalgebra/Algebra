@@ -97,37 +97,39 @@ contract EternalVirtualPool is VirtualTickStructure {
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
+    _increaseCumulative(uint32(block.timestamp));
 
-    if (!_increaseCumulative(uint32(block.timestamp))) return false;
-    unchecked {
-      int24 previousTick = globalPrevInitializedTick;
-      uint128 _currentLiquidity = currentLiquidity;
-      int24 _globalTick = globalTick;
+    int24 previousTick = globalPrevInitializedTick;
+    uint128 _currentLiquidity = currentLiquidity;
+    int24 _globalTick = globalTick;
 
-      if (zeroToOne) {
-        while (true) {
-          if (targetTick >= previousTick) break;
-          // TODO inf
+    (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
+    if (zeroToOne) {
+      while (true) {
+        if (targetTick >= previousTick) break;
+        // TODO inf
 
-          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -_crossTick(previousTick)); // TODO optimize
+        unchecked {
+          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1, 0));
           _globalTick = previousTick - 1;
           previousTick = ticks[previousTick].prevTick;
         }
-      } else {
-        while (true) {
-          int24 nextTick = ticks[previousTick].nextTick;
-          if (targetTick < nextTick) break;
-
-          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, _crossTick(nextTick));
-          _globalTick = nextTick;
-          previousTick = nextTick;
-        }
       }
+    } else {
+      while (true) {
+        int24 nextTick = ticks[previousTick].nextTick;
+        if (targetTick < nextTick) break;
 
-      globalTick = targetTick;
-      currentLiquidity = _currentLiquidity;
-      globalPrevInitializedTick = previousTick;
+        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, ticks.cross(nextTick, rewardGrowth0, rewardGrowth1, 0));
+        _globalTick = nextTick;
+        previousTick = nextTick;
+      }
     }
+
+    globalTick = targetTick;
+    currentLiquidity = _currentLiquidity;
+    globalPrevInitializedTick = previousTick;
+
     return true;
   }
 
@@ -210,14 +212,10 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
   }
 
-  function _crossTick(int24 nextTick) internal returns (int128 liquidityDelta) {
-    return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, 0);
-  }
-
-  function _increaseCumulative(uint32 currentTimestamp) internal returns (bool) {
+  function _increaseCumulative(uint32 currentTimestamp) internal {
     unchecked {
       uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
-      if (timeDelta == 0) return true; // only once per block
+      if (timeDelta == 0) return; // only once per block
 
       uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
       if (_currentLiquidity > 0) {
@@ -240,7 +238,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
 
     prevTimestamp = currentTimestamp;
-    return true;
+    return;
   }
 
   function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal returns (bool updated) {

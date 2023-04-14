@@ -253,24 +253,15 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Incentive storage incentive = incentives[incentiveId];
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    {
-      int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
+    int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
-      // update rewards, as ticks may be cleared when liquidity decreases
-      _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
+    // update rewards, as ticks may be cleared when liquidity decreases
+    _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
 
-      (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = _getInnerRewardsGrowth(virtualPool, farm.tickLower, farm.tickUpper);
+    (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
-      unchecked {
-        if (liquidityDelta != 0) {
-          _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, liquidityDelta, tick);
-        }
-
-        (reward, bonusReward) = (
-          FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-          FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
-        );
-      }
+    if (liquidityDelta != 0) {
+      _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, liquidityDelta, tick);
     }
 
     mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
@@ -288,15 +279,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (farm.liquidity == 0) revert farmDoesNotExist();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
-
-    (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = _getInnerRewardsGrowth(virtualPool, farm.tickLower, farm.tickUpper);
-
-    unchecked {
-      (reward, bonusReward) = (
-        FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-        FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
-      );
-    }
+    (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
   }
 
   /// @notice reward amounts should be updated before calling this method
@@ -313,14 +296,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
     virtualPool.increaseCumulative(uint32(block.timestamp));
 
-    (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = _getInnerRewardsGrowth(virtualPool, farm.tickLower, farm.tickUpper);
-
-    unchecked {
-      (reward, bonusReward) = (
-        FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
-        FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
-      );
-    }
+    uint256 innerRewardGrowth0;
+    uint256 innerRewardGrowth1;
+    (reward, bonusReward, innerRewardGrowth0, innerRewardGrowth1) = _getNewRewardsForFarm(virtualPool, farm);
 
     farms[tokenId][incentiveId].innerRewardGrowth0 = innerRewardGrowth0;
     farms[tokenId][incentiveId].innerRewardGrowth1 = innerRewardGrowth1;
@@ -336,6 +314,20 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   function _getInnerRewardsGrowth(IAlgebraEternalVirtualPool virtualPool, int24 tickLower, int24 tickUpper) private view returns (uint256, uint256) {
     return virtualPool.getInnerRewardsGrowth(tickLower, tickUpper);
+  }
+
+  function _getNewRewardsForFarm(
+    IAlgebraEternalVirtualPool virtualPool,
+    Farm memory farm
+  ) private view returns (uint256 reward, uint256 bonusReward, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) {
+    (innerRewardGrowth0, innerRewardGrowth1) = _getInnerRewardsGrowth(virtualPool, farm.tickLower, farm.tickUpper);
+
+    unchecked {
+      (reward, bonusReward) = (
+        FullMath.mulDiv(innerRewardGrowth0 - farm.innerRewardGrowth0, farm.liquidity, Constants.Q128),
+        FullMath.mulDiv(innerRewardGrowth1 - farm.innerRewardGrowth1, farm.liquidity, Constants.Q128)
+      );
+    }
   }
 
   function _addRewards(IAlgebraEternalVirtualPool virtualPool, uint128 amount0, uint128 amount1, bytes32 incentiveId) private {
@@ -370,9 +362,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128 received) {
-    uint256 balanceBefore = _balanceOf(token);
+    uint256 balanceBefore = token.balanceOf(address(this));
     TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
-    uint256 balanceAfter = _balanceOf(token);
+    uint256 balanceAfter = token.balanceOf(address(this));
     require(balanceAfter > balanceBefore);
     unchecked {
       received = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
@@ -418,10 +410,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     incentiveId = IncentiveId.compute(key);
     incentive = incentives[incentiveId];
     if (incentive.totalReward == 0) revert incentiveNotExist();
-  }
-
-  function _balanceOf(IERC20Minimal token) internal view returns (uint256) {
-    return token.balanceOf(address(this));
   }
 
   function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
