@@ -9,24 +9,9 @@ import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
 import '../base/IncentiveKey.sol';
-import '../farmings/interfaces/IAlgebraEternalFarming.sol';
+import '../interfaces/IAlgebraEternalFarming.sol';
 
 interface IFarmingCenter is IMulticall {
-  struct VirtualPoolAddresses {
-    address eternalVirtualPool;
-  }
-
-  struct DecreaseLiquidityParams {
-    uint256 tokenId;
-    uint128 liquidity;
-    uint256 amount0Min;
-    uint256 amount1Min;
-    uint128 amount0Max;
-    uint128 amount1Max;
-    address recipient;
-    uint256 deadline;
-  }
-
   function virtualPoolAddresses(address) external view returns (address);
 
   /// @notice The nonfungible position manager with which this farming contract is compatible

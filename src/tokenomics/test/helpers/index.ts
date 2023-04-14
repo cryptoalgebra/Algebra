@@ -17,13 +17,12 @@ import _ from 'lodash'
 import {
   TestERC20,
   INonfungiblePositionManager,
-  AlgebraLimitFarming,
   AlgebraEternalFarming,
   IAlgebraPool,
   TestIncentiveId,
   FarmingCenter,
 } from '../../typechain'
-import abi from '../../artifacts/contracts/farmings/limitFarming/LimitVirtualPool.sol/LimitVirtualPool.json'
+import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json'
 import { HelperTypes } from './types'
 import { ActorFixture } from '../shared/actors'
 import { mintPosition } from '../shared/fixtures'
@@ -44,7 +43,6 @@ const ETERNAL_FARMING = false
 export class HelperCommands {
   actors: ActorFixture
   provider: any
-  farming: AlgebraLimitFarming
   eternalFarming: AlgebraEternalFarming
   nft: INonfungiblePositionManager
   router: ISwapRouter
@@ -59,7 +57,6 @@ export class HelperCommands {
 
   constructor({
     provider,
-    farming,
     eternalFarming,
     nft,
     router,
@@ -69,7 +66,6 @@ export class HelperCommands {
     farmingCenter,
   }: {
     provider: any
-    farming: AlgebraLimitFarming
     eternalFarming: AlgebraEternalFarming
     farmingCenter: FarmingCenter
     nft: INonfungiblePositionManager
@@ -80,7 +76,6 @@ export class HelperCommands {
   }) {
     this.actors = actors
     this.provider = provider
-    this.farming = farming
     this.eternalFarming = eternalFarming
     this.nft = nft
     this.router = router
@@ -95,7 +90,6 @@ export class HelperCommands {
       provider,
       nft: context.nft,
       router: context.router,
-      farming: context.farming,
       eternalFarming: context.eternalFarming,
       pool: context.poolObj,
       testIncentiveId: context.testIncentiveId,
@@ -131,72 +125,28 @@ export class HelperCommands {
 
     let txResult
     let virtualPoolAddress
-    if (params.eternal) {
-      await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
-      await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
 
-      txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
-        {
-          pool: params.poolAddress,
-          rewardToken: params.rewardToken.address,
-          bonusRewardToken: params.bonusRewardToken.address,
-          ...times,
-        },
-        {
-          reward: params.totalReward,
-          bonusReward: params.bonusReward,
-          rewardRate: params.rewardRate || 10,
-          bonusRewardRate: params.bonusRewardRate || 10,
-          minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address,
-        },
-        {
-          tokenAmountForTier1: 0,
-          tokenAmountForTier2: 0,
-          tokenAmountForTier3: 0,
-          tier1Multiplier: 10000,
-          tier2Multiplier: 10000,
-          tier3Multiplier: 10000,
-        }
-      )
-      // @ts-ignore
-      virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
-    } else {
-      await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
-      await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
+    await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
+    await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
 
-      txResult = await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).createLimitFarming(
-        {
-          pool: params.poolAddress,
-          rewardToken: params.rewardToken.address,
-          bonusRewardToken: params.bonusRewardToken.address,
-          ...times,
-        },
-        {
-          tokenAmountForTier1: 0,
-          tokenAmountForTier2: 0,
-          tokenAmountForTier3: 0,
-          tier1Multiplier: 10000,
-          tier2Multiplier: 10000,
-          tier3Multiplier: 10000,
-        },
-        {
-          reward: params.totalReward,
-          bonusReward: params.bonusReward,
-          minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address,
-          enterStartTime: params.enterStartTime || 0,
-        }
-      )
-      // @ts-ignore
-      const incentiveId = await testIncentiveId.compute({
+    txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+      {
+        pool: params.poolAddress,
         rewardToken: params.rewardToken.address,
         bonusRewardToken: params.bonusRewardToken.address,
-        pool: params.poolAddress,
         ...times,
-      })
-      virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
-    }
+      },
+      {
+        reward: params.totalReward,
+        bonusReward: params.bonusReward,
+        rewardRate: params.rewardRate || 10,
+        bonusRewardRate: params.bonusRewardRate || 10,
+        minimalPositionWidth: params.minimalPositionWidth || 0,
+      }
+    )
+    // @ts-ignore
+    virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+    
 
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
@@ -228,81 +178,37 @@ export class HelperCommands {
 
     let txResult
     let virtualPoolAddress
-    if (params.eternal) {
-      await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
-      await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
 
-      txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
-        {
-          pool: params.poolAddress,
-          rewardToken: params.rewardToken.address,
-          bonusRewardToken: params.bonusRewardToken.address,
-          ...times,
-        },
-        {
-          reward: params.totalReward,
-          bonusReward: params.bonusReward,
-          rewardRate: params.rewardRate || 10,
-          bonusRewardRate: params.bonusRewardRate || 10,
-          minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address,
-        },
-        {
-          tokenAmountForTier1: 1000,
-          tokenAmountForTier2: 5000,
-          tokenAmountForTier3: 10000,
-          tier1Multiplier: 10000,
-          tier2Multiplier: 10000,
-          tier3Multiplier: 10000,
-        }
-      )
-      // @ts-ignore
-      const incentiveId = await testIncentiveId.compute({
+    await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.totalReward)
+    await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming.address, params.bonusReward)
+
+    txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
+      {
+        pool: params.poolAddress,
         rewardToken: params.rewardToken.address,
         bonusRewardToken: params.bonusRewardToken.address,
-        pool: params.poolAddress,
         ...times,
-      })
-      let txres = await txResult.wait(1)
-      if (txres.events && txres.events[3].args) {
-        virtualPoolAddress = txres.events[3].args['virtualPool']
-      } else throw new Error('Unable to get virtual pool address from event')
-    } else {
-      await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
-      await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
-
-      txResult = await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).createLimitFarming(
-        {
-          pool: params.poolAddress,
-          rewardToken: params.rewardToken.address,
-          bonusRewardToken: params.bonusRewardToken.address,
-          ...times,
-        },
-        {
-          tokenAmountForTier1: params.algbAmountForTier1 || 1000,
-          tokenAmountForTier2: params.algbAmountForTier2 || 5000,
-          tokenAmountForTier3: params.algbAmountForTier3 || 10000,
-          tier1Multiplier: params.tier1Multiplier || 10000,
-          tier2Multiplier: params.tier2Multiplier || 10000,
-          tier3Multiplier: params.tier3Multiplier || 10000,
-        },
-        {
-          reward: params.totalReward,
-          bonusReward: params.bonusReward,
-          minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address,
-          enterStartTime: params.enterStartTime || 0,
-        }
-      )
-
-      const incentiveId = await this.testIncentiveId.compute({
-        rewardToken: params.rewardToken.address,
-        bonusRewardToken: params.bonusRewardToken.address,
-        pool: params.poolAddress,
-        ...times,
-      })
-      virtualPoolAddress = (await (this.farming as AlgebraLimitFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
-    }
+      },
+      {
+        reward: params.totalReward,
+        bonusReward: params.bonusReward,
+        rewardRate: params.rewardRate || 10,
+        bonusRewardRate: params.bonusRewardRate || 10,
+        minimalPositionWidth: params.minimalPositionWidth || 0,
+      }
+    )
+    // @ts-ignore
+    const incentiveId = await testIncentiveId.compute({
+      rewardToken: params.rewardToken.address,
+      bonusRewardToken: params.bonusRewardToken.address,
+      pool: params.poolAddress,
+      ...times,
+    })
+    let txres = await txResult.wait(1)
+    if (txres.events && txres.events[3].args) {
+      virtualPoolAddress = txres.events[3].args['virtualPool']
+    } else throw new Error('Unable to get virtual pool address from event')
+  
 
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
@@ -352,10 +258,6 @@ export class HelperCommands {
       deadline: (await blockTimestamp()) + 1000,
     })
 
-    // Make sure LP has authorized tokenomics
-    await params.tokensToFarm[0].connect(params.lp).approve(this.farming.address, params.amountsToFarm[0])
-    await params.tokensToFarm[1].connect(params.lp).approve(this.farming.address, params.amountsToFarm[1])
-
     // The LP approves and farms their NFT
     await this.nft.connect(params.lp).approveForFarming(tokenId, true)
 
@@ -366,15 +268,9 @@ export class HelperCommands {
       await params.createIncentiveResult.rewardToken.connect(params.lp).approve(this.farmingCenter.address, params.tokensLocked)
     }
 
-    if (params.eternal) {
-      await this.farmingCenter
-        .connect(params.lp)
-        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0, ETERNAL_FARMING)
-    } else {
-      await this.farmingCenter
-        .connect(params.lp)
-        .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId, params.tokensLocked || 0, LIMIT_FARMING)
-    }
+    await this.farmingCenter
+      .connect(params.lp)
+      .enterFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
 
     const farmdAt = await blockTimestamp()
 
@@ -421,13 +317,13 @@ export class HelperCommands {
   exitFarmingCollectBurnFlow: HelperTypes.exitFarmingCollectBurn.Command = async (params) => {
     await this.farmingCenter
       .connect(params.lp)
-      .exitFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), params.tokenId, LIMIT_FARMING, maxGas)
+      .exitFarming(incentiveResultToFarmAdapter(params.createIncentiveResult), params.tokenId, maxGas)
 
     const exitFarmingdAt = await blockTimestamp()
 
-    await this.farming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken.address, params.lp.address, BN('0'))
+    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken.address, params.lp.address, BN('0'))
 
-    await this.farming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
+    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken.address, params.lp.address, BN('0'))
 
     const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId)
 

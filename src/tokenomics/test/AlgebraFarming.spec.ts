@@ -1,6 +1,6 @@
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { TestContext } from './types'
-import { AlgebraEternalFarming, TestERC20, AlgebraLimitFarming } from '../typechain'
+import { AlgebraEternalFarming, TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
   BigNumber,

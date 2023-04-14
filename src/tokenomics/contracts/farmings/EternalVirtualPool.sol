@@ -3,15 +3,27 @@ pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
 
 import '../libraries/VirtualTickManagement.sol';
-import './interfaces/IAlgebraEternalVirtualPool.sol';
 
-import '../base/AlgebraVirtualPoolBase.sol';
 import '../base/VirtualTickStructure.sol';
 
-contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAlgebraEternalVirtualPool {
+contract EternalVirtualPool is VirtualTickStructure {
   using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
+
+  address public immutable farmingCenterAddress;
+  address public immutable farmingAddress;
+  address public immutable pool;
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  uint128 public override currentLiquidity;
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  int24 public override globalTick;
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  uint32 public override prevTimestamp;
+
+  int24 internal globalPrevInitializedTick;
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
@@ -22,45 +34,27 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
   uint256 public totalRewardGrowth0 = 1;
   uint256 public totalRewardGrowth1 = 1;
 
-  constructor(
-    address _farmingCenterAddress,
-    address _farmingAddress,
-    address _pool
-  ) AlgebraVirtualPoolBase(_farmingCenterAddress, _farmingAddress, _pool) {
+  modifier onlyFromFarming() {
+    _checkIsFromFarming();
+    _;
+  }
+
+  constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) {
+    globalPrevInitializedTick = TickMath.MIN_TICK;
+    farmingCenterAddress = _farmingCenterAddress;
+    farmingAddress = _farmingAddress;
+    pool = _pool;
     prevTimestamp = uint32(block.timestamp);
   }
 
+  // @inheritdoc IAlgebraEternalVirtualPool
   function rewardReserves() external view override returns (uint128 reserve0, uint128 reserve1) {
     return (rewardReserve0, rewardReserve1);
   }
 
+  // @inheritdoc IAlgebraEternalVirtualPool
   function rewardRates() external view override returns (uint128 rate0, uint128 rate1) {
     return (rewardRate0, rewardRate1);
-  }
-
-  function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
-    _applyRewardsDelta(true, token0Amount, token1Amount);
-  }
-
-  // @inheritdoc IAlgebraEternalVirtualPool
-  function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
-    _applyRewardsDelta(false, token0Amount, token1Amount);
-  }
-
-  function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
-    _increaseCumulative(uint32(block.timestamp));
-    if (token0Delta | token1Delta != 0) {
-      (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
-      _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
-      _rewardReserve1 = add ? _rewardReserve1 + token1Delta : _rewardReserve1 - token1Delta;
-      (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
-    }
-  }
-
-  // @inheritdoc IAlgebraEternalVirtualPool
-  function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
-    _increaseCumulative(uint32(block.timestamp));
-    (rewardRate0, rewardRate1) = (rate0, rate1);
   }
 
   // @inheritdoc IAlgebraEternalVirtualPool
@@ -90,11 +84,137 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
     }
   }
 
-  function _crossTick(int24 nextTick) internal override returns (int128 liquidityDelta) {
+  // @inheritdoc IAlgebraEternalVirtualPool
+  function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
+    _applyRewardsDelta(true, token0Amount, token1Amount);
+  }
+
+  // @inheritdoc IAlgebraEternalVirtualPool
+  function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
+    _applyRewardsDelta(false, token0Amount, token1Amount);
+  }
+
+  /// @inheritdoc IAlgebraVirtualPool
+  function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
+    if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
+
+    if (!_increaseCumulative(uint32(block.timestamp))) return false;
+    unchecked {
+      int24 previousTick = globalPrevInitializedTick;
+      uint128 _currentLiquidity = currentLiquidity;
+      int24 _globalTick = globalTick;
+
+      if (zeroToOne) {
+        while (true) {
+          if (targetTick >= previousTick) break;
+          // TODO inf
+
+          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -_crossTick(previousTick)); // TODO optimize
+          _globalTick = previousTick - 1;
+          previousTick = ticks[previousTick].prevTick;
+        }
+      } else {
+        while (true) {
+          int24 nextTick = ticks[previousTick].nextTick;
+          if (targetTick < nextTick) break;
+
+          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, _crossTick(nextTick));
+          _globalTick = nextTick;
+          previousTick = nextTick;
+        }
+      }
+
+      globalTick = targetTick;
+      currentLiquidity = _currentLiquidity;
+      globalPrevInitializedTick = previousTick;
+    }
+    return true;
+  }
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  function increaseCumulative(uint32 currentTimestamp) external override onlyFromFarming {
+    _increaseCumulative(currentTimestamp);
+  }
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  function applyLiquidityDeltaToPosition(
+    uint32 currentTimestamp,
+    int24 bottomTick,
+    int24 topTick,
+    int128 liquidityDelta,
+    int24 currentTick
+  ) external override onlyFromFarming {
+    globalTick = currentTick;
+
+    if (currentTimestamp > prevTimestamp) {
+      _increaseCumulative(currentTimestamp);
+    }
+
+    if (liquidityDelta != 0) {
+      // if we need to update the ticks, do it
+      bool flippedBottom;
+      bool flippedTop;
+
+      if (_updateTick(bottomTick, currentTick, liquidityDelta, false)) {
+        flippedBottom = true;
+      }
+
+      if (_updateTick(topTick, currentTick, liquidityDelta, true)) {
+        flippedTop = true;
+      }
+
+      if (currentTick >= bottomTick && currentTick < topTick) {
+        currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+      }
+
+      if (flippedBottom || flippedTop) {
+        int24 previousTick = globalPrevInitializedTick;
+        if (flippedBottom) {
+          previousTick = _insertOrRemoveTick(bottomTick, currentTick, previousTick, liquidityDelta < 0);
+        }
+        if (flippedTop) {
+          previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
+        }
+        globalPrevInitializedTick = previousTick;
+      }
+
+      // clear any tick data that is no longer needed
+      if (liquidityDelta < 0) {
+        if (flippedBottom) {
+          delete ticks[bottomTick];
+        }
+        if (flippedTop) {
+          delete ticks[topTick];
+        }
+      }
+    }
+  }
+
+  // @inheritdoc IAlgebraEternalVirtualPool
+  function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
+    _increaseCumulative(uint32(block.timestamp));
+    (rewardRate0, rewardRate1) = (rate0, rate1);
+  }
+
+  function _checkIsFromFarming() internal view {
+    if (msg.sender != farmingAddress) revert onlyFarming();
+  }
+
+  function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
+    _increaseCumulative(uint32(block.timestamp));
+    if (token0Delta | token1Delta != 0) {
+      (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+      _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
+      _rewardReserve1 = add ? _rewardReserve1 + token1Delta : _rewardReserve1 - token1Delta;
+      (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+    }
+  }
+
+  function _crossTick(int24 nextTick) internal returns (int128 liquidityDelta) {
     return ticks.cross(nextTick, totalRewardGrowth0, totalRewardGrowth1, 0);
   }
 
-  function _increaseCumulative(uint32 currentTimestamp) internal override returns (bool) {
+  function _increaseCumulative(uint32 currentTimestamp) internal returns (bool) {
     unchecked {
       uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return true; // only once per block
@@ -108,15 +228,11 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
         if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
 
         if (reward0 | reward1 != 0) {
-          if (reward0 > 0) {
-            _rewardReserve0 = uint128(_rewardReserve0 - reward0);
-            totalRewardGrowth0 = totalRewardGrowth0 + FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
-          }
+          _rewardReserve0 = uint128(_rewardReserve0 - reward0);
+          _rewardReserve1 = uint128(_rewardReserve1 - reward1);
 
-          if (reward1 > 0) {
-            _rewardReserve1 = uint128(_rewardReserve1 - reward1);
-            totalRewardGrowth1 = totalRewardGrowth1 + FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
-          }
+          if (reward0 > 0) totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
+          if (reward1 > 0) totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
 
           (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
         }
@@ -127,7 +243,7 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, VirtualTickStructure, IAl
     return true;
   }
 
-  function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal override returns (bool updated) {
+  function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal returns (bool updated) {
     return ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, isTopTick);
   }
 }

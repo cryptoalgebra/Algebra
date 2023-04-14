@@ -18,17 +18,11 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
   /// @dev saves addresses of virtual pools for pool
-  mapping(address => VirtualPoolAddresses) private _virtualPoolAddresses;
+  mapping(address => address) public override virtualPoolAddresses;
 
-  /// @dev deposits[tokenId] => Deposit
-  mapping(uint256 => Deposit) public override deposits;
-
+  /// @dev deposits[tokenId] => incentiveId
+  mapping(uint256 => bytes32) public override deposits;
   mapping(bytes32 => IncentiveKey) public incentiveKeys;
-
-  /// @notice Represents the deposit of a liquidity NFT
-  struct Deposit {
-    bytes32 eternalIncentiveId;
-  }
 
   constructor(IAlgebraEternalFarming _eternalFarming, INonfungiblePositionManager _nonfungiblePositionManager) {
     eternalFarming = _eternalFarming;
@@ -42,16 +36,14 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @inheritdoc IFarmingCenter
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
-    Deposit storage _deposit = deposits[tokenId];
     bytes32 incentiveId = IncentiveId.compute(key);
     if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
-    IAlgebraFarming _farming = IAlgebraFarming(eternalFarming);
-    require(_deposit.eternalIncentiveId == bytes32(0), 'token already farmed');
-    _deposit.eternalIncentiveId = incentiveId;
+    require(deposits[tokenId] == bytes32(0), 'token already farmed');
+    deposits[tokenId] = incentiveId;
     nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
-    _farming.enterFarming(key, tokenId);
+    IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
   }
 
   /// @inheritdoc IFarmingCenter
@@ -60,23 +52,18 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   function _exitFarming(IncentiveKey memory key, uint256 tokenId, address tokenOwner) private {
-    Deposit storage deposit = deposits[tokenId];
-
-    bytes32 incentiveId = IncentiveId.compute(key);
-    require(deposit.eternalIncentiveId == incentiveId, 'invalid incentiveId');
-    deposit.eternalIncentiveId = bytes32(0);
+    require(deposits[tokenId] == IncentiveId.compute(key), 'invalid incentiveId');
+    deposits[tokenId] = bytes32(0);
     nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
 
-    IAlgebraFarming _farming = IAlgebraFarming(eternalFarming);
-    _farming.exitFarming(key, tokenId, tokenOwner);
+    IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
   }
 
   /// @inheritdoc IPositionFollower
   function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external override {
     require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
-    Deposit storage deposit = deposits[tokenId];
 
-    bytes32 _eternalIncentiveId = deposit.eternalIncentiveId;
+    bytes32 _eternalIncentiveId = deposits[tokenId];
     if (_eternalIncentiveId != bytes32(0)) {
       address tokenOwner = nonfungiblePositionManager.ownerOf(tokenId);
       (, , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
@@ -86,24 +73,23 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   function _reenterToFarming(bytes32 incentiveId, uint256 tokenId, address tokenOwner, uint128 liquidity) private {
-    IAlgebraFarming _farming = IAlgebraFarming(eternalFarming);
     IncentiveKey memory key = incentiveKeys[incentiveId];
 
     if (liquidity == 0) {
       _exitFarming(key, tokenId, tokenOwner);
     } else {
-      _farming.exitFarming(key, tokenId, tokenOwner);
-      _farming.enterFarming(key, tokenId);
+      IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+      IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
     }
   }
 
   /// @inheritdoc IPositionFollower
   function burnPosition(uint256 tokenId) external override {
     require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
-    Deposit storage deposit = deposits[tokenId];
+    bytes32 _eternalIncentiveId = deposits[tokenId];
 
-    if (deposit.eternalIncentiveId != bytes32(0)) {
-      IncentiveKey memory key = incentiveKeys[deposit.eternalIncentiveId];
+    if (_eternalIncentiveId != bytes32(0)) {
+      IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
       _exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
     }
   }
@@ -111,15 +97,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter
   function collectRewards(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
     (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
-  }
-
-  function _claimRewardFromFarming(
-    IAlgebraFarming _farming,
-    IERC20Minimal rewardToken,
-    address to,
-    uint256 amountRequested
-  ) internal returns (uint256 reward) {
-    return _farming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
   }
 
   /// @inheritdoc IFarmingCenter
@@ -133,11 +110,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
     require(msg.sender == address(eternalFarming), 'only farming can call this');
     pool.setIncentive(newVirtualPool);
-
-    _virtualPoolAddresses[address(pool)].eternalVirtualPool = newVirtualPool;
-  }
-
-  function virtualPoolAddresses(address pool) external view override returns (address eternalVP) {
-    (eternalVP) = (_virtualPoolAddresses[pool].eternalVirtualPool);
+    virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
 }

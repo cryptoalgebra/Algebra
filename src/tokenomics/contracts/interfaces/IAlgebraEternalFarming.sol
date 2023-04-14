@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
-
 import '../base/IncentiveKey.sol';
 
-/// @title Algebra Farming Interface
-/// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens
-interface IAlgebraFarming {
+/// @title Algebra Eternal Farming Interface
+/// @notice Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
+interface IAlgebraEternalFarming {
+  struct IncentiveParams {
+    uint128 reward; // The amount of reward tokens to be distributed
+    uint128 bonusReward; // The amount of bonus reward tokens to be distributed
+    uint128 rewardRate; // The rate of reward distribution per second
+    uint128 bonusRewardRate; // The rate of bonus reward distribution per second
+    uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+  }
+
   error farmingAlreadyExists();
   error farmDoesNotExist();
   error tokenAlreadyFarmed();
@@ -96,6 +99,29 @@ interface IAlgebraFarming {
   /// @return bonusReward The bonus reward accrued to the NFT for the given incentive thus far
   function getRewardInfo(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward);
 
+  /// @notice Returns information about a farmd liquidity NFT
+  /// @param tokenId The ID of the farmd token
+  /// @param incentiveId The ID of the incentive for which the token is farmd
+  /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
+  /// tickLower The lower tick of position,
+  /// tickUpper The upper tick of position,
+  /// innerRewardGrowth0 The last saved reward0 growth inside position,
+  /// innerRewardGrowth1 The last saved reward1 growth inside position
+  function farms(
+    uint256 tokenId,
+    bytes32 incentiveId
+  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1);
+
+  /// @notice Creates a new liquidity mining incentive program
+  /// @param key Details of the incentive to create
+  /// @param params Params of incentive
+  /// @return virtualPool The virtual pool
+  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params) external returns (address virtualPool);
+
+  function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
+
+  function collectRewards(IncentiveKey memory key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward);
+
   /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
   /// @param incentiveId The stopped incentive
   event IncentiveDeactivated(bytes32 indexed incentiveId);
@@ -146,4 +172,39 @@ interface IAlgebraFarming {
   /// @param rewardAddress The token reward address
   /// @param owner The address where claimed rewards were sent to
   event RewardClaimed(address indexed to, uint256 reward, address indexed rewardAddress, address indexed owner);
+
+  /// @notice Event emitted when reward rates were changed
+  /// @param rewardRate The new rate of main token distribution per sec
+  /// @param bonusRewardRate The new rate of bonus token distribution per sec
+  /// @param incentiveId The ID of the incentive for which rates were changed
+  event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
+
+  /// @notice Event emitted when rewards were collected
+  /// @param tokenId The ID of the token for which rewards were collected
+  /// @param incentiveId The ID of the incentive for which rewards were collected
+  /// @param rewardAmount Collected amount of reward
+  /// @param bonusRewardAmount Collected amount of bonus reward
+  event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount);
+
+  /// @notice Event emitted when a liquidity mining incentive has been created
+  /// @param rewardToken The token being distributed as a reward
+  /// @param bonusRewardToken The token being distributed as a bonus reward
+  /// @param pool The Algebra pool
+  /// @param virtualPool The virtual pool address
+  /// @param startTime The time when the incentive program begins
+  /// @param endTime The time when rewards stop accruing
+  /// @param reward The amount of reward tokens to be distributed
+  /// @param bonusReward The amount of bonus reward tokens to be distributed
+  /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
+  event EternalFarmingCreated(
+    IERC20Minimal indexed rewardToken,
+    IERC20Minimal indexed bonusRewardToken,
+    IAlgebraPool indexed pool,
+    address virtualPool,
+    uint256 startTime,
+    uint256 endTime,
+    uint256 reward,
+    uint256 bonusReward,
+    uint24 minimalAllowedPositionWidth
+  );
 }
