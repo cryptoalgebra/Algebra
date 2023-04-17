@@ -48,6 +48,7 @@ contract SwapRouterCompressedV1 is IAlgebraSwapCallback {
 
     function addTokenAddress(address token) external payable {
         require(msg.sender == owner);
+        require(token != WNativeToken && tokenToIndex[token] == 0);
         uint256 index = nextTokenIndex;
         nextTokenIndex++;
         indexToToken[index] = token;
@@ -58,8 +59,14 @@ contract SwapRouterCompressedV1 is IAlgebraSwapCallback {
         return indexToToken[index];
     }
 
-    function getIndexByToken(address token) external view returns (uint256) {
-        return tokenToIndex[token];
+    function getIndexByToken(address token) external view returns (int256) {
+        uint256 tokenId = tokenToIndex[token];
+        if (tokenId == 0) {
+            if (token == WNativeToken) {
+                return 0;
+            } else return -1;
+        }
+        return int256(tokenId);
     }
 
     function sweep(address token, uint256 amountMinimum) external {
