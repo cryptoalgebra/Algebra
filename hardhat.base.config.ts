@@ -62,6 +62,12 @@ export default {
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
+    },
+    avalance: {
+      url: `https://endpoints.omniatech.io/v1/avax/mainnet/public`,
+      chainId: 43114,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      gasPrice: 27_000_000_000
     }
   },
   etherscan: {

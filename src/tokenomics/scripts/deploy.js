@@ -8,7 +8,7 @@ async function main() {
 
   const maxIncentiveStartLeadTime = 2592000;
   const maxIncentiveDuration = 63072000;
-  const incentiveMaker = "0xDeaD1F5aF792afc125812E875A891b038f888258";
+  const incentiveMaker = "0xA38038eC009995fB11f09ab60410dCf0350C315c";
 
   const AlgebraLimitFarmingFactory = await hre.ethers.getContractFactory("AlgebraLimitFarming");
   const AlgebraLimitFarming = await AlgebraLimitFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, maxIncentiveStartLeadTime, maxIncentiveDuration);

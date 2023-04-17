@@ -32,12 +32,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     }
 
     /// @inheritdoc INonfungibleTokenPositionDescriptor
-    function tokenURI(INonfungiblePositionManager positionManager, uint256 tokenId)
-        external
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        INonfungiblePositionManager positionManager,
+        uint256 tokenId
+    ) external view override returns (string memory) {
         (, , address token0, address token1, int24 tickLower, int24 tickUpper, , , , , ) = positionManager.positions(
             tokenId
         );
@@ -61,10 +59,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                     quoteTokenAddress: quoteTokenAddress,
                     baseTokenAddress: baseTokenAddress,
                     quoteTokenSymbol: quoteTokenAddress == WNativeToken
-                        ? 'MATIC'
+                        ? 'AVAX'
                         : SafeERC20Namer.tokenSymbol(quoteTokenAddress),
                     baseTokenSymbol: baseTokenAddress == WNativeToken
-                        ? 'MATIC'
+                        ? 'AVAX'
                         : SafeERC20Namer.tokenSymbol(baseTokenAddress),
                     quoteTokenDecimals: IERC20Metadata(quoteTokenAddress).decimals(),
                     baseTokenDecimals: IERC20Metadata(baseTokenAddress).decimals(),
@@ -78,11 +76,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             );
     }
 
-    function flipRatio(
-        address token0,
-        address token1,
-        uint256 chainId
-    ) public view returns (bool) {
+    function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool) {
         return tokenRatioPriority(token0, chainId) > tokenRatioPriority(token1, chainId);
     }
 
