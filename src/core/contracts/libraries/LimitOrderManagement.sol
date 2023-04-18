@@ -105,7 +105,6 @@ library LimitOrderManagement {
       (uint128 amountToSell, uint128 soldAmount) = (data.amountToSell, data.soldAmount);
       uint256 unsoldAmount = amountToSell - soldAmount; // safe since soldAmount always < amountToSell
 
-      fee = 0;
       if (exactIn) {
         amountOut = FullMath.mulDiv(amountOut, Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
       }
