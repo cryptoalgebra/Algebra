@@ -20,11 +20,16 @@ library LimitOrderManagement {
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
   /// @param self The mapping containing limit order cumulatives for initialized ticks
   /// @param tick The tick that will be updated
+  /// @param tick The current tick in pool
   /// @param amount The amount of liquidity that will be added/removed
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
-  function addOrRemoveLimitOrder(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal returns (bool flipped) {
-    if (tick > 0) require(tick < Constants.MAX_LIMIT_ORDER_TICK);
-    else require(tick >= -Constants.MAX_LIMIT_ORDER_TICK);
+  function addOrRemoveLimitOrder(
+    mapping(int24 => LimitOrder) storage self,
+    int24 tick,
+    int24 currentTick,
+    int128 amount
+  ) internal returns (bool flipped) {
+    if (tick >= Constants.MAX_LIMIT_ORDER_TICK || tick < -Constants.MAX_LIMIT_ORDER_TICK) revert IAlgebraPoolErrors.invalidTickForLimitOrder();
 
     LimitOrder storage data = self[tick];
     uint128 _amountToSell = data.amountToSell;
@@ -34,17 +39,15 @@ library LimitOrderManagement {
         flipped = _amountToSell == 0;
         _amountToSell += uint128(amount);
 
-        //uint160 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-        //uint256 priceDoublePrecision = FullMath.mulDiv(tickSqrtPrice * Constants.Q96, tickSqrtPrice * Constants.Q96, Constants.Q192);
-        // if tick <= currentTick
-        //uint256 amountIn = FullMath.mulDivRoundingUp(_amountToSell, Constants.Q192, priceDoublePrecision);
-        //console.logUint(tickSqrtPrice);
-        //console.logUint(priceDoublePrecision);
-        //console.logUint(amountIn);
-        //console.logUint(Constants.Q128);
-        //require( amountIn < Constants.Q128, 'limit order overflow');
+        // check if a limit order can be closed at all
+        uint256 tickSqrtPriceX128 = uint256(TickMath.getSqrtRatioAtTick(tick)) * Constants.Q32;
+        uint256 priceX128 = FullMath.mulDiv(tickSqrtPriceX128, tickSqrtPriceX128, Constants.Q128);
+        uint256 amountToBuy = (tick > currentTick)
+          ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q128, priceX128)
+          : FullMath.mulDivRoundingUp(_amountToSell, priceX128, Constants.Q128);
+        if (amountToBuy > Constants.Q128 >> 1) revert IAlgebraPoolErrors.invalidAmountForLimitOrder();
       } else {
-        _amountToSell -= uint128(-amount);
+        _amountToSell -= uint128(-amount); // TODO check overflow
         flipped = _amountToSell == 0;
         if (flipped) data.soldAmount = 0; // reset filled amount if all orders are closed
       }

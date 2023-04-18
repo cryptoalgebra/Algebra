@@ -49,6 +49,12 @@ interface IAlgebraPoolErrors {
   error invalidNewTickSpacing();
   error invalidNewCommunityFee();
 
+  // ####  LimitOrder errors  ####
+  /// @notice Emitted if tick is too low/high for limit order
+  error invalidTickForLimitOrder();
+  /// @notice Emitted if amount is too high for limit order
+  error invalidAmountForLimitOrder();
+
   // ####  LiquidityMath errors  ####
   /// @notice Emitted if liquidity underflows
   error liquiditySub();

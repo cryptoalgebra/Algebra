@@ -35,7 +35,7 @@ abstract contract LimitOrderPositions is Positions {
       bool remove = amountToSellDelta < 0;
       (int24 currentTick, int24 prevTick) = (globalState.tick, globalState.prevInitializedTick);
 
-      if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
+      if (limitOrders.addOrRemoveLimitOrder(tick, currentTick, amountToSellDelta)) {
         // if tick flipped
         TickManagement.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
