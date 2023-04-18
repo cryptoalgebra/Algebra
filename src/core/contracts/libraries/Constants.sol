@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 
 library Constants {
   uint8 internal constant RESOLUTION = 96;
+  uint256 internal constant Q32 = 1 << 32;
   uint256 internal constant Q64 = 1 << 64;
   uint256 internal constant Q96 = 1 << 96;
   uint256 internal constant Q128 = 1 << 128;
@@ -12,6 +13,8 @@ library Constants {
   uint24 internal constant FEE_DENOMINATOR = 1e6;
   int24 internal constant INIT_TICK_SPACING = 60;
   int24 internal constant MAX_TICK_SPACING = 500;
+
+  int24 constant MAX_LIMIT_ORDER_TICK = 776363;
 
   // the frequency with which the accumulated community fees are sent to the vault
   uint32 internal constant COMMUNITY_FEE_TRANSFER_FREQUENCY = 8 hours;
