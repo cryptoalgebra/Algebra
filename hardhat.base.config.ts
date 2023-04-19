@@ -62,6 +62,12 @@ export default {
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
+    },
+    arbitrum: {
+      url: `https://arb1.arbitrum.io/rpc`,
+      chainId: 42161,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      gasPrice: 100_000_000
     }
   },
   etherscan: {
