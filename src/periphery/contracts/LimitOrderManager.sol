@@ -30,7 +30,7 @@ contract LimitOrderManager is
 {
     struct UpdatePositionCache {
         uint256 cumulativeDelta;
-        uint160 sqrtPrice;
+        uint256 sqrtPrice;
         uint256 price;
         uint128 liquidityLast;
         uint256 feeGrowthInside0LastX128;
@@ -179,11 +179,11 @@ contract LimitOrderManager is
 
         if (cache.cumulativeDelta > 0) {
             uint256 closedAmount = FullMath.mulDiv(cache.cumulativeDelta, position.liquidityInit, Constants.Q128);
-            cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-            cache.price = FullMath.mulDiv(cache.sqrtPrice, cache.sqrtPrice, Constants.Q96);
+            cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick) * Constants.Q32;
+            cache.price = FullMath.mulDiv(cache.sqrtPrice, cache.sqrtPrice, Constants.Q128);
             (uint256 nominator, uint256 denominator) = position.depositedToken
-                ? (Constants.Q96, cache.price)
-                : (cache.price, Constants.Q96);
+                ? (Constants.Q128, cache.price)
+                : (cache.price, Constants.Q128);
             uint256 fullAmount = FullMath.mulDiv(positionLiquidity, nominator, denominator);
             if (closedAmount >= fullAmount) {
                 closedAmount = fullAmount;
