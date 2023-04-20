@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
+import './LiquidityMath.sol';
 import './Constants.sol';
 import './TickMath.sol';
 
@@ -35,10 +36,9 @@ library LimitOrderManagement {
     uint128 _amountToSell = data.amountToSell;
 
     unchecked {
+      flipped = _amountToSell == 0; // calculate 'flipped' for amount > 0 case
+      _amountToSell = LiquidityMath.addDelta(_amountToSell, amount);
       if (amount > 0) {
-        flipped = _amountToSell == 0;
-        _amountToSell += uint128(amount);
-
         // check if a limit order can be closed at all
         uint256 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
         uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
@@ -47,8 +47,7 @@ library LimitOrderManagement {
           : FullMath.mulDivRoundingUp(_amountToSell, priceX144, Constants.Q144);
         if (amountToBuy > Constants.Q128 >> 1) revert IAlgebraPoolErrors.invalidAmountForLimitOrder();
       } else {
-        _amountToSell -= uint128(-amount); // TODO check overflow
-        flipped = _amountToSell == 0;
+        flipped = _amountToSell == 0; // override 'flipped' value
         if (flipped) data.soldAmount = 0; // reset filled amount if all orders are closed
       }
       data.amountToSell = _amountToSell;
