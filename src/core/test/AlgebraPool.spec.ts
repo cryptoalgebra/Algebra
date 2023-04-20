@@ -2096,8 +2096,40 @@ describe('AlgebraPool', () => {
 
         const receivedAmount = balance0After.sub(balance0Before);
 
-        expect(receivedAmount).to.be.eq('5180045469256647995362753001655755')
+        expect(receivedAmount).to.be.eq('5180028147650724670022564431770639')
+        //5180028147650724670022564431770639
+        //5180028146568363561220448355696464
         expect(balance1After).to.be.eq(balance1Before);
+
+        const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
+        const [reserve0, reserve1] = await pool.getReserves();
+        expect(reserve0).to.be.eq(poolBalance0After);
+        expect(reserve1).to.be.eq(poolBalance1After);
+      })
+
+      it('closes limit order at very high price with full execution', async() => {
+        const tickBefore = (await pool.globalState()).tick;
+        await addLimitOrder(swapTarget.address, 776340, 1);
+        
+
+        await swapExact1For0(BigNumber.from(10000).pow(18), wallet.address);
+
+        const tick = (await pool.globalState()).tick;
+
+
+        const balance0Before = await token0.balanceOf(wallet.address) 
+        const balance1Before = await token1.balanceOf(wallet.address) 
+        await swapTarget.removeLimitOrder(pool.address, wallet.address, 776340);
+        const balance0After = await token0.balanceOf(wallet.address)
+        const balance1After = await token1.balanceOf(wallet.address)
+
+        const receivedAmount = balance1After.sub(balance1Before);
+
+        expect(receivedAmount).to.be.eq('5180028146568363561220744072708308')
+        //5180028146568363561220744072708308
+        //5180028146568363561220744072708309
+        //5180028146568363561220448355696464
+        expect(balance0After).to.be.eq(balance0Before);
 
         const [poolBalance0After, poolBalance1After] = await Promise.all([token0.balanceOf(pool.address), token1.balanceOf(pool.address)]);
         const [reserve0, reserve1] = await pool.getReserves();

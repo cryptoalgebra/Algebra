@@ -40,11 +40,11 @@ library LimitOrderManagement {
         _amountToSell += uint128(amount);
 
         // check if a limit order can be closed at all
-        uint256 tickSqrtPriceX128 = uint256(TickMath.getSqrtRatioAtTick(tick)) * Constants.Q32;
-        uint256 priceX128 = FullMath.mulDiv(tickSqrtPriceX128, tickSqrtPriceX128, Constants.Q128);
+        uint256 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+        uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
         uint256 amountToBuy = (tick > currentTick)
-          ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q128, priceX128)
-          : FullMath.mulDivRoundingUp(_amountToSell, priceX128, Constants.Q128);
+          ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q144, priceX144)
+          : FullMath.mulDivRoundingUp(_amountToSell, priceX144, Constants.Q144);
         if (amountToBuy > Constants.Q128 >> 1) revert IAlgebraPoolErrors.invalidAmountForLimitOrder();
       } else {
         _amountToSell -= uint128(-amount); // TODO check overflow
@@ -94,12 +94,12 @@ library LimitOrderManagement {
       if (amountA < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
       // price is defined as "token1/token0"
-      uint256 sqrtPriceX128 = uint256(tickSqrtPrice) * Constants.Q32;
-      uint256 priceX128 = FullMath.mulDiv(sqrtPriceX128, sqrtPriceX128, Constants.Q128);
+      // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
+      uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
 
       uint256 amountB = (zeroToOne == exactIn)
-        ? FullMath.mulDiv(uint256(amountA), priceX128, Constants.Q128) // tokenA is token0
-        : FullMath.mulDiv(uint256(amountA), Constants.Q128, priceX128); // tokenA is token1
+        ? FullMath.mulDiv(uint256(amountA), priceX144, Constants.Q144) // tokenA is token0
+        : FullMath.mulDiv(uint256(amountA), Constants.Q144, priceX144); // tokenA is token1
 
       // limit orders buy tokenIn and sell tokenOut
       (amountOut, amountIn) = exactIn ? (amountB, uint256(amountA)) : (uint256(amountA), amountB);
@@ -123,8 +123,9 @@ library LimitOrderManagement {
       }
 
       amountIn = zeroToOne
-        ? FullMath.mulDivRoundingUp(amountOut, Constants.Q128, priceX128)
-        : FullMath.mulDivRoundingUp(amountOut, priceX128, Constants.Q128);
+        ? FullMath.mulDivRoundingUp(amountOut, Constants.Q144, priceX144)
+        : FullMath.mulDivRoundingUp(amountOut, priceX144, Constants.Q144);
+
       if (exactIn) {
         if (amountOut == unsoldAmount) {
           feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR);

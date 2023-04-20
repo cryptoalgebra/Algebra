@@ -95,9 +95,9 @@ abstract contract LimitOrderPositions is Positions {
         uint256 boughtAmount;
         if (amountToSellInitial > 0) {
           boughtAmount = FullMath.mulDiv(_cumulativeDelta, amountToSellInitial, Constants.Q128);
-          uint256 sqrtPriceX128 = TickMath.getSqrtRatioAtTick(tick) * Constants.Q32;
-          uint256 priceX128 = FullMath.mulDiv(sqrtPriceX128, sqrtPriceX128, Constants.Q128);
-          (uint256 nominator, uint256 denominator) = zeroToOne ? (priceX128, Constants.Q128) : (Constants.Q128, priceX128);
+          uint256 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+          uint256 priceX144 = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q48);
+          (uint256 nominator, uint256 denominator) = zeroToOne ? (priceX144, Constants.Q144) : (Constants.Q144, priceX144);
           uint256 amountToBuy = FullMath.mulDiv(amountToSell, nominator, denominator);
 
           if (boughtAmount < amountToBuy) {
