@@ -65,7 +65,7 @@ contract AlgebraPool is
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
       int24 _tickSpacing = bottomTick == topTick ? tickSpacingLimitOrders : tickSpacing;
-      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
+      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0 || _tickSpacing == type(int24).max) revert tickIsNotSpaced();
     }
     if (bottomTick == topTick) {
       (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
