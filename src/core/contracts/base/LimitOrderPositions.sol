@@ -96,6 +96,7 @@ abstract contract LimitOrderPositions is Positions {
         if (amountToSellInitial > 0) {
           boughtAmount = FullMath.mulDiv(_cumulativeDelta, amountToSellInitial, Constants.Q128);
           uint256 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+          // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
           uint256 priceX144 = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q48);
           (uint256 nominator, uint256 denominator) = zeroToOne ? (priceX144, Constants.Q144) : (Constants.Q144, priceX144);
           uint256 amountToBuy = FullMath.mulDiv(amountToSell, nominator, denominator);

@@ -41,6 +41,7 @@ library LimitOrderManagement {
       if (amount > 0) {
         // check if a limit order can be closed at all
         uint256 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+        // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
         uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
         uint256 amountToBuy = (tick > currentTick)
           ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q144, priceX144)
