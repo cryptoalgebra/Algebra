@@ -5,8 +5,14 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { getDeploymentNonce } from "../../../scripts/getDeploymentNonce";
 import { getZKAddress } from "../../../scripts/getZKAddress";
 
+import * as path from "path";
+import * as fs from "fs";
+
 // An example of a deploy script that will deploy and call a simple contract.
 export default async function (hre: HardhatRuntimeEnvironment) {
+  const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
+  const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
+
   console.log(`Running deploy script`);
   // Initialize the wallet.
   const wallet = new Wallet(hre.network.config.accounts[0]);
@@ -34,4 +40,9 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   await poolDeployer.deployed()
 
   console.log(`${artifactPD.contractName} was deployed to ${poolDeployer.address}`);
+
+  deploysData.poolDeployer = poolDeployer.address;
+  deploysData.factory = factory.address;
+  deploysData.communityVault = vaultAddress;
+  fs.writeFileSync(deployDataPath, JSON.stringify(deploysData));
 }
