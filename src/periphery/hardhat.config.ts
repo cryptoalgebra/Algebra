@@ -1,6 +1,7 @@
 import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
 import "@matterlabs/hardhat-zksync-verify";
+import baseConfig from '../../hardhat.base.config';
 
 module.exports = {
   zksolc: {
@@ -9,16 +10,7 @@ module.exports = {
     settings: {}
   },
   defaultNetwork: "zkSyncTestnet",
-
-  networks: {
-    zkSyncTestnet: {
-      url: "https://testnet.era.zksync.dev",
-      ethNetwork: "goerli", // RPC URL of the network (e.g. https://goerli.infura.io/v3/<API_KEY>)
-      gasPrice: 100_000_000,
-      verifyURL: 'https://zksync2-testnet-explorer.zksync.dev/contract_verification',
-      zksync: true,
-    },
-  },
+  networks: baseConfig.networks,
   solidity: {
     version: "0.8.17",
     settings: {

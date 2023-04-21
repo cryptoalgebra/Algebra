@@ -82,6 +82,12 @@ export default {
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       zksync: true,
     },
+    zkSyncTestnetLocal: {
+      url: "http://localhost:3050",
+      ethNetwork: "http://localhost:8545",
+      accounts: ["0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110"],
+      zksync: true,
+    },
   },
   etherscan: {
     // Your API key for Etherscan
