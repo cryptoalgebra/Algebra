@@ -1,6 +1,6 @@
-const ethers = require("ethers");
+import * as ethers from "ethers";
 
-function getZKAddress(params) {
+export function getZKAddress(params) {
     const prefix = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('zksyncCreate'));
     const addressBytes = ethers.utils
         .keccak256(
@@ -13,13 +13,4 @@ function getZKAddress(params) {
         .slice(26);
 
     return ethers.utils.getAddress(addressBytes);
-}
-
-module.exports = getZKAddress;
-
-for (let i = 0; i < 100; i++) {
-    console.log(i, getZKAddress({
-        from: "0xDeaD1F5aF792afc125812E875A891b038f888258",
-        nonce: i
-    }))
 }

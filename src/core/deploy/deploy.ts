@@ -1,22 +1,20 @@
-import { utils, Wallet } from "zksync-web3";
-import hre from "hardhat";
+import { utils, Wallet, ContractFactory } from "zksync-web3";
 import * as ethers from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
+import { getDeploymentNonce } from "../../../scripts/getDeploymentNonce";
+import { getZKAddress } from "../../../scripts/getZKAddress";
 
 // An example of a deploy script that will deploy and call a simple contract.
 export default async function (hre: HardhatRuntimeEnvironment) {
   console.log(`Running deploy script`);
-
   // Initialize the wallet.
-  const wallet = new Wallet("");
-
+  const wallet = new Wallet("0x7726827caac94a7f9e1b160f7ea819f172f7b6f9d2a97f992c38edeab82d4110");
   // Create deployer object and load the artifact of the contract we want to deploy.
   const deployer = new Deployer(hre, wallet);
-
   const poolDeployerAddress = getZKAddress({
     from: deployer.zkWallet.address, 
-    nonce: 52
+    nonce: (await getDeploymentNonce(deployer)).add(1)
   });
   console.log(poolDeployerAddress)
 
@@ -36,19 +34,4 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   await poolDeployer.deployed()
 
   console.log(`${artifactPD.contractName} was deployed to ${poolDeployer.address}`);
-}
-
-function getZKAddress(params) {
-  const prefix = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('zksyncCreate'));
-  const addressBytes = ethers.utils
-      .keccak256(
-          ethers.utils.concat([
-              prefix,
-              ethers.utils.zeroPad(params.from, 32),
-              ethers.utils.zeroPad(ethers.utils.hexlify(params.nonce), 32)
-          ])
-      )
-      .slice(26);
-
-  return ethers.utils.getAddress(addressBytes);
 }
