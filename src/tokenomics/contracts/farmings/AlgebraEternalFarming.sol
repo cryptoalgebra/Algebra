@@ -60,6 +60,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
 
+  uint256 public numOfIncentives;
+
   bytes32 public constant INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
   bytes32 public constant FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
@@ -122,8 +124,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       key.bonusRewardToken,
       key.pool,
       virtualPool,
-      key.startTime,
-      key.endTime,
+      numOfIncentives++,
       params.reward,
       params.bonusReward,
       params.minimalPositionWidth

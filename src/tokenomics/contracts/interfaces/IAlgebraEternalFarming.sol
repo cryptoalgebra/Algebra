@@ -191,8 +191,7 @@ interface IAlgebraEternalFarming {
   /// @param bonusRewardToken The token being distributed as a bonus reward
   /// @param pool The Algebra pool
   /// @param virtualPool The virtual pool address
-  /// @param startTime The time when the incentive program begins
-  /// @param endTime The time when rewards stop accruing
+  /// @param nonce The nonce of new farming
   /// @param reward The amount of reward tokens to be distributed
   /// @param bonusReward The amount of bonus reward tokens to be distributed
   /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
@@ -201,8 +200,7 @@ interface IAlgebraEternalFarming {
     IERC20Minimal indexed bonusRewardToken,
     IAlgebraPool indexed pool,
     address virtualPool,
-    uint256 startTime,
-    uint256 endTime,
+    uint256 nonce,
     uint256 reward,
     uint256 bonusReward,
     uint24 minimalAllowedPositionWidth
