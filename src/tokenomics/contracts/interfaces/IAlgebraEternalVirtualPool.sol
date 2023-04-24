@@ -44,11 +44,11 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external;
 
   /**
-   * @dev This function is called from the main pool before every swap To increase seconds per liquidity
-   * cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool
+   * @dev This function is called from the main pool before every swap To increase rewards per liquidity
+   * cumulative considering previous liquidity. The liquidity is stored in a virtual pool
    * @param currentTimestamp The timestamp of the current swap
    */
-  function increaseCumulative(uint32 currentTimestamp) external;
+  function distributeRewards(uint32 currentTimestamp) external;
 
   /// @notice Change reward rates
   /// @param rate0 The new rate of main token distribution per sec

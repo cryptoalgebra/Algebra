@@ -11,5 +11,5 @@ interface IPositionFollower {
 
     /// @notice Report a burn of position token
     /// @param tokenId The ID of the token which is being burned
-    function burnPosition(uint256 tokenId) external;
+    function burnPosition(uint256 tokenId) external returns (bool);
 }

@@ -68,6 +68,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
 
       if (timeDelta > 0) {
+        // update rewards
         uint128 _currentLiquidity = currentLiquidity;
         if (_currentLiquidity > 0) {
           (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
@@ -98,7 +99,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
-    _increaseCumulative(uint32(block.timestamp));
+    _distributeRewards(uint32(block.timestamp));
 
     int24 previousTick = globalPrevInitializedTick;
     uint128 _currentLiquidity = currentLiquidity;
@@ -134,8 +135,8 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function increaseCumulative(uint32 currentTimestamp) external override onlyFromFarming {
-    _increaseCumulative(currentTimestamp);
+  function distributeRewards(uint32 currentTimestamp) external override onlyFromFarming {
+    _distributeRewards(currentTimestamp);
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -149,7 +150,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     globalTick = currentTick;
 
     if (currentTimestamp > prevTimestamp) {
-      _increaseCumulative(currentTimestamp);
+      _distributeRewards(currentTimestamp);
     }
 
     if (liquidityDelta != 0) {
@@ -184,7 +185,7 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   // @inheritdoc IAlgebraEternalVirtualPool
   function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
-    _increaseCumulative(uint32(block.timestamp));
+    _distributeRewards(uint32(block.timestamp));
     (rewardRate0, rewardRate1) = (rate0, rate1);
   }
 
@@ -193,7 +194,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
-    _increaseCumulative(uint32(block.timestamp));
+    _distributeRewards(uint32(block.timestamp));
     if (token0Delta | token1Delta != 0) {
       (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
       _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
@@ -202,7 +203,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
   }
 
-  function _increaseCumulative(uint32 currentTimestamp) internal {
+  function _distributeRewards(uint32 currentTimestamp) internal {
     unchecked {
       uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return; // only once per block

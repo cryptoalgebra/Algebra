@@ -295,7 +295,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (farm.liquidity == 0) revert farmDoesNotExist();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    virtualPool.increaseCumulative(uint32(block.timestamp));
+    virtualPool.distributeRewards(uint32(block.timestamp));
 
     uint256 innerRewardGrowth0;
     uint256 innerRewardGrowth1;
