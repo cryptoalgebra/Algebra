@@ -109,11 +109,12 @@ contract EternalVirtualPool is VirtualTickStructure {
     // so this loop will cross no more ticks than the real pool
     if (zeroToOne) {
       while (_globalTick != TickMath.MIN_TICK) {
-        if (targetTick >= previousTick) break; // TODO cross min tick
+        if (targetTick >= previousTick) break;
         unchecked {
           _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1, 0));
-          _globalTick = previousTick - 1; // safe since ticks
+          _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
           previousTick = ticks[previousTick].prevTick;
+          if (_globalTick < TickMath.MIN_TICK) _globalTick = TickMath.MIN_TICK;
         }
       }
     } else {
@@ -122,15 +123,13 @@ contract EternalVirtualPool is VirtualTickStructure {
         if (targetTick < nextTick) break;
 
         _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, ticks.cross(nextTick, rewardGrowth0, rewardGrowth1, 0));
-        _globalTick = nextTick;
-        previousTick = nextTick;
+        (_globalTick, previousTick) = (nextTick, nextTick);
       }
     }
 
     globalTick = targetTick;
     currentLiquidity = _currentLiquidity;
     globalPrevInitializedTick = previousTick;
-
     return true;
   }
 
@@ -184,7 +183,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       // clear any tick data that is no longer needed
       if (liquidityDelta < 0) {
         if (flippedBottom) {
-          delete ticks[bottomTick];
+          delete ticks[bottomTick]; // TODO recheck
         }
         if (flippedTop) {
           delete ticks[topTick];

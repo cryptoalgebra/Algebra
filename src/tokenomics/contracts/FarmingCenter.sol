@@ -61,6 +61,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @inheritdoc IPositionFollower
   function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external override {
+    // TODO
     require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
 
     bytes32 _eternalIncentiveId = deposits[tokenId];
