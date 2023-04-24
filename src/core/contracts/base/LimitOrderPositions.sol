@@ -82,7 +82,8 @@ abstract contract LimitOrderPositions is Positions {
           _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
         }
         if (amountToSell == 0) {
-          // initial value isn't zero, but accumulators can overflow
+          // during initialization, "1" is written to the limit order accumulators (boughtAmount{0,1}Cumulative), not zero
+          // however, in the future, the accumulators may overflow and become equal to zero
           if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = _limitOrder.boughtAmount0Cumulative;
           if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = _limitOrder.boughtAmount1Cumulative;
         }
@@ -135,7 +136,7 @@ abstract contract LimitOrderPositions is Positions {
       }
       if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
 
-      require(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
+      assert(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
       (position.liquidity) = ((amountToSell << 128) | amountToSellInitial); // tightly pack data
     }
   }

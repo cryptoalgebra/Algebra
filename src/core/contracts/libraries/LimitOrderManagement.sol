@@ -21,7 +21,7 @@ library LimitOrderManagement {
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
   /// @param self The mapping containing limit order cumulatives for initialized ticks
   /// @param tick The tick that will be updated
-  /// @param tick The current tick in pool
+  /// @param currentTick The current tick in pool
   /// @param amount The amount of liquidity that will be added/removed
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
   function addOrRemoveLimitOrder(
