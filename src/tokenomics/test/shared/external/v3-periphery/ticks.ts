@@ -1,4 +1,3 @@
-
 import { BigNumber } from 'ethers'
 
 export const getMinTick = (tickSpacing: number) => Math.ceil(-887272 / tickSpacing) * tickSpacing

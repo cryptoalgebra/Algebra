@@ -302,7 +302,7 @@ contract NonfungiblePositionManager is
         }
 
         if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).increaseLiquidity(params.tokenId, actualLiquidity) {
+            try IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, int256(actualLiquidity)) {
                 // do nothing
             } catch {
                 emit FarmingFailed(params.tokenId);
@@ -361,10 +361,10 @@ contract NonfungiblePositionManager is
         }
 
         if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).decreaseLiquidity(params.tokenId, params.liquidity) returns (
-                bool res
-            ) {
-                require(res, 'position locked in farm');
+            try
+                IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, -int256(uint256(params.liquidity)))
+            {
+                // do nothing
             } catch {
                 emit FarmingFailed(params.tokenId);
             }
@@ -433,8 +433,8 @@ contract NonfungiblePositionManager is
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
 
         if (farmingCenter != address(0) && tokenFarmedIn[tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).burnPosition(tokenId) returns (bool res) {
-                require(res, 'position locked in farm');
+            try IPositionFollower(farmingCenter).burnPosition(tokenId) {
+                // do nothing
             } catch {
                 emit FarmingFailed(tokenId);
             }
