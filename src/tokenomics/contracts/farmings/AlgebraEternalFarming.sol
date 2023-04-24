@@ -139,7 +139,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (incentive.deactivated) revert incentiveStopped();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(_getCurrentVirtualPool(key.pool));
-    if (address(virtualPool) == address(0)) revert incentiveNotExist(); // TODO pool can detach by itself
+    if (address(virtualPool) == address(0)) revert incentiveNotExist();
     if (incentive.virtualPoolAddress != address(virtualPool)) revert anotherFarmingIsActive();
 
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
@@ -253,6 +253,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Incentive storage incentive = incentives[incentiveId];
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
+    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
     int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
@@ -344,8 +345,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     farmingCenter.connectVirtualPool(pool, virtualPool);
   }
 
-  function _getCurrentVirtualPool(IAlgebraPool pool) internal view returns (address eternal) {
-    return farmingCenter.virtualPoolAddresses(address(pool));
+  function _getCurrentVirtualPool(IAlgebraPool pool) internal view returns (address virtualPool) {
+    return pool.activeIncentive();
   }
 
   function _receiveRewards(
@@ -377,6 +378,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
     Incentive storage incentive;
     (incentiveId, incentive) = _getIncentiveByKey(key);
+    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
     if (incentive.deactivated) revert incentiveStopped();
 
     IAlgebraPool pool;
