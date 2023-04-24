@@ -179,16 +179,6 @@ contract EternalVirtualPool is VirtualTickStructure {
         }
         globalPrevInitializedTick = previousTick;
       }
-
-      // clear any tick data that is no longer needed
-      if (liquidityDelta < 0) {
-        if (flippedBottom) {
-          delete ticks[bottomTick]; // TODO recheck
-        }
-        if (flippedTop) {
-          delete ticks[topTick];
-        }
-      }
     }
   }
 
