@@ -84,7 +84,7 @@ library VirtualTickManagement {
     Tick storage data = self[tick];
 
     int128 liquidityDeltaBefore = data.liquidityDelta;
-    uint128 liquidityTotalBefore = data.liquidityTotal; // TODO redundant?
+    uint128 liquidityTotalBefore = data.liquidityTotal;
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
     if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();

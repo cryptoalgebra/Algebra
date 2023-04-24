@@ -362,13 +362,15 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     incentive.bonusReward = incentive.bonusReward + receivedBonusReward;
   }
 
-  function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128 received) {
+  function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128) {
     uint256 balanceBefore = token.balanceOf(address(this));
     TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
     uint256 balanceAfter = token.balanceOf(address(this));
     require(balanceAfter > balanceBefore);
     unchecked {
-      received = uint128(balanceAfter - balanceBefore); // TODO OVERFLOW CHECKS
+      uint256 received = uint128(balanceAfter - balanceBefore);
+      require(received <= type(uint128).max, 'invalid token amount');
+      return (uint128(received));
     }
   }
 

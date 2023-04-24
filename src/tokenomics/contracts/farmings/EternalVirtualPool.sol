@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
 
 import '../libraries/VirtualTickManagement.sol';
@@ -104,19 +105,19 @@ contract EternalVirtualPool is VirtualTickStructure {
     int24 _globalTick = globalTick;
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
+    // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
+    // so this loop will cross no more ticks than the real pool
     if (zeroToOne) {
-      while (true) {
-        if (targetTick >= previousTick) break;
-        // TODO inf
-
+      while (_globalTick != TickMath.MIN_TICK) {
+        if (targetTick >= previousTick) break; // TODO cross min tick
         unchecked {
           _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1, 0));
-          _globalTick = previousTick - 1;
+          _globalTick = previousTick - 1; // safe since ticks
           previousTick = ticks[previousTick].prevTick;
         }
       }
     } else {
-      while (true) {
+      while (_globalTick != TickMath.MAX_TICK - 1) {
         int24 nextTick = ticks[previousTick].nextTick;
         if (targetTick < nextTick) break;
 
