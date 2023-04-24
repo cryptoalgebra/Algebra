@@ -17,6 +17,7 @@ interface IFarmingCenter is IMulticall {
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
+  /// @notice The eternal farming contract
   function eternalFarming() external view returns (IAlgebraEternalFarming);
 
   /// @notice Returns information about a deposited NFT
