@@ -10,6 +10,8 @@ import '../libraries/VirtualTickManagement.sol';
 
 import '../base/VirtualTickStructure.sol';
 
+/// @title Algebra eternal virtual pool
+/// @notice used to track active liquidity in farming and distribute rewards
 contract EternalVirtualPool is VirtualTickStructure {
   using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
 

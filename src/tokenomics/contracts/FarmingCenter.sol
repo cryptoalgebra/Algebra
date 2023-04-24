@@ -30,7 +30,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   modifier isOwner(uint256 tokenId) {
-    require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner');
+    require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner of token');
     _;
   }
 
