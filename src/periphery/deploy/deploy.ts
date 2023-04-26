@@ -16,7 +16,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   
   const factory = deploysData.factory;
   const poolDeployer = deploysData.poolDeployer;
-  const weth = "0xaAf221d04F50E2AC32B2B21F679997c2d7A835e4"; 
+  const weth = "0x20b28B1e4665FFf290650586ad76E977EAb90c5D"; 
 
   // Initialize the wallet.
   const wallet = new Wallet(hre.network.config.accounts[0]);
@@ -24,8 +24,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // Create deployer object and load the artifact of the contract we want to deploy.
   const deployer = new Deployer(hre, wallet);
 
-
-  // Load contract
   const quoterArtifact = await deployer.loadArtifact("Quoter");
   // `greeting` is an argument for contract constructor.
   const quoter = await deployer.deploy(quoterArtifact, [factory, weth, poolDeployer]);
