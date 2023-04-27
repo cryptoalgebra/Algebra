@@ -101,14 +101,10 @@ export class HelperCommands {
    *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
    */
   createIncentiveFlow: HelperTypes.CreateIncentive.Command = async (params) => {
-    const { startTime } = params
-    const endTime = params.endTime || startTime + this.DEFAULT_INCENTIVE_DURATION
+    const { nonce } = params
 
     const incentiveCreator = this.actors.incentiveCreator()
-    const times = {
-      startTime,
-      endTime,
-    }
+
     const bal = await params.rewardToken.balanceOf(incentiveCreator.address)
     const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address)
 
@@ -131,7 +127,7 @@ export class HelperCommands {
         pool: params.poolAddress,
         rewardToken: params.rewardToken.address,
         bonusRewardToken: params.bonusRewardToken.address,
-        ...times,
+        nonce,
       },
       {
         reward: params.totalReward,
@@ -147,7 +143,7 @@ export class HelperCommands {
 
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
-      ...times,
+      nonce,
 
       virtualPool: new ethers.Contract(virtualPoolAddress, new ethers.utils.Interface(abi.abi), this.actors.lpUser0()),
     }
@@ -325,8 +321,7 @@ export class HelperCommands {
       rewardToken: params.rewardToken.address,
       bonusRewardToken: params.bonusRewardToken.address,
       pool: params.poolAddress,
-      startTime: params.startTime,
-      endTime: params.endTime,
+      nonce: params.nonce
     })
   }
 
@@ -542,6 +537,5 @@ export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = (params) => ({
   rewardToken: params.rewardToken.address,
   bonusRewardToken: params.bonusRewardToken.address,
   pool: params.poolAddress,
-  startTime: params.startTime,
-  endTime: params.endTime,
+  nonce: params.nonce
 })

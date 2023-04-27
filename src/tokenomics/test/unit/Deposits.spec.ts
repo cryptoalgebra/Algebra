@@ -53,7 +53,7 @@ describe('unit/Deposits', () => {
   let subject: (tokenId: string) => Promise<any>
   let tokenId: string
   const SAFE_TRANSFER_FROM_SIGNATURE = 'safeTransferFrom(address,address,uint256,bytes)'
-  const INCENTIVE_KEY_ABI = 'tuple(address rewardToken, address bonusRewardToken, address pool, uint256 startTime, uint256 endTime)'
+  const INCENTIVE_KEY_ABI = 'tuple(address rewardToken, address bonusRewardToken, address pool, uint256 nonce)'
 
   beforeEach(async () => {
     await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, context.nft.address)
@@ -93,12 +93,12 @@ describe('unit/Deposits', () => {
     }
 
     beforeEach('setup', async () => {
-      const { startTime } = makeTimestamps(await blockTimestamp())
+      const nonce = await context.eternalFarming.numOfIncentives()
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         poolAddress: context.poolObj.address,
-        startTime,
+        nonce,
         totalReward,
         bonusReward,
       })

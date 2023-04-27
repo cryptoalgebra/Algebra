@@ -34,6 +34,7 @@ describe('unit/EternalFarms', () => {
   const totalReward = BigNumber.from('10000')
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine(provider)
+  let nonce = BN(0)
   let bonusReward = BigNumber.from('200')
   let helpers: HelperCommands
   let context: AlgebraFixtureType
@@ -63,7 +64,7 @@ describe('unit/EternalFarms', () => {
 
       /** We will be doing a lot of time-testing here, so leave some room between
         and when the incentive starts */
-      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+      nonce = await context.eternalFarming.numOfIncentives()
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, context.nft.address)
 
@@ -87,7 +88,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('10'),
         bonusRewardRate: BigNumber.from('50'),
       }
@@ -101,7 +102,7 @@ describe('unit/EternalFarms', () => {
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
-            ...timestamps,
+            nonce,
           },
           L2TokenId
         )
@@ -127,10 +128,7 @@ describe('unit/EternalFarms', () => {
     })
 
     describe('works and', () => {
-      // Make sure the incentive has started
-      // beforeEach(async () => {
-      //   await Time.set(timestamps.startTime + 100)
-      // })
+
 
       it('emits the farm event', async () => {
         const { liquidity } = await context.nft.positions(tokenId)
@@ -153,19 +151,16 @@ describe('unit/EternalFarms', () => {
 
     describe('fails when', () => {
       it('deposit is already farmd in the incentive', async () => {
-        //await Time.set(timestamps.startTime + 500)
         await subject(tokenId, lpUser0)
         await expect(subject(tokenId, lpUser0)).to.be.revertedWith('token already farmed')
       })
 
       it('you are not the owner of the deposit', async () => {
-        //await Time.set(timestamps.startTime + 500)
         // lpUser2 calls, we're using lpUser0 elsewhere.
-        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('not owner')
+        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('not owner of token')
       })
 
       it('has 0 liquidity in the position', async () => {
-        //await Time.set(timestamps.startTime + 500)
         await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, context.nft.address)
 
         const tokenId2 = await mintPosition(context.nft.connect(lpUser0), {
@@ -204,7 +199,6 @@ describe('unit/EternalFarms', () => {
           tokens: [context.token1, context.rewardToken],
         })
 
-        // await Time.setAndMine(incentive2.startTime + 1)
 
         await helpers.depositFlow({
           lp: lpUser0,
@@ -217,7 +211,7 @@ describe('unit/EternalFarms', () => {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
+              nonce,
             },
             otherTokenId
           )
@@ -225,16 +219,14 @@ describe('unit/EternalFarms', () => {
       })
 
       it('incentive key does not exist', async () => {
-        // await Time.setAndMine(timestamps.startTime + 20)
-
+        nonce = BN(999)
         await expect(
           context.farmingCenter.connect(lpUser0).enterFarming(
             {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
-              startTime: timestamps.startTime + 10,
+              nonce
             },
             tokenId
           )
@@ -248,7 +240,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         }
@@ -275,7 +267,7 @@ describe('unit/EternalFarms', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce,
       }
 
       let incentiveId = await helpers.getIncentiveId(
@@ -285,7 +277,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -343,7 +335,7 @@ describe('unit/EternalFarms', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce,
       }
 
       let incentiveId = await helpers.getIncentiveId(
@@ -353,7 +345,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -400,7 +392,7 @@ describe('unit/EternalFarms', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce,
       }
 
       let incentiveId = await helpers.getIncentiveId(
@@ -410,7 +402,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -463,7 +455,7 @@ describe('unit/EternalFarms', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce,
       }
 
       incentiveId = await helpers.getIncentiveId(
@@ -473,7 +465,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -548,7 +540,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('10'),
         bonusRewardRate: BigNumber.from('50'),
       })
@@ -570,7 +562,7 @@ describe('unit/EternalFarms', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenId
       )
@@ -671,7 +663,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -700,7 +692,7 @@ describe('unit/EternalFarms', () => {
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
-            ...timestamps,
+            nonce,
           },
           tokenId
         )
@@ -713,7 +705,7 @@ describe('unit/EternalFarms', () => {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
+              nonce,
             },
             tokenId
           )
@@ -732,7 +724,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -775,7 +767,7 @@ describe('unit/EternalFarms', () => {
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
-            ...timestamps,
+            nonce,
           },
           tokenId
         )
@@ -785,7 +777,7 @@ describe('unit/EternalFarms', () => {
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
-            ...timestamps,
+            nonce,
           },
           tokenIdOut
         )
@@ -799,7 +791,7 @@ describe('unit/EternalFarms', () => {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
+              nonce,
             },
             tokenId
           )
@@ -839,7 +831,7 @@ describe('unit/EternalFarms', () => {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
+              nonce,
             },
             tokenIdOut
           )
@@ -856,7 +848,7 @@ describe('unit/EternalFarms', () => {
               pool: context.pool01,
               rewardToken: context.rewardToken.address,
               bonusRewardToken: context.bonusRewardToken.address,
-              ...timestamps,
+              nonce,
             },
             tokenId
           )
@@ -888,7 +880,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('10'),
         bonusRewardRate: BigNumber.from('50'),
       })
@@ -956,17 +948,16 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('10000'),
         bonusRewardRate: BigNumber.from('50000'),
       }
 
       incentiveKey = {
-        ...timestamps,
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
-
         pool: context.pool01,
+        nonce
       }
 
       virtualPool = (await helpers.createIncentiveFlow(incentiveArgs)).virtualPool
@@ -1000,17 +991,16 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('100'),
         bonusRewardRate: BigNumber.from('3'),
       }
 
       incentiveKey = {
-        ...timestamps,
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
-
         pool: context.pool01,
+        nonce,
       }
 
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
@@ -1064,11 +1054,10 @@ describe('unit/EternalFarms', () => {
 
     it('#addRewards to non-existent incentive', async () => {
       incentiveKey = {
-        ...timestamps,
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
-
         pool: context.pool12,
+        nonce,
       }
 
       await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 0, 0)).to.be.revertedWithCustomError(
@@ -1101,7 +1090,7 @@ describe('unit/EternalFarms', () => {
           pool: context.pool01,
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
-          ...timestamps,
+          nonce,
         },
         tokenId
       )

@@ -15,14 +15,9 @@ import {
   algebraFixture,
   log,
   days,
-  ratioE18,
   bnSum,
-  getCurrentTick,
-  BNe,
   mintPosition,
-  MaxUint256,
-  maxGas,
-  encodePath,
+
 } from './shared'
 import { createTimeMachine } from './shared/time'
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers'
@@ -32,8 +27,6 @@ import { HelperTypes } from './helpers/types'
 import { Wallet } from 'ethers'
 
 import './matchers/beWithin'
-const LIMIT_FARMING = true
-const ETERNAL_FARMING = false
 
 describe('AlgebraFarming', () => {
   let wallets: Wallet[]
@@ -58,6 +51,7 @@ describe('AlgebraFarming', () => {
     const totalReward = BNe18(2_000_000)
     const bonusReward = BNe18(4_000)
     const duration = days(40)
+    
 
     const scenario: () => Promise<TestSubject> = async () => {
       const context = await algebraFixture()
@@ -110,6 +104,7 @@ describe('AlgebraFarming', () => {
       const endTime = startTime + duration
 
       let incentiveCreator = actors.incentiveCreator()
+      let nonce = await context.eternalFarming.numOfIncentives()
 
       await context.rewardToken.transfer(incentiveCreator.address, totalReward)
       await context.bonusRewardToken.transfer(incentiveCreator.address, bonusReward)
@@ -122,8 +117,7 @@ describe('AlgebraFarming', () => {
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
-            startTime,
-            endTime,
+            nonce,
           },
           {
             reward: totalReward,
@@ -142,8 +136,7 @@ describe('AlgebraFarming', () => {
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
-            startTime,
-            endTime,
+            nonce,
           },
           {
             reward: totalReward,
@@ -162,8 +155,7 @@ describe('AlgebraFarming', () => {
             pool: context.pool01,
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
-            startTime,
-            endTime,
+            nonce
           },
           {
             reward: totalReward,
@@ -221,9 +213,10 @@ describe('AlgebraFarming', () => {
       const epoch = await blockTimestamp()
       const startTime = epoch + 100
       const endTime = startTime + duration
+      let nonce = await context.eternalFarming.numOfIncentives()
+
       const createIncentiveResult = await helpers.createIncentiveFlow({
-        startTime,
-        endTime,
+        nonce: nonce,
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         minimalPositionWidth: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -253,6 +246,7 @@ describe('AlgebraFarming', () => {
 
     const totalReward = BNe18(3_000)
     const bonusReward = BNe18(4_000)
+    
     const duration = days(1)
     const ticksToFarm: [number, number] = [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])]
     const amountsToFarm: [BigNumber, BigNumber] = [BNe18(1), BNe18(1)]
@@ -272,9 +266,10 @@ describe('AlgebraFarming', () => {
       const startTime = epoch + 1_000
       const endTime = startTime + duration
 
+      let nonce = await context.eternalFarming.numOfIncentives()
+      
       const createIncentiveResult = await helpers.createIncentiveFlow({
-        startTime,
-        endTime,
+        nonce,
         rewardToken,
         bonusRewardToken,
         poolAddress: context.pool01,
@@ -315,14 +310,21 @@ describe('AlgebraFarming', () => {
     }
 
     beforeEach('load fixture', async () => {
+
       subject = await loadFixture(scenario)
     })
 
     describe('who all farm the entire time ', () => {
       it('allows them all to withdraw at the end', async () => {
+
+        const epoch = await blockTimestamp()
+
+        const startTime = epoch + 1_000
+        const endTime = startTime + duration
+
         const { helpers, createIncentiveResult } = subject
 
-        await time.increaseTo(createIncentiveResult.endTime + 1)
+        await time.increaseTo(endTime + 1)
 
         const trader = actors.traderUser0()
         await helpers.makeTickGoFlow({
@@ -332,7 +334,7 @@ describe('AlgebraFarming', () => {
         })
 
         // Sanity check: make sure we go past the incentive end time.
-        expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(createIncentiveResult.endTime)
+        expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(endTime)
 
         // Everyone pulls their liquidity at the same time
         const exitFarmings = await Promise.all(
@@ -359,7 +361,12 @@ describe('AlgebraFarming', () => {
       it('allows them all to withdraw at the end', async () => {
         const { helpers, createIncentiveResult } = subject
 
-        await time.increaseTo(createIncentiveResult.endTime + 1)
+        const epoch = await blockTimestamp()
+
+        const startTime = epoch + 1_000
+        const endTime = startTime + duration
+
+        await time.increaseTo(endTime + 1)
 
         const trader = actors.traderUser0()
         await helpers.makeTickGoFlow({
@@ -369,7 +376,7 @@ describe('AlgebraFarming', () => {
         })
 
         // Sanity check: make sure we go past the incentive end time.
-        expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(createIncentiveResult.endTime)
+        expect(await blockTimestamp(), 'test setup: must be run after start time').to.be.gte(endTime)
 
         // Everyone pulls their liquidity at the same time
         const exitFarmings = await Promise.all(
@@ -396,8 +403,13 @@ describe('AlgebraFarming', () => {
       it('does not change the rewards', async () => {
         const { helpers, createIncentiveResult, context, farms } = subject
 
+        const epoch = await blockTimestamp()
+
+        const startTime = epoch + 1_000
+        const endTime = startTime + duration
+
         // Go halfway through
-        await time.setNextBlockTimestamp(createIncentiveResult.startTime + duration / 2)
+        await time.setNextBlockTimestamp(startTime + duration / 2)
 
         const lpUser3 = actors.traderUser2()
 
@@ -421,7 +433,7 @@ describe('AlgebraFarming', () => {
           deadline: (await blockTimestamp()) + 1000,
         })
 
-        await time.setNextBlockTimestamp(createIncentiveResult.endTime + 1)
+        await time.setNextBlockTimestamp(endTime + 1)
 
         const trader = actors.traderUser0()
         await helpers.makeTickGoFlow({

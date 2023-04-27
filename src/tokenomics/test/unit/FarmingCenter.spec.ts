@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat'
-import { BigNumber, Contract, Wallet } from 'ethers'
+import { BigNumber, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20, AlgebraEternalFarming } from '../../typechain'
-import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
+import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
   getMaxTick,
@@ -11,19 +11,16 @@ import {
   TICK_SPACINGS,
   blockTimestamp,
   BN,
-  BNe,
   BNe18,
   snapshotGasCost,
   ActorFixture,
   makeTimestamps,
-  maxGas,
-  ZERO_ADDRESS,
 } from '../shared'
 import { provider } from '../shared/provider'
-import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
-import { ContractParams } from '../../types/contractParams'
+import { HelperCommands, ERC20Helper } from '../helpers'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
+import { ContractParams } from '../../types/contractParams'
 
 describe('unit/FarmingCenter', () => {
   let actors: ActorFixture
@@ -38,6 +35,7 @@ describe('unit/FarmingCenter', () => {
   let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
   let tokenId: string
+  let nonce = BN(0)
 
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[]
@@ -59,7 +57,7 @@ describe('unit/FarmingCenter', () => {
 
   xdescribe('swap gas [ @skip-on-coverage ]', async () => {
     it('3 swaps', async () => {
-      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+      nonce = await context.eternalFarming.numOfIncentives()
 
       const mintResult = await helpers.mintFlow({
         lp: lpUser0,
@@ -71,7 +69,7 @@ describe('unit/FarmingCenter', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce: nonce
       }
 
       let incentiveIdEternal = await helpers.getIncentiveId(
@@ -81,7 +79,7 @@ describe('unit/FarmingCenter', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce: nonce,
           rewardRate: BigNumber.from('10'),
           bonusRewardRate: BigNumber.from('50'),
         })
@@ -94,7 +92,7 @@ describe('unit/FarmingCenter', () => {
           totalReward,
           bonusReward,
           poolAddress: context.poolObj.address,
-          ...timestamps,
+          nonce,
         })
       )
 
@@ -150,7 +148,7 @@ describe('unit/FarmingCenter', () => {
         totalReward,
         bonusReward,
         poolAddress: context.poolObj.address,
-        ...timestamps,
+        nonce,
         rewardRate: BigNumber.from('100'),
         bonusRewardRate: BigNumber.from('50'),
       })
@@ -190,7 +188,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         BNe18(1),
         BNe18(1)
@@ -211,7 +209,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenIdEternal
       )
@@ -239,7 +237,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         BNe18(1),
         BNe18(1)
@@ -259,7 +257,7 @@ describe('unit/FarmingCenter', () => {
         rewardToken: context.rewardToken.address,
         bonusRewardToken: context.bonusRewardToken.address,
         pool: context.pool01,
-        ...timestamps,
+        nonce,
       })
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
@@ -267,7 +265,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenIdEternal
       )
@@ -286,7 +284,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenIdEternal
       )
@@ -299,7 +297,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenIdEternal
       )
@@ -318,7 +316,7 @@ describe('unit/FarmingCenter', () => {
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool12,
-            ...timestamps,
+            nonce,
           },
           tokenIdEternal
         )
@@ -331,7 +329,7 @@ describe('unit/FarmingCenter', () => {
           rewardToken: context.rewardToken.address,
           bonusRewardToken: context.bonusRewardToken.address,
           pool: context.pool01,
-          ...timestamps,
+          nonce,
         },
         tokenIdEternal
       )
@@ -342,7 +340,7 @@ describe('unit/FarmingCenter', () => {
             rewardToken: context.rewardToken.address,
             bonusRewardToken: context.bonusRewardToken.address,
             pool: context.pool01,
-            ...timestamps,
+            nonce,
           },
           tokenIdEternal
         )

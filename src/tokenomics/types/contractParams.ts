@@ -10,7 +10,8 @@ export module ContractParams {
     pool: string
     rewardToken: string
     bonusRewardToken: string
-  } & Timestamps
+    nonce: BigNumberish
+  } 
 
   export type CreateIncentive = IncentiveKey & {
     reward: BigNumberish

@@ -10,11 +10,9 @@ export module HelperTypes {
       rewardToken: TestERC20
       bonusRewardToken: TestERC20
       poolAddress: string
-      startTime: number
-      endTime?: number
+      nonce: BigNumber
       totalReward: BigNumber
       bonusReward: BigNumber
-      enterStartTime?: BigNumber
 
       rewardRate?: BigNumber
       bonusRewardRate?: BigNumber
@@ -26,8 +24,7 @@ export module HelperTypes {
       bonusRewardToken: TestERC20
       bonusReward: BigNumber
       totalReward: BigNumber
-      startTime: number
-      endTime: number
+      nonce: BigNumber
       virtualPool: Contract
     }
 
