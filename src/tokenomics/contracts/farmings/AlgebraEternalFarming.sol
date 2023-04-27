@@ -381,6 +381,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
     Incentive storage incentive;
     (incentiveId, incentive) = _getIncentiveByKey(key);
+    virtualPool = incentive.virtualPoolAddress;
+
     if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
     if (incentive.deactivated) revert incentiveStopped();
 
@@ -395,7 +397,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       if (int256(tickUpper) - int256(tickLower) < int256(uint256(minimalAllowedTickWidth))) revert positionIsTooNarrow();
     }
 
-    virtualPool = incentive.virtualPoolAddress;
     int24 tick = _getTickInPool(pool);
     _updatePositionInVirtualPool(virtualPool, uint32(block.timestamp), tickLower, tickUpper, int256(uint256(liquidity)).toInt128(), tick);
   }
