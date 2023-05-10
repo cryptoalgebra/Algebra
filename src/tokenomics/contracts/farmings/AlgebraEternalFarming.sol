@@ -162,6 +162,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
     unchecked {
+      virtualPool.distributeRewards(uint32(block.timestamp));
       (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
       if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
       if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
