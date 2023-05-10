@@ -172,7 +172,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
     unchecked {
-      virtualPool.distributeRewards(uint32(block.timestamp));
+      virtualPool.distributeRewards();
       (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
       if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
       if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
@@ -276,7 +276,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
-    virtualPool.distributeRewards(uint32(block.timestamp));
+    virtualPool.distributeRewards();
 
     (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
@@ -314,7 +314,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (farm.liquidity == 0) revert farmDoesNotExist();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    virtualPool.distributeRewards(uint32(block.timestamp));
+    virtualPool.distributeRewards();
 
     uint256 innerRewardGrowth0;
     uint256 innerRewardGrowth1;
