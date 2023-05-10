@@ -405,14 +405,18 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _claimReward(IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) internal returns (uint256 reward) {
+    if (to == address(0)) revert claimToZeroAddress();
     reward = rewards[from][rewardToken];
 
     if (amountRequested == 0 || amountRequested > reward) amountRequested = reward;
-    unchecked {
-      rewards[from][rewardToken] = reward - amountRequested;
+
+    if (amountRequested > 0) {
+      unchecked {
+        rewards[from][rewardToken] = reward - amountRequested;
+      }
+      TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
+      emit RewardClaimed(to, amountRequested, address(rewardToken), from);
     }
-    TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
-    emit RewardClaimed(to, amountRequested, address(rewardToken), from);
   }
 
   function _getIncentiveByKey(IncentiveKey memory key) internal view returns (bytes32 incentiveId, Incentive storage incentive) {

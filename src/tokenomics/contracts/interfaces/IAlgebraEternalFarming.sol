@@ -28,6 +28,7 @@ interface IAlgebraEternalFarming {
   error positionIsTooNarrow();
   error zeroLiquidity();
   error invalidPool();
+  error claimToZeroAddress();
 
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
