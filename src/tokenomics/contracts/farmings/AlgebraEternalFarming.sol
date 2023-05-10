@@ -106,7 +106,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     if (_getCurrentVirtualPool(key.pool) != address(0)) revert farmingAlreadyExists();
 
-    virtualPool = address(new EternalVirtualPool(address(farmingCenter), address(this), address(key.pool)));
+    virtualPool = address(new EternalVirtualPool(address(this), address(key.pool)));
     _connectPoolToVirtualPool(key.pool, virtualPool);
 
     bytes32 incentiveId = IncentiveId.compute(key);

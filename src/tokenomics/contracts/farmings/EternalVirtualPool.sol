@@ -15,7 +15,6 @@ import '../base/VirtualTickStructure.sol';
 contract EternalVirtualPool is VirtualTickStructure {
   using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
 
-  address public immutable farmingCenterAddress;
   address public immutable farmingAddress;
   address public immutable pool;
 
@@ -42,9 +41,8 @@ contract EternalVirtualPool is VirtualTickStructure {
     _;
   }
 
-  constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) {
+  constructor(address _farmingAddress, address _pool) {
     globalPrevInitializedTick = TickMath.MIN_TICK;
-    farmingCenterAddress = _farmingCenterAddress;
     farmingAddress = _farmingAddress;
     pool = _pool;
     prevTimestamp = uint32(block.timestamp);
@@ -100,7 +98,7 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
-    if (msg.sender != farmingCenterAddress && msg.sender != pool) revert onlyPool();
+    if (msg.sender != pool) revert onlyPool();
     _distributeRewards(uint32(block.timestamp));
 
     int24 previousTick = globalPrevInitializedTick;
