@@ -215,7 +215,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     bytes32 incentiveId = IncentiveId.compute(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
 
-    if (_getCurrentVirtualPool(key.pool) != address(virtualPool) && (rewardRate != 0 || bonusRewardRate != 0)) revert incentiveStopped();
+    if ((incentive.deactivated || _getCurrentVirtualPool(key.pool) != address(virtualPool)) && (rewardRate | bonusRewardRate != 0))
+      revert incentiveStopped();
     _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
   }
 
