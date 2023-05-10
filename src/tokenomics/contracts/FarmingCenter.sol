@@ -8,6 +8,7 @@ import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
+import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
 
 import './libraries/IncentiveId.sol';
 
@@ -16,6 +17,7 @@ import './libraries/IncentiveId.sol';
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   IAlgebraEternalFarming public immutable override eternalFarming;
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
+  address public immutable override algebraPoolDeployer;
 
   /// @dev saves addresses of virtual pools for pool
   mapping(address => address) public override virtualPoolAddresses;
@@ -27,6 +29,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   constructor(IAlgebraEternalFarming _eternalFarming, INonfungiblePositionManager _nonfungiblePositionManager) {
     eternalFarming = _eternalFarming;
     nonfungiblePositionManager = _nonfungiblePositionManager;
+    algebraPoolDeployer = _nonfungiblePositionManager.poolDeployer();
   }
 
   modifier isOwner(uint256 tokenId) {
@@ -123,6 +126,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @inheritdoc IFarmingCenter
   function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
+    PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
+    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
     require(msg.sender == address(eternalFarming), 'only farming can call this');
     pool.setIncentive(newVirtualPool);
     virtualPoolAddresses[address(pool)] = newVirtualPool;

@@ -20,6 +20,9 @@ interface IFarmingCenter is IMulticall {
   /// @notice The eternal farming contract
   function eternalFarming() external view returns (IAlgebraEternalFarming);
 
+  /// @notice The Algebra poolDeployer contract
+  function algebraPoolDeployer() external view returns (address);
+
   /// @notice Returns information about a deposited NFT
   /// @param tokenId The ID of the deposit (and token) that is being transferred
   /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
