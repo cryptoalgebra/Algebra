@@ -215,7 +215,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     bytes32 incentiveId = IncentiveId.compute(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
 
-    if ((incentive.deactivated || _getCurrentVirtualPool(key.pool) != address(virtualPool)) && (rewardRate | bonusRewardRate != 0))
+    if ((incentives[incentiveId].deactivated || _getCurrentVirtualPool(key.pool) != address(virtualPool)) && (rewardRate | bonusRewardRate != 0))
       revert incentiveStopped();
     _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
   }
@@ -224,13 +224,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
     (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPoolAddress) = _enterFarming(key, tokenId);
 
-    mapping(bytes32 => Farm) storage farmsForToken = farms[tokenId];
-    if (farmsForToken[incentiveId].liquidity != 0) revert tokenAlreadyFarmed();
-
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(virtualPoolAddress);
     (uint256 innerRewardGrowth0, uint256 innerRewardGrowth1) = _getInnerRewardsGrowth(virtualPool, tickLower, tickUpper);
 
-    farmsForToken[incentiveId] = Farm(liquidity, tickLower, tickUpper, innerRewardGrowth0, innerRewardGrowth1);
+    farms[tokenId][incentiveId] = Farm(liquidity, tickLower, tickUpper, innerRewardGrowth0, innerRewardGrowth1);
 
     emit FarmEntered(tokenId, incentiveId, liquidity);
   }
@@ -400,6 +397,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (incentiveId, incentive) = _getIncentiveByKey(key);
     virtualPool = incentive.virtualPoolAddress;
 
+    if (farms[tokenId][incentiveId].liquidity != 0) revert tokenAlreadyFarmed();
     if (_getCurrentVirtualPool(key.pool) != address(virtualPool) || incentive.deactivated) revert incentiveStopped(); // pool can "detach" by itself
 
     IAlgebraPool pool;
