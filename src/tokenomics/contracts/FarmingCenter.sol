@@ -42,6 +42,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     bytes32 incentiveId = IncentiveId.compute(key);
     if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
+    require(deposits[tokenId] == bytes32(0), 'token already farmed');
     deposits[tokenId] = incentiveId;
     nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
