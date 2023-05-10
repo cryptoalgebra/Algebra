@@ -91,6 +91,17 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     factory = IAlgebraFactory(_nonfungiblePositionManager.factory());
   }
 
+  /// @inheritdoc IAlgebraEternalFarming
+  function isIncentiveActiveInPool(bytes32 incentiveId, IAlgebraPool pool) external view override returns (bool res) {
+    Incentive storage incentive = incentives[incentiveId];
+    if (incentive.deactivated) return false;
+
+    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+    if (_getCurrentVirtualPool(pool) != address(virtualPool)) return false; // pool can "detach" by itself
+
+    return true;
+  }
+
   function _checkIsFarmingCenter() internal view {
     require(msg.sender == address(farmingCenter));
   }

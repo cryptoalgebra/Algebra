@@ -91,11 +91,17 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
       IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
 
-      if (liquidity == 0) {
+      if (liquidity == 0 || virtualPoolAddresses[address(key.pool)] == address(0)) {
         _exitFarming(key, tokenId, tokenOwner);
       } else {
-        IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
-        IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId); // enter with new liquidity value
+        if (!IAlgebraEternalFarming(eternalFarming).isIncentiveActiveInPool(IncentiveId.compute(key), key.pool)) {
+          // exit if incentive stopped
+          _exitFarming(key, tokenId, tokenOwner);
+        } else {
+          // reenter with new liquidity value
+          IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+          IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
+        }
       }
     }
   }

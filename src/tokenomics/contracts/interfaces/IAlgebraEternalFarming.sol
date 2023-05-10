@@ -49,6 +49,13 @@ interface IAlgebraEternalFarming {
       bool deactivated
     );
 
+  /// @notice Check if incentive is active in Algebra pool
+  /// @dev Does not check that the pool is indeed an Algebra pool
+  /// @param incentiveId The ID of the incentive computed from its parameters
+  /// @param pool Corresponding Algebra pool
+  /// @return res True if incentive is active in Algebra pool
+  function isIncentiveActiveInPool(bytes32 incentiveId, IAlgebraPool pool) external view returns (bool res);
+
   /// @notice Detach incentive from the pool and deactivate it
   /// @param key The key of the incentive
   function deactivateIncentive(IncentiveKey memory key) external;
