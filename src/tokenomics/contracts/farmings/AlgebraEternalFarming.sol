@@ -216,6 +216,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external override onlyIncentiveMaker {
     bytes32 incentiveId = IncentiveId.compute(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
+
+    if (_getCurrentVirtualPool(key.pool) != address(virtualPool) && (rewardRate != 0 || bonusRewardRate != 0)) revert incentiveStopped();
     _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
   }
 
