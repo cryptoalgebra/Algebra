@@ -113,6 +113,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Incentive storage newIncentive = incentives[incentiveId];
 
     (params.reward, params.bonusReward) = _receiveRewards(key, params.reward, params.bonusReward, newIncentive);
+    if (params.reward == 0) revert zeroRewardAmount();
+
     unchecked {
       if (int256(uint256(params.minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)))
         revert minimalPositionWidthTooWide();

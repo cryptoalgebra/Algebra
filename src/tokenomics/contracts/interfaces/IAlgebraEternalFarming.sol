@@ -23,6 +23,7 @@ interface IAlgebraEternalFarming {
   error anotherFarmingIsActive();
 
   error minimalPositionWidthTooWide();
+  error zeroRewardAmount();
 
   error positionIsTooNarrow();
   error zeroLiquidity();
