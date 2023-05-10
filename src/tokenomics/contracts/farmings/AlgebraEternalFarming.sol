@@ -109,6 +109,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     virtualPool = address(new EternalVirtualPool(address(this), address(key.pool)));
     _connectPoolToVirtualPool(key.pool, virtualPool);
 
+    key.nonce = numOfIncentives++;
     bytes32 incentiveId = IncentiveId.compute(key);
     Incentive storage newIncentive = incentives[incentiveId];
 
@@ -126,7 +127,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       key.bonusRewardToken,
       key.pool,
       virtualPool,
-      numOfIncentives++,
+      key.nonce,
       params.reward,
       params.bonusReward,
       params.minimalPositionWidth
