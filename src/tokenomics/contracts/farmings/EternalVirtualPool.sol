@@ -116,7 +116,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       while (_globalTick != TickMath.MIN_TICK) {
         if (targetTick >= previousTick) break;
         unchecked {
-          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1, 0));
+          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1));
           _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
           previousTick = ticks[previousTick].prevTick;
           if (_globalTick < TickMath.MIN_TICK) _globalTick = TickMath.MIN_TICK;
@@ -127,7 +127,7 @@ contract EternalVirtualPool is VirtualTickStructure {
         int24 nextTick = ticks[previousTick].nextTick;
         if (targetTick < nextTick) break;
 
-        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, ticks.cross(nextTick, rewardGrowth0, rewardGrowth1, 0));
+        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, ticks.cross(nextTick, rewardGrowth0, rewardGrowth1));
         (_globalTick, previousTick) = (nextTick, nextTick);
       }
     }
@@ -237,6 +237,6 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal returns (bool updated) {
-    return ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, 0, isTopTick);
+    return ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, isTopTick);
   }
 }

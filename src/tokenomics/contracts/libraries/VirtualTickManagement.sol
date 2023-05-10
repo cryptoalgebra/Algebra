@@ -20,7 +20,6 @@ library VirtualTickManagement {
     uint256 outerFeeGrowth1Token;
     int24 prevTick;
     int24 nextTick;
-    uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
   }
 
   /// @notice Retrieves fee growth data
@@ -68,7 +67,6 @@ library VirtualTickManagement {
   /// @param liquidityDelta A new amount of liquidity to be added (subtracted) when tick is crossed from left to right (right to left)
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param secondsPerLiquidityCumulative The all-time seconds per max(1, liquidity) of the pool
   /// @param upper true for updating a position's upper tick, or false for updating a position's lower tick
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
   function update(
@@ -78,7 +76,6 @@ library VirtualTickManagement {
     int128 liquidityDelta,
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
-    uint160 secondsPerLiquidityCumulative,
     bool upper
   ) internal returns (bool flipped) {
     Tick storage data = self[tick];
@@ -101,7 +98,6 @@ library VirtualTickManagement {
       if (tick <= currentTick) {
         data.outerFeeGrowth0Token = totalFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token;
-        data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
       }
     }
   }
@@ -111,20 +107,16 @@ library VirtualTickManagement {
   /// @param tick The destination tick of the transition
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param secondsPerLiquidityCumulative The current seconds per liquidity
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
   function cross(
     mapping(int24 => Tick) storage self,
     int24 tick,
     uint256 totalFeeGrowth0Token,
-    uint256 totalFeeGrowth1Token,
-    uint160 secondsPerLiquidityCumulative
+    uint256 totalFeeGrowth1Token
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
 
     unchecked {
-      data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
-
       data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
       data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
     }

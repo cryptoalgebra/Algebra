@@ -19,8 +19,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
       uint256 outerFeeGrowth0Token,
       uint256 outerFeeGrowth1Token,
       int24 prevTick,
-      int24 nextTick,
-      uint160 outerSecondsPerLiquidity
+      int24 nextTick
     );
 
   // returns the current liquidity in virtual pool
