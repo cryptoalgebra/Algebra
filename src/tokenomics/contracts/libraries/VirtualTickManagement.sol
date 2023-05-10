@@ -131,7 +131,7 @@ library VirtualTickManagement {
     return data.liquidityDelta;
   }
 
-  /// @notice Used for initial setup if ticks list
+  /// @notice Used for initial setup of ticks list
   /// @param self The mapping containing all tick information for initialized ticks
   function initTickState(mapping(int24 => Tick) storage self) internal {
     (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
