@@ -64,6 +64,10 @@ contract EternalVirtualPool is VirtualTickStructure {
     int24 topTick
   ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
     unchecked {
+      // check if ticks are initialized
+      if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
+      if (ticks[topTick].prevTick == ticks[topTick].nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
+
       uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
       (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
 
