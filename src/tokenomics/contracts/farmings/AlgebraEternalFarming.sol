@@ -203,10 +203,13 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
     if (incentive.deactivated) revert incentiveStopped();
 
+    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) revert incentiveStopped(); // pool can "detach" by itself
+
     (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
 
     if (rewardAmount | bonusRewardAmount > 0) {
-      _addRewards(IAlgebraEternalVirtualPool(incentive.virtualPoolAddress), rewardAmount, bonusRewardAmount, incentiveId);
+      _addRewards(virtualPool, rewardAmount, bonusRewardAmount, incentiveId);
     }
   }
 
