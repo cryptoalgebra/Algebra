@@ -96,7 +96,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _checkHasRole(bytes32 role) internal view {
-    require(IAlgebraFactory(factory).hasRoleOrOwner(role, msg.sender));
+    require(factory.hasRoleOrOwner(role, msg.sender));
   }
 
   /// @inheritdoc IAlgebraEternalFarming
