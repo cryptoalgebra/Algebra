@@ -262,7 +262,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
-    _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, 0, tick);
+    virtualPool.distributeRewards(uint32(block.timestamp));
 
     (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
