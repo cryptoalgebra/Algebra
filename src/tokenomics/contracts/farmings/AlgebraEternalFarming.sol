@@ -171,16 +171,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    unchecked {
-      virtualPool.distributeRewards();
-      (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
-      if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
-      if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
-      incentive.totalReward = incentive.totalReward - rewardAmount;
+    virtualPool.distributeRewards();
+    (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
+    if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
+    if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
+    incentive.totalReward = incentive.totalReward - rewardAmount;
 
-      if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
-      incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
-    }
+    if (bonusRewardAmount > rewardReserve1) bonusRewardAmount = rewardReserve1;
+    incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
 
     virtualPool.decreaseRewards(rewardAmount, bonusRewardAmount);
 
