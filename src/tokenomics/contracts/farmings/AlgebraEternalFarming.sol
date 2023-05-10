@@ -400,8 +400,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (incentiveId, incentive) = _getIncentiveByKey(key);
     virtualPool = incentive.virtualPoolAddress;
 
-    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
-    if (incentive.deactivated) revert incentiveStopped();
+    if (_getCurrentVirtualPool(key.pool) != address(virtualPool) || incentive.deactivated) revert incentiveStopped(); // pool can "detach" by itself
 
     IAlgebraPool pool;
     (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
