@@ -32,7 +32,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint128 bonusReward;
     address virtualPoolAddress;
     uint24 minimalPositionWidth;
-    uint224 totalLiquidity;
     bool deactivated;
   }
 

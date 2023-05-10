@@ -37,17 +37,7 @@ interface IAlgebraEternalFarming {
   /// @param incentiveId The ID of the incentive computed from its parameters
   function incentives(
     bytes32 incentiveId
-  )
-    external
-    view
-    returns (
-      uint128 totalReward,
-      uint128 bonusReward,
-      address virtualPoolAddress,
-      uint24 minimalPositionWidth,
-      uint224 totalLiquidity,
-      bool deactivated
-    );
+  ) external view returns (uint128 totalReward, uint128 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated);
 
   /// @notice Check if incentive is active in Algebra pool
   /// @dev Does not check that the pool is indeed an Algebra pool
