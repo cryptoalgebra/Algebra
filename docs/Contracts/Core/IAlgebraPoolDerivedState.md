@@ -2,42 +2,28 @@
 
 # IAlgebraPoolDerivedState
 
+
 Pool state that is not stored
+
 Contains view functions to provide information about the pool that is computed rather than stored on the
 blockchain. The functions here may have variable gas costs.
+
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 
 
 ## Functions
-### getTimepoints
-
-
-`getTimepoints(uint32[])` view external
-
-Returns the cumulative tick and liquidity as of each timestamp &#x60;secondsAgo&#x60; from the current block timestamp
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| secondsAgos | uint32[] | From how long ago each cumulative tick and liquidity value should be returned |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tickCumulatives | int56[] |  |
-| secondsPerLiquidityCumulatives | uint160[] |  |
-| volatilityCumulatives | uint112[] |  |
-| volumePerAvgLiquiditys | uint256[] |  |
-
 ### getInnerCumulatives
 
 
-`getInnerCumulatives(int24,int24)` view external
+`function getInnerCumulatives(int24 bottomTick, int24 topTick) external view returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)` view external
 
-Returns a snapshot of the tick cumulative, seconds per liquidity and seconds inside a tick range
+Returns a snapshot of seconds per liquidity and seconds inside a tick range
+*Developer note: Snapshots must only be compared to other snapshots, taken over a period for which a position existed.
+I.e., snapshots cannot be compared if a position is not held for the entire period between when the first
+snapshot is taken and the second snapshot is taken.*
 
 
 
@@ -50,12 +36,12 @@ Returns a snapshot of the tick cumulative, seconds per liquidity and seconds ins
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| innerTickCumulative | int56 |  |
-| innerSecondsSpentPerLiquidity | uint160 |  |
-| innerSecondsSpent | uint32 |  |
+| innerSecondsSpentPerLiquidity | uint160 | The snapshot of seconds per liquidity for the range |
+| innerSecondsSpent | uint32 | The snapshot of the number of seconds during which the price was in this range |
+
+
 
 
 
 ---
-
 

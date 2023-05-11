@@ -55,6 +55,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @dev bytes32 refers to the return value of IncentiveId.compute
   /// @inheritdoc IAlgebraEternalFarming
   mapping(bytes32 => Incentive) public override incentives;
+
   /// @dev farms[tokenId][incentiveHash] => Farm
   /// @inheritdoc IAlgebraEternalFarming
   mapping(uint256 => mapping(bytes32 => Farm)) public override farms;

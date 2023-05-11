@@ -5,18 +5,16 @@
 {{/if}}
 
 {{#if signature}}
-`{{signature}}` {{stateMutability}} {{visibility}}
+`{{signature}}` {{stateMutabilityFiltered}} {{visibility}}
 {{/if}}
 {{#else}}
-{{stateMutability}} {{visibility}}
+{{stateMutabilityFiltered}} {{visibility}}
 {{/else}}
 
 {{#with natspec}}
 {{notice}}
 {{#if dev}}
-{{#if isDevUnique}}
 *Developer note: {{dev}}*
-{{/if}}
 {{/if}}
 
 {{/with}}

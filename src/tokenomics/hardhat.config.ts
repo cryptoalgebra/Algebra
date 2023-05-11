@@ -4,7 +4,7 @@ import '@nomicfoundation/hardhat-chai-matchers'
 import '@nomiclabs/hardhat-etherscan'
 import 'hardhat-contract-sizer'
 import 'solidity-coverage'
-import 'algebra-solidity-docgen'
+import 'solidity-docgen'
 
 import { HardhatUserConfig } from 'hardhat/config'
 import { SolcUserConfig } from 'hardhat/types'
@@ -39,9 +39,10 @@ const config: HardhatUserConfig = {
     runOnCompile: false,
   },
   docgen: {
-    output: '../../docs/Contracts/Tokenomics',
+    outputDir: '../../docs/Contracts/Tokenomics',
     pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public',
+    collapseNewlines: true
   },
 }
 

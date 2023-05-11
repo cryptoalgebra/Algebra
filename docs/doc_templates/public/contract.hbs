@@ -4,46 +4,65 @@
 
 {{h 1}} {{name}}
 
+{{#hsection}}
+
 {{natspec.title}}
+
 {{natspec.notice}}
+
 {{#if natspec.dev}}
 *Developer note: {{natspec.dev}}*
 {{/if}}
 
 {{#if modifiers}}
 ## Modifiers
+{{#hsection}}
 {{#each modifiers}}
-{{>item hlevel=3}}
+{{>item}}
 {{/each}}
+{{/hsection}}
 {{/if}}
 
 {{#if events}}
 ## Events
+{{#hsection}}
 {{#each events}}
-{{>item hlevel=3}}
+{{>item}}
 {{/each}}
+{{/hsection}}
 {{/if}}
 
 {{#if publicVariables}}
 ## Variables
+{{#hsection}}
 {{#each publicVariables}}
-{{>item hlevel=3}}
+{{>item}}
 {{/each}}
+{{/hsection}}
 {{/if}}
 
 {{#if publicExternalFunctions}}
 ## Functions
+{{#hsection}}
 {{#each publicExternalFunctions}}
-{{>item hlevel=3}}
+{{>item}}
 {{/each}}
+{{/hsection}}
 {{/if}}
 
+{{/hsection}}
+
+{{/if}}
+
+{{#if errors}}
+## Errors
+{{#hsection}}
 {{#each errors}}
-{{>item hlevel=3}}
+{{>item}}
 {{/each}}
+{{/hsection}}
+{{/if}}
 
 ---
-
-{{/if}}
 
 {{/if}}
