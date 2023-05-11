@@ -4,7 +4,9 @@
 
 
 Algebra reserves management abstract contract
+
 Encapsulates logic for tracking and changing pool reserves
+
 
 
 

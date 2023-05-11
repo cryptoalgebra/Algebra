@@ -4,7 +4,9 @@
 
 
 Algebra pool base abstract contract
+
 Contains state variables, immutables and common internal functions
+
 
 ## Modifiers
 ### onlyValidTicks

@@ -5,6 +5,8 @@
 
 Algebra main farming contract
 
+
+
 *Developer note: Manages farmings and performs entry, exit and other actions.*
 
 ## Modifiers

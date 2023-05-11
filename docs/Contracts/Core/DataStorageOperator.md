@@ -4,7 +4,9 @@
 
 
 Algebra timepoints data operator
+
 This contract stores timepoints and calculates adaptive fee and statistical averages
+
 
 ## Modifiers
 ### onlyPool

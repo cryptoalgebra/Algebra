@@ -4,7 +4,9 @@
 
 
 Pool state that is not stored
+
 Contains view functions to provide information about the pool that is computed rather than stored on the blockchain
+
 
 
 

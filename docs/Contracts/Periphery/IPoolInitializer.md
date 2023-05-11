@@ -4,8 +4,10 @@
 
 
 Creates and initializes Algebra Pools
+
 Provides a method for creating and initializing a pool, if necessary, for bundling with other methods that
 require the pool to exist.
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 

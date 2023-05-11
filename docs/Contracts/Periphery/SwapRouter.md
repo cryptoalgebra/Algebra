@@ -4,7 +4,9 @@
 
 
 Algebra Swap Router
+
 Router for stateless execution of swaps against Algebra
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 

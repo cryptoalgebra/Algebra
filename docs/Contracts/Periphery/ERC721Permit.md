@@ -4,7 +4,9 @@
 
 
 ERC721 with permit
+
 Nonfungible tokens that support an approve via signature, i.e. permit
+
 
 
 

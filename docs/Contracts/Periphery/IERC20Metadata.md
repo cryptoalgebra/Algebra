@@ -4,7 +4,9 @@
 
 
 Interface for ERC20 Metadata
+
 Extension to IERC20 that includes token metadata
+
 
 
 

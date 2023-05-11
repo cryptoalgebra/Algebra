@@ -4,7 +4,9 @@
 
 
 Provides quotes for swaps
+
 Allows getting the expected amount out or amount in for a given swap without executing the swap
+
 *Developer note: These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 the swap and check the amounts in the callback.
 Credit to Uniswap Labs under GPL-2.0-or-later license:

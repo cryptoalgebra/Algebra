@@ -4,7 +4,9 @@
 
 
 Algebra pool deployer
+
 Is used by AlgebraFactory to deploy pools
+
 *Developer note: Version: Algebra V2*
 
 

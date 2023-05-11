@@ -4,7 +4,9 @@
 
 
 Algebra community fee vault
+
 Community fee from pools is sent here, if it is enabled
+
 
 ## Modifiers
 ### onlyWithdrawer

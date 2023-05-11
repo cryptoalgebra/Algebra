@@ -4,7 +4,9 @@
 
 
 Algebra positions abstract contract
+
 Contains the logic of recalculation and change of liquidity positions
+
 
 
 

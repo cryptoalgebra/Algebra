@@ -5,6 +5,8 @@
 
 The interface for the Algebra Factory
 
+
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 

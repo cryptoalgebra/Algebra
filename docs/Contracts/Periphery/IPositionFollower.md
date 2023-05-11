@@ -4,7 +4,9 @@
 
 
 Contract tracking liquidity position
+
 Using these methods farmingCenter receives information about changes in the positions
+
 
 
 

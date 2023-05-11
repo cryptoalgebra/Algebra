@@ -4,7 +4,9 @@
 
 
 Self Permit
+
 Functionality to call permit on any EIP-2612-compliant token for use in the route
+
 
 
 

@@ -4,7 +4,9 @@
 
 
 Minimal ERC20 interface for Algebra
+
 Contains a subset of the full ERC20 interface that is used in Algebra
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 

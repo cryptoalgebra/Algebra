@@ -4,8 +4,10 @@
 
 
 Non-fungible token for positions
+
 Wraps Algebra positions in a non-fungible token interface which allows for them to be transferred
 and authorized.
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 

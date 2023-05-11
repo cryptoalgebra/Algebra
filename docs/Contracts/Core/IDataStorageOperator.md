@@ -5,6 +5,8 @@
 
 The interface for the DataStorageOperator
 
+
+
 *Developer note: This contract stores timepoints and calculates adaptive fee and statistical averages*
 
 

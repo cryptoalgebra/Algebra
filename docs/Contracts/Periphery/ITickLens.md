@@ -4,7 +4,9 @@
 
 
 Tick Lens
+
 Provides functions for fetching chunks of tick data for a pool
+
 *Developer note: This avoids the waterfall of fetching the tick bitmap, parsing the bitmap to know which ticks to fetch, and
 then sending additional multicalls to fetch the tick data
 Credit to Uniswap Labs under GPL-2.0-or-later license:

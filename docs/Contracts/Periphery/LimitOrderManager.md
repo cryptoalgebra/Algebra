@@ -4,7 +4,9 @@
 
 
 NFT limitPositions
+
 Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
+
 
 ## Modifiers
 ### isAuthorizedForToken

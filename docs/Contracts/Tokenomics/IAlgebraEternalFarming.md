@@ -4,7 +4,9 @@
 
 
 Algebra Eternal Farming Interface
+
 Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
+
 
 
 ## Events
