@@ -2,6 +2,7 @@
 
 # IAlgebraFlashCallback
 
+
 Callback for IAlgebraPoolActions#flash
 Any contract that calls IAlgebraPoolActions#flash must implement this interface
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
-# algebraFlashCallback
+### algebraFlashCallback
 
 
 `function algebraFlashCallback(uint256 fee0, uint256 fee1, bytes data) external`  external
@@ -31,6 +32,7 @@ The caller of this method _must_ be checked to be a AlgebraPool deployed by the 
 
 
 
----
 
+
+---
 

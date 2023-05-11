@@ -2,6 +2,7 @@
 
 # Quoter
 
+
 Provides quotes for swaps
 Allows getting the expected amount out or amount in for a given swap without executing the swap
 *Developer note: These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -13,7 +14,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _factory, address _WNativeToken, address _poolDeployer) public`  public
@@ -29,7 +30,7 @@ https://github.com/Uniswap/v3-periphery*
 | _poolDeployer | address |  |
 
 
-# algebraSwapCallback
+### algebraSwapCallback
 
 
 `function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes path) external view` view external
@@ -48,7 +49,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 | path | bytes |  |
 
 
-# quoteExactInputSingle
+### quoteExactInputSingle
 
 
 `function quoteExactInputSingle(address tokenIn, address tokenOut, uint256 amountIn, uint160 limitSqrtPrice) public returns (uint256 amountOut, uint16 fee)`  public
@@ -71,7 +72,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | amountOut | uint256 | The amount of &#x60;tokenOut&#x60; that would be received |
 | fee | uint16 |  |
 
-# quoteExactInput
+### quoteExactInput
 
 
 `function quoteExactInput(bytes path, uint256 amountIn) external returns (uint256 amountOut, uint16[] fees)`  external
@@ -92,7 +93,7 @@ Returns the amount out received for a given exact input swap without executing t
 | amountOut | uint256 | The amount of the last token that would be received |
 | fees | uint16[] |  |
 
-# quoteExactOutputSingle
+### quoteExactOutputSingle
 
 
 `function quoteExactOutputSingle(address tokenIn, address tokenOut, uint256 amountOut, uint160 limitSqrtPrice) public returns (uint256 amountIn, uint16 fee)`  public
@@ -115,7 +116,7 @@ Returns the amount in required to receive the given exact output amount but for 
 | amountIn | uint256 | The amount required as the input for the swap in order to receive &#x60;amountOut&#x60; |
 | fee | uint16 |  |
 
-# quoteExactOutput
+### quoteExactOutput
 
 
 `function quoteExactOutput(bytes path, uint256 amountOut) external returns (uint256 amountIn, uint16[] fees)`  external
@@ -138,6 +139,7 @@ Returns the amount in required for a given exact output swap without executing t
 
 
 
----
 
+
+---
 

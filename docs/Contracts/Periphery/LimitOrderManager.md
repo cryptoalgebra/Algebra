@@ -2,11 +2,12 @@
 
 # LimitOrderManager
 
+
 NFT limitPositions
 Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 
 ## Modifiers
-# isAuthorizedForToken
+### isAuthorizedForToken
 
 
 `modifier isAuthorizedForToken(uint256 tokenId)`  internal
@@ -24,7 +25,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _factory, address _WNativeToken, address _poolDeployer) public`  public
@@ -40,7 +41,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | _poolDeployer | address |  |
 
 
-# limitPositions
+### limitPositions
 
 
 `function limitPositions(uint256 tokenId) external view returns (struct ILimitOrderManager.LimitPosition limitPosition, address token0, address token1)` view external
@@ -61,7 +62,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | token0 | address |  |
 | token1 | address |  |
 
-# addLimitOrder
+### addLimitOrder
 
 
 `function addLimitOrder(struct ILimitOrderManager.addLimitOrderParams params) external payable returns (uint256 tokenId)` payable external
@@ -80,7 +81,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | ---- | ---- | ----------- |
 | tokenId | uint256 |  |
 
-# decreaseLimitOrder
+### decreaseLimitOrder
 
 
 `function decreaseLimitOrder(uint256 tokenId, uint128 liquidity) external payable` payable external
@@ -95,7 +96,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | liquidity | uint128 |  |
 
 
-# collectLimitOrder
+### collectLimitOrder
 
 
 `function collectLimitOrder(uint256 tokenId, address recipient) external payable returns (uint256 amount0, uint256 amount1)` payable external
@@ -116,7 +117,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | amount0 | uint256 |  |
 | amount1 | uint256 |  |
 
-# baseURI
+### baseURI
 
 
 `function baseURI() public pure returns (string)` pure public
@@ -132,7 +133,7 @@ Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
 | ---- | ---- | ----------- |
 | [0] | string |  |
 
-# burn
+### burn
 
 
 `function burn(uint256 tokenId) external payable` payable external
@@ -147,7 +148,7 @@ must be collected first.
 | tokenId | uint256 | The ID of the token that is being burned |
 
 
-# getApproved
+### getApproved
 
 
 `function getApproved(uint256 tokenId) public view returns (address)` view public
@@ -173,6 +174,7 @@ Requirements:
 
 
 
----
 
+
+---
 

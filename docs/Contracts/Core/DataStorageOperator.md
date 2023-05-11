@@ -2,11 +2,12 @@
 
 # DataStorageOperator
 
+
 Algebra timepoints data operator
 This contract stores timepoints and calculates adaptive fee and statistical averages
 
 ## Modifiers
-# onlyPool
+### onlyPool
 
 
 `modifier onlyPool()`  internal
@@ -20,23 +21,23 @@ This contract stores timepoints and calculates adaptive fee and statistical aver
 
 
 ## Variables
-# struct DataStorage.Timepoint[65536] timepoints 
+### struct DataStorage.Timepoint[65536] timepoints 
 
 Returns data belonging to a certain timepoint
 
 *Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
-# struct AlgebraFeeConfiguration feeConfig 
+### struct AlgebraFeeConfiguration feeConfig 
 
 
 
-# bytes32 FEE_CONFIG_MANAGER constant
+### bytes32 FEE_CONFIG_MANAGER constant
 
 
 
 *Developer note: The role can be granted in AlgebraFactory*
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _pool) public`  public
@@ -50,7 +51,7 @@ Returns data belonging to a certain timepoint
 | _pool | address |  |
 
 
-# initialize
+### initialize
 
 
 `function initialize(uint32 time, int24 tick) external`  external
@@ -65,7 +66,7 @@ Initialize the dataStorage array by writing the first slot. Called once for the 
 | tick | int24 | Initial tick |
 
 
-# changeFeeConfiguration
+### changeFeeConfiguration
 
 
 `function changeFeeConfiguration(struct AlgebraFeeConfiguration _config) external`  external
@@ -79,7 +80,7 @@ Changes fee configuration for the pool
 | _config | struct AlgebraFeeConfiguration |  |
 
 
-# getSingleTimepoint
+### getSingleTimepoint
 
 
 `function getSingleTimepoint(uint32 time, uint32 secondsAgo, int24 tick, uint16 lastIndex) external view returns (int56 tickCumulative, uint112 volatilityCumulative)` view external
@@ -106,7 +107,7 @@ at exactly the timestamp between the two timepoints.*
 | tickCumulative | int56 | The cumulative tick since the pool was first initialized, as of &#x60;secondsAgo&#x60; |
 | volatilityCumulative | uint112 | The cumulative volatility value since the pool was first initialized, as of &#x60;secondsAgo&#x60; |
 
-# getTimepoints
+### getTimepoints
 
 
 `function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)` view external
@@ -127,7 +128,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 | tickCumulatives | int56[] | The cumulative tick since the pool was first initialized, as of each &#x60;secondsAgo&#x60; |
 | volatilityCumulatives | uint112[] | The cumulative volatility values since the pool was first initialized, as of each &#x60;secondsAgo&#x60; |
 
-# write
+### write
 
 
 `function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee)`  external
@@ -150,7 +151,7 @@ Writes a dataStorage timepoint to the array
 | indexUpdated | uint16 | The new index of the most recently written element in the dataStorage array |
 | newFee | uint16 | The fee in hundredths of a bip, i.e. 1e-6 |
 
-# prepayTimepointsStorageSlots
+### prepayTimepointsStorageSlots
 
 
 `function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external`  external
@@ -168,6 +169,7 @@ Fills uninitialized timepoints with nonzero value
 
 
 
----
 
+
+---
 

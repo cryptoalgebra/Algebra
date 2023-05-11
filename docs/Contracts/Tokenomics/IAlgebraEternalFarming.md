@@ -2,12 +2,13 @@
 
 # IAlgebraEternalFarming
 
+
 Algebra Eternal Farming Interface
 Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
 
 
 ## Events
-# IncentiveDeactivated
+### IncentiveDeactivated
 
 
 `event IncentiveDeactivated(bytes32 incentiveId)`  
@@ -21,7 +22,7 @@ Event emitted when a liquidity mining incentive has been stopped from the outsid
 | incentiveId | bytes32 | The stopped incentive |
 
 
-# FarmEntered
+### FarmEntered
 
 
 `event FarmEntered(uint256 tokenId, bytes32 incentiveId, uint128 liquidity)`  
@@ -37,7 +38,7 @@ Event emitted when a Algebra LP token has been farmd
 | liquidity | uint128 | The amount of liquidity farmd |
 
 
-# FarmEnded
+### FarmEnded
 
 
 `event FarmEnded(uint256 tokenId, bytes32 incentiveId, address rewardAddress, address bonusRewardToken, address owner, uint256 reward, uint256 bonusReward)`  
@@ -57,7 +58,7 @@ Event emitted when a Algebra LP token has been exitFarmingd
 | bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
 
 
-# IncentiveMaker
+### IncentiveMaker
 
 
 `event IncentiveMaker(address incentiveMaker)`  
@@ -71,7 +72,7 @@ Emitted when the incentive maker is changed
 | incentiveMaker | address | The incentive maker after the address was changed |
 
 
-# FarmingCenter
+### FarmingCenter
 
 
 `event FarmingCenter(address farmingCenter)`  
@@ -85,7 +86,7 @@ Emitted when the farming center is changed
 | farmingCenter | address | The farming center after the address was changed |
 
 
-# RewardsAdded
+### RewardsAdded
 
 
 `event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId)`  
@@ -101,7 +102,7 @@ Event emitted when rewards were added
 | incentiveId | bytes32 | The ID of the incentive for which rewards were added |
 
 
-# RewardAmountsDecreased
+### RewardAmountsDecreased
 
 
 `event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId)`  
@@ -117,7 +118,7 @@ Event emitted when rewards were added
 | incentiveId | bytes32 |  |
 
 
-# RewardClaimed
+### RewardClaimed
 
 
 `event RewardClaimed(address to, uint256 reward, address rewardAddress, address owner)`  
@@ -134,7 +135,7 @@ Event emitted when a reward token has been claimed
 | owner | address | The address where claimed rewards were sent to |
 
 
-# RewardsRatesChanged
+### RewardsRatesChanged
 
 
 `event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId)`  
@@ -150,7 +151,7 @@ Event emitted when reward rates were changed
 | incentiveId | bytes32 | The ID of the incentive for which rates were changed |
 
 
-# RewardsCollected
+### RewardsCollected
 
 
 `event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount)`  
@@ -167,7 +168,7 @@ Event emitted when rewards were collected
 | bonusRewardAmount | uint256 | Collected amount of bonus reward |
 
 
-# EternalFarmingCreated
+### EternalFarmingCreated
 
 
 `event EternalFarmingCreated(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 nonce, uint256 reward, uint256 bonusReward, uint24 minimalAllowedPositionWidth)`  
@@ -191,7 +192,7 @@ Event emitted when a liquidity mining incentive has been created
 
 
 ## Functions
-# nonfungiblePositionManager
+### nonfungiblePositionManager
 
 
 `function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)` view external
@@ -207,7 +208,7 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
 
-# incentives
+### incentives
 
 
 `function incentives(bytes32 incentiveId) external view returns (uint128 totalReward, uint128 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated)` view external
@@ -230,7 +231,7 @@ Represents a farming incentive
 | minimalPositionWidth | uint24 |  |
 | deactivated | bool |  |
 
-# isIncentiveActiveInPool
+### isIncentiveActiveInPool
 
 
 `function isIncentiveActiveInPool(bytes32 incentiveId, contract IAlgebraPool pool) external view returns (bool res)` view external
@@ -251,7 +252,7 @@ Check if incentive is active in Algebra pool
 | ---- | ---- | ----------- |
 | res | bool | True if incentive is active in Algebra pool |
 
-# deactivateIncentive
+### deactivateIncentive
 
 
 `function deactivateIncentive(struct IncentiveKey key) external`  external
@@ -265,7 +266,7 @@ Detach incentive from the pool and deactivate it
 | key | struct IncentiveKey | The key of the incentive |
 
 
-# addRewards
+### addRewards
 
 
 `function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
@@ -281,7 +282,7 @@ Detach incentive from the pool and deactivate it
 | bonusRewardAmount | uint128 |  |
 
 
-# decreaseRewardsAmount
+### decreaseRewardsAmount
 
 
 `function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
@@ -297,7 +298,7 @@ Detach incentive from the pool and deactivate it
 | bonusRewardAmount | uint128 |  |
 
 
-# rewards
+### rewards
 
 
 `function rewards(address owner, contract IERC20Minimal rewardToken) external view returns (uint256 rewardsOwed)` view external
@@ -317,7 +318,7 @@ Returns amounts of reward tokens owed to a given address according to the last t
 | ---- | ---- | ----------- |
 | rewardsOwed | uint256 | The amount of the reward token claimable by the owner |
 
-# setFarmingCenterAddress
+### setFarmingCenterAddress
 
 
 `function setFarmingCenterAddress(address _farmingCenter) external`  external
@@ -331,7 +332,7 @@ Updates farming center address
 | _farmingCenter | address | The new farming center contract address |
 
 
-# enterFarming
+### enterFarming
 
 
 `function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -346,7 +347,7 @@ enter farming for Algebra LP token
 | tokenId | uint256 | The ID of the token to exitFarming |
 
 
-# exitFarming
+### exitFarming
 
 
 `function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external`  external
@@ -362,7 +363,7 @@ exitFarmings for Algebra LP token
 | _owner | address | Owner of the token |
 
 
-# claimReward
+### claimReward
 
 
 `function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -383,7 +384,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of reward tokens claimed |
 
-# claimRewardFrom
+### claimRewardFrom
 
 
 `function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -406,7 +407,7 @@ only for FarmingCenter
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of reward tokens claimed |
 
-# getRewardInfo
+### getRewardInfo
 
 
 `function getRewardInfo(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
@@ -427,7 +428,7 @@ Calculates the reward amount that will be received for the given farm
 | reward | uint256 | The reward accrued to the NFT for the given incentive thus far |
 | bonusReward | uint256 | The bonus reward accrued to the NFT for the given incentive thus far |
 
-# farms
+### farms
 
 
 `function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1)` view external
@@ -451,7 +452,7 @@ Returns information about a farmd liquidity NFT
 | innerRewardGrowth0 | uint256 |  |
 | innerRewardGrowth1 | uint256 |  |
 
-# createEternalFarming
+### createEternalFarming
 
 
 `function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)`  external
@@ -471,7 +472,7 @@ Creates a new liquidity mining incentive program
 | ---- | ---- | ----------- |
 | virtualPool | address | The virtual pool |
 
-# setRates
+### setRates
 
 
 `function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external`  external
@@ -487,7 +488,7 @@ Creates a new liquidity mining incentive program
 | bonusRewardRate | uint128 |  |
 
 
-# collectRewards
+### collectRewards
 
 
 `function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)`  external
@@ -510,7 +511,10 @@ Creates a new liquidity mining incentive program
 | bonusReward | uint256 |  |
 
 
-# farmingAlreadyExists
+
+
+## Errors
+## farmingAlreadyExists
 
 
 `error farmingAlreadyExists()`  
@@ -521,7 +525,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# farmDoesNotExist
+## farmDoesNotExist
 
 
 `error farmDoesNotExist()`  
@@ -532,7 +536,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# tokenAlreadyFarmed
+## tokenAlreadyFarmed
 
 
 `error tokenAlreadyFarmed()`  
@@ -543,7 +547,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# incentiveNotExist
+## incentiveNotExist
 
 
 `error incentiveNotExist()`  
@@ -554,7 +558,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# incentiveStopped
+## incentiveStopped
 
 
 `error incentiveStopped()`  
@@ -565,7 +569,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# anotherFarmingIsActive
+## anotherFarmingIsActive
 
 
 `error anotherFarmingIsActive()`  
@@ -576,7 +580,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# minimalPositionWidthTooWide
+## minimalPositionWidthTooWide
 
 
 `error minimalPositionWidthTooWide()`  
@@ -587,7 +591,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# zeroRewardAmount
+## zeroRewardAmount
 
 
 `error zeroRewardAmount()`  
@@ -598,7 +602,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# positionIsTooNarrow
+## positionIsTooNarrow
 
 
 `error positionIsTooNarrow()`  
@@ -609,7 +613,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# zeroLiquidity
+## zeroLiquidity
 
 
 `error zeroLiquidity()`  
@@ -620,7 +624,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# invalidPool
+## invalidPool
 
 
 `error invalidPool()`  
@@ -631,7 +635,7 @@ Creates a new liquidity mining incentive program
 
 
 
-# claimToZeroAddress
+## claimToZeroAddress
 
 
 `error claimToZeroAddress()`  
@@ -644,5 +648,4 @@ Creates a new liquidity mining incentive program
 
 
 ---
-
 

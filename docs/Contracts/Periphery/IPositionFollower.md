@@ -2,6 +2,7 @@
 
 # IPositionFollower
 
+
 Contract tracking liquidity position
 Using these methods farmingCenter receives information about changes in the positions
 
@@ -9,7 +10,7 @@ Using these methods farmingCenter receives information about changes in the posi
 
 
 ## Functions
-# applyLiquidityDelta
+### applyLiquidityDelta
 
 
 `function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external`  external
@@ -24,7 +25,7 @@ Report a change of liquidity in position
 | liquidityDelta | int256 | The amount of added liquidity |
 
 
-# burnPosition
+### burnPosition
 
 
 `function burnPosition(uint256 tokenId) external returns (bool)`  external
@@ -45,6 +46,7 @@ Report a burn of position token
 
 
 
----
 
+
+---
 

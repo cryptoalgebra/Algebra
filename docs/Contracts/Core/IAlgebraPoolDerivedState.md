@@ -2,6 +2,7 @@
 
 # IAlgebraPoolDerivedState
 
+
 Pool state that is not stored
 Contains view functions to provide information about the pool that is computed rather than stored on the
 blockchain. The functions here may have variable gas costs.
@@ -12,7 +13,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
-# getInnerCumulatives
+### getInnerCumulatives
 
 
 `function getInnerCumulatives(int24 bottomTick, int24 topTick) external view returns (uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)` view external
@@ -38,6 +39,7 @@ snapshot is taken and the second snapshot is taken.*
 
 
 
----
 
+
+---
 

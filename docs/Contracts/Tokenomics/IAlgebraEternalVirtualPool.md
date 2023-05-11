@@ -8,8 +8,9 @@
 
 
 
+
 ## Functions
-# ticks
+### ticks
 
 
 `function ticks(int24 tickId) external view returns (uint128 liquidityTotal, int128 liquidityDelta, uint256 outerFeeGrowth0Token, uint256 outerFeeGrowth1Token, int24 prevTick, int24 nextTick)` view external
@@ -33,7 +34,7 @@
 | prevTick | int24 |  |
 | nextTick | int24 |  |
 
-# currentLiquidity
+### currentLiquidity
 
 
 `function currentLiquidity() external view returns (uint128)` view external
@@ -49,7 +50,7 @@
 | ---- | ---- | ----------- |
 | [0] | uint128 |  |
 
-# globalTick
+### globalTick
 
 
 `function globalTick() external view returns (int24)` view external
@@ -65,7 +66,7 @@
 | ---- | ---- | ----------- |
 | [0] | int24 |  |
 
-# prevTimestamp
+### prevTimestamp
 
 
 `function prevTimestamp() external view returns (uint32)` view external
@@ -81,7 +82,7 @@
 | ---- | ---- | ----------- |
 | [0] | uint32 |  |
 
-# applyLiquidityDeltaToPosition
+### applyLiquidityDeltaToPosition
 
 
 `function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external`  external
@@ -101,7 +102,7 @@ should be changed accordingly*
 | currentTick | int24 | The current tick in the main pool |
 
 
-# distributeRewards
+### distributeRewards
 
 
 `function distributeRewards() external`  external
@@ -114,7 +115,7 @@ cumulative considering previous liquidity. The liquidity is stored in a virtual 
 
 
 
-# setRates
+### setRates
 
 
 `function setRates(uint128 rate0, uint128 rate1) external`  external
@@ -129,7 +130,7 @@ Change reward rates
 | rate1 | uint128 | The new rate of bonus token distribution per sec |
 
 
-# addRewards
+### addRewards
 
 
 `function addRewards(uint128 token0Amount, uint128 token1Amount) external`  external
@@ -144,7 +145,7 @@ Top up rewards reserves
 | token1Amount | uint128 | The amount of token1 |
 
 
-# decreaseRewards
+### decreaseRewards
 
 
 `function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external`  external
@@ -159,7 +160,7 @@ Withdraw rewards from reserves directly
 | token1Amount | uint128 | The amount of token1 |
 
 
-# getInnerRewardsGrowth
+### getInnerRewardsGrowth
 
 
 `function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)` view external
@@ -180,7 +181,7 @@ Withdraw rewards from reserves directly
 | rewardGrowthInside0 | uint256 |  |
 | rewardGrowthInside1 | uint256 |  |
 
-# rewardReserves
+### rewardReserves
 
 
 `function rewardReserves() external view returns (uint128 reserve0, uint128 reserve1)` view external
@@ -197,7 +198,7 @@ Get reserves of rewards in one call
 | reserve0 | uint128 | The reserve of token0 |
 | reserve1 | uint128 | The reserve of token1 |
 
-# rewardRates
+### rewardRates
 
 
 `function rewardRates() external view returns (uint128 rate0, uint128 rate1)` view external
@@ -215,7 +216,10 @@ Get rates of rewards in one call
 | rate1 | uint128 | The rate of token1, rewards / sec |
 
 
-# onlyPool
+
+
+## Errors
+## onlyPool
 
 
 `error onlyPool()`  
@@ -226,7 +230,7 @@ Get rates of rewards in one call
 
 
 
-# onlyFarming
+## onlyFarming
 
 
 `error onlyFarming()`  
@@ -239,5 +243,4 @@ Get rates of rewards in one call
 
 
 ---
-
 

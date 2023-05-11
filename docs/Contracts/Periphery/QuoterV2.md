@@ -2,6 +2,7 @@
 
 # QuoterV2
 
+
 Provides quotes for swaps
 Allows getting the expected amount out or amount in for a given swap without executing the swap
 *Developer note: These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -13,7 +14,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _factory, address _WNativeToken, address _poolDeployer) public`  public
@@ -29,7 +30,7 @@ https://github.com/Uniswap/v3-periphery*
 | _poolDeployer | address |  |
 
 
-# algebraSwapCallback
+### algebraSwapCallback
 
 
 `function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes path) external view` view external
@@ -48,7 +49,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 | path | bytes |  |
 
 
-# quoteExactInputSingle
+### quoteExactInputSingle
 
 
 `function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) public returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)`  public
@@ -70,7 +71,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | initializedTicksCrossed | uint32 | The number of initialized ticks that the swap crossed |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactInput
+### quoteExactInput
 
 
 `function quoteExactInput(bytes path, uint256 amountIn) public returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)`  public
@@ -93,7 +94,7 @@ Returns the amount out received for a given exact input swap without executing t
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactOutputSingle
+### quoteExactOutputSingle
 
 
 `function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) public returns (uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)`  public
@@ -115,7 +116,7 @@ Returns the amount in required to receive the given exact output amount but for 
 | initializedTicksCrossed | uint32 | The number of initialized ticks that the swap crossed |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactOutput
+### quoteExactOutput
 
 
 `function quoteExactOutput(bytes path, uint256 amountOut) public returns (uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)`  public
@@ -140,6 +141,7 @@ Returns the amount in required for a given exact output swap without executing t
 
 
 
----
 
+
+---
 

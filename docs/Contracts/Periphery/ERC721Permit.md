@@ -2,20 +2,21 @@
 
 # ERC721Permit
 
+
 ERC721 with permit
 Nonfungible tokens that support an approve via signature, i.e. permit
 
 
 
 ## Variables
-# bytes32 PERMIT_TYPEHASH constant
+### bytes32 PERMIT_TYPEHASH constant
 
 The permit typehash used in the permit signature
 
 *Developer note: Value is equal to keccak256(&quot;Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)&quot;);*
 
 ## Functions
-# DOMAIN_SEPARATOR
+### DOMAIN_SEPARATOR
 
 
 `function DOMAIN_SEPARATOR() public view returns (bytes32)` view public
@@ -31,7 +32,7 @@ The domain separator used in the permit signature
 | ---- | ---- | ----------- |
 | [0] | bytes32 | The domain separator used in encoding of permit signature |
 
-# permit
+### permit
 
 
 `function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external payable` payable external
@@ -52,6 +53,7 @@ Approve of a specific token ID for spending by spender via signature
 
 
 
----
 
+
+---
 

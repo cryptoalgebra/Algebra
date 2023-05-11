@@ -2,6 +2,7 @@
 
 # IMulticall
 
+
 Multicall interface
 Enables calling multiple methods in a single call to the contract
 
@@ -9,7 +10,7 @@ Enables calling multiple methods in a single call to the contract
 
 
 ## Functions
-# multicall
+### multicall
 
 
 `function multicall(bytes[] data) external payable returns (bytes[] results)` payable external
@@ -31,6 +32,7 @@ Call multiple functions in the current contract and return the data from all of 
 
 
 
----
 
+
+---
 

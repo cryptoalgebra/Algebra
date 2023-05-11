@@ -2,6 +2,7 @@
 
 # IERC721Permit
 
+
 ERC721 with permit
 Extension to ERC721 that includes a permit function for signature based approvals
 
@@ -9,7 +10,7 @@ Extension to ERC721 that includes a permit function for signature based approval
 
 
 ## Functions
-# PERMIT_TYPEHASH
+### PERMIT_TYPEHASH
 
 
 `function PERMIT_TYPEHASH() external pure returns (bytes32)` pure external
@@ -25,7 +26,7 @@ The permit typehash used in the permit signature
 | ---- | ---- | ----------- |
 | [0] | bytes32 | The typehash for the permit |
 
-# DOMAIN_SEPARATOR
+### DOMAIN_SEPARATOR
 
 
 `function DOMAIN_SEPARATOR() external view returns (bytes32)` view external
@@ -41,7 +42,7 @@ The domain separator used in the permit signature
 | ---- | ---- | ----------- |
 | [0] | bytes32 | The domain separator used in encoding of permit signature |
 
-# permit
+### permit
 
 
 `function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external payable` payable external
@@ -62,6 +63,7 @@ Approve of a specific token ID for spending by spender via signature
 
 
 
----
 
+
+---
 

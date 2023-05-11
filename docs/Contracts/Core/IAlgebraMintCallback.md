@@ -2,6 +2,7 @@
 
 # IAlgebraMintCallback
 
+
 Callback for IAlgebraPoolActions#mint
 Any contract that calls IAlgebraPoolActions#mint must implement this interface
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
-# algebraMintCallback
+### algebraMintCallback
 
 
 `function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes data) external`  external
@@ -31,6 +32,7 @@ The caller of this method _must_ be checked to be a AlgebraPool deployed by the 
 
 
 
----
 
+
+---
 

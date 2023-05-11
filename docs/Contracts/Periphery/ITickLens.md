@@ -2,6 +2,7 @@
 
 # ITickLens
 
+
 Tick Lens
 Provides functions for fetching chunks of tick data for a pool
 *Developer note: This avoids the waterfall of fetching the tick bitmap, parsing the bitmap to know which ticks to fetch, and
@@ -13,7 +14,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# getPopulatedTicksInWord
+### getPopulatedTicksInWord
 
 
 `function getPopulatedTicksInWord(address pool, int16 tickTableIndex) external view returns (struct ITickLens.PopulatedTick[] populatedTicks)` view external
@@ -35,6 +36,7 @@ Get all the tick data for the populated ticks from a word of the tick bitmap of 
 
 
 
----
 
+
+---
 

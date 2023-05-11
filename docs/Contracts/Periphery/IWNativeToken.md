@@ -2,6 +2,7 @@
 
 # IWNativeToken
 
+
 Interface for WNativeToken
 
 
@@ -9,7 +10,7 @@ Interface for WNativeToken
 
 
 ## Functions
-# deposit
+### deposit
 
 
 `function deposit() external payable` payable external
@@ -20,7 +21,7 @@ Deposit ether to get wrapped ether
 
 
 
-# withdraw
+### withdraw
 
 
 `function withdraw(uint256) external`  external
@@ -36,6 +37,7 @@ Withdraw wrapped ether to get ether
 
 
 
----
 
+
+---
 

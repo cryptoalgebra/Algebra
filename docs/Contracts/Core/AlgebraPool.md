@@ -2,6 +2,7 @@
 
 # AlgebraPool
 
+
 Algebra concentrated liquidity pool
 This contract is responsible for liquidity positions, swaps and flashloans
 *Developer note: Version: Algebra V2*
@@ -10,7 +11,7 @@ This contract is responsible for liquidity positions, swaps and flashloans
 
 
 ## Functions
-# initialize
+### initialize
 
 
 `function initialize(uint160 initialPrice) external`  external
@@ -26,7 +27,7 @@ Initialization should be done in one transaction with pool creation to avoid fro
 | initialPrice | uint160 |  |
 
 
-# mint
+### mint
 
 
 `function mint(address sender, address recipient, int24 bottomTick, int24 topTick, uint128 liquidityDesired, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)`  external
@@ -55,7 +56,7 @@ on bottomTick, topTick, the amount of liquidity, and the current price. If botto
 | amount1 | uint256 | The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback |
 | liquidityActual | uint128 | The actual minted amount of liquidity |
 
-# burn
+### burn
 
 
 `function burn(int24 bottomTick, int24 topTick, uint128 amount) external returns (uint256 amount0, uint256 amount1)`  external
@@ -79,7 +80,7 @@ Fees must be collected separately via a call to #collect*
 | amount0 | uint256 | The amount of token0 sent to the recipient |
 | amount1 | uint256 | The amount of token1 sent to the recipient |
 
-# collect
+### collect
 
 
 `function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)`  external
@@ -107,7 +108,7 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 | amount0 | uint128 | The amount of fees collected in token0 |
 | amount1 | uint128 | The amount of fees collected in token1 |
 
-# swap
+### swap
 
 
 `function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
@@ -132,7 +133,7 @@ Swap token0 for token1, or token1 for token0
 | amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
-# swapSupportingFeeOnInputTokens
+### swapSupportingFeeOnInputTokens
 
 
 `function swapSupportingFeeOnInputTokens(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
@@ -158,7 +159,7 @@ Swap token0 for token1, or token1 for token0 (tokens that have fee on transfer)
 | amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
-# flash
+### flash
 
 
 `function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external`  external
@@ -178,7 +179,7 @@ If there are no in-range liquidity providers, the fee will be transferred to the
 | data | bytes | Any data to be passed through to the callback |
 
 
-# setCommunityFee
+### setCommunityFee
 
 
 `function setCommunityFee(uint8 newCommunityFee) external`  external
@@ -192,7 +193,7 @@ Set the community&#x27;s % share of the fees. Cannot exceed 25% (250). Only fact
 | newCommunityFee | uint8 |  |
 
 
-# setTickSpacing
+### setTickSpacing
 
 
 `function setTickSpacing(int24 newTickSpacing, int24 newTickspacingLimitOrders) external`  external
@@ -207,7 +208,7 @@ Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE 
 | newTickspacingLimitOrders | int24 |  |
 
 
-# setIncentive
+### setIncentive
 
 
 `function setIncentive(address newIncentiveAddress) external`  external
@@ -223,6 +224,7 @@ Sets an active incentive. Only farming
 
 
 
----
 
+
+---
 

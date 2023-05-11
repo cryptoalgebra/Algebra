@@ -2,6 +2,7 @@
 
 # SwapRouter
 
+
 Algebra Swap Router
 Router for stateless execution of swaps against Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _factory, address _WNativeToken, address _poolDeployer) public`  public
@@ -27,7 +28,7 @@ https://github.com/Uniswap/v3-periphery*
 | _poolDeployer | address |  |
 
 
-# algebraSwapCallback
+### algebraSwapCallback
 
 
 `function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes _data) external`  external
@@ -46,7 +47,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 | _data | bytes |  |
 
 
-# exactInputSingle
+### exactInputSingle
 
 
 `function exactInputSingle(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)` payable external
@@ -65,7 +66,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 | ---- | ---- | ----------- |
 | amountOut | uint256 | The amount of the received token |
 
-# exactInput
+### exactInput
 
 
 `function exactInput(struct ISwapRouter.ExactInputParams params) external payable returns (uint256 amountOut)` payable external
@@ -84,7 +85,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 | ---- | ---- | ----------- |
 | amountOut | uint256 | The amount of the received token |
 
-# exactInputSingleSupportingFeeOnTransferTokens
+### exactInputSingleSupportingFeeOnTransferTokens
 
 
 `function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external returns (uint256 amountOut)`  external
@@ -104,7 +105,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 | ---- | ---- | ----------- |
 | amountOut | uint256 | The amount of the received token |
 
-# exactOutputSingle
+### exactOutputSingle
 
 
 `function exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params) external payable returns (uint256 amountIn)` payable external
@@ -123,7 +124,7 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another to
 | ---- | ---- | ----------- |
 | amountIn | uint256 | The amount of the input token |
 
-# exactOutput
+### exactOutput
 
 
 `function exactOutput(struct ISwapRouter.ExactOutputParams params) external payable returns (uint256 amountIn)` payable external
@@ -144,6 +145,7 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another al
 
 
 
----
 
+
+---
 

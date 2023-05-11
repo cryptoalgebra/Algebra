@@ -2,6 +2,7 @@
 
 # PoolInitializer
 
+
 Creates and initializes Algebra Pools
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# createAndInitializePoolIfNecessary
+### createAndInitializePoolIfNecessary
 
 
 `function createAndInitializePoolIfNecessary(address token0, address token1, uint160 sqrtPriceX96) external payable returns (address pool)` payable external
@@ -35,6 +36,7 @@ Creates a new pool if it does not exist, then initializes if not initialized
 
 
 
----
 
+
+---
 

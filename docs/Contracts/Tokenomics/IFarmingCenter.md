@@ -8,8 +8,9 @@
 
 
 
+
 ## Functions
-# virtualPoolAddresses
+### virtualPoolAddresses
 
 
 `function virtualPoolAddresses(address) external view returns (address)` view external
@@ -28,7 +29,7 @@
 | ---- | ---- | ----------- |
 | [0] | address |  |
 
-# nonfungiblePositionManager
+### nonfungiblePositionManager
 
 
 `function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)` view external
@@ -44,7 +45,7 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
 
-# eternalFarming
+### eternalFarming
 
 
 `function eternalFarming() external view returns (contract IAlgebraEternalFarming)` view external
@@ -60,7 +61,7 @@ The eternal farming contract
 | ---- | ---- | ----------- |
 | [0] | contract IAlgebraEternalFarming |  |
 
-# algebraPoolDeployer
+### algebraPoolDeployer
 
 
 `function algebraPoolDeployer() external view returns (address)` view external
@@ -76,7 +77,7 @@ The Algebra poolDeployer contract
 | ---- | ---- | ----------- |
 | [0] | address |  |
 
-# deposits
+### deposits
 
 
 `function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId)` view external
@@ -95,7 +96,7 @@ Returns information about a deposited NFT
 | ---- | ---- | ----------- |
 | eternalIncentiveId | bytes32 | The id of eternal incentive that is active for this NFT |
 
-# connectVirtualPool
+### connectVirtualPool
 
 
 `function connectVirtualPool(contract IAlgebraPool pool, address virtualPool) external`  external
@@ -111,7 +112,7 @@ Updates activeIncentive in AlgebraPool
 | virtualPool | address | The virtual pool to be connected |
 
 
-# enterFarming
+### enterFarming
 
 
 `function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -127,7 +128,7 @@ Enters in incentive (time-limited or eternal farming) with NFT-position token
 | tokenId | uint256 | The id of position NFT |
 
 
-# exitFarming
+### exitFarming
 
 
 `function exitFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -142,7 +143,7 @@ Exits from incentive (time-limited or eternal farming) with NFT-position token
 | tokenId | uint256 | The id of position NFT |
 
 
-# collectRewards
+### collectRewards
 
 
 `function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
@@ -163,7 +164,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 | reward | uint256 | The amount of collected reward |
 | bonusReward | uint256 | The amount of collected  bonus reward |
 
-# claimReward
+### claimReward
 
 
 `function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -187,6 +188,7 @@ Used to claim and send rewards from farming(s)
 
 
 
----
 
+
+---
 

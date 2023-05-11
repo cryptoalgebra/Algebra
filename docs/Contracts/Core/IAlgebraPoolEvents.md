@@ -2,6 +2,7 @@
 
 # IAlgebraPoolEvents
 
+
 Events emitted by a pool
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -9,7 +10,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
-# Initialize
+### Initialize
 
 
 `event Initialize(uint160 price, int24 tick)`  
@@ -25,7 +26,7 @@ Emitted exactly once by a pool when #initialize is first called on the pool
 | tick | int24 | The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool |
 
 
-# Mint
+### Mint
 
 
 `event Mint(address sender, address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
@@ -46,7 +47,7 @@ Emitted when liquidity is minted for a given position
 | amount1 | uint256 | How much token1 was required for the minted liquidity |
 
 
-# Collect
+### Collect
 
 
 `event Collect(address owner, address recipient, int24 bottomTick, int24 topTick, uint128 amount0, uint128 amount1)`  
@@ -66,7 +67,7 @@ Emitted when fees are collected by the owner of a position
 | amount1 | uint128 | The amount of token1 fees collected |
 
 
-# Burn
+### Burn
 
 
 `event Burn(address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
@@ -86,7 +87,7 @@ Emitted when a position&#x27;s liquidity is removed
 | amount1 | uint256 | The amount of token1 withdrawn |
 
 
-# Swap
+### Swap
 
 
 `event Swap(address sender, address recipient, int256 amount0, int256 amount1, uint160 price, uint128 liquidity, int24 tick)`  
@@ -106,7 +107,7 @@ Emitted by the pool for any swaps between token0 and token1
 | tick | int24 | The log base 1.0001 of price of the pool after the swap |
 
 
-# Flash
+### Flash
 
 
 `event Flash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1)`  
@@ -125,7 +126,7 @@ Emitted by the pool for any flashes of token0/token1
 | paid1 | uint256 | The amount of token1 paid for the flash, which can exceed the amount1 plus the fee |
 
 
-# CommunityFee
+### CommunityFee
 
 
 `event CommunityFee(uint8 communityFeeNew)`  
@@ -139,7 +140,7 @@ Emitted when the community fee is changed by the pool
 | communityFeeNew | uint8 | The updated value of the community fee in thousandths (1e-3) |
 
 
-# TickSpacing
+### TickSpacing
 
 
 `event TickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders)`  
@@ -154,7 +155,7 @@ Emitted when the tick spacing changes
 | newTickSpacingLimitOrders | int24 | The updated value of the new tick spacing for limit orders |
 
 
-# Incentive
+### Incentive
 
 
 `event Incentive(address newIncentiveAddress)`  
@@ -168,7 +169,7 @@ Emitted when new activeIncentive is set
 | newIncentiveAddress | address | The address of the new incentive |
 
 
-# Fee
+### Fee
 
 
 `event Fee(uint16 fee)`  
@@ -182,7 +183,7 @@ Emitted when the fee changes inside the pool
 | fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
 
 
-# DataStorageFailure
+### DataStorageFailure
 
 
 `event DataStorageFailure()`  
@@ -198,6 +199,7 @@ Emitted in case of an error when trying to write to the DataStorage
 
 
 
----
 
+
+---
 

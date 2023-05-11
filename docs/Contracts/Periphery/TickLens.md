@@ -2,6 +2,7 @@
 
 # TickLens
 
+
 Tick Lens contract
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# getPopulatedTicksInWord
+### getPopulatedTicksInWord
 
 
 `function getPopulatedTicksInWord(address pool, int16 tickTableIndex) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)` view public
@@ -33,6 +34,7 @@ Get all the tick data for the populated ticks from a word of the tick bitmap of 
 
 
 
----
 
+
+---
 

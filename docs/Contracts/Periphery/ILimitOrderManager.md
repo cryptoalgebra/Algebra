@@ -8,8 +8,9 @@
 
 
 
+
 ## Functions
-# limitPositions
+### limitPositions
 
 
 `function limitPositions(uint256 tokenId) external view returns (struct ILimitOrderManager.LimitPosition position, address token0, address token1)` view external
@@ -30,7 +31,7 @@
 | token0 | address |  |
 | token1 | address |  |
 
-# decreaseLimitOrder
+### decreaseLimitOrder
 
 
 `function decreaseLimitOrder(uint256 tokenId, uint128 liquidity) external payable` payable external
@@ -45,7 +46,7 @@
 | liquidity | uint128 |  |
 
 
-# collectLimitOrder
+### collectLimitOrder
 
 
 `function collectLimitOrder(uint256 tokenId, address recipient) external payable returns (uint256 amount0, uint256 amount1)` payable external
@@ -66,7 +67,7 @@
 | amount0 | uint256 |  |
 | amount1 | uint256 |  |
 
-# addLimitOrder
+### addLimitOrder
 
 
 `function addLimitOrder(struct ILimitOrderManager.addLimitOrderParams params) external payable returns (uint256 tokenId)` payable external
@@ -85,7 +86,7 @@
 | ---- | ---- | ----------- |
 | tokenId | uint256 |  |
 
-# burn
+### burn
 
 
 `function burn(uint256 tokenId) external payable` payable external
@@ -102,6 +103,7 @@ must be collected first.
 
 
 
----
 
+
+---
 

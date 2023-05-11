@@ -4,6 +4,7 @@
 
 
 
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# constructTokenURI
+### constructTokenURI
 
 
 `function constructTokenURI(struct NFTDescriptor.ConstructTokenURIParams params) public pure returns (string)` pure public
@@ -32,6 +33,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 
----
 
+
+---
 

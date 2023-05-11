@@ -2,6 +2,7 @@
 
 # IAlgebraVirtualPool
 
+
 The interface for the virtual pool
 
 *Developer note: Used to calculate active liquidity in farmings*
@@ -10,7 +11,7 @@ The interface for the virtual pool
 
 
 ## Functions
-# crossTo
+### crossTo
 
 
 `function crossTo(int24 targetTick, bool zeroToOne) external returns (bool success)`  external
@@ -34,6 +35,7 @@ If any one of crossed ticks is also initialized in a virtual pool it should be c
 
 
 
----
 
+
+---
 

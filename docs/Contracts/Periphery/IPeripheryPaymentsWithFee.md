@@ -2,6 +2,7 @@
 
 # IPeripheryPaymentsWithFee
 
+
 Periphery Payments
 Functions to ease deposits and withdrawals of NativeToken
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# unwrapWNativeTokenWithFee
+### unwrapWNativeTokenWithFee
 
 
 `function unwrapWNativeTokenWithFee(uint256 amountMinimum, address recipient, uint256 feeBips, address feeRecipient) external payable` payable external
@@ -30,7 +31,7 @@ Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as Na
 | feeRecipient | address |  |
 
 
-# sweepTokenWithFee
+### sweepTokenWithFee
 
 
 `function sweepTokenWithFee(address token, uint256 amountMinimum, address recipient, uint256 feeBips, address feeRecipient) external payable` payable external
@@ -52,6 +53,7 @@ Transfers the full amount of a token held by this contract to recipient, with a 
 
 
 
----
 
+
+---
 

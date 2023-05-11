@@ -2,11 +2,12 @@
 
 # AlgebraCommunityVault
 
+
 Algebra community fee vault
 Community fee from pools is sent here, if it is enabled
 
 ## Modifiers
-# onlyWithdrawer
+### onlyWithdrawer
 
 
 `modifier onlyWithdrawer()`  internal
@@ -19,7 +20,7 @@ Community fee from pools is sent here, if it is enabled
 
 
 ## Events
-# TokensWithdrawal
+### TokensWithdrawal
 
 
 `event TokensWithdrawal(address token, address to, uint256 amount)`  
@@ -37,14 +38,14 @@ Community fee from pools is sent here, if it is enabled
 
 
 ## Variables
-# bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
+### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
 
 
 
 *Developer note: The role can be granted in AlgebraFactory*
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor() public`  public
@@ -55,7 +56,7 @@ Community fee from pools is sent here, if it is enabled
 
 
 
-# withdraw
+### withdraw
 
 
 `function withdraw(address token, address to, uint256 amount) external`  external
@@ -71,7 +72,7 @@ Community fee from pools is sent here, if it is enabled
 | amount | uint256 |  |
 
 
-# withdrawTokens
+### withdrawTokens
 
 
 `function withdrawTokens(struct AlgebraCommunityVault.WithdrawTokensParams[] params) external`  external
@@ -87,6 +88,7 @@ Community fee from pools is sent here, if it is enabled
 
 
 
----
 
+
+---
 

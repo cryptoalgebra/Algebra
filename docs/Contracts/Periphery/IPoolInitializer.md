@@ -2,6 +2,7 @@
 
 # IPoolInitializer
 
+
 Creates and initializes Algebra Pools
 Provides a method for creating and initializing a pool, if necessary, for bundling with other methods that
 require the pool to exist.
@@ -12,7 +13,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# createAndInitializePoolIfNecessary
+### createAndInitializePoolIfNecessary
 
 
 `function createAndInitializePoolIfNecessary(address token0, address token1, uint160 sqrtPriceX96) external payable returns (address pool)` payable external
@@ -36,6 +37,7 @@ Creates a new pool if it does not exist, then initializes if not initialized
 
 
 
----
 
+
+---
 

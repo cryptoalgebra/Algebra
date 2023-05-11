@@ -2,6 +2,7 @@
 
 # IQuoter
 
+
 Quoter Interface
 Supports quoting the calculated amounts from exact input or exact output swaps
 *Developer note: These functions are not marked view because they rely on calling non-view functions and reverting
@@ -13,7 +14,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# quoteExactInput
+### quoteExactInput
 
 
 `function quoteExactInput(bytes path, uint256 amountIn) external returns (uint256 amountOut, uint16[] fees)`  external
@@ -34,7 +35,7 @@ Returns the amount out received for a given exact input swap without executing t
 | amountOut | uint256 | The amount of the last token that would be received |
 | fees | uint16[] |  |
 
-# quoteExactInputSingle
+### quoteExactInputSingle
 
 
 `function quoteExactInputSingle(address tokenIn, address tokenOut, uint256 amountIn, uint160 limitSqrtPrice) external returns (uint256 amountOut, uint16 fee)`  external
@@ -57,7 +58,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | amountOut | uint256 | The amount of &#x60;tokenOut&#x60; that would be received |
 | fee | uint16 |  |
 
-# quoteExactOutput
+### quoteExactOutput
 
 
 `function quoteExactOutput(bytes path, uint256 amountOut) external returns (uint256 amountIn, uint16[] fees)`  external
@@ -78,7 +79,7 @@ Returns the amount in required for a given exact output swap without executing t
 | amountIn | uint256 | The amount of first token required to be paid |
 | fees | uint16[] |  |
 
-# quoteExactOutputSingle
+### quoteExactOutputSingle
 
 
 `function quoteExactOutputSingle(address tokenIn, address tokenOut, uint256 amountOut, uint160 limitSqrtPrice) external returns (uint256 amountIn, uint16 fee)`  external
@@ -103,6 +104,7 @@ Returns the amount in required to receive the given exact output amount but for 
 
 
 
----
 
+
+---
 

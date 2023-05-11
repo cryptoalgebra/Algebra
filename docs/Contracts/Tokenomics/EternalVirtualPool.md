@@ -2,11 +2,12 @@
 
 # EternalVirtualPool
 
+
 Algebra eternal virtual pool
 used to track active liquidity in farming and distribute rewards
 
 ## Modifiers
-# onlyFromFarming
+### onlyFromFarming
 
 
 `modifier onlyFromFarming()`  internal
@@ -20,37 +21,37 @@ used to track active liquidity in farming and distribute rewards
 
 
 ## Variables
-# address farmingAddress immutable
+### address farmingAddress immutable
 
 
 
-# address pool immutable
+### address pool immutable
 
 
 
-# uint128 currentLiquidity 
+### uint128 currentLiquidity 
 
 
 
-# int24 globalTick 
+### int24 globalTick 
 
 
 
-# uint32 prevTimestamp 
+### uint32 prevTimestamp 
 
 
 
-# uint256 totalRewardGrowth0 
+### uint256 totalRewardGrowth0 
 
 
 
-# uint256 totalRewardGrowth1 
+### uint256 totalRewardGrowth1 
 
 
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _farmingAddress, address _pool) public`  public
@@ -65,7 +66,7 @@ used to track active liquidity in farming and distribute rewards
 | _pool | address |  |
 
 
-# rewardReserves
+### rewardReserves
 
 
 `function rewardReserves() external view returns (uint128 reserve0, uint128 reserve1)` view external
@@ -82,7 +83,7 @@ Get reserves of rewards in one call
 | reserve0 | uint128 | The reserve of token0 |
 | reserve1 | uint128 | The reserve of token1 |
 
-# rewardRates
+### rewardRates
 
 
 `function rewardRates() external view returns (uint128 rate0, uint128 rate1)` view external
@@ -99,7 +100,7 @@ Get rates of rewards in one call
 | rate0 | uint128 | The rate of token0, rewards / sec |
 | rate1 | uint128 | The rate of token1, rewards / sec |
 
-# getInnerRewardsGrowth
+### getInnerRewardsGrowth
 
 
 `function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)` view external
@@ -120,7 +121,7 @@ Get rates of rewards in one call
 | rewardGrowthInside0 | uint256 |  |
 | rewardGrowthInside1 | uint256 |  |
 
-# addRewards
+### addRewards
 
 
 `function addRewards(uint128 token0Amount, uint128 token1Amount) external`  external
@@ -135,7 +136,7 @@ Top up rewards reserves
 | token1Amount | uint128 | The amount of token1 |
 
 
-# decreaseRewards
+### decreaseRewards
 
 
 `function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external`  external
@@ -150,7 +151,7 @@ Withdraw rewards from reserves directly
 | token1Amount | uint128 | The amount of token1 |
 
 
-# crossTo
+### crossTo
 
 
 `function crossTo(int24 targetTick, bool zeroToOne) external returns (bool)`  external
@@ -172,7 +173,7 @@ If any one of crossed ticks is also initialized in a virtual pool it should be c
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-# distributeRewards
+### distributeRewards
 
 
 `function distributeRewards() external`  external
@@ -185,7 +186,7 @@ cumulative considering previous liquidity. The liquidity is stored in a virtual 
 
 
 
-# applyLiquidityDeltaToPosition
+### applyLiquidityDeltaToPosition
 
 
 `function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external`  external
@@ -205,7 +206,7 @@ should be changed accordingly*
 | currentTick | int24 | The current tick in the main pool |
 
 
-# setRates
+### setRates
 
 
 `function setRates(uint128 rate0, uint128 rate1) external`  external
@@ -222,6 +223,7 @@ Change reward rates
 
 
 
----
 
+
+---
 

@@ -2,6 +2,7 @@
 
 # ReservesManager
 
+
 Algebra reserves management abstract contract
 Encapsulates logic for tracking and changing pool reserves
 
@@ -9,7 +10,7 @@ Encapsulates logic for tracking and changing pool reserves
 
 
 ## Functions
-# getReserves
+### getReserves
 
 
 `function getReserves() external view returns (uint128, uint128)` view external
@@ -30,6 +31,7 @@ If the balance exceeds uint128, the excess will be sent to the communityVault.*
 
 
 
----
 
+
+---
 

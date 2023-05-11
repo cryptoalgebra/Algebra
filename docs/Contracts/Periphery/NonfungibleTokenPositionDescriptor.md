@@ -2,6 +2,7 @@
 
 # NonfungibleTokenPositionDescriptor
 
+
 Describes NFT token positions
 Produces a string containing the data URI for a JSON metadata string
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -10,13 +11,13 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Variables
-# address WNativeToken immutable
+### address WNativeToken immutable
 
 
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _WNativeToken) public`  public
@@ -30,7 +31,7 @@ https://github.com/Uniswap/v3-periphery*
 | _WNativeToken | address |  |
 
 
-# tokenURI
+### tokenURI
 
 
 `function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)` view external
@@ -51,7 +52,7 @@ Produces the URI describing a particular token ID for a position manager
 | ---- | ---- | ----------- |
 | [0] | string | The URI of the ERC721-compliant metadata |
 
-# flipRatio
+### flipRatio
 
 
 `function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool)` view public
@@ -72,7 +73,7 @@ Produces the URI describing a particular token ID for a position manager
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-# tokenRatioPriority
+### tokenRatioPriority
 
 
 `function tokenRatioPriority(address token, uint256 chainId) public view returns (int256)` view public
@@ -94,6 +95,7 @@ Produces the URI describing a particular token ID for a position manager
 
 
 
----
 
+
+---
 

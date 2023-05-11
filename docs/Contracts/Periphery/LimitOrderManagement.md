@@ -2,6 +2,7 @@
 
 # LimitOrderManagement
 
+
 Limit orders management functions
 Internal functions for safely managing limit orders in Algebra V2
 
@@ -9,7 +10,7 @@ Internal functions for safely managing limit orders in Algebra V2
 
 
 ## Functions
-# algebraMintCallback
+### algebraMintCallback
 
 
 `function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes data) external`  external
@@ -29,6 +30,7 @@ The caller of this method _must_ be checked to be a AlgebraPool deployed by the 
 
 
 
----
 
+
+---
 

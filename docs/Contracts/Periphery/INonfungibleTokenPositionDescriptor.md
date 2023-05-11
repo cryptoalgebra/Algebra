@@ -2,6 +2,7 @@
 
 # INonfungibleTokenPositionDescriptor
 
+
 Describes position NFT tokens via URI
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# tokenURI
+### tokenURI
 
 
 `function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)` view external
@@ -34,6 +35,7 @@ Produces the URI describing a particular token ID for a position manager
 
 
 
----
 
+
+---
 

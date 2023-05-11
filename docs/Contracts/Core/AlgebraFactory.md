@@ -2,6 +2,7 @@
 
 # AlgebraFactory
 
+
 Algebra factory
 Is used to deploy pools and its dataStorages
 *Developer note: Version: Algebra V2*
@@ -9,44 +10,44 @@ Is used to deploy pools and its dataStorages
 
 
 ## Variables
-# bytes32 POOLS_ADMINISTRATOR_ROLE constant
+### bytes32 POOLS_ADMINISTRATOR_ROLE constant
 
 role that can change communityFee and tickspacing in pools
 
-# address poolDeployer immutable
+### address poolDeployer immutable
 
 Returns the current poolDeployerAddress
 
-# address communityVault immutable
+### address communityVault immutable
 
 Returns the current communityVaultAddress
 
-# address farmingAddress 
+### address farmingAddress 
 
 
 
 *Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
-# uint8 defaultCommunityFee 
+### uint8 defaultCommunityFee 
 
 Returns the default community fee
 
-# uint256 renounceOwnershipStartTimestamp 
+### uint256 renounceOwnershipStartTimestamp 
 
 
 
-# struct AlgebraFeeConfiguration defaultFeeConfiguration 
+### struct AlgebraFeeConfiguration defaultFeeConfiguration 
 
 
 
 *Developer note: values of constants for sigmoids in fee calculation formula*
-# mapping(address &#x3D;&gt; mapping(address &#x3D;&gt; address)) poolByPair 
+### mapping(address &#x3D;&gt; mapping(address &#x3D;&gt; address)) poolByPair 
 
 Returns the pool address for a given pair of tokens, or address 0 if it does not exist
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _poolDeployer) public`  public
@@ -60,7 +61,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | _poolDeployer | address |  |
 
 
-# owner
+### owner
 
 
 `function owner() public view returns (address)` view public
@@ -77,7 +78,7 @@ Returns the current owner of the factory
 | ---- | ---- | ----------- |
 | [0] | address | The address of the factory owner |
 
-# hasRoleOrOwner
+### hasRoleOrOwner
 
 
 `function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)` view public
@@ -98,7 +99,7 @@ Returns the current owner of the factory
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-# createPool
+### createPool
 
 
 `function createPool(address tokenA, address tokenB) external returns (address pool)`  external
@@ -120,7 +121,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | ---- | ---- | ----------- |
 | pool | address | The address of the newly created pool |
 
-# setFarmingAddress
+### setFarmingAddress
 
 
 `function setFarmingAddress(address newFarmingAddress) external`  external
@@ -135,7 +136,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | newFarmingAddress | address | The new tokenomics contract address |
 
 
-# setDefaultCommunityFee
+### setDefaultCommunityFee
 
 
 `function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
@@ -150,7 +151,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
 
 
-# setDefaultFeeConfiguration
+### setDefaultFeeConfiguration
 
 
 `function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external`  external
@@ -166,7 +167,7 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 | newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
 
 
-# startRenounceOwnership
+### startRenounceOwnership
 
 
 `function startRenounceOwnership() external`  external
@@ -178,7 +179,7 @@ of time must pass before the ownership renounce can be completed.
 
 
 
-# stopRenounceOwnership
+### stopRenounceOwnership
 
 
 `function stopRenounceOwnership() external`  external
@@ -189,7 +190,7 @@ Stops process of renounceOwnership and removes timer.
 
 
 
-# renounceOwnership
+### renounceOwnership
 
 
 `function renounceOwnership() public`  public
@@ -205,6 +206,7 @@ have passed since the call to the startRenounceOwnership() function.*
 
 
 
----
 
+
+---
 

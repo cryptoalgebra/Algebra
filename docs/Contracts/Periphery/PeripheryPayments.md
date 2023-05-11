@@ -4,6 +4,7 @@
 
 
 
+
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# receive
+### receive
 
 
 `receive() external payable` payable external
@@ -22,7 +23,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 
-# unwrapWNativeToken
+### unwrapWNativeToken
 
 
 `function unwrapWNativeToken(uint256 amountMinimum, address recipient) external payable` payable external
@@ -38,7 +39,7 @@ Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as Na
 | recipient | address | The address receiving NativeToken |
 
 
-# sweepToken
+### sweepToken
 
 
 `function sweepToken(address token, uint256 amountMinimum, address recipient) external payable` payable external
@@ -55,7 +56,7 @@ Transfers the full amount of a token held by this contract to recipient
 | recipient | address | The destination address of the token |
 
 
-# refundNativeToken
+### refundNativeToken
 
 
 `function refundNativeToken() external payable` payable external
@@ -70,6 +71,7 @@ that use ether for the input amount*
 
 
 
----
 
+
+---
 

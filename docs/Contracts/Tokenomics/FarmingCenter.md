@@ -2,12 +2,13 @@
 
 # FarmingCenter
 
+
 Algebra main farming contract
 
 *Developer note: Manages farmings and performs entry, exit and other actions.*
 
 ## Modifiers
-# isOwner
+### isOwner
 
 
 `modifier isOwner(uint256 tokenId)`  internal
@@ -24,35 +25,35 @@ Algebra main farming contract
 
 
 ## Variables
-# contract IAlgebraEternalFarming eternalFarming immutable
+### contract IAlgebraEternalFarming eternalFarming immutable
 
 The eternal farming contract
 
-# contract INonfungiblePositionManager nonfungiblePositionManager immutable
+### contract INonfungiblePositionManager nonfungiblePositionManager immutable
 
 The nonfungible position manager with which this farming contract is compatible
 
-# address algebraPoolDeployer immutable
+### address algebraPoolDeployer immutable
 
 The Algebra poolDeployer contract
 
-# mapping(address &#x3D;&gt; address) virtualPoolAddresses 
+### mapping(address &#x3D;&gt; address) virtualPoolAddresses 
 
 
 
 *Developer note: saves addresses of virtual pools for pool*
-# mapping(uint256 &#x3D;&gt; bytes32) deposits 
+### mapping(uint256 &#x3D;&gt; bytes32) deposits 
 
 
 
 *Developer note: deposits[tokenId] &#x3D;&gt; incentiveId*
-# mapping(bytes32 &#x3D;&gt; struct IncentiveKey) incentiveKeys 
+### mapping(bytes32 &#x3D;&gt; struct IncentiveKey) incentiveKeys 
 
 
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(contract IAlgebraEternalFarming _eternalFarming, contract INonfungiblePositionManager _nonfungiblePositionManager) public`  public
@@ -67,7 +68,7 @@ The Algebra poolDeployer contract
 | _nonfungiblePositionManager | contract INonfungiblePositionManager |  |
 
 
-# enterFarming
+### enterFarming
 
 
 `function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -83,7 +84,7 @@ Enters in incentive (time-limited or eternal farming) with NFT-position token
 | tokenId | uint256 | The id of position NFT |
 
 
-# exitFarming
+### exitFarming
 
 
 `function exitFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -98,7 +99,7 @@ Exits from incentive (time-limited or eternal farming) with NFT-position token
 | tokenId | uint256 | The id of position NFT |
 
 
-# applyLiquidityDelta
+### applyLiquidityDelta
 
 
 `function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external`  external
@@ -113,7 +114,7 @@ Report a change of liquidity in position
 | liquidityDelta | int256 | The amount of added liquidity |
 
 
-# increaseLiquidity
+### increaseLiquidity
 
 
 `function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external`  external
@@ -128,7 +129,7 @@ Report a change of liquidity in position
 | liquidityDelta | uint256 |  |
 
 
-# decreaseLiquidity
+### decreaseLiquidity
 
 
 `function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external returns (bool success)`  external
@@ -148,7 +149,7 @@ Report a change of liquidity in position
 | ---- | ---- | ----------- |
 | success | bool |  |
 
-# burnPosition
+### burnPosition
 
 
 `function burnPosition(uint256 tokenId) external returns (bool success)`  external
@@ -167,7 +168,7 @@ Report a burn of position token
 | ---- | ---- | ----------- |
 | success | bool |  |
 
-# collectRewards
+### collectRewards
 
 
 `function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
@@ -188,7 +189,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 | reward | uint256 | The amount of collected reward |
 | bonusReward | uint256 | The amount of collected  bonus reward |
 
-# claimReward
+### claimReward
 
 
 `function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -210,7 +211,7 @@ Used to claim and send rewards from farming(s)
 | ---- | ---- | ----------- |
 | reward | uint256 | The summary amount of claimed rewards |
 
-# connectVirtualPool
+### connectVirtualPool
 
 
 `function connectVirtualPool(contract IAlgebraPool pool, address newVirtualPool) external`  external
@@ -228,6 +229,7 @@ Updates activeIncentive in AlgebraPool
 
 
 
----
 
+
+---
 

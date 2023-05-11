@@ -2,6 +2,7 @@
 
 # IERC20Metadata
 
+
 Interface for ERC20 Metadata
 Extension to IERC20 that includes token metadata
 
@@ -9,7 +10,7 @@ Extension to IERC20 that includes token metadata
 
 
 ## Functions
-# name
+### name
 
 
 `function name() external view returns (string)` view external
@@ -25,7 +26,7 @@ Extension to IERC20 that includes token metadata
 | ---- | ---- | ----------- |
 | [0] | string | The name of the token |
 
-# symbol
+### symbol
 
 
 `function symbol() external view returns (string)` view external
@@ -41,7 +42,7 @@ Extension to IERC20 that includes token metadata
 | ---- | ---- | ----------- |
 | [0] | string | The symbol of the token |
 
-# decimals
+### decimals
 
 
 `function decimals() external view returns (uint8)` view external
@@ -59,6 +60,7 @@ Extension to IERC20 that includes token metadata
 
 
 
----
 
+
+---
 

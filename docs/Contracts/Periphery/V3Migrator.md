@@ -2,6 +2,7 @@
 
 # V3Migrator
 
+
 Algebra Migrator
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -10,13 +11,13 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Variables
-# address nonfungiblePositionManager immutable
+### address nonfungiblePositionManager immutable
 
 
 
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(address _factory, address _WNativeToken, address _nonfungiblePositionManager, address _poolDeployer) public`  public
@@ -33,7 +34,7 @@ https://github.com/Uniswap/v3-periphery*
 | _poolDeployer | address |  |
 
 
-# receive
+### receive
 
 
 `receive() external payable` payable external
@@ -44,7 +45,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 
-# migrate
+### migrate
 
 
 `function migrate(struct IV3Migrator.MigrateParams params) external`  external
@@ -63,6 +64,7 @@ out-of-range position, &#x60;amount{0,1}Min&#x60; may be set to 0, enforcing tha
 
 
 
----
 
+
+---
 

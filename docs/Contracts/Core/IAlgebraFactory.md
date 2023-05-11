@@ -2,6 +2,7 @@
 
 # IAlgebraFactory
 
+
 The interface for the Algebra Factory
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -9,7 +10,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
-# RenounceOwnershipStart
+### RenounceOwnershipStart
 
 
 `event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp)`  
@@ -24,7 +25,7 @@ Emitted when a process of ownership renounce is started
 | finishTimestamp | uint256 | The timestamp when ownership renounce will be possible to finish |
 
 
-# RenounceOwnershipStop
+### RenounceOwnershipStop
 
 
 `event RenounceOwnershipStop(uint256 timestamp)`  
@@ -38,7 +39,7 @@ Emitted when a process of ownership renounce cancelled
 | timestamp | uint256 | The timestamp of event |
 
 
-# RenounceOwnershipFinish
+### RenounceOwnershipFinish
 
 
 `event RenounceOwnershipFinish(uint256 timestamp)`  
@@ -52,7 +53,7 @@ Emitted when a process of ownership renounce finished
 | timestamp | uint256 | The timestamp of ownership renouncement |
 
 
-# Pool
+### Pool
 
 
 `event Pool(address token0, address token1, address pool)`  
@@ -68,7 +69,7 @@ Emitted when a pool is created
 | pool | address | The address of the created pool |
 
 
-# FarmingAddress
+### FarmingAddress
 
 
 `event FarmingAddress(address newFarmingAddress)`  
@@ -82,7 +83,7 @@ Emitted when the farming address is changed
 | newFarmingAddress | address | The farming address after the address was changed |
 
 
-# DefaultFeeConfiguration
+### DefaultFeeConfiguration
 
 
 `event DefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig)`  
@@ -97,7 +98,7 @@ Emitted when the default fee configuration is changed
 | newConfig | struct AlgebraFeeConfiguration | The structure with dynamic fee parameters |
 
 
-# DefaultCommunityFee
+### DefaultCommunityFee
 
 
 `event DefaultCommunityFee(uint8 newDefaultCommunityFee)`  
@@ -114,7 +115,7 @@ Emitted when the default community fee is changed
 
 
 ## Functions
-# POOLS_ADMINISTRATOR_ROLE
+### POOLS_ADMINISTRATOR_ROLE
 
 
 `function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32)` view external
@@ -130,7 +131,7 @@ role that can change communityFee and tickspacing in pools
 | ---- | ---- | ----------- |
 | [0] | bytes32 |  |
 
-# hasRoleOrOwner
+### hasRoleOrOwner
 
 
 `function hasRoleOrOwner(bytes32 role, address account) external view returns (bool)` view external
@@ -151,7 +152,7 @@ role that can change communityFee and tickspacing in pools
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-# owner
+### owner
 
 
 `function owner() external view returns (address)` view external
@@ -168,7 +169,7 @@ Returns the current owner of the factory
 | ---- | ---- | ----------- |
 | [0] | address | The address of the factory owner |
 
-# poolDeployer
+### poolDeployer
 
 
 `function poolDeployer() external view returns (address)` view external
@@ -184,7 +185,7 @@ Returns the current poolDeployerAddress
 | ---- | ---- | ----------- |
 | [0] | address | The address of the poolDeployer |
 
-# farmingAddress
+### farmingAddress
 
 
 `function farmingAddress() external view returns (address)` view external
@@ -201,7 +202,7 @@ Returns the current poolDeployerAddress
 | ---- | ---- | ----------- |
 | [0] | address | The tokenomics contract address |
 
-# communityVault
+### communityVault
 
 
 `function communityVault() external view returns (address)` view external
@@ -217,7 +218,7 @@ Returns the current communityVaultAddress
 | ---- | ---- | ----------- |
 | [0] | address | The address to which community fees are transferred |
 
-# defaultCommunityFee
+### defaultCommunityFee
 
 
 `function defaultCommunityFee() external view returns (uint8)` view external
@@ -233,7 +234,7 @@ Returns the default community fee
 | ---- | ---- | ----------- |
 | [0] | uint8 | Fee which will be set at the creation of the pool |
 
-# poolByPair
+### poolByPair
 
 
 `function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
@@ -254,7 +255,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | ---- | ---- | ----------- |
 | pool | address | The pool address |
 
-# renounceOwnershipStartTimestamp
+### renounceOwnershipStartTimestamp
 
 
 `function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp)` view external
@@ -270,7 +271,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | ---- | ---- | ----------- |
 | timestamp | uint256 | The timestamp of the beginning of the renounceOwnership process |
 
-# createPool
+### createPool
 
 
 `function createPool(address tokenA, address tokenB) external returns (address pool)`  external
@@ -292,7 +293,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | ---- | ---- | ----------- |
 | pool | address | The address of the newly created pool |
 
-# setFarmingAddress
+### setFarmingAddress
 
 
 `function setFarmingAddress(address newFarmingAddress) external`  external
@@ -307,7 +308,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | newFarmingAddress | address | The new tokenomics contract address |
 
 
-# setDefaultCommunityFee
+### setDefaultCommunityFee
 
 
 `function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
@@ -322,7 +323,7 @@ The call will revert if the pool already exists or the token arguments are inval
 | newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
 
 
-# setDefaultFeeConfiguration
+### setDefaultFeeConfiguration
 
 
 `function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external`  external
@@ -338,7 +339,7 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 | newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
 
 
-# startRenounceOwnership
+### startRenounceOwnership
 
 
 `function startRenounceOwnership() external`  external
@@ -350,7 +351,7 @@ of time must pass before the ownership renounce can be completed.
 
 
 
-# stopRenounceOwnership
+### stopRenounceOwnership
 
 
 `function stopRenounceOwnership() external`  external
@@ -363,6 +364,7 @@ Stops process of renounceOwnership and removes timer.
 
 
 
----
 
+
+---
 

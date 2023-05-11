@@ -2,6 +2,7 @@
 
 # IERC20Minimal
 
+
 Minimal ERC20 interface for Algebra
 Contains a subset of the full ERC20 interface that is used in Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -9,7 +10,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
-# Transfer
+### Transfer
 
 
 `event Transfer(address from, address to, uint256 value)`  
@@ -25,7 +26,7 @@ Event emitted when tokens are transferred from one address to another, either vi
 | value | uint256 | The amount of tokens that were transferred |
 
 
-# Approval
+### Approval
 
 
 `event Approval(address owner, address spender, uint256 value)`  
@@ -44,7 +45,7 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 
 
 ## Functions
-# balanceOf
+### balanceOf
 
 
 `function balanceOf(address account) external view returns (uint256)` view external
@@ -63,7 +64,7 @@ Returns the balance of a token
 | ---- | ---- | ----------- |
 | [0] | uint256 | The number of tokens held by the account |
 
-# transfer
+### transfer
 
 
 `function transfer(address recipient, uint256 amount) external returns (bool)`  external
@@ -83,7 +84,7 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 | ---- | ---- | ----------- |
 | [0] | bool | Returns true for a successful transfer, false for an unsuccessful transfer |
 
-# allowance
+### allowance
 
 
 `function allowance(address owner, address spender) external view returns (uint256)` view external
@@ -103,7 +104,7 @@ Returns the current allowance given to a spender by an owner
 | ---- | ---- | ----------- |
 | [0] | uint256 | The current allowance granted by &#x60;owner&#x60; to &#x60;spender&#x60; |
 
-# approve
+### approve
 
 
 `function approve(address spender, uint256 amount) external returns (bool)`  external
@@ -123,7 +124,7 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 | ---- | ---- | ----------- |
 | [0] | bool | Returns true for a successful approval, false for unsuccessful |
 
-# transferFrom
+### transferFrom
 
 
 `function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)`  external
@@ -146,6 +147,7 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 
 
 
----
 
+
+---
 

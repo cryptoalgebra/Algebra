@@ -2,6 +2,7 @@
 
 # IQuoterV2
 
+
 QuoterV2 Interface
 Supports quoting the calculated amounts from exact input or exact output swaps.
 For each pool also tells you the number of initialized ticks crossed and the sqrt price of the pool after the swap.
@@ -14,7 +15,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# quoteExactInput
+### quoteExactInput
 
 
 `function quoteExactInput(bytes path, uint256 amountIn) external returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)`  external
@@ -37,7 +38,7 @@ Returns the amount out received for a given exact input swap without executing t
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactInputSingle
+### quoteExactInputSingle
 
 
 `function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)`  external
@@ -59,7 +60,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | initializedTicksCrossed | uint32 | The number of initialized ticks that the swap crossed |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactOutput
+### quoteExactOutput
 
 
 `function quoteExactOutput(bytes path, uint256 amountOut) external returns (uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)`  external
@@ -82,7 +83,7 @@ Returns the amount in required for a given exact output swap without executing t
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
-# quoteExactOutputSingle
+### quoteExactOutputSingle
 
 
 `function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) external returns (uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)`  external
@@ -106,6 +107,7 @@ Returns the amount in required to receive the given exact output amount but for 
 
 
 
----
 
+
+---
 

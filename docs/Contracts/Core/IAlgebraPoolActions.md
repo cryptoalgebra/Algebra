@@ -2,6 +2,7 @@
 
 # IAlgebraPoolActions
 
+
 Permissionless pool actions
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
-# initialize
+### initialize
 
 
 `function initialize(uint160 price) external`  external
@@ -27,7 +28,7 @@ Initialization should be done in one transaction with pool creation to avoid fro
 | price | uint160 | the initial sqrt price of the pool as a Q64.96 |
 
 
-# mint
+### mint
 
 
 `function mint(address sender, address recipient, int24 bottomTick, int24 topTick, uint128 amount, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)`  external
@@ -56,7 +57,7 @@ on bottomTick, topTick, the amount of liquidity, and the current price. If botto
 | amount1 | uint256 | The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback |
 | liquidityActual | uint128 | The actual minted amount of liquidity |
 
-# collect
+### collect
 
 
 `function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)`  external
@@ -84,7 +85,7 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 | amount0 | uint128 | The amount of fees collected in token0 |
 | amount1 | uint128 | The amount of fees collected in token1 |
 
-# burn
+### burn
 
 
 `function burn(int24 bottomTick, int24 topTick, uint128 amount) external returns (uint256 amount0, uint256 amount1)`  external
@@ -108,7 +109,7 @@ Fees must be collected separately via a call to #collect*
 | amount0 | uint256 | The amount of token0 sent to the recipient |
 | amount1 | uint256 | The amount of token1 sent to the recipient |
 
-# swap
+### swap
 
 
 `function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
@@ -133,7 +134,7 @@ Swap token0 for token1, or token1 for token0
 | amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
-# swapSupportingFeeOnInputTokens
+### swapSupportingFeeOnInputTokens
 
 
 `function swapSupportingFeeOnInputTokens(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
@@ -159,7 +160,7 @@ Swap token0 for token1, or token1 for token0 (tokens that have fee on transfer)
 | amount0 | int256 | The delta of the balance of token0 of the pool, exact when negative, minimum when positive |
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
-# flash
+### flash
 
 
 `function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external`  external
@@ -181,6 +182,7 @@ If there are no in-range liquidity providers, the fee will be transferred to the
 
 
 
----
 
+
+---
 

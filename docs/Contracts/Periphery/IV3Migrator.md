@@ -2,6 +2,7 @@
 
 # IV3Migrator
 
+
 Algebra Migrator
 Enables migration of liquidity from Uniswap v2-compatible pairs into Algebra pools
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -11,7 +12,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ## Functions
-# migrate
+### migrate
 
 
 `function migrate(struct IV3Migrator.MigrateParams params) external`  external
@@ -30,6 +31,7 @@ out-of-range position, &#x60;amount{0,1}Min&#x60; may be set to 0, enforcing tha
 
 
 
----
 
+
+---
 

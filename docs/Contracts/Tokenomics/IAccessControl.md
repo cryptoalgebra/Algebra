@@ -4,11 +4,12 @@
 
 
 
+
 *Developer note: External interface of AccessControl declared to support ERC165 detection.*
 
 
 ## Events
-# RoleAdminChanged
+### RoleAdminChanged
 
 
 `event RoleAdminChanged(bytes32 role, bytes32 previousAdminRole, bytes32 newAdminRole)`  
@@ -30,7 +31,7 @@ _Available since v3.1._*
 | newAdminRole | bytes32 |  |
 
 
-# RoleGranted
+### RoleGranted
 
 
 `event RoleGranted(bytes32 role, address account, address sender)`  
@@ -50,7 +51,7 @@ bearer except when using {AccessControl-_setupRole}.*
 | sender | address |  |
 
 
-# RoleRevoked
+### RoleRevoked
 
 
 `event RoleRevoked(bytes32 role, address account, address sender)`  
@@ -74,7 +75,7 @@ bearer except when using {AccessControl-_setupRole}.*
 
 
 ## Functions
-# hasRole
+### hasRole
 
 
 `function hasRole(bytes32 role, address account) external view returns (bool)` view external
@@ -95,7 +96,7 @@ bearer except when using {AccessControl-_setupRole}.*
 | ---- | ---- | ----------- |
 | [0] | bool |  |
 
-# getRoleAdmin
+### getRoleAdmin
 
 
 `function getRoleAdmin(bytes32 role) external view returns (bytes32)` view external
@@ -118,7 +119,7 @@ To change a role&#x27;s admin, use {AccessControl-_setRoleAdmin}.*
 | ---- | ---- | ----------- |
 | [0] | bytes32 |  |
 
-# grantRole
+### grantRole
 
 
 `function grantRole(bytes32 role, address account) external`  external
@@ -141,7 +142,7 @@ Requirements:
 | account | address |  |
 
 
-# revokeRole
+### revokeRole
 
 
 `function revokeRole(bytes32 role, address account) external`  external
@@ -163,7 +164,7 @@ Requirements:
 | account | address |  |
 
 
-# renounceRole
+### renounceRole
 
 
 `function renounceRole(bytes32 role, address account) external`  external
@@ -192,6 +193,7 @@ Requirements:
 
 
 
----
 
+
+---
 

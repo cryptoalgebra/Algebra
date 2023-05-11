@@ -2,11 +2,12 @@
 
 # AlgebraEternalFarming
 
+
 Algebra eternal (v2-like) farming
 
 
 ## Modifiers
-# onlyIncentiveMaker
+### onlyIncentiveMaker
 
 
 `modifier onlyIncentiveMaker()`  internal
@@ -17,7 +18,7 @@ Algebra eternal (v2-like) farming
 
 
 
-# onlyAdministrator
+### onlyAdministrator
 
 
 `modifier onlyAdministrator()`  internal
@@ -28,7 +29,7 @@ Algebra eternal (v2-like) farming
 
 
 
-# onlyFarmingCenter
+### onlyFarmingCenter
 
 
 `modifier onlyFarmingCenter()`  internal
@@ -42,44 +43,44 @@ Algebra eternal (v2-like) farming
 
 
 ## Variables
-# contract INonfungiblePositionManager nonfungiblePositionManager immutable
+### contract INonfungiblePositionManager nonfungiblePositionManager immutable
 
 The nonfungible position manager with which this farming contract is compatible
 
-# contract IFarmingCenter farmingCenter 
+### contract IFarmingCenter farmingCenter 
 
 
 
-# mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Incentive) incentives 
+### mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Incentive) incentives 
 
 Represents a farming incentive
 
 *Developer note: bytes32 refers to the return value of IncentiveId.compute*
-# mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
+### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
 
 Returns information about a farmd liquidity NFT
 
 *Developer note: farms[tokenId][incentiveHash] &#x3D;&gt; Farm*
-# uint256 numOfIncentives 
+### uint256 numOfIncentives 
 
 
 
-# bytes32 INCENTIVE_MAKER_ROLE constant
+### bytes32 INCENTIVE_MAKER_ROLE constant
 
 
 
-# bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
+### bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
 
 
 
-# mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
+### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
 *Developer note: rewards[owner][rewardToken] &#x3D;&gt; uint256*
 
 ## Functions
-# constructor
+### constructor
 
 
 `constructor(contract IAlgebraPoolDeployer _deployer, contract INonfungiblePositionManager _nonfungiblePositionManager) public`  public
@@ -94,7 +95,7 @@ Returns amounts of reward tokens owed to a given address according to the last t
 | _nonfungiblePositionManager | contract INonfungiblePositionManager | the NFT position manager contract address |
 
 
-# isIncentiveActiveInPool
+### isIncentiveActiveInPool
 
 
 `function isIncentiveActiveInPool(bytes32 incentiveId, contract IAlgebraPool pool) external view returns (bool res)` view external
@@ -115,7 +116,7 @@ Check if incentive is active in Algebra pool
 | ---- | ---- | ----------- |
 | res | bool | True if incentive is active in Algebra pool |
 
-# createEternalFarming
+### createEternalFarming
 
 
 `function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)`  external
@@ -135,7 +136,7 @@ Creates a new liquidity mining incentive program
 | ---- | ---- | ----------- |
 | virtualPool | address | The virtual pool |
 
-# deactivateIncentive
+### deactivateIncentive
 
 
 `function deactivateIncentive(struct IncentiveKey key) external`  external
@@ -149,7 +150,7 @@ Detach incentive from the pool and deactivate it
 | key | struct IncentiveKey | The key of the incentive |
 
 
-# decreaseRewardsAmount
+### decreaseRewardsAmount
 
 
 `function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
@@ -165,7 +166,7 @@ Detach incentive from the pool and deactivate it
 | bonusRewardAmount | uint128 |  |
 
 
-# setFarmingCenterAddress
+### setFarmingCenterAddress
 
 
 `function setFarmingCenterAddress(address _farmingCenter) external`  external
@@ -179,7 +180,7 @@ Updates farming center address
 | _farmingCenter | address | The new farming center contract address |
 
 
-# addRewards
+### addRewards
 
 
 `function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
@@ -195,7 +196,7 @@ Updates farming center address
 | bonusRewardAmount | uint128 |  |
 
 
-# setRates
+### setRates
 
 
 `function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external`  external
@@ -211,7 +212,7 @@ Updates farming center address
 | bonusRewardRate | uint128 |  |
 
 
-# enterFarming
+### enterFarming
 
 
 `function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
@@ -226,7 +227,7 @@ enter farming for Algebra LP token
 | tokenId | uint256 | The ID of the token to exitFarming |
 
 
-# exitFarming
+### exitFarming
 
 
 `function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external`  external
@@ -242,7 +243,7 @@ exitFarmings for Algebra LP token
 | _owner | address | Owner of the token |
 
 
-# claimReward
+### claimReward
 
 
 `function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -263,7 +264,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of reward tokens claimed |
 
-# claimRewardFrom
+### claimRewardFrom
 
 
 `function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
@@ -286,7 +287,7 @@ only for FarmingCenter
 | ---- | ---- | ----------- |
 | reward | uint256 | The amount of reward tokens claimed |
 
-# getRewardInfo
+### getRewardInfo
 
 
 `function getRewardInfo(struct IncentiveKey key, uint256 tokenId) external view returns (uint256 reward, uint256 bonusReward)` view external
@@ -307,7 +308,7 @@ reward amounts can be outdated, actual amounts could be obtained via static call
 | reward | uint256 | The reward accrued to the NFT for the given incentive thus far |
 | bonusReward | uint256 | The bonus reward accrued to the NFT for the given incentive thus far |
 
-# collectRewards
+### collectRewards
 
 
 `function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)`  external
@@ -331,6 +332,7 @@ reward amounts should be updated before calling this method
 
 
 
----
 
+
+---
 
