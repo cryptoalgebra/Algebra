@@ -7,7 +7,7 @@ Algebra factory
 
 Is used to deploy pools and its dataStorages
 
-*Developer note: Version: Algebra V2*
+*Developer note: Version: Algebra V2-directional-fee*
 
 
 

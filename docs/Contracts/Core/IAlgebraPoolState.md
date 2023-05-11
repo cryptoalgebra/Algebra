@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### globalState
 
 
-`function globalState() external view returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint16 timepointIndex, uint8 communityFee, bool unlocked)` view external
+`function globalState() external view returns (uint160 price, int24 tick, uint16 feeZtO, uint16 feeOtZ, uint16 timepointIndex, uint8 communityFee, bool unlocked)` view external
 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
@@ -31,8 +31,8 @@ and is exposed as a single method to save gas when accessed externally.
 | ---- | ---- | ----------- |
 | price | uint160 | The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value; |
 | tick | int24 | The current tick of the pool, i.e. according to the last tick transition that was run; This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary; |
-| prevInitializedTick | int24 | The previous initialized tick |
-| fee | uint16 | The last pool fee value in hundredths of a bip, i.e. 1e-6 |
+| feeZtO | uint16 | The last pool fee value for ZtO swaps in hundredths of a bip, i.e. 1e-6; |
+| feeOtZ | uint16 | The last pool fee value for OtZ swaps in hundredths of a bip, i.e. 1e-6; |
 | timepointIndex | uint16 | The index of the last written timepoint |
 | communityFee | uint8 | The community fee percentage of the swap fee in thousandths (1e-3) |
 | unlocked | bool | Whether the pool is currently locked to reentrancy |
@@ -141,6 +141,22 @@ The timestamp of the last sending of tokens to community vault
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint32 |  |
+
+### prevInitializedTick
+
+
+`function prevInitializedTick() external view returns (int24)` view external
+
+The previous active tick
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int24 |  |
 
 ### getCommunityFeePending
 

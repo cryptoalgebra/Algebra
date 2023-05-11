@@ -14,7 +14,7 @@ The interface for the DataStorageOperator
 ### FeeConfiguration
 
 
-`event FeeConfiguration(struct AlgebraFeeConfiguration feeConfig)`  
+`event FeeConfiguration(bool zto, struct AlgebraFeeConfiguration feeConfig)`  
 
 Emitted when the fee configuration is changed
 *Developer note: See the AdaptiveFee library for more details*
@@ -23,6 +23,7 @@ Emitted when the fee configuration is changed
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| zto | bool | Direction for new feeConfig (ZtO or OtZ) |
 | feeConfig | struct AlgebraFeeConfiguration | The structure with dynamic fee parameters |
 
 
@@ -121,7 +122,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 ### write
 
 
-`function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee)`  external
+`function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFeeZtO, uint16 newFeeOtZ)`  external
 
 Writes a dataStorage timepoint to the array
 *Developer note: Writable at most once per block. Index represents the most recently written element. index must be tracked externally.*
@@ -139,12 +140,13 @@ Writes a dataStorage timepoint to the array
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | indexUpdated | uint16 | The new index of the most recently written element in the dataStorage array |
-| newFee | uint16 | The fee in hundredths of a bip, i.e. 1e-6 |
+| newFeeZtO | uint16 | The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6 |
+| newFeeOtZ | uint16 | The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6 |
 
 ### changeFeeConfiguration
 
 
-`function changeFeeConfiguration(struct AlgebraFeeConfiguration feeConfig) external`  external
+`function changeFeeConfiguration(bool zto, struct AlgebraFeeConfiguration feeConfig) external`  external
 
 Changes fee configuration for the pool
 
@@ -152,6 +154,7 @@ Changes fee configuration for the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| zto | bool |  |
 | feeConfig | struct AlgebraFeeConfiguration |  |
 
 

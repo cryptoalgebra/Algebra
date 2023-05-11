@@ -174,7 +174,7 @@ Emitted when new activeIncentive is set
 ### Fee
 
 
-`event Fee(uint16 fee)`  
+`event Fee(uint16 feeZtO, uint16 feeOtZ)`  
 
 Emitted when the fee changes inside the pool
 
@@ -182,7 +182,8 @@ Emitted when the fee changes inside the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
+| feeZtO | uint16 | The current fee for ZtO swaps in hundredths of a bip, i.e. 1e-6 |
+| feeOtZ | uint16 | The current fee for OtZ swaps in hundredths of a bip, i.e. 1e-6 |
 
 
 ### DataStorageFailure

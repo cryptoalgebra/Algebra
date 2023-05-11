@@ -7,7 +7,7 @@ Algebra concentrated liquidity pool
 
 This contract is responsible for liquidity positions, swaps and flashloans
 
-*Developer note: Version: Algebra V2*
+*Developer note: Version: Algebra V2-directional-fee*
 
 
 

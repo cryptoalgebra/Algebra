@@ -85,6 +85,10 @@ This value is an int24 to avoid casting even though it is always positive.*
 
 The timestamp of the last sending of tokens to community vault
 
+### int24 prevInitializedTick 
+
+The previous active tick
+
 ### uint160 secondsPerLiquidityCumulative 
 
 The accumulator of seconds per liquidity since the pool was first initialized
