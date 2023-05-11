@@ -55,42 +55,45 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
-      cache.fee = zeroToOne ? globalState.feeZtO : globalState.feeOtZ;
-      cache.timepointIndex = globalState.timepointIndex;
+      (uint16 feeZtO, uint16 feeOtZ) = (globalState.feeZtO, globalState.feeOtZ);
+      uint16 timepointIndex = globalState.timepointIndex;
       cache.communityFee = globalState.communityFee;
-      cache.prevInitializedTick = prevInitializedTick;
 
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       currentLiquidity = liquidity;
+      cache.prevInitializedTick = prevInitializedTick;
 
       if (zeroToOne) {
-        if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
+        if (!(limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO)) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth0Token;
+        cache.fee = feeZtO;
       } else {
-        if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
+        if (!(limitSqrtPrice > currentPrice && limitSqrtPrice < TickMath.MAX_SQRT_RATIO)) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth1Token;
+        cache.fee = feeOtZ;
       }
 
       cache.blockTimestamp = _blockTimestamp();
 
       (uint16 newTimepointIndex, uint16 newFeeZtO, uint16 newFeeOtZ) = _writeTimepoint(
-        cache.timepointIndex,
+        timepointIndex,
         cache.blockTimestamp,
         currentTick,
         currentLiquidity
       );
 
       // new timepoint appears only for first swap/mint/burn in block
-      if (newTimepointIndex != cache.timepointIndex) {
-        cache.timepointIndex = newTimepointIndex;
-        if (globalState.feeZtO != newFeeZtO || globalState.feeOtZ != newFeeOtZ) {
+      if (timepointIndex != newTimepointIndex) {
+        timepointIndex = newTimepointIndex;
+        if (feeZtO != newFeeZtO || feeOtZ != newFeeOtZ) {
           globalState.feeZtO = newFeeZtO;
           globalState.feeOtZ = newFeeOtZ;
           cache.fee = zeroToOne ? newFeeZtO : newFeeOtZ;
           emit Fee(newFeeZtO, newFeeOtZ);
         }
       }
+      cache.timepointIndex = timepointIndex;
     }
 
     PriceMovementCache memory step;
