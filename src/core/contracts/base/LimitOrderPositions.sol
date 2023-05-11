@@ -35,7 +35,7 @@ abstract contract LimitOrderPositions is Positions {
       bool remove = amountToSellDelta < 0;
       (int24 currentTick, int24 prevTick) = (globalState.tick, prevInitializedTick);
 
-      if (limitOrders.addOrRemoveLimitOrder(tick, amountToSellDelta)) {
+      if (limitOrders.addOrRemoveLimitOrder(tick, currentTick, amountToSellDelta)) {
         // if tick flipped
         TickManagement.Tick storage _tickData = ticks[tick];
         _tickData.hasLimitOrders = !remove;
@@ -82,7 +82,8 @@ abstract contract LimitOrderPositions is Positions {
           _bought1Cumulative = _limitOrder.boughtAmount1Cumulative;
         }
         if (amountToSell == 0) {
-          // initial value isn't zero, but accumulators can overflow
+          // during initialization, "1" is written to the limit order accumulators (boughtAmount{0,1}Cumulative), not zero
+          // however, in the future, the accumulators may overflow and become equal to zero
           if (position.innerFeeGrowth0Token == 0) position.innerFeeGrowth0Token = _limitOrder.boughtAmount0Cumulative;
           if (position.innerFeeGrowth1Token == 0) position.innerFeeGrowth1Token = _limitOrder.boughtAmount1Cumulative;
         }
@@ -95,9 +96,10 @@ abstract contract LimitOrderPositions is Positions {
         uint256 boughtAmount;
         if (amountToSellInitial > 0) {
           boughtAmount = FullMath.mulDiv(_cumulativeDelta, amountToSellInitial, Constants.Q128);
-          uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-          uint256 price = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q96);
-          (uint256 nominator, uint256 denominator) = zeroToOne ? (price, Constants.Q96) : (Constants.Q96, price);
+          uint256 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+          // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
+          uint256 priceX144 = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q48);
+          (uint256 nominator, uint256 denominator) = zeroToOne ? (priceX144, Constants.Q144) : (Constants.Q144, priceX144);
           uint256 amountToBuy = FullMath.mulDiv(amountToSell, nominator, denominator);
 
           if (boughtAmount < amountToBuy) {
@@ -134,7 +136,7 @@ abstract contract LimitOrderPositions is Positions {
       }
       if (amountToSell == 0) amountToSellInitial = 0; // reset if all amount cancelled
 
-      require(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
+      assert(amountToSell <= type(uint128).max && amountToSellInitial <= type(uint128).max); // should never fail, just in case
       (position.liquidity) = ((amountToSell << 128) | amountToSellInitial); // tightly pack data
     }
   }

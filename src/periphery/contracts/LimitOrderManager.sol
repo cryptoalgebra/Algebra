@@ -4,6 +4,8 @@ pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
 import './interfaces/ILimitOrderManager.sol';
 import './libraries/PositionKey.sol';
@@ -14,7 +16,6 @@ import './base/Multicall.sol';
 import './base/ERC721Permit.sol';
 import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
-import './base/PoolInitializer.sol';
 
 /// @title NFT limitPositions
 /// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
@@ -23,14 +24,12 @@ contract LimitOrderManager is
     Multicall,
     ERC721Permit,
     PeripheryImmutableState,
-    LimitOrderManagment,
+    LimitOrderManagement,
     PeripheryValidation,
     SelfPermit
 {
     struct UpdatePositionCache {
         uint256 cumulativeDelta;
-        uint160 sqrtPrice;
-        uint256 price;
         uint128 liquidityLast;
         uint256 feeGrowthInside0LastX128;
         uint256 feeGrowthInside1LastX128;
@@ -55,7 +54,7 @@ contract LimitOrderManager is
         address _WNativeToken,
         address _poolDeployer
     )
-        ERC721Permit('Algebra Positions NFT-V1', 'ALGB-POS', '1')
+        ERC721Permit('Algebra Limit Orders NFT-V1', 'ALGB-LIMIT', '1')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {}
 
@@ -92,7 +91,7 @@ contract LimitOrderManager is
             liquidityInitPrev = uint128(_liquidity);
         }
 
-        (pool, depositedToken) = createLimitOrder(params.token0, params.token1, params.tick, params.amount);
+        (pool, depositedToken) = _createLimitOrder(params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
@@ -178,11 +177,16 @@ contract LimitOrderManager is
 
         if (cache.cumulativeDelta > 0) {
             uint256 closedAmount = FullMath.mulDiv(cache.cumulativeDelta, position.liquidityInit, Constants.Q128);
-            cache.sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
-            cache.price = FullMath.mulDiv(cache.sqrtPrice, cache.sqrtPrice, Constants.Q96);
-            (uint256 nominator, uint256 denominator) = position.depositedToken
-                ? (Constants.Q96, cache.price)
-                : (cache.price, Constants.Q96);
+            uint256 nominator;
+            uint256 denominator;
+            // scope to prevent stack too deep error
+            {
+                uint256 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+                uint256 priceX144 = FullMath.mulDiv(sqrtPrice, sqrtPrice, Constants.Q48);
+                (nominator, denominator) = position.depositedToken
+                    ? (Constants.Q144, priceX144)
+                    : (priceX144, Constants.Q144);
+            }
             uint256 fullAmount = FullMath.mulDiv(positionLiquidity, nominator, denominator);
             if (closedAmount >= fullAmount) {
                 closedAmount = fullAmount;
@@ -250,8 +254,8 @@ contract LimitOrderManager is
 
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         LimitPosition storage position = _limitPositions[tokenId];
-        delete _limitPositions[tokenId];
         require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, 'Not cleared');
+        delete _limitPositions[tokenId];
         _burn(tokenId);
     }
 

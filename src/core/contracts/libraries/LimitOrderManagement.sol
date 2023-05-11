@@ -3,7 +3,9 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
+import './LiquidityMath.sol';
 import './Constants.sol';
+import './TickMath.sol';
 
 /// @title LimitOrderManagement
 /// @notice Contains functions for managing limit orders and relevant calculations
@@ -19,18 +21,34 @@ library LimitOrderManagement {
   /// @notice Updates a limit order state and returns true if the tick was flipped from initialized to uninitialized, or vice versa
   /// @param self The mapping containing limit order cumulatives for initialized ticks
   /// @param tick The tick that will be updated
+  /// @param currentTick The current tick in pool
   /// @param amount The amount of liquidity that will be added/removed
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
-  function addOrRemoveLimitOrder(mapping(int24 => LimitOrder) storage self, int24 tick, int128 amount) internal returns (bool flipped) {
+  function addOrRemoveLimitOrder(
+    mapping(int24 => LimitOrder) storage self,
+    int24 tick,
+    int24 currentTick,
+    int128 amount
+  ) internal returns (bool flipped) {
+    if (tick >= Constants.MAX_LIMIT_ORDER_TICK || tick < -Constants.MAX_LIMIT_ORDER_TICK) revert IAlgebraPoolErrors.invalidTickForLimitOrder();
+
     LimitOrder storage data = self[tick];
     uint128 _amountToSell = data.amountToSell;
+
     unchecked {
+      flipped = _amountToSell == 0; // calculate 'flipped' for amount > 0 case
+      _amountToSell = LiquidityMath.addDelta(_amountToSell, amount);
       if (amount > 0) {
-        flipped = _amountToSell == 0;
-        _amountToSell += uint128(amount);
+        // check if a limit order can be closed at all
+        uint256 tickSqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+        // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
+        uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
+        uint256 amountToBuy = (tick > currentTick)
+          ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q144, priceX144)
+          : FullMath.mulDivRoundingUp(_amountToSell, priceX144, Constants.Q144);
+        if (amountToBuy > Constants.Q128 >> 1) revert IAlgebraPoolErrors.invalidAmountForLimitOrder();
       } else {
-        _amountToSell -= uint128(-amount);
-        flipped = _amountToSell == 0;
+        flipped = _amountToSell == 0; // override 'flipped' value
         if (flipped) data.soldAmount = 0; // reset filled amount if all orders are closed
       }
       data.amountToSell = _amountToSell;
@@ -76,11 +94,12 @@ library LimitOrderManagement {
       if (amountA < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
       // price is defined as "token1/token0"
-      uint256 price = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q96);
+      // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
+      uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
 
       uint256 amountB = (zeroToOne == exactIn)
-        ? FullMath.mulDiv(uint256(amountA), price, Constants.Q96) // tokenA is token0
-        : FullMath.mulDiv(uint256(amountA), Constants.Q96, price); // tokenA is token1
+        ? FullMath.mulDiv(uint256(amountA), priceX144, Constants.Q144) // tokenA is token0
+        : FullMath.mulDiv(uint256(amountA), Constants.Q144, priceX144); // tokenA is token1
 
       // limit orders buy tokenIn and sell tokenOut
       (amountOut, amountIn) = exactIn ? (amountB, uint256(amountA)) : (uint256(amountA), amountB);
@@ -103,7 +122,10 @@ library LimitOrderManagement {
         data.soldAmount = soldAmount + uint128(amountOut);
       }
 
-      amountIn = zeroToOne ? FullMath.mulDivRoundingUp(amountOut, Constants.Q96, price) : FullMath.mulDivRoundingUp(amountOut, price, Constants.Q96);
+      amountIn = zeroToOne
+        ? FullMath.mulDivRoundingUp(amountOut, Constants.Q144, priceX144)
+        : FullMath.mulDivRoundingUp(amountOut, priceX144, Constants.Q144);
+
       if (exactIn) {
         if (amountOut == unsoldAmount) {
           feeAmount = FullMath.mulDivRoundingUp(amountIn, fee, Constants.FEE_DENOMINATOR);

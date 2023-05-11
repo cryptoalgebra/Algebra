@@ -10,22 +10,11 @@ export module HelperTypes {
       rewardToken: TestERC20
       bonusRewardToken: TestERC20
       poolAddress: string
-      startTime: number
-      endTime?: number
+      nonce: BigNumber
       totalReward: BigNumber
       bonusReward: BigNumber
-      enterStartTime?: BigNumber
-      
-      algbAmountForTier1?: BigNumber
-      algbAmountForTier2?: BigNumber
-      algbAmountForTier3?: BigNumber
-      tier1Multiplier?: BigNumber
-      tier2Multiplier?: BigNumber
-      tier3Multiplier?: BigNumber
-      multiplierToken?: string
 
-      eternal? : boolean
-      rewardRate?: BigNumber,
+      rewardRate?: BigNumber
       bonusRewardRate?: BigNumber
       minimalPositionWidth?: number
     }
@@ -35,11 +24,9 @@ export module HelperTypes {
       bonusRewardToken: TestERC20
       bonusReward: BigNumber
       totalReward: BigNumber
-      startTime: number
-      endTime: number
+      nonce: BigNumber
       virtualPool: Contract
     }
-
 
     export type Command = CommandFunction<Args, Result>
   }
@@ -51,8 +38,6 @@ export module HelperTypes {
       amountsToFarm: [BigNumber, BigNumber]
       ticks: [number, number]
       createIncentiveResult: CreateIncentive.Result
-      eternal?: boolean
-      tokensLocked?: BigNumber
     }
 
     export type Result = {

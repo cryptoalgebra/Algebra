@@ -1,123 +1,62 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.7.6;
+pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
-import './INonfungiblePositionManager.sol';
+import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/IPeripheryPayments.sol';
+import '../base/IncentiveKey.sol';
+import '../interfaces/IAlgebraEternalFarming.sol';
 
-import '../farmings/limitFarming/interfaces/IAlgebraLimitFarming.sol';
-import '../farmings/eternalFarming/interfaces/IAlgebraEternalFarming.sol';
-import './IFarmingCenterVault.sol';
-import './IIncentiveKey.sol';
+interface IFarmingCenter is IMulticall {
+  function virtualPoolAddresses(address) external view returns (address);
 
-interface IFarmingCenter is IAlgebraVirtualPool, IIncentiveKey, IMulticall, IPeripheryPayments {
-    struct VirtualPoolAddresses {
-        address eternalVirtualPool;
-        address limitVirtualPool;
-    }
+  /// @notice The nonfungible position manager with which this farming contract is compatible
+  function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    struct DecreaseLiquidityParams {
-        uint256 tokenId;
-        uint128 liquidity;
-        uint256 amount0Min;
-        uint256 amount1Min;
-        uint128 amount0Max;
-        uint128 amount1Max;
-        address recipient;
-        uint256 deadline;
-    }
+  /// @notice The eternal farming contract
+  function eternalFarming() external view returns (IAlgebraEternalFarming);
 
-    function virtualPoolAddresses(address) external view returns (address, address);
+  /// @notice The Algebra poolDeployer contract
+  function algebraPoolDeployer() external view returns (address);
 
-    /// @notice The nonfungible position manager with which this farming contract is compatible
-    function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
+  /// @notice Returns information about a deposited NFT
+  /// @param tokenId The ID of the deposit (and token) that is being transferred
+  /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
+  function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId);
 
-    function limitFarming() external view returns (IAlgebraLimitFarming);
+  /// @notice Updates activeIncentive in AlgebraPool
+  /// @dev only farming can do it
+  /// @param pool The AlgebraPool for which farming was created
+  /// @param virtualPool The virtual pool to be connected
+  function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
 
-    function eternalFarming() external view returns (IAlgebraEternalFarming);
+  /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
+  /// @dev token must be deposited in FarmingCenter
+  /// @param key The incentive event key
+  /// @param tokenId The id of position NFT
+  function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
-    function farmingCenterVault() external view returns (IFarmingCenterVault);
+  /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
+  /// @param key The incentive event key
+  /// @param tokenId The id of position NFT
+  function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 
-    /// @notice Increasing the liquidity of the position without exiting from farming
-    /// @param key The incentive event key
-    /// @param params tokenId The ID of the token for which liquidity is being increased,
-    /// amount0Desired The desired amount of token0 to be spent,
-    /// amount1Desired The desired amount of token1 to be spent,
-    /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
-    /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
-    /// deadline The time by which the transaction must be included to effect the change
-    function increaseLiquidity(
-        IncentiveKey memory key,
-        INonfungiblePositionManager.IncreaseLiquidityParams memory params
-    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1);
+  /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
+  /// @param key The incentive event key
+  /// @param tokenId The id of position NFT
+  /// @return reward The amount of collected reward
+  /// @return bonusReward The amount of collected  bonus reward
+  function collectRewards(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward);
 
-    function decreaseLiquidity(
-        IncentiveKey memory key,
-        DecreaseLiquidityParams memory params
-    ) external payable returns (uint256 amount0, uint256 amount1);
-
-    /// @notice Returns information about a deposited NFT
-    /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @return numberOfFarms The number of farms,
-    /// inLimitFarming The parameter showing if the token is in the limit farm
-    function deposits(uint256 tokenId) external view returns (uint32 numberOfFarms, bool inLimitFarming);
-
-    function lockToken(uint256 tokenId) external;
-
-    function unlockToken(uint256 tokenId) external;
-
-    /// @notice Updates activeIncentive in AlgebraPool
-    /// @dev only farming can do it
-    /// @param pool The AlgebraPool for which farming was created
-    /// @param virtualPool The virtual pool to be connected
-    function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
-
-    /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
-    /// @dev token must be deposited in FarmingCenter
-    /// @param key The incentive event key
-    /// @param tokenId The id of position NFT
-    /// @param tokensLocked Amount of tokens to lock for liquidity multiplier (if tiers are used)
-    /// @param isLimit Is incentive time-limited or eternal
-    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked, bool isLimit) external;
-
-    /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
-    /// @param key The incentive event key
-    /// @param tokenId The id of position NFT
-    /// @param isLimit Is incentive time-limited or eternal
-    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external;
-
-    /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
-    /// @param key The incentive event key
-    /// @param tokenId The id of position NFT
-    /// @return reward The amount of collected reward
-    /// @return bonusReward The amount of collected  bonus reward
-    function collectRewards(
-        IncentiveKey memory key,
-        uint256 tokenId
-    ) external returns (uint256 reward, uint256 bonusReward);
-
-    /// @notice Used to claim and send rewards from farming(s)
-    /// @dev can be used via static call to get current rewards for user
-    /// @param rewardToken The token that is a reward
-    /// @param to The address to be rewarded
-    /// @param amountRequestedIncentive Amount to claim in incentive (limit) farming
-    /// @param amountRequestedEternal Amount to claim in eternal farming
-    /// @return reward The summary amount of claimed rewards
-    function claimReward(
-        IERC20Minimal rewardToken,
-        address to,
-        uint256 amountRequestedIncentive,
-        uint256 amountRequestedEternal
-    ) external returns (uint256 reward);
-
-    /// @notice Emitted when ownership of a deposit changes
-    /// @param tokenId The ID of the deposit (and token) that is being transferred
-    /// @param lock The current status of nft
-    event Lock(uint256 indexed tokenId, bool lock);
+  /// @notice Used to claim and send rewards from farming(s)
+  /// @dev can be used via static call to get current rewards for user
+  /// @param rewardToken The token that is a reward
+  /// @param to The address to be rewarded
+  /// @param amountRequested Amount to claim in eternal farming
+  /// @return reward The summary amount of claimed rewards
+  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward);
 }
