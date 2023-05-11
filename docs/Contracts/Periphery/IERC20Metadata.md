@@ -9,26 +9,10 @@ Extension to IERC20 that includes token metadata
 
 
 ## Functions
-### name
+# name
 
 
-`name()` view external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
-
-### symbol
-
-
-`symbol()` view external
+`function name() external view returns (string)` view external
 
 
 
@@ -39,44 +23,12 @@ Extension to IERC20 that includes token metadata
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string |  |
+| [0] | string | The name of the token |
 
-### decimals
-
-
-`decimals()` view external
+# symbol
 
 
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint8 |  |
-
-
-
----
-
-
-
-
-# IERC20Metadata
-
-Interface for ERC20 Metadata
-Extension to IERC20 that includes token metadata
-
-
-
-
-## Functions
-### name
-
-
-`name()` view external
+`function symbol() external view returns (string)` view external
 
 
 
@@ -87,28 +39,12 @@ Extension to IERC20 that includes token metadata
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | string |  |
+| [0] | string | The symbol of the token |
 
-### symbol
-
-
-`symbol()` view external
+# decimals
 
 
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
-
-### decimals
-
-
-`decimals()` view external
+`function decimals() external view returns (uint8)` view external
 
 
 
@@ -119,7 +55,7 @@ Extension to IERC20 that includes token metadata
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint8 |  |
+| [0] | uint8 | The number of decimal places the token has |
 
 
 

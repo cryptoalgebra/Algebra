@@ -1,11 +1,9 @@
 
 
-# IAlgebraMintCallback
+# LimitOrderManagement
 
-Callback for IAlgebraPoolActions#mint
-Any contract that calls IAlgebraPoolActions#mint must implement this interface
-*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
-https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
+Limit orders management functions
+Internal functions for safely managing limit orders in Algebra V2
 
 
 

@@ -4,7 +4,7 @@ import 'hardhat-watcher';
 import 'hardhat-dependency-compiler';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
-import 'algebra-solidity-docgen';
+import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
@@ -66,9 +66,10 @@ export default {
     outDir: 'typechain'
   },
   docgen: {
-    output: '../../docs/Contracts/Periphery',
+    outputDir: '../../docs/Contracts/Periphery',
     pages: (x: any) => x.name.toString() + '.md',
-    templates: '../../docs/doc_templates/public'
+    templates: '../../docs/doc_templates/public',
+    collapseNewlines: true
   },
   dependencyCompiler: {
     paths: [

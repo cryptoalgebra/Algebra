@@ -6,30 +6,13 @@
 
 
 
-## Events
-### DepositTransferred
-
-
-`DepositTransferred(uint256,address,address)`  
-
-Emitted when ownership of a deposit changes
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 | The ID of the deposit (and token) that is being transferred |
-| oldOwner | address | The owner before the deposit was transferred |
-| newOwner | address | The owner after the deposit was transferred |
-
-
 
 
 ## Functions
-### virtualPoolAddresses
+# virtualPoolAddresses
 
 
-`virtualPoolAddresses(address)` view external
+`function virtualPoolAddresses(address) external view returns (address)` view external
 
 
 
@@ -44,12 +27,11 @@ Emitted when ownership of a deposit changes
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address |  |
-| [1] | address |  |
 
-### nonfungiblePositionManager
+# nonfungiblePositionManager
 
 
-`nonfungiblePositionManager()` view external
+`function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)` view external
 
 The nonfungible position manager with which this farming contract is compatible
 
@@ -62,28 +44,12 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
 
-### limitFarming
+# eternalFarming
 
 
-`limitFarming()` view external
+`function eternalFarming() external view returns (contract IAlgebraEternalFarming)` view external
 
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | contract IAlgebraLimitFarming |  |
-
-### eternalFarming
-
-
-`eternalFarming()` view external
-
-
+The eternal farming contract
 
 
 
@@ -94,12 +60,12 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract IAlgebraEternalFarming |  |
 
-### farmingCenterVault
+# algebraPoolDeployer
 
 
-`farmingCenterVault()` view external
+`function algebraPoolDeployer() external view returns (address)` view external
 
-
+The Algebra poolDeployer contract
 
 
 
@@ -108,33 +74,12 @@ The nonfungible position manager with which this farming contract is compatible
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | contract IFarmingCenterVault |  |
+| [0] | address |  |
 
-### l2Nfts
-
-
-`l2Nfts(uint256)` view external
+# deposits
 
 
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-|  | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| nonce | uint96 |  |
-| operator | address |  |
-| tokenId | uint256 |  |
-
-### deposits
-
-
-`deposits(uint256)` view external
+`function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId)` view external
 
 Returns information about a deposited NFT
 
@@ -148,17 +93,15 @@ Returns information about a deposited NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| L2TokenId | uint256 |  |
-| numberOfFarms | uint32 |  |
-| inLimitFarming | bool |  |
-| owner | address |  |
+| eternalIncentiveId | bytes32 | The id of eternal incentive that is active for this NFT |
 
-### connectVirtualPool
+# connectVirtualPool
 
 
-`connectVirtualPool(contract IAlgebraPool,address)`  external
+`function connectVirtualPool(contract IAlgebraPool pool, address virtualPool) external`  external
 
 Updates activeIncentive in AlgebraPool
+*Developer note: only farming can do it*
 
 
 
@@ -168,27 +111,26 @@ Updates activeIncentive in AlgebraPool
 | virtualPool | address | The virtual pool to be connected |
 
 
-### enterFarming
+# enterFarming
 
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,bool)`  external
+`function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
 
 Enters in incentive (time-limited or eternal farming) with NFT-position token
+*Developer note: token must be deposited in FarmingCenter*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
-| tokensLocked | uint256 | Amount of tokens to lock for liquidity multiplier (if tiers are used) |
-| isLimit | bool | Is incentive time-limited or eternal |
 
 
-### exitFarming
+# exitFarming
 
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,bool)`  external
+`function exitFarming(struct IncentiveKey key, uint256 tokenId) external`  external
 
 Exits from incentive (time-limited or eternal farming) with NFT-position token
 
@@ -196,35 +138,14 @@ Exits from incentive (time-limited or eternal farming) with NFT-position token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
-| isLimit | bool | Is incentive time-limited or eternal |
 
 
-### collect
+# collectRewards
 
 
-`collect(struct INonfungiblePositionManager.CollectParams)`  external
-
-Collects up to a maximum amount of fees owed to a specific position to the recipient
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| amount0 | uint256 |  |
-| amount1 | uint256 |  |
-
-### collectRewards
-
-
-`collectRewards(struct IIncentiveKey.IncentiveKey,uint256)`  external
+`function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
 
 Used to collect reward from eternal farming. Then reward can be claimed.
 
@@ -232,22 +153,23 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive event key |
 | tokenId | uint256 | The id of position NFT |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| reward | uint256 | The amount of collected reward |
+| bonusReward | uint256 | The amount of collected  bonus reward |
 
-### claimReward
+# claimReward
 
 
-`claimReward(contract IERC20Minimal,address,uint256,uint256)`  external
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Used to claim and send rewards from farming(s)
+*Developer note: can be used via static call to get current rewards for user*
 
 
 
@@ -255,30 +177,13 @@ Used to claim and send rewards from farming(s)
 | ---- | ---- | ----------- |
 | rewardToken | contract IERC20Minimal | The token that is a reward |
 | to | address | The address to be rewarded |
-| amountRequestedIncentive | uint256 | Amount to claim in incentive (limit) farming |
-| amountRequestedEternal | uint256 | Amount to claim in eternal farming |
+| amountRequested | uint256 | Amount to claim in eternal farming |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-
-### withdrawToken
-
-
-`withdrawToken(uint256,address,bytes)`  external
-
-Withdraw Algebra NFT-position token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 | The id of position NFT |
-| to | address | New owner of position NFT |
-| data | bytes | The additional data for NonfungiblePositionManager |
-
+| reward | uint256 | The summary amount of claimed rewards |
 
 
 

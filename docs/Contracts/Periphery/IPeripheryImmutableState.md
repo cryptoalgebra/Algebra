@@ -4,31 +4,17 @@
 
 Immutable state
 Functions that return immutable state of the router
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-periphery*
 
 
 
 
 ## Functions
-### factory
+# factory
 
 
-`factory()` view external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
-
-### poolDeployer
-
-
-`poolDeployer()` view external
+`function factory() external view returns (address)` view external
 
 
 
@@ -39,44 +25,12 @@ Functions that return immutable state of the router
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | Returns the address of the Algebra factory |
 
-### WNativeToken
-
-
-`WNativeToken()` view external
+# poolDeployer
 
 
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
-
-
-
----
-
-
-
-
-# IPeripheryImmutableState
-
-Immutable state
-Functions that return immutable state of the router
-
-
-
-
-## Functions
-### factory
-
-
-`factory()` view external
+`function poolDeployer() external view returns (address)` view external
 
 
 
@@ -87,28 +41,12 @@ Functions that return immutable state of the router
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | Returns the address of the pool Deployer |
 
-### poolDeployer
-
-
-`poolDeployer()` view external
+# WNativeToken
 
 
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
-
-### WNativeToken
-
-
-`WNativeToken()` view external
+`function WNativeToken() external view returns (address)` view external
 
 
 
@@ -119,71 +57,7 @@ Functions that return immutable state of the router
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
-
-
-
----
-
-
-
-
-# IPeripheryImmutableState
-
-Immutable state
-Functions that return immutable state of the router
-
-
-
-
-## Functions
-### factory
-
-
-`factory()` view external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
-
-### poolDeployer
-
-
-`poolDeployer()` view external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
-
-### WNativeToken
-
-
-`WNativeToken()` view external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | Returns the address of WNativeToken |
 
 
 

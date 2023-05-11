@@ -4,15 +4,17 @@
 
 
 A fork of Multicall2 specifically tailored for the Algebra Interface
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-periphery*
 
 
 
 
 ## Functions
-### getCurrentBlockTimestamp
+# getCurrentBlockTimestamp
 
 
-`getCurrentBlockTimestamp()` view public
+`function getCurrentBlockTimestamp() public view returns (uint256 timestamp)` view public
 
 
 
@@ -25,10 +27,10 @@ A fork of Multicall2 specifically tailored for the Algebra Interface
 | ---- | ---- | ----------- |
 | timestamp | uint256 |  |
 
-### getEthBalance
+# getEthBalance
 
 
-`getEthBalance(address)` view public
+`function getEthBalance(address addr) public view returns (uint256 balance)` view public
 
 
 
@@ -44,10 +46,10 @@ A fork of Multicall2 specifically tailored for the Algebra Interface
 | ---- | ---- | ----------- |
 | balance | uint256 |  |
 
-### multicall
+# multicall
 
 
-`multicall(struct AlgebraInterfaceMulticall.Call[])`  public
+`function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData)`  public
 
 
 

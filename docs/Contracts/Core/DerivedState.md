@@ -1,12 +1,9 @@
 
 
-# IAlgebraPoolDerivedState
+# DerivedState
 
 Pool state that is not stored
-Contains view functions to provide information about the pool that is computed rather than stored on the
-blockchain. The functions here may have variable gas costs.
-*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
-https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
+Contains view functions to provide information about the pool that is computed rather than stored on the blockchain
 
 
 

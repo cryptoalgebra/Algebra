@@ -8,7 +8,6 @@
     "@types/chai": "^4.2.6",
     "@types/console-log-level": "^1.4.0",
     "@types/mocha": "^9.1.0",
-    "algebra-solidity-docgen": "^0.6.0-beta.1",
     "bignumber.js": "^9.1.1",
     "chai": "^4.3.7",
     "console-log-level": "^1.4.1",
@@ -45,5 +44,8 @@
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "solidity-docgen": "^0.6.0-beta.35"
   }
 }

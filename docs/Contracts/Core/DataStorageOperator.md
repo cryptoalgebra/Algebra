@@ -2,13 +2,14 @@
 
 # DataStorageOperator
 
-
-
+Algebra timepoints data operator
+This contract stores timepoints and calculates adaptive fee and statistical averages
 
 ## Modifiers
-### onlyPool
+# onlyPool
 
 
+`modifier onlyPool()`  internal
 
 
 
@@ -19,20 +20,26 @@
 
 
 ## Variables
-### struct DataStorage.Timepoint[65536] timepoints 
+# struct DataStorage.Timepoint[65536] timepoints 
+
+Returns data belonging to a certain timepoint
+
+*Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
+# struct AlgebraFeeConfiguration feeConfig 
 
 
 
-### struct AdaptiveFee.Configuration feeConfig 
+# bytes32 FEE_CONFIG_MANAGER constant
 
 
 
+*Developer note: The role can be granted in AlgebraFactory*
 
 ## Functions
-### constructor
+# constructor
 
 
-`constructor(address)`  public
+`constructor(address _pool) public`  public
 
 
 
@@ -43,11 +50,10 @@
 | _pool | address |  |
 
 
-### initialize
+# initialize
 
-onlyPool
 
-`initialize(uint32,int24)`  external
+`function initialize(uint32 time, int24 tick) external`  external
 
 Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
 
@@ -59,10 +65,10 @@ Initialize the dataStorage array by writing the first slot. Called once for the 
 | tick | int24 | Initial tick |
 
 
-### changeFeeConfiguration
+# changeFeeConfiguration
 
 
-`changeFeeConfiguration(struct AdaptiveFee.Configuration)`  external
+`function changeFeeConfiguration(struct AlgebraFeeConfiguration _config) external`  external
 
 Changes fee configuration for the pool
 
@@ -70,94 +76,64 @@ Changes fee configuration for the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _feeConfig | struct AdaptiveFee.Configuration |  |
+| _config | struct AlgebraFeeConfiguration |  |
 
 
-### getSingleTimepoint
-
-onlyPool
-
-`getSingleTimepoint(uint32,uint32,int24,uint16,uint128)` view external
+# getSingleTimepoint
 
 
+`function getSingleTimepoint(uint32 time, uint32 secondsAgo, int24 tick, uint16 lastIndex) external view returns (int56 tickCumulative, uint112 volatilityCumulative)` view external
+
+
+*Developer note: Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
+0 may be passed as &#x60;secondsAgo&#x27; to return the current cumulative values.
+If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
+at exactly the timestamp between the two timepoints.*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | time | uint32 | The current block timestamp |
-| secondsAgo | uint32 | The amount of time to look back, in seconds, at which point to return an timepoint |
+| secondsAgo | uint32 | The amount of time to look back, in seconds, at which point to return a timepoint |
 | tick | int24 | The current tick |
-| index | uint16 | The index of the timepoint that was most recently written to the timepoints array |
-| liquidity | uint128 | The current in-range pool liquidity |
+| lastIndex | uint16 |  |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tickCumulative | int56 |  |
-| secondsPerLiquidityCumulative | uint160 |  |
-| volatilityCumulative | uint112 |  |
-| volumePerAvgLiquidity | uint256 |  |
+| tickCumulative | int56 | The cumulative tick since the pool was first initialized, as of &#x60;secondsAgo&#x60; |
+| volatilityCumulative | uint112 | The cumulative volatility value since the pool was first initialized, as of &#x60;secondsAgo&#x60; |
 
-### getTimepoints
+# getTimepoints
 
-onlyPool
 
-`getTimepoints(uint32,uint32[],int24,uint16,uint128)` view external
+`function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)` view external
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
+*Developer note: Reverts if &#x60;secondsAgos&#x60; &gt; oldest timepoint*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| time | uint32 | The current block.timestamp |
-| secondsAgos | uint32[] | Each amount of time to look back, in seconds, at which point to return an timepoint |
-| tick | int24 | The current tick |
-| index | uint16 | The index of the timepoint that was most recently written to the timepoints array |
-| liquidity | uint128 | The current in-range pool liquidity |
+| secondsAgos | uint32[] | Each amount of time to look back, in seconds, at which point to return a timepoint |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tickCumulatives | int56[] |  |
-| secondsPerLiquidityCumulatives | uint160[] |  |
-| volatilityCumulatives | uint112[] |  |
-| volumePerAvgLiquiditys | uint256[] |  |
+| tickCumulatives | int56[] | The cumulative tick since the pool was first initialized, as of each &#x60;secondsAgo&#x60; |
+| volatilityCumulatives | uint112[] | The cumulative volatility values since the pool was first initialized, as of each &#x60;secondsAgo&#x60; |
 
-### getAverages
-
-onlyPool
-
-`getAverages(uint32,int24,uint16,uint128)` view external
-
-Returns average volatility in the range from time-WINDOW to time
+# write
 
 
+`function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee)`  external
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| time | uint32 | The current block.timestamp |
-| tick | int24 | The current tick |
-| index | uint16 | The index of the timepoint that was most recently written to the timepoints array |
-| liquidity | uint128 | The current in-range pool liquidity |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| TWVolatilityAverage | uint112 |  |
-| TWVolumePerLiqAverage | uint256 |  |
-
-### write
-
-onlyPool
-
-`write(uint16,uint32,int24,uint128,uint128)`  external
-
-Writes an dataStorage timepoint to the array
+Writes a dataStorage timepoint to the array
+*Developer note: Writable at most once per block. Index represents the most recently written element. index must be tracked externally.*
 
 
 
@@ -166,74 +142,29 @@ Writes an dataStorage timepoint to the array
 | index | uint16 | The index of the timepoint that was most recently written to the timepoints array |
 | blockTimestamp | uint32 | The timestamp of the new timepoint |
 | tick | int24 | The active tick at the time of the new timepoint |
-| liquidity | uint128 | The total in-range liquidity at the time of the new timepoint |
-| volumePerLiquidity | uint128 | The gmean(volumes)/liquidity at the time of the new timepoint |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| indexUpdated | uint16 |  |
+| indexUpdated | uint16 | The new index of the most recently written element in the dataStorage array |
+| newFee | uint16 | The fee in hundredths of a bip, i.e. 1e-6 |
 
-### calculateVolumePerLiquidity
-
-
-`calculateVolumePerLiquidity(uint128,int256,int256)` pure external
-
-Calculates gmean(volume/liquidity) for block
+# prepayTimepointsStorageSlots
 
 
+`function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external`  external
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| liquidity | uint128 | The current in-range pool liquidity |
-| amount0 | int256 | Total amount of swapped token0 |
-| amount1 | int256 | Total amount of swapped token1 |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| volumePerLiquidity | uint128 |  |
-
-### window
-
-
-`window()` pure external
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint32 |  |
-
-### getFee
-
-onlyPool
-
-`getFee(uint32,int24,uint16,uint128)` view external
-
-Calculates fee based on combination of sigmoids
+Fills uninitialized timepoints with nonzero value
+*Developer note: Can be used to reduce the gas cost of future swaps*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _time | uint32 |  |
-| _tick | int24 |  |
-| _index | uint16 |  |
-| _liquidity | uint128 |  |
+| startIndex | uint16 | The start index, must be not initialized |
+| amount | uint16 | of slots to fill, startIndex + amount must be &lt;&#x3D; type(uint16).max |
 
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| fee | uint16 |  |
 
 
 

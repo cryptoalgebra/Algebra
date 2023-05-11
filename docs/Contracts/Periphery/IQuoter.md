@@ -5,16 +5,18 @@
 Quoter Interface
 Supports quoting the calculated amounts from exact input or exact output swaps
 *Developer note: These functions are not marked view because they rely on calling non-view functions and reverting
-to compute the result. They are also not gas efficient and should not be called on-chain.*
+to compute the result. They are also not gas efficient and should not be called on-chain.
+Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-periphery*
 
 
 
 
 ## Functions
-### quoteExactInput
+# quoteExactInput
 
 
-`quoteExactInput(bytes,uint256)`  external
+`function quoteExactInput(bytes path, uint256 amountIn) external returns (uint256 amountOut, uint16[] fees)`  external
 
 Returns the amount out received for a given exact input swap without executing the swap
 
@@ -29,13 +31,13 @@ Returns the amount out received for a given exact input swap without executing t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountOut | uint256 |  |
+| amountOut | uint256 | The amount of the last token that would be received |
 | fees | uint16[] |  |
 
-### quoteExactInputSingle
+# quoteExactInputSingle
 
 
-`quoteExactInputSingle(address,address,uint256,uint160)`  external
+`function quoteExactInputSingle(address tokenIn, address tokenOut, uint256 amountIn, uint160 limitSqrtPrice) external returns (uint256 amountOut, uint16 fee)`  external
 
 Returns the amount out received for a given exact input but for a swap of a single pool
 
@@ -52,13 +54,13 @@ Returns the amount out received for a given exact input but for a swap of a sing
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountOut | uint256 |  |
+| amountOut | uint256 | The amount of &#x60;tokenOut&#x60; that would be received |
 | fee | uint16 |  |
 
-### quoteExactOutput
+# quoteExactOutput
 
 
-`quoteExactOutput(bytes,uint256)`  external
+`function quoteExactOutput(bytes path, uint256 amountOut) external returns (uint256 amountIn, uint16[] fees)`  external
 
 Returns the amount in required for a given exact output swap without executing the swap
 
@@ -73,13 +75,13 @@ Returns the amount in required for a given exact output swap without executing t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountIn | uint256 |  |
+| amountIn | uint256 | The amount of first token required to be paid |
 | fees | uint16[] |  |
 
-### quoteExactOutputSingle
+# quoteExactOutputSingle
 
 
-`quoteExactOutputSingle(address,address,uint256,uint160)`  external
+`function quoteExactOutputSingle(address tokenIn, address tokenOut, uint256 amountOut, uint160 limitSqrtPrice) external returns (uint256 amountIn, uint16 fee)`  external
 
 Returns the amount in required to receive the given exact output amount but for a swap of a single pool
 
@@ -96,7 +98,7 @@ Returns the amount in required to receive the given exact output amount but for 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountIn | uint256 |  |
+| amountIn | uint256 | The amount required as the input for the swap in order to receive &#x60;amountOut&#x60; |
 | fee | uint16 |  |
 
 
