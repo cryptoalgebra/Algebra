@@ -103,7 +103,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != pool) revert onlyPool();
-    _distributeRewards(uint32(block.timestamp));
+    _distributeRewards();
 
     int24 previousTick = globalPrevInitializedTick;
     uint128 _currentLiquidity = currentLiquidity;
@@ -139,8 +139,8 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function distributeRewards(uint32 currentTimestamp) external override onlyFromFarming {
-    _distributeRewards(currentTimestamp);
+  function distributeRewards() external override onlyFromFarming {
+    _distributeRewards();
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -154,7 +154,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     globalTick = currentTick;
 
     if (currentTimestamp > prevTimestamp) {
-      _distributeRewards(currentTimestamp);
+      _distributeRewards();
     }
 
     if (liquidityDelta != 0) {
@@ -189,7 +189,7 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   // @inheritdoc IAlgebraEternalVirtualPool
   function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
-    _distributeRewards(uint32(block.timestamp));
+    _distributeRewards();
     (rewardRate0, rewardRate1) = (rate0, rate1);
   }
 
@@ -198,7 +198,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
-    _distributeRewards(uint32(block.timestamp));
+    _distributeRewards();
     if (token0Delta | token1Delta != 0) {
       (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
       _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
@@ -207,9 +207,9 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
   }
 
-  function _distributeRewards(uint32 currentTimestamp) internal {
+  function _distributeRewards() internal {
     unchecked {
-      uint256 timeDelta = currentTimestamp - prevTimestamp; // safe until timedelta > 136 years
+      uint256 timeDelta = uint32(block.timestamp) - prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return; // only once per block
 
       uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
@@ -232,7 +232,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       }
     }
 
-    prevTimestamp = currentTimestamp;
+    prevTimestamp = uint32(block.timestamp);
     return;
   }
 

@@ -42,8 +42,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
 
   /// @dev This function is called from the main pool before every swap To increase rewards per liquidity
   /// cumulative considering previous liquidity. The liquidity is stored in a virtual pool
-  /// @param currentTimestamp The timestamp of the current swap
-  function distributeRewards(uint32 currentTimestamp) external;
+  function distributeRewards() external;
 
   /// @notice Change reward rates
   /// @param rate0 The new rate of main token distribution per sec
