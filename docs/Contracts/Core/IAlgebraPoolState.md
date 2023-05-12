@@ -307,6 +307,3 @@ Returns the information about active incentive
 
 
 
-
----
-

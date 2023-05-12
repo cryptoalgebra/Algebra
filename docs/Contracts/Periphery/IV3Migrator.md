@@ -34,6 +34,3 @@ out-of-range position, &#x60;amount{0,1}Min&#x60; may be set to 0, enforcing tha
 
 
 
-
----
-

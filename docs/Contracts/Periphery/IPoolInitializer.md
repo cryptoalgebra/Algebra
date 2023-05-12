@@ -40,6 +40,3 @@ Creates a new pool if it does not exist, then initializes if not initialized
 
 
 
-
----
-

@@ -37,6 +37,3 @@ Approve the spender to spend some tokens via the holder signature
 
 
 
-
----
-

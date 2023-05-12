@@ -191,6 +191,3 @@ Used to claim and send rewards from farming(s)
 
 
 
-
----
-

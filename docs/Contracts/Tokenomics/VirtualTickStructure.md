@@ -20,6 +20,3 @@ Encapsulates the logic of interaction with the data structure with ticks
 
 
 
-
----
-

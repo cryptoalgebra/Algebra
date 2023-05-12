@@ -150,6 +150,3 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 
 
 
-
----
-
