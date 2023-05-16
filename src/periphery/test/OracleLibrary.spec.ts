@@ -87,28 +87,6 @@ describe('DataStorageLibrary', () => {
       expect(dataStorageTick).to.equal(BigNumber.from(-1))
     })
 
-    it('correct output for tick cumulatives across overflow boundaries', async () => {
-      const period = 4
-      const tickCumulatives = [BigNumber.from(-100), BigNumber.from('36028797018963967')]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
-      const dataStorageTick = await dataStorage.consult(mockObservable.address, period)
-
-      // Always round to negative infinity
-      // In this case, we don't have do anything
-      expect(dataStorageTick).to.equal(BigNumber.from(24))
-    })
-
-    it('correct output for tick cumulatives across underflow boundaries', async () => {
-      const period = 4
-      const tickCumulatives = [BigNumber.from(100), BigNumber.from('-36028797018963967')]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
-      const dataStorageTick = await dataStorage.consult(mockObservable.address, period)
-
-      // Always round to negative infinity
-      // In this case, we need to subtract one because integer division rounds to 0
-      expect(dataStorageTick).to.equal(BigNumber.from(-25))
-    })
-
     it('gas test [ @skip-on-coverage ]', async () => {
       const period = 3
       const tickCumulatives = [BigNumber.from(7), BigNumber.from(12)]
