@@ -159,6 +159,7 @@ contract LimitOrderManager is
         }
 
         if (cache.liquidityLast > 0) {
+            if (liquidity > cache.liquidityLast) liquidity = cache.liquidityLast;
             pool.burn(tick, tick, liquidity);
             // this is now updated to the current transaction
             (_liquidity, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
