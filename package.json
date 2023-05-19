@@ -28,6 +28,7 @@
     "pretty-quick": "^3.1.1",
     "solhint": "^3.3.7",
     "solhint-plugin-prettier": "^0.0.5",
+    "solidity-docgen": "^0.6.0-beta.35",
     "ts-generator": "^0.1.1",
     "ts-node": "^10.9.0",
     "typechain": "^8.1.0",
@@ -44,8 +45,5 @@
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=14.0.0"
-  },
-  "dependencies": {
-    "solidity-docgen": "^0.6.0-beta.35"
   }
 }
