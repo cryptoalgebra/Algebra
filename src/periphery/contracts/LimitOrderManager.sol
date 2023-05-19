@@ -244,10 +244,7 @@ contract LimitOrderManager is
 
         // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
         // instead of the actual amount so we can burn the token
-        (position.tokensOwed0, position.tokensOwed1) = (
-            position.tokensOwed0 - amount0Collect,
-            position.tokensOwed1 - amount1Collect
-        );
+        (position.tokensOwed0, position.tokensOwed1) = (0, 0);
     }
 
     // save bytecode by removing implementation of unused method
