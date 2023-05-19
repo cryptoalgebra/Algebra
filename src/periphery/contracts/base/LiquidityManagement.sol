@@ -85,7 +85,8 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
     }
 
-    function _createLimitOrder(
+    /// @notice Create limit order in pool
+    function createLimitOrder(
         IAlgebraPool pool,
         address token0,
         address token1,
