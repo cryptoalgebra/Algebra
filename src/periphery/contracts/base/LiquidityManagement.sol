@@ -27,11 +27,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @inheritdoc IAlgebraMintCallback
-    function algebraMintCallback(
-        uint256 amount0Owed,
-        uint256 amount1Owed,
-        bytes calldata data
-    ) external override {
+    function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
         MintCallbackData memory decoded = abi.decode(data, (MintCallbackData));
         CallbackValidation.verifyCallback(poolDeployer, decoded.poolKey);
 
@@ -52,15 +48,11 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @notice Add liquidity to an initialized pool
-    function addLiquidity(AddLiquidityParams memory params)
+    function addLiquidity(
+        AddLiquidityParams memory params
+    )
         internal
-        returns (
-            uint128 liquidity,
-            uint256 actualLiquidity,
-            uint256 amount0,
-            uint256 amount1,
-            IAlgebraPool pool
-        )
+        returns (uint128 liquidity, uint256 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
 
@@ -91,5 +83,25 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         );
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
+    }
+
+    function _createLimitOrder(
+        IAlgebraPool pool,
+        address token0,
+        address token1,
+        int24 tick,
+        uint128 amount
+    ) internal returns (bool depositedToken) {
+        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
+
+        (, uint256 amount1, ) = pool.mint(
+            msg.sender,
+            address(this),
+            tick,
+            tick,
+            amount,
+            abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))
+        );
+        depositedToken = amount1 > 0;
     }
 }

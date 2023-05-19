@@ -10,7 +10,7 @@ import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import './interfaces/ILimitOrderManager.sol';
 import './libraries/PositionKey.sol';
 import './libraries/PoolAddress.sol';
-import './base/LimitOrderManagement.sol';
+import './base/LiquidityManagement.sol';
 import './base/PeripheryImmutableState.sol';
 import './base/Multicall.sol';
 import './base/ERC721Permit.sol';
@@ -24,7 +24,7 @@ contract LimitOrderManager is
     Multicall,
     ERC721Permit,
     PeripheryImmutableState,
-    LimitOrderManagement,
+    LiquidityManagement,
     PeripheryValidation,
     SelfPermit
 {
