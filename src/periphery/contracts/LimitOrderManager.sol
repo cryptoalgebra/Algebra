@@ -141,6 +141,8 @@ contract LimitOrderManager is
         UpdatePositionCache memory cache;
 
         uint128 positionLiquidity = position.liquidity;
+        require(positionLiquidity != 0, 'Empty position');
+
         int24 tick = position.tick;
 
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
