@@ -29,14 +29,13 @@ abstract contract LimitOrderManagement is IAlgebraMintCallback, PeripheryImmutab
 
     /// @notice Add liquidity to an initialized pool
     function _createLimitOrder(
+        IAlgebraPool pool,
         address token0,
         address token1,
         int24 tick,
         uint128 amount
-    ) internal returns (IAlgebraPool pool, bool depositedToken) {
+    ) internal returns (bool depositedToken) {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
-
-        pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
 
         (, uint256 amount1, ) = pool.mint(
             msg.sender,

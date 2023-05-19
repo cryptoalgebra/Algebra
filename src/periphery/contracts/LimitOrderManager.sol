@@ -91,7 +91,7 @@ contract LimitOrderManager is
             liquidityInitPrev = uint128(_liquidity);
         }
 
-        (pool, depositedToken) = _createLimitOrder(params.token0, params.token1, params.tick, params.amount);
+        depositedToken = _createLimitOrder(pool, params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
