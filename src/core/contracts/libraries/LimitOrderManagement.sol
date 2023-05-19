@@ -44,8 +44,8 @@ library LimitOrderManagement {
         // MAX_LIMIT_ORDER_TICK check guarantees that this value does not overflow
         uint256 priceX144 = FullMath.mulDiv(tickSqrtPrice, tickSqrtPrice, Constants.Q48);
         uint256 amountToBuy = (tick > currentTick)
-          ? FullMath.mulDivRoundingUp(_amountToSell, Constants.Q144, priceX144)
-          : FullMath.mulDivRoundingUp(_amountToSell, priceX144, Constants.Q144);
+          ? FullMath.mulDivRoundingUp(_amountToSell, priceX144, Constants.Q144)
+          : FullMath.mulDivRoundingUp(_amountToSell, Constants.Q144, priceX144);
         if (amountToBuy > Constants.Q128 >> 1) revert IAlgebraPoolErrors.invalidAmountForLimitOrder();
       } else {
         flipped = _amountToSell == 0; // override 'flipped' value
