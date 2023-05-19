@@ -256,17 +256,23 @@ contract LimitOrderManager is
         _burn(tokenId);
     }
 
+    /// @inheritdoc IERC721
+    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
+        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+
+        return _limitPositions[tokenId].operator;
+    }
+
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
         unchecked {
             return uint256(_limitPositions[tokenId].nonce++);
         }
     }
 
-    /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
-
-        return _limitPositions[tokenId].operator;
+    /// @dev Overrides _transfer to clear approval
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        _limitPositions[tokenId].operator = address(0);
+        super._transfer(from, to, tokenId);
     }
 
     /// @dev Overrides _approve to use the operator in the limitPosition, which is packed with the limitPosition permit nonce
