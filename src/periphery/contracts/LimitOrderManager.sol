@@ -79,7 +79,6 @@ contract LimitOrderManager is
     function addLimitOrder(addLimitOrderParams calldata params) external payable override returns (uint256 tokenId) {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
         IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
-        bool depositedToken;
 
         bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
         uint128 liquidityPrev;
@@ -91,7 +90,7 @@ contract LimitOrderManager is
             liquidityInitPrev = uint128(_liquidity);
         }
 
-        depositedToken = _createLimitOrder(pool, params.token0, params.token1, params.tick, params.amount);
+        bool depositedToken = _createLimitOrder(pool, params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
@@ -205,7 +204,7 @@ contract LimitOrderManager is
         }
 
         if (liquidity > 0) {
-            require(positionLiquidity >= liquidity);
+            require(positionLiquidity >= liquidity, 'Invalid liquidity amount');
             positionLiquidity -= liquidity;
             if (position.depositedToken) {
                 position.tokensOwed1 += liquidity;
