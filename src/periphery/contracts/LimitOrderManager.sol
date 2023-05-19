@@ -261,7 +261,9 @@ contract LimitOrderManager is
     }
 
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
-        return uint256(_limitPositions[tokenId].nonce++);
+        unchecked {
+            return uint256(_limitPositions[tokenId].nonce++);
+        }
     }
 
     /// @inheritdoc IERC721
