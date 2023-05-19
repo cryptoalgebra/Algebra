@@ -27,7 +27,7 @@ library PoolAddress {
     /// @param key The PoolKey
     /// @return pool The contract address of the Algebra pool
     function computeAddress(address poolDeployer, PoolKey memory key) internal pure returns (address pool) {
-        require(key.token0 < key.token1);
+        require(key.token0 < key.token1, "Tokens aren't sorted");
         pool = address(
             uint160(
                 uint256(
