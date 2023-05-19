@@ -18,7 +18,7 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 
 /// @title NFT limitPositions
-/// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
+/// @notice Wraps Algebra limitPositions in the ERC721 non-fungible token interface
 contract LimitOrderManager is
     ILimitOrderManager,
     Multicall,
