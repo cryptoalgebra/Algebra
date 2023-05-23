@@ -26,7 +26,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
-/// @dev Version: Algebra V2
+/// @dev Version: Algebra V2.1
 contract AlgebraPool is
   AlgebraPoolBase,
   DerivedState,
