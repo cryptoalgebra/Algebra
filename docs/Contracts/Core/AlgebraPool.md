@@ -227,6 +227,3 @@ Sets an active incentive. Only farming
 
 
 
-
----
-

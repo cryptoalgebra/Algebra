@@ -56,6 +56,3 @@ Transfers the full amount of a token held by this contract to recipient, with a 
 
 
 
-
----
-

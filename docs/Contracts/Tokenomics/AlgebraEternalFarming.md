@@ -335,6 +335,3 @@ reward amounts should be updated before calling this method
 
 
 
-
----
-

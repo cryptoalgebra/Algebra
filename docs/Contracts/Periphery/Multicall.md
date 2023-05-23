@@ -35,6 +35,3 @@ Call multiple functions in the current contract and return the data from all of 
 
 
 
-
----
-

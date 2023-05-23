@@ -50,7 +50,7 @@ describe('unit/FarmingCenter', () => {
   })
 
   it('cannot call connectVirtualPool directly', async () => {
-    await expect(context.farmingCenter.connectVirtualPool(actors.lpUser0().address, actors.lpUser0().address)).to.be.revertedWith(
+    await expect(context.farmingCenter.connectVirtualPool(context.pool01, context.pool01)).to.be.revertedWith(
       'only farming can call this'
     )
   })
@@ -217,8 +217,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
 
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199299))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99349))
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199699))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99549))
     })
 
     it('collect rewards after eternalFarming deactivate', async () => {
@@ -273,8 +273,8 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
 
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199299))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99349))
+      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199699))
+      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99549))
     })
 
     it('when requesting zero amount', async () => {

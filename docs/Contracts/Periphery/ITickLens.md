@@ -39,6 +39,3 @@ Get all the tick data for the populated ticks from a word of the tick bitmap of 
 
 
 
-
----
-

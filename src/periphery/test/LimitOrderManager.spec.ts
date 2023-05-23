@@ -318,23 +318,23 @@ describe('LimitOrderManager', () => {
         token0: tokens[0].address,
         token1: tokens[1].address,
         depositedToken: false,
-        amount: 50,
+        amount: expandTo18Decimals(50),
         tick: 60
       })
 
-      await tokens[1].approve(router.address, 100)
+      await tokens[1].approve(router.address, expandTo18Decimals(50))
 
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
         tokenOut: tokens[0].address,
         recipient: wallets[0].address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 20,
+        amountIn: expandTo18Decimals(21),
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
 
-      await lomanager.decreaseLimitOrder(1, 29)
+      await lomanager.decreaseLimitOrder(1, BigNumber.from("29126660212146054380")) 
 
       const {
         limitPosition,
@@ -343,8 +343,8 @@ describe('LimitOrderManager', () => {
       } = await lomanager.limitPositions(1)
 
       expect(limitPosition.liquidity).to.eq(0)
-      expect(limitPosition.tokensOwed0).to.eq(29)
-      expect(limitPosition.tokensOwed1).to.eq(20)
+      expect(limitPosition.tokensOwed0).to.eq(BigNumber.from("29126660212146054380"))
+      expect(limitPosition.tokensOwed1).to.eq(BigNumber.from("20998949999999999999"))
     })
 
     
@@ -508,7 +508,7 @@ describe('LimitOrderManager', () => {
       let balance0After = await tokens[0].balanceOf(wallets[0].address)
       let balance1After = await tokens[1].balanceOf(wallets[0].address)
       expect(balance0After.sub(balance0Before)).to.eq(0)
-      expect(balance1After.sub(balance1Before)).to.eq(20)
+      expect(balance1After.sub(balance1Before)).to.eq(18)
     
     })
 
@@ -548,7 +548,7 @@ describe('LimitOrderManager', () => {
       let balance0After = await tokens[0].balanceOf(wallets[0].address)
       let balance1After = await tokens[1].balanceOf(wallets[0].address)
       expect(balance0After.sub(balance0Before)).to.eq(79)
-      expect(balance1After.sub(balance1Before)).to.eq(20)
+      expect(balance1After.sub(balance1Before)).to.eq(18)
     })
 
     it('close & collect lo', async () => {
@@ -935,13 +935,13 @@ describe('LimitOrderManager', () => {
       let pos1 = (await lomanager.limitPositions(1)).limitPosition
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(150)
+      expect(pos1.tokensOwed1).to.eq(148)
       expect(pos1.tokensOwed0).to.eq(0)
-      expect(pos1.liquidity).to.eq(49)
+      expect(pos1.liquidity).to.eq(51)
 
-      expect(pos2.tokensOwed1).to.eq(50)
+      expect(pos2.tokensOwed1).to.eq(49)
       expect(pos2.tokensOwed0).to.eq(0)
-      expect(pos2.liquidity).to.eq(49)
+      expect(pos2.liquidity).to.eq(50)
 
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
@@ -959,11 +959,11 @@ describe('LimitOrderManager', () => {
       pos1 = (await lomanager.limitPositions(1)).limitPosition
       pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(199)
+      expect(pos1.tokensOwed1).to.eq(198)
       expect(pos1.tokensOwed0).to.eq(0)
       expect(pos1.liquidity).to.eq(0)
 
-      expect(pos2.tokensOwed1).to.eq(99)
+      expect(pos2.tokensOwed1).to.eq(98)
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(0)
 
@@ -1030,7 +1030,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 150,
+        amountIn: 200,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1043,11 +1043,11 @@ describe('LimitOrderManager', () => {
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       let pos3 = (await lomanager.limitPositions(3)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(100)
+      expect(pos1.tokensOwed1).to.eq(101)
       expect(pos1.tokensOwed0).to.eq(99)
       expect(pos1.liquidity).to.eq(0)
   
-      expect(pos2.tokensOwed1).to.eq(99)
+      expect(pos2.tokensOwed1).to.eq(100)
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(0)
   
@@ -1112,13 +1112,13 @@ describe('LimitOrderManager', () => {
       let pos1 = (await lomanager.limitPositions(1)).limitPosition
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(50)
+      expect(pos1.tokensOwed1).to.eq(49)
       expect(pos1.tokensOwed0).to.eq(49)
       expect(pos1.liquidity).to.eq(0)
   
-      expect(pos2.tokensOwed1).to.eq(74)
+      expect(pos2.tokensOwed1).to.eq(72)
       expect(pos2.tokensOwed0).to.eq(0)
-      expect(pos2.liquidity).to.eq(25)
+      expect(pos2.liquidity).to.eq(27)
   
     })
 
@@ -1148,7 +1148,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1166,7 +1166,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[1].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(1, 100)
       })
@@ -1184,7 +1184,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1315,13 +1315,13 @@ describe('LimitOrderManager', () => {
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(3)
   
-      expect(pos3.tokensOwed1).to.eq(66)
+      expect(pos3.tokensOwed1).to.eq(65)
       expect(pos3.tokensOwed0).to.eq(33)
       expect(pos3.liquidity).to.eq(0)
 
-      expect(pos4.tokensOwed1).to.eq(86)
+      expect(pos4.tokensOwed1).to.eq(81)
       expect(pos4.tokensOwed0).to.eq(0)
-      expect(pos4.liquidity).to.eq(13)
+      expect(pos4.liquidity).to.eq(18)
   
     })
   })

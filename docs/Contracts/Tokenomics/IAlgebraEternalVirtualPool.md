@@ -243,6 +243,3 @@ Get rates of rewards in one call
 
 
 
-
----
-

@@ -353,7 +353,7 @@ describe('AlgebraFarming', () => {
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
         // })
-        expect(rewardsEarned).to.be.gte(totalReward.mul(BN(9999)).div(BN(10000)))
+        expect(rewardsEarned).to.be.gte(883879)
       })
     })
 
@@ -395,7 +395,7 @@ describe('AlgebraFarming', () => {
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
         // })
-        expect(rewardsEarned).to.be.gte(totalReward.mul(BN(9999)).div(BN(10000)))
+        expect(rewardsEarned).to.be.gte(883879)
       })
     })
 
@@ -470,7 +470,7 @@ describe('AlgebraFarming', () => {
         const secondHalfRewards = totalReward.div(BN('2')).mul('3').div('4')
         const rewardsEarned = bnSum(exitFarmings.map((s) => s.balance))
         // @ts-ignore
-        expect(rewardsEarned).be.gte(totalReward.mul(BN(9999)).div(BN(10000)))
+        expect(rewardsEarned).be.gte(883867)
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
         // })

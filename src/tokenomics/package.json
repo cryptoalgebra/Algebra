@@ -2,7 +2,7 @@
   "name": "@cryptoalgebra/farmings",
   "description": "Liquidity mining contracts for Algebra protocol",
   "license": "GPL-3.0-or-later",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "keywords": [
     "algebra",
     "liquidity mining"
@@ -22,8 +22,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.6.0",
     "@uniswap/v2-core": "^1.0.1",
-    "@cryptoalgebra/core": "^2.0.0",
-    "@cryptoalgebra/periphery": "^1.0.0"
+    "@cryptoalgebra/core": "^3.0.0",
+    "@cryptoalgebra/periphery": "^2.0.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.170",

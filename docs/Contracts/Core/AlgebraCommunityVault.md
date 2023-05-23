@@ -91,6 +91,3 @@ Community fee from pools is sent here, if it is enabled
 
 
 
-
----
-

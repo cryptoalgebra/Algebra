@@ -1558,7 +1558,7 @@ describe('AlgebraPool', () => {
     await expect(sqrtTickMath.getSqrtRatioAtTick(-887273)).to.be.revertedWithCustomError(sqrtTickMath, 'tickOutOfRange');
   })
 
-  xit('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
+  it('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
     pool = await createPoolWrapped()
     const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest
     const PriceMovementMath = (await (await ethers.getContractFactory('PriceMovementMathTest')).deploy()) as PriceMovementMathTest
@@ -1568,6 +1568,7 @@ describe('AlgebraPool', () => {
     await pool.initialize(p0)
     expect(await pool.liquidity(), 'current pool liquidity is 1').to.eq(0)
     expect((await pool.globalState()).tick, 'pool tick is -24081').to.eq(-24081)
+    await pool.setTickSpacing(1, 1);
 
     // add a bunch of liquidity around current price
     const liquidity = expandTo18Decimals(1000)

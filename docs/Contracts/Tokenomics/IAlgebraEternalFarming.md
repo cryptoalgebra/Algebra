@@ -448,7 +448,7 @@ Returns information about a farmd liquidity NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower tick of position, tickUpper The upper tick of position, innerRewardGrowth0 The last saved reward0 growth inside position, innerRewardGrowth1 The last saved reward1 growth inside position |
+| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower tick of position, tickUpper The upper tick of position, innerRewardGrowth0 The last saved reward0 growth inside position, innerRewardGrowth1 The last saved reward1 growth inside position |
 | tickLower | int24 |  |
 | tickUpper | int24 |  |
 | innerRewardGrowth0 | uint256 |  |
@@ -647,7 +647,4 @@ Creates a new liquidity mining incentive program
 
 
 
-
-
----
 

@@ -10,7 +10,7 @@ import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import './interfaces/ILimitOrderManager.sol';
 import './libraries/PositionKey.sol';
 import './libraries/PoolAddress.sol';
-import './base/LimitOrderManagement.sol';
+import './base/LiquidityManagement.sol';
 import './base/PeripheryImmutableState.sol';
 import './base/Multicall.sol';
 import './base/ERC721Permit.sol';
@@ -18,13 +18,13 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 
 /// @title NFT limitPositions
-/// @notice Wraps Algebra  limitPositions in the ERC721 non-fungible token interface
+/// @notice Wraps Algebra limitPositions in the ERC721 non-fungible token interface
 contract LimitOrderManager is
     ILimitOrderManager,
     Multicall,
     ERC721Permit,
     PeripheryImmutableState,
-    LimitOrderManagement,
+    LiquidityManagement,
     PeripheryValidation,
     SelfPermit
 {
@@ -79,7 +79,6 @@ contract LimitOrderManager is
     function addLimitOrder(addLimitOrderParams calldata params) external payable override returns (uint256 tokenId) {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
         IAlgebraPool pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
-        bool depositedToken;
 
         bytes32 positionKey = PositionKey.compute(address(this), params.tick, params.tick);
         uint128 liquidityPrev;
@@ -91,7 +90,7 @@ contract LimitOrderManager is
             liquidityInitPrev = uint128(_liquidity);
         }
 
-        (pool, depositedToken) = _createLimitOrder(params.token0, params.token1, params.tick, params.amount);
+        bool depositedToken = createLimitOrder(pool, params.token0, params.token1, params.tick, params.amount);
         _mint(msg.sender, (tokenId = _nextId++));
 
         // idempotent set
@@ -142,6 +141,8 @@ contract LimitOrderManager is
         UpdatePositionCache memory cache;
 
         uint128 positionLiquidity = position.liquidity;
+        require(positionLiquidity != 0, 'Empty position');
+
         int24 tick = position.tick;
 
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
@@ -159,6 +160,7 @@ contract LimitOrderManager is
         }
 
         if (cache.liquidityLast > 0) {
+            if (liquidity > cache.liquidityLast) liquidity = cache.liquidityLast;
             pool.burn(tick, tick, liquidity);
             // this is now updated to the current transaction
             (_liquidity, cache.feeGrowthInside0LastX128, cache.feeGrowthInside1LastX128, , ) = pool.positions(
@@ -204,7 +206,7 @@ contract LimitOrderManager is
         }
 
         if (liquidity > 0) {
-            require(positionLiquidity >= liquidity);
+            require(positionLiquidity >= liquidity, 'Invalid liquidity amount');
             positionLiquidity -= liquidity;
             if (position.depositedToken) {
                 position.tokensOwed1 += liquidity;
@@ -243,10 +245,7 @@ contract LimitOrderManager is
 
         // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
         // instead of the actual amount so we can burn the token
-        (position.tokensOwed0, position.tokensOwed1) = (
-            position.tokensOwed0 - amount0Collect,
-            position.tokensOwed1 - amount1Collect
-        );
+        (position.tokensOwed0, position.tokensOwed1) = (0, 0);
     }
 
     // save bytecode by removing implementation of unused method
@@ -259,15 +258,23 @@ contract LimitOrderManager is
         _burn(tokenId);
     }
 
-    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
-        return uint256(_limitPositions[tokenId].nonce++);
-    }
-
     /// @inheritdoc IERC721
     function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
         require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
 
         return _limitPositions[tokenId].operator;
+    }
+
+    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
+        unchecked {
+            return uint256(_limitPositions[tokenId].nonce++);
+        }
+    }
+
+    /// @dev Overrides _transfer to clear approval
+    function _transfer(address from, address to, uint256 tokenId) internal override {
+        _limitPositions[tokenId].operator = address(0);
+        super._transfer(from, to, tokenId);
     }
 
     /// @dev Overrides _approve to use the operator in the limitPosition, which is packed with the limitPosition permit nonce

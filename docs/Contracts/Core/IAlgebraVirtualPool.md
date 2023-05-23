@@ -38,6 +38,3 @@ If any one of crossed ticks is also initialized in a virtual pool it should be c
 
 
 
-
----
-
