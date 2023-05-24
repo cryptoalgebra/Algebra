@@ -60,6 +60,7 @@ async function main() {
   const ProxyFactory = await hre.ethers.getContractFactory("TransparentUpgradeableProxy")
   const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.address, ProxyAdmin, "0x") 
 
+  await Proxy.deployed()
   console.log('Proxy deployed to:', Proxy.address)
   // // arg1 factory address
   // // arg2 wnative address

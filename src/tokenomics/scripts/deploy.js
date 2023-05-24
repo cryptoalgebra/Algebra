@@ -23,19 +23,13 @@ async function main() {
   await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.address)
   console.log('Updated farming center address in eternal(incentive) farming')
 
-  await AlgebraEternalFarming.setIncentiveMaker(incentiveMaker)
-  console.log('Updated incentive maker')
-
-  await FarmingCenterVault.setFarmingCenter(FarmingCenter.address)
-  console.log('Updated farming center address in farming center vault')
-
   const factory = await hre.ethers.getContractAt('IAlgebraFactory', deploysData.factory)
 
   await factory.setFarmingAddress(FarmingCenter.address)
   console.log('Updated farming center address in factory')
 
   const posManager = await hre.ethers.getContractAt(
-    '/contracts/interfaces/INonfungiblePositionManager.sol:INonfungiblePositionManager',
+    'INonfungiblePositionManager',
     deploysData.nonfungiblePositionManager
   )
   await posManager.setFarmingCenter(FarmingCenter.address)
