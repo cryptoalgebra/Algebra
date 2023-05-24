@@ -67,6 +67,16 @@ describe('LimitOrderManager', () => {
 
   beforeEach('load fixture', async () => {
     ;({ nft, factory, tokens, wnative, router, lomanager } = await loadFixture(loFixture))
+
+    await nft.createAndInitializePoolIfNecessary(
+      tokens[0].address,
+      tokens[1].address,
+      encodePriceSqrt(1, 1)
+    )
+
+    const poolAddress = await factory.poolByPair(tokens[0].address, tokens[1].address)
+    const pool = new ethers.Contract(poolAddress, IAlgebraPoolABI, wallet)
+    await pool.setTickSpacing(60, 60)
   })
 
 
@@ -74,8 +84,8 @@ describe('LimitOrderManager', () => {
     it('fails if pool does not exist', async () => {
       await expect(
         lomanager.addLimitOrder({
-          token0: tokens[0].address,
-          token1: tokens[1].address,
+          token0: tokens[1].address,
+          token1: tokens[2].address,
           depositedToken: false,
           amount: 100,
           tick: 60
@@ -84,11 +94,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('fails if cannot transfer', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+ 
       await tokens[0].approve(lomanager.address, 0)
       await expect(
         lomanager.addLimitOrder({
@@ -103,11 +109,7 @@ describe('LimitOrderManager', () => {
 
     it('fails if deposited token changed during the deposit', async () => {
       let user = wallets[0]
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await tokens[0].approve(lomanager.address, 100)
 
         lomanager.addLimitOrder({
@@ -142,11 +144,6 @@ describe('LimitOrderManager', () => {
     })
 
     it('creates a token', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -166,11 +163,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('add second limit order to tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -199,11 +192,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('add limit order to tick with executed LO', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -251,11 +240,6 @@ describe('LimitOrderManager', () => {
       // remove any approval
       await wnative.approve(nft.address, 0)
 
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       const mintData = lomanager.interface.encodeFunctionData('addLimitOrder', [
         {
@@ -284,11 +268,7 @@ describe('LimitOrderManager', () => {
   describe('#decreaseLiquidity', () => {
 
     it('get all liquidity back', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -309,32 +289,28 @@ describe('LimitOrderManager', () => {
     })
 
     it('try to get liquidity back after lo partly executions', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
         depositedToken: false,
-        amount: 50,
+        amount: expandTo18Decimals(50),
         tick: 60
       })
 
-      await tokens[1].approve(router.address, 100)
+      await tokens[1].approve(router.address, expandTo18Decimals(50))
 
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
         tokenOut: tokens[0].address,
         recipient: wallets[0].address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 20,
+        amountIn: expandTo18Decimals(21),
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
 
-      await lomanager.decreaseLimitOrder(1, 29)
+      await lomanager.decreaseLimitOrder(1, BigNumber.from("29126660212146054380")) 
 
       const {
         limitPosition,
@@ -343,18 +319,12 @@ describe('LimitOrderManager', () => {
       } = await lomanager.limitPositions(1)
 
       expect(limitPosition.liquidity).to.eq(0)
-      expect(limitPosition.tokensOwed0).to.eq(29)
-      expect(limitPosition.tokensOwed1).to.eq(20)
+      expect(limitPosition.tokensOwed0).to.eq(BigNumber.from("29126660212146054380"))
+      expect(limitPosition.tokensOwed1).to.eq(BigNumber.from("20998949999999999999"))
     })
 
     
     it('get back second LO liquidity', async () => {
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
@@ -399,12 +369,6 @@ describe('LimitOrderManager', () => {
 
     it('fails if try to get all liquidity back after lo executions', async () => {
 
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
-
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -438,12 +402,6 @@ describe('LimitOrderManager', () => {
 
     it('collect executed lo', async () => {
 
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
-
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -474,12 +432,6 @@ describe('LimitOrderManager', () => {
 
     it('collect partly executed lo', async () => {
 
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
-
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -508,17 +460,11 @@ describe('LimitOrderManager', () => {
       let balance0After = await tokens[0].balanceOf(wallets[0].address)
       let balance1After = await tokens[1].balanceOf(wallets[0].address)
       expect(balance0After.sub(balance0Before)).to.eq(0)
-      expect(balance1After.sub(balance1Before)).to.eq(20)
+      expect(balance1After.sub(balance1Before)).to.eq(18)
     
     })
 
     it('close & collect partly executed lo', async () => {
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
@@ -548,16 +494,10 @@ describe('LimitOrderManager', () => {
       let balance0After = await tokens[0].balanceOf(wallets[0].address)
       let balance1After = await tokens[1].balanceOf(wallets[0].address)
       expect(balance0After.sub(balance0Before)).to.eq(79)
-      expect(balance1After.sub(balance1Before)).to.eq(20)
+      expect(balance1After.sub(balance1Before)).to.eq(18)
     })
 
     it('close & collect lo', async () => {
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
@@ -583,11 +523,7 @@ describe('LimitOrderManager', () => {
   describe('correct amounts distibution', () => {
 
     it('lo at positive tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -621,11 +557,6 @@ describe('LimitOrderManager', () => {
     })
 
     it('lo at negative tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
@@ -660,11 +591,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('two los at positive tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -710,11 +637,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('two los at negative tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -759,11 +682,7 @@ describe('LimitOrderManager', () => {
     })
 
     it('lo added after closed lo at negative tick', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
         token1: tokens[1].address,
@@ -819,12 +738,6 @@ describe('LimitOrderManager', () => {
     })
 
     it('lo added after closed lo at positive tick', async () => {
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await lomanager.addLimitOrder({
         token0: tokens[0].address,
@@ -884,11 +797,7 @@ describe('LimitOrderManager', () => {
 
     it('placed at tick with partly executed lo', async () => {
       let user = wallets[0]
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await tokens[0].approve(lomanager.address, 1000)
         lomanager.addLimitOrder({
             token0: tokens[0].address,
@@ -935,13 +844,13 @@ describe('LimitOrderManager', () => {
       let pos1 = (await lomanager.limitPositions(1)).limitPosition
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(150)
+      expect(pos1.tokensOwed1).to.eq(148)
       expect(pos1.tokensOwed0).to.eq(0)
-      expect(pos1.liquidity).to.eq(49)
+      expect(pos1.liquidity).to.eq(51)
 
-      expect(pos2.tokensOwed1).to.eq(50)
+      expect(pos2.tokensOwed1).to.eq(49)
       expect(pos2.tokensOwed0).to.eq(0)
-      expect(pos2.liquidity).to.eq(49)
+      expect(pos2.liquidity).to.eq(50)
 
       await router.exactInputSingle({
         tokenIn: tokens[1].address,
@@ -959,11 +868,11 @@ describe('LimitOrderManager', () => {
       pos1 = (await lomanager.limitPositions(1)).limitPosition
       pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(199)
+      expect(pos1.tokensOwed1).to.eq(198)
       expect(pos1.tokensOwed0).to.eq(0)
       expect(pos1.liquidity).to.eq(0)
 
-      expect(pos2.tokensOwed1).to.eq(99)
+      expect(pos2.tokensOwed1).to.eq(98)
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(0)
 
@@ -971,11 +880,7 @@ describe('LimitOrderManager', () => {
 
     it('placed at tick with partly executed lo', async () => {
       let user = wallets[0]
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await tokens[0].approve(lomanager.address, 1000)
         lomanager.addLimitOrder({
             token0: tokens[0].address,
@@ -1030,7 +935,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 150,
+        amountIn: 200,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1043,11 +948,11 @@ describe('LimitOrderManager', () => {
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       let pos3 = (await lomanager.limitPositions(3)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(100)
+      expect(pos1.tokensOwed1).to.eq(101)
       expect(pos1.tokensOwed0).to.eq(99)
       expect(pos1.liquidity).to.eq(0)
   
-      expect(pos2.tokensOwed1).to.eq(99)
+      expect(pos2.tokensOwed1).to.eq(100)
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(0)
   
@@ -1059,11 +964,7 @@ describe('LimitOrderManager', () => {
   
     it('placed at tick with partly executed lo', async () => {
       let user = wallets[0]
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+ 
       await tokens[0].approve(lomanager.address, 1000)
         lomanager.addLimitOrder({
             token0: tokens[0].address,
@@ -1112,24 +1013,18 @@ describe('LimitOrderManager', () => {
       let pos1 = (await lomanager.limitPositions(1)).limitPosition
       let pos2 = (await lomanager.limitPositions(2)).limitPosition
       
-      expect(pos1.tokensOwed1).to.eq(50)
+      expect(pos1.tokensOwed1).to.eq(49)
       expect(pos1.tokensOwed0).to.eq(49)
       expect(pos1.liquidity).to.eq(0)
   
-      expect(pos2.tokensOwed1).to.eq(74)
+      expect(pos2.tokensOwed1).to.eq(72)
       expect(pos2.tokensOwed0).to.eq(0)
-      expect(pos2.liquidity).to.eq(25)
+      expect(pos2.liquidity).to.eq(27)
   
     })
 
     it('3 LOs with different deposited tokens', async () => {
       let user = wallets[0]
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
 
       await tokens[0].approve(lomanager.address, 1000)
       lomanager.addLimitOrder({
@@ -1148,7 +1043,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1166,7 +1061,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[1].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(1, 100)
       })
@@ -1184,7 +1079,7 @@ describe('LimitOrderManager', () => {
         tokenOut: tokens[0].address,
         recipient: user.address,
         deadline: encodePriceSqrt(2, 1),
-        amountIn: 101,
+        amountIn: 102,
         amountOutMinimum: 0,
         limitSqrtPrice: encodePriceSqrt(100, 1)
       })
@@ -1213,11 +1108,7 @@ describe('LimitOrderManager', () => {
 
     it('placed at tick with partly executed lo', async () => {
       let user = wallets[0]
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].address,
-        tokens[1].address,
-        encodePriceSqrt(1, 1)
-      )
+
       await tokens[0].approve(lomanager.address, 1000)
         lomanager.addLimitOrder({
             token0: tokens[0].address,
@@ -1315,13 +1206,13 @@ describe('LimitOrderManager', () => {
       expect(pos2.tokensOwed0).to.eq(0)
       expect(pos2.liquidity).to.eq(3)
   
-      expect(pos3.tokensOwed1).to.eq(66)
+      expect(pos3.tokensOwed1).to.eq(65)
       expect(pos3.tokensOwed0).to.eq(33)
       expect(pos3.liquidity).to.eq(0)
 
-      expect(pos4.tokensOwed1).to.eq(86)
+      expect(pos4.tokensOwed1).to.eq(81)
       expect(pos4.tokensOwed0).to.eq(0)
-      expect(pos4.liquidity).to.eq(13)
+      expect(pos4.liquidity).to.eq(18)
   
     })
   })
