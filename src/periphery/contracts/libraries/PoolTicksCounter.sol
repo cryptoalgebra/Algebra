@@ -2,6 +2,7 @@
 pragma solidity >=0.6.0;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import 'hardhat/console.sol';
 
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
@@ -15,84 +16,28 @@ library PoolTicksCounter {
         int24 tickBefore,
         int24 tickAfter
     ) internal view returns (uint32 initializedTicksCrossed) {
-        int16 wordPosLower;
-        int16 wordPosHigher;
-        uint8 bitPosLower;
-        uint8 bitPosHigher;
-        bool tickBeforeInitialized;
-        bool tickAfterInitialized;
+        int24 startTick;
 
-        {
-            // Get the key and offset in the tick bitmap of the active tick before and after the swap.
-            int16 wordPos = int16((tickBefore / self.tickSpacing()) >> 8);
-            uint8 bitPos = uint8(int8((tickBefore / self.tickSpacing()) % 256));
+        (, , int24 prevTick, , , , ) = self.globalState();
 
-            int16 wordPosAfter = int16((tickAfter / self.tickSpacing()) >> 8);
-            uint8 bitPosAfter = uint8(int8((tickAfter / self.tickSpacing()) % 256));
-
-            // In the case where tickAfter is initialized, we only want to count it if we are swapping downwards.
-            // If the initializable tick after the swap is initialized, our original tickAfter is a
-            // multiple of tick spacing, and we are swapping downwards we know that tickAfter is initialized
-            // and we shouldn't count it.
-            tickAfterInitialized =
-                ((self.tickTable(wordPosAfter) & (1 << bitPosAfter)) > 0) &&
-                ((tickAfter % self.tickSpacing()) == 0) &&
-                (tickBefore > tickAfter);
-
-            // In the case where tickBefore is initialized, we only want to count it if we are swapping upwards.
-            // Use the same logic as above to decide whether we should count tickBefore or not.
-            tickBeforeInitialized =
-                ((self.tickTable(wordPos) & (1 << bitPos)) > 0) &&
-                ((tickBefore % self.tickSpacing()) == 0) &&
-                (tickBefore < tickAfter);
-
-            if (wordPos < wordPosAfter || (wordPos == wordPosAfter && bitPos <= bitPosAfter)) {
-                wordPosLower = wordPos;
-                bitPosLower = bitPos;
-                wordPosHigher = wordPosAfter;
-                bitPosHigher = bitPosAfter;
-            } else {
-                wordPosLower = wordPosAfter;
-                bitPosLower = bitPosAfter;
-                wordPosHigher = wordPos;
-                bitPosHigher = bitPos;
+        if (tickAfter <= tickBefore) {
+            startTick = prevTick;
+            while (startTick > tickAfter) {
+                initializedTicksCrossed++;
+                (, , , , startTick, , , , ) = self.ticks(startTick);
+            }
+        } else {
+            (, , , , , startTick, , , ) = self.ticks(prevTick);
+            while (startTick <= tickAfter) {
+                initializedTicksCrossed++;
+                (, , , , , startTick, , , ) = self.ticks(startTick);
             }
         }
 
-        // Count the number of initialized ticks crossed by iterating through the tick bitmap.
-        // Our first mask should include the lower tick and everything to its left.
-        uint256 mask = type(uint256).max << bitPosLower;
-        while (wordPosLower <= wordPosHigher) {
-            // If we're on the final tick bitmap page, ensure we only count up to our
-            // ending tick.
-            if (wordPosLower == wordPosHigher) {
-                mask = mask & (type(uint256).max >> (255 - bitPosHigher));
-            }
-
-            uint256 masked = self.tickTable(wordPosLower) & mask;
-            initializedTicksCrossed += countOneBits(masked);
-            wordPosLower++;
-            // Reset our mask so we consider all bits on the next iteration.
-            mask = type(uint256).max;
-        }
-
-        if (tickAfterInitialized) {
-            initializedTicksCrossed -= 1;
-        }
-
-        if (tickBeforeInitialized) {
+        if ((startTick == tickBefore) && (tickBefore < tickAfter)) {
             initializedTicksCrossed -= 1;
         }
 
         return initializedTicksCrossed;
-    }
-
-    function countOneBits(uint256 x) private pure returns (uint16) {
-        uint16 bits = 0;
-        while (x != 0) {
-            bits++;
-            x &= (x - 1);
-        }
-        return bits;
     }
 }
