@@ -107,7 +107,7 @@ describe('TickLens', () => {
     })
 
     function getTickTableIndex(tick: BigNumberish, tickSpacing: number): BigNumber {
-      const intermediate = BigNumber.from(tick).div(tickSpacing)
+      const intermediate = BigNumber.from(tick)
       // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
       return intermediate.lt(0) ? intermediate.add(1).div(BigNumber.from(2).pow(8)).sub(1) : intermediate.shr(8)
     }
@@ -207,7 +207,7 @@ describe('TickLens', () => {
         poolAddress,
         getTickTableIndex(0, TICK_SPACINGS[FeeAmount.MEDIUM])
       )
-      expect(ticks.length).to.be.eq(256)
+      expect(ticks.length).to.be.eq(5)
 
       await snapshotGasCost(
         tickLens.getGasCostOfGetPopulatedTicksInWord(
