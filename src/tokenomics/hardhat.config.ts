@@ -1,18 +1,18 @@
-import '@typechain/hardhat';
-import '@nomiclabs/hardhat-ethers';
-import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomiclabs/hardhat-etherscan';
-import 'hardhat-contract-sizer';
-import 'solidity-coverage';
-import 'algebra-solidity-docgen';
+import '@typechain/hardhat'
+import '@nomiclabs/hardhat-ethers'
+import '@nomicfoundation/hardhat-chai-matchers'
+import '@nomiclabs/hardhat-etherscan'
+import 'hardhat-contract-sizer'
+import 'solidity-coverage'
+import 'solidity-docgen'
 
-import { HardhatUserConfig } from 'hardhat/config';
-import { SolcUserConfig } from 'hardhat/types';
+import { HardhatUserConfig } from 'hardhat/config'
+import { SolcUserConfig } from 'hardhat/types'
 
-import baseConfig from '../../hardhat.base.config';
+import baseConfig from '../../hardhat.base.config'
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.7.6',
+  version: '0.8.17',
   settings: {
     optimizer: {
       enabled: true,
@@ -31,7 +31,7 @@ const config: HardhatUserConfig = {
     compilers: [DEFAULT_COMPILER_SETTINGS],
   },
   typechain: {
-    outDir: 'typechain'
+    outDir: 'typechain',
   },
   contractSizer: {
     alphaSort: false,
@@ -39,10 +39,11 @@ const config: HardhatUserConfig = {
     runOnCompile: false,
   },
   docgen: {
-    output: '../../docs/Contracts/Tokenomics',
+    outputDir: '../../docs/Contracts/Tokenomics',
     pages: (x: any) => x.name.toString() + '.md',
-    templates: '../../docs/doc_templates/public'
-  }
+    templates: '../../docs/doc_templates/public',
+    collapseNewlines: true
+  },
 }
 
 export default config

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
@@ -53,7 +53,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
         IAlgebraPool pool = getPool(tokenIn, tokenOut);
-        (, , uint16 fee, , , , ) = pool.globalState();
+        (, , , uint16 fee, , , ) = pool.globalState();
 
         if (isExactInput) {
             assembly {
@@ -75,7 +75,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @dev Parses a revert reason that should contain the numeric quote
-    function parseRevertReason(bytes memory reason) private pure returns (uint256, uint16) {
+    function parseRevertReason(bytes memory reason) private view returns (uint256, uint16) {
         if (reason.length != 64) {
             if (reason.length < 68) revert('Unexpected error');
             assembly {

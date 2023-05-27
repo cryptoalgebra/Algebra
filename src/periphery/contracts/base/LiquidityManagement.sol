@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
@@ -10,6 +10,8 @@ import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 import '../libraries/LiquidityAmounts.sol';
 
+import '../libraries/PoolInteraction.sol';
+
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
 
@@ -18,17 +20,14 @@ import './PeripheryImmutableState.sol';
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutableState, PeripheryPayments {
+    using PoolInteraction for IAlgebraPool;
     struct MintCallbackData {
         PoolAddress.PoolKey poolKey;
         address payer;
     }
 
     /// @inheritdoc IAlgebraMintCallback
-    function algebraMintCallback(
-        uint256 amount0Owed,
-        uint256 amount1Owed,
-        bytes calldata data
-    ) external override {
+    function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
         MintCallbackData memory decoded = abi.decode(data, (MintCallbackData));
         CallbackValidation.verifyCallback(poolDeployer, decoded.poolKey);
 
@@ -49,15 +48,11 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
     }
 
     /// @notice Add liquidity to an initialized pool
-    function addLiquidity(AddLiquidityParams memory params)
+    function addLiquidity(
+        AddLiquidityParams memory params
+    )
         internal
-        returns (
-            uint128 liquidity,
-            uint256 actualLiquidity,
-            uint256 amount0,
-            uint256 amount1,
-            IAlgebraPool pool
-        )
+        returns (uint128 liquidity, uint256 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
 
@@ -65,7 +60,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
 
         // compute the liquidity amount
         {
-            (uint160 sqrtPriceX96, , , , , , ) = pool.globalState();
+            uint160 sqrtPriceX96 = pool._getSqrtPrice();
             uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
             uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
 
@@ -88,5 +83,26 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         );
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
+    }
+
+    /// @notice Create limit order in pool
+    function createLimitOrder(
+        IAlgebraPool pool,
+        address token0,
+        address token1,
+        int24 tick,
+        uint128 amount
+    ) internal returns (bool depositedToken) {
+        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
+
+        (, uint256 amount1, ) = pool.mint(
+            msg.sender,
+            address(this),
+            tick,
+            tick,
+            amount,
+            abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))
+        );
+        depositedToken = amount1 > 0;
     }
 }

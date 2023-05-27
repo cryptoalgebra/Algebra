@@ -1,31 +1,25 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../libraries/FullMath.sol';
 
 contract FullMathEchidnaTest {
-  function checkMulDivRounding(
-    uint256 x,
-    uint256 y,
-    uint256 d
-  ) external pure {
+  function checkMulDivRounding(uint256 x, uint256 y, uint256 d) external pure {
     require(d > 0);
 
     uint256 ceiled = FullMath.mulDivRoundingUp(x, y, d);
     uint256 floored = FullMath.mulDiv(x, y, d);
 
-    if (mulmod(x, y, d) > 0) {
-      assert(ceiled - floored == 1);
-    } else {
-      assert(ceiled == floored);
+    unchecked {
+      if (mulmod(x, y, d) > 0) {
+        assert(ceiled - floored == 1);
+      } else {
+        assert(ceiled == floored);
+      }
     }
   }
 
-  function checkMulDiv(
-    uint256 x,
-    uint256 y,
-    uint256 d
-  ) external pure {
+  function checkMulDiv(uint256 x, uint256 y, uint256 d) external pure {
     require(d > 0);
     uint256 z = FullMath.mulDiv(x, y, d);
     if (x == 0 || y == 0) {
@@ -39,15 +33,13 @@ contract FullMathEchidnaTest {
     assert(x2 <= x);
     assert(y2 <= y);
 
-    assert(x - x2 < d);
-    assert(y - y2 < d);
+    unchecked {
+      assert(x - x2 < d);
+      assert(y - y2 < d);
+    }
   }
 
-  function checkMulDivRoundingUp(
-    uint256 x,
-    uint256 y,
-    uint256 d
-  ) external pure {
+  function checkMulDivRoundingUp(uint256 x, uint256 y, uint256 d) external pure {
     require(d > 0);
     uint256 z = FullMath.mulDivRoundingUp(x, y, d);
     if (x == 0 || y == 0) {
@@ -61,7 +53,9 @@ contract FullMathEchidnaTest {
     assert(x2 >= x);
     assert(y2 >= y);
 
-    assert(x2 - x < d);
-    assert(y2 - y < d);
+    unchecked {
+      assert(x2 - x < d);
+      assert(y2 - y < d);
+    }
   }
 }

@@ -6,7 +6,6 @@ export * from './actors'
 export * from './logging'
 export * from './ticks'
 
-import { FeeAmount } from './external/v3-periphery/constants'
 import { provider } from './provider'
 import { BigNumber, BigNumberish, Contract, ContractTransaction } from 'ethers'
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider'
@@ -39,14 +38,7 @@ export { expect }
 
 // returns the sqrt price as a 64x96
 export const encodePriceSqrt = (reserve1: BigNumberish, reserve0: BigNumberish): BigNumber => {
-  return BigNumber.from(
-    new bn(reserve1.toString())
-      .div(reserve0.toString())
-      .sqrt()
-      .multipliedBy(new bn(2).pow(96))
-      .integerValue(3)
-      .toString()
-  )
+  return BigNumber.from(new bn(reserve1.toString()).div(reserve0.toString()).sqrt().multipliedBy(new bn(2).pow(96)).integerValue(3).toString())
 }
 
 export const BN = BigNumber.from
@@ -104,7 +96,7 @@ export const maxGas = {
   gasLimit: MAX_GAS_LIMIT,
 }
 
-export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" 
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const days = (n: number) => 86_400 * n
 
 export const getSlot0 = async (pool: IAlgebraPool) => {

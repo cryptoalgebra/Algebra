@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 contract MockObservable {
     Timepoint private timepoint0;
@@ -77,5 +77,9 @@ contract MockObservable {
         _volumeGMCumulatives[1] = timepoint1.volumeGMCumulative;
 
         return (_tickCumulatives, _secondsPerLiquidityCumulativeX128s, _volatilityCumulatives, _volumeGMCumulatives);
+    }
+
+    function dataStorageOperator() external view returns (address) {
+        return address(this);
     }
 }

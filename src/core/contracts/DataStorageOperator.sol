@@ -1,24 +1,26 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
+import './base/common/Timestamp.sol';
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IDataStorageOperator.sol';
+import './interfaces/pool/IAlgebraPoolState.sol';
 
 import './libraries/DataStorage.sol';
-import './libraries/Sqrt.sol';
 import './libraries/AdaptiveFee.sol';
 
-import './libraries/Constants.sol';
-
-contract DataStorageOperator is IDataStorageOperator {
-  uint256 constant UINT16_MODULO = 65536;
-  uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
+/// @title Algebra timepoints data operator
+/// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
+contract DataStorageOperator is IDataStorageOperator, Timestamp {
+  uint256 internal constant UINT16_MODULO = 65536;
 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  AdaptiveFee.Configuration public feeConfig;
+  AlgebraFeeConfiguration public feeConfig;
+
+  /// @dev The role can be granted in AlgebraFactory
+  bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
 
   address private immutable pool;
   address private immutable factory;
@@ -29,8 +31,7 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   constructor(address _pool) {
-    factory = msg.sender;
-    pool = _pool;
+    (factory, pool) = (msg.sender, _pool);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -39,14 +40,12 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
-    require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
+  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
+    require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
+    AdaptiveFee.validateFeeConfiguration(_config);
 
-    require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0 && _feeConfig.volumeGamma != 0, 'Gammas must be > 0');
-
-    feeConfig = _feeConfig;
-    emit FeeConfiguration(_feeConfig);
+    feeConfig = _config;
+    emit FeeConfiguration(_config);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -54,107 +53,46 @@ contract DataStorageOperator is IDataStorageOperator {
     uint32 time,
     uint32 secondsAgo,
     int24 tick,
-    uint16 index,
-    uint128 liquidity
-  )
-    external
-    view
-    override
-    onlyPool
-    returns (
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
-    )
-  {
-    uint16 oldestIndex;
-    // check if we have overflow in the past
-    uint16 nextIndex = index + 1; // considering overflow
-    if (timepoints[nextIndex].initialized) {
-      oldestIndex = nextIndex;
-    }
-
-    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, index, oldestIndex, liquidity);
-    (tickCumulative, secondsPerLiquidityCumulative, volatilityCumulative, volumePerAvgLiquidity) = (
-      result.tickCumulative,
-      result.secondsPerLiquidityCumulative,
-      result.volatilityCumulative,
-      result.volumePerLiquidityCumulative
-    );
+    uint16 lastIndex
+  ) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
+    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, lastIndex, timepoints.getOldestIndex(lastIndex));
+    (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
   /// @inheritdoc IDataStorageOperator
   function getTimepoints(
-    uint32 time,
-    uint32[] memory secondsAgos,
-    int24 tick,
-    uint16 index,
-    uint128 liquidity
-  )
-    external
-    view
-    override
-    onlyPool
-    returns (
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulatives,
-      uint112[] memory volatilityCumulatives,
-      uint256[] memory volumePerAvgLiquiditys
-    )
-  {
-    return timepoints.getTimepoints(time, secondsAgos, tick, index, liquidity);
+    uint32[] memory secondsAgos
+  ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+    (, int24 tick, , , uint16 index, , ) = IAlgebraPoolState(pool).globalState();
+    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, index);
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getAverages(
-    uint32 time,
-    int24 tick,
-    uint16 index,
-    uint128 liquidity
-  ) external view override onlyPool returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
-    return timepoints.getAverages(time, tick, index, liquidity);
+  function write(uint16 index, uint32 blockTimestamp, int24 tick) external override onlyPool returns (uint16 indexUpdated, uint16 newFee) {
+    uint16 oldestIndex;
+    (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
+
+    if (index != indexUpdated) {
+      AlgebraFeeConfiguration memory _feeConfig = feeConfig;
+      if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
+        newFee = _feeConfig.baseFee;
+      } else {
+        uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;
+        uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
+        newFee = AdaptiveFee.getFee(volatilityAverage, _feeConfig);
+      }
+    }
   }
 
   /// @inheritdoc IDataStorageOperator
-  function write(
-    uint16 index,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 liquidity,
-    uint128 volumePerLiquidity
-  ) external override onlyPool returns (uint16 indexUpdated) {
-    return timepoints.write(index, blockTimestamp, tick, liquidity, volumePerLiquidity);
-  }
+  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external {
+    require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
+    require(amount > 0 && type(uint16).max - startIndex >= amount);
 
-  /// @inheritdoc IDataStorageOperator
-  function calculateVolumePerLiquidity(
-    uint128 liquidity,
-    int256 amount0,
-    int256 amount1
-  ) external pure override returns (uint128 volumePerLiquidity) {
-    uint256 volume = Sqrt.sqrtAbs(amount0) * Sqrt.sqrtAbs(amount1);
-    uint256 volumeShifted;
-    if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
-    else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
-    if (volumeShifted >= MAX_VOLUME_PER_LIQUIDITY) return MAX_VOLUME_PER_LIQUIDITY;
-    else return uint128(volumeShifted);
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function window() external pure override returns (uint32) {
-    return DataStorage.WINDOW;
-  }
-
-  /// @inheritdoc IDataStorageOperator
-  function getFee(
-    uint32 _time,
-    int24 _tick,
-    uint16 _index,
-    uint128 _liquidity
-  ) external view override onlyPool returns (uint16 fee) {
-    (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
-
-    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig);
+    unchecked {
+      for (uint256 i = startIndex; i < startIndex + amount; ++i) {
+        timepoints[i].blockTimestamp = 1; // will be overwritten
+      }
+    }
   }
 }

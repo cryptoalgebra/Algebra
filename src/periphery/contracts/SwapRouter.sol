@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
@@ -45,7 +45,7 @@ contract SwapRouter is
         address _poolDeployer
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
-    /// @dev Returns the pool for the given token pair and fee. The pool contract may or may not exist.
+    /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
     function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {
         return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));
     }

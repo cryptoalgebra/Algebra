@@ -1,58 +1,64 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.7.6;
-pragma abicoder v2;
+pragma solidity =0.8.17;
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
+import './base/AlgebraFeeConfiguration.sol';
+import './libraries/Constants.sol';
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
+import './AlgebraCommunityVault.sol';
 
-/**
- * @title Algebra factory
- * @notice Is used to deploy pools and its dataStorages
- */
-contract AlgebraFactory is IAlgebraFactory {
+import '@openzeppelin/contracts/access/Ownable2Step.sol';
+import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
+
+/// @title Algebra factory
+/// @notice Is used to deploy pools and its dataStorages
+/// @dev Version: Algebra V2.1
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
-  address public override owner;
+  bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
+  address public immutable override communityVault;
+
+  /// @inheritdoc IAlgebraFactory
   address public override farmingAddress;
 
   /// @inheritdoc IAlgebraFactory
-  address public override vaultAddress;
+  uint8 public override defaultCommunityFee;
 
-  // values of constants for sigmoids in fee calculation formula
-  AdaptiveFee.Configuration public baseFeeConfiguration =
-    AdaptiveFee.Configuration(
-      3000 - Constants.BASE_FEE, // alpha1
-      15000 - 3000, // alpha2
-      360, // beta1
-      60000, // beta2
-      59, // gamma1
-      8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
-      Constants.BASE_FEE // baseFee
-    );
+  /// @inheritdoc IAlgebraFactory
+  uint256 public override renounceOwnershipStartTimestamp;
 
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
+  /// @dev time delay before ownership renouncement can be finished
+  uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
+
+  /// @dev values of constants for sigmoids in fee calculation formula
+  AlgebraFeeConfiguration public defaultFeeConfiguration;
 
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
-  constructor(address _poolDeployer, address _vaultAddress) {
-    owner = msg.sender;
-    emit Owner(msg.sender);
-
+  constructor(address _poolDeployer) {
+    require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
-    vaultAddress = _vaultAddress;
+    communityVault = address(new AlgebraCommunityVault());
+    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function owner() public view override(IAlgebraFactory, Ownable) returns (address) {
+    return super.owner();
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function hasRoleOrOwner(bytes32 role, address account) public view override returns (bool) {
+    return (owner() == account || super.hasRole(role, account));
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -62,64 +68,79 @@ contract AlgebraFactory is IAlgebraFactory {
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = new DataStorageOperator(computeAddress(token0, token1));
+    IDataStorageOperator dataStorage = new DataStorageOperator(_computeAddress(token0, token1));
+    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
 
-    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), address(this), token0, token1);
-
-    poolByPair[token0][token1] = pool; // to avoid future addresses comparing we are populating the mapping twice
+    poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
     emit Pool(token0, token1, pool);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setOwner(address _owner) external override onlyOwner {
-    require(owner != _owner);
-    emit Owner(_owner);
-    owner = _owner;
+  function setFarmingAddress(address newFarmingAddress) external override onlyOwner {
+    require(farmingAddress != newFarmingAddress);
+    farmingAddress = newFarmingAddress;
+    emit FarmingAddress(newFarmingAddress);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setFarmingAddress(address _farmingAddress) external override onlyOwner {
-    require(farmingAddress != _farmingAddress);
-    emit FarmingAddress(_farmingAddress);
-    farmingAddress = _farmingAddress;
+  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+    require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(defaultCommunityFee != newDefaultCommunityFee);
+    defaultCommunityFee = newDefaultCommunityFee;
+    emit DefaultCommunityFee(newDefaultCommunityFee);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setVaultAddress(address _vaultAddress) external override onlyOwner {
-    require(vaultAddress != _vaultAddress);
-    emit VaultAddress(_vaultAddress);
-    vaultAddress = _vaultAddress;
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
+    AdaptiveFee.validateFeeConfiguration(newConfig);
+    defaultFeeConfiguration = newConfig;
+    emit DefaultFeeConfiguration(newConfig);
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setBaseFeeConfiguration(
-    uint16 alpha1,
-    uint16 alpha2,
-    uint32 beta1,
-    uint32 beta2,
-    uint16 gamma1,
-    uint16 gamma2,
-    uint32 volumeBeta,
-    uint16 volumeGamma,
-    uint16 baseFee
-  ) external override onlyOwner {
-    require(uint256(alpha1) + uint256(alpha2) + uint256(baseFee) <= type(uint16).max, 'Max fee exceeded');
-    require(gamma1 != 0 && gamma2 != 0 && volumeGamma != 0, 'Gammas must be > 0');
-
-    baseFeeConfiguration = AdaptiveFee.Configuration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
-    emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
+  function startRenounceOwnership() external override onlyOwner {
+    renounceOwnershipStartTimestamp = block.timestamp;
+    emit RenounceOwnershipStart(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ec6c9c8091d160c0aa74b2b14ba9c1717e95093bd3ac085cee99a49aab294a4;
+  /// @inheritdoc IAlgebraFactory
+  function stopRenounceOwnership() external override onlyOwner {
+    require(renounceOwnershipStartTimestamp != 0);
+    renounceOwnershipStartTimestamp = 0;
+    emit RenounceOwnershipStop(block.timestamp);
+  }
 
-  /// @notice Deterministically computes the pool address given the factory and PoolKey
+  /// @dev Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore.
+  /// Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
+  /// have passed since the call to the startRenounceOwnership() function.
+  function renounceOwnership() public override onlyOwner {
+    require(renounceOwnershipStartTimestamp != 0);
+    require(block.timestamp - renounceOwnershipStartTimestamp >= RENOUNCE_OWNERSHIP_DELAY);
+    renounceOwnershipStartTimestamp = 0;
+
+    super.renounceOwnership();
+    emit RenounceOwnershipFinish(block.timestamp);
+  }
+
+  /// @dev Transfers ownership of the contract to a new account (`newOwner`).
+  /// Modified to fit with the role mechanism.
+  function _transferOwnership(address newOwner) internal override {
+    _revokeRole(DEFAULT_ADMIN_ROLE, owner());
+    super._transferOwnership(newOwner);
+    _grantRole(DEFAULT_ADMIN_ROLE, owner());
+  }
+
+  /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x15b69bf972c5c2df89dd7772b62e872d4048b3741a214df60be904ec5620d9df;
+
+  /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token
   /// @param token1 second token
   /// @return pool The contract address of the Algebra pool
-  function computeAddress(address token0, address token1) internal view returns (address pool) {
-    pool = address(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH))));
+  function _computeAddress(address token0, address token1) private view returns (address pool) {
+    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
   }
 }

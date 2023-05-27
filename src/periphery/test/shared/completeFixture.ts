@@ -5,6 +5,7 @@ import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
   MockTimeSwapRouter,
+  LimitOrderManager,
   NonfungibleTokenPositionDescriptor,
   TestERC20,
   IAlgebraFactory
@@ -16,8 +17,10 @@ const completeFixture: () => Promise<{
   router: MockTimeSwapRouter
   nft: MockTimeNonfungiblePositionManager
   nftDescriptor: NonfungibleTokenPositionDescriptor
+  lomanager: LimitOrderManager
   tokens: [TestERC20, TestERC20, TestERC20]
 }> = async () => {
+
   const { wnative, factory, router } = await v3RouterFixture()
   const tokenFactory = await ethers.getContractFactory('TestERC20')
   const factoryOwner = await factory.owner()
@@ -26,6 +29,7 @@ const completeFixture: () => Promise<{
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
     (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
   ]
+
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy()
@@ -48,7 +52,12 @@ const completeFixture: () => Promise<{
     nftDescriptorProxied.address,
       await factory.poolDeployer()
   )) as MockTimeNonfungiblePositionManager
-
+  const LOManagerFactory = await ethers.getContractFactory('LimitOrderManager')
+  const lomanager = (await LOManagerFactory.deploy(
+    factory.address,
+    wnative.address,
+    await factory.poolDeployer()
+  )) as LimitOrderManager
   tokens.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1))
 
   return {
@@ -57,7 +66,8 @@ const completeFixture: () => Promise<{
     router,
     tokens,
     nft,
-    nftDescriptor: nftDescriptorProxied
+    nftDescriptor: nftDescriptorProxied,
+    lomanager
   }
 }
 

@@ -49,8 +49,7 @@ describe('DataStorage', () => {
       checkTimepointEquals(await dataStorage.timepoints(0), {
         initialized: true,
         blockTimestamp: 1,
-        tickCumulative: 0,
-        secondsPerLiquidityCumulative: 0,
+        tickCumulative: 0
       })
     })
     it('gas  [ @skip-on-coverage ]', async () => {
@@ -87,7 +86,6 @@ describe('DataStorage', () => {
       expect(await dataStorage.index()).to.eq(2)
       checkTimepointEquals(await dataStorage.timepoints(1), {
         tickCumulative: 0,
-        secondsPerLiquidityCumulative: '2041694201525630780780247644590609268736',
         initialized: true,
         blockTimestamp: 6,
       })
@@ -103,25 +101,21 @@ describe('DataStorage', () => {
       checkTimepointEquals(await dataStorage.timepoints(1), {
         initialized: true,
         tickCumulative: 0,
-        secondsPerLiquidityCumulative: '1020847100762815390390123822295304634368',
         blockTimestamp: 3,
       })
       checkTimepointEquals(await dataStorage.timepoints(2), {
         initialized: true,
         tickCumulative: 12,
-        secondsPerLiquidityCumulative: '1701411834604692317316873037158841057280',
         blockTimestamp: 7,
       })
       checkTimepointEquals(await dataStorage.timepoints(3), {
         initialized: true,
         tickCumulative: -23,
-        secondsPerLiquidityCumulative: '1984980473705474370203018543351981233493',
         blockTimestamp: 12,
       })
       checkTimepointEquals(await dataStorage.timepoints(4), {
         initialized: false,
         tickCumulative: 0,
-        secondsPerLiquidityCumulative: 0,
         blockTimestamp: 0,
       })
     })
@@ -134,7 +128,7 @@ describe('DataStorage', () => {
     })
 
     it('potential overflow scenario', async () => {
-      const window = Number(await dataStorage.window());
+      const window = 24 * 60 * 60;
       await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
       let avrgTick = await dataStorage.getAverageTick();
       expect(avrgTick).to.be.lt(7300)
@@ -165,160 +159,94 @@ describe('DataStorage', () => {
 
       const getSingleTimepoint = async (secondsAgo: number) => {
         const {
-          tickCumulatives: [tickCumulative],
-          secondsPerLiquidityCumulatives: [secondsPerLiquidityCumulative],
+          tickCumulatives: [tickCumulative]
         } = await dataStorage.getTimepoints([secondsAgo])
-        return { secondsPerLiquidityCumulative, tickCumulative }
+        return { tickCumulative }
       }
 
       it('fails if an older timepoint does not exist', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
-        await expect(getSingleTimepoint(1)).to.be.revertedWith('OLD')
+        await expect(getSingleTimepoint(1)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
       })
 
       it('does not fail across overflow boundary', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 2 ** 32 - 1 })
         await dataStorage.advanceTime(2)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(1)
+        const { tickCumulative} = await getSingleTimepoint(1)
         expect(tickCumulative).to.be.eq(2)
-        expect(secondsPerLiquidityCumulative).to.be.eq('85070591730234615865843651857942052864')
       })
 
-      it('interpolates correctly at max liquidity', async () => {
-        await dataStorage.initialize({ liquidity: MaxUint128, tick: 0, time: 0 })
-        await dataStorage.update({ advanceTimeBy: 13, tick: 0, liquidity: 0 })
-        let { secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
-        expect(secondsPerLiquidityCumulative).to.eq(13)
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(6))
-        expect(secondsPerLiquidityCumulative).to.eq(7)
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(12))
-        expect(secondsPerLiquidityCumulative).to.eq(1)
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(13))
-        expect(secondsPerLiquidityCumulative).to.eq(0)
-      })
-
-      it('interpolates correctly at min liquidity', async () => {
-        await dataStorage.initialize({ liquidity: 0, tick: 0, time: 0 })
-        await dataStorage.update({ advanceTimeBy: 13, tick: 0, liquidity: MaxUint128 })
-        let { secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(13).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(6))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(7).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(12))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(1).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(13))
-        expect(secondsPerLiquidityCumulative).to.eq(0)
-      })
-
-      it('interpolates the same as 0 liquidity for 1 liquidity', async () => {
-        await dataStorage.initialize({ liquidity: 1, tick: 0, time: 0 })
-        await dataStorage.update({ advanceTimeBy: 13, tick: 0, liquidity: MaxUint128 })
-        let { secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(13).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(6))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(7).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(12))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(1).shl(128))
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(13))
-        expect(secondsPerLiquidityCumulative).to.eq(0)
-      })
-
-      it('interpolates correctly across uint32 seconds boundaries', async () => {
-        // setup
-        await dataStorage.initialize({ liquidity: 0, tick: 0, time: 0 })
-        
-        await dataStorage.update({ advanceTimeBy: 2 ** 32 - 6, tick: 0, liquidity: 0 })
-        let { secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(2 ** 32 - 6).shl(128))
-        await dataStorage.update({ advanceTimeBy: 13, tick: 0, liquidity: 0 })
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(0))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(7).shl(128))
-        // interpolation checks
-        ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(3))
-        expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(4).shl(128))
-        // ;({ secondsPerLiquidityCumulative } = await getSingleTimepoint(8))
-        // expect(secondsPerLiquidityCumulative).to.eq(BigNumber.from(2 ** 32 - 1).shl(128))
-      })
 
       it('single timepoint at current time', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(0)
-        expect(secondsPerLiquidityCumulative).to.eq(0)
       })
 
       it('single timepoint in past but not earlier than secondsAgo', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await dataStorage.advanceTime(3)
-        await expect(getSingleTimepoint(4)).to.be.revertedWith('OLD')
+        await expect(getSingleTimepoint(4)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
       })
 
       it('single timepoint in past at exactly seconds ago', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await dataStorage.advanceTime(3)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(3)
+        const { tickCumulative } = await getSingleTimepoint(3)
         expect(tickCumulative).to.eq(0)
-        expect(secondsPerLiquidityCumulative).to.eq(0)
       })
 
       it('single timepoint in past counterfactual in past', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await dataStorage.advanceTime(3)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(1)
+        const { tickCumulative } = await getSingleTimepoint(1)
         expect(tickCumulative).to.eq(4)
-        expect(secondsPerLiquidityCumulative).to.eq('170141183460469231731687303715884105728')
       })
 
       it('single timepoint in past counterfactual now', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 })
         await dataStorage.advanceTime(3)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(6)
-        expect(secondsPerLiquidityCumulative).to.eq('255211775190703847597530955573826158592')
       })
 
       it('two timepoints in chronological order 0 seconds ago exact', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(-20)
-        expect(secondsPerLiquidityCumulative).to.eq('272225893536750770770699685945414569164')
       })
 
       it('two timepoints in chronological order 0 seconds ago counterfactual', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(-13)
-        expect(secondsPerLiquidityCumulative).to.eq('1463214177760035392892510811956603309260')
       })
 
       it('two timepoints in chronological order seconds ago is exactly on first timepoint', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(11)
+        const { tickCumulative } = await getSingleTimepoint(11)
         expect(tickCumulative).to.eq(0)
-        expect(secondsPerLiquidityCumulative).to.eq(0)
       })
 
       it('two timepoints in chronological order seconds ago is between first and second', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(9)
+        const { tickCumulative } = await getSingleTimepoint(9)
         expect(tickCumulative).to.eq(-10)
-        expect(secondsPerLiquidityCumulative).to.eq('136112946768375385385349842972707284582')
       })
 
       it('two timepoints in reverse order 0 seconds ago exact', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 })
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 })
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative,  } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(-17)
-        expect(secondsPerLiquidityCumulative).to.eq('782649443918158465965761597093066886348')
       })
 
       it('two timepoints in reverse order 0 seconds ago counterfactual', async () => {
@@ -326,9 +254,8 @@ describe('DataStorage', () => {
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+        const { tickCumulative,  } = await getSingleTimepoint(0)
         expect(tickCumulative).to.eq(-52)
-        expect(secondsPerLiquidityCumulative).to.eq('1378143586029800777026667160098661256396')
       })
 
       it('two timepoints in reverse order seconds ago is exactly on first timepoint', async () => {
@@ -336,9 +263,8 @@ describe('DataStorage', () => {
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(10)
+        const { tickCumulative } = await getSingleTimepoint(10)
         expect(tickCumulative).to.eq(-20)
-        expect(secondsPerLiquidityCumulative).to.eq('272225893536750770770699685945414569164')
       })
 
       it('two timepoints in reverse order seconds ago is between first and second', async () => {
@@ -346,9 +272,8 @@ describe('DataStorage', () => {
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 })
         await dataStorage.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 })
         await dataStorage.advanceTime(7)
-        const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(9)
+        const { tickCumulative,  } = await getSingleTimepoint(9)
         expect(tickCumulative).to.eq(-19)
-        expect(secondsPerLiquidityCumulative).to.eq('442367076997220002502386989661298674892')
       })
 
       it('can fetch multiple timepoints', async () => {
@@ -356,7 +281,7 @@ describe('DataStorage', () => {
         await dataStorage.update({ advanceTimeBy: 13, tick: 6, liquidity: BigNumber.from(2).pow(12) })
         await dataStorage.advanceTime(5)
 
-        const { tickCumulatives, secondsPerLiquidityCumulatives } = await dataStorage.getTimepoints([0, 3, 8, 13, 15, 18])
+        const { tickCumulatives } = await dataStorage.getTimepoints([0, 3, 8, 13, 15, 18])
         expect(tickCumulatives).to.have.lengthOf(6)
         expect(tickCumulatives[0]).to.eq(56)
         expect(tickCumulatives[1]).to.eq(38)
@@ -364,13 +289,6 @@ describe('DataStorage', () => {
         expect(tickCumulatives[3]).to.eq(10)
         expect(tickCumulatives[4]).to.eq(6)
         expect(tickCumulatives[5]).to.eq(0)
-        expect(secondsPerLiquidityCumulatives).to.have.lengthOf(6)
-        expect(secondsPerLiquidityCumulatives[0]).to.eq('550383467004691728624232610897330176')
-        expect(secondsPerLiquidityCumulatives[1]).to.eq('301153217795020002454768787094765568')
-        expect(secondsPerLiquidityCumulatives[2]).to.eq('103845937170696552570609926584401920')
-        expect(secondsPerLiquidityCumulatives[3]).to.eq('51922968585348276285304963292200960')
-        expect(secondsPerLiquidityCumulatives[4]).to.eq('31153781151208965771182977975320576')
-        expect(secondsPerLiquidityCumulatives[5]).to.eq(0)
       })
 
       it('gas for getTimepoints since most recent  [ @skip-on-coverage ]', async () => {
@@ -411,59 +329,51 @@ describe('DataStorage', () => {
 
         const getSingleTimepoint = async (secondsAgo: number) => {
           const {
-            tickCumulatives: [tickCumulative],
-            secondsPerLiquidityCumulatives: [secondsPerLiquidityCumulative],
+            tickCumulatives: [tickCumulative]
           } = await dataStorage.getTimepoints([secondsAgo])
-          return { secondsPerLiquidityCumulative, tickCumulative }
+          return { tickCumulative }
         }
         it('latest timepoint same time as latest', async () => {
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+          const { tickCumulative } = await getSingleTimepoint(0)
           expect(tickCumulative).to.eq(-21)
-          expect(secondsPerLiquidityCumulative).to.eq('2104079302127802832415199655953100107502')
         })
         it('latest timepoint 5 seconds after latest', async () => {
           await dataStorage.advanceTime(5)
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(5)
+          const { tickCumulative } = await getSingleTimepoint(5)
           expect(tickCumulative).to.eq(-21)
-          expect(secondsPerLiquidityCumulative).to.eq('2104079302127802832415199655953100107502')
         })
         it('current timepoint 5 seconds after latest', async () => {
           await dataStorage.advanceTime(5)
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(0)
+          const { tickCumulative } = await getSingleTimepoint(0)
           expect(tickCumulative).to.eq(9)
-          expect(secondsPerLiquidityCumulative).to.eq('2347138135642758877746181518404363115684')
         })
         it('between latest timepoint and just before latest timepoint at same time as latest', async () => {
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(3)
+          const { tickCumulative } = await getSingleTimepoint(3)
           expect(tickCumulative).to.eq(-33)
-          expect(secondsPerLiquidityCumulative).to.eq('1593655751746395137220137744805447790318')
         })
         it('between latest timepoint and just before latest timepoint after the latest timepoint', async () => {
           await dataStorage.advanceTime(5)
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(8)
+          const { tickCumulative } = await getSingleTimepoint(8)
           expect(tickCumulative).to.eq(-33)
-          expect(secondsPerLiquidityCumulative).to.eq('1593655751746395137220137744805447790318')
         })
         it('older than oldest reverts', async () => {
-          await expect(getSingleTimepoint(22)).to.be.revertedWith('OLD')
+          await expect(getSingleTimepoint(22)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
           await dataStorage.advanceTime(5)
-          await expect(getSingleTimepoint(27)).to.be.revertedWith('OLD')
+          await expect(getSingleTimepoint(27)).to.be.revertedWithCustomError(dataStorage, 'targetIsTooOld')
         })
         it('oldest timepoint', async () => {
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(14)
+          const { tickCumulative } = await getSingleTimepoint(14)
           expect(tickCumulative).to.eq(-13)
-          expect(secondsPerLiquidityCumulative).to.eq('544451787073501541541399371890829138329')
         })
         it('oldest timepoint after some time', async () => {
           await dataStorage.advanceTime(6)
-          const { tickCumulative, secondsPerLiquidityCumulative } = await getSingleTimepoint(20)
+          const { tickCumulative } = await getSingleTimepoint(20)
           expect(tickCumulative).to.eq(-13)
-          expect(secondsPerLiquidityCumulative).to.eq('544451787073501541541399371890829138329')
         })
 
         it('fetch many values', async () => {
           await dataStorage.advanceTime(6)
-          const { tickCumulatives, secondsPerLiquidityCumulatives } = await dataStorage.getTimepoints([
+          const { tickCumulatives } = await dataStorage.getTimepoints([
             20,
             17,
             13,
@@ -473,8 +383,7 @@ describe('DataStorage', () => {
             0,
           ])
           expect({
-            tickCumulatives: tickCumulatives.map((tc) => tc.toNumber()),
-            secondsPerLiquidityCumulatives: secondsPerLiquidityCumulatives.map((lc) => lc.toString()),
+            tickCumulatives: tickCumulatives.map((tc:any) => tc.toNumber())
           }).to.matchSnapshot()
         })
 
@@ -515,7 +424,6 @@ describe('DataStorage', () => {
     const STARTING_TIME = TEST_POOL_START_TIME
 
     const maxedOutDataStorageFixture = async () => {
-      await ethers.provider.send("hardhat_setLoggingEnabled", [false]);
       await ethers.provider.send("hardhat_setBalance", [
         wallet.address,
         "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
@@ -528,13 +436,11 @@ describe('DataStorage', () => {
         const batch = Array(BATCH_SIZE)
           .fill(null)
           .map((_, j) => ({
-            advanceTimeBy: 13,
             tick: -i - j,
             liquidity: i + j,
           }))
-        await dataStorage.batchUpdate(batch)
+        await dataStorage.batchUpdateFixedTimedelta(batch)
       }
-      //await waffle.provider.send("hardhat_setLoggingEnabled", [true]);
       return dataStorage
     }
 
@@ -548,40 +454,35 @@ describe('DataStorage', () => {
 
     async function checkGetPoints(
       secondsAgo: number,
-      expected?: { tickCumulative: BigNumberish; secondsPerLiquidityCumulative: BigNumberish }
+      expected?: { tickCumulative: BigNumberish }
     ) {
-      const { tickCumulatives, secondsPerLiquidityCumulatives } = await dataStorage.getTimepoints([secondsAgo])
+      const { tickCumulatives } = await dataStorage.getTimepoints([secondsAgo])
       const check = {
         tickCumulative: tickCumulatives[0].toString(),
-        secondsPerLiquidityCumulative: secondsPerLiquidityCumulatives[0].toString(),
       }
       if (typeof expected === 'undefined') {
         expect(check).to.matchSnapshot()
       } else {
         expect(check).to.deep.eq({
-          tickCumulative: expected.tickCumulative.toString(),
-          secondsPerLiquidityCumulative: expected.secondsPerLiquidityCumulative.toString(),
+          tickCumulative: expected.tickCumulative.toString()
         })
       }
     }
 
     it('can getTimepoints into the ordered portion with exact seconds ago', async () => {
       await checkGetPoints(100 * 13, {
-        secondsPerLiquidityCumulative: '60465049086512033878831623038233202591033',
         tickCumulative: '-27970560813',
       })
     })
 
     it('can getTimepoints into the ordered portion with unexact seconds ago', async () => {
       await checkGetPoints(100 * 13 + 5, {
-        secondsPerLiquidityCumulative: '60465023149565257990964350912969670793706',
         tickCumulative: '-27970232823',
       })
     })
 
     it('can getTimepoints at exactly the latest timepoint', async () => {
       await checkGetPoints(0, {
-        secondsPerLiquidityCumulative: '60471787506468701386237800669810720099776',
         tickCumulative: '-28055903863',
       })
     })
@@ -589,7 +490,6 @@ describe('DataStorage', () => {
     it('can getTimepoints at exactly the latest timepoint after some time passes', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(5, {
-        secondsPerLiquidityCumulative: '60471787506468701386237800669810720099776',
         tickCumulative: '-28055903863',
       })
     })
@@ -597,28 +497,24 @@ describe('DataStorage', () => {
     it('can getTimepoints after the latest timepoint counterfactual', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(3, {
-        secondsPerLiquidityCumulative: '60471797865298117996489508104462919730461',
         tickCumulative: '-28056035261',
       })
     })
 
     it('can getTimepoints into the unordered portion of array at exact seconds ago of timepoint', async () => {
       await checkGetPoints(200 * 13, {
-        secondsPerLiquidityCumulative: '60458300386499273141628780395875293027404',
         tickCumulative: '-27885347763',
       })
     })
 
     it('can getTimepoints into the unordered portion of array at seconds ago between timepoints', async () => {
       await checkGetPoints(200 * 13 + 5, {
-        secondsPerLiquidityCumulative: '60458274409952896081377821330361274907140',
         tickCumulative: '-27885020273',
       })
     })
 
     it('can getTimepoints the oldest timepoint 13*65534 seconds ago', async () => {
       await checkGetPoints(13 * 65534, {
-        secondsPerLiquidityCumulative: '33974356747348039873972993881117400879779',
         tickCumulative: '-175890',
       })
     })
@@ -626,7 +522,6 @@ describe('DataStorage', () => {
     it('can getTimepoints the oldest timepoint 13*65534 + 5 seconds ago if time has elapsed', async () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(13 * 65534 + 5, {
-        secondsPerLiquidityCumulative: '33974356747348039873972993881117400879779',
         tickCumulative: '-175890',
       })
     })
@@ -670,38 +565,11 @@ describe('DataStorageOperator external methods', () => {
     dataStorageOperator = (await dataStorageOperatorFactory.deploy(ethers.constants.AddressZero)) as DataStorageOperator;
   })
 
-  it('can get WINDOW', async() => {
-    expect(await dataStorageOperator.window()).to.be.eq(24*60*60);
-  })
-
   it('cannot call onlyPool methods', async () => {
-    await expect(dataStorageOperator.getAverages(100, 0, 2, 1)).to.be.revertedWith('only pool can call this');
     await expect(dataStorageOperator.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getSingleTimepoint(100, 0, 10, 2, 1)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.write(10, 100, 2, 4, 2)).to.be.revertedWith('only pool can call this');
-    await expect(dataStorageOperator.getFee(10, 100, 2, 4)).to.be.reverted; // hardhat bugs
+    await expect(dataStorageOperator.write(10, 100, 2)).to.be.revertedWith('only pool can call this');
   })
 
-  describe('#calculateVolumePerLiquidity', () => {
-    it('volume > 2**192', async() => {
-      let amount0 = BigNumber.from(2).pow(192).add(1);
-      let amount1 = BigNumber.from(2).pow(192).add(1);
-      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
-    })
-
-    it('volume > max', async() => {
-      let amount0 = BigNumber.from(110000);
-      let amount1 = BigNumber.from(110000);
-      expect(await dataStorageOperator.calculateVolumePerLiquidity(1, amount0, amount1)).to.be.eq(BigNumber.from(100000).shl(64));
-    })
-
-    it('volume < max, zero liquidity', async() => {
-      let amount0 = BigNumber.from(1000);
-      let amount1 = BigNumber.from(1000);
-      let volumePerLiquidity = await dataStorageOperator.calculateVolumePerLiquidity(0, amount0, amount1);
-      expect(volumePerLiquidity.shr(64)).to.be.eq(961);
-    })
-  })
   describe('#changeFeeConfiguration', () => {
     const configuration  = {
       alpha1: 3002,
@@ -710,8 +578,6 @@ describe('DataStorageOperator external methods', () => {
       beta2: 1006,
       gamma1: 20,
       gamma2: 22,
-      volumeBeta: 1007,
-      volumeGamma: 26,
       baseFee: 150
     }
     it('fails if caller is not factory', async () => {
@@ -733,8 +599,6 @@ describe('DataStorageOperator external methods', () => {
       expect(newConfig.beta2).to.eq(configuration.beta2);
       expect(newConfig.gamma1).to.eq(configuration.gamma1);
       expect(newConfig.gamma2).to.eq(configuration.gamma2);
-      expect(newConfig.volumeBeta).to.eq(configuration.volumeBeta);
-      expect(newConfig.volumeGamma).to.eq(configuration.volumeGamma);
       expect(newConfig.baseFee).to.eq(configuration.baseFee);
     })
 
@@ -768,12 +632,6 @@ describe('DataStorageOperator external methods', () => {
       wrongConfig2.gamma2 = 0;
       await expect(dataStorageOperator.changeFeeConfiguration(
         wrongConfig2
-      )).to.be.revertedWith('Gammas must be > 0');
-
-      let wrongConfig3 = {...configuration};
-      wrongConfig3.volumeGamma = 0;
-      await expect(dataStorageOperator.changeFeeConfiguration(
-        wrongConfig3
       )).to.be.revertedWith('Gammas must be > 0');
     })
   })

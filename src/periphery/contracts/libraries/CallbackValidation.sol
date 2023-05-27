@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+pragma solidity ^0.8.0;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import './PoolAddress.sol';
@@ -12,7 +12,7 @@ library CallbackValidation {
     /// @param poolDeployer The contract address of the Algebra pool deployer
     /// @param tokenA The contract address of either token0 or token1
     /// @param tokenB The contract address of the other token
-    /// @return pool The V3 pool contract address
+    /// @return pool The Algebra pool contract address
     function verifyCallback(
         address poolDeployer,
         address tokenA,
@@ -23,8 +23,8 @@ library CallbackValidation {
 
     /// @notice Returns the address of a valid Algebra Pool
     /// @param poolDeployer The contract address of the Algebra pool deployer
-    /// @param poolKey The identifying key of the V3 pool
-    /// @return pool The V3 pool contract address
+    /// @param poolKey The identifying key of the ALgebra pool
+    /// @return pool The Algebra pool contract address
     function verifyCallback(address poolDeployer, PoolAddress.PoolKey memory poolKey)
         internal
         view

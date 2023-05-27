@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
-
+import * as fs from 'fs';
 import { expect } from './shared/expect'
 import snapshotGasCost from './shared/snapshotGasCost'
 import { encodePriceSqrt, expandTo18Decimals } from './shared/utilities'

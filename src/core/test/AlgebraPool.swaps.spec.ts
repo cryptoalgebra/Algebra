@@ -430,7 +430,7 @@ const TEST_POOLS: PoolTestCase[] = [
       {
         bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         topTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        liquidity: BigNumber.from("11505743598341114571880798222544994"),
+        liquidity: BigNumber.from("40564824043007195767232224305152"),
       },
     ],
   },
@@ -474,9 +474,12 @@ describe('AlgebraPool swap tests', () => {
     describe(poolCase.description, () => {
       const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
         const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
-        const pool = await createPool(poolCase.feeAmount)
+        const pool = await createPool()
         const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
         await pool.initialize(poolCase.startingPrice)
+
+        if (poolCase.tickSpacing != 60)
+          await pool.setTickSpacing(poolCase.tickSpacing, poolCase.tickSpacing)
         // mint all positions
         if (isDefl) {
           if (zeroToOne)

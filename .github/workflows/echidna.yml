@@ -22,7 +22,7 @@ jobs:
           - PriceMovementMathEchidnaTest
           - TickMathEchidnaTest
           - TickOverflowSafetyEchidnaTest
-          - TickTableEchidnaTest
+          - TickTreeEchidnaTest
           - TokenDeltaMathEchidnaTest
           - UnsafeMathEchidnaTest
 
@@ -48,7 +48,7 @@ jobs:
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@v2
         with:
-          solc-version: 0.7.6
+          solc-version: 0.8.17
           files: ./src/core/contracts/test/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile

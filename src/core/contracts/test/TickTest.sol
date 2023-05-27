@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 pragma abicoder v2;
 
-import '../libraries/TickManager.sol';
+import '../libraries/TickManagement.sol';
 
 contract TickTest {
-  using TickManager for mapping(int24 => TickManager.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
-  mapping(int24 => TickManager.Tick) public ticks;
+  mapping(int24 => TickManagement.Tick) public ticks;
 
-  function setTick(int24 tick, TickManager.Tick memory data) external {
+  function setTick(int24 tick, TickManagement.Tick memory data) external {
     ticks[tick] = data;
   }
 
@@ -30,22 +30,10 @@ contract TickTest {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
     uint160 secondsPerLiquidityCumulative,
-    int56 tickCumulative,
     uint32 time,
     bool upper
   ) external returns (bool flipped) {
-    return
-      ticks.update(
-        tick,
-        currentTick,
-        liquidityDelta,
-        totalFeeGrowth0Token,
-        totalFeeGrowth1Token,
-        secondsPerLiquidityCumulative,
-        tickCumulative,
-        time,
-        upper
-      );
+    return ticks.update(tick, currentTick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, time, upper);
   }
 
   function clear(int24 tick) external {
@@ -57,9 +45,8 @@ contract TickTest {
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
     uint160 secondsPerLiquidityCumulative,
-    int56 tickCumulative,
-    uint32 time
+    uint32 timestamp
   ) external returns (int128 liquidityDelta) {
-    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, tickCumulative, time);
+    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, timestamp);
   }
 }

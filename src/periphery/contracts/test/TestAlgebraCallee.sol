@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';

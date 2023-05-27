@@ -1,30 +1,27 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
+pragma abicoder v1;
 
+import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
-  AdaptiveFee.Configuration public feeConfig =
-    AdaptiveFee.Configuration(
-      3000 - Constants.BASE_FEE, // alpha1
-      15000 - 3000, // alpha2
-      360, // beta1
-      60000, // beta2
-      59, // gamma1
-      8500, // gamma2
-      0, // volumeBeta
-      10, // volumeGamma
-      Constants.BASE_FEE // baseFee
-    );
+  AlgebraFeeConfiguration public feeConfig;
 
-  function getFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256 fee) {
-    return AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
+  constructor() {
+    feeConfig = AdaptiveFee.initialFeeConfiguration();
   }
 
-  function getGasCostOfGetFee(uint88 volatility, uint256 volumePerLiquidity) external view returns (uint256) {
-    uint256 gasBefore = gasleft();
-    AdaptiveFee.getFee(volatility, volumePerLiquidity, feeConfig);
-    return gasBefore - gasleft();
+  function getFee(uint88 volatility) external view returns (uint256 fee) {
+    return AdaptiveFee.getFee(volatility, feeConfig);
+  }
+
+  function getGasCostOfGetFee(uint88 volatility) external view returns (uint256) {
+    unchecked {
+      uint256 gasBefore = gasleft();
+      AdaptiveFee.getFee(volatility, feeConfig);
+      return gasBefore - gasleft();
+    }
   }
 }

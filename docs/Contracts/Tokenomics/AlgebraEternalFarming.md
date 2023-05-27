@@ -2,24 +2,90 @@
 
 # AlgebraEternalFarming
 
+
 Algebra eternal (v2-like) farming
 
 
 
 
+## Modifiers
+### onlyIncentiveMaker
+
+
+`modifier onlyIncentiveMaker()`  internal
+
+
+
+
+
+
+
+### onlyAdministrator
+
+
+`modifier onlyAdministrator()`  internal
+
+
+
+
+
+
+
+### onlyFarmingCenter
+
+
+`modifier onlyFarmingCenter()`  internal
+
+
+
+
+
+
+
+
+
 ## Variables
+### contract INonfungiblePositionManager nonfungiblePositionManager immutable
+
+The nonfungible position manager with which this farming contract is compatible
+
+### contract IFarmingCenter farmingCenter 
+
+
+
+### mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Incentive) incentives 
+
+Represents a farming incentive
+
+*Developer note: bytes32 refers to the return value of IncentiveId.compute*
 ### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
 
 Returns information about a farmd liquidity NFT
 
 *Developer note: farms[tokenId][incentiveHash] &#x3D;&gt; Farm*
+### uint256 numOfIncentives 
+
+
+
+### bytes32 INCENTIVE_MAKER_ROLE constant
+
+
+
+### bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
+
+
+
+### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
+
+Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
+
+*Developer note: rewards[owner][rewardToken] &#x3D;&gt; uint256*
 
 ## Functions
 ### constructor
 
-AlgebraFarming
 
-`constructor(contract IAlgebraPoolDeployer,contract INonfungiblePositionManager)`  public
+`constructor(contract IAlgebraPoolDeployer _deployer, contract INonfungiblePositionManager _nonfungiblePositionManager) public`  public
 
 
 
@@ -31,11 +97,31 @@ AlgebraFarming
 | _nonfungiblePositionManager | contract INonfungiblePositionManager | the NFT position manager contract address |
 
 
+### isIncentiveActiveInPool
+
+
+`function isIncentiveActiveInPool(bytes32 incentiveId, contract IAlgebraPool pool) external view returns (bool res)` view external
+
+Check if incentive is active in Algebra pool
+*Developer note: Does not check that the pool is indeed an Algebra pool*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| incentiveId | bytes32 | The ID of the incentive computed from its parameters |
+| pool | contract IAlgebraPool | Corresponding Algebra pool |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| res | bool | True if incentive is active in Algebra pool |
+
 ### createEternalFarming
 
-onlyIncentiveMaker
 
-`createEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,uint128,uint128,address,struct IAlgebraFarming.Tiers)`  external
+`function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)`  external
 
 Creates a new liquidity mining incentive program
 
@@ -43,54 +129,63 @@ Creates a new liquidity mining incentive program
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | Details of the incentive to create |
-| reward | uint256 | The amount of reward tokens to be distributed |
-| bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
-| rewardRate | uint128 | The rate of reward distribution per second |
-| bonusRewardRate | uint128 | The rate of bonus reward distribution per second |
-| multiplierToken | address | The address of token which can be locked to get liquidity multiplier |
-| tiers | struct IAlgebraFarming.Tiers | The amounts of locked token for liquidity multipliers |
+| key | struct IncentiveKey | Details of the incentive to create |
+| params | struct IAlgebraEternalFarming.IncentiveParams | Params of incentive |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| virtualPool | address |  |
+| virtualPool | address | The virtual pool |
 
-### detachIncentive
-
-onlyIncentiveMaker
-
-`detachIncentive(struct IIncentiveKey.IncentiveKey)`  external
-
-Detach incentive from the pool
+### deactivateIncentive
 
 
+`function deactivateIncentive(struct IncentiveKey key) external`  external
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
-
-
-### attachIncentive
-
-onlyIncentiveMaker
-
-`attachIncentive(struct IIncentiveKey.IncentiveKey)`  external
-
-Attach incentive to the pool
+Detach incentive from the pool and deactivate it
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
+| key | struct IncentiveKey | The key of the incentive |
+
+
+### decreaseRewardsAmount
+
+
+`function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IncentiveKey |  |
+| rewardAmount | uint128 |  |
+| bonusRewardAmount | uint128 |  |
+
+
+### setFarmingCenterAddress
+
+
+`function setFarmingCenterAddress(address _farmingCenter) external`  external
+
+Updates farming center address
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _farmingCenter | address | The new farming center contract address |
 
 
 ### addRewards
 
 
-`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external`  external
 
 
 
@@ -98,16 +193,15 @@ Attach incentive to the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| rewardAmount | uint256 |  |
-| bonusRewardAmount | uint256 |  |
+| key | struct IncentiveKey |  |
+| rewardAmount | uint128 |  |
+| bonusRewardAmount | uint128 |  |
 
 
 ### setRates
 
-onlyIncentiveMaker
 
-`setRates(struct IIncentiveKey.IncentiveKey,uint128,uint128)`  external
+`function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external`  external
 
 
 
@@ -115,16 +209,15 @@ onlyIncentiveMaker
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
+| key | struct IncentiveKey |  |
 | rewardRate | uint128 |  |
 | bonusRewardRate | uint128 |  |
 
 
 ### enterFarming
 
-onlyFarmingCenter
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function enterFarming(struct IncentiveKey key, uint256 tokenId) external`  external
 
 enter farming for Algebra LP token
 
@@ -132,16 +225,14 @@ enter farming for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to enterFarming the NFT |
+| key | struct IncentiveKey | The key of the incentive for which to enterFarming the NFT |
 | tokenId | uint256 | The ID of the token to exitFarming |
-| tokensLocked | uint256 | The amount of tokens locked for boost |
 
 
 ### exitFarming
 
-onlyFarmingCenter
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+`function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external`  external
 
 exitFarmings for Algebra LP token
 
@@ -149,15 +240,59 @@ exitFarmings for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive for which to exitFarming the NFT |
+| key | struct IncentiveKey | The key of the incentive for which to exitFarming the NFT |
 | tokenId | uint256 | The ID of the token to exitFarming |
 | _owner | address | Owner of the token |
 
 
+### claimReward
+
+
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
+
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
+| to | address | The address where claimed rewards will be sent to |
+| amountRequested | uint256 | The amount of reward tokens to claim. Claims entire reward amount if set to 0. |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| reward | uint256 | The amount of reward tokens claimed |
+
+### claimRewardFrom
+
+
+`function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
+
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+only for FarmingCenter
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
+| from | address | The address of position owner |
+| to | address | The address where claimed rewards will be sent to |
+| amountRequested | uint256 | The amount of reward tokens to claim. Claims entire reward amount if set to 0. |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| reward | uint256 | The amount of reward tokens claimed |
+
 ### getRewardInfo
 
 
-`getRewardInfo(struct IIncentiveKey.IncentiveKey,uint256)` view external
+`function getRewardInfo(struct IncentiveKey key, uint256 tokenId) external view returns (uint256 reward, uint256 bonusReward)` view external
 
 reward amounts can be outdated, actual amounts could be obtained via static call of &#x60;collectRewards&#x60; in FarmingCenter
 
@@ -165,21 +300,20 @@ reward amounts can be outdated, actual amounts could be obtained via static call
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
+| key | struct IncentiveKey | The key of the incentive |
 | tokenId | uint256 | The ID of the token |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| reward | uint256 | The reward accrued to the NFT for the given incentive thus far |
+| bonusReward | uint256 | The bonus reward accrued to the NFT for the given incentive thus far |
 
 ### collectRewards
 
-onlyFarmingCenter
 
-`collectRewards(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+`function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)`  external
 
 reward amounts should be updated before calling this method
 
@@ -187,7 +321,7 @@ reward amounts should be updated before calling this method
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
+| key | struct IncentiveKey |  |
 | tokenId | uint256 |  |
 | _owner | address |  |
 
@@ -199,7 +333,5 @@ reward amounts should be updated before calling this method
 | bonusReward | uint256 |  |
 
 
-
----
 
 

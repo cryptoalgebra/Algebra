@@ -11,12 +11,24 @@ Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
   <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml/badge.svg"></a>
 </p>
 
-
+- [Docs](#Docs)
+- [Versions](#Versions)
 - [Build](#Build)
 - [Tests](#Tests)
 - [Coverage](#Tests-coverage)
 - [Deploy](#Deploy)
 
+## Docs
+
+The current short documentation page is located at: <a href="https://docs.algebra.finance/">https://docs.algebra.finance/</a>
+
+We are currently in the process of creating a more complete and comprehensive version of the documentation. It will be published when ready.
+
+## Versions
+
+Please note that different DEX-partners of our protocol may use different versions of the protocol. 
+
+A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/en/docs/contracts/partners/introduction)
 
 ## Build
 

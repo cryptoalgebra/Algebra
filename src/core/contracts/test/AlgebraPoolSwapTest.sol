@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+pragma solidity =0.8.17;
 
 import '../interfaces/IERC20Minimal.sol';
 
@@ -15,24 +15,13 @@ contract AlgebraPoolSwapTest is IAlgebraSwapCallback {
     bool zeroToOne,
     int256 amountSpecified,
     uint160 limitSqrtPrice
-  )
-    external
-    returns (
-      int256 amount0Delta,
-      int256 amount1Delta,
-      uint160 nextSqrtRatio
-    )
-  {
+  ) external returns (int256 amount0Delta, int256 amount1Delta, uint160 nextSqrtRatio) {
     (amount0Delta, amount1Delta) = IAlgebraPool(pool).swap(address(0), zeroToOne, amountSpecified, limitSqrtPrice, abi.encode(msg.sender));
 
     (nextSqrtRatio, , , , , , ) = IAlgebraPool(pool).globalState();
   }
 
-  function algebraSwapCallback(
-    int256 amount0Delta,
-    int256 amount1Delta,
-    bytes calldata data
-  ) external override {
+  function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) external override {
     address sender = abi.decode(data, (address));
 
     if (amount0Delta > 0) {

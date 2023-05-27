@@ -72,7 +72,7 @@ describe('AlgebraPool arbitrage tests', () => {
           const arbTestFixture = async () => {
             const fix = await poolFixture()
 
-            const pool = await fix.createPool(feeAmount)
+            const pool = await fix.createPool()
 
             await fix.token0.transfer(arbitrageur.address, BigNumber.from(2).pow(254))
             await fix.token1.transfer(arbitrageur.address, BigNumber.from(2).pow(254))
@@ -100,7 +100,9 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.approve(tester.address, MaxUint256)
 
             await pool.initialize(startingPrice)
-            if (communityFee != 0) await pool.setCommunityFee(communityFee, communityFee)
+            if (tickSpacing != 60)
+              await pool.setTickSpacing(tickSpacing, tickSpacing)
+            if (communityFee != 0) await pool.setCommunityFee(communityFee)
             await mint(wallet.address, minTick, maxTick, passiveLiquidity)
 
             expect((await pool.globalState()).tick).to.eq(startingTick)
@@ -234,7 +236,7 @@ describe('AlgebraPool arbitrage tests', () => {
 
                 // deposit max liquidity at the tick
                 const mintReceipt = await (
-                  await mint(wallet.address, bottomTick, topTick, BigNumber.from("11505743598341114571880798222544994"))
+                  await mint(wallet.address, bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"))
                 ).wait()
                 // sub the mint costs
                 const { amount0: amount0Mint, amount1: amount1Mint } = pool.interface.decodeEventLog(
@@ -254,9 +256,9 @@ describe('AlgebraPool arbitrage tests', () => {
                 const { amount0: amount0Burn, amount1: amount1Burn } = await pool.callStatic.burn(
                   bottomTick,
                   topTick,
-                  BigNumber.from("11505743598341114571880798222544994")
+                  BigNumber.from("40564824043007195767232224305152")
                 )
-                await pool.burn(bottomTick, topTick, BigNumber.from("11505743598341114571880798222544994"))
+                await pool.burn(bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"))
                 arbBalance0 = arbBalance0.add(amount0Burn)
                 arbBalance1 = arbBalance1.add(amount1Burn)
 

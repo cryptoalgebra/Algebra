@@ -17,14 +17,13 @@ import {
   defaultTicksArray,
   expect,
 } from '../shared'
-import {  provider } from '../shared/provider'
+import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
 
-
 describe('unit/Multicall', () => {
-  let actors: ActorFixture;
+  let actors: ActorFixture
   let lpUser0: Wallet
   let incentiveCreator: Wallet
   let multicaller: Wallet
@@ -86,17 +85,8 @@ describe('unit/Multicall', () => {
         ...makeTimestamps(currentTime + 100),
       },
       {
-        tokenAmountForTier1: 0,
-        tokenAmountForTier2: 0,
-        tokenAmountForTier3: 0,
-        tier1Multiplier: 10000,
-        tier2Multiplier: 10000,
-        tier3Multiplier: 10000,
-      },
-      {
         reward: totalReward,
         bonusReward: bonusReward,
-        multiplierToken: context.rewardToken.address,
         enterStartTime: 0,
       }
     ])

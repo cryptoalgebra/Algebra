@@ -2,7 +2,7 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-/// @title Creates and initializes V3 Pools
+/// @title Creates and initializes Algebra Pools
 /// @notice Provides a method for creating and initializing a pool, if necessary, for bundling with other methods that
 /// require the pool to exist.
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
