@@ -24,11 +24,11 @@ library PoolTicksCounter {
 
         {
             // Get the key and offset in the tick bitmap of the active tick before and after the swap.
-            int16 wordPos = int16((tickBefore) >> 8);
-            uint8 bitPos = uint8(int8((tickBefore) % 256));
+            int16 wordPos = int16(tickBefore >> 8);
+            uint8 bitPos = uint8(int8(tickBefore % 256));
 
-            int16 wordPosAfter = int16((tickAfter) >> 8);
-            uint8 bitPosAfter = uint8(int8((tickAfter) % 256));
+            int16 wordPosAfter = int16(tickAfter >> 8);
+            uint8 bitPosAfter = uint8(int8(tickAfter % 256));
 
             // In the case where tickAfter is initialized, we only want to count it if we are swapping downwards.
             // If the initializable tick after the swap is initialized, our original tickAfter is a
