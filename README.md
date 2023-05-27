@@ -11,12 +11,17 @@ Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
   <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml/badge.svg"></a>
 </p>
 
-
+- [Docs](#Docs)
 - [Build](#Build)
 - [Tests](#Tests)
 - [Coverage](#Tests-coverage)
 - [Deploy](#Deploy)
 
+## Docs
+
+The current short documentation page is located at: <a href="https://docs.algebra.finance/">https://docs.algebra.finance/</a>
+
+We are currently in the process of creating a more complete and comprehensive version of the documentation. It will be published when ready.
 
 ## Build
 
