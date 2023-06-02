@@ -56,7 +56,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
       int24 _tickSpacing = tickSpacing;
-      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0 || _tickSpacing == type(int24).max) revert tickIsNotSpaced();
+      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
     }
 
     (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
