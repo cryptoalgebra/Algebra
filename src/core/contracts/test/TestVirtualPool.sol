@@ -15,7 +15,7 @@ contract TestVirtualPool is IAlgebraVirtualPool {
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     for (uint i; i < 100; i++) {
       (, int24 poolTick, , , , , ) = IAlgebraPool(msg.sender).globalState();
-      data[i].tick = poolTick;
+      data.push(Data(poolTick));
     }
 
     return true;

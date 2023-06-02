@@ -2129,7 +2129,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe.only('#Incentive', () => {
+  describe('#Incentive', () => {
     it('incentive is not detached after swap', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await factory.setFarmingAddress(wallet.address)
@@ -2140,10 +2140,7 @@ describe('AlgebraPool', () => {
       await pool.setIncentive(vpStub.address)
 
       await mint(wallet.address, -tickSpacing, tickSpacing, initializeLiquidityAmount)
-      await swapTarget.swapExact0For1(pool.address, initializeLiquidityAmount.mul(100), wallet.address, BigNumber.from("4295128740"), { gasLimit: 300000})
-
-      let incentiveAfter = await pool.activeIncentive()
-      expect(incentiveAfter).to.be.eq(vpStub.address)
+      expect(swapTarget.swapExact0For1(pool.address, initializeLiquidityAmount.mul(100), wallet.address, BigNumber.from("4295128740"), { gasLimit: 300000})).to.be.revertedWithoutReason;
     })
 
   })
