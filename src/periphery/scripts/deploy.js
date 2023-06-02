@@ -72,13 +72,6 @@ async function main() {
   deploysData.nonfungiblePositionManager = NonfungiblePositionManager.address;
   console.log('NonfungiblePositionManager deployed to:', NonfungiblePositionManager.address)
 
-  const LimitOrderManagerFactory = await hre.ethers.getContractFactory("LimitOrderManager");
-  const LimitOrderManager = await LimitOrderManagerFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
-
-  await LimitOrderManager.deployed()
-  console.log('LimitOrderManager deployed to:', LimitOrderManager.address)
-
-
   // // arg1 factory address
   // // arg2 wnative address
   // // arg3 nonfungiblePositionManager address

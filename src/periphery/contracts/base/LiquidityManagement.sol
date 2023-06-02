@@ -84,25 +84,4 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
     }
-
-    /// @notice Create limit order in pool
-    function createLimitOrder(
-        IAlgebraPool pool,
-        address token0,
-        address token1,
-        int24 tick,
-        uint128 amount
-    ) internal returns (bool depositedToken) {
-        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
-
-        (, uint256 amount1, ) = pool.mint(
-            msg.sender,
-            address(this),
-            tick,
-            tick,
-            amount,
-            abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))
-        );
-        depositedToken = amount1 > 0;
-    }
 }
