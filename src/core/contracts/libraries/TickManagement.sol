@@ -22,12 +22,11 @@ library TickManagement {
     int24 nextTick;
     uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
     uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
-    bool hasLimitOrders;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
     if (topTick > TickMath.MAX_TICK) revert IAlgebraPoolErrors.topTickAboveMAX();
-    if (topTick < bottomTick) revert IAlgebraPoolErrors.topTickLowerThanBottomTick();
+    if (topTick <= bottomTick) revert IAlgebraPoolErrors.topTickLowerOrEqBottomTick();
     if (bottomTick < TickMath.MIN_TICK) revert IAlgebraPoolErrors.bottomTickLowerThanMIN();
   }
 
@@ -115,8 +114,6 @@ library TickManagement {
         data.outerSecondsSpent = time;
       }
     }
-
-    if (flipped) flipped = !data.hasLimitOrders;
   }
 
   /// @notice Transitions to next tick as needed by price movement

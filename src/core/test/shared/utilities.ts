@@ -117,7 +117,6 @@ export interface PoolFunctions {
   swap1ForExact0: SwapFunction
   flash: FlashFunction
   mint: MintFunction
-  addLimitOrder: AddLimitFunction
 }
 export function createPoolFunctions({
   swapTarget,
@@ -209,14 +208,6 @@ export function createPoolFunctions({
     return swap(token1, [0, amount], to, limitSqrtPrice)
   }
 
-  const addLimitOrder: AddLimitFunction = async (recipient, tick, amount) => {
-    const currentTick = (await pool.globalState()).tick;
-
-    await (currentTick > tick ? token1 : token0).approve(swapTarget.address, constants.MaxUint256);
-
-    return swapTarget.addLimitOrder(pool.address, recipient, tick, amount);
-  }
-
   const mint: MintFunction = async (recipient, bottomTick, topTick, liquidity) => {
     await token0.approve(swapTarget.address, constants.MaxUint256)
     await token1.approve(swapTarget.address, constants.MaxUint256)
@@ -252,8 +243,7 @@ export function createPoolFunctions({
     swapExact1For0SupportingFee,
     swap1ForExact0,
     mint,
-    flash,
-    addLimitOrder
+    flash
   }
 }
 

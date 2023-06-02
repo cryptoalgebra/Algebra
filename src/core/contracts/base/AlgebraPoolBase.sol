@@ -8,7 +8,6 @@ import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IDataStorageOperator.sol';
 import '../interfaces/IERC20Minimal.sol';
 import '../libraries/TickManagement.sol';
-import '../libraries/LimitOrderManagement.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
 
@@ -50,8 +49,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
   /// @inheritdoc IAlgebraPoolState
-  int24 public override tickSpacingLimitOrders;
-  /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
@@ -68,8 +65,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
-  /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => LimitOrderManagement.LimitOrder) public override limitOrders;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
@@ -94,7 +89,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
     tickSpacing = Constants.INIT_TICK_SPACING;
-    tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
   }
 
   function _balanceToken0() internal view returns (uint256) {

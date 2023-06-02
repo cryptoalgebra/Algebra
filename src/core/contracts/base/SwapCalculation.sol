@@ -3,7 +3,6 @@ pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../libraries/PriceMovementMath.sol';
-import '../libraries/LimitOrderManagement.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
@@ -12,7 +11,6 @@ import './AlgebraPoolBase.sol';
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
-  using LimitOrderManagement for mapping(int24 => LimitOrderManagement.LimitOrder);
   using SafeCast for uint256;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
@@ -40,7 +38,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
-    bool inLimitOrder; // If a limit order is currently being executed
   }
 
   function _calculateSwap(
@@ -95,38 +92,16 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         step.initialized = true;
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
-        if (step.stepSqrtPrice == step.nextTickPrice && ticks[step.nextTick].hasLimitOrders) {
-          step.inLimitOrder = true;
-          bool isLimitOrderExecuted = false;
-          // calculate the amounts from LO
-          (isLimitOrderExecuted, step.output, step.input, step.feeAmount) = limitOrders.executeLimitOrders(
-            step.nextTick,
-            currentPrice,
-            zeroToOne,
-            amountRequired,
-            cache.fee / 2
-          );
-          if (isLimitOrderExecuted) {
-            if (ticks[step.nextTick].liquidityTotal == 0) {
-              cache.prevInitializedTick = _insertOrRemoveTick(step.nextTick, currentTick, cache.prevInitializedTick, true);
-              step.initialized = false;
-            } else {
-              ticks[step.nextTick].hasLimitOrders = false;
-            }
-            step.inLimitOrder = false;
-          }
-        } else {
-          (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
-            zeroToOne,
-            currentPrice,
-            (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
-              ? limitSqrtPrice
-              : step.nextTickPrice,
-            currentLiquidity,
-            amountRequired,
-            cache.fee
-          );
-        }
+        (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
+          zeroToOne,
+          currentPrice,
+          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
+            ? limitSqrtPrice
+            : step.nextTickPrice,
+          currentLiquidity,
+          amountRequired,
+          cache.fee
+        );
 
         if (cache.exactInput) {
           amountRequired -= (step.input + step.feeAmount).toInt256(); // decrease remaining input amount
@@ -144,15 +119,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
-        if (currentPrice == step.nextTickPrice && !step.inLimitOrder) {
+        if (currentPrice == step.nextTickPrice) {
           // if the reached tick is initialized then we need to cross it
           if (step.initialized) {
-            // we have opened LOs
-            if (ticks[step.nextTick].hasLimitOrders) {
-              currentTick = zeroToOne ? step.nextTick : step.nextTick - 1;
-              continue;
-            }
-
             if (!cache.crossedAnyTick) {
               cache.crossedAnyTick = true;
               cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;

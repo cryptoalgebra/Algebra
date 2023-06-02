@@ -40,12 +40,6 @@ interface IAlgebraPoolState {
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
 
-  /// @notice The current tick spacing for limit orders
-  /// @dev Ticks can only be used for limit orders at multiples of this value
-  /// This value is an int24 to avoid casting even though it is always positive.
-  /// @return The current tick spacing for limit orders
-  function tickSpacingLimitOrders() external view returns (int24);
-
   /// @notice The timestamp of the last sending of tokens to community vault
   function communityFeeLastTimestamp() external view returns (uint32);
 
@@ -71,7 +65,6 @@ interface IAlgebraPoolState {
   /// @return nextTick The next tick in tick list
   /// @return outerSecondsPerLiquidity The seconds spent per liquidity on the other side of the tick from the current tick
   /// @return outerSecondsSpent The seconds spent on the other side of the tick from the current tick
-  /// @return hasLimitOrders Whether there are limit orders on this tick or not
   /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
   /// a specific position.
   function ticks(
@@ -87,23 +80,8 @@ interface IAlgebraPoolState {
       int24 prevTick,
       int24 nextTick,
       uint160 outerSecondsPerLiquidity,
-      uint32 outerSecondsSpent,
-      bool hasLimitOrders
+      uint32 outerSecondsSpent
     );
-
-  /// @notice Returns the summary information about a limit orders at tick
-  /// @param tick The tick to look up
-  /// @return amountToSell The amount of tokens to sell. Has only relative meaning
-  /// @return soldAmount The amount of tokens already sold. Has only relative meaning
-  /// @return boughtAmount0Cumulative The accumulator of bought tokens0 per amountToSell. Has only relative meaning
-  /// @return boughtAmount1Cumulative The accumulator of bought tokens1 per amountToSell. Has only relative meaning
-  /// @return initialized Will be true if a limit order was created at least once on this tick
-  function limitOrders(
-    int24 tick
-  )
-    external
-    view
-    returns (uint128 amountToSell, uint128 soldAmount, uint256 boughtAmount0Cumulative, uint256 boughtAmount1Cumulative, bool initialized);
 
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
   function tickTable(int16 wordPosition) external view returns (uint256);

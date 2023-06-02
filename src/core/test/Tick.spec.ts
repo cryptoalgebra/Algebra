@@ -40,7 +40,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -57,7 +56,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -74,7 +72,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -85,7 +82,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -102,7 +98,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -113,7 +108,6 @@ describe('Tick', () => {
         liquidityDelta: 0,
         outerSecondsPerLiquidity: 0,
         outerSecondsSpent: 0,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -168,13 +162,11 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        hasLimitOrders,
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
       expect(outerSecondsPerLiquidity).to.eq(3)
       expect(outerSecondsSpent).to.eq(5)
-      expect(hasLimitOrders).to.eq(false)
     })
     it('does not set any growth fields if tick is already initialized', async () => {
       await tickTest.update(1, 1, 1, 1, 2, 3, 4, false)
@@ -184,13 +176,11 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        hasLimitOrders,
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
       expect(outerSecondsPerLiquidity).to.eq(3)
       expect(outerSecondsSpent).to.eq(4)
-      expect(hasLimitOrders).to.eq(false)
     })
     it('does not set any growth fields for ticks gt current tick', async () => {
       await tickTest.update(2, 1, 1, 1, 2, 3, 4, false)
@@ -199,13 +189,11 @@ describe('Tick', () => {
         outerFeeGrowth1Token,
         outerSecondsSpent,
         outerSecondsPerLiquidity,
-        hasLimitOrders,
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
       expect(outerSecondsPerLiquidity).to.eq(0)
       expect(outerSecondsSpent).to.eq(0)
-      expect(hasLimitOrders).to.eq(false)
     })
   })
 
@@ -219,7 +207,6 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -231,7 +218,6 @@ describe('Tick', () => {
         outerSecondsPerLiquidity,
         liquidityTotal,
         liquidityDelta,
-        hasLimitOrders,
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
@@ -239,7 +225,6 @@ describe('Tick', () => {
       expect(outerSecondsPerLiquidity).to.eq(0)
       expect(liquidityTotal).to.eq(0)
       expect(liquidityDelta).to.eq(0)
-      expect(hasLimitOrders).to.eq(false)
     })
   })
 
@@ -252,7 +237,6 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })
@@ -276,7 +260,6 @@ describe('Tick', () => {
         liquidityDelta: 4,
         outerSecondsPerLiquidity: 5,
         outerSecondsSpent: 7,
-        hasLimitOrders: false,
         prevTick: 0,
         nextTick: 0
       })

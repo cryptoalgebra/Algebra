@@ -8,7 +8,6 @@ import './base/AlgebraPoolBase.sol';
 import './base/DerivedState.sol';
 import './base/ReentrancyGuard.sol';
 import './base/Positions.sol';
-import './base/LimitOrderPositions.sol';
 import './base/SwapCalculation.sol';
 import './base/ReservesManager.sol';
 import './base/TickStructure.sol';
@@ -27,16 +26,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
 /// @dev Version: Algebra V2.1
-contract AlgebraPool is
-  AlgebraPoolBase,
-  DerivedState,
-  ReentrancyGuard,
-  Positions,
-  LimitOrderPositions,
-  SwapCalculation,
-  ReservesManager,
-  TickStructure
-{
+contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Positions, SwapCalculation, ReservesManager, TickStructure {
   using SafeCast for uint256;
 
   /// @inheritdoc IAlgebraPoolActions
@@ -65,14 +55,11 @@ contract AlgebraPool is
   ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
-      int24 _tickSpacing = bottomTick == topTick ? tickSpacingLimitOrders : tickSpacing;
+      int24 _tickSpacing = tickSpacing;
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0 || _tickSpacing == type(int24).max) revert tickIsNotSpaced();
     }
-    if (bottomTick == topTick) {
-      (amount0, amount1) = bottomTick > globalState.tick ? (uint256(liquidityDesired), uint256(0)) : (uint256(0), uint256(liquidityDesired));
-    } else {
-      (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
-    }
+
+    (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
@@ -83,24 +70,18 @@ contract AlgebraPool is
     // scope to prevent "stack too deep"
     {
       Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
-      if (bottomTick == topTick) {
-        liquidityActual = receivedAmount0 > 0 ? uint128(receivedAmount0) : uint128(receivedAmount1);
-        if (liquidityActual == 0) revert insufficientInputAmount();
-        _updateLimitOrderPosition(_position, bottomTick, int128(liquidityActual));
+      if (receivedAmount0 < amount0) {
+        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
       } else {
-        if (receivedAmount0 < amount0) {
-          liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
-        } else {
-          liquidityActual = liquidityDesired;
-        }
-        if (receivedAmount1 < amount1) {
-          uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
-          if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-        }
-        if (liquidityActual == 0) revert zeroLiquidityActual();
-
-        (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int128(liquidityActual));
+        liquidityActual = liquidityDesired;
       }
+      if (receivedAmount1 < amount1) {
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
+        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+      }
+      if (liquidityActual == 0) revert zeroLiquidityActual();
+
+      (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int128(liquidityActual));
     }
 
     unchecked {
@@ -130,9 +111,7 @@ contract AlgebraPool is
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
     int128 liquidityDelta = -int128(amount);
-    (amount0, amount1) = (bottomTick == topTick)
-      ? _updateLimitOrderPosition(position, bottomTick, liquidityDelta)
-      : _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
+    (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
     if (amount0 | amount1 != 0) {
       (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
@@ -311,18 +290,11 @@ contract AlgebraPool is
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing, int24 newTickspacingLimitOrders) external override nonReentrant {
+  function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
     _checkIfAdministrator();
-    if (
-      newTickSpacing <= 0 ||
-      newTickSpacing > Constants.MAX_TICK_SPACING ||
-      (tickSpacing == newTickSpacing && tickSpacingLimitOrders == newTickspacingLimitOrders)
-    ) revert invalidNewTickSpacing();
-    // newTickspacingLimitOrders isn't limited, so it is possible to forbid new limit orders completely
-    if (newTickspacingLimitOrders <= 0) revert invalidNewTickSpacing();
+    if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
-    tickSpacingLimitOrders = newTickspacingLimitOrders;
-    emit TickSpacing(newTickSpacing, newTickspacingLimitOrders);
+    emit TickSpacing(newTickSpacing);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

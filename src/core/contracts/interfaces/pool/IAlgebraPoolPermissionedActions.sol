@@ -12,8 +12,7 @@ interface IAlgebraPoolPermissionedActions {
 
   /// @notice Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newTickSpacing The new tick spacing value
-  /// @param newTickSpacingLimitOrders The new tick spacing value for limit orders
-  function setTickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders) external;
+  function setTickSpacing(int24 newTickSpacing) external;
 
   /// @notice Sets an active incentive. Only farming
   /// @param newIncentiveAddress The address associated with the incentive
