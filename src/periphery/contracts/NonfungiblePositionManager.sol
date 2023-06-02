@@ -284,6 +284,14 @@ contract NonfungiblePositionManager is
             })
         );
 
+        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
+            try IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, int256(actualLiquidity)) {
+                // do nothing
+            } catch {
+                emit FarmingFailed(params.tokenId);
+            }
+        }
+
         // this is now updated to the current transaction
         uint128 positionLiquidity = position.liquidity;
         (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
@@ -299,14 +307,6 @@ contract NonfungiblePositionManager is
             position.tokensOwed0 += tokensOwed0;
             position.tokensOwed1 += tokensOwed1;
             position.liquidity = positionLiquidity + uint128(actualLiquidity);
-        }
-
-        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, int256(actualLiquidity)) {
-                // do nothing
-            } catch {
-                emit FarmingFailed(params.tokenId);
-            }
         }
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
@@ -334,6 +334,16 @@ contract NonfungiblePositionManager is
         );
         require(positionLiquidity >= params.liquidity);
 
+        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
+            try
+                IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, -int256(uint256(params.liquidity)))
+            {
+                // do nothing
+            } catch {
+                emit FarmingFailed(params.tokenId);
+            }
+        }
+
         IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
 
@@ -357,16 +367,6 @@ contract NonfungiblePositionManager is
 
                 // subtraction is safe because we checked positionLiquidity is gte params.liquidity
                 position.liquidity = positionLiquidity - params.liquidity;
-            }
-        }
-
-        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try
-                IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, -int256(uint256(params.liquidity)))
-            {
-                // do nothing
-            } catch {
-                emit FarmingFailed(params.tokenId);
             }
         }
 
