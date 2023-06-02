@@ -33,6 +33,7 @@ import {
 import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
 import { TickMathTest } from '../typechain/test/TickMathTest'
+import { TestVirtualPool } from '../typechain/test/TestVirtualPool'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
 import { MockTimeDataStorageOperator } from '../typechain/test/MockTimeDataStorageOperator';
 
@@ -2126,6 +2127,25 @@ describe('AlgebraPool', () => {
       // the tests happen in solidity
       await expect(reentrant.swapToReenter(pool.address)).to.be.revertedWith('Unable to reenter')
     })
+  })
+
+  describe.only('#Incentive', () => {
+    it('incentive is not detached after swap', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1))
+      await factory.setFarmingAddress(wallet.address)
+
+      const vpStubFactory = await ethers.getContractFactory('TestVirtualPool')
+      let vpStub = (await vpStubFactory.deploy()) as TestVirtualPool
+
+      await pool.setIncentive(vpStub.address)
+
+      await mint(wallet.address, -tickSpacing, tickSpacing, initializeLiquidityAmount)
+      await swapTarget.swapExact0For1(pool.address, initializeLiquidityAmount.mul(100), wallet.address, BigNumber.from("4295128740"), { gasLimit: 220000})
+
+      let incentiveAfter = await pool.activeIncentive()
+      expect(incentiveAfter).to.be.eq(vpStub.address)
+    })
+
   })
 
   describe('#getInnerCumulatives', () => {
