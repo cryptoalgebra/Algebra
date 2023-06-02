@@ -7,6 +7,8 @@ import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
@@ -89,7 +91,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
         step.stepSqrtPrice = currentPrice;
-        step.initialized = true;
+        step.initialized = true; // TODO WHY?
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
@@ -170,9 +172,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         address _activeIncentive = activeIncentive;
         if (_activeIncentive != address(0)) {
           bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
+          // errors without message will be propagated and revert transaction
           try IAlgebraVirtualPool(_activeIncentive).crossTo(currentTick, zeroToOne) returns (bool success) {
             isIncentiveActive = success;
-          } catch {
+          } catch Panic(uint256) {
+            // pool will reset activeIncentive in this case
+          } catch Error(string memory) {
             // pool will reset activeIncentive in this case
           }
           if (!isIncentiveActive) {

@@ -122,9 +122,16 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     lastTimepointTimestamp = blockTimestamp;
 
     // failure should not occur. But in case of failure, the pool will remain operational
+    // errors without message will be propagated and revert transaction
+    bool failure;
     try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 _newTimepointIndex, uint16 _newFee) {
       return (_newTimepointIndex, _newFee);
-    } catch {
+    } catch Panic(uint256) {
+      failure = true;
+    } catch Error(string memory) {
+      failure = true;
+    }
+    if (failure) {
       emit DataStorageFailure();
       return (timepointIndex, 0);
     }
