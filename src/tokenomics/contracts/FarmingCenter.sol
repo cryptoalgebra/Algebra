@@ -106,18 +106,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     }
   }
 
-  /// @inheritdoc IPositionFollower
-  function burnPosition(uint256 tokenId) external override returns (bool success) {
-    require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
-    bytes32 _eternalIncentiveId = deposits[tokenId];
-
-    if (_eternalIncentiveId != bytes32(0)) {
-      IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
-      _exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
-    }
-    return true;
-  }
-
   /// @inheritdoc IFarmingCenter
   function collectRewards(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
     (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);

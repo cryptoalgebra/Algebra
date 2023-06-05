@@ -284,13 +284,7 @@ contract NonfungiblePositionManager is
             })
         );
 
-        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, int256(actualLiquidity)) {
-                // do nothing
-            } catch {
-                emit FarmingFailed(params.tokenId);
-            }
-        }
+        _applyLiquidityDeltaInFarming(params.tokenId, int256(actualLiquidity));
 
         // this is now updated to the current transaction
         uint128 positionLiquidity = position.liquidity;
@@ -334,15 +328,7 @@ contract NonfungiblePositionManager is
         );
         require(positionLiquidity >= params.liquidity);
 
-        if (farmingCenter != address(0) && tokenFarmedIn[params.tokenId] == farmingCenter) {
-            try
-                IPositionFollower(farmingCenter).applyLiquidityDelta(params.tokenId, -int256(uint256(params.liquidity)))
-            {
-                // do nothing
-            } catch {
-                emit FarmingFailed(params.tokenId);
-            }
-        }
+        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
 
         IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
@@ -432,14 +418,6 @@ contract NonfungiblePositionManager is
         Position storage position = _positions[tokenId];
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
 
-        if (farmingCenter != address(0) && tokenFarmedIn[tokenId] == farmingCenter) {
-            try IPositionFollower(farmingCenter).burnPosition(tokenId) {
-                // do nothing
-            } catch {
-                emit FarmingFailed(tokenId);
-            }
-        }
-
         delete _positions[tokenId];
         delete farmingApprovals[tokenId];
         delete tokenFarmedIn[tokenId];
@@ -475,6 +453,22 @@ contract NonfungiblePositionManager is
         require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
 
         return _positions[tokenId].operator;
+    }
+
+    function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
+        address _farmingCenter = farmingCenter;
+        if (_farmingCenter == address(0)) return;
+
+        if (tokenFarmedIn[tokenId] == _farmingCenter) {
+            // errors without message will be propagated
+            try IPositionFollower(_farmingCenter).applyLiquidityDelta(tokenId, liquidityDelta) {
+                // do nothing
+            } catch Panic(uint256) {
+                emit FarmingFailed(tokenId);
+            } catch Error(string memory) {
+                emit FarmingFailed(tokenId);
+            }
+        }
     }
 
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
