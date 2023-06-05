@@ -8,13 +8,15 @@ contract TickTableTest {
 
   mapping(int16 => uint256) public bitmap;
 
+  int24 constant tickSpacing = 60;
+
   function toggleTick(int24 tick) external {
-    bitmap.toggleTick(tick);
+    bitmap.toggleTick(tick, tickSpacing);
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     uint256 gasBefore = gasleft();
-    bitmap.toggleTick(tick);
+    bitmap.toggleTick(tick, tickSpacing);
     return gasBefore - gasleft();
   }
 

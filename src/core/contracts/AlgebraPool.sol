@@ -65,6 +65,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
   constructor() PoolImmutables(msg.sender) {
     globalState.fee = Constants.BASE_FEE;
+    tickSpacing = 60;
   }
 
   function balanceToken0() private view returns (uint256) {
@@ -310,7 +311,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledBottom = true;
-        tickTable.toggleTick(bottomTick);
+        tickTable.toggleTick(bottomTick, tickSpacing);
       }
 
       if (
@@ -327,7 +328,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledTop = true;
-        tickTable.toggleTick(topTick);
+        tickTable.toggleTick(topTick, tickSpacing);
       }
     }
 
@@ -953,6 +954,13 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require((communityFee0 <= Constants.MAX_COMMUNITY_FEE) && (communityFee1 <= Constants.MAX_COMMUNITY_FEE));
     (globalState.communityFeeToken0, globalState.communityFeeToken1) = (communityFee0, communityFee1);
     emit CommunityFee(communityFee0, communityFee1);
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setTickSpacing(int24 newTickSpacing) external override lock onlyFactoryOwner {
+    require(newTickSpacing > 0 && newTickSpacing <= Constants.MAX_TICK_SPACING && tickSpacing != newTickSpacing, 'Invalid newTickSpacing');
+    tickSpacing = newTickSpacing;
+    emit TickSpacing(newTickSpacing);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions

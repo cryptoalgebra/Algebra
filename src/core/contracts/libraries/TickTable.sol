@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-import './Constants.sol';
 import './TickMath.sol';
 
 /// @title Packed tick initialized state library
@@ -11,9 +10,12 @@ library TickTable {
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
-  function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
-    require(tick % Constants.TICK_SPACING == 0, 'tick is not spaced'); // ensure that the tick is spaced
-    tick /= Constants.TICK_SPACING; // compress tick
+  function toggleTick(
+    mapping(int16 => uint256) storage self,
+    int24 tick,
+    int24 tickSpacing
+  ) internal {
+    require(tick % tickSpacing == 0, 'tick is not spaced'); // ensure that the tick is spaced
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -71,7 +73,7 @@ library TickTable {
     bool lte
   ) internal view returns (int24 nextTick, bool initialized) {
     {
-      int24 tickSpacing = Constants.TICK_SPACING;
+      int24 tickSpacing = 1; // TODO
       // compress and round towards negative infinity if negative
       assembly {
         tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))
@@ -90,10 +92,10 @@ library TickTable {
 
       if (_row != 0) {
         tick -= int24(255 - getMostSignificantBit(_row));
-        return (uncompressAndBoundTick(tick), true);
+        return (boundTick(tick), true);
       } else {
         tick -= int24(bitNumber);
-        return (uncompressAndBoundTick(tick), false);
+        return (boundTick(tick), false);
       }
     } else {
       // start from the word of the next tick, since the current tick state doesn't matter
@@ -110,16 +112,16 @@ library TickTable {
 
       if (_row != 0) {
         tick += int24(getSingleSignificantBit(-_row & _row)); // least significant bit
-        return (uncompressAndBoundTick(tick), true);
+        return (boundTick(tick), true);
       } else {
         tick += int24(255 - bitNumber);
-        return (uncompressAndBoundTick(tick), false);
+        return (boundTick(tick), false);
       }
     }
   }
 
-  function uncompressAndBoundTick(int24 tick) private pure returns (int24 boundedTick) {
-    boundedTick = tick * Constants.TICK_SPACING;
+  function boundTick(int24 tick) private pure returns (int24 boundedTick) {
+    boundedTick = tick;
     if (boundedTick < TickMath.MIN_TICK) {
       boundedTick = TickMath.MIN_TICK;
     } else if (boundedTick > TickMath.MAX_TICK) {

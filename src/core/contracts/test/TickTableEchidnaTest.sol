@@ -8,6 +8,8 @@ contract TickTableEchidnaTest {
 
   mapping(int16 => uint256) private bitmap;
 
+  int24 constant tickSpacing = 60;
+
   // returns whether the given tick is initialized
   function isInitialized(int24 tick) private view returns (bool) {
     (int24 next, bool initialized) = bitmap.nextTickInTheSameRow(tick, true);
@@ -21,7 +23,7 @@ contract TickTableEchidnaTest {
     require(tick <= 887272);
     require(tick % 60 == 0);
     bool before = isInitialized(tick);
-    bitmap.toggleTick(tick);
+    bitmap.toggleTick(tick, tickSpacing);
     assert(isInitialized(tick) == !before);
   }
 
