@@ -311,7 +311,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledBottom = true;
-        tickTable.toggleTick(bottomTick, tickSpacing);
+        tickTable.toggleTick(bottomTick);
       }
 
       if (
@@ -328,7 +328,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         )
       ) {
         toggledTop = true;
-        tickTable.toggleTick(topTick, tickSpacing);
+        tickTable.toggleTick(topTick);
       }
     }
 
@@ -433,6 +433,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     )
   {
     require(liquidityDesired > 0, 'IL');
+    {
+      int24 _tickSpacing = tickSpacing;
+      require(bottomTick % _tickSpacing | topTick % _tickSpacing == 0, 'tick is not spaced'); // ensure that the tick is spaced
+    }
+
     {
       (int256 amount0Int, int256 amount1Int, ) = _getAmountsForLiquidity(
         bottomTick,

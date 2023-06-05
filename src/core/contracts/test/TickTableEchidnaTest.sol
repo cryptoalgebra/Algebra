@@ -23,7 +23,7 @@ contract TickTableEchidnaTest {
     require(tick <= 887272);
     require(tick % 60 == 0);
     bool before = isInitialized(tick);
-    bitmap.toggleTick(tick, tickSpacing);
+    bitmap.toggleTick(tick);
     assert(isInitialized(tick) == !before);
   }
 

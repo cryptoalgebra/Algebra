@@ -10,12 +10,7 @@ library TickTable {
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param self The mapping in which to toggle the tick
   /// @param tick The tick to toggle
-  function toggleTick(
-    mapping(int16 => uint256) storage self,
-    int24 tick,
-    int24 tickSpacing
-  ) internal {
-    require(tick % tickSpacing == 0, 'tick is not spaced'); // ensure that the tick is spaced
+  function toggleTick(mapping(int16 => uint256) storage self, int24 tick) internal {
     int16 rowNumber;
     uint8 bitNumber;
 
@@ -72,14 +67,6 @@ library TickTable {
     int24 tick,
     bool lte
   ) internal view returns (int24 nextTick, bool initialized) {
-    {
-      int24 tickSpacing = 1; // TODO
-      // compress and round towards negative infinity if negative
-      assembly {
-        tick := sub(sdiv(tick, tickSpacing), and(slt(tick, 0), not(iszero(smod(tick, tickSpacing)))))
-      }
-    }
-
     if (lte) {
       // unpacking not made into a separate function for gas and contract size savings
       int16 rowNumber;
