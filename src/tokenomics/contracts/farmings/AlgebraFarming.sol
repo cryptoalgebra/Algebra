@@ -170,11 +170,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
         require(
-            minimalPositionWidth <=
-                ((int256(TickMath.MAX_TICK) / Constants.TICK_SPACING) *
-                    Constants.TICK_SPACING -
-                    (int256(TickMath.MIN_TICK) / Constants.TICK_SPACING) *
-                    Constants.TICK_SPACING),
+            minimalPositionWidth <= (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)),
             'minimalPositionWidth too wide'
         );
         newIncentive.virtualPoolAddress = virtualPool;
