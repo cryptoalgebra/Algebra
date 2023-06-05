@@ -62,6 +62,11 @@ export default {
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
+    },
+    pulse:{
+      url: `https://rpc.pulsechain.com`,
+      chainId: 369,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     }
   },
   etherscan: {
