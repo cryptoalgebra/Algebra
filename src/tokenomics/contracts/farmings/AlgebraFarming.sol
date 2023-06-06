@@ -259,7 +259,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'invalid pool for token');
         require(liquidity > 0, 'cannot farm token with 0 liquidity');
-        (, int24 tick, , , , , ) = pool.globalState();
+        (, int24 tick, , , , , , ) = pool.globalState();
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);

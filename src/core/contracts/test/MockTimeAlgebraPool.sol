@@ -32,7 +32,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function getAverages() external view returns (uint112 TWVolatilityAverage, uint256 TWVolumePerLiqAverage) {
     (TWVolatilityAverage, TWVolumePerLiqAverage) = IDataStorageOperator(dataStorageOperator).getAverages(
       _blockTimestamp(),
-      globalState.fee,
+      globalState.tick,
       globalState.timepointIndex,
       liquidity
     );
@@ -48,7 +48,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function getFee() external view returns (uint16 fee) {
-    return IDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
+    (fee, ) = IDataStorageOperator(dataStorageOperator).getFees(_blockTimestamp(), globalState.tick, globalState.timepointIndex, liquidity);
   }
 
   function getKeyForPosition(

@@ -64,7 +64,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   constructor() PoolImmutables(msg.sender) {
-    globalState.fee = Constants.BASE_FEE;
+    globalState.feeZto = Constants.BASE_FEE;
+    globalState.feeOtz = Constants.BASE_FEE;
     tickSpacing = 60;
   }
 
@@ -355,7 +356,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
         uint128 liquidityBefore = liquidity;
         uint16 newTimepointIndex = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), cache.tick, liquidityBefore, volumePerLiquidityInBlock);
         if (cache.timepointIndex != newTimepointIndex) {
-          globalState.fee = _getNewFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
+          _updateFee(_blockTimestamp(), cache.tick, newTimepointIndex, liquidityBefore);
           globalState.timepointIndex = newTimepointIndex;
           volumePerLiquidityInBlock = 0;
         }
@@ -538,15 +539,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
   }
 
-  /// @dev Returns new fee according combination of sigmoids
-  function _getNewFee(
+  /// @dev Updates fees according combinations of sigmoids
+  function _updateFee(
     uint32 _time,
     int24 _tick,
     uint16 _index,
     uint128 _liquidity
-  ) private returns (uint16 newFee) {
-    newFee = IDataStorageOperator(dataStorageOperator).getFee(_time, _tick, _index, _liquidity);
-    emit Fee(newFee);
+  ) private returns (uint16 newFeeZto, uint16 newFeeOtz) {
+    (newFeeZto, newFeeOtz) = IDataStorageOperator(dataStorageOperator).getFees(_time, _tick, _index, _liquidity);
+    (globalState.feeZto, globalState.feeOtz) = (newFeeZto, newFeeOtz);
+
+    emit Fee(newFeeZto, newFeeOtz);
   }
 
   function _payCommunityFee(address token, uint256 amount) private {
@@ -727,7 +730,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
-      cache.fee = globalState.fee;
+      cache.fee = zeroToOne ? globalState.feeZto : globalState.feeOtz;
       cache.timepointIndex = globalState.timepointIndex;
       uint256 _communityFeeToken0 = globalState.communityFeeToken0;
       uint256 _communityFeeToken1 = globalState.communityFeeToken1;
@@ -778,7 +781,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       if (newTimepointIndex != cache.timepointIndex) {
         cache.timepointIndex = newTimepointIndex;
         cache.volumePerLiquidityInBlock = 0;
-        cache.fee = _getNewFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
+        if (zeroToOne) {
+          (cache.fee, ) = _updateFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
+        } else {
+          (, cache.fee) = _updateFee(blockTimestamp, currentTick, newTimepointIndex, currentLiquidity);
+        }
       }
     }
 
@@ -879,7 +886,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
       ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less then initially specified (e.g. reached limit)
       : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
 
-    (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex) = (currentPrice, currentTick, cache.fee, cache.timepointIndex);
+    (globalState.price, globalState.tick, globalState.timepointIndex) = (currentPrice, currentTick, cache.timepointIndex);
 
     (liquidity, volumePerLiquidityInBlock) = (
       currentLiquidity,
@@ -903,7 +910,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     uint128 _liquidity = liquidity;
     require(_liquidity > 0, 'L');
 
-    uint16 _fee = globalState.fee;
+    uint16 _fee = Constants.BASE_FEE;
 
     uint256 fee0;
     uint256 balance0Before = balanceToken0();

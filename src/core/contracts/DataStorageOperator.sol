@@ -18,7 +18,9 @@ contract DataStorageOperator is IDataStorageOperator {
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  AdaptiveFee.Configuration public feeConfig;
+
+  AdaptiveFee.Configuration public feeConfigZto;
+  AdaptiveFee.Configuration public feeConfigOtz;
 
   address private immutable pool;
   address private immutable factory;
@@ -39,14 +41,15 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata _feeConfig) external override {
+  function changeFeeConfiguration(bool zto, AdaptiveFee.Configuration calldata _feeConfig) external override {
     require(msg.sender == factory || msg.sender == IAlgebraFactory(factory).owner());
 
     require(uint256(_feeConfig.alpha1) + uint256(_feeConfig.alpha2) + uint256(_feeConfig.baseFee) <= type(uint16).max, 'Max fee exceeded');
     require(_feeConfig.gamma1 != 0 && _feeConfig.gamma2 != 0 && _feeConfig.volumeGamma != 0, 'Gammas must be > 0');
 
-    feeConfig = _feeConfig;
-    emit FeeConfiguration(_feeConfig);
+    if (zto) feeConfigZto = _feeConfig;
+    else feeConfigOtz = _feeConfig;
+    emit FeeConfiguration(zto, _feeConfig);
   }
 
   /// @inheritdoc IDataStorageOperator
@@ -147,14 +150,15 @@ contract DataStorageOperator is IDataStorageOperator {
   }
 
   /// @inheritdoc IDataStorageOperator
-  function getFee(
+  function getFees(
     uint32 _time,
     int24 _tick,
     uint16 _index,
     uint128 _liquidity
-  ) external view override onlyPool returns (uint16 fee) {
+  ) external view override onlyPool returns (uint16 feeZto, uint16 feeOtz) {
     (uint88 volatilityAverage, uint256 volumePerLiqAverage) = timepoints.getAverages(_time, _tick, _index, _liquidity);
 
-    return AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfig);
+    feeZto = AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfigZto);
+    feeOtz = AdaptiveFee.getFee(volatilityAverage / 15, volumePerLiqAverage, feeConfigOtz);
   }
 }

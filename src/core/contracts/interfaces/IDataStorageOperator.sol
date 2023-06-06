@@ -5,12 +5,12 @@ pragma abicoder v2;
 import '../libraries/AdaptiveFee.sol';
 
 interface IDataStorageOperator {
-  event FeeConfiguration(AdaptiveFee.Configuration feeConfig);
+  event FeeConfiguration(bool zto, AdaptiveFee.Configuration feeConfig);
 
   /**
    * @notice Returns data belonging to a certain timepoint
    * @param index The index of timepoint in the array
-   * @dev There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds
+   * @dev There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds
    * @return initialized Whether the timepoint has been initialized and the values are safe to use,
    * blockTimestamp The timestamp of the observation,
    * tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp,
@@ -124,7 +124,7 @@ interface IDataStorageOperator {
   ) external returns (uint16 indexUpdated);
 
   /// @notice Changes fee configuration for the pool
-  function changeFeeConfiguration(AdaptiveFee.Configuration calldata feeConfig) external;
+  function changeFeeConfiguration(bool zto, AdaptiveFee.Configuration calldata feeConfig) external;
 
   /// @notice Calculates gmean(volume/liquidity) for block
   /// @param liquidity The current in-range pool liquidity
@@ -145,11 +145,12 @@ interface IDataStorageOperator {
   /// @param tick The current tick
   /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @param liquidity The current in-range pool liquidity
-  /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(
+  /// @return feeZto The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6
+  /// @return feeOtz The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6
+  function getFees(
     uint32 time,
     int24 tick,
     uint16 index,
     uint128 liquidity
-  ) external view returns (uint16 fee);
+  ) external view returns (uint16 feeZto, uint16 feeOtz);
 }

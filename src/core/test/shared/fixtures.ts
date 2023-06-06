@@ -100,7 +100,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
       )
 
       const receipt = await tx.wait()
-      const poolAddress = receipt.events?.[1].args?.pool as string
+      const poolAddress = receipt.events?.[2].args?.pool as string
       return MockTimeAlgebraPoolFactory.attach(poolAddress) as MockTimeAlgebraPool
     },
   }

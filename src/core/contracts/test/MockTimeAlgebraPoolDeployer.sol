@@ -40,7 +40,8 @@ contract MockTimeAlgebraPoolDeployer {
     bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
     DataStorageOperator dataStorage = (new DataStorageOperator(computeAddress(initCodeHash, token0, token1)));
 
-    dataStorage.changeFeeConfiguration(baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(true, baseFeeConfiguration);
+    dataStorage.changeFeeConfiguration(false, baseFeeConfiguration);
 
     parameters = Parameters({dataStorage: address(dataStorage), factory: factory, token0: token0, token1: token1});
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
