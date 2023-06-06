@@ -7,8 +7,6 @@ import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
