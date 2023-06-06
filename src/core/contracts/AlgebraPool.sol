@@ -464,10 +464,10 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
 
     liquidityActual = liquidityDesired;
     if (receivedAmount0 < amount0) {
-      liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount0, amount0));
+      liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
     }
     if (receivedAmount1 < amount1) {
-      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityActual), receivedAmount1, amount1));
+      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
       if (liquidityForRA1 < liquidityActual) {
         liquidityActual = liquidityForRA1;
       }
