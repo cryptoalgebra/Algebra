@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../libraries/FullMath.sol';
-import '../libraries/TokenDeltaMath.sol';
-import '../libraries/PriceMovementMath.sol';
-import '../libraries/Constants.sol';
+import '../../libraries/FullMath.sol';
+import '../../libraries/TokenDeltaMath.sol';
+import '../../libraries/PriceMovementMath.sol';
+import '../../libraries/Constants.sol';
 
 contract TokenDeltaMathEchidnaTest {
   function mulDivRoundingUpInvariants(uint256 x, uint256 y, uint256 z) external pure {

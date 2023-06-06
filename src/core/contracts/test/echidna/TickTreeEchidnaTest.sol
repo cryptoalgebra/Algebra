@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 pragma abicoder v1;
 
-import '../libraries/TickTree.sol';
+import '../../libraries/TickTree.sol';
 
 contract TickTreeEchidnaTest {
   using TickTree for mapping(int16 => uint256);

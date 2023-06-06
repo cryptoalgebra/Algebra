@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../libraries/TickTree.sol';
+import '../../libraries/TickTree.sol';
 
 contract BitMathEchidnaTest {
   function leastSignificantBitInvariant(uint256 input) external pure {

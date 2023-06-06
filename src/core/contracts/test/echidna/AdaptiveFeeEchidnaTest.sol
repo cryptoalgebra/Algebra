@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../libraries/AdaptiveFee.sol';
+import '../../libraries/AdaptiveFee.sol';
 
 contract AdaptiveFeeEchidnaTest {
   function expInvariants(uint256 x, uint16 gamma) external pure {

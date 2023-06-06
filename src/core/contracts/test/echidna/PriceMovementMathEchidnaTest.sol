@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.17;
 
-import '../libraries/PriceMovementMath.sol';
-import '../libraries/TickMath.sol';
+import '../../libraries/PriceMovementMath.sol';
+import '../../libraries/TickMath.sol';
 
 contract PriceMovementMathEchidnaTest {
   function checkmovePriceTowardsTargetInvariants(
