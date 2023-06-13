@@ -110,7 +110,7 @@ describe('AlgebraPool', () => {
     expect(await pool.factory()).to.eq(factory.address)
     expect(await pool.token0()).to.eq(token0.address)
     expect(await pool.token1()).to.eq(token1.address)
-    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("40564824043007195767232224305152"))
+    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("191757638537527648490752896198553"))
   })
 
   it('_blockTimestamp works', async() => {
