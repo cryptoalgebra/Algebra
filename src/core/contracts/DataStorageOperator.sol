@@ -11,6 +11,8 @@ import './libraries/AdaptiveFee.sol';
 
 import './libraries/Constants.sol';
 
+/// @title Algebra timepoints data operator
+/// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract DataStorageOperator is IDataStorageOperator {
   uint256 constant UINT16_MODULO = 65536;
   uint128 constant MAX_VOLUME_PER_LIQUIDITY = 100000 << 64; // maximum meaningful ratio of volume to liquidity
@@ -64,12 +66,7 @@ contract DataStorageOperator is IDataStorageOperator {
     view
     override
     onlyPool
-    returns (
-      int56 tickCumulative,
-      uint160 secondsPerLiquidityCumulative,
-      uint112 volatilityCumulative,
-      uint256 volumePerAvgLiquidity
-    )
+    returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative, uint256 volumePerAvgLiquidity)
   {
     uint16 oldestIndex;
     // check if we have overflow in the past
@@ -138,7 +135,7 @@ contract DataStorageOperator is IDataStorageOperator {
   ) external pure override returns (uint128 volumePerLiquidity) {
     uint256 volume = Sqrt.sqrtAbs(amount0) * Sqrt.sqrtAbs(amount1);
     uint256 volumeShifted;
-    if (volume >= 2**192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
+    if (volume >= 2 ** 192) volumeShifted = (type(uint256).max) / (liquidity > 0 ? liquidity : 1);
     else volumeShifted = (volume << 64) / (liquidity > 0 ? liquidity : 1);
     if (volumeShifted >= MAX_VOLUME_PER_LIQUIDITY) return MAX_VOLUME_PER_LIQUIDITY;
     else return uint128(volumeShifted);

@@ -8,10 +8,9 @@ import './interfaces/IDataStorageOperator.sol';
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
 
-/**
- * @title Algebra factory
- * @notice Is used to deploy pools and its dataStorages
- */
+/// @title Algebra factory
+/// @notice Is used to deploy pools and its dataStorages
+/// @dev Version: Algebra V1.9-directional-fee
 contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override owner;

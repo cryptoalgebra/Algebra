@@ -4,6 +4,9 @@ pragma solidity =0.7.6;
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './AlgebraPool.sol';
 
+/// @title Algebra pool deployer
+/// @notice Is used by AlgebraFactory to deploy pools
+/// @dev Version: Algebra V1.9-directional-fee
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   struct Parameters {
     address dataStorage;
@@ -41,12 +44,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function deploy(
-    address dataStorage,
-    address _factory,
-    address token0,
-    address token1
-  ) external override onlyFactory returns (address pool) {
+  function deploy(address dataStorage, address _factory, address token0, address token1) external override onlyFactory returns (address pool) {
     parameters = Parameters({dataStorage: dataStorage, factory: _factory, token0: token0, token1: token1});
     pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
   }
