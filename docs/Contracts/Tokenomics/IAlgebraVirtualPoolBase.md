@@ -2,7 +2,10 @@
 
 # IAlgebraVirtualPoolBase
 
+
 Base interface for virtual pools
+
+
 
 
 
@@ -12,7 +15,7 @@ Base interface for virtual pools
 ### timeOutside
 
 
-`timeOutside()` view external
+`function timeOutside() external view returns (uint32)` view external
 
 
 
@@ -28,7 +31,7 @@ Base interface for virtual pools
 ### ticks
 
 
-`ticks(int24)` view external
+`function ticks(int24 tickId) external view returns (uint128 liquidityTotal, int128 liquidityDelta, uint256 outerFeeGrowth0Token, uint256 outerFeeGrowth1Token, int56 outerTickCumulative, uint160 outerSecondsPerLiquidity, uint32 outerSecondsSpent, bool initialized)` view external
 
 
 
@@ -54,7 +57,7 @@ Base interface for virtual pools
 ### currentLiquidity
 
 
-`currentLiquidity()` view external
+`function currentLiquidity() external view returns (uint128)` view external
 
 
 
@@ -70,7 +73,7 @@ Base interface for virtual pools
 ### globalTick
 
 
-`globalTick()` view external
+`function globalTick() external view returns (int24)` view external
 
 
 
@@ -86,7 +89,7 @@ Base interface for virtual pools
 ### globalSecondsPerLiquidityCumulative
 
 
-`globalSecondsPerLiquidityCumulative()` view external
+`function globalSecondsPerLiquidityCumulative() external view returns (uint160)` view external
 
 
 
@@ -102,7 +105,7 @@ Base interface for virtual pools
 ### prevTimestamp
 
 
-`prevTimestamp()` view external
+`function prevTimestamp() external view returns (uint32)` view external
 
 
 
@@ -118,7 +121,7 @@ Base interface for virtual pools
 ### getInnerSecondsPerLiquidity
 
 
-`getInnerSecondsPerLiquidity(int24,int24)` view external
+`function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick) external view returns (uint160 innerSecondsSpentPerLiquidity)` view external
 
 This function is used to calculate the seconds per liquidity inside a certain position
 
@@ -133,14 +136,16 @@ This function is used to calculate the seconds per liquidity inside a certain po
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| innerSecondsSpentPerLiquidity | uint160 |  |
+| innerSecondsSpentPerLiquidity | uint160 | The seconds per liquidity inside the position |
 
 ### applyLiquidityDeltaToPosition
 
 
-`applyLiquidityDeltaToPosition(uint32,int24,int24,int128,int24)`  external
+`function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external`  external
 
 
+*Developer note: This function is called when anyone farms their liquidity. The position in a virtual pool
+should be changed accordingly*
 
 
 
@@ -154,7 +159,5 @@ This function is used to calculate the seconds per liquidity inside a certain po
 
 
 
-
----
 
 

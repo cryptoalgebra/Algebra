@@ -2,13 +2,17 @@
 
 # AlgebraFarming
 
+
 Abstract base contract for Algebra farmings
+
+
 
 
 ## Modifiers
 ### onlyIncentiveMaker
 
 
+`modifier onlyIncentiveMaker()`  internal
 
 
 
@@ -19,6 +23,7 @@ Abstract base contract for Algebra farmings
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -29,6 +34,7 @@ Abstract base contract for Algebra farmings
 ### onlyFarmingCenter
 
 
+`modifier onlyFarmingCenter()`  internal
 
 
 
@@ -65,9 +71,8 @@ Returns amounts of reward tokens owed to a given address according to the last t
 ## Functions
 ### setIncentiveMaker
 
-onlyOwner
 
-`setIncentiveMaker(address)`  external
+`function setIncentiveMaker(address _incentiveMaker) external`  external
 
 Updates the incentive maker
 
@@ -80,9 +85,8 @@ Updates the incentive maker
 
 ### setFarmingCenterAddress
 
-onlyOwner
 
-`setFarmingCenterAddress(address)`  external
+`function setFarmingCenterAddress(address _farmingCenter) external`  external
 
 Updates farming center address
 
@@ -96,7 +100,7 @@ Updates farming center address
 ### claimReward
 
 
-`claimReward(contract IERC20Minimal,address,uint256)`  external
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 
@@ -112,13 +116,12 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 ### claimRewardFrom
 
-onlyFarmingCenter
 
-`claimRewardFrom(contract IERC20Minimal,address,address,uint256)`  external
+`function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
@@ -136,10 +139,8 @@ only for FarmingCenter
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 
-
----
 
 

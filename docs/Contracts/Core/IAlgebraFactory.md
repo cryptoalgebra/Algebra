@@ -2,73 +2,84 @@
 
 # IAlgebraFactory
 
+
 The interface for the Algebra Factory
 
+
+
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
 ### Owner
 
 
-`Owner(address)`  
+`event Owner(address newOwner)`  
 
-Emitted when the owner of the factory is changed
+@notice Emitted when the owner of the factory is changed
+ @param newOwner The owner after the owner was changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newOwner | address | The owner after the owner was changed |
+| newOwner | address |  |
 
 
 ### VaultAddress
 
 
-`VaultAddress(address)`  
+`event VaultAddress(address newVaultAddress)`  
 
-Emitted when the vault address is changed
+@notice Emitted when the vault address is changed
+ @param newVaultAddress The vault address after the address was changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newVaultAddress | address | The vault address after the address was changed |
+| newVaultAddress | address |  |
 
 
 ### Pool
 
 
-`Pool(address,address,address)`  
+`event Pool(address token0, address token1, address pool)`  
 
-Emitted when a pool is created
+@notice Emitted when a pool is created
+ @param token0 The first token of the pool by address sort order
+ @param token1 The second token of the pool by address sort order
+ @param pool The address of the created pool
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| token0 | address | The first token of the pool by address sort order |
-| token1 | address | The second token of the pool by address sort order |
-| pool | address | The address of the created pool |
+| token0 | address |  |
+| token1 | address |  |
+| pool | address |  |
 
 
 ### FarmingAddress
 
 
-`FarmingAddress(address)`  
+`event FarmingAddress(address newFarmingAddress)`  
 
-Emitted when the farming address is changed
+@notice Emitted when the farming address is changed
+ @param newFarmingAddress The farming address after the address was changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newFarmingAddress | address | The farming address after the address was changed |
+| newFarmingAddress | address |  |
 
 
 ### FeeConfiguration
 
 
-`FeeConfiguration(uint16,uint16,uint32,uint32,uint16,uint16,uint32,uint16,uint16)`  
+`event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint32 volumeBeta, uint16 volumeGamma, uint16 baseFee)`  
 
 
 
@@ -93,10 +104,11 @@ Emitted when the farming address is changed
 ### owner
 
 
-`owner()` view external
+`function owner() external view returns (address)` view external
 
-Returns the current owner of the factory
-*Developer note: Can be changed by the current owner via setOwner*
+@notice Returns the current owner of the factory
+ @dev Can be changed by the current owner via setOwner
+ @return The address of the factory owner
 
 
 
@@ -110,9 +122,10 @@ Returns the current owner of the factory
 ### poolDeployer
 
 
-`poolDeployer()` view external
+`function poolDeployer() external view returns (address)` view external
 
-Returns the current poolDeployerAddress
+@notice Returns the current poolDeployerAddress
+ @return The address of the poolDeployer
 
 
 
@@ -126,9 +139,11 @@ Returns the current poolDeployerAddress
 ### farmingAddress
 
 
-`farmingAddress()` view external
+`function farmingAddress() external view returns (address)` view external
 
 
+*Developer note: Is retrieved from the pools to restrict calling
+certain functions not by a tokenomics contract*
 
 
 
@@ -137,12 +152,12 @@ Returns the current poolDeployerAddress
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The tokenomics contract address |
 
 ### vaultAddress
 
 
-`vaultAddress()` view external
+`function vaultAddress() external view returns (address)` view external
 
 
 
@@ -158,17 +173,20 @@ Returns the current poolDeployerAddress
 ### poolByPair
 
 
-`poolByPair(address,address)` view external
+`function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
 
-Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
-*Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
+@notice Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
+ @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
+ @param tokenA The contract address of either token0 or token1
+ @param tokenB The contract address of the other token
+ @return pool The pool address
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenA | address | The contract address of either token0 or token1 |
-| tokenB | address | The contract address of the other token |
+| tokenA | address |  |
+| tokenB | address |  |
 
 **Returns:**
 
@@ -179,19 +197,22 @@ Returns the pool address for a given pair of tokens and a fee, or address 0 if i
 ### createPool
 
 
-`createPool(address,address)`  external
+`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
-Creates a pool for the given two tokens and fee
-*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
-from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
-are invalid.*
+@notice Creates a pool for the given two tokens and fee
+ @param tokenA One of the two tokens in the desired pool
+ @param tokenB The other of the two tokens in the desired pool
+ @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
+ from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
+ are invalid.
+ @return pool The address of the newly created pool
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenA | address | One of the two tokens in the desired pool |
-| tokenB | address | The other of the two tokens in the desired pool |
+| tokenA | address |  |
+| tokenB | address |  |
 
 **Returns:**
 
@@ -202,24 +223,26 @@ are invalid.*
 ### setOwner
 
 
-`setOwner(address)`  external
+`function setOwner(address _owner) external`  external
 
-Updates the owner of the factory
-*Developer note: Must be called by the current owner*
+@notice Updates the owner of the factory
+ @dev Must be called by the current owner
+ @param _owner The new owner of the factory
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _owner | address | The new owner of the factory |
+| _owner | address |  |
 
 
 ### setFarmingAddress
 
 
-`setFarmingAddress(address)`  external
+`function setFarmingAddress(address _farmingAddress) external`  external
 
 
+*Developer note: updates tokenomics address on the factory*
 
 
 
@@ -231,9 +254,10 @@ Updates the owner of the factory
 ### setVaultAddress
 
 
-`setVaultAddress(address)`  external
+`function setVaultAddress(address _vaultAddress) external`  external
 
 
+*Developer note: updates vault address on the factory*
 
 
 
@@ -245,9 +269,12 @@ Updates the owner of the factory
 ### setBaseFeeConfiguration
 
 
-`setBaseFeeConfiguration(uint16,uint16,uint32,uint32,uint16,uint16,uint32,uint16,uint16)`  external
+`function setBaseFeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint32 volumeBeta, uint16 volumeGamma, uint16 baseFee) external`  external
 
 Changes initial fee configuration for new pools
+*Developer note: changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
+gammas must be &gt; 0*
 
 
 
@@ -265,7 +292,5 @@ Changes initial fee configuration for new pools
 
 
 
-
----
 
 

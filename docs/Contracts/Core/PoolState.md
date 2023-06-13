@@ -5,12 +5,17 @@
 
 
 
+
+
+
 ## Modifiers
 ### lock
 
 
+`modifier lock()`  internal
 
 
+*Developer note: Reentrancy protection. Implemented in every function of the contract since there are checks of balances.*
 
 
 
@@ -49,17 +54,23 @@ Returns the lock time for added liquidity
 Returns the information about active incentive
 
 *Developer note: if there is no active incentive at the moment, virtualPool,endTimestamp,startTimestamp would be equal to 0*
+### int24 tickSpacing 
+
+The pool tick spacing
+
+*Developer note: Ticks can only be used at multiples of this value
+e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+This value is an int24 to avoid casting even though it is always positive.*
 ### mapping(int24 &#x3D;&gt; struct TickManager.Tick) ticks 
 
 Look up information about a specific tick in the pool
 
+*Developer note: This is a public structure, so the &#x60;return&#x60; natspec tags are omitted.*
 ### mapping(int16 &#x3D;&gt; uint256) tickTable 
 
 Returns 256 packed tick initialized boolean values. See TickTable for more information
 
 
 
-
----
 
 

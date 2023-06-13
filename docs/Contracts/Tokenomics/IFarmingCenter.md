@@ -6,11 +6,14 @@
 
 
 
+
+
+
 ## Events
 ### DepositTransferred
 
 
-`DepositTransferred(uint256,address,address)`  
+`event DepositTransferred(uint256 tokenId, address oldOwner, address newOwner)`  
 
 Emitted when ownership of a deposit changes
 
@@ -29,7 +32,7 @@ Emitted when ownership of a deposit changes
 ### virtualPoolAddresses
 
 
-`virtualPoolAddresses(address)` view external
+`function virtualPoolAddresses(address) external view returns (address, address)` view external
 
 
 
@@ -49,7 +52,7 @@ Emitted when ownership of a deposit changes
 ### nonfungiblePositionManager
 
 
-`nonfungiblePositionManager()` view external
+`function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)` view external
 
 The nonfungible position manager with which this farming contract is compatible
 
@@ -65,7 +68,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### limitFarming
 
 
-`limitFarming()` view external
+`function limitFarming() external view returns (contract IAlgebraLimitFarming)` view external
 
 
 
@@ -81,7 +84,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### eternalFarming
 
 
-`eternalFarming()` view external
+`function eternalFarming() external view returns (contract IAlgebraEternalFarming)` view external
 
 
 
@@ -97,7 +100,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### farmingCenterVault
 
 
-`farmingCenterVault()` view external
+`function farmingCenterVault() external view returns (contract IFarmingCenterVault)` view external
 
 
 
@@ -113,7 +116,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### l2Nfts
 
 
-`l2Nfts(uint256)` view external
+`function l2Nfts(uint256) external view returns (uint96 nonce, address operator, uint256 tokenId)` view external
 
 
 
@@ -134,7 +137,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### deposits
 
 
-`deposits(uint256)` view external
+`function deposits(uint256 tokenId) external view returns (uint256 L2TokenId, uint32 numberOfFarms, bool inLimitFarming, address owner)` view external
 
 Returns information about a deposited NFT
 
@@ -148,7 +151,7 @@ Returns information about a deposited NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| L2TokenId | uint256 |  |
+| L2TokenId | uint256 | The nft layer2 id, numberOfFarms The number of farms, inLimitFarming The parameter showing if the token is in the limit farm, owner The owner of deposit |
 | numberOfFarms | uint32 |  |
 | inLimitFarming | bool |  |
 | owner | address |  |
@@ -156,9 +159,10 @@ Returns information about a deposited NFT
 ### connectVirtualPool
 
 
-`connectVirtualPool(contract IAlgebraPool,address)`  external
+`function connectVirtualPool(contract IAlgebraPool pool, address virtualPool) external`  external
 
 Updates activeIncentive in AlgebraPool
+*Developer note: only farming can do it*
 
 
 
@@ -171,9 +175,10 @@ Updates activeIncentive in AlgebraPool
 ### enterFarming
 
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,bool)`  external
+`function enterFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, uint256 tokensLocked, bool isLimit) external`  external
 
 Enters in incentive (time-limited or eternal farming) with NFT-position token
+*Developer note: token must be deposited in FarmingCenter*
 
 
 
@@ -188,7 +193,7 @@ Enters in incentive (time-limited or eternal farming) with NFT-position token
 ### exitFarming
 
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,bool)`  external
+`function exitFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, bool isLimit) external`  external
 
 Exits from incentive (time-limited or eternal farming) with NFT-position token
 
@@ -204,27 +209,28 @@ Exits from incentive (time-limited or eternal farming) with NFT-position token
 ### collect
 
 
-`collect(struct INonfungiblePositionManager.CollectParams)`  external
+`function collect(struct INonfungiblePositionManager.CollectParams params) external returns (uint256 amount0, uint256 amount1)`  external
 
 Collects up to a maximum amount of fees owed to a specific position to the recipient
+*Developer note: &quot;proxies&quot; to NonfungiblePositionManager*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
+| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | uint256 |  |
-| amount1 | uint256 |  |
+| amount0 | uint256 | The amount of fees collected in token0 |
+| amount1 | uint256 | The amount of fees collected in token1 |
 
 ### collectRewards
 
 
-`collectRewards(struct IIncentiveKey.IncentiveKey,uint256)`  external
+`function collectRewards(struct IIncentiveKey.IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
 
 Used to collect reward from eternal farming. Then reward can be claimed.
 
@@ -239,15 +245,16 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| reward | uint256 | The amount of collected reward |
+| bonusReward | uint256 | The amount of collected  bonus reward |
 
 ### claimReward
 
 
-`claimReward(contract IERC20Minimal,address,uint256,uint256)`  external
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequestedIncentive, uint256 amountRequestedEternal) external returns (uint256 reward)`  external
 
 Used to claim and send rewards from farming(s)
+*Developer note: can be used via static call to get current rewards for user*
 
 
 
@@ -262,14 +269,15 @@ Used to claim and send rewards from farming(s)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The summary amount of claimed rewards |
 
 ### withdrawToken
 
 
-`withdrawToken(uint256,address,bytes)`  external
+`function withdrawToken(uint256 tokenId, address to, bytes data) external`  external
 
 Withdraw Algebra NFT-position token
+*Developer note: can be used via static call to get current rewards for user*
 
 
 
@@ -281,7 +289,5 @@ Withdraw Algebra NFT-position token
 
 
 
-
----
 
 

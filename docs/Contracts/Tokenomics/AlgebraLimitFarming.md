@@ -2,7 +2,10 @@
 
 # AlgebraLimitFarming
 
+
 Algebra incentive (time-limited) farming
+
+
 
 
 
@@ -25,9 +28,8 @@ Returns information about a farmd liquidity NFT
 ## Functions
 ### constructor
 
-AlgebraFarming
 
-`constructor(contract IAlgebraPoolDeployer,contract INonfungiblePositionManager,uint256,uint256)`  public
+`constructor(contract IAlgebraPoolDeployer _deployer, contract INonfungiblePositionManager _nonfungiblePositionManager, uint256 _maxIncentiveStartLeadTime, uint256 _maxIncentiveDuration) public`  public
 
 
 
@@ -43,9 +45,8 @@ AlgebraFarming
 
 ### createLimitFarming
 
-onlyIncentiveMaker
 
-`createLimitFarming(struct IIncentiveKey.IncentiveKey,struct IAlgebraFarming.Tiers,struct IAlgebraLimitFarming.IncentiveParams)`  external
+`function createLimitFarming(struct IIncentiveKey.IncentiveKey key, struct IAlgebraFarming.Tiers tiers, struct IAlgebraLimitFarming.IncentiveParams params) external returns (address virtualPool)`  external
 
 
 
@@ -65,9 +66,8 @@ onlyIncentiveMaker
 
 ### addRewards
 
-onlyIncentiveMaker
 
-`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function addRewards(struct IIncentiveKey.IncentiveKey key, uint256 reward, uint256 bonusReward) external`  external
 
 
 
@@ -82,9 +82,8 @@ onlyIncentiveMaker
 
 ### decreaseRewardsAmount
 
-onlyIncentiveMaker
 
-`decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey key, uint256 rewardAmount, uint256 bonusRewardAmount) external`  external
 
 
 
@@ -99,9 +98,8 @@ onlyIncentiveMaker
 
 ### detachIncentive
 
-onlyIncentiveMaker
 
-`detachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+`function detachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
 Detach incentive from the pool
 
@@ -114,9 +112,8 @@ Detach incentive from the pool
 
 ### attachIncentive
 
-onlyIncentiveMaker
 
-`attachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+`function attachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
 Attach incentive to the pool
 
@@ -129,9 +126,8 @@ Attach incentive to the pool
 
 ### enterFarming
 
-onlyFarmingCenter
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function enterFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, uint256 tokensLocked) external`  external
 
 enter farming for Algebra LP token
 
@@ -146,9 +142,8 @@ enter farming for Algebra LP token
 
 ### exitFarming
 
-onlyFarmingCenter
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+`function exitFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, address _owner) external`  external
 
 exitFarmings for Algebra LP token
 
@@ -164,7 +159,7 @@ exitFarmings for Algebra LP token
 ### getRewardInfo
 
 
-`getRewardInfo(struct IIncentiveKey.IncentiveKey,uint256)` view external
+`function getRewardInfo(struct IIncentiveKey.IncentiveKey key, uint256 tokenId) external view returns (uint256 reward, uint256 bonusReward)` view external
 
 Calculates the reward amount that will be received for the given farm
 
@@ -179,11 +174,9 @@ Calculates the reward amount that will be received for the given farm
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| reward | uint256 | The reward accrued to the NFT for the given incentive thus far |
+| bonusReward | uint256 | The bonus reward accrued to the NFT for the given incentive thus far |
 
 
-
----
 
 

@@ -7,6 +7,9 @@
 
 
 
+
+
+
 ## Variables
 ### uint128 rewardRate0 
 
@@ -36,9 +39,8 @@
 ## Functions
 ### constructor
 
-AlgebraVirtualPoolBase
 
-`constructor(address,address,address)`  public
+`constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) public`  public
 
 
 
@@ -53,9 +55,8 @@ AlgebraVirtualPoolBase
 
 ### addRewards
 
-onlyFarming
 
-`addRewards(uint256,uint256)`  external
+`function addRewards(uint256 token0Amount, uint256 token1Amount) external`  external
 
 
 
@@ -69,24 +70,23 @@ onlyFarming
 
 ### setRates
 
-onlyFarming
 
-`setRates(uint128,uint128)`  external
+`function setRates(uint128 rate0, uint128 rate1) external`  external
 
-
+Change reward rates
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rate0 | uint128 |  |
-| rate1 | uint128 |  |
+| rate0 | uint128 | The new rate of main token distribution per sec |
+| rate1 | uint128 | The new rate of bonus token distribution per sec |
 
 
 ### getInnerRewardsGrowth
 
 
-`getInnerRewardsGrowth(int24,int24)` view external
+`function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)` view external
 
 
 
@@ -105,7 +105,5 @@ onlyFarming
 | rewardGrowthInside1 | uint256 |  |
 
 
-
----
 
 

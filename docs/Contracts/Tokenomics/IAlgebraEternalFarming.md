@@ -2,15 +2,18 @@
 
 # IAlgebraEternalFarming
 
+
 Algebra Eternal Farming Interface
+
 Allows farming nonfungible liquidity tokens in exchange for reward tokens without locking NFT for incentive time
+
 
 
 ## Events
 ### RewardsRatesChanged
 
 
-`RewardsRatesChanged(uint128,uint128,bytes32)`  
+`event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId)`  
 
 Event emitted when reward rates were changed
 
@@ -26,7 +29,7 @@ Event emitted when reward rates were changed
 ### RewardsCollected
 
 
-`RewardsCollected(uint256,bytes32,uint256,uint256)`  
+`event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount)`  
 
 Event emitted when rewards were added
 
@@ -43,7 +46,7 @@ Event emitted when rewards were added
 ### EternalFarmingCreated
 
 
-`EternalFarmingCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address)`  
+`event EternalFarmingCreated(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime, uint256 reward, uint256 bonusReward, struct IAlgebraFarming.Tiers tiers, address multiplierToken, uint24 minimalAllowedPositionWidth)`  
 
 Event emitted when a liquidity mining incentive has been created
 
@@ -61,6 +64,7 @@ Event emitted when a liquidity mining incentive has been created
 | bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
 | tiers | struct IAlgebraFarming.Tiers | The amounts of locked token for liquidity multipliers |
 | multiplierToken | address | The address of token which can be locked to get liquidity multiplier |
+| minimalAllowedPositionWidth | uint24 | The minimal allowed position width (tickUpper - tickLower) |
 
 
 
@@ -69,7 +73,7 @@ Event emitted when a liquidity mining incentive has been created
 ### farms
 
 
-`farms(uint256,bytes32)` view external
+`function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1)` view external
 
 Returns information about a farmd liquidity NFT
 
@@ -84,7 +88,7 @@ Returns information about a farmd liquidity NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 |  |
+| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower tick of position, tickUpper The upper tick of position, innerRewardGrowth0 The last saved reward0 growth inside position, innerRewardGrowth1 The last saved reward1 growth inside position |
 | tickLower | int24 |  |
 | tickUpper | int24 |  |
 | innerRewardGrowth0 | uint256 |  |
@@ -93,7 +97,7 @@ Returns information about a farmd liquidity NFT
 ### createEternalFarming
 
 
-`createEternalFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256,uint128,uint128,address,struct IAlgebraFarming.Tiers)`  external
+`function createEternalFarming(struct IIncentiveKey.IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params, struct IAlgebraFarming.Tiers tiers) external returns (address virtualPool)`  external
 
 Creates a new liquidity mining incentive program
 
@@ -102,23 +106,19 @@ Creates a new liquidity mining incentive program
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | Details of the incentive to create |
-| reward | uint256 | The amount of reward tokens to be distributed |
-| bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
-| rewardRate | uint128 | The rate of reward distribution per second |
-| bonusRewardRate | uint128 | The rate of bonus reward distribution per second |
-| multiplierToken | address | The address of token which can be locked to get liquidity multiplier |
+| params | struct IAlgebraEternalFarming.IncentiveParams | Params of incentive |
 | tiers | struct IAlgebraFarming.Tiers | The amounts of locked token for liquidity multipliers |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| virtualPool | address |  |
+| virtualPool | address | The virtual pool |
 
 ### addRewards
 
 
-`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function addRewards(struct IIncentiveKey.IncentiveKey key, uint256 rewardAmount, uint256 bonusRewardAmount) external`  external
 
 
 
@@ -134,7 +134,7 @@ Creates a new liquidity mining incentive program
 ### setRates
 
 
-`setRates(struct IIncentiveKey.IncentiveKey,uint128,uint128)`  external
+`function setRates(struct IIncentiveKey.IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external`  external
 
 
 
@@ -150,7 +150,7 @@ Creates a new liquidity mining incentive program
 ### collectRewards
 
 
-`collectRewards(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+`function collectRewards(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)`  external
 
 
 
@@ -170,7 +170,5 @@ Creates a new liquidity mining incentive program
 | bonusReward | uint256 |  |
 
 
-
----
 
 

@@ -2,15 +2,18 @@
 
 # IERC20Minimal
 
+
 Minimal ERC20 interface for Algebra
+
 Contains a subset of the full ERC20 interface that is used in Algebra
+
 
 
 ## Events
 ### Transfer
 
 
-`Transfer(address,address,uint256)`  
+`event Transfer(address from, address to, uint256 value)`  
 
 Event emitted when tokens are transferred from one address to another, either via &#x60;#transfer&#x60; or &#x60;#transferFrom&#x60;.
 
@@ -26,7 +29,7 @@ Event emitted when tokens are transferred from one address to another, either vi
 ### Approval
 
 
-`Approval(address,address,uint256)`  
+`event Approval(address owner, address spender, uint256 value)`  
 
 Event emitted when the approval amount for the spender of a given owner&#x27;s tokens changes.
 
@@ -45,7 +48,7 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 ### balanceOf
 
 
-`balanceOf(address)` view external
+`function balanceOf(address account) external view returns (uint256)` view external
 
 Returns the balance of a token
 
@@ -59,12 +62,12 @@ Returns the balance of a token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 |  |
+| [0] | uint256 | The number of tokens held by the account |
 
 ### transfer
 
 
-`transfer(address,uint256)`  external
+`function transfer(address recipient, uint256 amount) external returns (bool)`  external
 
 Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
@@ -79,12 +82,12 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful transfer, false for an unsuccessful transfer |
 
 ### allowance
 
 
-`allowance(address,address)` view external
+`function allowance(address owner, address spender) external view returns (uint256)` view external
 
 Returns the current allowance given to a spender by an owner
 
@@ -99,12 +102,12 @@ Returns the current allowance given to a spender by an owner
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 |  |
+| [0] | uint256 | The current allowance granted by &#x60;owner&#x60; to &#x60;spender&#x60; |
 
 ### approve
 
 
-`approve(address,uint256)`  external
+`function approve(address spender, uint256 amount) external returns (bool)`  external
 
 Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
 
@@ -119,12 +122,12 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful approval, false for unsuccessful |
 
 ### transferFrom
 
 
-`transferFrom(address,address,uint256)`  external
+`function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)`  external
 
 Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
 
@@ -140,166 +143,17 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
-
-
-
----
-
-
-
-
-# IERC20Minimal
-
-Minimal ERC20 interface for Algebra
-Contains a subset of the full ERC20 interface that is used in Algebra
-
-
-## Events
-### Transfer
-
-
-`Transfer(address,address,uint256)`  
-
-Event emitted when tokens are transferred from one address to another, either via &#x60;#transfer&#x60; or &#x60;#transferFrom&#x60;.
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| from | address | The account from which the tokens were sent, i.e. the balance decreased |
-| to | address | The account to which the tokens were sent, i.e. the balance increased |
-| value | uint256 | The amount of tokens that were transferred |
-
-
-### Approval
-
-
-`Approval(address,address,uint256)`  
-
-Event emitted when the approval amount for the spender of a given owner&#x27;s tokens changes.
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner | address | The account that approved spending of its tokens |
-| spender | address | The account for which the spending allowance was modified |
-| value | uint256 | The new allowance from the owner to the spender |
-
-
-
-
-## Functions
-### balanceOf
-
-
-`balanceOf(address)` view external
-
-Returns the balance of a token
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| account | address | The account for which to look up the number of tokens it has, i.e. its balance |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 |  |
-
-### transfer
-
-
-`transfer(address,uint256)`  external
-
-Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| recipient | address | The account that will receive the amount transferred |
-| amount | uint256 | The number of tokens to send from the sender to the recipient |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool |  |
-
-### allowance
-
-
-`allowance(address,address)` view external
-
-Returns the current allowance given to a spender by an owner
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner | address | The account of the token owner |
-| spender | address | The account of the token spender |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | uint256 |  |
-
-### approve
-
-
-`approve(address,uint256)`  external
-
-Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| spender | address | The account which will be allowed to spend a given amount of the owners tokens |
-| amount | uint256 | The amount of tokens allowed to be used by &#x60;spender&#x60; |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool |  |
-
-### transferFrom
-
-
-`transferFrom(address,address,uint256)`  external
-
-Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| sender | address | The account from which the transfer will be initiated |
-| recipient | address | The recipient of the transfer |
-| amount | uint256 | The amount of the transfer |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful transfer, false for unsuccessful |
 
 ### mintAndFreeze
 
 
-`mintAndFreeze(address,uint256,uint64)`  external
+`function mintAndFreeze(address _to, uint256 _amount, uint64 _until) external returns (bool)`  external
 
 
 *Developer note: Mint the specified amount of token to the specified address and freeze it until the specified date.
-    Be careful, gas usage is not deterministic,
-    and depends on how many freezes _to address already has.*
+     Be careful, gas usage is not deterministic,
+     and depends on how many freezes _to address already has.*
 
 
 
@@ -313,14 +167,15 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | A boolean that indicates if the operation was successful. |
 
 ### releaseOnce
 
 
-`releaseOnce()`  external
+`function releaseOnce() external`  external
 
 
+*Developer note: release first available freezing tokens.*
 
 
 
@@ -329,9 +184,10 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 ### getFreezing
 
 
-`getFreezing(address,uint256)` view external
+`function getFreezing(address _addr, uint256 _index) external view returns (uint64 _release, uint256 _balance)` view external
 
 
+*Developer note: gets freezing end date and freezing balance for the freezing portion specified by index.*
 
 
 
@@ -348,7 +204,5 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 | _balance | uint256 |  |
 
 
-
----
 
 
