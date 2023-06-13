@@ -11,8 +11,8 @@ pragma solidity >=0.5.0;
  */
 interface IAlgebraPoolDeployer {
   /**
-   *  @notice Emitted when the factory address is changed
-   *  @param factory The factory address after the address was changed
+   * @notice Emitted when the factory address is changed
+   * @param factory The factory address after the address was changed
    */
   event Factory(address indexed factory);
 

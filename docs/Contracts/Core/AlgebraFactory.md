@@ -70,6 +70,9 @@ Returns the pool address for a given pair of tokens and a fee, or address 0 if i
 `createPool(address,address)`  external
 
 Creates a pool for the given two tokens and fee
+*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
+from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
+are invalid.*
 
 
 
@@ -82,7 +85,7 @@ Creates a pool for the given two tokens and fee
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The address of the newly created pool |
 
 ### setOwner
 
@@ -91,6 +94,7 @@ onlyOwner
 `setOwner(address)`  external
 
 Updates the owner of the factory
+*Developer note: Must be called by the current owner*
 
 
 

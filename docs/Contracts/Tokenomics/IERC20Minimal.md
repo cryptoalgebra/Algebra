@@ -297,6 +297,9 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 `mintAndFreeze(address,uint256,uint64)`  external
 
 
+*Developer note: Mint the specified amount of token to the specified address and freeze it until the specified date.
+    Be careful, gas usage is not deterministic,
+    and depends on how many freezes _to address already has.*
 
 
 
