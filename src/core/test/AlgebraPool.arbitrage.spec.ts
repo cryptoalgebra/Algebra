@@ -234,7 +234,7 @@ describe('AlgebraPool arbitrage tests', () => {
 
                 // deposit max liquidity at the tick
                 const mintReceipt = await (
-                  await mint(wallet.address, bottomTick, topTick, BigNumber.from("11505743598341114571880798222544994"))
+                  await mint(wallet.address, bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"))
                 ).wait()
                 // sub the mint costs
                 const { amount0: amount0Mint, amount1: amount1Mint } = pool.interface.decodeEventLog(
@@ -254,9 +254,9 @@ describe('AlgebraPool arbitrage tests', () => {
                 const { amount0: amount0Burn, amount1: amount1Burn } = await pool.callStatic.burn(
                   bottomTick,
                   topTick,
-                  BigNumber.from("11505743598341114571880798222544994")
+                  BigNumber.from("40564824043007195767232224305152")
                 )
-                await pool.burn(bottomTick, topTick, BigNumber.from("11505743598341114571880798222544994"))
+                await pool.burn(bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"))
                 arbBalance0 = arbBalance0.add(amount0Burn)
                 arbBalance1 = arbBalance1.add(amount1Burn)
 

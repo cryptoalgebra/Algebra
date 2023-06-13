@@ -430,7 +430,7 @@ const TEST_POOLS: PoolTestCase[] = [
       {
         bottomTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         topTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        liquidity: BigNumber.from("11505743598341114571880798222544994"),
+        liquidity: BigNumber.from("40564824043007195767232224305152"),
       },
     ],
   },

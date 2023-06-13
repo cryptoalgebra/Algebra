@@ -36,7 +36,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -50,7 +50,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "profit": Object {
     "afterFrontrun": "-0.29012",
@@ -97,7 +97,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -111,7 +111,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "profit": Object {
     "afterFrontrun": "-0.29930",
@@ -158,7 +158,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -172,7 +172,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.5661",
@@ -219,7 +219,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -233,7 +233,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.6354",
@@ -280,7 +280,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -294,7 +294,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.1200",
@@ -341,7 +341,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -355,7 +355,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.2436",
@@ -402,7 +402,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -416,7 +416,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "profit": Object {
     "afterFrontrun": "-0.11091",
@@ -463,7 +463,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "collect": Object {
     "amount0": "0.0010000",
@@ -477,7 +477,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "profit": Object {
     "afterFrontrun": "-0.24900",
@@ -524,7 +524,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -538,7 +538,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "profit": Object {
     "afterFrontrun": "-0.29012",
@@ -585,7 +585,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -599,7 +599,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0910e+12",
+    "amount1": "3.8464e+9",
   },
   "profit": Object {
     "afterFrontrun": "-0.29930",
@@ -646,7 +646,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -660,7 +660,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.5661",
@@ -707,7 +707,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -721,7 +721,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "1.0412e+13",
+    "amount1": "3.6709e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.6354",
@@ -768,7 +768,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -782,7 +782,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.1200",
@@ -829,7 +829,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -843,7 +843,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "2.4408e+13",
+    "amount1": "8.6055e+10",
   },
   "profit": Object {
     "afterFrontrun": "-1.2436",
@@ -890,7 +890,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -904,7 +904,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "profit": Object {
     "afterFrontrun": "-0.11091",
@@ -951,7 +951,7 @@ Object {
   },
   "burn": Object {
     "amount0": "9.9990",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "collect": Object {
     "amount0": "0.00083000",
@@ -965,7 +965,7 @@ Object {
   },
   "mint": Object {
     "amount0": "0.0000",
-    "amount1": "3.2947e+13",
+    "amount1": "1.1616e+11",
   },
   "profit": Object {
     "afterFrontrun": "-0.24900",
