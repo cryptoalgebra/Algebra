@@ -8,11 +8,14 @@
 
 
 
+
+
+
 ## Functions
 ### setRates
 
 
-`setRates(uint128,uint128)`  external
+`function setRates(uint128 rate0, uint128 rate1) external`  external
 
 Change reward rates
 
@@ -27,7 +30,7 @@ Change reward rates
 ### addRewards
 
 
-`addRewards(uint256,uint256)`  external
+`function addRewards(uint256 token0Amount, uint256 token1Amount) external`  external
 
 
 
@@ -42,7 +45,7 @@ Change reward rates
 ### getInnerRewardsGrowth
 
 
-`getInnerRewardsGrowth(int24,int24)` view external
+`function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)` view external
 
 
 
@@ -61,7 +64,5 @@ Change reward rates
 | rewardGrowthInside1 | uint256 |  |
 
 
-
----
 
 

@@ -5,10 +5,14 @@
 
 
 
+
+
+
 ## Modifiers
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -21,7 +25,7 @@
 ### Entered
 
 
-`Entered(address,uint256,uint256)`  
+`event Entered(address staker, uint256 ALGBAmount, uint256 xALGBAmount)`  
 
 
 
@@ -37,7 +41,7 @@
 ### Left
 
 
-`Left(address,uint256,uint256)`  
+`event Left(address staker, uint256 xALGBAmount, uint256 ALGBAmount)`  
 
 
 
@@ -68,9 +72,8 @@
 ## Functions
 ### constructor
 
-ERC20
 
-`constructor(contract IERC20Minimal)`  public
+`constructor(contract IERC20Minimal _ALGB) public`  public
 
 
 
@@ -84,7 +87,7 @@ ERC20
 ### enter
 
 
-`enter(uint256)`  external
+`function enter(uint256 _amount) external`  external
 
 
 
@@ -98,7 +101,7 @@ ERC20
 ### leave
 
 
-`leave(uint256)`  external
+`function leave(uint256 _share) external`  external
 
 
 
@@ -112,7 +115,7 @@ ERC20
 ### currentBalance
 
 
-`currentBalance(uint256)` view external
+`function currentBalance(uint256 _amount) external view returns (uint256)` view external
 
 
 
@@ -130,9 +133,8 @@ ERC20
 
 ### setFreezeTime
 
-onlyOwner
 
-`setFreezeTime(uint256)`  external
+`function setFreezeTime(uint256 _freezeTime) external`  external
 
 
 
@@ -145,9 +147,8 @@ onlyOwner
 
 ### transferOwner
 
-onlyOwner
 
-`transferOwner(address)`  external
+`function transferOwner(address _newOwner) external`  external
 
 
 
@@ -159,7 +160,5 @@ onlyOwner
 
 
 
-
----
 
 

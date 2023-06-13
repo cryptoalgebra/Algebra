@@ -3,16 +3,22 @@
 # IAlgebraPoolEvents
 
 
+Events emitted by a pool
 
+
+
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
 ### Initialize
 
 
-`Initialize(uint160,int24)`  
+`event Initialize(uint160 price, int24 tick)`  
 
 Emitted exactly once by a pool when #initialize is first called on the pool
+*Developer note: Mint/Burn/Swap cannot be emitted by the pool before Initialize*
 
 
 
@@ -25,7 +31,7 @@ Emitted exactly once by a pool when #initialize is first called on the pool
 ### Mint
 
 
-`Mint(address,address,int24,int24,uint128,uint256,uint256)`  
+`event Mint(address sender, address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
 
 Emitted when liquidity is minted for a given position
 
@@ -45,9 +51,10 @@ Emitted when liquidity is minted for a given position
 ### Collect
 
 
-`Collect(address,address,int24,int24,uint128,uint128)`  
+`event Collect(address owner, address recipient, int24 bottomTick, int24 topTick, uint128 amount0, uint128 amount1)`  
 
 Emitted when fees are collected by the owner of a position
+*Developer note: Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees*
 
 
 
@@ -64,9 +71,10 @@ Emitted when fees are collected by the owner of a position
 ### Burn
 
 
-`Burn(address,int24,int24,uint128,uint256,uint256)`  
+`event Burn(address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
 
 Emitted when a position&#x27;s liquidity is removed
+*Developer note: Does not withdraw any fees earned by the liquidity position, which must be withdrawn via #collect*
 
 
 
@@ -83,7 +91,7 @@ Emitted when a position&#x27;s liquidity is removed
 ### Swap
 
 
-`Swap(address,address,int256,int256,uint160,uint128,int24)`  
+`event Swap(address sender, address recipient, int256 amount0, int256 amount1, uint160 price, uint128 liquidity, int24 tick)`  
 
 Emitted by the pool for any swaps between token0 and token1
 
@@ -103,7 +111,7 @@ Emitted by the pool for any swaps between token0 and token1
 ### Flash
 
 
-`Flash(address,address,uint256,uint256,uint256,uint256)`  
+`event Flash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1)`  
 
 Emitted by the pool for any flashes of token0/token1
 
@@ -122,7 +130,7 @@ Emitted by the pool for any flashes of token0/token1
 ### CommunityFee
 
 
-`CommunityFee(uint8,uint8)`  
+`event CommunityFee(uint8 communityFee0New, uint8 communityFee1New)`  
 
 Emitted when the community fee is changed by the pool
 
@@ -134,10 +142,24 @@ Emitted when the community fee is changed by the pool
 | communityFee1New | uint8 | The updated value of the token1 community fee percent |
 
 
+### TickSpacing
+
+
+`event TickSpacing(int24 newTickSpacing)`  
+
+Emitted when the tick spacing changes
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newTickSpacing | int24 | The updated value of the new tick spacing |
+
+
 ### Incentive
 
 
-`Incentive(address)`  
+`event Incentive(address virtualPoolAddress)`  
 
 Emitted when new activeIncentive is set
 
@@ -151,7 +173,7 @@ Emitted when new activeIncentive is set
 ### Fee
 
 
-`Fee(uint16)`  
+`event Fee(uint16 feeZto, uint16 feeOtz)`  
 
 Emitted when the fee changes
 
@@ -159,13 +181,14 @@ Emitted when the fee changes
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| fee | uint16 | The value of the token fee |
+| feeZto | uint16 | The value of the token fee for zto swaps |
+| feeOtz | uint16 | The value of the token fee for otz swaps |
 
 
 ### LiquidityCooldown
 
 
-`LiquidityCooldown(uint32)`  
+`event LiquidityCooldown(uint32 liquidityCooldown)`  
 
 Emitted when the LiquidityCooldown changes
 
@@ -179,7 +202,5 @@ Emitted when the LiquidityCooldown changes
 
 
 
-
----
 
 

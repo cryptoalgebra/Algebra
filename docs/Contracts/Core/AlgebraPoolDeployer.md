@@ -5,10 +5,14 @@
 
 
 
+
+
+
 ## Modifiers
 ### onlyFactory
 
 
+`modifier onlyFactory()`  internal
 
 
 
@@ -19,6 +23,7 @@
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -43,7 +48,7 @@ Returns token1 The second token of the pool by address sort order*
 ### constructor
 
 
-`constructor()`  public
+`constructor() public`  public
 
 
 
@@ -53,11 +58,11 @@ Returns token1 The second token of the pool by address sort order*
 
 ### setFactory
 
-onlyOwner
 
-`setFactory(address)`  external
+`function setFactory(address _factory) external`  external
 
 
+*Developer note: Sets the factory address to the poolDeployer for permissioned actions*
 
 
 
@@ -68,11 +73,12 @@ onlyOwner
 
 ### deploy
 
-onlyFactory
 
-`deploy(address,address,address,address)`  external
+`function deploy(address dataStorage, address _factory, address token0, address token1) external returns (address pool)`  external
 
 
+*Developer note: Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
+clearing it after deploying the pool.*
 
 
 
@@ -87,10 +93,8 @@ onlyFactory
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The deployed pool&#x27;s address |
 
 
-
----
 
 

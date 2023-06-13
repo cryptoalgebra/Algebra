@@ -7,6 +7,9 @@
 
 
 
+
+
+
 ## Variables
 ### address farmingCenter 
 
@@ -25,7 +28,7 @@
 ### constructor
 
 
-`constructor()`  public
+`constructor() public`  public
 
 
 
@@ -36,7 +39,7 @@
 ### lockTokens
 
 
-`lockTokens(uint256,bytes32,uint256)`  external
+`function lockTokens(uint256 tokenId, bytes32 incentiveId, uint256 tokenAmount) external`  external
 
 
 
@@ -52,7 +55,7 @@
 ### setFarmingCenter
 
 
-`setFarmingCenter(address)`  external
+`function setFarmingCenter(address _farmingCenter) external`  external
 
 
 
@@ -66,7 +69,7 @@
 ### claimTokens
 
 
-`claimTokens(address,address,uint256,bytes32)`  external
+`function claimTokens(address multiplierToken, address to, uint256 tokenId, bytes32 incentiveId) external`  external
 
 
 
@@ -81,7 +84,5 @@
 
 
 
-
----
 
 

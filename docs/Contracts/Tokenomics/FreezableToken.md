@@ -6,11 +6,14 @@
 
 
 
+
+
+
 ## Events
 ### Freezed
 
 
-`Freezed(address,uint64,uint256)`  
+`event Freezed(address to, uint64 release, uint256 amount)`  
 
 
 
@@ -26,7 +29,7 @@
 ### Released
 
 
-`Released(address,uint256)`  
+`event Released(address owner, uint256 amount)`  
 
 
 
@@ -44,9 +47,10 @@
 ### balanceOf
 
 
-`balanceOf(address)` view public
+`function balanceOf(address _owner) public view returns (uint256 balance)` view public
 
 
+*Developer note: Gets the balance of the specified address include freezing tokens.*
 
 
 
@@ -58,14 +62,15 @@
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| balance | uint256 |  |
+| balance | uint256 | An uint256 representing the amount owned by the passed address. |
 
 ### actualBalanceOf
 
 
-`actualBalanceOf(address)` view public
+`function actualBalanceOf(address _owner) public view returns (uint256 balance)` view public
 
 
+*Developer note: Gets the balance of the specified address without freezing tokens.*
 
 
 
@@ -77,12 +82,12 @@
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| balance | uint256 |  |
+| balance | uint256 | n uint256 representing the amount owned by the passed address. |
 
 ### freezingBalanceOf
 
 
-`freezingBalanceOf(address)` view public
+`function freezingBalanceOf(address _owner) public view returns (uint256 balance)` view public
 
 
 
@@ -99,7 +104,5 @@
 | balance | uint256 |  |
 
 
-
----
 
 

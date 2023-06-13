@@ -2,15 +2,18 @@
 
 # IAlgebraFarming
 
+
 Algebra Farming Interface
+
 Allows farming nonfungible liquidity tokens in exchange for reward tokens
+
 
 
 ## Events
 ### IncentiveDetached
 
 
-`IncentiveDetached(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256)`  
+`event IncentiveDetached(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime)`  
 
 Event emitted when a liquidity mining incentive has been stopped from the outside
 
@@ -29,7 +32,7 @@ Event emitted when a liquidity mining incentive has been stopped from the outsid
 ### IncentiveAttached
 
 
-`IncentiveAttached(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,address,uint256,uint256)`  
+`event IncentiveAttached(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime)`  
 
 Event emitted when a liquidity mining incentive has been runned again from the outside
 
@@ -48,7 +51,7 @@ Event emitted when a liquidity mining incentive has been runned again from the o
 ### FarmEntered
 
 
-`FarmEntered(uint256,bytes32,uint128,uint256)`  
+`event FarmEntered(uint256 tokenId, bytes32 incentiveId, uint128 liquidity, uint256 tokensLocked)`  
 
 Event emitted when a Algebra LP token has been farmd
 
@@ -65,7 +68,7 @@ Event emitted when a Algebra LP token has been farmd
 ### FarmEnded
 
 
-`FarmEnded(uint256,bytes32,address,address,address,uint256,uint256)`  
+`event FarmEnded(uint256 tokenId, bytes32 incentiveId, address rewardAddress, address bonusRewardToken, address owner, uint256 reward, uint256 bonusReward)`  
 
 Event emitted when a Algebra LP token has been exitFarmingd
 
@@ -85,7 +88,7 @@ Event emitted when a Algebra LP token has been exitFarmingd
 ### IncentiveMaker
 
 
-`IncentiveMaker(address)`  
+`event IncentiveMaker(address incentiveMaker)`  
 
 Emitted when the incentive maker is changed
 
@@ -99,7 +102,7 @@ Emitted when the incentive maker is changed
 ### FarmingCenter
 
 
-`FarmingCenter(address)`  
+`event FarmingCenter(address farmingCenter)`  
 
 Emitted when the farming center is changed
 
@@ -113,7 +116,7 @@ Emitted when the farming center is changed
 ### RewardsAdded
 
 
-`RewardsAdded(uint256,uint256,bytes32)`  
+`event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId)`  
 
 Event emitted when rewards were added
 
@@ -129,7 +132,7 @@ Event emitted when rewards were added
 ### RewardClaimed
 
 
-`RewardClaimed(address,uint256,address,address)`  
+`event RewardClaimed(address to, uint256 reward, address rewardAddress, address owner)`  
 
 Event emitted when a reward token has been claimed
 
@@ -149,7 +152,7 @@ Event emitted when a reward token has been claimed
 ### nonfungiblePositionManager
 
 
-`nonfungiblePositionManager()` view external
+`function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)` view external
 
 The nonfungible position manager with which this farming contract is compatible
 
@@ -165,7 +168,7 @@ The nonfungible position manager with which this farming contract is compatible
 ### farmingCenter
 
 
-`farmingCenter()` view external
+`function farmingCenter() external view returns (contract IFarmingCenter)` view external
 
 The farming Center
 
@@ -181,7 +184,7 @@ The farming Center
 ### deployer
 
 
-`deployer()`  external
+`function deployer() external returns (contract IAlgebraPoolDeployer)`  external
 
 The pool deployer
 
@@ -197,7 +200,7 @@ The pool deployer
 ### setIncentiveMaker
 
 
-`setIncentiveMaker(address)`  external
+`function setIncentiveMaker(address _incentiveMaker) external`  external
 
 Updates the incentive maker
 
@@ -211,7 +214,7 @@ Updates the incentive maker
 ### incentives
 
 
-`incentives(bytes32)` view external
+`function incentives(bytes32 incentiveId) external view returns (uint256 totalReward, uint256 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, uint224 totalLiquidity, address multiplierToken, struct IAlgebraFarming.Tiers tiers)` view external
 
 Represents a farming incentive
 
@@ -228,6 +231,7 @@ Represents a farming incentive
 | totalReward | uint256 |  |
 | bonusReward | uint256 |  |
 | virtualPoolAddress | address |  |
+| minimalPositionWidth | uint24 |  |
 | totalLiquidity | uint224 |  |
 | multiplierToken | address |  |
 | tiers | struct IAlgebraFarming.Tiers |  |
@@ -235,7 +239,7 @@ Represents a farming incentive
 ### detachIncentive
 
 
-`detachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+`function detachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
 Detach incentive from the pool
 
@@ -249,7 +253,7 @@ Detach incentive from the pool
 ### attachIncentive
 
 
-`attachIncentive(struct IIncentiveKey.IncentiveKey)`  external
+`function attachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
 Attach incentive to the pool
 
@@ -263,7 +267,7 @@ Attach incentive to the pool
 ### rewards
 
 
-`rewards(address,contract IERC20Minimal)` view external
+`function rewards(address owner, contract IERC20Minimal rewardToken) external view returns (uint256 rewardsOwed)` view external
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
@@ -278,12 +282,12 @@ Returns amounts of reward tokens owed to a given address according to the last t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rewardsOwed | uint256 |  |
+| rewardsOwed | uint256 | The amount of the reward token claimable by the owner |
 
 ### setFarmingCenterAddress
 
 
-`setFarmingCenterAddress(address)`  external
+`function setFarmingCenterAddress(address _farmingCenter) external`  external
 
 Updates farming center address
 
@@ -297,7 +301,7 @@ Updates farming center address
 ### enterFarming
 
 
-`enterFarming(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
+`function enterFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, uint256 tokensLocked) external`  external
 
 enter farming for Algebra LP token
 
@@ -313,7 +317,7 @@ enter farming for Algebra LP token
 ### exitFarming
 
 
-`exitFarming(struct IIncentiveKey.IncentiveKey,uint256,address)`  external
+`function exitFarming(struct IIncentiveKey.IncentiveKey key, uint256 tokenId, address _owner) external`  external
 
 exitFarmings for Algebra LP token
 
@@ -329,7 +333,7 @@ exitFarmings for Algebra LP token
 ### claimReward
 
 
-`claimReward(contract IERC20Minimal,address,uint256)`  external
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 
@@ -345,12 +349,12 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 ### claimRewardFrom
 
 
-`claimRewardFrom(contract IERC20Minimal,address,address,uint256)`  external
+`function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
@@ -368,12 +372,12 @@ only for FarmingCenter
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 ### getRewardInfo
 
 
-`getRewardInfo(struct IIncentiveKey.IncentiveKey,uint256)`  external
+`function getRewardInfo(struct IIncentiveKey.IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)`  external
 
 Calculates the reward amount that will be received for the given farm
 
@@ -388,11 +392,9 @@ Calculates the reward amount that will be received for the given farm
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
+| reward | uint256 | The reward accrued to the NFT for the given incentive thus far |
+| bonusReward | uint256 | The bonus reward accrued to the NFT for the given incentive thus far |
 
 
-
----
 
 

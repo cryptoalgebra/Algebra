@@ -2,15 +2,20 @@
 
 # IERC20Minimal
 
+
 Minimal ERC20 interface for Algebra
+
 Contains a subset of the full ERC20 interface that is used in Algebra
+
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
 ### Transfer
 
 
-`Transfer(address,address,uint256)`  
+`event Transfer(address from, address to, uint256 value)`  
 
 Event emitted when tokens are transferred from one address to another, either via &#x60;#transfer&#x60; or &#x60;#transferFrom&#x60;.
 
@@ -26,7 +31,7 @@ Event emitted when tokens are transferred from one address to another, either vi
 ### Approval
 
 
-`Approval(address,address,uint256)`  
+`event Approval(address owner, address spender, uint256 value)`  
 
 Event emitted when the approval amount for the spender of a given owner&#x27;s tokens changes.
 
@@ -45,7 +50,7 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 ### balanceOf
 
 
-`balanceOf(address)` view external
+`function balanceOf(address account) external view returns (uint256)` view external
 
 Returns the balance of a token
 
@@ -59,12 +64,12 @@ Returns the balance of a token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 |  |
+| [0] | uint256 | The number of tokens held by the account |
 
 ### transfer
 
 
-`transfer(address,uint256)`  external
+`function transfer(address recipient, uint256 amount) external returns (bool)`  external
 
 Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
@@ -79,12 +84,12 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful transfer, false for an unsuccessful transfer |
 
 ### allowance
 
 
-`allowance(address,address)` view external
+`function allowance(address owner, address spender) external view returns (uint256)` view external
 
 Returns the current allowance given to a spender by an owner
 
@@ -99,12 +104,12 @@ Returns the current allowance given to a spender by an owner
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 |  |
+| [0] | uint256 | The current allowance granted by &#x60;owner&#x60; to &#x60;spender&#x60; |
 
 ### approve
 
 
-`approve(address,uint256)`  external
+`function approve(address spender, uint256 amount) external returns (bool)`  external
 
 Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
 
@@ -119,12 +124,12 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful approval, false for unsuccessful |
 
 ### transferFrom
 
 
-`transferFrom(address,address,uint256)`  external
+`function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)`  external
 
 Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
 
@@ -140,10 +145,8 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Returns true for a successful transfer, false for unsuccessful |
 
 
-
----
 
 

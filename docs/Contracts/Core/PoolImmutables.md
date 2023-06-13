@@ -7,6 +7,9 @@
 
 
 
+
+
+
 ## Variables
 ### address dataStorageOperator immutable
 
@@ -26,28 +29,14 @@ The second of the two tokens of the pool, sorted by address
 
 
 ## Functions
-### tickSpacing
-
-
-`tickSpacing()` pure external
-
-The pool tick spacing
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int24 |  |
-
 ### maxLiquidityPerTick
 
 
-`maxLiquidityPerTick()` pure external
+`function maxLiquidityPerTick() external pure returns (uint128)` pure external
 
 The maximum amount of position liquidity that can use any tick in the range
+*Developer note: This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
+also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool*
 
 
 
@@ -56,10 +45,8 @@ The maximum amount of position liquidity that can use any tick in the range
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint128 |  |
+| [0] | uint128 | The max amount of liquidity per tick |
 
 
-
----
 
 

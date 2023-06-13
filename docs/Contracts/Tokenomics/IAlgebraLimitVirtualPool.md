@@ -8,11 +8,14 @@
 
 
 
+
+
+
 ## Functions
 ### desiredEndTimestamp
 
 
-`desiredEndTimestamp()` view external
+`function desiredEndTimestamp() external view returns (uint32)` view external
 
 
 
@@ -28,7 +31,7 @@
 ### desiredStartTimestamp
 
 
-`desiredStartTimestamp()` view external
+`function desiredStartTimestamp() external view returns (uint32)` view external
 
 
 
@@ -44,7 +47,7 @@
 ### isFinished
 
 
-`isFinished()` view external
+`function isFinished() external view returns (bool)` view external
 
 
 
@@ -60,9 +63,10 @@
 ### finish
 
 
-`finish()`  external
+`function finish() external returns (bool wasFinished, uint32 activeTime)`  external
 
 Finishes incentive if it wasn&#x27;t
+*Developer note: This function is called by a AlgebraLimitFarming when someone calls #exitFarming() after the end timestamp*
 
 
 
@@ -71,11 +75,9 @@ Finishes incentive if it wasn&#x27;t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| wasFinished | bool |  |
-| activeTime | uint32 |  |
+| wasFinished | bool | Was incentive finished before this call or not |
+| activeTime | uint32 | The summary amount of seconds inside active positions |
 
 
-
----
 
 
