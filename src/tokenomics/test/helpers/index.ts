@@ -107,7 +107,7 @@ export class HelperCommands {
    * Creates a staking incentive owned by `incentiveCreator` for `totalReward` of `rewardToken`
    *
    * Side-Effects:
-   *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
+   * Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
    */
   createIncentiveFlow: HelperTypes.CreateIncentive.Command = async (params) => {
     const { startTime } = params
@@ -329,8 +329,8 @@ export class HelperCommands {
    * params.lp mints an NFT backed by a certain amount of `params.tokensToFarm`.
    *
    * Side-Effects:
-   *  Funds `params.lp` with enough `params.tokensToFarm` if they do not have enough.
-   *  Handles the ERC20 and ERC721 permits.
+   * Funds `params.lp` with enough `params.tokensToFarm` if they do not have enough.
+   * Handles the ERC20 and ERC721 permits.
    */
   mintDepositFarmFlow: HelperTypes.MintDepositFarm.Command = async (params) => {
     // Make sure LP has enough balance

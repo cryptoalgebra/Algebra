@@ -17,14 +17,13 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `event Owner(address newOwner)`  
 
-@notice Emitted when the owner of the factory is changed
- @param newOwner The owner after the owner was changed
+Emitted when the owner of the factory is changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newOwner | address |  |
+| newOwner | address | The owner after the owner was changed |
 
 
 ### VaultAddress
@@ -32,14 +31,13 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `event VaultAddress(address newVaultAddress)`  
 
-@notice Emitted when the vault address is changed
- @param newVaultAddress The vault address after the address was changed
+Emitted when the vault address is changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newVaultAddress | address |  |
+| newVaultAddress | address | The vault address after the address was changed |
 
 
 ### Pool
@@ -47,18 +45,15 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `event Pool(address token0, address token1, address pool)`  
 
-@notice Emitted when a pool is created
- @param token0 The first token of the pool by address sort order
- @param token1 The second token of the pool by address sort order
- @param pool The address of the created pool
+Emitted when a pool is created
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| token0 | address |  |
-| token1 | address |  |
-| pool | address |  |
+| token0 | address | The first token of the pool by address sort order |
+| token1 | address | The second token of the pool by address sort order |
+| pool | address | The address of the created pool |
 
 
 ### FarmingAddress
@@ -66,14 +61,13 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `event FarmingAddress(address newFarmingAddress)`  
 
-@notice Emitted when the farming address is changed
- @param newFarmingAddress The farming address after the address was changed
+Emitted when the farming address is changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newFarmingAddress | address |  |
+| newFarmingAddress | address | The farming address after the address was changed |
 
 
 ### FeeConfiguration
@@ -106,9 +100,8 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `function owner() external view returns (address)` view external
 
-@notice Returns the current owner of the factory
- @dev Can be changed by the current owner via setOwner
- @return The address of the factory owner
+Returns the current owner of the factory
+*Developer note: Can be changed by the current owner via setOwner*
 
 
 
@@ -117,15 +110,14 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The address of the factory owner |
 
 ### poolDeployer
 
 
 `function poolDeployer() external view returns (address)` view external
 
-@notice Returns the current poolDeployerAddress
- @return The address of the poolDeployer
+Returns the current poolDeployerAddress
 
 
 
@@ -134,7 +126,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The address of the poolDeployer |
 
 ### farmingAddress
 
@@ -175,65 +167,58 @@ certain functions not by a tokenomics contract*
 
 `function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
 
-@notice Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
- @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
- @param tokenA The contract address of either token0 or token1
- @param tokenB The contract address of the other token
- @return pool The pool address
+Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
+*Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenA | address |  |
-| tokenB | address |  |
+| tokenA | address | The contract address of either token0 or token1 |
+| tokenB | address | The contract address of the other token |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The pool address |
 
 ### createPool
 
 
 `function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
-@notice Creates a pool for the given two tokens and fee
- @param tokenA One of the two tokens in the desired pool
- @param tokenB The other of the two tokens in the desired pool
- @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
- from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
- are invalid.
- @return pool The address of the newly created pool
+Creates a pool for the given two tokens and fee
+*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
+from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
+are invalid.*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenA | address |  |
-| tokenB | address |  |
+| tokenA | address | One of the two tokens in the desired pool |
+| tokenB | address | The other of the two tokens in the desired pool |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The address of the newly created pool |
 
 ### setOwner
 
 
 `function setOwner(address _owner) external`  external
 
-@notice Updates the owner of the factory
- @dev Must be called by the current owner
- @param _owner The new owner of the factory
+Updates the owner of the factory
+*Developer note: Must be called by the current owner*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _owner | address |  |
+| _owner | address | The new owner of the factory |
 
 
 ### setFarmingAddress

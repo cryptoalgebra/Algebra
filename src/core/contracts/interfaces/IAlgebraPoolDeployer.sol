@@ -11,8 +11,8 @@ pragma solidity >=0.5.0;
  */
 interface IAlgebraPoolDeployer {
   /**
-   *  @notice Emitted when the factory address is changed
-   *  @param factory The factory address after the address was changed
+   * @notice Emitted when the factory address is changed
+   * @param factory The factory address after the address was changed
    */
   event Factory(address indexed factory);
 
@@ -24,15 +24,7 @@ interface IAlgebraPoolDeployer {
    * Returns token0 The first token of the pool by address sort order
    * Returns token1 The second token of the pool by address sort order
    */
-  function parameters()
-    external
-    view
-    returns (
-      address dataStorage,
-      address factory,
-      address token0,
-      address token1
-    );
+  function parameters() external view returns (address dataStorage, address factory, address token0, address token1);
 
   /**
    * @dev Deploys a pool with the given parameters by transiently setting the parameters storage slot and then
@@ -43,12 +35,7 @@ interface IAlgebraPoolDeployer {
    * @param token1 The second token of the pool by address sort order
    * @return pool The deployed pool's address
    */
-  function deploy(
-    address dataStorage,
-    address factory,
-    address token0,
-    address token1
-  ) external returns (address pool);
+  function deploy(address dataStorage, address factory, address token0, address token1) external returns (address pool);
 
   /**
    * @dev Sets the factory address to the poolDeployer for permissioned actions
