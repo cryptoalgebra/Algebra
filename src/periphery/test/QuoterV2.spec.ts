@@ -373,10 +373,10 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1)
         expect(initializedTicksCrossedList[0]).to.eq(2)
-        expect(amountIn).to.eq(15228)
+        expect(amountIn).to.eq(15229)
 
         expect(sqrtPriceX96AfterList.length).to.eq(1)
-        expect(sqrtPriceX96AfterList[0]).to.eq('78055527257643669242286029831')
+        expect(sqrtPriceX96AfterList[0]).to.eq('78055522596578558023133221195')
       })
 
       it('0 -> 2 cross 2 where tick after is initialized', async () => {
@@ -471,9 +471,9 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1)
         expect(initializedTicksCrossedList[0]).to.eq(2)
-        expect(amountIn).to.eq(15228)
+        expect(amountIn).to.eq(15230)
         expect(sqrtPriceX96AfterList.length).to.eq(1)
-        expect(sqrtPriceX96AfterList[0]).to.eq('80418414376567919517220409857')
+        expect(sqrtPriceX96AfterList[0]).to.eq('80418471184994227644271611530')
       })
 
       it('2 -> 0 cross 2 where tick after is initialized', async () => {

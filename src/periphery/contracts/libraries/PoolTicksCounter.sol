@@ -36,15 +36,11 @@ library PoolTicksCounter {
             // and we shouldn't count it.
             tickAfterInitialized =
                 ((self.tickTable(wordPosAfter) & (1 << bitPosAfter)) > 0) &&
-                ((tickAfter % self.tickSpacing()) == 0) &&
                 (tickBefore > tickAfter);
 
             // In the case where tickBefore is initialized, we only want to count it if we are swapping upwards.
             // Use the same logic as above to decide whether we should count tickBefore or not.
-            tickBeforeInitialized =
-                ((self.tickTable(wordPos) & (1 << bitPos)) > 0) &&
-                ((tickBefore % self.tickSpacing()) == 0) &&
-                (tickBefore < tickAfter);
+            tickBeforeInitialized = ((self.tickTable(wordPos) & (1 << bitPos)) > 0) && (tickBefore < tickAfter);
 
             if (wordPos < wordPosAfter || (wordPos == wordPosAfter && bitPos <= bitPosAfter)) {
                 wordPosLower = wordPos;
