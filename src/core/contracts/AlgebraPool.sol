@@ -29,6 +29,9 @@ import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraSwapCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
 
+/// @title Algebra concentrated liquidity pool
+/// @notice This contract is responsible for liquidity positions, swaps and flashloans
+/// @dev Version: Algebra V1.9
 contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
