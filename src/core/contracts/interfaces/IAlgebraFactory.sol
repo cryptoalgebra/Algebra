@@ -33,6 +33,12 @@ interface IAlgebraFactory {
    */
   event FarmingAddress(address indexed newFarmingAddress);
 
+  /**
+   * @notice Emitted when the default community fee is changed
+   * @param newDefaultCommunityFee The new default community fee value
+   */
+  event DefaultCommunityFee(uint16 newDefaultCommunityFee);
+
   event FeeConfiguration(
     uint16 alpha1,
     uint16 alpha2,
@@ -64,6 +70,12 @@ interface IAlgebraFactory {
    * @return The tokenomics contract address
    */
   function farmingAddress() external view returns (address);
+
+  /**
+   * @notice Returns the default community fee
+   * @return Fee which will be set at the creation of the pool
+   */
+  function defaultCommunityFee() external view returns (uint16);
 
   function vaultAddress() external view returns (address);
 
@@ -99,6 +111,12 @@ interface IAlgebraFactory {
    * @param _farmingAddress The new tokenomics contract address
    */
   function setFarmingAddress(address _farmingAddress) external;
+
+  /**
+   * @dev updates default community fee for new pools
+   * @param newDefaultCommunityFee The new community fee, _must_ be <= MAX_COMMUNITY_FEE
+   */
+  function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external;
 
   /**
    * @dev updates vault address on the factory
