@@ -6,7 +6,7 @@ import './AlgebraPool.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools
-/// @dev Version: Algebra V1.9
+/// @dev Version: Algebra V1.9-ve3,3
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   struct Parameters {
     address dataStorage;

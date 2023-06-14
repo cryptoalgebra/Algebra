@@ -10,7 +10,7 @@ import './DataStorageOperator.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its dataStorages
-/// @dev Version: Algebra V1.9
+/// @dev Version: Algebra V1.9-ve3,3
 contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override owner;
