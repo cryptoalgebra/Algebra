@@ -1196,7 +1196,7 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe.only('#communityFee', () => {
+  describe('#communityFee', () => {
     const liquidityAmount = expandTo18Decimals(1000)
 
     it('default comm fee set to 100', async () => {
