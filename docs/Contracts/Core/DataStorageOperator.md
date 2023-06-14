@@ -27,12 +27,8 @@
 
 Returns data belonging to a certain timepoint
 
-*Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
-### struct AdaptiveFee.Configuration feeConfigZto 
-
-
-
-### struct AdaptiveFee.Configuration feeConfigOtz 
+*Developer note: There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds*
+### struct AdaptiveFee.Configuration feeConfig 
 
 
 
@@ -70,7 +66,7 @@ Initialize the dataStorage array by writing the first slot. Called once for the 
 ### changeFeeConfiguration
 
 
-`function changeFeeConfiguration(bool zto, struct AdaptiveFee.Configuration _feeConfig) external`  external
+`function changeFeeConfiguration(struct AdaptiveFee.Configuration _feeConfig) external`  external
 
 Changes fee configuration for the pool
 
@@ -78,7 +74,6 @@ Changes fee configuration for the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| zto | bool |  |
 | _feeConfig | struct AdaptiveFee.Configuration |  |
 
 
@@ -223,10 +218,10 @@ Calculates gmean(volume/liquidity) for block
 | ---- | ---- | ----------- |
 | [0] | uint32 |  |
 
-### getFees
+### getFee
 
 
-`function getFees(uint32 _time, int24 _tick, uint16 _index, uint128 _liquidity) external view returns (uint16 feeZto, uint16 feeOtz)` view external
+`function getFee(uint32 _time, int24 _tick, uint16 _index, uint128 _liquidity) external view returns (uint16 fee)` view external
 
 Calculates fee based on combination of sigmoids
 
@@ -243,8 +238,7 @@ Calculates fee based on combination of sigmoids
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| feeZto | uint16 | The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6 |
-| feeOtz | uint16 | The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6 |
+| fee | uint16 | The fee in hundredths of a bip, i.e. 1e-6 |
 
 
 

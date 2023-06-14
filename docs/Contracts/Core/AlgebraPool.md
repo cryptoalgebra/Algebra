@@ -3,10 +3,11 @@
 # AlgebraPool
 
 
+Algebra concentrated liquidity pool
 
+This contract is responsible for liquidity positions, swaps and flashloans
 
-
-
+*Developer note: Version: Algebra V1.9*
 
 ## Modifiers
 ### onlyFactoryOwner

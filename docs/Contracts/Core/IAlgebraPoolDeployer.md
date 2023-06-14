@@ -19,14 +19,13 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 `event Factory(address factory)`  
 
-@notice Emitted when the factory address is changed
- @param factory The factory address after the address was changed
+Emitted when the factory address is changed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| factory | address |  |
+| factory | address | The factory address after the address was changed |
 
 
 

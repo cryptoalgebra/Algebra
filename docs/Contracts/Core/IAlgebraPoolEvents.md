@@ -173,7 +173,7 @@ Emitted when new activeIncentive is set
 ### Fee
 
 
-`event Fee(uint16 feeZto, uint16 feeOtz)`  
+`event Fee(uint16 fee)`  
 
 Emitted when the fee changes
 
@@ -181,8 +181,7 @@ Emitted when the fee changes
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| feeZto | uint16 | The value of the token fee for zto swaps |
-| feeOtz | uint16 | The value of the token fee for otz swaps |
+| fee | uint16 | The value of the token fee |
 
 
 ### LiquidityCooldown

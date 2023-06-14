@@ -3,10 +3,11 @@
 # AlgebraPoolDeployer
 
 
+Algebra pool deployer
 
+Is used by AlgebraFactory to deploy pools
 
-
-
+*Developer note: Version: Algebra V1.9*
 
 ## Modifiers
 ### onlyFactory

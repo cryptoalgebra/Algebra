@@ -13,7 +13,7 @@
 ### FeeConfiguration
 
 
-`event FeeConfiguration(bool zto, struct AdaptiveFee.Configuration feeConfig)`  
+`event FeeConfiguration(struct AdaptiveFee.Configuration feeConfig)`  
 
 
 
@@ -21,7 +21,6 @@
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| zto | bool |  |
 | feeConfig | struct AdaptiveFee.Configuration |  |
 
 
@@ -34,7 +33,7 @@
 `function timepoints(uint256 index) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint88 volatilityCumulative, int24 averageTick, uint144 volumePerLiquidityCumulative)` view external
 
 Returns data belonging to a certain timepoint
-*Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
+*Developer note: There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds*
 
 
 
@@ -176,7 +175,7 @@ Writes an dataStorage timepoint to the array
 ### changeFeeConfiguration
 
 
-`function changeFeeConfiguration(bool zto, struct AdaptiveFee.Configuration feeConfig) external`  external
+`function changeFeeConfiguration(struct AdaptiveFee.Configuration feeConfig) external`  external
 
 Changes fee configuration for the pool
 
@@ -184,7 +183,6 @@ Changes fee configuration for the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| zto | bool |  |
 | feeConfig | struct AdaptiveFee.Configuration |  |
 
 
@@ -225,10 +223,10 @@ Calculates gmean(volume/liquidity) for block
 | ---- | ---- | ----------- |
 | windowLength | uint32 | Length of window used to calculate averages |
 
-### getFees
+### getFee
 
 
-`function getFees(uint32 time, int24 tick, uint16 index, uint128 liquidity) external view returns (uint16 feeZto, uint16 feeOtz)` view external
+`function getFee(uint32 time, int24 tick, uint16 index, uint128 liquidity) external view returns (uint16 fee)` view external
 
 Calculates fee based on combination of sigmoids
 
@@ -245,8 +243,7 @@ Calculates fee based on combination of sigmoids
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| feeZto | uint16 | The fee for ZtO swaps in hundredths of a bip, i.e. 1e-6 |
-| feeOtz | uint16 | The fee for OtZ swaps in hundredths of a bip, i.e. 1e-6 |
+| fee | uint16 | The fee in hundredths of a bip, i.e. 1e-6 |
 
 
 
