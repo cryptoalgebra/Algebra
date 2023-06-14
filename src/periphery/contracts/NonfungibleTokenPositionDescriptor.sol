@@ -61,10 +61,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                     quoteTokenAddress: quoteTokenAddress,
                     baseTokenAddress: baseTokenAddress,
                     quoteTokenSymbol: quoteTokenAddress == WNativeToken
-                        ? 'MATIC'
+                        ? 'ETH'
                         : SafeERC20Namer.tokenSymbol(quoteTokenAddress),
                     baseTokenSymbol: baseTokenAddress == WNativeToken
-                        ? 'MATIC'
+                        ? 'ETH'
                         : SafeERC20Namer.tokenSymbol(baseTokenAddress),
                     quoteTokenDecimals: IERC20Metadata(quoteTokenAddress).decimals(),
                     baseTokenDecimals: IERC20Metadata(baseTokenAddress).decimals(),
