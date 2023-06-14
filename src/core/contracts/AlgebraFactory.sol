@@ -19,6 +19,9 @@ contract AlgebraFactory is IAlgebraFactory {
   address public immutable override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
+  uint8 public override defaultCommunityFee;
+
+  /// @inheritdoc IAlgebraFactory
   address public override farmingAddress;
 
   /// @inheritdoc IAlgebraFactory
@@ -88,6 +91,14 @@ contract AlgebraFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
+  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+    require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(defaultCommunityFee != newDefaultCommunityFee);
+    defaultCommunityFee = newDefaultCommunityFee;
+    emit DefaultCommunityFee(newDefaultCommunityFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
     require(vaultAddress != _vaultAddress);
     emit VaultAddress(_vaultAddress);
@@ -113,7 +124,7 @@ contract AlgebraFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x5d100e2dbf4b80b9451c29380def0d6c4abeb3db0d166c81fda155a89e106dbd;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xab9acbcae566bd662fb801895320dc3dd170e64394f78600b969ab128a3a40fd;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

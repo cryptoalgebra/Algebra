@@ -81,9 +81,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolState
-  function timepoints(
-    uint256 index
-  )
+  function timepoints(uint256 index)
     external
     view
     override
@@ -107,15 +105,16 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolDerivedState
-  function getInnerCumulatives(
-    int24 bottomTick,
-    int24 topTick
-  )
+  function getInnerCumulatives(int24 bottomTick, int24 topTick)
     external
     view
     override
     onlyValidTicks(bottomTick, topTick)
-    returns (int56 innerTickCumulative, uint160 innerSecondsSpentPerLiquidity, uint32 innerSecondsSpent)
+    returns (
+      int56 innerTickCumulative,
+      uint160 innerSecondsSpentPerLiquidity,
+      uint32 innerSecondsSpent
+    )
   {
     Cumulatives memory lower;
     {
@@ -174,9 +173,7 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolDerivedState
-  function getTimepoints(
-    uint32[] calldata secondsAgos
-  )
+  function getTimepoints(uint32[] calldata secondsAgos)
     external
     view
     override
@@ -207,6 +204,8 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     IDataStorageOperator(dataStorageOperator).initialize(timestamp, tick);
 
     globalState.price = initialPrice;
+    globalState.communityFeeToken0 = IAlgebraFactory(factory).defaultCommunityFee();
+    globalState.communityFeeToken1 = IAlgebraFactory(factory).defaultCommunityFee();
     globalState.unlocked = true;
     globalState.tick = tick;
 
@@ -284,7 +283,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 bottomTick,
     int24 topTick,
     int128 liquidityDelta
-  ) private returns (Position storage position, int256 amount0, int256 amount1) {
+  )
+    private
+    returns (
+      Position storage position,
+      int256 amount0,
+      int256 amount1
+    )
+  {
     UpdatePositionCache memory cache = UpdatePositionCache(globalState.price, globalState.tick, globalState.timepointIndex);
 
     position = getOrCreatePosition(owner, bottomTick, topTick);
@@ -370,7 +376,15 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int128 liquidityDelta,
     int24 currentTick,
     uint160 currentPrice
-  ) private pure returns (int256 amount0, int256 amount1, int128 globalLiquidityDelta) {
+  )
+    private
+    pure
+    returns (
+      int256 amount0,
+      int256 amount1,
+      int128 globalLiquidityDelta
+    )
+  {
     // If current tick is less than the provided bottom one then only the token0 has to be provided
     if (currentTick < bottomTick) {
       amount0 = TokenDeltaMath.getToken0Delta(TickMath.getSqrtRatioAtTick(bottomTick), TickMath.getSqrtRatioAtTick(topTick), liquidityDelta);
@@ -393,7 +407,11 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
    * @param topTick The position's top tick
    * @return position The Position object
    */
-  function getOrCreatePosition(address owner, int24 bottomTick, int24 topTick) private view returns (Position storage) {
+  function getOrCreatePosition(
+    address owner,
+    int24 bottomTick,
+    int24 topTick
+  ) private view returns (Position storage) {
     bytes32 key;
     assembly {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
@@ -409,7 +427,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 topTick,
     uint128 liquidityDesired,
     bytes calldata data
-  ) external override lock onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
+  )
+    external
+    override
+    lock
+    onlyValidTicks(bottomTick, topTick)
+    returns (
+      uint256 amount0,
+      uint256 amount1,
+      uint128 liquidityActual
+    )
+  {
     require(liquidityDesired > 0, 'IL');
     {
       int24 _tickSpacing = tickSpacing;
@@ -517,7 +545,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @dev Updates fees according combinations of sigmoids
-  function _updateFee(uint32 _time, int24 _tick, uint16 _index, uint128 _liquidity) private returns (uint16 newFeeZto, uint16 newFeeOtz) {
+  function _updateFee(
+    uint32 _time,
+    int24 _tick,
+    uint16 _index,
+    uint128 _liquidity
+  ) private returns (uint16 newFeeZto, uint16 newFeeOtz) {
     (newFeeZto, newFeeOtz) = IDataStorageOperator(dataStorageOperator).getFees(_time, _tick, _index, _liquidity);
     (globalState.feeZto, globalState.feeOtz) = (newFeeZto, newFeeOtz);
 
@@ -545,11 +578,24 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     int24 startTick,
     uint16 timepointIndex,
     uint128 liquidityStart
-  ) private view returns (int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint112 volatilityCumulative, uint256 volumePerAvgLiquidity) {
+  )
+    private
+    view
+    returns (
+      int56 tickCumulative,
+      uint160 secondsPerLiquidityCumulative,
+      uint112 volatilityCumulative,
+      uint256 volumePerAvgLiquidity
+    )
+  {
     return IDataStorageOperator(dataStorageOperator).getSingleTimepoint(blockTimestamp, secondsAgo, startTick, timepointIndex, liquidityStart);
   }
 
-  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) private {
+  function _swapCallback(
+    int256 amount0,
+    int256 amount1,
+    bytes calldata data
+  ) private {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
@@ -672,7 +718,17 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  ) private returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
+  )
+    private
+    returns (
+      int256 amount0,
+      int256 amount1,
+      uint160 currentPrice,
+      int24 currentTick,
+      uint128 currentLiquidity,
+      uint256 communityFeeAmount
+    )
+  {
     uint32 blockTimestamp;
     SwapCalculationCache memory cache;
     {
@@ -850,7 +906,12 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override lock {
+  function flash(
+    address recipient,
+    uint256 amount0,
+    uint256 amount1,
+    bytes calldata data
+  ) external override lock {
     uint128 _liquidity = liquidity;
     require(_liquidity > 0, 'L');
 
