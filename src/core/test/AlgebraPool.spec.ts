@@ -1093,6 +1093,14 @@ describe('AlgebraPool', () => {
   describe('#communityFee', () => {
     const liquidityAmount = expandTo18Decimals(1000)
 
+    it('default comm fee set to 100', async () => {
+      pool = await createPool(FeeAmount.LOW)
+      await factory.setDefaultCommunityFee(100)
+      await pool.initialize(encodePriceSqrt(1, 1))
+      expect((await pool.globalState()).communityFeeToken0).to.eq(100)
+      expect((await pool.globalState()).communityFeeToken1).to.eq(100)
+    })
+
     beforeEach(async () => {
       pool = await createPool(FeeAmount.LOW)
       await pool.initialize(encodePriceSqrt(1, 1))
@@ -1118,8 +1126,16 @@ describe('AlgebraPool', () => {
       await expect(pool.setCommunityFee(250, 251)).to.be.reverted
     })
 
+    it('default community fee cannot be changed out of bounds', async () => {
+      await expect(factory.setDefaultCommunityFee(251)).to.be.reverted
+      await expect(factory.setDefaultCommunityFee(0)).to.be.reverted
+    })
+
     it('cannot be changed by addresses that are not owner', async () => {
       await expect(pool.connect(other).setCommunityFee(170, 170)).to.be.reverted
+    })
+    it('default community fee cannot be changed by addresses that are not owner', async () => {
+      await expect(factory.connect(other).setDefaultCommunityFee(170)).to.be.reverted
     })
 
     async function swapAndGetFeesOwed({

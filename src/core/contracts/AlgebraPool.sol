@@ -198,11 +198,14 @@ contract AlgebraPool is PoolState, PoolImmutables, IAlgebraPool {
     require(globalState.price == 0, 'AI');
     // getTickAtSqrtRatio checks validity of initialPrice inside
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice);
+    uint8 defaultCommunityFee = IAlgebraFactory(factory).defaultCommunityFee();
 
     uint32 timestamp = _blockTimestamp();
     IDataStorageOperator(dataStorageOperator).initialize(timestamp, tick);
 
     globalState.price = initialPrice;
+    globalState.communityFeeToken0 = defaultCommunityFee;
+    globalState.communityFeeToken1 = defaultCommunityFee;
     globalState.unlocked = true;
     globalState.tick = tick;
 
