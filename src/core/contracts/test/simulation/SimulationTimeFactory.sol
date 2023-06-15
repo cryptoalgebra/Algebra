@@ -34,6 +34,9 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   uint8 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
+  int24 public override defaultTickspacing;
+
+  /// @inheritdoc IAlgebraFactory
   uint256 public override renounceOwnershipStartTimestamp;
 
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
@@ -46,6 +49,7 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   constructor(address _poolDeployer, address _vaultAddress) {
     poolDeployer = _poolDeployer;
     communityVault = _vaultAddress;
+    defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
   }
 
@@ -56,6 +60,11 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   /// @inheritdoc IAlgebraFactory
   function hasRoleOrOwner(bytes32 role, address account) public view override returns (bool) {
     return (owner() == account || super.hasRole(role, account));
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function defaultConfigurationForPool() external view returns (uint8 communityFee, int24 tickSpacing) {
+    return (defaultCommunityFee, defaultTickspacing);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -124,13 +133,22 @@ contract SimulationTimeFactory is IAlgebraFactory, Ownable2Step, AccessControlEn
   }
 
   /// @inheritdoc IAlgebraFactory
+  function setDefaultTickspacing(int24 newDefaultTickspacing) external override onlyOwner {
+    require(newDefaultTickspacing >= Constants.MIN_TICK_SPACING);
+    require(newDefaultTickspacing <= Constants.MAX_TICK_SPACING);
+    require(newDefaultTickspacing != defaultTickspacing);
+    defaultTickspacing = newDefaultTickspacing;
+    emit DefaultTickspacing(newDefaultTickspacing);
+  }
+
+  /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
     emit DefaultCommunityFee(newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
   }
 
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x45ce277bc66a24195d1b264a61a41914b5a893ad6fda63e1fc8840f855bccf29;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x5e2280fcb9fdce253ac892f4ef018204914369c8e73665f9badb3470ba07cb05;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

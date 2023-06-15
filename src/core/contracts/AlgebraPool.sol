@@ -36,12 +36,19 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick);
     lastTimepointTimestamp = _blockTimestamp();
 
+    (uint8 _communityFee, int24 _tickSpacing) = IAlgebraFactory(factory).defaultConfigurationForPool();
+
+    tickSpacing = _tickSpacing;
+
     globalState.price = initialPrice;
-    globalState.communityFee = IAlgebraFactory(factory).defaultCommunityFee();
+    globalState.communityFee = _communityFee;
     globalState.unlocked = true;
     globalState.tick = tick;
 
     emit Initialize(initialPrice, tick);
+
+    emit TickSpacing(_tickSpacing);
+    emit CommunityFee(_communityFee);
   }
 
   /// @inheritdoc IAlgebraPoolActions

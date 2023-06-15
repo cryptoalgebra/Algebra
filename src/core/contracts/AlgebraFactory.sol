@@ -36,6 +36,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   uint8 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
+  int24 public override defaultTickspacing;
+
+  /// @inheritdoc IAlgebraFactory
   uint256 public override renounceOwnershipStartTimestamp;
 
   /// @dev time delay before ownership renouncement can be finished
@@ -51,6 +54,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
     communityVault = address(new AlgebraCommunityVault());
+    defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
   }
 
@@ -62,6 +66,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   function hasRoleOrOwner(bytes32 role, address account) public view override returns (bool) {
     return (owner() == account || super.hasRole(role, account));
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function defaultConfigurationForPool() external view returns (uint8 communityFee, int24 tickSpacing) {
+    return (defaultCommunityFee, defaultTickspacing);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -94,6 +103,15 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(defaultCommunityFee != newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
     emit DefaultCommunityFee(newDefaultCommunityFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function setDefaultTickspacing(int24 newDefaultTickspacing) external override onlyOwner {
+    require(newDefaultTickspacing >= Constants.MIN_TICK_SPACING);
+    require(newDefaultTickspacing <= Constants.MAX_TICK_SPACING);
+    require(newDefaultTickspacing != defaultTickspacing);
+    defaultTickspacing = newDefaultTickspacing;
+    emit DefaultTickspacing(newDefaultTickspacing);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -137,7 +155,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x81e73f5e49e6ed960a7e4f31963584d4276fecab3fe04038d996c0cacef4bd18;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x3b5150aa99a5ce535caeed0834339a12e346db881a259562a3834645cb40ed89;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

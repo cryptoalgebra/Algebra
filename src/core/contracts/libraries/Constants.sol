@@ -13,8 +13,10 @@ library Constants {
 
   uint16 internal constant BASE_FEE = 0.0001e6; // init minimum fee value in hundredths of a bip (0.01%)
   uint24 internal constant FEE_DENOMINATOR = 1e6;
-  int24 internal constant INIT_TICK_SPACING = 60;
+
+  int24 internal constant INIT_DEFAULT_TICK_SPACING = 60;
   int24 internal constant MAX_TICK_SPACING = 500;
+  int24 internal constant MIN_TICK_SPACING = 1;
 
   // Defines the maximum and minimum ticks allowed for limit orders. Corresponds to the range of possible
   // price values ​​in UniswapV2. Due to this limitation, sufficient accuracy is achieved even with the minimum allowable tick
