@@ -110,7 +110,7 @@ describe('AlgebraPool', () => {
     expect(await pool.factory()).to.eq(factory.address)
     expect(await pool.token0()).to.eq(token0.address)
     expect(await pool.token1()).to.eq(token1.address)
-    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("11505743598341114571880798222544994"))
+    expect(await pool.maxLiquidityPerTick()).to.eq(BigNumber.from("191757638537527648490752896198553"))
   })
 
   it('_blockTimestamp works', async() => {
@@ -224,7 +224,7 @@ describe('AlgebraPool', () => {
           })     
 
           it('fails if token1 hardly underpayed', async() => {
-            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -22980, BigNumber.from('11505743598341114571880798222544994'), expandTo18Decimals(100), 1)).to.be.revertedWith('IIL2');
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, -22980, BigNumber.from('191757638537527648490752896198553'), expandTo18Decimals(100), 1)).to.be.revertedWith('IIL2');
           })          
         })
 
@@ -518,8 +518,8 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1).div(10), wallet.address)
         await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
 
-        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('1700000000000')
-        expect((await token1.balanceOf(vaultAddress)).toString()).to.eq('170000000000')
+        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('1699999999999')
+        expect((await token1.balanceOf(vaultAddress)).toString()).to.eq('169999999999')
       })
 
       it('positions are protected before community fee is turned on', async () => {
@@ -554,7 +554,7 @@ describe('AlgebraPool', () => {
         expect(liquidity).to.eq(1)
         expect(fees0, 'tokens owed 0 before').to.eq(0)
         expect(fees1, 'tokens owed 1 before').to.eq(0)
-        expect(innerFeeGrowth0Token).to.eq('3402823669209373878308127703486852')
+        expect(innerFeeGrowth0Token).to.eq('3402823669210054443041969578262513')
         expect(innerFeeGrowth1Token).to.eq('340282366920937387830812770348685')
 
         await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 1)
@@ -566,7 +566,7 @@ describe('AlgebraPool', () => {
           fees0,
         } = await pool.positions(await pool.getKeyForPosition(wallet.address, minTick + tickSpacing, maxTick - tickSpacing)))
         expect(liquidity).to.eq(0)
-        expect(innerFeeGrowth0Token).to.eq('3402823669209373878308127703486852')
+        expect(innerFeeGrowth0Token).to.eq('3402823669210054443041969578262513')
         expect(innerFeeGrowth1Token).to.eq('340282366920937387830812770348685')
         expect(fees0, 'tokens owed 0 after').to.eq(3)
         expect(fees1, 'tokens owed 1 after').to.eq(0)

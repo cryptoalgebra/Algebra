@@ -1,19 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost for entire word  [ @skip-on-coverage ] 1`] = `2591`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost for entire word  [ @skip-on-coverage ] 1`] = `2522`;
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost just below boundary  [ @skip-on-coverage ] 1`] = `2591`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost just below boundary  [ @skip-on-coverage ] 1`] = `2522`;
 
-exports[`TickTable #nextTickInTheSameRow lte = false gas cost on boundary  [ @skip-on-coverage ] 1`] = `2591`;
+exports[`TickTable #nextTickInTheSameRow lte = false gas cost on boundary  [ @skip-on-coverage ] 1`] = `2522`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost for entire word  [ @skip-on-coverage ] 1`] = `2581`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost for entire word  [ @skip-on-coverage ] 1`] = `2512`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary  [ @skip-on-coverage ] 1`] = `3010`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost just below boundary  [ @skip-on-coverage ] 1`] = `2512`;
 
-exports[`TickTable #nextTickInTheSameRow lte = true gas cost on boundary  [ @skip-on-coverage ] 1`] = `2581`;
+exports[`TickTable #nextTickInTheSameRow lte = true gas cost on boundary  [ @skip-on-coverage ] 1`] = `2512`;
 
-exports[`TickTable #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `22000`;
+exports[`TickTable #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `21928`;
 
-exports[`TickTable #toggleTick gas cost of flipping first tick in word to initialized  [ @skip-on-coverage ] 1`] = `43912`;
+exports[`TickTable #toggleTick gas cost of flipping first tick in word to initialized  [ @skip-on-coverage ] 1`] = `43840`;
 
-exports[`TickTable #toggleTick gas cost of flipping second tick in word to initialized  [ @skip-on-coverage ] 1`] = `26812`;
+exports[`TickTable #toggleTick gas cost of flipping second tick in word to initialized  [ @skip-on-coverage ] 1`] = `26740`;

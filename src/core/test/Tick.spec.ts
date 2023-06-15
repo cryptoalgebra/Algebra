@@ -138,9 +138,9 @@ describe('Tick', () => {
       expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, 0, 0, 0, false,)).to.eq(false)
     })
     it('reverts if total liquidity gross is greater than max', async () => {
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, 0, false,)
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, 0, true,)
-      await expect(tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2), 0, 0, 0, 0, 0, false,)).to.be.revertedWith('LO')
+      await tickTest.update(0, 0, BigNumber.from('191757638537527648490752896198553').div(2), 0, 0, 0, 0, 0, false,)
+      await tickTest.update(0, 0, BigNumber.from('191757638537527648490752896198553').div(2), 0, 0, 0, 0, 0, true,)
+      await expect(tickTest.update(0, 0, BigNumber.from('191757638537527648490752896198553').div(2), 0, 0, 0, 0, 0, false,)).to.be.revertedWith('LO')
     })
     it('nets the liquidity based on upper flag', async () => {
       await tickTest.update(0, 0, 2, 0, 0, 0, 0, 0, false,)
@@ -152,7 +152,7 @@ describe('Tick', () => {
       expect(liquidityDelta).to.eq(2 - 1 - 3 + 1)
     })
     it('reverts on overflow liquidity gross', async () => {
-      await tickTest.update(0, 0, BigNumber.from('11505743598341114571880798222544994').div(2).sub(1), 0, 0, 0, 0, 0, false)
+      await tickTest.update(0, 0, BigNumber.from('191757638537527648490752896198553').div(2).sub(1), 0, 0, 0, 0, 0, false)
       await expect(tickTest.update(0, 0,  MaxUint128.div(2).sub(1), 0, 0, 0, 0, 0, false)).to.be.reverted
     })
     it('assumes all growth happens below ticks lte current tick', async () => {
