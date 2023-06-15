@@ -2,12 +2,13 @@
 pragma solidity =0.8.17;
 
 import './base/common/Timestamp.sol';
-import './interfaces/IAlgebraFactory.sol';
-import './interfaces/IDataStorageOperator.sol';
-import './interfaces/pool/IAlgebraPoolState.sol';
 
 import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
+
+import './interfaces/IAlgebraFactory.sol';
+import './interfaces/IDataStorageOperator.sol';
+import './interfaces/pool/IAlgebraPoolState.sol';
 
 /// @title Algebra timepoints data operator
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages

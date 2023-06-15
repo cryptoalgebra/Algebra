@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
+import './base/AlgebraFeeConfiguration.sol';
+
+import './libraries/Constants.sol';
+import './libraries/AdaptiveFee.sol';
+
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IDataStorageOperator.sol';
-import './base/AlgebraFeeConfiguration.sol';
-import './libraries/Constants.sol';
-import './libraries/AdaptiveFee.sol';
+
 import './DataStorageOperator.sol';
 import './AlgebraCommunityVault.sol';
 

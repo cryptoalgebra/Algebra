@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import './interfaces/IAlgebraFactory.sol';
 import './libraries/SafeTransfer.sol';
+
+import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled
