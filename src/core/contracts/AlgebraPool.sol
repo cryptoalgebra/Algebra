@@ -28,6 +28,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 /// @dev Version: Algebra V2.1
 contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Positions, SwapCalculation, ReservesManager, TickStructure {
   using SafeCast for uint256;
+  using SafeCast for uint128;
 
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
@@ -59,7 +60,13 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
     }
 
-    (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, int128(liquidityDesired), globalState.tick, globalState.price);
+    (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(
+      bottomTick,
+      topTick,
+      liquidityDesired.toInt128(),
+      globalState.tick,
+      globalState.price
+    );
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
@@ -81,7 +88,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
       }
       if (liquidityActual == 0) revert zeroLiquidityActual();
 
-      (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, int128(liquidityActual));
+      (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, liquidityActual.toInt128());
     }
 
     unchecked {
