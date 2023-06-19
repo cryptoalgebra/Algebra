@@ -199,6 +199,18 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
+    function isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) external view override returns (bool) {
+        VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
+
+        address activeIncentiveInPool = pool.activeIncentive();
+
+        if (activeIncentiveInPool == virtualPool) return true;
+        if (activeIncentiveInPool != address(this)) return false;
+
+        return virtualPools.eternalVirtualPool == virtualPool || virtualPools.limitVirtualPool == virtualPool;
+    }
+
+    /// @inheritdoc IFarmingCenter
     function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
         bool isLimitFarming = msg.sender == address(limitFarming);
         require(isLimitFarming || msg.sender == address(eternalFarming), 'only farming can call this');

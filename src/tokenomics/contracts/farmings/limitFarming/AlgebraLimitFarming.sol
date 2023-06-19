@@ -53,7 +53,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         IncentiveParams memory params
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-        address activeIncentive = _activeIncentiveInPool(key.pool);
+        address activeIncentive = key.pool.activeIncentive();
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
             _activeEndTimestamp = IAlgebraLimitVirtualPool(_incentive).desiredEndTimestamp();
@@ -240,7 +240,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            if (_activeIncentiveInPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
+            if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
             int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
             virtualPool.applyLiquidityDeltaToPosition(

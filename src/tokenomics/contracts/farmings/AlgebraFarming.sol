@@ -197,7 +197,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         incentive.deactivated = true;
 
-        if (virtualPool == _activeIncentiveInPool(key.pool)) {
+        if (_isIncentiveActiveInPool(key.pool, virtualPool)) {
             _connectPoolToVirtualPool(key.pool, address(0));
         }
 
@@ -220,7 +220,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         (incentiveId, incentive) = _getIncentiveByKey(key);
 
         virtualPool = incentive.virtualPoolAddress;
-        require(!incentive.deactivated && _activeIncentiveInPool(key.pool) == virtualPool, 'incentive stopped');
+        require(!incentive.deactivated && _isIncentiveActiveInPool(key.pool, virtualPool), 'incentive stopped');
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -268,8 +268,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);
     }
 
-    function _activeIncentiveInPool(IAlgebraPool pool) internal view returns (address virtualPool) {
-        return pool.activeIncentive();
+    function _isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) internal view returns (bool) {
+        return farmingCenter.isIncentiveActiveInPool(pool, virtualPool);
     }
 
     function _getIncentiveByKey(

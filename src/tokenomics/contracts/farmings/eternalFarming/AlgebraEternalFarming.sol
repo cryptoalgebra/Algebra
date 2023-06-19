@@ -125,12 +125,16 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     /// @inheritdoc IAlgebraFarming
     function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external override {
         (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
-        require(!incentive.deactivated, 'incentive stopped');
+
+        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+        require(
+            !incentive.deactivated && _isIncentiveActiveInPool(key.pool, address(virtualPool)),
+            'incentive stopped'
+        );
 
         (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
 
         if (rewardAmount | bonusRewardAmount > 0) {
-            IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
             _addRewards(virtualPool, rewardAmount, bonusRewardAmount, incentiveId);
         }
     }
@@ -145,7 +149,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-        if ((incentive.deactivated || _activeIncentiveInPool(key.pool) != address(virtualPool)))
+        if (incentive.deactivated || !_isIncentiveActiveInPool(key.pool, address(virtualPool)))
             require(rewardRate | bonusRewardRate == 0, 'incentive stopped');
 
         _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
@@ -196,7 +200,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 bonusReward;
 
         {
-            if (_activeIncentiveInPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
+            if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
             int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
             // update rewards, as ticks may be cleared when liquidity decreases
