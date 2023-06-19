@@ -10,6 +10,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPoolBase {
     /// @param rate1 The new rate of bonus token distribution per sec
     function setRates(uint128 rate0, uint128 rate1) external;
 
+    /// @dev This function is called from the farming contract to update rewards for users
+    function distributeRewards() external;
+
     function addRewards(uint256 token0Amount, uint256 token1Amount) external;
 
     function decreaseRewards(uint256 token0Amount, uint256 token1Amount) external;

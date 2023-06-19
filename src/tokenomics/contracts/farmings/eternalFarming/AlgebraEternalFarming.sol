@@ -73,11 +73,13 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             params.minimalPositionWidth
         );
 
-        IAlgebraEternalVirtualPool(virtualPool).addRewards(params.reward, params.bonusReward);
-        IAlgebraEternalVirtualPool(virtualPool).setRates(params.rewardRate, params.bonusRewardRate);
-
-        emit RewardsAdded(params.reward, params.bonusReward, incentiveId);
-        emit RewardsRatesChanged(params.rewardRate, params.bonusRewardRate, incentiveId);
+        _addRewards(IAlgebraEternalVirtualPool(virtualPool), params.reward, params.bonusReward, incentiveId);
+        _setRewardRates(
+            IAlgebraEternalVirtualPool(virtualPool),
+            params.rewardRate,
+            params.bonusRewardRate,
+            incentiveId
+        );
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -88,8 +90,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         _deactivateIncentive(key, address(virtualPool), incentive);
 
         if (virtualPool.rewardRate0() != 0 || virtualPool.rewardRate1() != 0) {
-            virtualPool.setRates(0, 0);
-            emit RewardsRatesChanged(0, 0, incentiveId);
+            _setRewardRates(virtualPool, 0, 0, incentiveId);
         }
     }
 
@@ -100,9 +101,9 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 bonusRewardAmount
     ) external override onlyOwner {
         (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
-
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
+        virtualPool.distributeRewards();
         uint256 rewardReserve0 = virtualPool.rewardReserve0();
         if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
         if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
@@ -130,9 +131,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
         if (rewardAmount | bonusRewardAmount > 0) {
             IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-            virtualPool.addRewards(rewardAmount, bonusRewardAmount);
-
-            emit RewardsAdded(rewardAmount, bonusRewardAmount, incentiveId);
+            _addRewards(virtualPool, rewardAmount, bonusRewardAmount, incentiveId);
         }
     }
 
@@ -149,9 +148,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         if ((incentive.deactivated || _activeIncentiveInPool(key.pool) != address(virtualPool)))
             require(rewardRate | bonusRewardRate == 0, 'incentive stopped');
 
-        virtualPool.setRates(rewardRate, bonusRewardRate);
-
-        emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
+        _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -309,5 +306,25 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         }
 
         emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);
+    }
+
+    function _addRewards(
+        IAlgebraEternalVirtualPool virtualPool,
+        uint256 amount0,
+        uint256 amount1,
+        bytes32 incentiveId
+    ) private {
+        virtualPool.addRewards(amount0, amount1);
+        emit RewardsAdded(amount0, amount1, incentiveId);
+    }
+
+    function _setRewardRates(
+        IAlgebraEternalVirtualPool virtualPool,
+        uint128 rate0,
+        uint128 rate1,
+        bytes32 incentiveId
+    ) private {
+        virtualPool.setRates(rate0, rate1);
+        emit RewardsRatesChanged(rate0, rate1, incentiveId);
     }
 }

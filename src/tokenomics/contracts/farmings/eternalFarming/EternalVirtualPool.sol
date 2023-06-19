@@ -32,6 +32,11 @@ contract EternalVirtualPool is AlgebraVirtualPoolBase, IAlgebraEternalVirtualPoo
         prevTimestamp = uint32(block.timestamp);
     }
 
+    /// @inheritdoc IAlgebraEternalVirtualPool
+    function distributeRewards() external override onlyFarming {
+        _increaseCumulative(uint32(block.timestamp));
+    }
+
     // @inheritdoc IAlgebraEternalVirtualPool
     function addRewards(uint256 token0Amount, uint256 token1Amount) external override onlyFarming {
         _increaseCumulative(uint32(block.timestamp));
