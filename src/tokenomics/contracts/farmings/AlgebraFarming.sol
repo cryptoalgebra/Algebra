@@ -159,6 +159,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         incentiveId = IncentiveId.compute(key);
 
         Incentive storage newIncentive = incentives[incentiveId];
+        require(newIncentive.totalReward == 0, 'key already used');
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
 
