@@ -50,8 +50,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     mapping(bytes32 => Incentive) public override incentives;
 
-    address internal incentiveMaker;
-    address internal owner;
+    address public incentiveMaker;
+    address public owner;
 
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
