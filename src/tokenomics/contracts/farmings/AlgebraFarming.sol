@@ -268,4 +268,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         emit RewardClaimed(to, amountRequested, address(rewardToken), from);
     }
+
+    function _activeIncentiveInPool(IAlgebraPool pool) internal view returns (address virtualPool) {
+        return pool.activeIncentive();
+    }
 }

@@ -53,7 +53,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         IncentiveParams memory params
     ) external override onlyIncentiveMaker returns (address virtualPool) {
         (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-        address activeIncentive = key.pool.activeIncentive();
+        address activeIncentive = _activeIncentiveInPool(key.pool);
         uint32 _activeEndTimestamp;
         if (_incentive != address(0)) {
             _activeEndTimestamp = IAlgebraLimitVirtualPool(_incentive).desiredEndTimestamp();

@@ -148,7 +148,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint128 bonusRewardRate
     ) external override onlyIncentiveMaker {
         bytes32 incentiveId = IncentiveId.compute(key);
-        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
+        Incentive storage incentive = incentives[incentiveId];
+        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+
+        if ((incentive.deactivated || _activeIncentiveInPool(key.pool) != address(virtualPool)))
+            require(rewardRate | bonusRewardRate == 0, 'incentive stopped');
+
         virtualPool.setRates(rewardRate, bonusRewardRate);
 
         emit RewardsRatesChanged(rewardRate, bonusRewardRate, incentiveId);
