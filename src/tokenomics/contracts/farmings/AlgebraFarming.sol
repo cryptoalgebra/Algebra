@@ -219,7 +219,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         Incentive storage incentive;
         (incentiveId, incentive) = _getIncentiveByKey(key);
 
-        require(!incentive.deactivated, 'incentive stopped');
+        virtualPool = incentive.virtualPoolAddress;
+        require(!incentive.deactivated && _activeIncentiveInPool(key.pool) == virtualPool, 'incentive stopped');
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -230,14 +231,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'invalid pool for token');
         require(liquidity > 0, 'cannot farm token with 0 liquidity');
-        (, int24 tick, , , , , ) = pool.globalState();
+        int24 tick = _getTickInPool(pool);
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
         require(liquidityAmountWithMultiplier <= type(uint128).max);
         liquidity = uint128(liquidityAmountWithMultiplier);
 
-        virtualPool = incentive.virtualPoolAddress;
         uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
         require(int256(tickUpper) - int256(tickLower) >= int256(minimalAllowedTickWidth), 'position too narrow');
 
@@ -278,5 +278,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         incentiveId = IncentiveId.compute(key);
         incentive = incentives[incentiveId];
         require(incentive.totalReward != 0, 'non-existent incentive');
+    }
+
+    function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
+        (, tick, , , , , ) = pool.globalState();
     }
 }
