@@ -162,6 +162,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         require(newIncentive.totalReward == 0, 'key already used');
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
+        require(receivedReward != 0, 'zero reward amount');
 
         require(
             minimalPositionWidth <=
