@@ -54,7 +54,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         INonfungiblePositionManager _nonfungiblePositionManager,
         IFarmingCenterVault _farmingCenterVault
     )
-        ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2')
+        ERC721Permit('Algebra Farming NFT-V2.1', 'ALGB-FARM', '2.1')
         PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken())
     {
         limitFarming = _limitFarming;
@@ -228,7 +228,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
             }
         }
 
-        pool.setIncentive(newIncentive);
+        _setIncentive(pool, newIncentive);
 
         if (isLimitFarming) {
             virtualPools.limitVirtualPool = newVirtualPool;
@@ -262,8 +262,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function cross(int24 nextTick, bool zeroToOne) external override {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).cross(nextTick, zeroToOne);
+        _crossInVirtualPool(IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool), nextTick, zeroToOne);
+        _crossInVirtualPool(IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool), nextTick, zeroToOne);
     }
 
     /**
@@ -273,21 +273,31 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
      */
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status status) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
-        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).increaseCumulative(
+        address eternalVirtualPool = _virtualPoolAddressesForPool.eternalVirtualPool;
+        address limitVirtualPool = _virtualPoolAddressesForPool.limitVirtualPool;
+
+        Status eternalStatus = _increaseCumulativeInVirtualPool(
+            IAlgebraVirtualPool(eternalVirtualPool),
             blockTimestamp
         );
+        Status limitStatus = _increaseCumulativeInVirtualPool(IAlgebraVirtualPool(limitVirtualPool), blockTimestamp);
 
-        Status limitStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).increaseCumulative(
-            blockTimestamp
-        );
+        if (eternalStatus == Status.NOT_EXIST || limitStatus == Status.NOT_EXIST) {
+            address newIncentiveAddress = eternalVirtualPool;
+            if (eternalStatus == Status.NOT_EXIST) {
+                _virtualPoolAddressesForPool.eternalVirtualPool = address(0);
+                newIncentiveAddress = limitVirtualPool;
+            }
 
-        if (eternalStatus == Status.ACTIVE || limitStatus == Status.ACTIVE) {
-            return Status.ACTIVE;
-        } else if (limitStatus == Status.NOT_STARTED) {
-            return Status.NOT_STARTED;
+            if (limitStatus == Status.NOT_EXIST) {
+                _virtualPoolAddressesForPool.limitVirtualPool = address(0);
+                if (newIncentiveAddress == limitVirtualPool) newIncentiveAddress = address(0);
+            }
+
+            _setIncentive(IAlgebraPool(msg.sender), newIncentiveAddress);
         }
 
-        return Status.NOT_EXIST;
+        status = eternalStatus == Status.ACTIVE ? Status.ACTIVE : limitStatus;
     }
 
     function virtualPoolAddresses(address pool) external view override returns (address limitVP, address eternalVP) {
@@ -312,5 +322,20 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function _approve(address to, uint256 tokenId) internal override(ERC721) {
         l2Nfts[tokenId].operator = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
+    }
+
+    function _setIncentive(IAlgebraPool pool, address newIncentive) private {
+        pool.setIncentive(newIncentive);
+    }
+
+    function _crossInVirtualPool(IAlgebraVirtualPool virtualPool, int24 nextTick, bool zeroToOne) private {
+        virtualPool.cross(nextTick, zeroToOne);
+    }
+
+    function _increaseCumulativeInVirtualPool(
+        IAlgebraVirtualPool virtualPool,
+        uint32 blockTimestamp
+    ) private returns (Status status) {
+        return virtualPool.increaseCumulative(blockTimestamp);
     }
 }
