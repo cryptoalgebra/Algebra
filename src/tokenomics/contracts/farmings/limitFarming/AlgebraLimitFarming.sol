@@ -148,8 +148,8 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
 
     /// @inheritdoc IAlgebraFarming
     function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _deactivateIncentive(key, _incentiveVirtualPool);
+        (, Incentive storage incentive) = _getIncentiveByKey(key);
+        _deactivateIncentive(key, incentive.virtualPoolAddress, incentive);
     }
 
     /// @inheritdoc IAlgebraFarming

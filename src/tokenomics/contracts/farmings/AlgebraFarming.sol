@@ -191,21 +191,21 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         newIncentive.multiplierToken = multiplierToken;
     }
 
-    function _deactivateIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
-        require(currentVirtualPool != address(0), 'Farming do not exist');
-
-        Incentive storage incentive = incentives[IncentiveId.compute(key)];
-        require(incentive.virtualPoolAddress == currentVirtualPool, 'Another farming is active');
+    function _deactivateIncentive(IncentiveKey memory key, address virtualPool, Incentive storage incentive) internal {
+        require(virtualPool != address(0), 'Farming do not exist');
         require(!incentive.deactivated, 'Already deactivated');
+
         incentive.deactivated = true;
 
-        _connectPoolToVirtualPool(key.pool, address(0));
+        if (virtualPool == _activeIncentiveInPool(key.pool)) {
+            _connectPoolToVirtualPool(key.pool, address(0));
+        }
 
         emit IncentiveDeactivated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
-            currentVirtualPool,
+            virtualPool,
             key.startTime,
             key.endTime
         );
@@ -217,7 +217,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 tokensLocked
     ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
         Incentive storage incentive;
-        (incentive, incentiveId) = _getIncentiveByKey(key);
+        (incentiveId, incentive) = _getIncentiveByKey(key);
 
         require(!incentive.deactivated, 'incentive stopped');
 
@@ -274,7 +274,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _getIncentiveByKey(
         IncentiveKey memory key
-    ) internal view returns (Incentive storage incentive, bytes32 incentiveId) {
+    ) internal view returns (bytes32 incentiveId, Incentive storage incentive) {
         incentiveId = IncentiveId.compute(key);
         incentive = incentives[incentiveId];
         require(incentive.totalReward != 0, 'non-existent incentive');

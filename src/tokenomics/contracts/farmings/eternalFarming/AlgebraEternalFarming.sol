@@ -82,15 +82,15 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @inheritdoc IAlgebraFarming
     function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (, address _eternalVirtualPool) = _getCurrentVirtualPools(key.pool);
+        (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
+        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(_eternalVirtualPool);
+        _deactivateIncentive(key, address(virtualPool), incentive);
+
         if (virtualPool.rewardRate0() != 0 || virtualPool.rewardRate1() != 0) {
             virtualPool.setRates(0, 0);
-            emit RewardsRatesChanged(0, 0, IncentiveId.compute(key));
+            emit RewardsRatesChanged(0, 0, incentiveId);
         }
-
-        _deactivateIncentive(key, _eternalVirtualPool);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -99,7 +99,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 rewardAmount,
         uint256 bonusRewardAmount
     ) external override onlyOwner {
-        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
+        (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
@@ -123,7 +123,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @inheritdoc IAlgebraFarming
     function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external override {
-        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
+        (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
         require(!incentive.deactivated, 'incentive stopped');
 
         (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
@@ -142,7 +142,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint128 rewardRate,
         uint128 bonusRewardRate
     ) external override onlyIncentiveMaker {
-        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
+        (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
@@ -280,7 +280,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 tokenId,
         address _owner
     ) external override onlyFarmingCenter returns (uint256 reward, uint256 bonusReward) {
-        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
+        (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
