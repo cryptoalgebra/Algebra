@@ -99,10 +99,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 rewardAmount,
         uint256 bonusRewardAmount
     ) external override onlyOwner {
-        bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
-
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
@@ -126,9 +123,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
     /// @inheritdoc IAlgebraFarming
     function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external override {
-        bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
         require(!incentive.deactivated, 'incentive stopped');
 
         (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
@@ -147,8 +142,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint128 rewardRate,
         uint128 bonusRewardRate
     ) external override onlyIncentiveMaker {
-        bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
+        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
+
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
         if ((incentive.deactivated || _activeIncentiveInPool(key.pool) != address(virtualPool)))
@@ -285,9 +280,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 tokenId,
         address _owner
     ) external override onlyFarmingCenter returns (uint256 reward, uint256 bonusReward) {
-        bytes32 incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        (Incentive storage incentive, bytes32 incentiveId) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 

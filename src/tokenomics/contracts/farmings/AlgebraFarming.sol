@@ -216,10 +216,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 tokenId,
         uint256 tokensLocked
     ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
-        incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
+        Incentive storage incentive;
+        (incentive, incentiveId) = _getIncentiveByKey(key);
 
-        require(incentive.totalReward > 0, 'non-existent incentive');
         require(!incentive.deactivated, 'incentive stopped');
 
         IAlgebraPool pool;
@@ -271,5 +270,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     function _activeIncentiveInPool(IAlgebraPool pool) internal view returns (address virtualPool) {
         return pool.activeIncentive();
+    }
+
+    function _getIncentiveByKey(
+        IncentiveKey memory key
+    ) internal view returns (Incentive storage incentive, bytes32 incentiveId) {
+        incentiveId = IncentiveId.compute(key);
+        incentive = incentives[incentiveId];
+        require(incentive.totalReward != 0, 'non-existent incentive');
     }
 }
