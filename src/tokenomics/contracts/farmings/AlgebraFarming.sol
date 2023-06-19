@@ -58,17 +58,17 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
 
     modifier onlyIncentiveMaker() {
-        require(msg.sender == incentiveMaker);
+        _checkIsIncentiveMaker();
         _;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        _checkIsOwner();
         _;
     }
 
     modifier onlyFarmingCenter() {
-        require(msg.sender == address(farmingCenter));
+        _checkIsFarmingCenter();
         _;
     }
 
@@ -78,6 +78,18 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         owner = msg.sender;
         deployer = _deployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+    }
+
+    function _checkIsFarmingCenter() private view {
+        require(msg.sender == address(farmingCenter));
+    }
+
+    function _checkIsIncentiveMaker() private view {
+        require(msg.sender == incentiveMaker);
+    }
+
+    function _checkIsOwner() private view {
+        require(msg.sender == owner);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -135,21 +147,21 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         Incentive storage incentive
     ) internal returns (uint256 receivedReward, uint256 receivedBonusReward) {
         if (reward > 0) {
-            IERC20Minimal rewardToken = key.rewardToken;
-            uint256 balanceBefore = rewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
-            require((receivedReward = rewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedReward -= balanceBefore;
+            receivedReward = _receiveToken(key.rewardToken, reward);
             incentive.totalReward = incentive.totalReward.add(receivedReward);
         }
         if (bonusReward > 0) {
-            IERC20Minimal bonusRewardToken = key.bonusRewardToken;
-            uint256 balanceBefore = bonusRewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
-            require((receivedBonusReward = bonusRewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedBonusReward -= balanceBefore;
+            receivedBonusReward = _receiveToken(key.bonusRewardToken, bonusReward);
             incentive.bonusReward = incentive.bonusReward.add(receivedBonusReward);
         }
+    }
+
+    function _receiveToken(IERC20Minimal token, uint256 amount) private returns (uint256) {
+        uint256 balanceBefore = token.balanceOf(address(this));
+        TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
+        uint256 balanceAfter = token.balanceOf(address(this));
+        require(balanceAfter > balanceBefore);
+        return balanceAfter - balanceBefore;
     }
 
     function _createFarming(
