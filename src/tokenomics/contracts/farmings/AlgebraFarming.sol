@@ -279,16 +279,19 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         address to,
         uint256 amountRequested
     ) internal returns (uint256 reward) {
+        require(to != address(0), 'to zero address');
         reward = rewards[from][rewardToken];
 
         if (amountRequested == 0 || amountRequested > reward) {
             amountRequested = reward;
         }
 
-        rewards[from][rewardToken] = reward - amountRequested;
-        TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
+        if (amountRequested > 0) {
+            rewards[from][rewardToken] = reward - amountRequested;
+            TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
-        emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+            emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+        }
     }
 
     function _isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) internal view returns (bool) {
