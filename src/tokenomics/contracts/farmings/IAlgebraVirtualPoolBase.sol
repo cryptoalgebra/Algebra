@@ -10,7 +10,9 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     function timeOutside() external view returns (uint32);
 
     // returns data associated with a tick
-    function ticks(int24 tickId)
+    function ticks(
+        int24 tickId
+    )
         external
         view
         returns (
@@ -36,14 +38,20 @@ interface IAlgebraVirtualPoolBase is IAlgebraVirtualPool {
     // returns the timestamp after previous swap (like the last timepoint in a default pool)
     function prevTimestamp() external view returns (uint32);
 
+    // returns true if virtual pool is deactivated
+    function deactivated() external view returns (bool);
+
     /// @notice This function is used to calculate the seconds per liquidity inside a certain position
     /// @param bottomTick The bottom tick of a position
     /// @param topTick The top tick of a position
     /// @return innerSecondsSpentPerLiquidity The seconds per liquidity inside the position
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        returns (uint160 innerSecondsSpentPerLiquidity);
+    function getInnerSecondsPerLiquidity(
+        int24 bottomTick,
+        int24 topTick
+    ) external view returns (uint160 innerSecondsSpentPerLiquidity);
+
+    /// @notice This function is used to deactivate virtual pool. Deactivated virtual pool will return Status.NOT_EXIST in increaseCumulative function
+    function deactivate() external;
 
     /**
      * @dev This function is called when anyone farms their liquidity. The position in a virtual pool

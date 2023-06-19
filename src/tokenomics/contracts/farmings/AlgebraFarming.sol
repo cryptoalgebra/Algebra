@@ -197,6 +197,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         incentive.deactivated = true;
 
+        IAlgebraVirtualPoolBase(virtualPool).deactivate();
+
         if (_isIncentiveActiveInPool(key.pool, virtualPool)) {
             _connectPoolToVirtualPool(key.pool, address(0));
         }
