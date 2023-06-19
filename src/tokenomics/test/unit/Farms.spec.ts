@@ -55,6 +55,71 @@ describe('unit/Farms', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider)
   })
 
+  describe('#createFarming', () => {
+    it('cannot use same key twice', async () => {
+      
+      context = await loadFixture(algebraFixture)
+      helpers = HelperCommands.fromTestContext(context, actors, provider)
+      /** We will be doing a lot of time-testing here, so leave some room between
+        and when the incentive starts */
+      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+      const incentiveKey = {
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        totalReward,
+        bonusReward,
+        pool: context.poolObj.address,
+        ...timestamps,
+      }
+
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true
+      }
+
+      const incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWith('key already used');
+    })
+
+    it('cannot create farming with 0 rewards', async () => {
+      
+      context = await loadFixture(algebraFixture)
+      helpers = HelperCommands.fromTestContext(context, actors, provider)
+      /** We will be doing a lot of time-testing here, so leave some room between
+        and when the incentive starts */
+      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+      const incentiveKey = {
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        totalReward: 0,
+        bonusReward,
+        pool: context.poolObj.address,
+        ...timestamps,
+      }
+
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward: BigNumber.from(0),
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true
+      }
+
+      await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWith('zero reward amount');
+    })
+  })
+
   describe('#enterFarming', () => {
     let incentiveId: string
     let incentiveArgs: HelperTypes.CreateIncentive.Args
@@ -394,6 +459,16 @@ describe('unit/Farms', () => {
         params)
       ).to.be.reverted;
 
+      await expect(context.eternalFarming.connect(actors.lpUser1()).createEternalFarming(
+        farmIncentiveKey,
+        { 
+          ...params,
+          rewardRate: 100,
+          bonusRewardRate: 100
+        },
+        tiers)
+      ).to.be.reverted;
+
       let incentiveId = await helpers.getIncentiveId(
         await helpers.createIncentiveFlow({
           rewardToken: context.rewardToken,
@@ -445,7 +520,25 @@ describe('unit/Farms', () => {
         20000)
       ).to.be.reverted;
 
+      await expect(context.eternalFarming.connect(actors.lpUser1()).enterFarming(
+        farmIncentiveKey,
+        0,
+        20000)
+      ).to.be.reverted;
+
       await expect(context.farming.connect(actors.lpUser1()).exitFarming(
+        farmIncentiveKey,
+        0,
+        actors.lpUser1().address)
+      ).to.be.reverted;
+
+      await expect(context.eternalFarming.connect(actors.lpUser1()).exitFarming(
+        farmIncentiveKey,
+        0,
+        actors.lpUser1().address)
+      ).to.be.reverted;
+
+      await expect(context.eternalFarming.connect(actors.lpUser1()).collectRewards(
         farmIncentiveKey,
         0,
         actors.lpUser1().address)

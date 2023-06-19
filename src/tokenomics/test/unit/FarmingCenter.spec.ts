@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Contract, Wallet } from 'ethers'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, impersonateAccount, stopImpersonatingAccount, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20 } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
@@ -1098,6 +1098,245 @@ describe('unit/FarmingCenter', () => {
       )).to.be.revertedWith('farm does not exist')
     })
 
+  })
+
+  describe('#Parallel deactivated', () => {
+    let incentiveId: string
+    let incentiveIdEternal: string
+    let subject: (actor: Wallet) => Promise<any>
+    let subjectEternal: (actor: Wallet) => Promise<any>
+    let createIncentiveResult: HelperTypes.CreateIncentive.Result
+    let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result
+
+    it('fc can handle deactivated eternal farming', async() => {
+      timestamps = makeTimestamps(await blockTimestamp())
+
+      createIncentiveResultEternal = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10'),
+        bonusRewardRate: BigNumber.from('50')
+      })
+
+      createIncentiveResult = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps
+      })
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.token0, context.token1],
+        amountDesired,
+        context.nft.address
+      )
+      
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: context.token0.address,
+        token1: context.token1.address,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenId,
+        0,
+        ETERNAL_FARMING
+      )
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenId,
+        0,
+        LIMIT_FARMING
+      )
+      await Time.setAndMine(timestamps.startTime + 1)
+
+      incentiveIdEternal = await helpers.getIncentiveId(createIncentiveResultEternal)
+
+      const virtualPools = await context.farmingCenter.virtualPoolAddresses(context.pool01);
+
+      await context.eternalFarming.connect(actors.incentiveCreator()).deactivateIncentive(        
+      { 
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      })
+
+
+      await impersonateAccount(context.eternalFarming.address);
+      const signer = await ethers.getSigner(context.eternalFarming.address);
+      await setBalance(context.eternalFarming.address, 100n ** 18n);
+
+      await context.farmingCenter.connect(signer).connectVirtualPool(context.pool01, virtualPools.eternalVP);
+
+      const activeVirtualPoolBefore = await context.poolObj.connect(incentiveCreator).activeIncentive();
+      expect(activeVirtualPoolBefore).to.be.eq(context.farmingCenter.address);
+
+      await helpers.makeTickGoFlow({direction: 'up', desiredValue: 1});
+
+      const activeVirtualPool = await context.poolObj.connect(incentiveCreator).activeIncentive();
+      expect(activeVirtualPool).to.be.eq(virtualPools.limitVP);
+
+      await stopImpersonatingAccount(context.eternalFarming.address);
+    })   
+
+    it('fc can handle deactivated farmings', async() => {
+      timestamps = makeTimestamps(await blockTimestamp())
+
+      createIncentiveResultEternal = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true,
+        rewardRate: BigNumber.from('10'),
+        bonusRewardRate: BigNumber.from('50')
+      })
+
+      createIncentiveResult = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps
+      })
+
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.token0, context.token1],
+        amountDesired,
+        context.nft.address
+      )
+      
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: context.token0.address,
+        token1: context.token1.address,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenId,
+        0,
+        ETERNAL_FARMING
+      )
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        },
+        tokenId,
+        0,
+        LIMIT_FARMING
+      )
+      await Time.setAndMine(timestamps.startTime + 1)
+      incentiveIdEternal = await helpers.getIncentiveId(createIncentiveResultEternal)
+
+      const virtualPools = await context.farmingCenter.virtualPoolAddresses(context.poolObj.address);
+
+      await context.eternalFarming.connect(actors.incentiveCreator()).deactivateIncentive(        
+      { 
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      })
+
+      await context.farming.connect(actors.incentiveCreator()).deactivateIncentive(        
+        {
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          pool: context.pool01,
+          ...timestamps,
+        })
+
+      await impersonateAccount(context.eternalFarming.address);
+      const signer = await ethers.getSigner(context.eternalFarming.address);
+      await setBalance(context.eternalFarming.address, 100n ** 18n);
+      await context.farmingCenter.connect(signer).connectVirtualPool(context.poolObj.address, virtualPools.eternalVP);
+      
+
+      await impersonateAccount(context.farming.address);
+      const signer2 = await ethers.getSigner(context.farming.address);
+      await setBalance(context.farming.address, 100n ** 18n);
+      await context.farmingCenter.connect(signer2).connectVirtualPool(context.poolObj.address, virtualPools.limitVP);
+      
+      const activeVirtualPoolBefore = await context.poolObj.connect(incentiveCreator).activeIncentive();
+      expect(activeVirtualPoolBefore).to.be.eq(context.farmingCenter.address);
+
+      await helpers.makeTickGoFlow({direction: 'up', desiredValue: 10});
+
+      const activeVirtualPool = await context.poolObj.connect(incentiveCreator).activeIncentive();
+      expect(activeVirtualPool).to.be.eq(ZERO_ADDRESS);
+
+      await stopImpersonatingAccount(context.eternalFarming.address);
+      await stopImpersonatingAccount(context.farming.address);
+    })   
   })
 
   describe('#Parallel exitFarming', () => {
