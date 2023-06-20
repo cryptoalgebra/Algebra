@@ -135,7 +135,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override nonReentrant {
         Deposit storage deposit = deposits[tokenId];
         checkAuthorizationForToken(deposit.L2TokenId);
         IAlgebraFarming _farming;
