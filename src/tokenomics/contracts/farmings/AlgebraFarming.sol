@@ -55,6 +55,8 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
     /// @inheritdoc IAlgebraFarming
     bool public override isEmergencyWithdrawActivated;
+    // reentrancy lock
+    bool private unlocked = true;
 
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
@@ -73,6 +75,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     modifier onlyFarmingCenter() {
         _checkIsFarmingCenter();
         _;
+    }
+
+    modifier nonReentrant() {
+        require(unlocked);
+        unlocked = false;
+        _;
+        unlocked = true;
     }
 
     /// @param _deployer pool deployer contract address
@@ -155,7 +164,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         Incentive storage incentive
-    ) internal returns (uint256 receivedReward, uint256 receivedBonusReward) {
+    ) internal nonReentrant returns (uint256 receivedReward, uint256 receivedBonusReward) {
         if (reward > 0) {
             receivedReward = _receiveToken(key.rewardToken, reward);
             incentive.totalReward = incentive.totalReward.add(receivedReward);
@@ -167,11 +176,15 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     }
 
     function _receiveToken(IERC20Minimal token, uint256 amount) private returns (uint256) {
-        uint256 balanceBefore = token.balanceOf(address(this));
+        uint256 balanceBefore = _balanceOfToken(token);
         TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
-        uint256 balanceAfter = token.balanceOf(address(this));
+        uint256 balanceAfter = _balanceOfToken(token);
         require(balanceAfter > balanceBefore);
         return balanceAfter - balanceBefore;
+    }
+
+    function _balanceOfToken(IERC20Minimal token) private view returns (uint256) {
+        return token.balanceOf(address(this));
     }
 
     function _createFarming(
