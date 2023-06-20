@@ -33,6 +33,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
     mapping(uint256 => L2Nft) public override l2Nfts;
 
+    // reentrancy lock
+    bool private unlocked = true;
+
     /// @notice Represents the deposit of a liquidity NFT
     struct Deposit {
         uint256 L2TokenId;
@@ -46,6 +49,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint96 nonce; // the nonce for permits
         address operator; // the address that is approved for spending this token
         uint256 tokenId;
+    }
+
+    modifier nonReentrant() {
+        require(unlocked);
+        unlocked = false;
+        _;
+        unlocked = true;
     }
 
     constructor(
@@ -97,7 +107,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 tokenId,
         uint256 tokensLocked,
         bool isLimit
-    ) external override {
+    ) external override nonReentrant {
         Deposit storage _deposit = deposits[tokenId];
         checkAuthorizationForToken(_deposit.L2TokenId);
         (uint32 numberOfFarms, bool inLimitFarming) = (_deposit.numberOfFarms, _deposit.inLimitFarming);
