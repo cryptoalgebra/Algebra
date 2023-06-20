@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20 } from '../../typechain'
+import { LimitVirtualPool, TestERC20 } from '../../typechain'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -17,7 +17,8 @@ import {
   ActorFixture,
   makeTimestamps,
   maxGas,
-  days
+  days,
+  ZERO_ADDRESS
 } from '../shared'
 import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
@@ -658,6 +659,109 @@ describe('unit/Farms', () => {
 
   })
 
+  describe('deactivate incentive', () => {
+    let incentiveArgs: HelperTypes.CreateIncentive.Args
+    let incentiveKey: ContractParams.IncentiveKey
+    let virtualPool: LimitVirtualPool
+
+    beforeEach(async () => {
+      /** We will be doing a lot of time-testing here, so leave some room between
+        and when the incentive starts */
+      timestamps = makeTimestamps(1_000 + (await blockTimestamp()))
+
+      incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        rewardRate: BigNumber.from('10000'),
+        bonusRewardRate: BigNumber.from('50000')
+      }
+
+      incentiveKey = {
+        ...timestamps,
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        
+        pool: context.pool01,
+      }
+
+      const vpFactory = await ethers.getContractFactory('EternalVirtualPool')
+      const _vpool = ((await helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).virtualPool);
+      virtualPool = vpFactory.attach(_vpool.address) as LimitVirtualPool;
+
+    })
+
+    it('deactivate incentive', async () => {
+      let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
+      let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      expect(activeIncentiveBefore).to.equal(virtualPool.address)
+      expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS);
+    })
+
+
+    it('deactivate incentive only incentiveMaker', async () => {
+      let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      expect(context.farming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
+      let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+
+      expect(activeIncentiveBefore).to.equal(virtualPool.address)
+      expect(activeIncentiveAfter).to.equal(virtualPool.address) 
+    })
+
+    it('cannot deactivate twice', async () => {
+
+      await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await expect(context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.be.revertedWith('Already deactivated');
+    })
+
+    it('can deactivate manually after indirect deactivation', async () => {
+      await context.factory.setFarmingAddress(actors.algebraRootUser().address);
+      await context.poolObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+      
+      await expect(context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+    })
+
+    it('deactivates if activated forcefully', async () => {
+      await erc20Helper.ensureBalancesAndApprovals(
+        lpUser0,
+        [context.token0, context.token1],
+        amountDesired,
+        context.nft.address
+      )
+
+      const tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: context.token0.address,
+        token1: context.token1.address,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+
+      await context.factory.setFarmingAddress(actors.algebraRootUser().address);
+      await context.poolObj.connect(actors.algebraRootUser()).setIncentive(virtualPool.address);
+
+      await helpers.makeTickGoFlow({direction: 'up', desiredValue: 10, trader: actors.farmingDeployer()});
+
+      const currentIncentive = await context.poolObj.connect(actors.algebraRootUser()).activeIncentive();
+      expect(currentIncentive).to.be.eq(ZERO_ADDRESS);
+    })
+  })
+
   describe('#getRewardInfo', () => {
     let incentiveId: string
     let farmIncentiveKey: ContractParams.IncentiveKey
@@ -1148,6 +1252,25 @@ describe('unit/Farms', () => {
       })
 
        it('calculates the right secondsPerLiquidity')
+
+       it('can exit from deactivated farming', async () => {
+        await context.farming.connect(incentiveCreator).deactivateIncentive(
+          {
+            
+            pool: context.pool01,
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            ...timestamps,
+          }
+        );
+        await subject(lpUser0);
+      })
+  
+      it('can exit from indirectly deactivated farming', async () => {
+        await context.factory.setFarmingAddress(actors.algebraRootUser().address);
+        await context.poolObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await subject(lpUser0);
+      })
     })
 
     describe('fails if', () => {

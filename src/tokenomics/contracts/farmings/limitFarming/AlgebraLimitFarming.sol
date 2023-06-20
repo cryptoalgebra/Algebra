@@ -211,8 +211,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 bool wasFinished;
                 (wasFinished, activeTime) = virtualPool.finish();
                 if (!wasFinished) {
-                    (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-                    if (address(virtualPool) == _incentive) {
+                    if (_isIncentiveActiveInPool(key.pool, address(virtualPool))) {
                         farmingCenter.connectVirtualPool(key.pool, address(0));
                     }
                 }

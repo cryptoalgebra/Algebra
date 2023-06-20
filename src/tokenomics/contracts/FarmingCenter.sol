@@ -210,6 +210,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         address activeIncentiveInPool = _getActiveIncentiveInPool(pool);
 
+        if (activeIncentiveInPool == address(0)) return false;
         if (activeIncentiveInPool == virtualPool) return true;
         if (activeIncentiveInPool != address(this)) return false;
 
