@@ -22,7 +22,7 @@ export module HelperTypes {
       tier1Multiplier?: BigNumber
       tier2Multiplier?: BigNumber
       tier3Multiplier?: BigNumber
-      multiplierToken?: string
+      multiplierToken?: string 
 
       eternal? : boolean
       rewardRate?: BigNumber,

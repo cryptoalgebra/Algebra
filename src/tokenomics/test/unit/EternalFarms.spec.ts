@@ -274,6 +274,87 @@ describe('unit/EternalFarms', () => {
         )
       })
 
+      it('extremely huge liquidity', async () => {
+        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
+            
+          pool: context.pool01,
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          ...timestamps,
+        })
+
+        timestamps = makeTimestamps(5000 + (await blockTimestamp()))
+
+        incentiveArgs = {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.token1,
+          totalReward,
+          bonusReward: BN(0),
+          poolAddress: context.poolObj.address,
+          ...timestamps,
+          eternal: true,
+          multiplierToken: context.rewardToken.address,
+          tier1Multiplier: BN(50000),
+          tier2Multiplier: BN(50000),
+          tier3Multiplier: BN(50000),
+          algbAmountForTier1: BN(100),
+          algbAmountForTier2: BN(200),
+          algbAmountForTier3: BN(300),
+          rewardRate: BigNumber.from('10'),
+          bonusRewardRate: BigNumber.from('50')
+        }
+  
+        incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+
+        //await Time.set(timestamps.startTime + 500)
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.token0, context.token1],
+          BigNumber.from(2).pow(128),
+          context.nft.address
+        )
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.rewardToken],
+          BN(1000),
+          context.farmingCenter.address
+        )
+
+        const tokenId2 = await mintPosition(context.nft.connect(lpUser0), {
+          token0: context.token0.address,
+          token1: context.token1.address,
+          fee: FeeAmount.MEDIUM,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]) + 60,
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - 60,
+          recipient: lpUser0.address,
+          amount0Desired: BigNumber.from(2).pow(119).sub(1).div(60),
+          amount1Desired: BigNumber.from(2).pow(119).sub(1).div(60),
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+
+        await context.nft
+          .connect(lpUser0)
+          ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId2, {
+            ...maxGas,
+          })
+
+        await expect(context.farmingCenter.connect(lpUser0).enterFarming(
+          {
+            
+            pool: context.pool01,
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            ...timestamps,
+          },
+          tokenId2,
+          100,
+          ETERNAL_FARMING
+        )).to.be.revertedWith('LO')
+      })
+
       it('token id is for a different pool than the incentive', async () => {
         const incentive2 = await helpers.createIncentiveFlow({
           ...incentiveArgs,
