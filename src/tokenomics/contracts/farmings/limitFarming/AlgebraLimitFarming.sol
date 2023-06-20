@@ -250,7 +250,11 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
+            // pool can "detach" by itself
+            if (!incentive.deactivated) {
+                if (!_isIncentiveActiveInPool(key.pool, address(virtualPool)))
+                    _deactivateIncentive(key, address(virtualPool), incentive);
+            }
             int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
             virtualPool.applyLiquidityDeltaToPosition(

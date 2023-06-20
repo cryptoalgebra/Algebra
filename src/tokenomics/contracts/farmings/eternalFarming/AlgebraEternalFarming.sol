@@ -208,7 +208,12 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
             IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
             {
-                if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
+                // pool can "detach" by itself
+                if (!incentive.deactivated) {
+                    if (!_isIncentiveActiveInPool(key.pool, address(virtualPool)))
+                        _deactivateIncentive(key, address(virtualPool), incentive);
+                }
+
                 int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
                 virtualPool.distributeRewards(); // update rewards, as ticks may be cleared when liquidity decreases
