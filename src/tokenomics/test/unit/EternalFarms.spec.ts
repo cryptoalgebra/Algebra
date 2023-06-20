@@ -1710,4 +1710,110 @@ describe('unit/EternalFarms', () => {
       expect(rewardsAfter.bonusReward.sub(rewardsBefore.bonusReward)).to.eq(BN(5).mul(BN(104)))
     })
   })
+
+  describe('#emergencyWithdraw', () => {
+    it('Can set emergencyWithdraw in eternal farm', async () => {
+      await expect(context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true))
+      .to.emit(context.eternalFarming, 'EmergencyWithdraw').withArgs(true);
+
+      const status = await context.eternalFarming.isEmergencyWithdrawActivated();
+      expect(status).to.be.eq(true);
+    })
+
+    it('Can turn off', async () => {
+      await context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+      expect(context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true)).to.be.revertedWithoutReason;
+
+      await expect(context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(false))
+      .to.emit(context.eternalFarming, 'EmergencyWithdraw').withArgs(false);
+
+      const status = await context.eternalFarming.isEmergencyWithdrawActivated();
+      expect(status).to.be.eq(false);
+    })
+
+    it('Cannot activate if not owner', async () => {
+      expect(context.eternalFarming.connect(lpUser0).setEmergencyWithdrawStatus(true))
+      .to.be.revertedWithoutReason;
+    })
+
+    it('Can exit after emergency', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+      })
+      tokenId = mintResult.tokenId
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true
+      })
+
+      // await Time.set(timestamps.startTime)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)
+
+      await context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+        farmIncentiveKey,
+        tokenId,
+        ETERNAL_FARMING)
+      ).to.emit(context.eternalFarming, 'FarmEnded');
+    })
+
+    it('Cannot enter farming if emergency', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+      })
+      tokenId = mintResult.tokenId
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+        eternal: true
+      })
+
+      await context.eternalFarming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+
+      await expect(context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, ETERNAL_FARMING)).to.be.revertedWith('emergency activated');
+    })
+
+  })
 })

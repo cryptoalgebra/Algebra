@@ -546,6 +546,118 @@ describe('unit/Farms', () => {
     })
   })
 
+  describe('#emergencyWithdraw', () => {
+    it('Can set emergencyWithdraw in limit farm', async () => {
+      await expect(context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true))
+      .to.emit(context.farming, 'EmergencyWithdraw').withArgs(true);
+
+      const status = await context.farming.isEmergencyWithdrawActivated();
+      expect(status).to.be.eq(true);
+    })
+
+    it('Can turn off', async () => {
+      await context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+      expect(context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true)).to.be.revertedWithoutReason;
+
+      await expect(context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(false))
+      .to.emit(context.farming, 'EmergencyWithdraw').withArgs(false);
+
+      const status = await context.farming.isEmergencyWithdrawActivated();
+      expect(status).to.be.eq(false);
+    })
+
+    it('Cannot activate if not owner', async () => {
+      expect(context.farming.connect(lpUser0).setEmergencyWithdrawStatus(true))
+      .to.be.revertedWithoutReason;
+    })
+
+    it('Can exit after emergency', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+      })
+      tokenId = mintResult.tokenId
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+      })
+
+      // await Time.set(timestamps.startTime)
+      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)
+
+      Time.set(timestamps.startTime + 10)
+
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+        farmIncentiveKey,
+        tokenId,
+        LIMIT_FARMING)
+      ).to.be.reverted;
+
+      await context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+
+      await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+        farmIncentiveKey,
+        tokenId,
+        LIMIT_FARMING)
+      ).to.emit(context.farming, 'FarmEnded');
+    })
+
+    it('Cannot enter farming if emergency', async () => {
+      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
+
+      const mintResult = await helpers.mintFlow({
+        lp: lpUser0,
+        tokens: [context.token0, context.token1],
+      })
+      tokenId = mintResult.tokenId
+
+      await context.nft
+        .connect(lpUser0)
+        ['safeTransferFrom(address,address,uint256)'](lpUser0.address, context.farmingCenter.address, tokenId)
+
+      let farmIncentiveKey = {
+        
+        rewardToken: context.rewardToken.address,
+        bonusRewardToken: context.bonusRewardToken.address,
+        pool: context.pool01,
+        ...timestamps,
+      }
+
+      await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: context.poolObj.address,
+        ...timestamps,
+      })
+
+      await context.farming.connect(actors.farmingDeployer()).setEmergencyWithdrawStatus(true);
+
+      await expect(context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId, 0, LIMIT_FARMING)).to.be.revertedWith('emergency activated');
+    })
+
+  })
+
   describe('#getRewardInfo', () => {
     let incentiveId: string
     let farmIncentiveKey: ContractParams.IncentiveKey
