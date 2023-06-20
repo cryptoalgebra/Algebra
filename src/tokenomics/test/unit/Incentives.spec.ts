@@ -231,6 +231,27 @@ describe('unit/Incentives', async () => {
         expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
 
       })
+
+      it('deactivate incentive only incentiveMaker', async () => {
+        let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(context.farming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
+        let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(activeIncentiveBefore).to.equal(virtualPool.address)
+        expect(activeIncentiveAfter).to.equal(virtualPool.address) 
+      })
+      
+      it('correct reward distribution after deactivate', async () => {
+        let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(context.farming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
+        let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(activeIncentiveBefore).to.equal(virtualPool.address)
+        expect(activeIncentiveAfter).to.equal(virtualPool.address) 
+      })
+
     })
     
     describe('increase/decrease rewards', () => {
@@ -278,6 +299,19 @@ describe('unit/Incentives', async () => {
         
         expect(rewardAmount).to.eq(BNe18(90))
         expect(bonusRewardAmount).to.eq(BNe18(90))
+      })
+
+      it('decrease rewards with 0 params', async () => {
+        let amount = BNe18(0)
+
+        await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
+      
+        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        
+        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        
+        expect(rewardAmount).to.eq(BNe18(100))
+        expect(bonusRewardAmount).to.eq(BNe18(100))
       })
 
       it('can decrease rewards after end if 0 liquidity', async () => {
@@ -450,7 +484,7 @@ describe('unit/Incentives', async () => {
             ...timestamps,
             eternal: false
           }
-  
+
           await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWith("already has active incentive")
         })
       })

@@ -661,7 +661,7 @@ describe('unit/Farms', () => {
   describe('#getRewardInfo', () => {
     let incentiveId: string
     let farmIncentiveKey: ContractParams.IncentiveKey
-
+    
     beforeEach('set up incentive and farm', async () => {
       timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
 
@@ -1063,6 +1063,35 @@ describe('unit/Farms', () => {
       })
 
       it('allow exit without rewards', async () => {
+        await expect(context.farmingCenter.connect(lpUser0).exitFarming(
+          {
+            
+            pool: context.pool01,
+            rewardToken: context.rewardToken.address,
+            bonusRewardToken: context.bonusRewardToken.address,
+            ...timestamps,
+          },
+          tokenIdOut,
+          LIMIT_FARMING
+        )).to.emit(context.farming, 'FarmEnded').withArgs(
+            tokenIdOut,
+            incentiveId,
+            context.rewardToken.address,
+            context.bonusRewardToken.address,
+            lpUser0.address,
+            BN('0'),
+            BN('0')
+        )
+      })
+
+      it('allow exit after deactivate', async () => {
+        await context.farming.connect(incentiveCreator).deactivateIncentive(         
+        {  
+          pool: context.pool01,
+          rewardToken: context.rewardToken.address,
+          bonusRewardToken: context.bonusRewardToken.address,
+          ...timestamps,
+        })
         await expect(context.farmingCenter.connect(lpUser0).exitFarming(
           {
             

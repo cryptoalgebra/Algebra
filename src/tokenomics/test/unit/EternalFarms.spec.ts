@@ -1471,8 +1471,10 @@ describe('unit/EternalFarms', () => {
       await context.farmingCenter.connect(lpUser0).collectRewards(incentiveKey, tokenIdNarrow)
       let rewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
       let bonusRewards = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let vpTick = await virtualPool.globalTick()
       expect(rewards).to.eq(1595250)
       expect(bonusRewards).to.eq(7976251)
+      expect(vpTick).to.eq(120)
     })
   
     it('cross upper after deactivate', async () => {
@@ -1580,8 +1582,10 @@ describe('unit/EternalFarms', () => {
       await context.farmingCenter.connect(lpUser0).collectRewards(incentiveKey, tokenIdNarrow)
       let rewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
       let bonusRewards = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let vpTick = await virtualPool.globalTick()
       expect(rewards).to.eq(1535428)
       expect(bonusRewards).to.eq(7677141)
+      expect(vpTick).to.eq(-121)
     })
   })
 
