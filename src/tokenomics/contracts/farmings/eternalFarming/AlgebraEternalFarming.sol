@@ -103,8 +103,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     ) external override onlyOwner {
         (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-
-        virtualPool.distributeRewards();
+        _distributeRewards(virtualPool);
 
         (uint256 rewardReserve0, uint256 rewardReserve1) = virtualPool.rewardReserves();
 
@@ -216,7 +215,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
 
                 int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
-                virtualPool.distributeRewards(); // update rewards, as ticks may be cleared when liquidity decreases
+                _distributeRewards(virtualPool); // update rewards, as ticks may be cleared when liquidity decreases
 
                 (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
@@ -276,6 +275,7 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
 
         IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+        _distributeRewards(virtualPool);
 
         Farm memory farm = farms[tokenId][incentiveId];
         require(farm.liquidity != 0, 'farm does not exist');
@@ -340,5 +340,9 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
     ) private {
         virtualPool.setRates(rate0, rate1);
         emit RewardsRatesChanged(rate0, rate1, incentiveId);
+    }
+
+    function _distributeRewards(IAlgebraEternalVirtualPool virtualPool) private {
+        virtualPool.distributeRewards();
     }
 }
