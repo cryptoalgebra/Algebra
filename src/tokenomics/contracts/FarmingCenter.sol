@@ -91,10 +91,6 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
-    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
-        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
-    }
-
     /// @inheritdoc IFarmingCenter
     function enterFarming(
         IncentiveKey memory key,
@@ -115,7 +111,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
+        address multiplierToken = _getMultiplierTokenForFarming(_farming, incentiveId);
         if (tokensLocked > 0) {
             uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
@@ -144,7 +140,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _farming.exitFarming(key, tokenId, msg.sender);
 
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, , ) = _farming.incentives(incentiveId);
+        address multiplierToken = _getMultiplierTokenForFarming(_farming, incentiveId);
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
         }
@@ -169,7 +165,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         checkAuthorizationForToken(deposits[tokenId].L2TokenId);
         address _virtualPool = _virtualPoolAddresses[address(key.pool)].eternalVirtualPool;
         if (_virtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPool).increaseCumulative(uint32(block.timestamp));
+            _increaseCumulativeInVirtualPool(IAlgebraVirtualPool(_virtualPool), uint32(block.timestamp));
         }
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
@@ -202,7 +198,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) external view override returns (bool) {
         VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
 
-        address activeIncentiveInPool = pool.activeIncentive();
+        address activeIncentiveInPool = _getActiveIncentiveInPool(pool);
 
         if (activeIncentiveInPool == virtualPool) return true;
         if (activeIncentiveInPool != address(this)) return false;
@@ -217,7 +213,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
         address newIncentive;
-        if (pool.activeIncentive() == address(0)) {
+        if (_getActiveIncentiveInPool(pool) == address(0)) {
             newIncentive = newVirtualPool; // turn on pool directly
         } else {
             if (newVirtualPool == address(0)) {
@@ -324,12 +320,29 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
 
+    // Wrapped external calls. Moved to separate functions to reduce bytecode size
+
+    function _getActiveIncentiveInPool(IAlgebraPool pool) private view returns (address virtualPool) {
+        virtualPool = pool.activeIncentive();
+    }
+
     function _setIncentive(IAlgebraPool pool, address newIncentive) private {
         pool.setIncentive(newIncentive);
     }
 
     function _crossInVirtualPool(IAlgebraVirtualPool virtualPool, int24 nextTick, bool zeroToOne) private {
         virtualPool.cross(nextTick, zeroToOne);
+    }
+
+    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
+        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
+    }
+
+    function _getMultiplierTokenForFarming(
+        IAlgebraFarming farming,
+        bytes32 incentiveId
+    ) private view returns (address multiplierToken) {
+        (, , , , , multiplierToken, , ) = farming.incentives(incentiveId);
     }
 
     function _increaseCumulativeInVirtualPool(
