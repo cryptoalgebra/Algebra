@@ -163,6 +163,8 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         uint256 tokenId,
         uint256 tokensLocked
     ) external override onlyFarmingCenter {
+        require(!isEmergencyWithdrawActivated, 'emergency activated');
+
         (
             bytes32 incentiveId,
             int24 tickLower,
@@ -198,35 +200,37 @@ contract AlgebraEternalFarming is AlgebraFarming, IAlgebraEternalFarming {
         Farm memory farm = farms[tokenId][incentiveId];
         require(farm.liquidity != 0, 'farm does not exist');
 
-        Incentive storage incentive = incentives[incentiveId];
-        IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-
         uint256 reward;
         uint256 bonusReward;
 
-        {
-            if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
-            int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
+        if (!isEmergencyWithdrawActivated) {
+            Incentive storage incentive = incentives[incentiveId];
+            IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-            virtualPool.distributeRewards(); // update rewards, as ticks may be cleared when liquidity decreases
+            {
+                if (!_isIncentiveActiveInPool(key.pool, address(virtualPool))) incentive.deactivated = true; // pool can "detach" by itself
+                int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
-            (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
+                virtualPool.distributeRewards(); // update rewards, as ticks may be cleared when liquidity decreases
 
-            virtualPool.applyLiquidityDeltaToPosition(
-                uint32(block.timestamp),
-                farm.tickLower,
-                farm.tickUpper,
-                -int256(farm.liquidity).toInt128(),
-                tick
-            );
-        }
+                (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
-        mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
-        if (reward != 0) {
-            rewardBalances[key.rewardToken] += reward; // user must claim before overflow
-        }
-        if (bonusReward != 0) {
-            rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+                virtualPool.applyLiquidityDeltaToPosition(
+                    uint32(block.timestamp),
+                    farm.tickLower,
+                    farm.tickUpper,
+                    -int256(farm.liquidity).toInt128(),
+                    tick
+                );
+            }
+
+            mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
+            if (reward != 0) {
+                rewardBalances[key.rewardToken] += reward; // user must claim before overflow
+            }
+            if (bonusReward != 0) {
+                rewardBalances[key.bonusRewardToken] += bonusReward; // user must claim before overflow
+            }
         }
 
         delete farms[tokenId][incentiveId];

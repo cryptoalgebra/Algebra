@@ -18,6 +18,9 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice The pool deployer
     function deployer() external returns (IAlgebraPoolDeployer);
 
+    /// @notice Users can withdraw liquidity without any checks if active.
+    function isEmergencyWithdrawActivated() external view returns (bool);
+
     /// @notice Updates the incentive maker
     /// @param _incentiveMaker The new incentive maker address
     function setIncentiveMaker(address _incentiveMaker) external;
@@ -72,6 +75,13 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice Updates farming center address
     /// @param _farmingCenter The new farming center contract address
     function setFarmingCenterAddress(address _farmingCenter) external;
+
+    /// @notice Changes `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if activated.
+    /// User cannot enter to farmings if activated.
+    /// _Must_ only be used in emergency situations. Farmings may be unusable after activation.
+    /// @dev only owner
+    /// @param newStatus The new status of `isEmergencyWithdrawActivated`.
+    function setEmergencyWithdrawStatus(bool newStatus) external;
 
     /// @notice enter farming for Algebra LP token
     /// @param key The key of the incentive for which to enterFarming the NFT
@@ -187,4 +197,8 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param rewardAddress The token reward address
     /// @param owner The address where claimed rewards were sent to
     event RewardClaimed(address indexed to, uint256 reward, address indexed rewardAddress, address indexed owner);
+
+    /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes
+    /// @param newStatus New value of `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
+    event EmergencyWithdraw(bool newStatus);
 }

@@ -125,4 +125,8 @@ interface IFarmingCenter is
     /// @param oldOwner The owner before the deposit was transferred
     /// @param newOwner The owner after the deposit was transferred
     event DepositTransferred(uint256 indexed tokenId, address indexed oldOwner, address indexed newOwner);
+
+    /// @notice Emitted when status of EmergencyWithdraw changes
+    /// @param newStatus New value of `emergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
+    event EmergencyWithdrawToggle(bool newStatus);
 }

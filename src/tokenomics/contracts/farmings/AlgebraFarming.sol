@@ -53,6 +53,9 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     address public incentiveMaker;
     address public owner;
 
+    /// @inheritdoc IAlgebraFarming
+    bool public override isEmergencyWithdrawActivated;
+
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
     mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
@@ -111,6 +114,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         require(_farmingCenter != address(farmingCenter));
         farmingCenter = IFarmingCenter(_farmingCenter);
         emit FarmingCenter(_farmingCenter);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function setEmergencyWithdrawStatus(bool newStatus) external override onlyOwner {
+        require(isEmergencyWithdrawActivated != newStatus);
+        isEmergencyWithdrawActivated = newStatus;
+        emit EmergencyWithdraw(newStatus);
     }
 
     /// @inheritdoc IAlgebraFarming

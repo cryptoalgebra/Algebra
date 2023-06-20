@@ -158,6 +158,8 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 tokenId,
         uint256 tokensLocked
     ) external override onlyFarmingCenter {
+        require(!isEmergencyWithdrawActivated, 'emergency activated');
+
         require(block.timestamp < key.startTime, 'incentive has already started');
 
         (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, ) = _enterFarming(
@@ -183,12 +185,20 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        // anyone can call exitFarming if the block time is after the end time of the incentive
-        require(block.timestamp > key.endTime || block.timestamp < key.startTime, 'cannot exitFarming before end time');
 
         Farm memory farm = farms[tokenId][incentiveId];
-
         require(farm.liquidity != 0, 'farm does not exist');
+
+        if (isEmergencyWithdrawActivated) {
+            delete farms[tokenId][incentiveId];
+
+            emit FarmEnded(tokenId, incentiveId, address(key.rewardToken), address(key.bonusRewardToken), _owner, 0, 0);
+
+            return;
+        }
+
+        // anyone can call exitFarming if the block time is after the end time of the incentive
+        require(block.timestamp > key.endTime || block.timestamp < key.startTime, 'cannot exitFarming before end time');
 
         uint256 reward;
         uint256 bonusReward;
