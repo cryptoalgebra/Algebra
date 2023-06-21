@@ -34,22 +34,6 @@ Event emitted when a liquidity mining incentive has been created
 | enterStartTime | uint32 | The time when enter becomes possible |
 
 
-### RewardAmountsDecreased
-
-
-`event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId)`  
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-| incentiveId | bytes32 |  |
-
-
 
 
 ## Functions
@@ -103,7 +87,7 @@ Returns information about a farmd liquidity NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower end of the tick range for the position, tickUpper The upper end of the tick range for the position |
+| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower end of the tick range for the position, tickUpper The upper end of the tick range for the position |
 | tickLower | int24 |  |
 | tickUpper | int24 |  |
 
@@ -127,38 +111,6 @@ Returns information about a farmd liquidity NFT
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | virtualPool | address |  |
-
-### addRewards
-
-
-`function addRewards(struct IIncentiveKey.IncentiveKey key, uint256 reward, uint256 bonusReward) external`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-
-
-### decreaseRewardsAmount
-
-
-`function decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey key, uint256 rewardAmount, uint256 bonusRewardAmount) external`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| rewardAmount | uint256 |  |
-| bonusRewardAmount | uint256 |  |
-
 
 
 

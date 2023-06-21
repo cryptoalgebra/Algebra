@@ -9,6 +9,18 @@ Algebra main farming contract
 
 *Developer note: Manages farmings and performs entry, exit and other actions.*
 
+## Modifiers
+### nonReentrant
+
+
+`modifier nonReentrant()`  internal
+
+
+
+
+
+
+
 
 
 ## Variables
@@ -131,7 +143,7 @@ Collects up to a maximum amount of fees owed to a specific position to the recip
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
+| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
 
 **Returns:**
 
@@ -183,6 +195,26 @@ Used to claim and send rewards from farming(s)
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | reward | uint256 | The summary amount of claimed rewards |
+
+### isIncentiveActiveInPool
+
+
+`function isIncentiveActiveInPool(contract IAlgebraPool pool, address virtualPool) external view returns (bool)` view external
+
+Is virtualPool connected to pool or not
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | contract IAlgebraPool |  |
+| virtualPool | address |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
 
 ### connectVirtualPool
 

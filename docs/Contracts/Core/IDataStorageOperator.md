@@ -33,7 +33,7 @@
 `function timepoints(uint256 index) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint160 secondsPerLiquidityCumulative, uint88 volatilityCumulative, int24 averageTick, uint144 volumePerLiquidityCumulative)` view external
 
 Returns data belonging to a certain timepoint
-*Developer note: There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds*
+*Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
 
 
 
@@ -45,7 +45,7 @@ Returns data belonging to a certain timepoint
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| initialized | bool | Whether the timepoint has been initialized and the values are safe to use, blockTimestamp The timestamp of the observation, tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp, secondsPerLiquidityCumulative The seconds per in range liquidity for the life of the pool as of the timepoint timestamp, volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp, averageTick Time-weighted average tick, volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp |
+| initialized | bool | Whether the timepoint has been initialized and the values are safe to use, blockTimestamp The timestamp of the observation, tickCumulative The tick multiplied by seconds elapsed for the life of the pool as of the timepoint timestamp, secondsPerLiquidityCumulative The seconds per in range liquidity for the life of the pool as of the timepoint timestamp, volatilityCumulative Cumulative standard deviation for the life of the pool as of the timepoint timestamp, averageTick Time-weighted average tick, volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp |
 | blockTimestamp | uint32 |  |
 | tickCumulative | int56 |  |
 | secondsPerLiquidityCumulative | uint160 |  |

@@ -70,6 +70,10 @@ only pool (or FarmingCenter as &quot;proxy&quot;) can call
 
 
 
+### bool deactivated 
+
+
+
 
 ## Functions
 ### getInnerSecondsPerLiquidity
@@ -112,7 +116,7 @@ If the tick is also initialized in a virtual pool it should be crossed too*
 ### increaseCumulative
 
 
-`function increaseCumulative(uint32 currentTimestamp) external returns (enum IAlgebraVirtualPool.Status)`  external
+`function increaseCumulative(uint32 currentTimestamp) external returns (enum IAlgebraVirtualPool.Status res)`  external
 
 
 *Developer note: This function is called from the main pool before every swap To increase seconds per liquidity
@@ -128,7 +132,18 @@ cumulative considering previous timestamp and liquidity. The liquidity is stored
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | enum IAlgebraVirtualPool.Status | Status The status of virtual pool |
+| res | enum IAlgebraVirtualPool.Status | Status The status of virtual pool |
+
+### deactivate
+
+
+`function deactivate() external`  external
+
+This function is used to deactivate virtual pool. Deactivated virtual pool will return Status.NOT_EXIST in increaseCumulative function
+
+
+
+
 
 ### applyLiquidityDeltaToPosition
 

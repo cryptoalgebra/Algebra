@@ -96,26 +96,12 @@ Returns information about a farmd liquidity NFT
 | bonusRewardAmount | uint256 |  |
 
 
-### detachIncentive
+### deactivateIncentive
 
 
-`function detachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
+`function deactivateIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
-Detach incentive from the pool
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
-
-
-### attachIncentive
-
-
-`function attachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
-
-Attach incentive to the pool
+Detach incentive from the pool and deactivate it
 
 
 

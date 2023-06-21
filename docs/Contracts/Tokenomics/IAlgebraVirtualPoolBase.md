@@ -118,6 +118,22 @@ Base interface for virtual pools
 | ---- | ---- | ----------- |
 | [0] | uint32 |  |
 
+### deactivated
+
+
+`function deactivated() external view returns (bool)` view external
+
+
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
+
 ### getInnerSecondsPerLiquidity
 
 
@@ -137,6 +153,17 @@ This function is used to calculate the seconds per liquidity inside a certain po
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | innerSecondsSpentPerLiquidity | uint160 | The seconds per liquidity inside the position |
+
+### deactivate
+
+
+`function deactivate() external`  external
+
+This function is used to deactivate virtual pool. Deactivated virtual pool will return Status.NOT_EXIST in increaseCumulative function
+
+
+
+
 
 ### applyLiquidityDeltaToPosition
 
