@@ -4,13 +4,7 @@ This directory contains the periphery smart contracts for the Algebra DEX. For t
 
 ## Slither
 
-*Relevant for Slither 0.8.3*
-
-To run slither for periphery you need to exclude `delegatecall-loop` and `msg-value-loop` detectors:
-```
-$ slither . --exclude delegatecall-loop,msg-value-loop
-```
-Or exclude contracts in `base` folder. Otherwise Slither crashes with an error.
+*Works correctly starting from the version 0.9.0*
 
 ## License
 

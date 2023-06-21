@@ -34,6 +34,7 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint24 minimalPositionWidth;
         uint224 totalLiquidity;
         address multiplierToken;
+        bool deactivated;
         Tiers tiers;
     }
 
@@ -43,33 +44,44 @@ abstract contract AlgebraFarming is IAlgebraFarming {
     /// @inheritdoc IAlgebraFarming
     IAlgebraPoolDeployer public immutable override deployer;
 
-    /// @inheritdoc IAlgebraFarming
-    IFarmingCenter public override farmingCenter;
+    IFarmingCenter public farmingCenter;
 
     /// @dev bytes32 refers to the return value of IncentiveId.compute
     /// @inheritdoc IAlgebraFarming
     mapping(bytes32 => Incentive) public override incentives;
 
-    address internal incentiveMaker;
-    address internal owner;
+    address public incentiveMaker;
+    address public owner;
+
+    /// @inheritdoc IAlgebraFarming
+    bool public override isEmergencyWithdrawActivated;
+    // reentrancy lock
+    bool private unlocked = true;
 
     /// @dev rewards[owner][rewardToken] => uint256
     /// @inheritdoc IAlgebraFarming
     mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
 
     modifier onlyIncentiveMaker() {
-        require(msg.sender == incentiveMaker);
+        _checkIsIncentiveMaker();
         _;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        _checkIsOwner();
         _;
     }
 
     modifier onlyFarmingCenter() {
-        require(msg.sender == address(farmingCenter));
+        _checkIsFarmingCenter();
         _;
+    }
+
+    modifier nonReentrant() {
+        require(unlocked);
+        unlocked = false;
+        _;
+        unlocked = true;
     }
 
     /// @param _deployer pool deployer contract address
@@ -78,6 +90,18 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         owner = msg.sender;
         deployer = _deployer;
         nonfungiblePositionManager = _nonfungiblePositionManager;
+    }
+
+    function _checkIsFarmingCenter() private view {
+        require(msg.sender == address(farmingCenter));
+    }
+
+    function _checkIsIncentiveMaker() private view {
+        require(msg.sender == incentiveMaker);
+    }
+
+    function _checkIsOwner() private view {
+        require(msg.sender == owner);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -99,6 +123,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         require(_farmingCenter != address(farmingCenter));
         farmingCenter = IFarmingCenter(_farmingCenter);
         emit FarmingCenter(_farmingCenter);
+    }
+
+    /// @inheritdoc IAlgebraFarming
+    function setEmergencyWithdrawStatus(bool newStatus) external override onlyOwner {
+        require(isEmergencyWithdrawActivated != newStatus);
+        isEmergencyWithdrawActivated = newStatus;
+        emit EmergencyWithdraw(newStatus);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -133,23 +164,27 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint256 reward,
         uint256 bonusReward,
         Incentive storage incentive
-    ) internal returns (uint256 receivedReward, uint256 receivedBonusReward) {
+    ) internal nonReentrant returns (uint256 receivedReward, uint256 receivedBonusReward) {
         if (reward > 0) {
-            IERC20Minimal rewardToken = key.rewardToken;
-            uint256 balanceBefore = rewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(address(rewardToken), msg.sender, address(this), reward);
-            require((receivedReward = rewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedReward -= balanceBefore;
+            receivedReward = _receiveToken(key.rewardToken, reward);
             incentive.totalReward = incentive.totalReward.add(receivedReward);
         }
         if (bonusReward > 0) {
-            IERC20Minimal bonusRewardToken = key.bonusRewardToken;
-            uint256 balanceBefore = bonusRewardToken.balanceOf(address(this));
-            TransferHelper.safeTransferFrom(address(bonusRewardToken), msg.sender, address(this), bonusReward);
-            require((receivedBonusReward = bonusRewardToken.balanceOf(address(this))) > balanceBefore);
-            receivedBonusReward -= balanceBefore;
+            receivedBonusReward = _receiveToken(key.bonusRewardToken, bonusReward);
             incentive.bonusReward = incentive.bonusReward.add(receivedBonusReward);
         }
+    }
+
+    function _receiveToken(IERC20Minimal token, uint256 amount) private returns (uint256) {
+        uint256 balanceBefore = _balanceOfToken(token);
+        TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
+        uint256 balanceAfter = _balanceOfToken(token);
+        require(balanceAfter > balanceBefore);
+        return balanceAfter - balanceBefore;
+    }
+
+    function _balanceOfToken(IERC20Minimal token) private view returns (uint256) {
+        return token.balanceOf(address(this));
     }
 
     function _createFarming(
@@ -160,21 +195,16 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         uint24 minimalPositionWidth,
         address multiplierToken,
         Tiers calldata tiers
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            uint256 receivedReward,
-            uint256 receivedBonusReward
-        )
-    {
+    ) internal returns (bytes32 incentiveId, uint256 receivedReward, uint256 receivedBonusReward) {
         _connectPoolToVirtualPool(key.pool, virtualPool);
 
         incentiveId = IncentiveId.compute(key);
 
         Incentive storage newIncentive = incentives[incentiveId];
+        require(newIncentive.totalReward == 0, 'key already used');
 
         (receivedReward, receivedBonusReward) = _receiveRewards(key, reward, bonusReward, newIncentive);
+        require(receivedReward != 0, 'zero reward amount');
 
         require(
             minimalPositionWidth <= (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)),
@@ -201,38 +231,23 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         newIncentive.multiplierToken = multiplierToken;
     }
 
-    function _detachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
-        require(currentVirtualPool != address(0), 'Farming do not exist');
+    function _deactivateIncentive(IncentiveKey memory key, address virtualPool, Incentive storage incentive) internal {
+        require(virtualPool != address(0), 'Farming do not exist');
+        require(!incentive.deactivated, 'Already deactivated');
 
-        require(
-            incentives[IncentiveId.compute(key)].virtualPoolAddress == currentVirtualPool,
-            'Another farming is active'
-        );
-        _connectPoolToVirtualPool(key.pool, address(0));
+        incentive.deactivated = true;
 
-        emit IncentiveDetached(
+        IAlgebraVirtualPoolBase(virtualPool).deactivate();
+
+        if (_isIncentiveActiveInPool(key.pool, virtualPool)) {
+            _connectPoolToVirtualPool(key.pool, address(0));
+        }
+
+        emit IncentiveDeactivated(
             key.rewardToken,
             key.bonusRewardToken,
             key.pool,
-            currentVirtualPool,
-            key.startTime,
-            key.endTime
-        );
-    }
-
-    function _attachIncentive(IncentiveKey memory key, address currentVirtualPool) internal {
-        require(currentVirtualPool == address(0), 'Farming already exists');
-
-        address virtualPoolAddress = incentives[IncentiveId.compute(key)].virtualPoolAddress;
-        require(virtualPoolAddress != address(0), 'Invalid farming');
-
-        _connectPoolToVirtualPool(key.pool, virtualPoolAddress);
-
-        emit IncentiveAttached(
-            key.rewardToken,
-            key.bonusRewardToken,
-            key.pool,
-            virtualPoolAddress,
+            virtualPool,
             key.startTime,
             key.endTime
         );
@@ -242,20 +257,12 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked
-    )
-        internal
-        returns (
-            bytes32 incentiveId,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
-            address virtualPool
-        )
-    {
-        incentiveId = IncentiveId.compute(key);
-        Incentive storage incentive = incentives[incentiveId];
+    ) internal returns (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPool) {
+        Incentive storage incentive;
+        (incentiveId, incentive) = _getIncentiveByKey(key);
 
-        require(incentive.totalReward > 0, 'non-existent incentive');
+        virtualPool = incentive.virtualPoolAddress;
+        require(!incentive.deactivated && _isIncentiveActiveInPool(key.pool, virtualPool), 'incentive stopped');
 
         IAlgebraPool pool;
         (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(
@@ -266,14 +273,13 @@ abstract contract AlgebraFarming is IAlgebraFarming {
 
         require(pool == key.pool, 'invalid pool for token');
         require(liquidity > 0, 'cannot farm token with 0 liquidity');
-        (, int24 tick, , , , , ) = pool.globalState();
+        int24 tick = _getTickInPool(pool);
 
         uint32 multiplier = LiquidityTier.getLiquidityMultiplier(tokensLocked, incentive.tiers);
         uint256 liquidityAmountWithMultiplier = FullMath.mulDiv(liquidity, multiplier, LiquidityTier.DENOMINATOR);
         require(liquidityAmountWithMultiplier <= type(uint128).max);
         liquidity = uint128(liquidityAmountWithMultiplier);
 
-        virtualPool = incentive.virtualPoolAddress;
         uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
         require(int256(tickUpper) - int256(tickLower) >= int256(minimalAllowedTickWidth), 'position too narrow');
 
@@ -292,15 +298,34 @@ abstract contract AlgebraFarming is IAlgebraFarming {
         address to,
         uint256 amountRequested
     ) internal returns (uint256 reward) {
+        require(to != address(0), 'to zero address');
         reward = rewards[from][rewardToken];
 
         if (amountRequested == 0 || amountRequested > reward) {
             amountRequested = reward;
         }
 
-        rewards[from][rewardToken] = reward - amountRequested;
-        TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
+        if (amountRequested > 0) {
+            rewards[from][rewardToken] = reward - amountRequested;
+            TransferHelper.safeTransfer(address(rewardToken), to, amountRequested);
 
-        emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+            emit RewardClaimed(to, amountRequested, address(rewardToken), from);
+        }
+    }
+
+    function _isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) internal view returns (bool) {
+        return farmingCenter.isIncentiveActiveInPool(pool, virtualPool);
+    }
+
+    function _getIncentiveByKey(
+        IncentiveKey memory key
+    ) internal view returns (bytes32 incentiveId, Incentive storage incentive) {
+        incentiveId = IncentiveId.compute(key);
+        incentive = incentives[incentiveId];
+        require(incentive.totalReward != 0, 'non-existent incentive');
+    }
+
+    function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
+        (, tick, , , , , ) = pool.globalState();
     }
 }
