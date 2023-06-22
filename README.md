@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-Innovative DEX with concentrated liquidity, adaptive fee, build-in farming etc.
+Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
 </p>
  
  <p align="center">

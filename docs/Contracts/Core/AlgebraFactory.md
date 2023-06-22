@@ -33,6 +33,10 @@ Returns the current owner of the factory
 
 Returns the current poolDeployerAddress
 
+### uint8 defaultCommunityFee 
+
+Returns the default community fee
+
 ### address farmingAddress 
 
 
@@ -120,6 +124,21 @@ Updates the owner of the factory
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _farmingAddress | address | The new tokenomics contract address |
+
+
+### setDefaultCommunityFee
+
+
+`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
+
+
+*Developer note: updates default community fee for new pools*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
 
 
 ### setVaultAddress

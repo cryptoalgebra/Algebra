@@ -26,6 +26,20 @@ Emitted when ownership of a deposit changes
 | newOwner | address | The owner after the deposit was transferred |
 
 
+### EmergencyWithdrawToggle
+
+
+`event EmergencyWithdrawToggle(bool newStatus)`  
+
+Emitted when status of EmergencyWithdraw changes
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newStatus | bool | New value of &#x60;emergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if active. |
+
+
 
 
 ## Functions
@@ -113,6 +127,26 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract IFarmingCenterVault |  |
 
+### isIncentiveActiveInPool
+
+
+`function isIncentiveActiveInPool(contract IAlgebraPool pool, address virtualPool) external view returns (bool)` view external
+
+Is virtualPool connected to pool or not
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | contract IAlgebraPool |  |
+| virtualPool | address |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
+
 ### l2Nfts
 
 
@@ -151,7 +185,7 @@ Returns information about a deposited NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| L2TokenId | uint256 | The nft layer2 id, numberOfFarms The number of farms, inLimitFarming The parameter showing if the token is in the limit farm, owner The owner of deposit |
+| L2TokenId | uint256 | The nft layer2 id, numberOfFarms The number of farms, inLimitFarming The parameter showing if the token is in the limit farm, owner The owner of deposit |
 | numberOfFarms | uint32 |  |
 | inLimitFarming | bool |  |
 | owner | address |  |
@@ -218,7 +252,7 @@ Collects up to a maximum amount of fees owed to a specific position to the recip
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
+| params | struct INonfungiblePositionManager.CollectParams | tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect |
 
 **Returns:**
 

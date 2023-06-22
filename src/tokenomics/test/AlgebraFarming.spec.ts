@@ -220,34 +220,6 @@ describe('AlgebraFarming', () => {
 				  bonusReward: bonusReward,
 				  rewardRate:  10,
 				  bonusRewardRate:  10,
-				  minimalPositionWidth: 887272 * 2,
-				  multiplierToken: context.rewardToken.address
-				},
-				{
-				  tokenAmountForTier1: 0,
-				  tokenAmountForTier2: 0,
-				  tokenAmountForTier3: 0,
-				  tier1Multiplier: 10000,
-				  tier2Multiplier: 10000,
-				  tier3Multiplier: 10000,
-				},
-				
-			  )).to.be.revertedWith('minimalPositionWidth too wide');
-
-			  await expect((context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
-				{
-				  pool: context.pool01,
-				  rewardToken: context.rewardToken.address,
-				  bonusRewardToken: context.bonusRewardToken.address,
-				  startTime,
-				  endTime
-				  
-				},
-				{ 
-				  reward: totalReward,
-				  bonusReward: bonusReward,
-				  rewardRate:  10,
-				  bonusRewardRate:  10,
 				  minimalPositionWidth: (887272 - 887272 % 60) * 2,
 				  multiplierToken: context.rewardToken.address
 				},

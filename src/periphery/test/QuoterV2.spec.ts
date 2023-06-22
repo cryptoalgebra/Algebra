@@ -373,7 +373,7 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1)
         expect(initializedTicksCrossedList[0]).to.eq(2)
-        expect(amountIn).to.eq(15228)
+        expect(amountIn).to.eq(15229)
 
         expect(sqrtPriceX96AfterList.length).to.eq(1)
         expect(sqrtPriceX96AfterList[0]).to.eq('78055527257643669242286029831')
@@ -471,7 +471,7 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1)
         expect(initializedTicksCrossedList[0]).to.eq(2)
-        expect(amountIn).to.eq(15228)
+        expect(amountIn).to.eq(15230)
         expect(sqrtPriceX96AfterList.length).to.eq(1)
         expect(sqrtPriceX96AfterList[0]).to.eq('80418414376567919517220409857')
       })

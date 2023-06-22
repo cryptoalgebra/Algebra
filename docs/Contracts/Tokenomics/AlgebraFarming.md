@@ -42,6 +42,17 @@ Abstract base contract for Algebra farmings
 
 
 
+### nonReentrant
+
+
+`modifier nonReentrant()`  internal
+
+
+
+
+
+
+
 
 
 ## Variables
@@ -55,13 +66,25 @@ The pool deployer
 
 ### contract IFarmingCenter farmingCenter 
 
-The farming Center
+
 
 ### mapping(bytes32 &#x3D;&gt; struct AlgebraFarming.Incentive) incentives 
 
 Represents a farming incentive
 
 *Developer note: bytes32 refers to the return value of IncentiveId.compute*
+### address incentiveMaker 
+
+
+
+### address owner 
+
+
+
+### bool isEmergencyWithdrawActivated 
+
+Users can withdraw liquidity without any checks if active.
+
 ### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
@@ -83,6 +106,20 @@ Updates the incentive maker
 | _incentiveMaker | address | The new incentive maker address |
 
 
+### setOwner
+
+
+`function setOwner(address _owner) external`  external
+
+Updates the owner address
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address |  |
+
+
 ### setFarmingCenterAddress
 
 
@@ -95,6 +132,23 @@ Updates farming center address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _farmingCenter | address | The new farming center contract address |
+
+
+### setEmergencyWithdrawStatus
+
+
+`function setEmergencyWithdrawStatus(bool newStatus) external`  external
+
+Changes &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if activated.
+User cannot enter to farmings if activated.
+_Must_ only be used in emergency situations. Farmings may be unusable after activation.
+*Developer note: only owner*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newStatus | bool | The new status of &#x60;isEmergencyWithdrawActivated&#x60;. |
 
 
 ### claimReward

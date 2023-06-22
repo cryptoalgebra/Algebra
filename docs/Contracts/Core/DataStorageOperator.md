@@ -27,7 +27,7 @@
 
 Returns data belonging to a certain timepoint
 
-*Developer note: There is more convenient function to fetch a timepoint: observe(). Which requires not an index but seconds*
+*Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
 ### struct AdaptiveFee.Configuration feeConfig 
 
 

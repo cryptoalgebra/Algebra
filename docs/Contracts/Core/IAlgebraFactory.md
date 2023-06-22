@@ -70,6 +70,20 @@ Emitted when the farming address is changed
 | newFarmingAddress | address | The farming address after the address was changed |
 
 
+### DefaultCommunityFee
+
+
+`event DefaultCommunityFee(uint8 newDefaultCommunityFee)`  
+
+Emitted when the default community fee is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new default community fee value |
+
+
 ### FeeConfiguration
 
 
@@ -145,6 +159,22 @@ certain functions not by a tokenomics contract*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address | The tokenomics contract address |
+
+### defaultCommunityFee
+
+
+`function defaultCommunityFee() external view returns (uint8)` view external
+
+Returns the default community fee
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint8 | Fee which will be set at the creation of the pool |
 
 ### vaultAddress
 
@@ -234,6 +264,21 @@ Updates the owner of the factory
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _farmingAddress | address | The new tokenomics contract address |
+
+
+### setDefaultCommunityFee
+
+
+`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
+
+
+*Developer note: updates default community fee for new pools*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
 
 
 ### setVaultAddress

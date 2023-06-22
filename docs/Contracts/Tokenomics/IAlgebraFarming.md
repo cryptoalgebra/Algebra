@@ -10,10 +10,10 @@ Allows farming nonfungible liquidity tokens in exchange for reward tokens
 
 
 ## Events
-### IncentiveDetached
+### IncentiveDeactivated
 
 
-`event IncentiveDetached(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime)`  
+`event IncentiveDeactivated(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime)`  
 
 Event emitted when a liquidity mining incentive has been stopped from the outside
 
@@ -25,25 +25,6 @@ Event emitted when a liquidity mining incentive has been stopped from the outsid
 | bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
 | pool | contract IAlgebraPool | The Algebra pool |
 | virtualPool | address | The detached virtual pool address |
-| startTime | uint256 | The time when the incentive program begins |
-| endTime | uint256 | The time when rewards stop accruing |
-
-
-### IncentiveAttached
-
-
-`event IncentiveAttached(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, address virtualPool, uint256 startTime, uint256 endTime)`  
-
-Event emitted when a liquidity mining incentive has been runned again from the outside
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| rewardToken | contract IERC20Minimal | The token being distributed as a reward |
-| bonusRewardToken | contract IERC20Minimal | The token being distributed as a bonus reward |
-| pool | contract IAlgebraPool | The Algebra pool |
-| virtualPool | address | The attached virtual pool address |
 | startTime | uint256 | The time when the incentive program begins |
 | endTime | uint256 | The time when rewards stop accruing |
 
@@ -99,6 +80,20 @@ Emitted when the incentive maker is changed
 | incentiveMaker | address | The incentive maker after the address was changed |
 
 
+### Owner
+
+
+`event Owner(address owner)`  
+
+Emitted when owner is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner after the address was changed |
+
+
 ### FarmingCenter
 
 
@@ -129,6 +124,22 @@ Event emitted when rewards were added
 | incentiveId | bytes32 | The ID of the incentive for which rewards were added |
 
 
+### RewardAmountsDecreased
+
+
+`event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId)`  
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| reward | uint256 |  |
+| bonusReward | uint256 |  |
+| incentiveId | bytes32 |  |
+
+
 ### RewardClaimed
 
 
@@ -144,6 +155,20 @@ Event emitted when a reward token has been claimed
 | reward | uint256 | The amount of reward tokens claimed |
 | rewardAddress | address | The token reward address |
 | owner | address | The address where claimed rewards were sent to |
+
+
+### EmergencyWithdraw
+
+
+`event EmergencyWithdraw(bool newStatus)`  
+
+Emitted when status of &#x60;isEmergencyWithdrawActivated&#x60; changes
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newStatus | bool | New value of &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if active. |
 
 
 
@@ -165,22 +190,6 @@ The nonfungible position manager with which this farming contract is compatible
 | ---- | ---- | ----------- |
 | [0] | contract INonfungiblePositionManager |  |
 
-### farmingCenter
-
-
-`function farmingCenter() external view returns (contract IFarmingCenter)` view external
-
-The farming Center
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | contract IFarmingCenter |  |
-
 ### deployer
 
 
@@ -197,6 +206,22 @@ The pool deployer
 | ---- | ---- | ----------- |
 | [0] | contract IAlgebraPoolDeployer |  |
 
+### isEmergencyWithdrawActivated
+
+
+`function isEmergencyWithdrawActivated() external view returns (bool)` view external
+
+Users can withdraw liquidity without any checks if active.
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
+
 ### setIncentiveMaker
 
 
@@ -211,10 +236,24 @@ Updates the incentive maker
 | _incentiveMaker | address | The new incentive maker address |
 
 
+### setOwner
+
+
+`function setOwner(address owner) external`  external
+
+Updates the owner address
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The new owner address |
+
+
 ### incentives
 
 
-`function incentives(bytes32 incentiveId) external view returns (uint256 totalReward, uint256 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, uint224 totalLiquidity, address multiplierToken, struct IAlgebraFarming.Tiers tiers)` view external
+`function incentives(bytes32 incentiveId) external view returns (uint256 totalReward, uint256 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, uint224 totalLiquidity, address multiplierToken, bool deactivated, struct IAlgebraFarming.Tiers tiers)` view external
 
 Represents a farming incentive
 
@@ -234,34 +273,53 @@ Represents a farming incentive
 | minimalPositionWidth | uint24 |  |
 | totalLiquidity | uint224 |  |
 | multiplierToken | address |  |
+| deactivated | bool |  |
 | tiers | struct IAlgebraFarming.Tiers |  |
 
-### detachIncentive
+### deactivateIncentive
 
 
-`function detachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
+`function deactivateIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
 
-Detach incentive from the pool
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
-
-
-### attachIncentive
-
-
-`function attachIncentive(struct IIncentiveKey.IncentiveKey key) external`  external
-
-Attach incentive to the pool
+Detach incentive from the pool and deactivate it
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | struct IIncentiveKey.IncentiveKey | The key of the incentive |
+
+
+### addRewards
+
+
+`function addRewards(struct IIncentiveKey.IncentiveKey key, uint256 rewardAmount, uint256 bonusRewardAmount) external`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| rewardAmount | uint256 |  |
+| bonusRewardAmount | uint256 |  |
+
+
+### decreaseRewardsAmount
+
+
+`function decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey key, uint256 rewardAmount, uint256 bonusRewardAmount) external`  external
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | struct IIncentiveKey.IncentiveKey |  |
+| rewardAmount | uint256 |  |
+| bonusRewardAmount | uint256 |  |
 
 
 ### rewards
@@ -296,6 +354,23 @@ Updates farming center address
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _farmingCenter | address | The new farming center contract address |
+
+
+### setEmergencyWithdrawStatus
+
+
+`function setEmergencyWithdrawStatus(bool newStatus) external`  external
+
+Changes &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if activated.
+User cannot enter to farmings if activated.
+_Must_ only be used in emergency situations. Farmings may be unusable after activation.
+*Developer note: only owner*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newStatus | bool | The new status of &#x60;isEmergencyWithdrawActivated&#x60;. |
 
 
 ### enterFarming
