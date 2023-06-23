@@ -667,7 +667,6 @@ describe('AlgebraPool', () => {
       // moves to tick -1
       await swapExact0For1(1000, wallet.address)
       await pool.advanceTime(4)
-      await dsOperator.advanceTime(4);
       let {
         tickCumulatives: [tickCumulative],
       } = await dsOperator.getTimepoints([0])
@@ -678,7 +677,6 @@ describe('AlgebraPool', () => {
       await swapExact0For1(expandTo18Decimals(1).div(2), wallet.address);
       expect((await pool.globalState()).tick).to.eq(-4463);
       await pool.advanceTime(4);
-      await dsOperator.advanceTime(4);
       await swapExact1For0(expandTo18Decimals(1).div(4), wallet.address);
       expect((await pool.globalState()).tick).to.eq(-1560);
       let {
@@ -686,7 +684,6 @@ describe('AlgebraPool', () => {
       } = await dsOperator.getTimepoints([0])
       expect(tickCumulative0).to.eq(-17852);
       await pool.advanceTime(60 * 5);
-      await dsOperator.advanceTime(60 * 5);
       await swapExact0For1(100, wallet.address);
       let {
         tickCumulatives: [tickCumulative1],

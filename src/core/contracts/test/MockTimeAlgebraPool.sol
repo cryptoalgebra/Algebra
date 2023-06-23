@@ -22,6 +22,7 @@ contract MockTimeAlgebraPool is AlgebraPool {
     unchecked {
       time += by;
     }
+    MockTimeDataStorageOperator(dataStorageOperator).advanceTime(by);
   }
 
   function _blockTimestamp() internal view override returns (uint32) {
