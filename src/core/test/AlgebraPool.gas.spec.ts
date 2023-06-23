@@ -123,7 +123,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         it('first swap in block, large swap, no initialized crossings, prepaid dataStorage slot', async () => {
           const dataStorageOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
-          const dsOperator = dataStorageOperatorFactory.attach(pool.dataStorageOperator()) as MockTimeDataStorageOperator;
+          const dsOperator = dataStorageOperatorFactory.attach(pool.plugin()) as MockTimeDataStorageOperator;
           await dsOperator.prepayTimepointsStorage(3, 1);
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address))
           expect((await pool.globalState()).tick).to.eq(-35586)
