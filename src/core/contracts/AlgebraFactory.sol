@@ -53,8 +53,6 @@ contract AlgebraFactory is IAlgebraFactory {
     owner = msg.sender;
     emit Owner(msg.sender);
 
-    defaultCommunityFee = Constants.MAX_COMMUNITY_FEE;
-
     poolDeployer = _poolDeployer;
     vaultAddress = _vaultAddress;
   }
