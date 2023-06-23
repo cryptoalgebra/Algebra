@@ -77,15 +77,10 @@ interface IAlgebraPoolEvents {
   /// @param newTickSpacing The updated value of the new tick spacing
   event TickSpacing(int24 newTickSpacing);
 
-  /// @notice Emitted when new activeIncentive is set
-  /// @param newIncentiveAddress The address of the new incentive
-  event Incentive(address indexed newIncentiveAddress);
+  // TODO
+  event Plugin(address indexed newIncentiveAddress);
 
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
   event Fee(uint16 fee);
-
-  /// @notice Emitted in case of an error when trying to write to the DataStorage
-  /// @dev This shouldn't happen
-  event DataStorageFailure();
 }

@@ -5,10 +5,6 @@ pragma solidity >=0.5.0;
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolImmutables {
-  /// @notice The contract that stores all the timepoints and can perform actions with them
-  /// @return The operator address
-  function dataStorageOperator() external view returns (address);
-
   /// @notice The contract that deployed the pool, which must adhere to the IAlgebraFactory interface
   /// @return The contract address
   function factory() external view returns (address);

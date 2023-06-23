@@ -22,7 +22,8 @@ contract MockTimeAlgebraPool is AlgebraPool {
     unchecked {
       time += by;
     }
-    MockTimeDataStorageOperator(dataStorageOperator).advanceTime(by);
+
+    MockTimeDataStorageOperator(plugin).advanceTime(by);
   }
 
   function _blockTimestamp() internal view override returns (uint32) {
@@ -37,24 +38,21 @@ contract MockTimeAlgebraPool is AlgebraPool {
   }
 
   function getAverageVolatility() external view returns (uint112 volatilityAverage) {
-    volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
-      _blockTimestamp(),
-      int24(uint24(globalState.fee)),
-      globalState.timepointIndex
-    );
+    volatilityAverage = MockTimeDataStorageOperator(plugin).getAverageVolatility(_blockTimestamp(), int24(uint24(globalState.fee)));
   }
 
   function getPrevTick() external view returns (int24 tick, int24 currentTick) {
     unchecked {
-      if (globalState.timepointIndex > 2) {
-        (, , , , tick, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
+      uint16 timepointIndex = IDataStorageOperator(plugin).timepointIndex();
+      if (timepointIndex > 2) {
+        (, , , , tick, , ) = IDataStorageOperator(plugin).timepoints(timepointIndex);
       }
       currentTick = globalState.tick;
     }
   }
 
   function getFee() external view returns (uint16 fee) {
-    return MockTimeDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex);
+    return MockTimeDataStorageOperator(plugin).getFee(_blockTimestamp(), globalState.tick);
   }
 
   function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {

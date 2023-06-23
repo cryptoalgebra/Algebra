@@ -40,7 +40,7 @@ abstract contract Positions is AlgebraPoolBase {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint16 timepointIndex; // The index of the last written timepoint
+    uint8 pluginConfig; // The index of the last written timepoint
   }
 
   /**
@@ -59,10 +59,14 @@ abstract contract Positions is AlgebraPoolBase {
       globalState.price,
       globalState.prevInitializedTick,
       globalState.fee,
-      globalState.timepointIndex
+      globalState.pluginConfig
     );
 
     int24 currentTick = globalState.tick;
+
+    if (cache.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
+    }
 
     bool toggledBottom;
     bool toggledTop;
@@ -124,18 +128,15 @@ abstract contract Positions is AlgebraPoolBase {
       (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), currentTick, liquidityBefore);
-        if (cache.timepointIndex != newTimepointIndex) {
-          cache.timepointIndex = newTimepointIndex;
-          if (cache.fee != newFee) {
-            cache.fee = newFee;
-            emit Fee(newFee);
-          }
-        }
+        _writeSecondsPerLiquidityCumulative(_blockTimestamp(), liquidityBefore);
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
 
-      (globalState.prevInitializedTick, globalState.fee, globalState.timepointIndex) = (cache.prevInitializedTick, cache.fee, cache.timepointIndex);
+      (globalState.prevInitializedTick, globalState.fee) = (cache.prevInitializedTick, cache.fee);
+    }
+
+    if (cache.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
   }
 

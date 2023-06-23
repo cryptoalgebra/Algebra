@@ -37,6 +37,8 @@ interface IDataStorageOperator {
       uint16 windowStartIndex
     );
 
+  function timepointIndex() external view returns (uint16);
+
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
   /// @param tick Initial tick
@@ -65,15 +67,6 @@ interface IDataStorageOperator {
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(uint32[] memory secondsAgos) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives);
-
-  /// @notice Writes a dataStorage timepoint to the array
-  /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
-  /// @param index The index of the timepoint that was most recently written to the timepoints array
-  /// @param blockTimestamp The timestamp of the new timepoint
-  /// @param tick The active tick at the time of the new timepoint
-  /// @return indexUpdated The new index of the most recently written element in the dataStorage array
-  /// @return newFee The fee in hundredths of a bip, i.e. 1e-6
-  function write(uint16 index, uint32 blockTimestamp, int24 tick) external returns (uint16 indexUpdated, uint16 newFee);
 
   /// @notice Changes fee configuration for the pool
   function changeFeeConfiguration(AlgebraFeeConfiguration calldata feeConfig) external;

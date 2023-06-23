@@ -12,13 +12,13 @@ interface IAlgebraPoolState {
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
   /// @return prevInitializedTick The previous initialized tick
   /// @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
-  /// @return timepointIndex The index of the last written timepoint
+  /// @return pluginConfig TODO
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
   function globalState()
     external
     view
-    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint16 timepointIndex, uint8 communityFee, bool unlocked);
+    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint8 communityFee, bool unlocked);
 
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256
@@ -97,8 +97,6 @@ interface IAlgebraPoolState {
     bytes32 key
   ) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
 
-  /// @notice Returns the information about active incentive
-  /// @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)
-  /// @return incentiveAddress The address associated with the current active incentive
-  function activeIncentive() external view returns (address incentiveAddress);
+  // TODO
+  function plugin() external view returns (address pluginAddress);
 }

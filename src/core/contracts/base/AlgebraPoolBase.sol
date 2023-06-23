@@ -5,8 +5,9 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
-import '../interfaces/IDataStorageOperator.sol';
+import '../interfaces/IAlgebraPlugin.sol';
 import '../interfaces/IERC20Minimal.sol';
+
 import '../libraries/TickManagement.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
@@ -21,13 +22,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     int24 tick; // The current tick
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint16 timepointIndex; // The index of the last written timepoint
+    uint8 pluginConfig;
     uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
 
-  /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override dataStorageOperator;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables
@@ -61,7 +60,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint160 public override secondsPerLiquidityCumulative;
 
   /// @inheritdoc IAlgebraPoolState
-  address public override activeIncentive;
+  address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
@@ -85,9 +84,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   constructor() {
-    (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
+    (plugin, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
     globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
+    globalState.pluginConfig = uint8(Constants.AFTER_INIT_HOOK_FLAG | Constants.BEFORE_SWAP_HOOK_FLAG | Constants.AFTER_POSITION_MODIFY_HOOK_FLAG);
   }
 
   function _balanceToken0() internal view returns (uint256) {
@@ -103,15 +103,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
-  /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeTimepoint(
-    uint16 timepointIndex,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 currentLiquidity
-  ) internal returns (uint16 newTimepointIndex, uint16 newFee) {
+  /// @dev Once per block updates the accumulator `secondsPerLiquidityCumulative`
+  function _writeSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal {
     uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
+    if (_lastTs == blockTimestamp) return; // writing should only happen once per block
 
     unchecked {
       // just timedelta if liquidity == 0
@@ -119,21 +114,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
       secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
     }
     lastTimepointTimestamp = blockTimestamp;
-
-    // failure should not occur. But in case of failure, the pool will remain operational
-    // errors without message will be propagated and revert transaction
-    bool failure;
-    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 _newTimepointIndex, uint16 _newFee) {
-      return (_newTimepointIndex, _newFee);
-    } catch Panic(uint256) {
-      failure = true;
-    } catch Error(string memory) {
-      failure = true;
-    }
-    if (failure) {
-      emit DataStorageFailure();
-      return (timepointIndex, 0);
-    }
   }
 
   /// @dev Get secondsPerLiquidityCumulative accumulator value for current blockTimestamp

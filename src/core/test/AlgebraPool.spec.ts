@@ -106,7 +106,7 @@ describe('AlgebraPool', () => {
     }
     pool = await createPoolWrapped()
     const dsOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
-    dsOperator = (dsOperatorFactory.attach(await pool.dataStorageOperator())) as MockTimeDataStorageOperator;
+    dsOperator = (dsOperatorFactory.attach(await pool.plugin())) as MockTimeDataStorageOperator;
   })
 
   it('constructor initializes immutables', async () => {
@@ -145,9 +145,9 @@ describe('AlgebraPool', () => {
       const initPrice = encodePriceSqrt(1, 2)
       await pool.initialize(initPrice)
 
-      const { price, timepointIndex } = await pool.globalState()
+      const { price  } = await pool.globalState()
       expect(price).to.eq(price)
-      expect(timepointIndex).to.eq(0)
+      //expect(timepointIndex).to.eq(0) TODO check plugin
       expect((await pool.globalState()).tick).to.eq(-6932)
     })
     it('initializes timepoints slot', async () => {

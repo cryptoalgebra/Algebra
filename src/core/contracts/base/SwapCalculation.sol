@@ -2,6 +2,7 @@
 pragma solidity =0.8.17;
 
 import '../interfaces/IAlgebraVirtualPool.sol';
+import '../interfaces/IAlgebraPlugin.sol';
 import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
@@ -25,7 +26,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 totalFeeGrowthB;
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
-    uint16 timepointIndex; // The index of last written timepoint
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint32 blockTimestamp; // The timestamp of current block
   }
@@ -49,11 +49,14 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
     SwapCalculationCache memory cache;
     {
+      if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+        // TODO optimize
+        IAlgebraPlugin(plugin).beforeSwap(msg.sender);
+      }
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
       cache.fee = globalState.fee;
-      cache.timepointIndex = globalState.timepointIndex;
       cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
 
@@ -71,16 +74,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
       cache.blockTimestamp = _blockTimestamp();
 
-      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
-
-      // new timepoint appears only for first swap/mint/burn in block
-      if (newTimepointIndex != cache.timepointIndex) {
-        cache.timepointIndex = newTimepointIndex;
-        if (cache.fee != newFee) {
-          cache.fee = newFee;
-          emit Fee(newFee);
-        }
-      }
+      _writeSecondsPerLiquidityCumulative(cache.blockTimestamp, currentLiquidity);
     }
 
     PriceMovementCache memory step;
@@ -165,36 +159,15 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         }
       }
 
-      if (cache.crossedAnyTick) {
-        // ticks cross data is needed to be duplicated in a virtual pool
-        address _activeIncentive = activeIncentive;
-        if (_activeIncentive != address(0)) {
-          bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
-          // errors without message will be propagated and revert transaction
-          try IAlgebraVirtualPool(_activeIncentive).crossTo(currentTick, zeroToOne) returns (bool success) {
-            isIncentiveActive = success;
-          } catch Panic(uint256) {
-            // pool will reset activeIncentive in this case
-          } catch Error(string memory) {
-            // pool will reset activeIncentive in this case
-          }
-          if (!isIncentiveActive) {
-            activeIncentive = address(0);
-            emit Incentive(address(0));
-          }
-        }
-      }
-
       (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less than initially specified (e.g. reached limit)
         ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less than initially specified (e.g. reached limit)
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
     }
 
-    (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex, globalState.prevInitializedTick) = (
+    (globalState.price, globalState.tick, globalState.fee, globalState.prevInitializedTick) = (
       currentPrice,
       currentTick,
       cache.fee,
-      cache.timepointIndex,
       cache.prevInitializedTick
     );
 
@@ -203,6 +176,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowth;
+    }
+
+    // TODO only if crosses ?
+    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+      // TODO optimize
+      IAlgebraPlugin(plugin).afterSwap(msg.sender);
     }
   }
 }

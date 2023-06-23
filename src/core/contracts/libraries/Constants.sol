@@ -32,4 +32,13 @@ library Constants {
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;
   // role that can change communityFee and tickspacing in pools
   bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
+
+  uint256 internal constant BEFORE_SWAP_HOOK_FLAG = 1;
+  uint256 internal constant AFTER_SWAP_HOOK_FLAG = 1 << 1;
+  uint256 internal constant BEFORE_POSITION_MODIFY_HOOK_FLAG = 1 << 2;
+  uint256 internal constant AFTER_POSITION_MODIFY_HOOK_FLAG = 1 << 3;
+  uint256 internal constant BEFORE_FLASH_HOOK_FLAG = 1 << 4;
+  uint256 internal constant AFTER_FLASH_HOOK_FLAG = 1 << 5;
+  uint256 internal constant BEFORE_INIT_HOOK_FLAG = 1 << 6;
+  uint256 internal constant AFTER_INIT_HOOK_FLAG = 1 << 7;
 }

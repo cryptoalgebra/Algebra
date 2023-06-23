@@ -14,7 +14,9 @@ interface IAlgebraPoolPermissionedActions {
   /// @param newTickSpacing The new tick spacing value
   function setTickSpacing(int24 newTickSpacing) external;
 
-  /// @notice Sets an active incentive. Only farming
-  /// @param newIncentiveAddress The address associated with the incentive
-  function setIncentive(address newIncentiveAddress) external;
+  // TODO
+  function setPlugin(address newPluginAddress) external;
+
+  // TODO
+  function setFee(uint16 newFee) external;
 }
