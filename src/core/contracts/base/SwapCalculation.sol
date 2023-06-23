@@ -166,12 +166,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
     }
 
-    (globalState.price, globalState.tick, globalState.fee, globalState.prevInitializedTick) = (
-      currentPrice,
-      currentTick,
-      cache.fee,
-      cache.prevInitializedTick
-    );
+    (globalState.price, globalState.tick, globalState.prevInitializedTick) = (currentPrice, currentTick, cache.prevInitializedTick);
 
     liquidity = currentLiquidity;
     if (zeroToOne) {
