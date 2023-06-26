@@ -40,6 +40,10 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (factory, pool) = (msg.sender, _pool);
   }
 
+  function _getTickAndFeeInPool() internal view returns (int24 tick, uint16 fee) {
+    (, tick, , fee, , , ) = IAlgebraPoolState(pool).globalState();
+  }
+
   // ###### Volatility and TWAP oracle ######
 
   /// @inheritdoc IVolatilityOracle
@@ -47,15 +51,12 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     return timepoints.initialize(time, tick);
   }
 
-  // TODO indexes
   /// @inheritdoc IVolatilityOracle
-  function getSingleTimepoint(
-    uint32 time,
-    uint32 secondsAgo,
-    int24 tick,
-    uint16 lastIndex
-  ) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
-    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(time, secondsAgo, tick, lastIndex, timepoints.getOldestIndex(lastIndex));
+  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
+    (int24 tick, ) = _getTickAndFeeInPool();
+    uint16 lastTimepointIndex = timepointIndex;
+    uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
+    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
     (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
@@ -65,17 +66,6 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
     (int24 tick, ) = _getTickAndFeeInPool();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
-  }
-
-  function _writeTimepoint(uint32 blockTimestamp, int24 tick) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
-    uint16 index = timepointIndex;
-    (newLastIndex, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
-
-    if (index != newLastIndex) {
-      // TODO written?
-      timepointIndex = newLastIndex;
-      updated = true;
-    }
   }
 
   /// @inheritdoc IVolatilityOracle
@@ -90,8 +80,14 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     }
   }
 
-  function _getTickAndFeeInPool() internal view returns (int24 tick, uint16 fee) {
-    (, tick, , fee, , , ) = IAlgebraPoolState(pool).globalState();
+  function _writeTimepoint(uint32 blockTimestamp, int24 tick) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
+    uint16 index = timepointIndex;
+    (newLastIndex, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
+
+    if (index != newLastIndex) {
+      timepointIndex = newLastIndex;
+      updated = true;
+    }
   }
 
   // ###### Fee manager ######

@@ -41,18 +41,10 @@ interface IVolatilityOracle {
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
-  /// @param time The current block timestamp
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
-  /// @param tick The current tick
-  /// @param index The index of the timepoint that was most recently written to the timepoints array
   /// @return tickCumulative The cumulative tick since the pool was first initialized, as of `secondsAgo`
   /// @return volatilityCumulative The cumulative volatility value since the pool was first initialized, as of `secondsAgo`
-  function getSingleTimepoint(
-    uint32 time,
-    uint32 secondsAgo,
-    int24 tick,
-    uint16 index
-  ) external view returns (int56 tickCumulative, uint112 volatilityCumulative);
+  function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
