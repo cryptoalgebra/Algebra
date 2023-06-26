@@ -33,7 +33,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   address public override farmingAddress;
 
   /// @inheritdoc IAlgebraFactory
-  uint8 public override defaultCommunityFee;
+  uint16 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
   int24 public override defaultTickspacing;
@@ -69,7 +69,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view returns (uint8 communityFee, int24 tickSpacing) {
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing) {
     return (defaultCommunityFee, defaultTickspacing);
   }
 
@@ -98,7 +98,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+  function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
     require(defaultCommunityFee != newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
@@ -155,7 +155,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xdb6b3e4affbcdfdbef270178d512c586aff9d155cab69215a84bb706597a0f29;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x93838455897d3e9f39e3c39f5311746258d7265115e3c4b5f7864a271ae0e04d;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

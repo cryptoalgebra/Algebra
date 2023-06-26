@@ -23,7 +23,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint8 pluginConfig;
-    uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
+    uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
 

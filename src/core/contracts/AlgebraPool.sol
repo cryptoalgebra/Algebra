@@ -41,7 +41,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     //IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick); // TODO
     lastTimepointTimestamp = _blockTimestamp();
 
-    (uint8 _communityFee, int24 _tickSpacing) = IAlgebraFactory(factory).defaultConfigurationForPool();
+    (uint16 _communityFee, int24 _tickSpacing) = IAlgebraFactory(factory).defaultConfigurationForPool();
     tickSpacing = _tickSpacing;
 
     globalState.price = initialPrice;
@@ -367,7 +367,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint8 newCommunityFee) external override nonReentrant {
+  function setCommunityFee(uint16 newCommunityFee) external override nonReentrant {
     _checkIfAdministrator();
     if (newCommunityFee > Constants.MAX_COMMUNITY_FEE || newCommunityFee == globalState.communityFee) revert invalidNewCommunityFee();
     globalState.communityFee = newCommunityFee;

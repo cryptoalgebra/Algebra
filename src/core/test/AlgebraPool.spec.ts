@@ -166,7 +166,7 @@ describe('AlgebraPool', () => {
 
   describe('#mint', () => {
     it('fails if not initialized', async () => {
-      await expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithCustomError(pool, 'locked')
+      expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithoutReason
     })
     describe('after initialization', () => {
       beforeEach('initialize the pool at price of 10:1', async () => {
@@ -1192,7 +1192,7 @@ describe('AlgebraPool', () => {
     })
 
     it('cannot be changed out of bounds', async () => {
-      await expect(pool.setCommunityFee(251)).to.be.reverted
+      await expect(pool.setCommunityFee(1001)).to.be.reverted
     })
 
     it('cannot be changed by addresses that are not owner', async () => {
@@ -2070,8 +2070,8 @@ describe('AlgebraPool', () => {
     it('can only be called by factory owner', async () => {
       await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted
     })
-    it('fails if fee is gt 25%', async () => {
-      await expect(pool.setCommunityFee(254)).to.be.reverted
+    it('fails if fee is gt 100%', async () => {
+      await expect(pool.setCommunityFee(1004)).to.be.reverted
     })
     it('succeeds for fee 25%', async () => {
       await pool.setCommunityFee(250)

@@ -28,7 +28,7 @@ library Constants {
   // max(uint128) / ( (MAX_TICK - MIN_TICK) )
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 40564824043007195767232224305152;
 
-  uint8 internal constant MAX_COMMUNITY_FEE = 0.25e3; // 25%
+  uint16 internal constant MAX_COMMUNITY_FEE = 1e3; // 100%
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;
   // role that can change communityFee and tickspacing in pools
   bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');

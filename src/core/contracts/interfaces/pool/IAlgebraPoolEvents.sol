@@ -71,7 +71,7 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the community fee is changed by the pool
   /// @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
-  event CommunityFee(uint8 communityFeeNew);
+  event CommunityFee(uint16 communityFeeNew);
 
   /// @notice Emitted when the tick spacing changes
   /// @param newTickSpacing The updated value of the new tick spacing

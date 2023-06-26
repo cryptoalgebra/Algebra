@@ -18,7 +18,7 @@ interface IAlgebraPoolState {
   function globalState()
     external
     view
-    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint8 communityFee, bool unlocked);
+    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256

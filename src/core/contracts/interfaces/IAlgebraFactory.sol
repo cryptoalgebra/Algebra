@@ -38,7 +38,7 @@ interface IAlgebraFactory {
 
   /// @notice Emitted when the default community fee is changed
   /// @param newDefaultCommunityFee The new default community fee value
-  event DefaultCommunityFee(uint8 newDefaultCommunityFee);
+  event DefaultCommunityFee(uint16 newDefaultCommunityFee);
 
   /// @notice Emitted when the default tickspacing is changed
   /// @param newDefaultTickspacing The new default tickspacing value
@@ -69,7 +69,7 @@ interface IAlgebraFactory {
 
   /// @notice Returns the default community fee
   /// @return Fee which will be set at the creation of the pool
-  function defaultCommunityFee() external view returns (uint8);
+  function defaultCommunityFee() external view returns (uint16);
 
   /// @notice Returns the default tickspacing
   /// @return Tickspacing which will be set at the creation of the pool
@@ -78,7 +78,7 @@ interface IAlgebraFactory {
   /// @notice Returns the default communityFee and tickspacing
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
-  function defaultConfigurationForPool() external view returns (uint8 communityFee, int24 tickSpacing);
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing);
 
   /// @notice Returns the pool address for a given pair of tokens, or address 0 if it does not exist
   /// @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
@@ -104,7 +104,7 @@ interface IAlgebraFactory {
 
   /// @dev updates default community fee for new pools
   /// @param newDefaultCommunityFee The new community fee, _must_ be <= MAX_COMMUNITY_FEE
-  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external;
+  function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external;
 
   /// @dev updates default tickspacing for new pools
   /// @param newDefaultTickspacing The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING
