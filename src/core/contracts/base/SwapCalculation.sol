@@ -28,7 +28,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint16 fee; // The current dynamic fee
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint32 blockTimestamp; // The timestamp of current block
-    uint8 pluginConfig; // TODO
   }
 
   struct PriceMovementCache {
@@ -50,11 +49,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
     SwapCalculationCache memory cache;
     {
-      cache.pluginConfig = globalState.pluginConfig;
-      if (cache.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
-        // TODO optimize
-        IAlgebraPlugin(plugin).beforeSwap(msg.sender);
-      }
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
@@ -173,12 +167,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowth;
-    }
-
-    // TODO only if crosses ?
-    if (cache.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
-      // TODO optimize
-      IAlgebraPlugin(plugin).afterSwap(msg.sender);
     }
   }
 }

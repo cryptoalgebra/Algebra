@@ -66,12 +66,18 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     int24 topTick,
     uint128 liquidityDesired,
     bytes calldata data
-  ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
+  ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
     unchecked {
       int24 _tickSpacing = tickSpacing;
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
     }
+
+    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender); // TODO REENTRANCY
+    }
+
+    _lock();
 
     (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(
       bottomTick,
@@ -118,6 +124,12 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     _changeReserves(int256(amount0), int256(amount1), 0, 0);
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
+
+    _unlock();
+
+    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -125,8 +137,15 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     int24 bottomTick,
     int24 topTick,
     uint128 amount
-  ) external override nonReentrant onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
+  ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     if (amount > uint128(type(int128).max)) revert arithmeticError();
+
+    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
+    }
+
+    _lock();
+
     _updateReserves();
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
@@ -138,6 +157,12 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     }
 
     if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
+
+    _unlock();
+
+    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -178,7 +203,14 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
-  ) external override nonReentrant returns (int256 amount0, int256 amount1) {
+  ) external override returns (int256 amount0, int256 amount1) {
+    if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+      // TODO optimize
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender);
+    }
+
+    _lock();
+
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
@@ -202,6 +234,13 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+
+    _unlock();
+
+    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+      // TODO optimize
+      IAlgebraPlugin(plugin).afterSwap(msg.sender);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -212,8 +251,15 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     int256 amountRequired,
     uint160 limitSqrtPrice,
     bytes calldata data
-  ) external override nonReentrant returns (int256 amount0, int256 amount1) {
+  ) external override returns (int256 amount0, int256 amount1) {
     if (amountRequired < 0) revert invalidAmountRequired(); // we support only exactInput here
+
+    if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+      // TODO optimize
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender);
+    }
+
+    _lock();
 
     // Since the pool can get less tokens then sent, firstly we are getting tokens from the
     // original caller of the transaction. And change the _amountRequired_
@@ -257,14 +303,22 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     }
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+    _unlock();
+
+    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+      // TODO optimize
+      IAlgebraPlugin(plugin).afterSwap(msg.sender);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override nonReentrant {
+  function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override {
     uint8 pluginConfig = globalState.pluginConfig;
     if (pluginConfig & Constants.BEFORE_FLASH_HOOK_FLAG != 0) {
       IAlgebraPlugin(plugin).beforeFlash(msg.sender, amount0, amount1);
     }
+
+    _lock();
 
     (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
     uint256 fee0;
@@ -299,6 +353,8 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
       _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1);
     }
     emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
+
+    _unlock();
 
     if (pluginConfig & Constants.AFTER_FLASH_HOOK_FLAG != 0) {
       IAlgebraPlugin(plugin).afterFlash(msg.sender, amount0, amount1);

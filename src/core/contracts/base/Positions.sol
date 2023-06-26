@@ -39,8 +39,6 @@ abstract contract Positions is AlgebraPoolBase {
   struct UpdatePositionCache {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint8 pluginConfig; // The index of the last written timepoint
   }
 
   /**
@@ -55,18 +53,9 @@ abstract contract Positions is AlgebraPoolBase {
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
     // using memory cache to avoid "stack too deep" error
-    UpdatePositionCache memory cache = UpdatePositionCache(
-      globalState.price,
-      globalState.prevInitializedTick,
-      globalState.fee,
-      globalState.pluginConfig
-    );
+    UpdatePositionCache memory cache = UpdatePositionCache(globalState.price, globalState.prevInitializedTick); // TODO OPTIMIZE
 
     int24 currentTick = globalState.tick;
-
-    if (cache.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
-    }
 
     bool toggledBottom;
     bool toggledTop;
@@ -121,7 +110,9 @@ abstract contract Positions is AlgebraPoolBase {
         if (toggledTop) {
           previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
         }
-        cache.prevInitializedTick = previousTick;
+        if (cache.prevInitializedTick != previousTick) {
+          globalState.prevInitializedTick = previousTick;
+        }
       }
 
       int128 globalLiquidityDelta;
@@ -131,12 +122,6 @@ abstract contract Positions is AlgebraPoolBase {
         _writeSecondsPerLiquidityCumulative(_blockTimestamp(), liquidityBefore);
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
-
-      (globalState.prevInitializedTick, globalState.fee) = (cache.prevInitializedTick, cache.fee);
-    }
-
-    if (cache.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
-      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
   }
 
