@@ -12,7 +12,7 @@ import './interfaces/IDataStorageOperator.sol';
 import './interfaces/pool/IAlgebraPoolState.sol';
 import './interfaces/IAlgebraPool.sol';
 
-/// @title Algebra timepoints data operator
+/// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin {
   uint256 internal constant UINT16_MODULO = 65536;
@@ -40,22 +40,15 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (factory, pool) = (msg.sender, _pool);
   }
 
-  /// @inheritdoc IDataStorageOperator
+  // ###### Volatility and TWAP oracle ######
+
+  /// @inheritdoc IVolatilityOracle
   function initialize(uint32 time, int24 tick) external override onlyPool {
     return timepoints.initialize(time, tick);
   }
 
-  /// @inheritdoc IDataStorageOperator
-  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
-    require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
-    AdaptiveFee.validateFeeConfiguration(_config);
-
-    feeConfig = _config;
-    emit FeeConfiguration(_config);
-  }
-
   // TODO indexes
-  /// @inheritdoc IDataStorageOperator
+  /// @inheritdoc IVolatilityOracle
   function getSingleTimepoint(
     uint32 time,
     uint32 secondsAgo,
@@ -66,7 +59,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
-  /// @inheritdoc IDataStorageOperator
+  /// @inheritdoc IVolatilityOracle
   function getTimepoints(
     uint32[] memory secondsAgos
   ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
@@ -74,25 +67,18 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
   }
 
-  function _writeTimepoint(uint32 blockTimestamp, int24 tick) internal returns (uint16 indexUpdated, uint16 newFee) {
+  function _writeTimepoint(uint32 blockTimestamp, int24 tick) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
     uint16 index = timepointIndex;
-    uint16 oldestIndex;
-    (indexUpdated, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
+    (newLastIndex, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
 
-    if (index != indexUpdated) {
-      timepointIndex = indexUpdated;
-      AlgebraFeeConfiguration memory _feeConfig = feeConfig;
-      if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
-        newFee = _feeConfig.baseFee;
-      } else {
-        uint88 lastVolatilityCumulative = timepoints[indexUpdated].volatilityCumulative;
-        uint88 volatilityAverage = timepoints.getAverageVolatility(blockTimestamp, tick, indexUpdated, oldestIndex, lastVolatilityCumulative);
-        newFee = AdaptiveFee.getFee(volatilityAverage, _feeConfig);
-      }
+    if (index != newLastIndex) {
+      // TODO written?
+      timepointIndex = newLastIndex;
+      updated = true;
     }
   }
 
-  /// @inheritdoc IDataStorageOperator
+  /// @inheritdoc IVolatilityOracle
   function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external {
     require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
     require(amount > 0 && type(uint16).max - startIndex >= amount);
@@ -106,6 +92,51 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   function _getTickAndFeeInPool() internal view returns (int24 tick, uint16 fee) {
     (, tick, , fee, , , ) = IAlgebraPoolState(pool).globalState();
+  }
+
+  // ###### Fee manager ######
+
+  /// @inheritdoc IDynamicFeeManager
+  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
+    require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
+    AdaptiveFee.validateFeeConfiguration(_config);
+
+    feeConfig = _config;
+    emit FeeConfiguration(_config);
+  }
+
+  /// @inheritdoc IDynamicFeeManager
+  function getCurrentFee() external view override returns (uint16 fee) {
+    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
+    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
+      return _feeConfig.baseFee;
+    } else {
+      uint16 lastIndex = timepointIndex;
+      uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+      (int24 tick, ) = _getTickAndFeeInPool();
+
+      uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_blockTimestamp(), 0, tick, lastIndex, oldestIndex);
+      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex, lastVolatilityCumulative);
+
+      return AdaptiveFee.getFee(volatilityAverage, feeConfig);
+    }
+  }
+
+  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex, uint16 oldestTimepointIndex, int24 currentTick) internal view returns (uint16 fee) {
+    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
+    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
+      return _feeConfig.baseFee;
+    } else {
+      uint88 lastVolatilityCumulative = timepoints[lastTimepointIndex].volatilityCumulative;
+      uint88 volatilityAverage = timepoints.getAverageVolatility(
+        _blockTimestamp(),
+        currentTick,
+        lastTimepointIndex,
+        oldestTimepointIndex,
+        lastVolatilityCumulative
+      );
+      return AdaptiveFee.getFee(volatilityAverage, _feeConfig);
+    }
   }
 
   // ###### HOOKS ######
@@ -125,10 +156,13 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   function afterModifyPosition(address) external onlyPool returns (bytes4) {
     (int24 tick, uint16 fee) = _getTickAndFeeInPool(); // TODO optimize
-    (, uint16 newFee) = _writeTimepoint(_blockTimestamp(), tick);
-    if (newFee != 0 && newFee != fee) {
-      // TODO do not use 0 value
-      IAlgebraPool(pool).setFee(newFee);
+    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
+    if (updated) {
+      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
+
+      if (newFee != fee) {
+        IAlgebraPool(pool).setFee(newFee);
+      }
     }
 
     return IAlgebraPlugin.afterModifyPosition.selector;
@@ -136,13 +170,14 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   function beforeSwap(address) external onlyPool returns (bytes4) {
     (int24 tick, uint16 fee) = _getTickAndFeeInPool();
-    (, uint16 newFee) = _writeTimepoint(_blockTimestamp(), tick);
+    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
+    if (updated) {
+      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
 
-    if (newFee != 0 && newFee != fee) {
-      // TODO do not use 0 value
-      IAlgebraPool(pool).setFee(newFee);
+      if (newFee != fee) {
+        IAlgebraPool(pool).setFee(newFee);
+      }
     }
-
     return IAlgebraPlugin.beforeSwap.selector;
   }
 
