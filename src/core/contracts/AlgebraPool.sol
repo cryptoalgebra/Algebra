@@ -390,9 +390,17 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setPluginConfig(uint8 newConfig) external override {
+    if (msg.sender != plugin) {
+      _checkIfAdministrator();
+    }
+    globalState.pluginConfig = newConfig;
+    emit PluginConfig(newConfig);
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
     if (msg.sender != plugin) revert(); // TODO
-
     globalState.fee = newFee;
     emit Fee(newFee);
   }

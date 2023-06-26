@@ -18,5 +18,8 @@ interface IAlgebraPoolPermissionedActions {
   function setPlugin(address newPluginAddress) external;
 
   // TODO
+  function setPluginConfig(uint8 newConfig) external;
+
+  // TODO
   function setFee(uint16 newFee) external;
 }

@@ -11,6 +11,7 @@ import './interfaces/IAlgebraPlugin.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/pool/IAlgebraPoolState.sol';
 import './interfaces/IAlgebraPool.sol';
+import './interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
@@ -31,6 +32,8 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   address private immutable pool;
   address private immutable factory;
 
+  address public override incentive;
+
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
     _;
@@ -40,8 +43,8 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (factory, pool) = (msg.sender, _pool);
   }
 
-  function _getTickAndFeeInPool() internal view returns (int24 tick, uint16 fee) {
-    (, tick, , fee, , , ) = IAlgebraPoolState(pool).globalState();
+  function _getPoolState() internal view returns (int24 tick, uint16 fee, uint8 pluginConfig) {
+    (, tick, , fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
   }
 
   // ###### Volatility and TWAP oracle ######
@@ -53,7 +56,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IVolatilityOracle
   function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
-    (int24 tick, ) = _getTickAndFeeInPool();
+    (int24 tick, , ) = _getPoolState();
     uint16 lastTimepointIndex = timepointIndex;
     uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
@@ -64,7 +67,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   function getTimepoints(
     uint32[] memory secondsAgos
   ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
-    (int24 tick, ) = _getTickAndFeeInPool();
+    (int24 tick, , ) = _getPoolState();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
   }
 
@@ -109,7 +112,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     } else {
       uint16 lastIndex = timepointIndex;
       uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-      (int24 tick, ) = _getTickAndFeeInPool();
+      (int24 tick, , ) = _getPoolState();
 
       uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_blockTimestamp(), 0, tick, lastIndex, oldestIndex);
       uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex, lastVolatilityCumulative);
@@ -135,6 +138,39 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     }
   }
 
+  // ###### Farming plugin ######
+
+  /// @inheritdoc IFarmingPlugin
+  function setIncentive(address newIncentive) external override {
+    require(msg.sender == IAlgebraFactory(factory).farmingAddress());
+
+    bool turnOn = newIncentive != address(0);
+    address currentIncentive = incentive;
+
+    require(currentIncentive != newIncentive, 'already active');
+    if (currentIncentive != address(0)) require(!turnOn, 'has active incentive');
+
+    incentive = newIncentive;
+    emit Incentive(newIncentive);
+
+    (, , uint8 pluginConfig) = _getPoolState();
+    bool isHookActive = pluginConfig & uint8(Constants.AFTER_SWAP_HOOK_FLAG) != 0;
+    if (turnOn != isHookActive) {
+      pluginConfig = pluginConfig ^ uint8(Constants.AFTER_SWAP_HOOK_FLAG);
+      IAlgebraPool(pool).setPluginConfig(pluginConfig);
+    }
+  }
+
+  /// @inheritdoc IFarmingPlugin
+  function isIncentiveActive(address targetIncentive) external view returns (bool) {
+    if (incentive != targetIncentive) return false;
+    if (IAlgebraPool(pool).plugin() != address(this)) return false;
+    (, , uint8 pluginConfig) = _getPoolState();
+    if (pluginConfig & uint8(Constants.AFTER_SWAP_HOOK_FLAG) == 0) return false;
+
+    return true;
+  }
+
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external view override onlyPool returns (bytes4) {
@@ -151,34 +187,18 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   function afterModifyPosition(address) external onlyPool returns (bytes4) {
-    (int24 tick, uint16 fee) = _getTickAndFeeInPool(); // TODO optimize
-    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
-    if (updated) {
-      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
-
-      if (newFee != fee) {
-        IAlgebraPool(pool).setFee(newFee);
-      }
-    }
-
+    _writeTimepointAndUpdateFee();
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
   function beforeSwap(address) external onlyPool returns (bytes4) {
-    (int24 tick, uint16 fee) = _getTickAndFeeInPool();
-    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
-    if (updated) {
-      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
-
-      if (newFee != fee) {
-        IAlgebraPool(pool).setFee(newFee);
-      }
-    }
+    _writeTimepointAndUpdateFee();
     return IAlgebraPlugin.beforeSwap.selector;
   }
 
   function afterSwap(address) external onlyPool returns (bytes4) {
-    // TODO farm logic
+    (int24 tick, , ) = _getPoolState();
+    IAlgebraVirtualPool(incentive).crossTo(tick);
     return IAlgebraPlugin.afterSwap.selector;
   }
 
@@ -188,5 +208,17 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   function afterFlash(address, uint256, uint256) external view onlyPool returns (bytes4) {
     revert('Not implemented');
+  }
+
+  function _writeTimepointAndUpdateFee() internal {
+    (int24 tick, uint16 fee, ) = _getPoolState();
+    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
+    if (updated) {
+      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
+
+      if (newFee != fee) {
+        IAlgebraPool(pool).setFee(newFee);
+      }
+    }
   }
 }
