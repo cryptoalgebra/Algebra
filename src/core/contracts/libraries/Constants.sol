@@ -39,6 +39,5 @@ library Constants {
   uint256 internal constant AFTER_POSITION_MODIFY_HOOK_FLAG = 1 << 3;
   uint256 internal constant BEFORE_FLASH_HOOK_FLAG = 1 << 4;
   uint256 internal constant AFTER_FLASH_HOOK_FLAG = 1 << 5;
-  uint256 internal constant BEFORE_INIT_HOOK_FLAG = 1 << 6;
-  uint256 internal constant AFTER_INIT_HOOK_FLAG = 1 << 7;
+  uint256 internal constant AFTER_INIT_HOOK_FLAG = 1 << 6;
 }

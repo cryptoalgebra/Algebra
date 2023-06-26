@@ -32,17 +32,19 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
-    uint8 pluginConfig = globalState.pluginConfig;
+
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
 
-    if (pluginConfig & Constants.BEFORE_INIT_HOOK_FLAG != 0) {
+    if (plugin != address(0)) {
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice);
     }
-    //IDataStorageOperator(dataStorageOperator).initialize(_blockTimestamp(), tick); // TODO
+
     lastTimepointTimestamp = _blockTimestamp();
 
     (uint16 _communityFee, int24 _tickSpacing) = IAlgebraFactory(factory).defaultConfigurationForPool();
     tickSpacing = _tickSpacing;
+
+    uint8 pluginConfig = globalState.pluginConfig;
 
     globalState.price = initialPrice;
     globalState.communityFee = _communityFee;

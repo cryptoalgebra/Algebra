@@ -32,7 +32,7 @@ contract MockTimeAlgebraPoolDeployer {
 
   function deployMock(address _factory, address _vault, address token0, address token1) external returns (address pool) {
     bytes32 initCodeHash = keccak256(type(MockTimeAlgebraPool).creationCode);
-    DataStorageOperator dataStorage = (new MockTimeDataStorageOperator(computeAddress(initCodeHash, token0, token1)));
+    DataStorageOperator dataStorage = (new MockTimeDataStorageOperator(computeAddress(initCodeHash, token0, token1), address(this)));
     dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
 
     (factory, vault) = (_factory, _vault);

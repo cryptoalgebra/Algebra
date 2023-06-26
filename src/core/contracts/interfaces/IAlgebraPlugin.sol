@@ -3,6 +3,9 @@ pragma solidity >=0.5.0;
 
 /// TODO
 interface IAlgebraPlugin {
+  // TODO
+  function defaultPluginConfig() external view returns (uint8);
+
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call
   /// @param sqrtPriceX96 The sqrt(price) of the pool as a Q64.96

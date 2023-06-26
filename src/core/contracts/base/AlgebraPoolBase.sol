@@ -87,7 +87,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     (plugin, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
     globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
-    globalState.pluginConfig = uint8(Constants.AFTER_INIT_HOOK_FLAG | Constants.BEFORE_SWAP_HOOK_FLAG | Constants.AFTER_POSITION_MODIFY_HOOK_FLAG);
   }
 
   function _balanceToken0() internal view returns (uint256) {

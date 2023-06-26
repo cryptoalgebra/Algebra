@@ -31,11 +31,6 @@ interface IAlgebraFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address indexed newFarmingAddress);
 
-  /// @notice Emitted when the default fee configuration is changed
-  /// @param newConfig The structure with dynamic fee parameters
-  /// @dev See the AdaptiveFee library for more details
-  event DefaultFeeConfiguration(AlgebraFeeConfiguration newConfig);
-
   /// @notice Emitted when the default community fee is changed
   /// @param newDefaultCommunityFee The new default community fee value
   event DefaultCommunityFee(uint16 newDefaultCommunityFee);
@@ -43,6 +38,9 @@ interface IAlgebraFactory {
   /// @notice Emitted when the default tickspacing is changed
   /// @param newDefaultTickspacing The new default tickspacing value
   event DefaultTickspacing(int24 newDefaultTickspacing);
+
+  // TODO
+  event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
   /// @notice role that can change communityFee and tickspacing in pools
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
@@ -110,11 +108,8 @@ interface IAlgebraFactory {
   /// @param newDefaultTickspacing The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING
   function setDefaultTickspacing(int24 newDefaultTickspacing) external;
 
-  /// @notice Changes initial fee configuration for new pools
-  /// @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-  /// alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max and gammas must be > 0
-  /// @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external;
+  // TODO
+  function setDefaultPluginFactory(address newDefaultPluginFactory) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
   /// of time must pass before the ownership renounce can be completed.

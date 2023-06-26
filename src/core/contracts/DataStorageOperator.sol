@@ -34,13 +34,16 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   address public override incentive;
 
+  uint8 public constant override defaultPluginConfig =
+    uint8(Constants.AFTER_INIT_HOOK_FLAG | Constants.BEFORE_SWAP_HOOK_FLAG | Constants.AFTER_POSITION_MODIFY_HOOK_FLAG);
+
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
     _;
   }
 
-  constructor(address _pool) {
-    (factory, pool) = (msg.sender, _pool);
+  constructor(address _pool, address _factory) {
+    (factory, pool) = (_factory, _pool);
   }
 
   function _getPoolState() internal view returns (int24 tick, uint16 fee, uint8 pluginConfig) {
@@ -173,8 +176,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   // ###### HOOKS ######
 
-  function beforeInitialize(address, uint160) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
+    IAlgebraPool(msg.sender).setPluginConfig(defaultPluginConfig);
+    return IAlgebraPlugin.beforeInitialize.selector;
   }
 
   function afterInitialize(address, uint160, int24 tick) external onlyPool returns (bytes4) {

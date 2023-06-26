@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import './base/AlgebraFeeConfiguration.sol';
-
 import './libraries/Constants.sol';
-import './libraries/AdaptiveFee.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
-import './interfaces/IDataStorageOperator.sol';
+import './interfaces/IAlgebraPluginFactory.sol';
 
-import './DataStorageOperator.sol';
 import './AlgebraCommunityVault.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
@@ -44,8 +40,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @dev time delay before ownership renouncement can be finished
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
-  /// @dev values of constants for sigmoids in fee calculation formula
-  AlgebraFeeConfiguration public defaultFeeConfiguration;
+  // TODO
+  IAlgebraPluginFactory public defaultPluginFactory;
 
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
@@ -55,7 +51,6 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     poolDeployer = _poolDeployer;
     communityVault = address(new AlgebraCommunityVault());
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
-    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -80,10 +75,12 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = new DataStorageOperator(_computeAddress(token0, token1));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
+    address defaultPlugin;
+    if (address(defaultPluginFactory) != address(0)) {
+      defaultPlugin = defaultPluginFactory.createPlugin(_computeAddress(token0, token1));
+    }
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(defaultPlugin), token0, token1);
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
@@ -115,10 +112,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
-    AdaptiveFee.validateFeeConfiguration(newConfig);
-    defaultFeeConfiguration = newConfig;
-    emit DefaultFeeConfiguration(newConfig);
+  function setDefaultPluginFactory(address newDefaultPluginFactory) external override onlyOwner {
+    require(newDefaultPluginFactory != address(defaultPluginFactory));
+    defaultPluginFactory = IAlgebraPluginFactory(newDefaultPluginFactory);
+    emit DefaultPluginFactory(newDefaultPluginFactory);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -155,7 +152,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xe44541830adf5808f76c36586206be3cab685fa20b3e34182bf8a6e8490b9fc9;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xa5e083ecd639440b0234bc4847050258e34442bcc780f423e2ff63d572d618f7;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token
