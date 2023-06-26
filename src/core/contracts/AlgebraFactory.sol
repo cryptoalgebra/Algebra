@@ -13,7 +13,7 @@ import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /// @title Algebra factory
-/// @notice Is used to deploy pools and its dataStorages
+/// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra V2.1
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
