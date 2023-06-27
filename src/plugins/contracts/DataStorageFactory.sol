@@ -6,7 +6,7 @@ import './libraries/AdaptiveFee.sol';
 
 import './DataStorageOperator.sol';
 
-import './interfaces/IAlgebraPluginFactory.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPluginFactory.sol';
 
 /// TODO
 contract DataStorageFactory is IAlgebraPluginFactory {

@@ -41,8 +41,8 @@ Max error: 0.27%
 "
 `;
 
-exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 0 volat 1`] = `2930`;
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 0 volat 1`] = `2870`;
 
-exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 100 volat 1`] = `2930`;
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 100 volat 1`] = `2870`;
 
-exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 2000 volat 1`] = `3658`;
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 2000 volat 1`] = `3598`;

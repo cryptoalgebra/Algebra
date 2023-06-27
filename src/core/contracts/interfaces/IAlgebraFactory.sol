@@ -2,8 +2,6 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import '../base/AlgebraFeeConfiguration.sol';
-
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces

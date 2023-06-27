@@ -4,7 +4,8 @@ pragma abicoder v1;
 
 import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
-import '../libraries/Constants.sol';
+
+import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
   AlgebraFeeConfiguration public feeConfig;

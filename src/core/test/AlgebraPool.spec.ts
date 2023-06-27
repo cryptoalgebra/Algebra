@@ -4,9 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { TestERC20 } from '../typechain/test/TestERC20'
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
-import { MockTimeVirtualPool } from '../typechain/test/MockTimeVirtualPool'
 import { TestAlgebraSwapPay } from '../typechain/test/TestAlgebraSwapPay'
-import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 
 import { poolFixture, TEST_POOL_START_TIME} from './shared/fixtures'
@@ -35,7 +33,6 @@ import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentra
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { TestVirtualPool } from '../typechain/test/TestVirtualPool'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
-import { MockTimeDataStorageOperator } from '../typechain/test/MockTimeDataStorageOperator';
 
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
@@ -49,7 +46,7 @@ describe('AlgebraPool', () => {
 
   let factory: AlgebraFactory
   let pool: MockTimeAlgebraPool
-  let dsOperator: MockTimeDataStorageOperator
+  //let dsOperator: MockTimeDataStorageOperator
 
   let swapTarget: TestAlgebraCallee
 
@@ -105,8 +102,8 @@ describe('AlgebraPool', () => {
       return pool
     }
     pool = await createPoolWrapped()
-    const dsOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
-    dsOperator = (dsOperatorFactory.attach(await pool.plugin())) as MockTimeDataStorageOperator;
+    //const dsOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
+    //dsOperator = (dsOperatorFactory.attach(await pool.plugin())) as MockTimeDataStorageOperator;
   })
 
   it('constructor initializes immutables', async () => {
@@ -150,13 +147,13 @@ describe('AlgebraPool', () => {
       //expect(timepointIndex).to.eq(0) TODO check plugin
       expect((await pool.globalState()).tick).to.eq(-6932)
     })
-    it('initializes timepoints slot', async () => {
-      await pool.initialize(encodePriceSqrt(1, 1))
+    it.skip('initializes timepoints slot', async () => {
+      /*await pool.initialize(encodePriceSqrt(1, 1))
       checkTimepointEquals(await dsOperator.timepoints(0), {
         initialized: true,
         blockTimestamp: TEST_POOL_START_TIME,
         tickCumulative: 0,
-      })
+      })*/
     })
     it('emits a Initialized event with the input tick', async () => {
       const price = encodePriceSqrt(1, 2)
@@ -348,8 +345,8 @@ describe('AlgebraPool', () => {
             expect(outerFeeGrowth1Token).to.eq(0)
           })
 
-          it('does not write an timepoint', async () => {
-            checkTimepointEquals(await dsOperator.timepoints(0), {
+          it.skip('does not write an timepoint', async () => {
+            /*checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -360,7 +357,7 @@ describe('AlgebraPool', () => {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
-            })
+            })*/
           })
         })
 
@@ -411,8 +408,8 @@ describe('AlgebraPool', () => {
             expect(amount1, 'amount1').to.eq(31)
           })
 
-          it('writes an timepoint', async () => {
-            checkTimepointEquals(await dsOperator.timepoints(0), {
+          it.skip('writes an timepoint', async () => {
+            /*checkTimepointEquals(await dsOperator.timepoints(0), {
               tickCumulative: 0,
               blockTimestamp: TEST_POOL_START_TIME,
               initialized: true,
@@ -425,6 +422,7 @@ describe('AlgebraPool', () => {
               initialized: true,
             })
             expect(await pool.secondsPerLiquidityCumulative()).to.be.eq('107650226801941937191829992860413859');
+            */
           })
         })
 
@@ -464,23 +462,6 @@ describe('AlgebraPool', () => {
             )
             expect(amount0, 'amount0').to.eq(0)
             expect(amount1, 'amount1').to.eq(3)
-          })
-
-          it('does not write an timepoint', async () => {
-            checkTimepointEquals(await dsOperator.timepoints(0), {
-              tickCumulative: 0,
-              blockTimestamp: TEST_POOL_START_TIME,
-              initialized: true
-            })
-            expect(await pool.secondsPerLiquidityCumulative()).to.be.eq(0);
-            await pool.advanceTime(1)
-            await mint(wallet.address, -46080, -23040, 100)
-            checkTimepointEquals(await dsOperator.timepoints(0), {
-              tickCumulative: 0,
-              blockTimestamp: TEST_POOL_START_TIME,
-              initialized: true,
-            })
-            expect(await pool.secondsPerLiquidityCumulative()).to.be.eq(0);
           })
         })
       })
@@ -647,7 +628,8 @@ describe('AlgebraPool', () => {
     await mint(wallet.address, min, max, initializeLiquidityAmount)
   }
 
-  describe('#getTimepoints', () => {
+  describe.skip('#getTimepoints', () => {
+    /*
     beforeEach(() => initializeAtZeroTick(pool))
 
     // zero tick
@@ -690,6 +672,7 @@ describe('AlgebraPool', () => {
       } = await dsOperator.getTimepoints([0]);
       expect(tickCumulative1).to.eq(-485852);
     })
+    */
   })
 
   describe('miscellaneous mint tests', () => {
@@ -2505,7 +2488,7 @@ describe('AlgebraPool', () => {
   })
 
   describe('virtual pool tests', () => {
-    let virtualPoolMock: MockTimeVirtualPool;
+   /* let virtualPoolMock: MockTimeVirtualPool;
 
     beforeEach('deploy virtualPoolMock', async () => {
       await factory.setFarmingAddress(wallet.address);
@@ -2565,7 +2548,7 @@ describe('AlgebraPool', () => {
       const tick = (await pool.globalState()).tick;
       expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
       expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
-      expect(await virtualPoolMock.timestamp()).to.be.eq(0);
-    })
+      expect(await virtualPoolMock.timestamp()).to.be.eq(0); 
+    }) */
   })
 })

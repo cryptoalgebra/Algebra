@@ -20,7 +20,6 @@ import './libraries/LiquidityMath.sol';
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
 import './interfaces/callback/IAlgebraFlashCallback.sol';
-import './interfaces/IDataStorageOperator.sol';
 
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans

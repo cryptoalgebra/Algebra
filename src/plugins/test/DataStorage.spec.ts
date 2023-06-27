@@ -7,7 +7,6 @@ import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME } from './shared/fixtures'
 import snapshotGasCost from './shared/snapshotGasCost'
-import { MaxUint128 } from './shared/utilities'
 
 describe('DataStorage', () => {
   let wallet: Wallet, other: Wallet
@@ -562,7 +561,7 @@ describe('DataStorageOperator external methods', () => {
 
   beforeEach('deploy DataStorageOperator', async () => {
     const dataStorageOperatorFactory = await ethers.getContractFactory('DataStorageOperator')
-    dataStorageOperator = (await dataStorageOperatorFactory.deploy(ethers.constants.AddressZero)) as DataStorageOperator;
+    dataStorageOperator = (await dataStorageOperatorFactory.deploy(ethers.constants.AddressZero, wallet.address)) as DataStorageOperator;
   })
 
   it('cannot call onlyPool methods', async () => {

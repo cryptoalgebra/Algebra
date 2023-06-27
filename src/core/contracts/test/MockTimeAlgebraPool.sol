@@ -3,7 +3,6 @@ pragma solidity =0.8.17;
 pragma abicoder v1;
 
 import '../AlgebraPool.sol';
-import './MockTimeDataStorageOperator.sol';
 
 // used for testing time dependent behavior
 contract MockTimeAlgebraPool is AlgebraPool {
@@ -22,8 +21,6 @@ contract MockTimeAlgebraPool is AlgebraPool {
     unchecked {
       time += by;
     }
-
-    MockTimeDataStorageOperator(plugin).advanceTime(by);
   }
 
   function _blockTimestamp() internal view override returns (uint32) {
@@ -35,24 +32,6 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function checkBlockTimestamp() external view returns (bool) {
     require(super._blockTimestamp() == uint32(block.timestamp));
     return true;
-  }
-
-  function getAverageVolatility() external view returns (uint112 volatilityAverage) {
-    volatilityAverage = MockTimeDataStorageOperator(plugin).getAverageVolatility(_blockTimestamp(), int24(uint24(globalState.fee)));
-  }
-
-  function getPrevTick() external view returns (int24 tick, int24 currentTick) {
-    unchecked {
-      uint16 timepointIndex = IDataStorageOperator(plugin).timepointIndex();
-      if (timepointIndex > 2) {
-        (, , , , tick, , ) = IDataStorageOperator(plugin).timepoints(timepointIndex);
-      }
-      currentTick = globalState.tick;
-    }
-  }
-
-  function getFee() external view returns (uint16 fee) {
-    return MockTimeDataStorageOperator(plugin).getFee(_blockTimestamp(), globalState.tick);
   }
 
   function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {

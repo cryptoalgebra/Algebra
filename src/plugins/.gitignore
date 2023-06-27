@@ -1,0 +1,10 @@
+node_modules
+.env
+cache
+artifacts
+typechain
+.idea
+bytecode
+hashCalc.js
+AllBlocks_timestamped.json
+results.json
