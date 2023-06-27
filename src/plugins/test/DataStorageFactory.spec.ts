@@ -108,4 +108,26 @@ describe('DataStorageFactory', () => {
       })
     })*/
   })
+
+  describe('#setFarmingAddress', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.reverted;
+    })
+
+    it('updates farmingAddress', async () => {
+      await pluginFactory.setFarmingAddress(other.address);
+      expect(await pluginFactory.farmingAddress()).to.eq(other.address);
+    })
+
+    it('emits event', async () => {
+      await expect(pluginFactory.setFarmingAddress(other.address))
+        .to.emit(pluginFactory, 'FarmingAddress')
+        .withArgs(other.address);
+    })
+
+    it('cannot set current address', async () => {
+      await pluginFactory.setFarmingAddress(other.address);
+      await expect(pluginFactory.setFarmingAddress(other.address)).to.be.reverted;
+    })
+  })
 })

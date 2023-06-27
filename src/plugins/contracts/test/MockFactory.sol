@@ -5,8 +5,6 @@ pragma solidity =0.8.17;
 contract MockFactory {
   bytes32 public constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
 
-  address public farmingAddress;
-
   address public owner;
 
   mapping(address => mapping(bytes32 => bool)) public hasRole;
@@ -25,9 +23,5 @@ contract MockFactory {
 
   function revokeRole(bytes32 role, address account) external {
     hasRole[account][role] = false;
-  }
-
-  function setFarmingAddress(address newFarmingAddress) external {
-    farmingAddress = newFarmingAddress;
   }
 }

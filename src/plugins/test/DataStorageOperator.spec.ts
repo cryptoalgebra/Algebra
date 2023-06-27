@@ -391,4 +391,79 @@ describe('DataStorageOperator', () => {
        }) */
      })
   })
+
+  describe('DataStorageOperator external methods', () => {
+  
+    it('cannot call onlyPool methods', async () => {
+      await expect(plugin.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
+    })
+  
+    describe('#changeFeeConfiguration', () => {
+      const configuration  = {
+        alpha1: 3002,
+        alpha2: 10009,
+        beta1: 1001,
+        beta2: 1006,
+        gamma1: 20,
+        gamma2: 22,
+        baseFee: 150
+      }
+      it('fails if caller is not factory', async () => {
+        await expect(plugin.connect(other).changeFeeConfiguration(
+          configuration
+        )).to.be.reverted;
+      })
+  
+      it('updates baseFeeConfiguration', async () => {
+        await plugin.changeFeeConfiguration(
+          configuration
+        );
+  
+        const newConfig = await plugin.feeConfig();
+  
+        expect(newConfig.alpha1).to.eq(configuration.alpha1);
+        expect(newConfig.alpha2).to.eq(configuration.alpha2);
+        expect(newConfig.beta1).to.eq(configuration.beta1);
+        expect(newConfig.beta2).to.eq(configuration.beta2);
+        expect(newConfig.gamma1).to.eq(configuration.gamma1);
+        expect(newConfig.gamma2).to.eq(configuration.gamma2);
+        expect(newConfig.baseFee).to.eq(configuration.baseFee);
+      })
+  
+      it('emits event', async () => {
+        await expect(plugin.changeFeeConfiguration(
+          configuration
+        )).to.emit(plugin, 'FeeConfiguration')
+          .withArgs(
+            [...Object.values(configuration)]
+          );
+      })
+  
+      it('cannot exceed max fee', async () => {
+        let wrongConfig = {...configuration};
+        wrongConfig.alpha1 = 30000;
+        wrongConfig.alpha2 = 30000;
+        wrongConfig.baseFee = 15000;
+        await expect(plugin.changeFeeConfiguration(
+          wrongConfig
+        )).to.be.revertedWith('Max fee exceeded');
+      })
+  
+      it('cannot set zero gamma', async () => {
+        let wrongConfig1 = {...configuration};
+        wrongConfig1.gamma1 = 0;
+        await expect(plugin.changeFeeConfiguration(
+          wrongConfig1
+        )).to.be.revertedWith('Gammas must be > 0');
+        
+        let wrongConfig2 = {...configuration};
+        wrongConfig2.gamma2 = 0;
+        await expect(plugin.changeFeeConfiguration(
+          wrongConfig2
+        )).to.be.revertedWith('Gammas must be > 0');
+      })
+    })
+  })
 })
+
+

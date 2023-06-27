@@ -25,10 +25,6 @@ interface IAlgebraFactory {
   /// @param pool The address of the created pool
   event Pool(address indexed token0, address indexed token1, address pool);
 
-  /// @notice Emitted when the farming address is changed
-  /// @param newFarmingAddress The farming address after the address was changed
-  event FarmingAddress(address indexed newFarmingAddress);
-
   /// @notice Emitted when the default community fee is changed
   /// @param newDefaultCommunityFee The new default community fee value
   event DefaultCommunityFee(uint16 newDefaultCommunityFee);
@@ -54,10 +50,6 @@ interface IAlgebraFactory {
   /// @notice Returns the current poolDeployerAddress
   /// @return The address of the poolDeployer
   function poolDeployer() external view returns (address);
-
-  /// @dev Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract
-  /// @return The tokenomics contract address
-  function farmingAddress() external view returns (address);
 
   /// @notice Returns the current communityVaultAddress
   /// @return The address to which community fees are transferred
@@ -93,10 +85,6 @@ interface IAlgebraFactory {
   /// The call will revert if the pool already exists or the token arguments are invalid.
   /// @return pool The address of the newly created pool
   function createPool(address tokenA, address tokenB) external returns (address pool);
-
-  /// @dev updates tokenomics address on the factory
-  /// @param newFarmingAddress The new tokenomics contract address
-  function setFarmingAddress(address newFarmingAddress) external;
 
   /// @dev updates default community fee for new pools
   /// @param newDefaultCommunityFee The new community fee, _must_ be <= MAX_COMMUNITY_FEE

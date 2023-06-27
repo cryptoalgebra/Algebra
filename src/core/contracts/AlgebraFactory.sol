@@ -26,9 +26,6 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraFactory
-  address public override farmingAddress;
-
-  /// @inheritdoc IAlgebraFactory
   uint16 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
@@ -85,13 +82,6 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
     emit Pool(token0, token1, pool);
-  }
-
-  /// @inheritdoc IAlgebraFactory
-  function setFarmingAddress(address newFarmingAddress) external override onlyOwner {
-    require(farmingAddress != newFarmingAddress);
-    farmingAddress = newFarmingAddress;
-    emit FarmingAddress(newFarmingAddress);
   }
 
   /// @inheritdoc IAlgebraFactory

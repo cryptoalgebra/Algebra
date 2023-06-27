@@ -12,6 +12,7 @@ import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/IDataStorageOperator.sol';
+import './interfaces/IDataStorageFactory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Algebra default plugin
@@ -32,6 +33,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   address private immutable pool;
   address private immutable factory;
+  address private immutable pluginFactory;
 
   address public override incentive;
 
@@ -43,8 +45,8 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     _;
   }
 
-  constructor(address _pool, address _factory) {
-    (factory, pool) = (_factory, _pool);
+  constructor(address _pool, address _factory, address _pluginFactory) {
+    (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 
   function _getPoolState() internal view returns (int24 tick, uint16 fee, uint8 pluginConfig) {
@@ -101,7 +103,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IDynamicFeeManager
   function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
-    require(msg.sender == factory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
     feeConfig = _config;
@@ -146,7 +148,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   function setIncentive(address newIncentive) external override {
-    require(msg.sender == IAlgebraFactory(factory).farmingAddress());
+    require(msg.sender == IDataStorageFactory(pluginFactory).farmingAddress());
 
     bool turnOn = newIncentive != address(0);
     address currentIncentive = incentive;

@@ -174,26 +174,4 @@ describe('AlgebraFactory', () => {
       expect(await factory.pendingOwner()).to.be.eq(ZERO_ADDRESS);
     })
   })
-
-  describe('#setFarmingAddress', () => {
-    it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setFarmingAddress(wallet.address)).to.be.reverted;
-    })
-
-    it('updates farmingAddress', async () => {
-      await factory.setFarmingAddress(other.address);
-      expect(await factory.farmingAddress()).to.eq(other.address);
-    })
-
-    it('emits event', async () => {
-      await expect(factory.setFarmingAddress(other.address))
-        .to.emit(factory, 'FarmingAddress')
-        .withArgs(other.address);
-    })
-
-    it('cannot set current address', async () => {
-      await factory.setFarmingAddress(other.address);
-      await expect(factory.setFarmingAddress(other.address)).to.be.reverted;
-    })
-  })
 })
