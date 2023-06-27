@@ -25,6 +25,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
   // TODO
   uint16 public override timepointIndex;
+  uint32 public lastTimepointTimestamp;
 
   AlgebraFeeConfiguration public feeConfig;
 
@@ -57,6 +58,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IVolatilityOracle
   function initialize(uint32 time, int24 tick) external override onlyPool {
+    lastTimepointTimestamp = time;
     return timepoints.initialize(time, tick); // TODO "late" init?
   }
 
@@ -89,12 +91,16 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     }
   }
 
-  function _writeTimepoint(uint32 blockTimestamp, int24 tick) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
-    uint16 index = timepointIndex;
-    (newLastIndex, oldestIndex) = timepoints.write(index, blockTimestamp, tick);
+  function _writeTimepoint(
+    uint32 blockTimestamp,
+    int24 tick,
+    uint16 lastIndex
+  ) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
+    (newLastIndex, oldestIndex) = timepoints.write(lastIndex, blockTimestamp, tick);
 
-    if (index != newLastIndex) {
+    if (lastIndex != newLastIndex) {
       timepointIndex = newLastIndex;
+      lastTimepointTimestamp = blockTimestamp;
       updated = true;
     }
   }
@@ -185,6 +191,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   function afterInitialize(address, uint160, int24 tick) external onlyPool returns (bytes4) {
+    lastTimepointTimestamp = _blockTimestamp();
     timepoints.initialize(_blockTimestamp(), tick);
     return IAlgebraPlugin.afterInitialize.selector;
   }
@@ -218,10 +225,14 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   function _writeTimepointAndUpdateFee() internal {
+    (uint16 _lastIndex, uint32 _lastTimepointTimestamp) = (timepointIndex, lastTimepointTimestamp);
+
+    if (_lastTimepointTimestamp == _blockTimestamp()) return;
+
     (int24 tick, uint16 fee, ) = _getPoolState();
-    (bool updated, uint16 lastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick);
+    (bool updated, uint16 newLastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick, _lastIndex);
     if (updated) {
-      uint16 newFee = _getFeeAtLastTimepoint(lastIndex, oldestIndex, tick);
+      uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
 
       if (newFee != fee) {
         IAlgebraPool(pool).setFee(newFee);

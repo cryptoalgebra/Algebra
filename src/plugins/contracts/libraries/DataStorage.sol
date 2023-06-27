@@ -167,6 +167,8 @@ library DataStorage {
     }
   }
 
+  // TODO MORE EFFECTIVE VERSION FOR LAST TIMEPOINT
+
   /// @notice Returns average volatility in the range from time-WINDOW to time
   /// @param self The stored dataStorage array
   /// @param time The current block.timestamp
