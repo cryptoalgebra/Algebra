@@ -464,45 +464,41 @@ const TEST_POOLS: PoolTestCase[] = [
 
 describe('AlgebraPool swap tests', () => {
   let wallet: Wallet, other: Wallet
+  const fixture = async () => {
+    const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
+    const pool = await createPool()
+    const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
 
+    return{
+      createPool, token0, token1, swapTarget, pool, poolFunctions
+    }
+  }
 
-  before('create fixture loader', async () => {
+  before('get signers', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
   })
 
   for (const poolCase of TEST_POOLS) {
-    describe(poolCase.description, () => {
-      const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
-        const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
-        const pool = await createPool()
-        const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
+      const poolCaseFixture = async () => {
+        const { createPool, token0, token1, swapTarget, pool, poolFunctions } = await loadFixture(fixture);
         await pool.initialize(poolCase.startingPrice)
 
         if (poolCase.tickSpacing != 60)
           await pool.setTickSpacing(poolCase.tickSpacing)
         // mint all positions
-        if (isDefl) {
-          if (zeroToOne)
-            await token0.setDefl();
-          else
-            await token1.setDefl();
-        }
-
         let _positions = [];
         for (const position of poolCase.positions) {
           let _position = {...position}
           let tx = await poolFunctions.mint(wallet.address, position.bottomTick, position.topTick, position.liquidity)
-          if (isDefl) {
-            let receipt = await tx.wait();
-            if (!receipt.events) continue;
+          let receipt = await tx.wait();
+          if (!receipt.events) continue;
 
-            for (let ev of receipt.events) {
-              if (ev.event == 'MintResult') {
-                if (ev.args) {
-                  _position.liquidity = ev.args[2];
-                }
-                break;
+          for (let ev of receipt.events) {
+            if (ev.event == 'MintResult') {
+              if (ev.args) {
+                _position.liquidity = ev.args[2];
               }
+              break;
             }
           }
           _positions.push(_position);
@@ -514,6 +510,22 @@ describe('AlgebraPool swap tests', () => {
         ])
 
         return { token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions }
+    }
+    
+    describe(poolCase.description, () => {
+
+    const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
+      const { token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions } = await loadFixture(poolCaseFixture);
+
+      if (isDefl) {
+        if (zeroToOne)
+          await token0.setDefl();
+        else
+          await token1.setDefl();
+      }
+      return {
+        token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions
+      }
     }
 
       let token0: TestERC20
