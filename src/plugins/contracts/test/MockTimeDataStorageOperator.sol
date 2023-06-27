@@ -44,28 +44,4 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
     uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(timestamp, 0, tick, index, oldestIndex);
     return timepoints.getAverageVolatility(timestamp, tick, index, oldestIndex, lastVolatilityCumulative);
   }
-
-  /// @notice Calculates fee based on combination of sigmoids
-  /// @param _time The current block.timestamp
-  /// @param tick The current tick
-  /// @return fee The fee in hundredths of a bip, i.e. 1e-6
-  function getFee(uint32 _time, int24 tick) external view returns (uint16 fee) {
-    uint16 lastIndex = timepointIndex;
-    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-    uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_time, 0, tick, lastIndex, oldestIndex);
-    uint88 volatilityAverage = timepoints.getAverageVolatility(_time, tick, lastIndex, oldestIndex, lastVolatilityCumulative);
-    return AdaptiveFee.getFee(volatilityAverage, feeConfig);
-  }
-
-  /// @dev pay for storage slots
-  function prepayTimepointsStorage(uint16 startIndex, uint16 amount) external {
-    require(!timepoints[startIndex].initialized);
-    require(amount > 0);
-
-    unchecked {
-      for (uint256 i = startIndex; i < startIndex + amount; ++i) {
-        timepoints[i].blockTimestamp = 1;
-      }
-    }
-  }
 }

@@ -21,8 +21,6 @@ describe('AdaptiveFee', () => {
       console.log( (await adaptiveFee.getFee(BigNumber.from(0))).toString());
     })
 
-
-
     it('fee grid snapshot', async () => {
       const config = {
         alpha1: 2900,
