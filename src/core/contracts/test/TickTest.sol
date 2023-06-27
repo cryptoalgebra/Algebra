@@ -49,4 +49,16 @@ contract TickTest {
   ) external returns (int128 liquidityDelta) {
     return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, timestamp);
   }
+
+  function removeTick(int24 tick) external returns (int24) {
+    return ticks.removeTick(tick);
+  }
+
+  function insertTick(int24 tick, int24 prevTick, int24 nextTick) external {
+    return ticks.insertTick(tick, prevTick, nextTick);
+  }
+
+  function init() external {
+    ticks.initTickState();
+  }
 }

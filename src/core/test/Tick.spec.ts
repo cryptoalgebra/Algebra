@@ -277,4 +277,96 @@ describe('Tick', () => {
       expect(outerSecondsSpent).to.eq(7)
     })
   })
+
+  describe('#insertTick', () => {
+
+    beforeEach('insert ticks', async () => {
+      await tickTest.init()
+    })
+
+    it('works correct', async () => {
+      await tickTest.insertTick(0, -887272, 887272);
+      await tickTest.insertTick(100, 0, 887272);
+      await tickTest.insertTick(-100, -887272, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(0)
+      expect(prevTick).to.eq(-100)
+      expect(nextTick).to.eq(100)
+    })
+
+    it('insert MAX tick', async () => {
+      await tickTest.insertTick(887272, 0, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(887272)
+
+    })
+
+    it('insert MIN tick', async () => {
+      await tickTest.insertTick(-887272, 0, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(-887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(887272)
+
+    })
+
+    it('fails with incorrect input', async () => {
+      await expect(tickTest.insertTick(0, 887272, -887272)).to.be.revertedWithCustomError(tickTest, 'tickInvalidLinks')
+    })
+  })
+
+  describe('#removeTick', () => {
+    
+    beforeEach('insert ticks', async () => {
+      await tickTest.init()
+      await tickTest.insertTick(0, -887272, 887272);
+      await tickTest.insertTick(100, 0, 887272);
+      await tickTest.insertTick(-100, -887272, 0);
+    })
+    
+    it('works correct', async () => {
+      await tickTest.removeTick(0)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(0)
+      expect(prevTick).to.eq(0)
+      expect(nextTick).to.eq(0)
+    })
+
+    it('remove MIN tick', async () => {
+      await tickTest.removeTick(-887272)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(-887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(-100)
+    
+    })
+
+    it('remove MAX tick', async () => {
+      await tickTest.removeTick(887272)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(887272)
+      expect(prevTick).to.eq(100)
+      expect(nextTick).to.eq(887272)
+    })
+
+    it('fails when remove not initialized tick', async () => {
+      await expect(tickTest.removeTick(1)).to.be.revertedWithCustomError(tickTest, 'tickIsNotInitialized')
+    })
+
+  })
+
 })
