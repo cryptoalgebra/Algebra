@@ -390,6 +390,23 @@ describe('DataStorageOperator', () => {
          expect(await virtualPoolMock.timestamp()).to.be.eq(0); 
        }) */
      })
+
+     describe('#Incentive', () => {
+      /*
+      it('incentive is not detached after swap', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await factory.setFarmingAddress(wallet.address)
+  
+        const vpStubFactory = await ethers.getContractFactory('TestVirtualPool')
+        let vpStub = (await vpStubFactory.deploy()) as TestVirtualPool
+  
+        await pool.setIncentive(vpStub.address)
+  
+        await mint(wallet.address, -tickSpacing, tickSpacing, initializeLiquidityAmount)
+        expect(swapTarget.swapExact0For1(pool.address, initializeLiquidityAmount.mul(100), wallet.address, BigNumber.from("4295128740"), { gasLimit: 300000})).to.be.revertedWithoutReason;
+      })
+      */
+    })
   })
 
   describe('DataStorageOperator external methods', () => {
