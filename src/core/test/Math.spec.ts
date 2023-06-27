@@ -26,6 +26,7 @@ describe('SafeMath', () => {
 
   it('#sub', async () => {
     await expect(safeMath.sub(Q128.sub(1), Q128)).to.be.reverted;
+    expect( await safeMath.sub(Q128, Q128.sub(1))).to.be.eq(1)
   })
 
   it('#mul', async () => {
@@ -43,15 +44,24 @@ describe('SafeMath', () => {
 
   it('#add128', async () => {
     await expect(safeMath.add128(Q128.sub(10), 15)).to.be.reverted;
+    expect( await safeMath.add128(10, 10)).to.be.eq(20)
   })
   
   it('#toUint160', async () => {
     await expect(safeMath.toUint160(BigNumber.from(2).pow(255).sub(1))).to.be.reverted;
   })
 
+  it('#toUint128', async () => {
+    await expect(safeMath.toUint128(BigNumber.from(2).pow(255).sub(1))).to.be.reverted;
+  })
+
   it('#toInt128', async () => {
     await expect(safeMath.toInt128(BigNumber.from(2).pow(255).sub(1))).to.be.reverted;
+    expect(await safeMath.toInt128(BigNumber.from(2).pow(127).sub(1))).to.be.eq(BigNumber.from(2).pow(127).sub(1))
+    await expect(safeMath.toInt128U(BigNumber.from(2).pow(128).sub(1))).to.be.reverted;
   })
+
+
 
   it('#toInt256', async () => {
     await expect(safeMath.toInt256(BigNumber.from(2).pow(256).sub(1))).to.be.reverted;
