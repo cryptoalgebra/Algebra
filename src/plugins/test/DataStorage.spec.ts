@@ -552,5 +552,16 @@ describe('DataStorage', () => {
       await dataStorage.advanceTime(5)
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step + 5]))
     })
+    it('gas cost of getTimepoints(24h ago)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([24 * 60 * 60]))
+    })
+    it('gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(5)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([24 * 60 * 60]))
+    })
+    it('gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(15*60)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([24 * 60 * 60]))
+    })
   })
 })
