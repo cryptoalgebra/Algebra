@@ -206,26 +206,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).tick).to.be.lt(0)
         })
 
-        it('small swap with filled dataStorage', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          )
-          expect((await pool.globalState()).tick).to.eq(startingTick)
-          for (let i = 0; i < 100; i++) {
-            if (i % 2 == 0) {
-              await swapExact0For1(expandTo18Decimals(1).div(10000), wallet.address)
-            } else {
-              await swapExact1For0(expandTo18Decimals(1).div(10000), wallet.address)
-            }
-            await advanceTime(60 * 60)
-          }
-          await snapshotGasCost(swapExact0For1(1000, wallet.address))
-        })
-
         it('first swap in block, large swap crossing a single initialized tick', async () => {
           await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1))
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
@@ -281,6 +261,71 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await advanceTime(1)
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
           expect((await pool.globalState()).tick).to.be.lt(tickSpacing * -4)
+        })
+
+        describe('Filled DataStorage', function() {
+          this.timeout(600_000)
+
+          const filledStorageFixture = async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            )
+            expect((await pool.globalState()).tick).to.eq(startingTick)
+
+            const BATCH_SIZE = 300;
+            let summaryTimeDelta = 0;
+            for (let i = 0; i < 1500; i += BATCH_SIZE) {
+              
+              const batch = [];
+              for (let j = 0; j < BATCH_SIZE; j++) {
+                const timeDelta = (i + j) % 2 == 0 ? 60 : 90;
+                summaryTimeDelta += timeDelta;
+                batch.push({
+                  advanceTimeBy: timeDelta,
+                  tick: startingTick + i - j
+                })
+              }
+              await plugin.batchUpdate(batch)
+            }
+            await pool.advanceTime(summaryTimeDelta);
+          }
+
+          beforeEach('load inner fixture', async() => {
+            await loadFixture(filledStorageFixture);
+          })
+
+          it('small swap with filled dataStorage', async () => {
+            await advanceTime(15);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address))
+          })
+
+          it('small swap with filled dataStorage after 4h', async () => {
+            await advanceTime(4 * 60 * 60);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address))
+          })
+
+          it('small swap with filled dataStorage after 8h', async () => {
+            await advanceTime(8 * 60 * 60);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address))
+          })
+
+          it('large swap crossing several initialized ticks', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            )
+            await swapExact0For1(2, wallet.address)
+            await advanceTime(15);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing)
+          })
         })
       })
 

@@ -24,6 +24,30 @@ contract MockTimeDataStorageOperator is DataStorageOperator {
     return uint32(time);
   }
 
+  struct UpdateParams {
+    uint32 advanceTimeBy;
+    int24 tick;
+  }
+
+  function batchUpdate(UpdateParams[] calldata params) external {
+    // sload everything
+    uint16 _index = timepointIndex;
+    uint32 _time = lastTimepointTimestamp;
+    int24 _tick;
+    unchecked {
+      for (uint256 i; i < params.length; ++i) {
+        _time += params[i].advanceTimeBy;
+        _tick = params[i].tick;
+        (_index, ) = timepoints.write(_index, _time, _tick);
+      }
+    }
+
+    // sstore everything
+    lastTimepointTimestamp = _time;
+    timepointIndex = _index;
+    time = _time;
+  }
+
   function checkBlockTimestamp() external view returns (bool) {
     require(super._blockTimestamp() == uint32(block.timestamp));
     return true;
