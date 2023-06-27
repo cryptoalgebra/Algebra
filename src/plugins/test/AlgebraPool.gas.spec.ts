@@ -6,7 +6,6 @@ import { MockFactory, MockPool, MockTimeDataStorageOperator, MockTimeDSFactory, 
 import { expect } from './shared/expect'
 
 import { algebraPoolDeployerMockFixture } from './shared/externalFixtures'
-import { pluginFixture } from './shared/fixtures'
 
 import snapshotGasCost from './shared/snapshotGasCost'
 
@@ -19,7 +18,6 @@ import {
   createPoolFunctions,
   SwapFunction,
   MintFunction,
-  AddLimitFunction,
   getMaxTick,
   MaxUint128,
   SwapToPriceFunction,
@@ -33,9 +31,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let token0: TestERC20;
   let token1;
   let swapTarget: TestAlgebraCallee;
-  let plugin: MockTimeDataStorageOperator;
 
-  let advanceTime: any;
 
   before('create fixture loader', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
@@ -62,11 +58,11 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         const pluginAddress = await mockPluginFactory.pluginsForPools(pool.address);
       
         const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
-        plugin = mockDSOperatorFactory.attach(pluginAddress) as MockTimeDataStorageOperator;
+        const plugin = mockDSOperatorFactory.attach(pluginAddress) as MockTimeDataStorageOperator;
 
         await pool.setPlugin(plugin.address);
 
-        advanceTime = async (secs: any) => {
+        const advanceTime = async (secs: any) => {
           await pool.advanceTime(secs);
           await plugin.advanceTime(secs);
         }
@@ -94,7 +90,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         expect((await pool.globalState()).tick).to.eq(startingTick)
         expect((await pool.globalState()).price).to.eq(startingPrice)
 
-        return { pool, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice}
+        return { advanceTime, pool, plugin, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice}
       }
 
       let swapExact0For1: SwapFunction
@@ -102,10 +98,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapToHigherPrice: SwapToPriceFunction
       let swapToLowerPrice: SwapToPriceFunction
       let pool: MockTimeAlgebraPool
+      let plugin: MockTimeDataStorageOperator;
       let mint: MintFunction
+      let advanceTime: any;
 
       beforeEach('load the fixture', async () => {
-        ;({ swapExact0For1, swapExact1For0, pool, mint, swapToHigherPrice, swapToLowerPrice} = await loadFixture(gasTestFixture))
+        ;({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, mint, swapToHigherPrice, swapToLowerPrice} = await loadFixture(gasTestFixture))
       })
 
       describe('#swapExact0For1', () => {
