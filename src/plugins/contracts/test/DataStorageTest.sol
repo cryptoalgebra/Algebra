@@ -8,11 +8,12 @@ contract DataStorageTest {
   uint256 private constant UINT16_MODULO = 65536;
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
+  uint32 initTime;
+
   DataStorage.Timepoint[UINT16_MODULO] public timepoints;
 
   uint32 public time;
   int24 public tick;
-  uint128 public liquidity;
   uint16 public index;
 
   struct InitializeParams {
@@ -22,9 +23,9 @@ contract DataStorageTest {
   }
 
   function initialize(InitializeParams calldata params) external {
+    initTime = params.time;
     time = params.time;
     tick = params.tick;
-    liquidity = params.liquidity;
     timepoints.initialize(params.time, tick);
   }
 
@@ -45,13 +46,11 @@ contract DataStorageTest {
     advanceTime(params.advanceTimeBy);
     (index, ) = timepoints.write(index, time, tick);
     tick = params.tick;
-    liquidity = params.liquidity;
   }
 
   function batchUpdate(UpdateParams[] calldata params) external {
     // sload everything
     int24 _tick = tick;
-    uint128 _liquidity = liquidity;
     uint16 _index = index;
     uint32 _time = time;
     unchecked {
@@ -59,13 +58,11 @@ contract DataStorageTest {
         _time += params[i].advanceTimeBy;
         (_index, ) = timepoints.write(_index, _time, _tick);
         _tick = params[i].tick;
-        _liquidity = params[i].liquidity;
       }
     }
 
     // sstore everything
     tick = _tick;
-    liquidity = _liquidity;
     index = _index;
     time = _time;
   }
@@ -75,24 +72,67 @@ contract DataStorageTest {
     uint128 liquidity;
   }
 
-  function batchUpdateFixedTimedelta(UpdateParamsFixedTimedelta[] calldata params) external {
+  uint32 constant STEP = 13;
+
+  function batchUpdateFast(uint256 length) external {
     // sload everything
     int24 _tick = tick;
-    uint128 _liquidity = liquidity;
-    uint16 _index = index;
     uint32 _time = time;
+
+    uint32 _initTime = initTime;
+    uint256 _index = (_time - _initTime) / STEP;
+
+    DataStorage.Timepoint memory last = timepoints[_index];
+
     unchecked {
-      for (uint256 i; i < params.length; ++i) {
-        _time += 13;
-        (_index, ) = timepoints.write(_index, _time, _tick);
-        _tick = params[i].tick;
-        _liquidity = params[i].liquidity;
+      for (uint256 i; i < length; ++i) {
+        _time += STEP;
+
+        // get next index considering overflow
+        uint16 nextIndex = uint16(_index + 1);
+
+        int24 avgTick;
+        uint16 windowStartIndex;
+
+        if (_time - _initTime > 24 hours) {
+          windowStartIndex = uint16(_index - (uint256(24 hours) / STEP) + 1); // CHECK
+          avgTick = -int24(uint24((STEP * ((nextIndex + 1) * nextIndex - (windowStartIndex + 1) * windowStartIndex)) / (2 * uint256(24 hours))));
+        } else {
+          uint32 timeDelta = _time - _initTime;
+          avgTick = -int24(uint24((STEP * (nextIndex + 1) * nextIndex) / (2 * uint256(timeDelta))));
+        }
+
+        last = DataStorage._createNewTimepoint(last, _time, _tick, avgTick, windowStartIndex);
+
+        timepoints[nextIndex] = last;
+
+        _tick--;
+
+        _index = _index + 1;
       }
     }
 
     // sstore everything
     tick = _tick;
-    liquidity = _liquidity;
+    index = uint16(_index);
+    time = _time;
+  }
+
+  function batchUpdateFixedTimedelta(uint256 length) external {
+    // sload everything
+    int24 _tick = tick;
+    uint16 _index = index;
+    uint32 _time = time;
+    unchecked {
+      for (uint256 i; i < length; ++i) {
+        _time += STEP;
+        (_index, ) = timepoints.write(_index, _time, _tick);
+        _tick--;
+      }
+    }
+
+    // sstore everything
+    tick = _tick;
     index = _index;
     time = _time;
   }

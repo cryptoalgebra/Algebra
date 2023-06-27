@@ -222,7 +222,7 @@ library DataStorage {
     int24 tick,
     int24 averageTick,
     uint16 windowStartIndex
-  ) private pure returns (Timepoint memory) {
+  ) internal pure returns (Timepoint memory) {
     unchecked {
       uint32 delta = blockTimestamp - last.blockTimestamp; // overflow is desired
       // We don't create a new structure in memory to save gas. Therefore, the function changes the old structure
@@ -277,7 +277,7 @@ library DataStorage {
     uint16 oldestIndex,
     uint32 lastTimestamp,
     int56 lastTickCumulative
-  ) private view returns (int24 avgTick, uint16 windowStartIndex) {
+  ) internal view returns (int24 avgTick, uint16 windowStartIndex) {
     (int256 _avgTick, uint256 _windowStartIndex) = _getAverageTick(self, time, tick, lastIndex, oldestIndex, lastTimestamp, lastTickCumulative);
     unchecked {
       (avgTick, windowStartIndex) = (int24(_avgTick), uint16(_windowStartIndex)); // overflow in uint16(_windowStartIndex) is desired

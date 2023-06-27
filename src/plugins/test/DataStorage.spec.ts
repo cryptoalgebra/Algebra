@@ -413,12 +413,13 @@ describe('DataStorage', () => {
     }
   })
 
-  describe.skip('full dataStorage', function () {
-    this.timeout(1_200_000)
+  describe('full dataStorage', function () {
+    this.timeout(10_200_000)
 
     let dataStorage: DataStorageTest
 
-    const BATCH_SIZE = 300
+    let BATCH_SIZE = 1000;
+    const step = 13;
 
     const STARTING_TIME = TEST_POOL_START_TIME
 
@@ -430,16 +431,18 @@ describe('DataStorage', () => {
       const dataStorage = await dataStorageFixture()
       await dataStorage.initialize({ liquidity: 0, tick: 0, time: STARTING_TIME })
 
-      for (let i = 0; i < 65535; i += BATCH_SIZE) {
-        console.log('batch update starting at', i)
-        const batch = Array(BATCH_SIZE)
-          .fill(null)
-          .map((_, j) => ({
-            tick: -i - j,
-            liquidity: i + j,
-          }))
-        await dataStorage.batchUpdateFixedTimedelta(batch)
+      let i = 1;
+      for (i = 1; i < 65536; i += BATCH_SIZE) {
+        if (i + BATCH_SIZE > 65536) {
+          BATCH_SIZE = Math.ceil(65536 / 300) * 300 - i;
+          console.log('batch update starting at', i)
+          await dataStorage.batchUpdateFixedTimedelta(BATCH_SIZE)
+        } else {
+          console.log('batch update starting at', i)
+          await dataStorage.batchUpdateFast(BATCH_SIZE)
+        }
       }
+      console.log('Length:', i);
       return dataStorage
     }
 
@@ -448,7 +451,7 @@ describe('DataStorage', () => {
     })
 
     it('index wrapped around', async () => {
-      expect(await dataStorage.index()).to.eq(164)
+      expect(await dataStorage.index()).to.eq(163)
     })
 
     async function checkGetPoints(
@@ -469,13 +472,13 @@ describe('DataStorage', () => {
     }
 
     it('can getTimepoints into the ordered portion with exact seconds ago', async () => {
-      await checkGetPoints(100 * 13, {
+      await checkGetPoints(100 * step, {
         tickCumulative: '-27970560813',
       })
     })
 
     it('can getTimepoints into the ordered portion with unexact seconds ago', async () => {
-      await checkGetPoints(100 * 13 + 5, {
+      await checkGetPoints(100 * step + 5, {
         tickCumulative: '-27970232823',
       })
     })
@@ -501,53 +504,53 @@ describe('DataStorage', () => {
     })
 
     it('can getTimepoints into the unordered portion of array at exact seconds ago of timepoint', async () => {
-      await checkGetPoints(200 * 13, {
+      await checkGetPoints(200 * step, {
         tickCumulative: '-27885347763',
       })
     })
 
     it('can getTimepoints into the unordered portion of array at seconds ago between timepoints', async () => {
-      await checkGetPoints(200 * 13 + 5, {
+      await checkGetPoints(200 * step + 5, {
         tickCumulative: '-27885020273',
       })
     })
 
     it('can getTimepoints the oldest timepoint 13*65534 seconds ago', async () => {
-      await checkGetPoints(13 * 65534, {
+      await checkGetPoints(step * 65534, {
         tickCumulative: '-175890',
       })
     })
 
     it('can getTimepoints the oldest timepoint 13*65534 + 5 seconds ago if time has elapsed', async () => {
       await dataStorage.advanceTime(5)
-      await checkGetPoints(13 * 65534 + 5, {
+      await checkGetPoints(step * 65534 + 5, {
         tickCumulative: '-175890',
       })
     })
 
-    it('gas cost of getTimepoints(0)', async () => {
+    it('gas cost of getTimepoints(0)  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
     })
-    it('gas cost of getTimepoints(200 * 13)', async () => {
-      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 + 13]))
+    it(`gas cost of getTimepoints(200 * ${step})  [ @skip-on-coverage ]`, async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 * step]))
     })
-    it('gas cost of getTimepoints(200 * 13 + 5)', async () => {
-      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 + 13 + 5]))
+    it(`gas cost of getTimepoints(200 * ${step} + 5)  [ @skip-on-coverage ]`, async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 * step + 5]))
     })
-    it('gas cost of getTimepoints(0) after 5 seconds', async () => {
+    it('gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ]', async () => {
       await dataStorage.advanceTime(5)
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
     })
-    it('gas cost of getTimepoints(5) after 5 seconds', async () => {
+    it('gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ]', async () => {
       await dataStorage.advanceTime(5)
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([5]))
     })
-    it('gas cost of getTimepoints(oldest)', async () => {
-      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * 13]))
+    it('gas cost of getTimepoints(oldest)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step]))
     })
-    it('gas cost of getTimepoints(oldest) after 5 seconds', async () => {
+    it('gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ]', async () => {
       await dataStorage.advanceTime(5)
-      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * 13 + 5]))
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step + 5]))
     })
   })
 })
