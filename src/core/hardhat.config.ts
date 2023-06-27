@@ -73,8 +73,6 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/DataStorageOperator.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/DataStorageFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
     },
   },
   docgen: {
