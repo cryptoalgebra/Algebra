@@ -258,6 +258,15 @@ const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
     sqrtPriceLimit: encodePriceSqrt(2, 5),
     zeroToOne: false,
   },
+  // swap with incorrect limit price
+  {
+    sqrtPriceLimit: MAX_SQRT_RATIO,
+    zeroToOne: false,
+  },
+  {
+    sqrtPriceLimit: MIN_SQRT_RATIO,
+    zeroToOne: true,
+  }
 ]
 
 interface Position {
@@ -556,7 +565,6 @@ describe('AlgebraPool swap tests', () => {
           )
 
           const globalState = await pool.globalState()
-
           const tx = executeSwap(pool, testCase, poolFunctions)
           try {
             await tx

@@ -320,6 +320,7 @@ describe('Tick', () => {
 
     it('fails with incorrect input', async () => {
       await expect(tickTest.insertTick(0, 887272, -887272)).to.be.revertedWithCustomError(tickTest, 'tickInvalidLinks')
+      await expect(tickTest.insertTick(0, -887272, -100)).to.be.revertedWithCustomError(tickTest, 'tickInvalidLinks')
     })
   })
 

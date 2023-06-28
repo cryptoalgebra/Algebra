@@ -183,7 +183,7 @@ describe('AlgebraPool', () => {
 
           it('fails if token0 hardly underpayed', async() => {
             await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 1, expandTo18Decimals(100))).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
-          })     
+          })
 
           it('fails if token1 hardly underpayed', async() => {
             await swapToHigherPrice(encodePriceSqrt(10, 1), wallet.address);
@@ -244,6 +244,16 @@ describe('AlgebraPool', () => {
           expect((await pool.globalState()).tick).to.eq(-23028)
         })
 
+        it('refund if overpayment', async () => {
+          const factory = await ethers.getContractFactory('TestAlgebraSwapPay')
+          let payer = (await factory.deploy()) as TestAlgebraSwapPay;
+          await token0.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+          await token1.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+
+          await payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 10, expandTo18Decimals(1000), expandTo18Decimals(1000))
+
+        })
+
         describe('above current price', () => {
           it('transfers token0 only', async () => {
             await expect(mint(wallet.address, -22980, 0, 10000))
@@ -270,6 +280,24 @@ describe('AlgebraPool', () => {
 
           it('removing works', async () => {
             await mint(wallet.address, -240, 0, 10000)
+            await pool.burn(-240, 0, 10000)
+            const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
+            expect(amount0, 'amount0').to.eq(120)
+            expect(amount1, 'amount1').to.eq(0)
+          })
+
+          it('removing works after tickSpacing increase', async () => {
+            await mint(wallet.address, -240, 0, 10000)
+            await pool.setTickSpacing(100)
+            await pool.burn(-240, 0, 10000)
+            const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
+            expect(amount0, 'amount0').to.eq(120)
+            expect(amount1, 'amount1').to.eq(0)
+          })
+
+          it('removing works after tickSpacing decrease', async () => {
+            await mint(wallet.address, -240, 0, 10000)
+            await pool.setTickSpacing(1)
             await pool.burn(-240, 0, 10000)
             const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
             expect(amount0, 'amount0').to.eq(120)
@@ -548,6 +576,19 @@ describe('AlgebraPool', () => {
       await checkTickIsClear(topTick)
     })
 
+    it('clears the tick if its the last position using it after tickSpacing increase', async () => {
+      const bottomTick = minTick + tickSpacing
+      const topTick = maxTick - tickSpacing
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10)
+      await mint(wallet.address, bottomTick, topTick, 1)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      await pool.setTickSpacing(200)
+      await pool.burn(bottomTick, topTick, 1)
+      await checkTickIsClear(bottomTick)
+      await checkTickIsClear(topTick)
+    })
+
     it('clears only the lower tick if upper is still used', async () => {
       const bottomTick = minTick + tickSpacing
       const topTick = maxTick - tickSpacing
@@ -555,6 +596,20 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(10)
       await mint(wallet.address, bottomTick, topTick, 1)
       await mint(wallet.address, bottomTick + tickSpacing, topTick, 1)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      await pool.burn(bottomTick, topTick, 1)
+      await checkTickIsClear(bottomTick)
+      await checkTickIsNotClear(topTick)
+    })
+
+    it('clears only the lower tick if upper is still used after tickSpacing decrease', async () => {
+      const bottomTick = minTick + tickSpacing
+      const topTick = maxTick - tickSpacing
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10)
+      await mint(wallet.address, bottomTick, topTick, 1)
+      await mint(wallet.address, bottomTick + tickSpacing, topTick, 1)
+      await pool.setTickSpacing(5)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
       await pool.burn(bottomTick, topTick, 1)
       await checkTickIsClear(bottomTick)
@@ -572,6 +627,40 @@ describe('AlgebraPool', () => {
       await pool.burn(bottomTick, topTick, 1)
       await checkTickIsNotClear(bottomTick)
       await checkTickIsClear(topTick)
+    })
+
+    it('clears only the upper tick if lower is still used after tickSpacing increase', async () => {
+      const bottomTick = minTick + tickSpacing
+      const topTick = maxTick - tickSpacing
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10)
+      await mint(wallet.address, bottomTick, topTick, 1)
+      await mint(wallet.address, bottomTick, topTick - tickSpacing, 1)
+      await pool.setTickSpacing(100)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      await pool.burn(bottomTick, topTick, 1)
+      await checkTickIsNotClear(bottomTick)
+      await checkTickIsClear(topTick)
+    })
+
+    it('fails when try to burn with incorrect ticks', async () => {
+      const bottomTick = minTick + tickSpacing
+      const topTick = maxTick - tickSpacing
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10)
+      await mint(wallet.address, bottomTick, topTick, 1)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      await expect( pool.burn(topTick, bottomTick, 1)).to.be.revertedWithCustomError(pool, "topTickLowerOrEqBottomTick")
+    })
+
+    it('fails when try to burn max int128 value', async () => {
+      const bottomTick = minTick + tickSpacing
+      const topTick = maxTick - tickSpacing
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10)
+      await mint(wallet.address, bottomTick, topTick, 1)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      await expect(pool.burn(bottomTick, topTick, BigNumber.from(2).pow(128).sub(1))).to.be.revertedWithCustomError(pool, "arithmeticError")
     })
 
   })
@@ -858,6 +947,80 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(2))
 
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      // poke positions
+      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
+
+      const { fees0: fees0Position0 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+      const { fees0: fees0Position1 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, pool)
+      )
+
+      expect(fees0Position0).to.be.eq('33333333333333')
+      expect(fees0Position1).to.be.eq('66666666666666')
+    })
+
+    
+    it('collect part of fees', async () => {
+      await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+
+      await swapExact1For0(expandTo18Decimals(1), wallet.address)
+
+      await pool.burn(minTick, maxTick, 0)
+
+      const { fees0: fees0Position0before, fees1: fees0Position1before} = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+
+      expect(fees0Position0before).to.eq('99999999999999')
+      expect(fees0Position1before).to.eq('99999999999999')
+
+      // collect the fees
+      await pool.collect(wallet.address, minTick, maxTick, 1000, 1000)
+
+
+      const { fees0: fees0Position0, fees1: fees0Position1} = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+
+      expect(fees0Position0).to.be.eq('99999999998999')
+      expect(fees0Position1).to.be.eq('99999999998999')
+    })
+
+    it('works with multiple LPs after tickSpacing increase', async () => {
+      await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+      await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(2))
+
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+
+      await pool.setTickSpacing(200)
+      // poke positions
+      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
+
+      const { fees0: fees0Position0 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+      const { fees0: fees0Position1 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, pool)
+      )
+
+      expect(fees0Position0).to.be.eq('33333333333333')
+      expect(fees0Position1).to.be.eq('66666666666666')
+    })
+
+    it('works with multiple LPs after tickSpacing decrease', async () => {
+      await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+      await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, expandTo18Decimals(2))
+
+      await pool.setTickSpacing(1)
+
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+
       // poke positions
       await pool.burn(minTick, maxTick, 0)
       await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
@@ -1415,6 +1578,16 @@ describe('AlgebraPool', () => {
           await mint(wallet.address, 60, 120, 1)
           await mint(wallet.address, -240, -180, 1)
         })
+        it('mint after tickSpacing increase', async () => {
+          await mint(wallet.address, 60, 120, 1)
+          await pool.setTickSpacing(200)
+          await mint(wallet.address, -2400, -1800, 1)
+        })
+        it('mint after tickSpacing decrease', async () => {
+          await mint(wallet.address, 60, 120, 1)
+          await pool.setTickSpacing(13)
+          await mint(wallet.address, -260, -130, 1)
+        })
         it('swapping across gaps works in 1 for 0 direction', async () => {
           const liquidityAmount = expandTo18Decimals(1).div(4)
           await mint(wallet.address, 120000, 121200, liquidityAmount)
@@ -1436,6 +1609,29 @@ describe('AlgebraPool', () => {
             .to.not.emit(token0, 'Transfer')
             .to.not.emit(token1, 'Transfer')
           expect((await pool.globalState()).tick).to.eq(-120198)
+        })
+      })
+
+      describe('setTickSpacing', () => {
+
+        beforeEach('add some tokens', async () => {
+          await initializeAtZeroTick(pool)
+        })
+
+        it('setTickspacing works', async () => {
+          await pool.setTickSpacing(100)
+          expect(await pool.tickSpacing()).to.eq(100)
+        })
+        it('setTickspacing can be called only by owner', async () => {
+          await expect(pool.connect(other).setTickSpacing(100)).to.be.reverted
+        })
+        it('cannot setTickSpacing gt 500 & lt 1', async () => {
+          await expect(pool.setTickSpacing(600)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+          await expect(pool.setTickSpacing(-20)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+          await expect(pool.setTickSpacing(0)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+        })
+        it('cannot set same value', async () => {
+          await expect(pool.setTickSpacing(60)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
         })
       })
   })
