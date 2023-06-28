@@ -114,12 +114,12 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     unchecked {
       if (amount0 > 0) {
         if (receivedAmount0 > amount0) SafeTransfer.safeTransfer(token0, sender, receivedAmount0 - amount0);
-        else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint();
+        else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
 
       if (amount1 > 0) {
         if (receivedAmount1 > amount1) SafeTransfer.safeTransfer(token1, sender, receivedAmount1 - amount1);
-        else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint();
+        else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
     }
 

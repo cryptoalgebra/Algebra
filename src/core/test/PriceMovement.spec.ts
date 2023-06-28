@@ -279,6 +279,28 @@ describe('PriceMovementMath', () => {
       expect(sqrtQ, 'price is less than price after whole output amount').to.eq(priceAfterWholeOutputAmount)
     })
 
+    it('check price collision in exactOut', async () => {
+      // this scenario isn't possible in pool
+      const price = '1524785991'
+      const priceTarget = '1524785992'
+      const liquidity = '4369999'
+      const amount = -2
+      const fee = 39875
+      const zeroToOne = false
+
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )
+
+      expect(amountIn).to.eq('1')
+      expect(feeAmount).to.eq('1')
+      expect(amountOut).to.eq('2')
+    })
+
     it('amount out is capped at the desired amount out', async () => {
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         BigNumber.from('417332158212080721273783715441582'),

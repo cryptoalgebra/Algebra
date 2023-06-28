@@ -134,6 +134,7 @@ library PriceMovementMath {
             // we didn't reach the target, so take the remainder of the maximum input as fee
             feeAmount = uint256(amountAvailable) - input;
           } else {
+            // should not be possible
             feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
           }
         }
@@ -150,6 +151,7 @@ library PriceMovementMath {
         else {
           resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
+          // should be always true if the price is in the allowed range
           if (targetPrice != resultPrice) {
             output = getAmountB(resultPrice, currentPrice, liquidity);
           }
