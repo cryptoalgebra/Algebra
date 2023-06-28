@@ -188,7 +188,7 @@ describe('AlgebraPool', () => {
           it('fails if token1 hardly underpayed', async() => {
             await swapToHigherPrice(encodePriceSqrt(10, 1), wallet.address);
             await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, expandTo18Decimals(100), 1)).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
-          })          
+          })     
         })
 
 
@@ -252,6 +252,37 @@ describe('AlgebraPool', () => {
 
           await payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 10, expandTo18Decimals(1000), expandTo18Decimals(1000))
 
+        })
+
+        describe('underpayment', () => {
+          let payer: TestAlgebraSwapPay;
+          // TODO improve tests, check liquiditys
+          beforeEach(async() => {
+            const factory = await ethers.getContractFactory('TestAlgebraSwapPay')
+            payer = (await factory.deploy()) as TestAlgebraSwapPay;
+            await token0.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+            await token1.approve(payer.address, BigNumber.from(2).pow(256).sub(1));
+          })
+
+          it('handle underpayment in both tokens', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 100)).to.not.be.reverted;
+          })
+
+          it('handle underpayment in both tokens, token0 less', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 50, 100)).to.not.be.reverted;
+          })
+
+          it('handle underpayment in both tokens, token1 less', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 50)).to.not.be.reverted;
+          })
+
+          it('handle underpayment in token0', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100, 100000000)).to.not.be.reverted;
+          })
+
+          it('handle underpayment in token1', async() => {
+            await expect(payer.mint(pool.address, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000000, 100000000, 100)).to.not.be.reverted;
+          })
         })
 
         describe('above current price', () => {
