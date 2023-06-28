@@ -132,6 +132,9 @@ describe('AlgebraFactory', () => {
   describe('#transferOwnership', () => {
     it('fails if caller is not owner', async () => {
       await expect(factory.connect(other).transferOwnership(wallet.address)).to.be.reverted
+      await expect(factory.connect(other).startRenounceOwnership()).to.be.reverted
+      await expect(factory.connect(other).renounceOwnership()).to.be.reverted
+      await expect(factory.connect(other).stopRenounceOwnership()).to.be.reverted
     })
 
     it('updates owner', async () => {
@@ -152,9 +155,36 @@ describe('AlgebraFactory', () => {
       await factory.connect(other).acceptOwnership();
       await expect(factory.transferOwnership(wallet.address)).to.be.reverted
     })
+
+    it('renounceOwner works correct', async () => {
+      await factory.startRenounceOwnership();
+      await ethers.provider.send('evm_increaseTime', [86500])
+      await factory.renounceOwnership();
+      expect(await factory.owner()).to.eq("0x0000000000000000000000000000000000000000")
+    })
     
     it('renounceOwner cannot be used before delay', async () => {
       await factory.startRenounceOwnership();
+      await expect(factory.renounceOwnership()).to.be.reverted;
+    })
+
+    it('stopRenounceOwnership works correct', async () => {
+      await factory.startRenounceOwnership();
+      await factory.stopRenounceOwnership();
+      expect(await factory.renounceOwnershipStartTimestamp()).to.eq(0)
+    })
+
+    it('stopRenounceOwnership doesnt works without start', async () => {
+      await expect(factory.stopRenounceOwnership()).to.be.reverted;
+    })
+
+    it('stopRenounceOwnership emits event', async () => {
+      await factory.startRenounceOwnership();
+      await expect(factory.stopRenounceOwnership())
+        .to.emit(factory, 'RenounceOwnershipStop')
+    })
+    
+    it('renounceOwnership doesnt works without start', async () => {
       await expect(factory.renounceOwnership()).to.be.reverted;
     })
 
@@ -174,4 +204,92 @@ describe('AlgebraFactory', () => {
       expect(await factory.pendingOwner()).to.be.eq(ZERO_ADDRESS);
     })
   })
+
+  describe('#setDefaultCommunityFee', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.reverted
+    })
+
+    it('fails if new community fee greate than max fee', async () => {
+      await expect(factory.setDefaultCommunityFee(1100)).to.be.reverted
+    })
+
+    it('fails if new community fee eq current', async () => {
+      await expect(factory.setDefaultCommunityFee(0)).to.be.reverted
+    })
+
+    it('works correct', async () => {
+      await factory.setDefaultCommunityFee(60)
+      expect(await factory.defaultCommunityFee()).to.eq(60)
+    })
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultCommunityFee(60))
+        .to.emit(factory, 'DefaultCommunityFee')
+        .withArgs(60)
+    })
+  })
+
+  describe('#setDefaultTickspacing', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.reverted
+    })
+
+    it('fails if new community fee greate than max fee & lt min fee', async () => {
+      await expect(factory.setDefaultTickspacing(1100)).to.be.reverted
+      await expect(factory.setDefaultTickspacing(-1100)).to.be.reverted
+    })
+
+    it('fails if new community fee eq current', async () => {
+      await expect(factory.setDefaultTickspacing(60)).to.be.reverted
+    })
+
+    it('works correct', async () => {
+      await factory.setDefaultTickspacing(50)
+      expect(await factory.defaultTickspacing()).to.eq(50)
+    })
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultTickspacing(50))
+        .to.emit(factory,'DefaultTickspacing')
+        .withArgs(50)
+    })
+  })
+
+  describe('#setDefaultCommunityFee', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.reverted
+    })
+
+    it('fails if new community fee greate than max fee', async () => {
+      await expect(factory.setDefaultCommunityFee(1100)).to.be.reverted
+    })
+
+    it('fails if new community fee eq current', async () => {
+      await expect(factory.setDefaultCommunityFee(0)).to.be.reverted
+    })
+
+    it('works correct', async () => {
+      await factory.setDefaultCommunityFee(60)
+      expect(await factory.defaultCommunityFee()).to.eq(60)
+    })
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultCommunityFee(60))
+        .to.emit(factory, 'DefaultCommunityFee')
+        .withArgs(60)
+    })
+  })
+
+  it('hasRoleOrOwner', async () => {
+    expect(await factory.hasRoleOrOwner("0x0000000000000000000000000000000000000000000000000000000000000000", wallet.address)).to.eq(true)
+    expect(await factory.hasRoleOrOwner("0x0000000000000000000000000000000000000000000000000000000000000000", other.address)).to.eq(false)
+  })
+
+  it('defaultConfigurationForPool', async () => {
+    const {communityFee, tickSpacing} = await factory.defaultConfigurationForPool()
+    expect(communityFee).to.eq(0)
+    expect(tickSpacing).to.eq(60)
+  })
+
 })
