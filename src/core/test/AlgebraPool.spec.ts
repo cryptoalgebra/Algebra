@@ -30,6 +30,7 @@ import {
 } from './shared/utilities'
 import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee'
 import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee'
+import { MockPoolPlugin} from "../typechain/test/MockPoolPlugin";
 import { TickMathTest } from '../typechain/test/TickMathTest'
 import { TestVirtualPool } from '../typechain/test/TestVirtualPool'
 import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest'
@@ -2065,7 +2066,68 @@ describe('AlgebraPool', () => {
         await expect(pool.setTickSpacing(60)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
       })
     })
+    
+    describe('#plugin', () => {
+      let poolPlugin : MockPoolPlugin
+      beforeEach('create plugin', async () => {
+        const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin')
+        poolPlugin = (await MockPoolPluginFactory.deploy(pool.address)) as MockPoolPlugin
+        await pool.setPlugin(poolPlugin.address)
+        await pool.setPluginConfig(127)
+      })
   
+      it('before initialize hook is called', async () => {
+          await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.emit(poolPlugin, 'BeforeInitialize').withArgs(wallet.address, encodePriceSqrt(1,1))
+      })
+
+      it('after initialize hook is called', async () => {
+        await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.emit(poolPlugin, 'AfterInitialize').withArgs(wallet.address, encodePriceSqrt(1,1), 0)
+      })
+
+      it('before pos modify hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'BeforeModifyPosition').withArgs(swapTarget.address)
+      })
+
+      it('after pos modify hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'AfterModifyPosition').withArgs(swapTarget.address)
+      })
+
+      it('before swap hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(swapExact0For1(10000, wallet.address)).to.be.emit(poolPlugin, 'BeforeSwap').withArgs(swapTarget.address)
+      })
+
+      it('after swap hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(swapExact0For1(10000, wallet.address)).to.be.emit(poolPlugin, 'AfterSwap').withArgs(swapTarget.address)
+      })
+
+      it('before flash hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(flash(100, 200, other.address)).to.be.emit(poolPlugin, 'BeforeFlash').withArgs(swapTarget.address, 100, 200)
+      })
+
+      it('after flash hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(flash(100, 200, other.address)).to.be.emit(poolPlugin, 'AfterFlash').withArgs(swapTarget.address, 100, 200)
+      })
+
+      it('hooks are disabled after a config change', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(flash(100, 200, other.address)).to.be.emit(poolPlugin, 'AfterFlash').withArgs(swapTarget.address, 100, 200)
+        await pool.setPluginConfig(95)
+        await expect(flash(100, 200, other.address)).not.to.be.emit(poolPlugin, 'AfterFlash')
+      })
+
+    })
+
     describe('#setPlugin', () => {
       beforeEach('initialize the pool', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))

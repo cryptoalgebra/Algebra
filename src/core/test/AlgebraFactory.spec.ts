@@ -3,6 +3,7 @@ import { ethers } from 'hardhat'
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory } from '../typechain/AlgebraFactory'
 import { AlgebraPoolDeployer } from "../typechain/AlgebraPoolDeployer";
+import { MockDefaultPluginFactory} from "../typechain/test/MockDefaultPluginFactory";
 import { expect } from './shared/expect'
 import { ZERO_ADDRESS } from "./shared/fixtures";
 import snapshotGasCost from './shared/snapshotGasCost'
@@ -23,6 +24,8 @@ describe('AlgebraFactory', () => {
   let factory: AlgebraFactory
   let poolDeployer: AlgebraPoolDeployer
   let poolBytecode: string
+  let defaultPluginFactory: MockDefaultPluginFactory
+
   const fixture = async () => {
     const [deployer] = await ethers.getSigners();
     // precompute
@@ -35,6 +38,9 @@ describe('AlgebraFactory', () => {
     const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
 
     const vaultAddress = await _factory.communityVault();
+
+    const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory')
+    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as MockDefaultPluginFactory
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
     poolDeployer = (await poolDeployerFactory.deploy(_factory.address, vaultAddress)) as AlgebraPoolDeployer
@@ -102,6 +108,17 @@ describe('AlgebraFactory', () => {
 
     it('succeeds if tokens are passed in reverse', async () => {
       await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
+    })
+
+    it('succeeds if defaultPluginFactory setted', async () => {
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      await factory.setDefaultPluginFactory(defaultPluginFactory.address)
+      await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
+
+
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool')
+      let pool = poolContractFactory.attach(poolAddress)
+      expect(await pool.defaultPluginFactory()).to.eq(defaultPluginFactory.address)
     })
 
     it('fails if trying to create via pool deployer directly', async () => {
