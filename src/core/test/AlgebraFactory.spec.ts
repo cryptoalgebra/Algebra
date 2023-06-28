@@ -112,7 +112,7 @@ describe('AlgebraFactory', () => {
 
     it('succeeds if defaultPluginFactory setted', async () => {
       await factory.setDefaultPluginFactory(defaultPluginFactory.address)
-      await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]])
 
       let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
       let pluginAddress = await defaultPluginFactory.pluginsForPools(poolAddress)

@@ -89,7 +89,7 @@ describe('AlgebraPool', () => {
         swapExact1For0SupportingFee,
         swap1ForExact0,
         mint,
-        flash
+        flash,
       } = createPoolFunctions({
         token0,
         token1,
@@ -1754,6 +1754,38 @@ describe('AlgebraPool', () => {
       await expect(flash(100, 0, other.address)).to.emit(token0, 'Transfer')
       .withArgs(pool.address, other.address, 100)
       await expect(flash(100, 100, other.address)).to.be.revertedWithCustomError(pool, 'transferFailed')
+    })
+
+    it('flash overflows communityFee0', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1))
+      await pool.setCommunityFee(1000);
+
+      await token0.approve(swapTarget.address, constants.MaxUint256);
+      await token1.approve(swapTarget.address, constants.MaxUint256);
+
+      await flash(0, 0, wallet.address, 1, 1)
+      await flash(0, 0, wallet.address, MaxUint128, 0)
+      await flash(0, 0, wallet.address, 1, 1)
+
+      const [reserve0after, reserve1after] = await pool.getReserves();
+      expect(reserve0after).to.eq(0)
+      expect(reserve1after).to.eq(0)
+    })
+
+    it('flash overflows communityFee1', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1))
+      await pool.setCommunityFee(1000);
+
+      await token0.approve(swapTarget.address, constants.MaxUint256);
+      await token1.approve(swapTarget.address, constants.MaxUint256);
+
+      await flash(0, 0, wallet.address, 1, 1)
+      await flash(0, 0, wallet.address, 0, MaxUint128)
+      await flash(0, 0, wallet.address, 1, 1)
+
+      const [reserve0after, reserve1after] = await pool.getReserves();
+      expect(reserve0after).to.eq(0)
+      expect(reserve1after).to.eq(0)
     })
 
     describe('after liquidity added', () => {
