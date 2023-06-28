@@ -1611,29 +1611,6 @@ describe('AlgebraPool', () => {
           expect((await pool.globalState()).tick).to.eq(-120198)
         })
       })
-
-      describe('setTickSpacing', () => {
-
-        beforeEach('add some tokens', async () => {
-          await initializeAtZeroTick(pool)
-        })
-
-        it('setTickspacing works', async () => {
-          await pool.setTickSpacing(100)
-          expect(await pool.tickSpacing()).to.eq(100)
-        })
-        it('setTickspacing can be called only by owner', async () => {
-          await expect(pool.connect(other).setTickSpacing(100)).to.be.reverted
-        })
-        it('cannot setTickSpacing gt 500 & lt 1', async () => {
-          await expect(pool.setTickSpacing(600)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
-          await expect(pool.setTickSpacing(-20)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
-          await expect(pool.setTickSpacing(0)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
-        })
-        it('cannot set same value', async () => {
-          await expect(pool.setTickSpacing(60)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
-        })
-      })
   })
 
   it('tickMath handles tick overflow', async() => {
@@ -1953,51 +1930,116 @@ describe('AlgebraPool', () => {
     })
   })
 
-  describe('#setCommunityFee', () => {
-    beforeEach('initialize the pool', async () => {
-      await pool.initialize(encodePriceSqrt(1, 1))
+  describe('PermissionedActions', async () => {
+    describe('#setCommunityFee', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+      })
+  
+      it('can only be called by factory owner', async () => {
+        await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted
+      })
+      it('fails if fee is gt 100%', async () => {
+        await expect(pool.setCommunityFee(1004)).to.be.reverted
+      })
+      it('succeeds for fee 25%', async () => {
+        await pool.setCommunityFee(250)
+      })
+      it('succeeds for fee of 10%', async () => {
+        await pool.setCommunityFee(100)
+      })
+      it('sets community fee', async () => {
+        await pool.setCommunityFee(140)
+        expect((await pool.globalState()).communityFee).to.eq(140)
+      })
+      it('can change community fee', async () => {
+        await pool.setCommunityFee(140)
+        await pool.setCommunityFee(200)
+        expect((await pool.globalState()).communityFee).to.eq(200)
+      })
+      it('can turn off community fee', async () => {
+        await pool.setCommunityFee(250)
+        await pool.setCommunityFee(0)
+        expect((await pool.globalState()).communityFee).to.eq(0)
+      })
+      it('emits an event when turned on', async () => {
+        await expect(pool.setCommunityFee(140)).to.be.emit(pool, 'CommunityFee').withArgs(140)
+      })
+      it('emits an event when turned off', async () => {
+        await pool.setCommunityFee(140)
+        await expect(pool.setCommunityFee(0)).to.be.emit(pool, 'CommunityFee').withArgs(0)
+      })
+      it('emits an event when changed', async () => {
+        await pool.setCommunityFee(250)
+        await expect(pool.setCommunityFee(170)).to.be.emit(pool, 'CommunityFee').withArgs(170)
+      })
+      it('fails if unchanged', async () => {
+        await pool.setCommunityFee(200)
+        await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
+      })
     })
 
-    it('can only be called by factory owner', async () => {
-      await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted
+    describe('#setTickSpacing', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+      })
+
+      it('setTickspacing works', async () => {
+        await pool.setTickSpacing(100)
+        expect(await pool.tickSpacing()).to.eq(100)
+      })
+      it('setTickspacing can be called only by owner', async () => {
+        await expect(pool.connect(other).setTickSpacing(100)).to.be.reverted
+      })
+      it('cannot setTickSpacing gt 500 & lt 1', async () => {
+        await expect(pool.setTickSpacing(600)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+        await expect(pool.setTickSpacing(-20)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+        await expect(pool.setTickSpacing(0)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+      })
+      it('cannot set same value', async () => {
+        await expect(pool.setTickSpacing(60)).to.be.revertedWithCustomError(pool, "invalidNewTickSpacing")
+      })
     })
-    it('fails if fee is gt 100%', async () => {
-      await expect(pool.setCommunityFee(1004)).to.be.reverted
+  
+    describe('#setPlugin', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+      })
+      it('can only be called by factory owner or administrator', async () => {
+        await expect(pool.connect(other).setPlugin(other.address)).to.be.reverted
+      })
+      it('emits an event when changed', async () => {
+        await expect(pool.setPlugin(other.address)).to.be.emit(pool, 'Plugin').withArgs(other.address)
+      })
     })
-    it('succeeds for fee 25%', async () => {
-      await pool.setCommunityFee(250)
+
+    describe('#setPluginConfig', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+      })
+      it('cannot be called by usual user', async () => {
+        await expect(pool.connect(other).setPluginConfig(1)).to.be.reverted
+      })
+      it('can be called by plugin', async () => {
+        await pool.setPlugin(other.address);
+        await expect(pool.connect(other).setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1)
+      })
+      it('emits an event when changed', async () => {
+        await expect(pool.setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1)
+      })
     })
-    it('succeeds for fee of 10%', async () => {
-      await pool.setCommunityFee(100)
-    })
-    it('sets community fee', async () => {
-      await pool.setCommunityFee(140)
-      expect((await pool.globalState()).communityFee).to.eq(140)
-    })
-    it('can change community fee', async () => {
-      await pool.setCommunityFee(140)
-      await pool.setCommunityFee(200)
-      expect((await pool.globalState()).communityFee).to.eq(200)
-    })
-    it('can turn off community fee', async () => {
-      await pool.setCommunityFee(250)
-      await pool.setCommunityFee(0)
-      expect((await pool.globalState()).communityFee).to.eq(0)
-    })
-    it('emits an event when turned on', async () => {
-      await expect(pool.setCommunityFee(140)).to.be.emit(pool, 'CommunityFee').withArgs(140)
-    })
-    it('emits an event when turned off', async () => {
-      await pool.setCommunityFee(140)
-      await expect(pool.setCommunityFee(0)).to.be.emit(pool, 'CommunityFee').withArgs(0)
-    })
-    it('emits an event when changed', async () => {
-      await pool.setCommunityFee(250)
-      await expect(pool.setCommunityFee(170)).to.be.emit(pool, 'CommunityFee').withArgs(170)
-    })
-    it('fails if unchanged', async () => {
-      await pool.setCommunityFee(200)
-      await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
+
+    describe('#setFee', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+      })
+      it('cannot be called by usual user', async () => {
+        await expect(pool.connect(other).setFee(1)).to.be.reverted
+      })
+      it('can be called by plugin', async () => {
+        await pool.setPlugin(other.address);
+        await expect(pool.connect(other).setFee(1)).to.be.emit(pool, 'Fee').withArgs(1)
+      })
     })
   })
 
