@@ -18,6 +18,140 @@ describe('PriceMovementMath', () => {
   })
 
   describe('#movePriceTowardsTarget', () => {
+    it('revert cases', async () => {
+      const price = encodePriceSqrt(1, 1)
+      const priceTarget = encodePriceSqrt(101, 100)
+      const liquidity = BigNumber.from(2).pow(128).sub(1);
+      const amount = expandTo18Decimals(1)
+      const fee = 600
+      const zeroToOne = false
+
+      expect(PriceMovementMath.movePriceTowardsTarget(
+        0,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )).to.be.revertedWithoutReason
+
+      expect(PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        0,
+        amount,
+        fee
+      )).to.be.revertedWithoutReason
+    })
+
+    it('handles amountAvailable underflow', async () => {
+      const price = encodePriceSqrt(1, 1)
+      const priceTarget = encodePriceSqrt(101, 100)
+      const liquidity = expandTo18Decimals(2)
+      const amount = '-57896044618658097711785492504343953926634992332820282019728792003956564819968';
+      const fee = 600
+      const zeroToOne = false
+
+      await expect(PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )).to.be.revertedWithCustomError(PriceMovementMath, 'invalidAmountRequired')
+    })
+
+    it('handles max liquidity', async () => {
+      const price = encodePriceSqrt(1, 1)
+      const priceTarget = encodePriceSqrt(101, 100)
+      const liquidity = BigNumber.from(2).pow(128).sub(1);
+      const amount = expandTo18Decimals(1)
+      const fee = 600
+      const zeroToOne = false
+
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )
+
+      expect(amountIn).to.eq('999399998850334720')
+      expect(feeAmount).to.eq('600001149665280')
+      expect(amountOut).to.eq('999399998850334719')
+      expect(amountIn.add(feeAmount), 'entire amount is used').to.be.eq(amount)
+      expect(sqrtQ).to.not.eq(priceTarget)
+    })
+
+    it('handles max liquidity and huge amount', async () => {
+      const price = encodePriceSqrt(1, 1)
+      const priceTarget = 1
+      const liquidity = BigNumber.from(2).pow(128).sub(1);
+      const amount = BigNumber.from(2).pow(128).sub(1)
+      const fee = 0
+      const zeroToOne = false
+
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )
+
+      expect(amountIn).to.eq('340282366920938463463374607431768211455')
+      expect(feeAmount).to.eq('0')
+      expect(amountOut).to.eq('170141183460469231731687303715884105727')
+      expect(amountIn.add(feeAmount), 'entire amount is used').to.be.eq(amount)
+      expect(sqrtQ).to.not.eq(priceTarget)
+    })
+
+    it('handles shifted liquidity internal overflow', async () => {
+      const price = '1461446703485210103287273052203988822378723970342'
+      const priceTarget = '4295128739'
+      const liquidity = BigNumber.from(2).pow(128).sub(1);
+      const amount = '79231140595944432132633395119'
+      const fee = 0
+      const zeroToOne = false
+
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )
+
+      expect(amountIn).to.eq('79231140595944432132633395118')
+      expect(feeAmount).to.eq('1')
+      expect(amountOut).to.eq('6276865794854539910162679325510021897617750978755115584760')
+      expect(amountIn.add(feeAmount), 'entire amount is used').to.be.eq(amount)
+      expect(sqrtQ).to.not.eq(priceTarget)
+    })
+
+    it('handles max liquidity and huge amount at max price', async () => {
+      const price = '1461446703485210103287273052203988822378723970342'
+      const priceTarget = '4295128739'
+      const liquidity = BigNumber.from(2).pow(128).sub(1);
+      const amount = BigNumber.from(2).pow(128).sub(1)
+      const fee = 0
+      const zeroToOne = false
+
+      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+        price,
+        priceTarget,
+        liquidity,
+        amount,
+        fee
+      )
+
+      expect(amountIn).to.eq('340282366920938463463374607431203982080')
+      expect(amountOut).to.eq('6276865796315986612967337485317294249402799158149117772694')
+      expect(feeAmount).to.eq('564229375') // TODO lost precision
+      expect(amountIn.add(feeAmount), 'entire amount is used').to.be.eq(amount)
+      expect(sqrtQ).to.not.eq(priceTarget)
+    })
+    
     it('exact amount in that gets capped at price target in one for zero', async () => {
       const price = encodePriceSqrt(1, 1)
       const priceTarget = encodePriceSqrt(101, 100)
