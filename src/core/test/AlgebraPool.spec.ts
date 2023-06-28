@@ -2076,43 +2076,67 @@ describe('AlgebraPool', () => {
         await pool.setPluginConfig(127)
       })
   
-      it('before initialize hook is called', async () => {
+      it('before initialize the hook is called', async () => {
           await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.emit(poolPlugin, 'BeforeInitialize').withArgs(wallet.address, encodePriceSqrt(1,1))
       })
 
-      it('after initialize hook is called', async () => {
+      it('after initialize the hook is called', async () => {
         await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.emit(poolPlugin, 'AfterInitialize').withArgs(wallet.address, encodePriceSqrt(1,1), 0)
       })
 
-      it('before pos modify hook is called', async () => {
+      it('before mint the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'BeforeModifyPosition').withArgs(swapTarget.address)
       })
 
-      it('after pos modify hook is called', async () => {
+      it('after mint the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'AfterModifyPosition').withArgs(swapTarget.address)
       })
 
-      it('before swap hook is called', async () => {
+      it('before burn the hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'BeforeModifyPosition').withArgs(wallet.address)
+      })
+
+      it('after burn the hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'AfterModifyPosition').withArgs(wallet.address)
+      })
+
+      it('before swap fee on transfer tokens the hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(swapExact1For0SupportingFee(10000, wallet.address)).to.be.emit(poolPlugin, 'BeforeSwap').withArgs(swapTarget.address)
+      })
+
+      it('after swap fee on transfer tokens the hook is called', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(swapExact1For0SupportingFee(10000, wallet.address)).to.be.emit(poolPlugin, 'AfterSwap').withArgs(swapTarget.address)
+      })
+
+      it('before swap the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
         await expect(swapExact0For1(10000, wallet.address)).to.be.emit(poolPlugin, 'BeforeSwap').withArgs(swapTarget.address)
       })
 
-      it('after swap hook is called', async () => {
+      it('after swap the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
         await expect(swapExact0For1(10000, wallet.address)).to.be.emit(poolPlugin, 'AfterSwap').withArgs(swapTarget.address)
       })
 
-      it('before flash hook is called', async () => {
+      it('before flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
         await expect(flash(100, 200, other.address)).to.be.emit(poolPlugin, 'BeforeFlash').withArgs(swapTarget.address, 100, 200)
       })
 
-      it('after flash hook is called', async () => {
+      it('after flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
         await expect(flash(100, 200, other.address)).to.be.emit(poolPlugin, 'AfterFlash').withArgs(swapTarget.address, 100, 200)
