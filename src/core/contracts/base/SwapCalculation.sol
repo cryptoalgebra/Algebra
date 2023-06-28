@@ -32,7 +32,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   struct PriceMovementCache {
     uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
     int24 nextTick; // The tick till the current step goes
-    bool initialized; // True if the _nextTick_ is initialized
     uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
@@ -78,7 +77,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
         step.stepSqrtPrice = currentPrice;
-        step.initialized = true; // TODO WHY?
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
@@ -108,37 +106,36 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
+        // min or max tick can not be crossed due to limitSqrtPrice check
         if (currentPrice == step.nextTickPrice) {
           // if the reached tick is initialized then we need to cross it
-          if (step.initialized) {
-            if (!cache.crossedAnyTick) {
-              cache.crossedAnyTick = true;
-              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
-              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
-            }
-
-            int128 liquidityDelta;
-            if (zeroToOne) {
-              liquidityDelta = -ticks.cross(
-                step.nextTick,
-                cache.totalFeeGrowth, // A == 0
-                cache.totalFeeGrowthB, // B == 1
-                cache.secondsPerLiquidityCumulative,
-                cache.blockTimestamp
-              );
-              cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
-            } else {
-              liquidityDelta = ticks.cross(
-                step.nextTick,
-                cache.totalFeeGrowthB, // B == 0
-                cache.totalFeeGrowth, // A == 1
-                cache.secondsPerLiquidityCumulative,
-                cache.blockTimestamp
-              );
-              cache.prevInitializedTick = step.nextTick;
-            }
-            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+          if (!cache.crossedAnyTick) {
+            cache.crossedAnyTick = true;
+            cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
+            cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
+
+          int128 liquidityDelta;
+          if (zeroToOne) {
+            liquidityDelta = -ticks.cross(
+              step.nextTick,
+              cache.totalFeeGrowth, // A == 0
+              cache.totalFeeGrowthB, // B == 1
+              cache.secondsPerLiquidityCumulative,
+              cache.blockTimestamp
+            );
+            cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
+          } else {
+            liquidityDelta = ticks.cross(
+              step.nextTick,
+              cache.totalFeeGrowthB, // B == 0
+              cache.totalFeeGrowth, // A == 1
+              cache.secondsPerLiquidityCumulative,
+              cache.blockTimestamp
+            );
+            cache.prevInitializedTick = step.nextTick;
+          }
+          currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
 
           (currentTick, step.nextTick) = zeroToOne
             ? (step.nextTick - 1, cache.prevInitializedTick)
