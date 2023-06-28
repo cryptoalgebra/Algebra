@@ -936,6 +936,40 @@ describe('AlgebraPool', () => {
     })
   })
 
+  describe('#swaps', () => {
+    describe('#swap', async () => {
+      it('fails if not initialized', async () => {
+        expect(swapToLowerPrice(encodePriceSqrt(1, 5), other.address)).to.be.revertedWithoutReason
+      })
+      describe('after initialization', () => {
+        beforeEach('initialize the pool at price of 10:1', async () => {
+          await pool.initialize(encodePriceSqrt(1, 10))
+          await mint(wallet.address, minTick, maxTick, 3161)
+        })
+
+        it('fails if required int256.min', async () => {
+          expect(pool.swap(other.address, true, '-57896044618658097711785492504343953926634992332820282019728792003956564819968', 0)).to.be.revertedWithCustomError(pool, 'invalidAmountRequired')
+        })
+      })
+    })
+
+    describe('#swapSupportingFeeOnInputTokens', async () => {
+      it('fails if not initialized', async () => {
+        expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithoutReason
+      })
+      describe('after initialization', () => {
+        beforeEach('initialize the pool at price of 10:1', async () => {
+          await pool.initialize(encodePriceSqrt(1, 10))
+          await mint(wallet.address, minTick, maxTick, 3161)
+        })
+
+        it('fails if required negative amount', async () => {
+          expect(pool.swapSupportingFeeOnInputTokens(other.address, true, '-1', 0)).to.be.revertedWithCustomError(pool, 'invalidAmountRequired')
+        })
+      })
+    })
+  })
+
   describe('#collect', () => {
     beforeEach(async () => {
       pool = await createPoolWrapped()
