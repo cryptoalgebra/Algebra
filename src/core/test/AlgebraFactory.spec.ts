@@ -39,11 +39,11 @@ describe('AlgebraFactory', () => {
 
     const vaultAddress = await _factory.communityVault();
 
-    const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory')
-    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as MockDefaultPluginFactory
-
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer')
     poolDeployer = (await poolDeployerFactory.deploy(_factory.address, vaultAddress)) as AlgebraPoolDeployer
+
+    const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory')
+    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as MockDefaultPluginFactory
 
     return _factory;
   }
@@ -111,14 +111,15 @@ describe('AlgebraFactory', () => {
     })
 
     it('succeeds if defaultPluginFactory setted', async () => {
-      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
       await factory.setDefaultPluginFactory(defaultPluginFactory.address)
       await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
 
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      let pluginAddress = await defaultPluginFactory.pluginsForPools(poolAddress)
 
       const poolContractFactory = await ethers.getContractFactory('AlgebraPool')
       let pool = poolContractFactory.attach(poolAddress)
-      expect(await pool.defaultPluginFactory()).to.eq(defaultPluginFactory.address)
+      expect(await pool.plugin()).to.be.eq(pluginAddress)
     })
 
     it('fails if trying to create via pool deployer directly', async () => {
