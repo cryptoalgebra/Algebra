@@ -147,7 +147,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         }
         // check stop condition
         if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
-          break;
+          break; // TODO recheck if on tick
         }
       }
 

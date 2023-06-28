@@ -29,6 +29,7 @@ const { constants } = ethers
 interface BaseSwapTestCase {
   zeroToOne: boolean
   sqrtPriceLimit?: BigNumber
+  targetTick?: number
 }
 interface SwapExact0For1TestCase extends BaseSwapTestCase {
   zeroToOne: true
@@ -58,11 +59,11 @@ interface Swap1ForExact0TestCase extends BaseSwapTestCase {
 }
 interface SwapToHigherPrice extends BaseSwapTestCase {
   zeroToOne: false
-  sqrtPriceLimit: BigNumber
+  sqrtPriceLimit?: BigNumber
 }
 interface SwapToLowerPrice extends BaseSwapTestCase {
   zeroToOne: true
-  sqrtPriceLimit: BigNumber
+  sqrtPriceLimit?: BigNumber
 }
 type SwapTestCase =
   | SwapExact0For1TestCase
@@ -93,10 +94,18 @@ function swapCaseToDescription(testCase: SwapTestCase): string {
       }
     }
   } else {
-    if (testCase.zeroToOne) {
-      return `swap token0 for token1${priceClause}`
+    if ('sqrtPriceLimit' in testCase) {
+      if (testCase.zeroToOne) {
+        return `swap token0 for token1${priceClause}`
+      } else {
+        return `swap token1 for token0${priceClause}`
+      }
     } else {
-      return `swap token1 for token0${priceClause}`
+      if (testCase.zeroToOne) {
+        return `swap token0 for token1 to tick ${testCase.targetTick}`
+      } else {
+        return `swap token1 for token0 to tick ${testCase.targetTick}`
+      }     
     }
   }
 }
@@ -110,7 +119,8 @@ const POSITION_PROCEEDS_OUTPUT_ADDRESS = constants.AddressZero.slice(0, -1) + '2
 async function executeSwap(
   pool: MockTimeAlgebraPool,
   testCase: SwapTestCase,
-  poolFunctions: PoolFunctions
+  poolFunctions: PoolFunctions,
+  testCallee: TestAlgebraCallee
 ): Promise<ContractTransaction> {
   let swap: ContractTransaction
   if ('exactOut' in testCase) {
@@ -136,10 +146,16 @@ async function executeSwap(
       }
     }
   } else {
-    if (testCase.zeroToOne) {
-      swap = await poolFunctions.swapToLowerPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
+    let targetPrice;
+    if ('sqrtPriceLimit' in testCase) {
+      targetPrice = testCase.sqrtPriceLimit;
     } else {
-      swap = await poolFunctions.swapToHigherPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
+      targetPrice = testCallee.getPriceAtTick(testCase.targetTick);
+    }
+    if (testCase.zeroToOne) {
+      swap = await poolFunctions.swapToLowerPrice(targetPrice, SWAP_RECIPIENT_ADDRESS)
+    } else {
+      swap = await poolFunctions.swapToHigherPrice(targetPrice, SWAP_RECIPIENT_ADDRESS)
     }
   }
   return swap
@@ -266,7 +282,16 @@ const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
   {
     sqrtPriceLimit: MIN_SQRT_RATIO,
     zeroToOne: true,
-  }
+  },
+  // swap to tick using priceLimit
+  {
+    targetTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+    zeroToOne: true,
+  },
+  {
+    targetTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+    zeroToOne: false,
+  },
 ]
 
 interface Position {
@@ -565,7 +590,7 @@ describe('AlgebraPool swap tests', () => {
           )
 
           const globalState = await pool.globalState()
-          const tx = executeSwap(pool, testCase, poolFunctions)
+          const tx = executeSwap(pool, testCase, poolFunctions, swapTarget)
           try {
             await tx
           } catch (error: any) {
