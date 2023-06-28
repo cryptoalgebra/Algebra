@@ -208,6 +208,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests 1:1 price, 0 liquidity, all liquidity around current price swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "1994009290088178439",
+  "poolBalance1": "1994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests 1:1 price, 0 liquidity, all liquidity around current price swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "1994009290088178439",
@@ -305,6 +315,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "19674864276345186078164474358341856",
+}
+`;
+
+exports[`AlgebraPool swap tests 1:1 price, 0 liquidity, all liquidity around current price swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "1994009290088178439",
+  "poolBalance1": "1994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -516,6 +536,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests 1:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "2000000000000000000",
@@ -613,6 +643,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "19777107371808577101544891766017400",
+}
+`;
+
+exports[`AlgebraPool swap tests 1:1 price, 2e18 max range liquidity swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "2000000000000000000",
+  "poolBalance1": "2000000000000000000",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -824,6 +864,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests 1:1 price, additional liquidity around current price swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "3994009290088178439",
+  "poolBalance1": "3994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests 1:1 price, additional liquidity around current price swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "3994009290088178439",
@@ -921,6 +971,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "19777107371808577101544891766017400",
+}
+`;
+
+exports[`AlgebraPool swap tests 1:1 price, additional liquidity around current price swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "3994009290088178439",
+  "poolBalance1": "3994009290088178439",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -1120,6 +1180,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests 1:10 price, 2e18 max range liquidity swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -23028,
+}
+`;
+
 exports[`AlgebraPool swap tests 1:10 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "poolBalance0": "6324555320336758664",
@@ -1217,6 +1287,16 @@ Object {
   "tickBefore": -23028,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "43046997782310388363881342758145240",
+}
+`;
+
+exports[`AlgebraPool swap tests 1:10 price, 2e18 max range liquidity swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "6324555320336758664",
+  "poolBalance1": "632455532033675867",
+  "poolPriceBefore": "0.10000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -23028,
 }
 `;
 
@@ -1422,6 +1502,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests 10:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 23027,
+}
+`;
+
 exports[`AlgebraPool swap tests 10:1 price, 2e18 max range liquidity swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "632455532033675867",
@@ -1507,6 +1597,16 @@ Object {
 `;
 
 exports[`AlgebraPool swap tests 10:1 price, 2e18 max range liquidity swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "632455532033675867",
+  "poolBalance1": "6324555320336758664",
+  "poolPriceBefore": "10.000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 23027,
+}
+`;
+
+exports[`AlgebraPool swap tests 10:1 price, 2e18 max range liquidity swap token1 for token0 to price 3.4026e+38 1`] = `
 Object {
   "poolBalance0": "632455532033675867",
   "poolBalance1": "6324555320336758664",
@@ -1718,6 +1818,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests close to max price swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 880340,
+}
+`;
+
 exports[`AlgebraPool swap tests close to max price swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "1",
@@ -1803,6 +1913,16 @@ Object {
 `;
 
 exports[`AlgebraPool swap tests close to max price swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "1",
+  "poolBalance1": "26087635650665564424699143612505016738",
+  "poolPriceBefore": "1.7014e+38",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 880340,
+}
+`;
+
+exports[`AlgebraPool swap tests close to max price swap token1 for token0 to price 3.4026e+38 1`] = `
 Object {
   "poolBalance0": "1",
   "poolBalance1": "26087635650665564424699143612505016738",
@@ -2008,6 +2128,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests close to min price swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -880303,
+}
+`;
+
 exports[`AlgebraPool swap tests close to min price swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "poolBalance0": "26037782196502120275425782622539039026",
@@ -2105,6 +2235,16 @@ Object {
   "tickBefore": -880303,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "53808747227888027990147543564989484",
+}
+`;
+
+exports[`AlgebraPool swap tests close to min price swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "26037782196502120275425782622539039026",
+  "poolBalance1": "1",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -880303,
 }
 `;
 
@@ -2286,6 +2426,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 887271,
+}
+`;
+
 exports[`AlgebraPool swap tests initialized at the max ratio swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "0",
@@ -2359,6 +2509,16 @@ Object {
 `;
 
 exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for token0 to price 2.5000 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "36796311329002736532545403775337522448",
+  "poolPriceBefore": "3.4026e+38",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 887271,
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the max ratio swap token1 for token0 to price 3.4026e+38 1`] = `
 Object {
   "poolBalance0": "0",
   "poolBalance1": "36796311329002736532545403775337522448",
@@ -2528,6 +2688,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -887272,
+}
+`;
+
 exports[`AlgebraPool swap tests initialized at the min ratio swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "poolBalance0": "36796311322104302062438284732106019258",
@@ -2625,6 +2795,16 @@ Object {
   "tickBefore": -887272,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "53808747227888027990147543564989484",
+}
+`;
+
+exports[`AlgebraPool swap tests initialized at the min ratio swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "36796311322104302062438284732106019258",
+  "poolBalance1": "0",
+  "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": -887272,
 }
 `;
 
@@ -2836,6 +3016,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests large liquidity around current price (stable swap) swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "999700069986003",
+  "poolBalance1": "999700069986003",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests large liquidity around current price (stable swap) swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "999700069986003",
@@ -2933,6 +3123,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "17019223432426795735927308880868",
+}
+`;
+
+exports[`AlgebraPool swap tests large liquidity around current price (stable swap) swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "999700069986003",
+  "poolBalance1": "999700069986003",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -3144,6 +3344,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "40564824043007195765027393300202",
+  "poolBalance1": "40564824043007195765027393299788",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "40564824043007195765027393300202",
@@ -3241,6 +3451,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "19777107371808494847052532377419959",
+}
+`;
+
+exports[`AlgebraPool swap tests max full range liquidity at 1:1 price with default fee swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "40564824043007195765027393300202",
+  "poolBalance1": "40564824043007195765027393299788",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -3452,6 +3672,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests token0 liquidity only swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "1995041008271423675",
+  "poolBalance1": "0",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests token0 liquidity only swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "1995041008271423675",
@@ -3549,6 +3779,16 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "19777107371808577101544891766017400",
+}
+`;
+
+exports[`AlgebraPool swap tests token0 liquidity only swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "1995041008271423675",
+  "poolBalance1": "0",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
 
@@ -3760,6 +4000,16 @@ Object {
 }
 `;
 
+exports[`AlgebraPool swap tests token1 liquidity only swap token0 for token1 to price 0.0000000000000000000000000000000000000029390 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "1995041008271423675",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
+}
+`;
+
 exports[`AlgebraPool swap tests token1 liquidity only swap token0 for token1 to price 0.40000 1`] = `
 Object {
   "amount0Before": "0",
@@ -3857,5 +4107,15 @@ Object {
   "tickBefore": 0,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
+}
+`;
+
+exports[`AlgebraPool swap tests token1 liquidity only swap token1 for token0 to price 3.4026e+38 1`] = `
+Object {
+  "poolBalance0": "0",
+  "poolBalance1": "1995041008271423675",
+  "poolPriceBefore": "1.0000",
+  "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
+  "tickBefore": 0,
 }
 `;
