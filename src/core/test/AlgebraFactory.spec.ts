@@ -59,6 +59,11 @@ describe('AlgebraFactory', () => {
     expect(await factory.owner()).to.eq(wallet.address)
   })
 
+  it('cannot deploy factory with incorrent poolDeployer', async() => {
+    const factoryFactory = await ethers.getContractFactory('AlgebraFactory')
+    expect(factoryFactory.deploy(ethers.constants.AddressZero)).to.be.revertedWithoutReason;
+  })
+
   it('factory bytecode size  [ @skip-on-coverage ]', async () => {
     expect(((await ethers.provider.getCode(factory.address)).length - 2) / 2).to.matchSnapshot()
   })
@@ -281,9 +286,28 @@ describe('AlgebraFactory', () => {
     })
   })
 
+  describe('#setDefaultPluginFactory', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setDefaultPluginFactory(other.address)).to.be.reverted
+    })
+
+    it('fails if equals current value', async () => {
+      await expect(factory.setDefaultPluginFactory(ethers.constants.AddressZero)).to.be.reverted
+    })
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultPluginFactory(other.address))
+        .to.emit(factory, 'DefaultPluginFactory')
+        .withArgs(other.address)
+    })
+  })
+
   it('hasRoleOrOwner', async () => {
     expect(await factory.hasRoleOrOwner("0x0000000000000000000000000000000000000000000000000000000000000000", wallet.address)).to.eq(true)
     expect(await factory.hasRoleOrOwner("0x0000000000000000000000000000000000000000000000000000000000000000", other.address)).to.eq(false)
+
+    await factory.grantRole("0x0000000000000000000000000000000000000000000000000000000000000001", other.address);
+    expect(await factory.hasRoleOrOwner("0x0000000000000000000000000000000000000000000000000000000000000001", other.address)).to.eq(true)
   })
 
   it('defaultConfigurationForPool', async () => {
