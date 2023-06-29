@@ -33,7 +33,7 @@ contract TickTest {
     uint32 time,
     bool upper
   ) external returns (bool flipped) {
-    return ticks.update(tick, currentTick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, time, upper);
+    return ticks.update(tick, currentTick, liquidityDelta, totalFeeGrowth0Token, totalFeeGrowth1Token, upper);
   }
 
   function clear(int24 tick) external {
@@ -47,7 +47,7 @@ contract TickTest {
     uint160 secondsPerLiquidityCumulative,
     uint32 timestamp
   ) external returns (int128 liquidityDelta) {
-    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token, secondsPerLiquidityCumulative, timestamp);
+    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token);
   }
 
   function removeTick(int24 tick) external returns (int24) {

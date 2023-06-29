@@ -17,7 +17,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool crossedAnyTick; //  If we have already crossed at least one active tick
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
     int256 amountCalculated; // The additive amount of total output\input calculated through the swap
@@ -26,7 +25,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint32 blockTimestamp; // The timestamp of current block
   }
 
   struct PriceMovementCache {
@@ -65,10 +63,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth1Token;
       }
-
-      cache.blockTimestamp = _blockTimestamp();
-
-      _writeSecondsPerLiquidityCumulative(cache.blockTimestamp, currentLiquidity);
     }
 
     PriceMovementCache memory step;
@@ -111,7 +105,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           // if the reached tick is initialized then we need to cross it
           if (!cache.crossedAnyTick) {
             cache.crossedAnyTick = true;
-            cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
             cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
 
@@ -120,9 +113,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             liquidityDelta = -ticks.cross(
               step.nextTick,
               cache.totalFeeGrowth, // A == 0
-              cache.totalFeeGrowthB, // B == 1
-              cache.secondsPerLiquidityCumulative,
-              cache.blockTimestamp
+              cache.totalFeeGrowthB // B == 1
             );
             currentTick = step.nextTick - 1;
             cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
@@ -130,9 +121,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             liquidityDelta = ticks.cross(
               step.nextTick,
               cache.totalFeeGrowthB, // B == 0
-              cache.totalFeeGrowth, // A == 1
-              cache.secondsPerLiquidityCumulative,
-              cache.blockTimestamp
+              cache.totalFeeGrowth // A == 1
             );
             currentTick = step.nextTick;
             cache.prevInitializedTick = currentTick;

@@ -63,17 +63,12 @@ abstract contract Positions is AlgebraPoolBase {
       // scope to prevent "stack too deep"
       (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
-        uint32 time = _blockTimestamp();
-        uint160 _secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
-
         toggledBottom = ticks.update(
           bottomTick,
           currentTick,
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
-          _secondsPerLiquidityCumulative,
-          time,
           false // isTopTick: false
         );
 
@@ -83,8 +78,6 @@ abstract contract Positions is AlgebraPoolBase {
           liquidityDelta,
           _totalFeeGrowth0Token,
           _totalFeeGrowth1Token,
-          _secondsPerLiquidityCumulative,
-          time,
           true // isTopTick: true
         );
       }
@@ -119,7 +112,6 @@ abstract contract Positions is AlgebraPoolBase {
       (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
-        _writeSecondsPerLiquidityCumulative(_blockTimestamp(), liquidityBefore);
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
     }

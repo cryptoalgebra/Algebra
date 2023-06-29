@@ -102,31 +102,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
-  /// @dev Once per block updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal {
-    uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return; // writing should only happen once per block
-
-    unchecked {
-      // just timedelta if liquidity == 0
-      // overflow and underflow are desired
-      secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
-    lastTimepointTimestamp = blockTimestamp;
-  }
-
-  /// @dev Get secondsPerLiquidityCumulative accumulator value for current blockTimestamp
-  function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal view returns (uint160 _secPerLiqCumulative) {
-    uint32 _lastTs;
-    (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
-    unchecked {
-      if (_lastTs != blockTimestamp)
-        // just timedelta if liquidity == 0
-        // overflow and underflow are desired
-        _secPerLiqCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
-  }
-
   /// @dev Add or remove a tick to the corresponding data structure
   function _insertOrRemoveTick(
     int24 tick,

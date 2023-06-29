@@ -63,8 +63,6 @@ interface IAlgebraPoolState {
   /// @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
   /// @return prevTick The previous tick in tick list
   /// @return nextTick The next tick in tick list
-  /// @return outerSecondsPerLiquidity The seconds spent per liquidity on the other side of the tick from the current tick
-  /// @return outerSecondsSpent The seconds spent on the other side of the tick from the current tick
   /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
   /// a specific position.
   function ticks(
@@ -78,9 +76,7 @@ interface IAlgebraPoolState {
       uint256 outerFeeGrowth0Token,
       uint256 outerFeeGrowth1Token,
       int24 prevTick,
-      int24 nextTick,
-      uint160 outerSecondsPerLiquidity,
-      uint32 outerSecondsSpent
+      int24 nextTick
     );
 
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information

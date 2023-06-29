@@ -3,7 +3,6 @@ pragma solidity =0.8.17;
 pragma abicoder v1;
 
 import './base/AlgebraPoolBase.sol';
-import './base/DerivedState.sol';
 import './base/ReentrancyGuard.sol';
 import './base/Positions.sol';
 import './base/SwapCalculation.sol';
@@ -25,7 +24,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
 /// @dev Version: Algebra V2.1
-contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Positions, SwapCalculation, ReservesManager, TickStructure {
+contract AlgebraPool is AlgebraPoolBase, ReentrancyGuard, Positions, SwapCalculation, ReservesManager, TickStructure {
   using SafeCast for uint256;
   using SafeCast for uint128;
   using Plugins for uint8;
