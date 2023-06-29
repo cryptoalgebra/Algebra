@@ -3,6 +3,7 @@ pragma solidity =0.8.17;
 pragma abicoder v1;
 
 import '../interfaces/IAlgebraPlugin.sol';
+import '../interfaces/IAlgebraPool.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin {
   address public pool;
@@ -80,6 +81,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @return bytes4 The function selector for the hook
   function beforeFlash(address sender, uint256 amount0, uint256 amount1) external override returns (bytes4) {
     emit BeforeFlash(sender, amount0, amount1);
+    IAlgebraPool(pool).setFee(200);
     return IAlgebraPlugin.beforeFlash.selector;
   }
 

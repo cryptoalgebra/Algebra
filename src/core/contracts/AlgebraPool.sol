@@ -402,10 +402,11 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
+    uint8 pluginConfig = globalState.pluginConfig;
     if (msg.sender != plugin) {
       _checkIfAdministrator();
-      if (globalState.pluginConfig & Constants.DYNAMIC_FEE != 0) revert dynamicFeeActive();
-    }
+      if (pluginConfig & Constants.DYNAMIC_FEE != 0) revert dynamicFeeActive();
+    } else if (pluginConfig & Constants.DYNAMIC_FEE == 0) revert dynamicFeeDisabled();
     globalState.fee = newFee;
     emit Fee(newFee);
   }
