@@ -70,9 +70,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
           zeroToOne,
           currentPrice,
-          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
-            ? limitSqrtPrice
-            : step.nextTickPrice,
+          zeroToOne // move the price to the target or to the limit
+            ? PriceMovementMath.getMaxPrice(step.nextTickPrice, limitSqrtPrice)
+            : PriceMovementMath.getMinPrice(step.nextTickPrice, limitSqrtPrice),
           currentLiquidity,
           amountRequired,
           cache.fee

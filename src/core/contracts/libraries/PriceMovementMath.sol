@@ -14,6 +14,20 @@ library PriceMovementMath {
   using LowGasSafeMath for uint256;
   using SafeCast for uint256;
 
+  function getMaxPrice(uint160 priceA, uint160 priceB) internal pure returns (uint160 res) {
+    assembly {
+      let delta := sub(priceA, priceB)
+      res := sub(priceA, and(sar(255, delta), delta))
+    }
+  }
+
+  function getMinPrice(uint160 priceA, uint160 priceB) internal pure returns (uint160 res) {
+    assembly {
+      let delta := sub(priceA, priceB)
+      res := add(priceB, and(sar(255, delta), delta))
+    }
+  }
+
   /// @notice Gets the next sqrt price given an input amount of token0 or token1
   /// @dev Throws if price or liquidity are 0, or if the next price is out of bounds
   /// @param price The starting Q64.96 sqrt price, i.e., before accounting for the input amount
