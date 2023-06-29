@@ -36,11 +36,6 @@ abstract contract Positions is AlgebraPoolBase {
     return positions[key];
   }
 
-  struct UpdatePositionCache {
-    uint160 price; // The square root of the current price in Q64.96 format
-    int24 prevInitializedTick; // The previous initialized tick in linked list
-  }
-
   /**
    * @dev Updates position's ticks and its fees
    * @return amount0 The abs amount of token0 that corresponds to liquidityDelta
@@ -52,10 +47,9 @@ abstract contract Positions is AlgebraPoolBase {
     int24 topTick,
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
-    // using memory cache to avoid "stack too deep" error
-    UpdatePositionCache memory cache = UpdatePositionCache(globalState.price, globalState.prevInitializedTick); // TODO OPTIMIZE
-
+    uint160 currentPrice = globalState.price;
     int24 currentTick = globalState.tick;
+    int24 prevInitializedTick = globalState.prevInitializedTick;
 
     bool toggledBottom;
     bool toggledTop;
@@ -96,20 +90,20 @@ abstract contract Positions is AlgebraPoolBase {
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        int24 previousTick = cache.prevInitializedTick;
+        int24 newPreviousTick = prevInitializedTick;
         if (toggledBottom) {
-          previousTick = _insertOrRemoveTick(bottomTick, currentTick, previousTick, liquidityDelta < 0);
+          newPreviousTick = _insertOrRemoveTick(bottomTick, currentTick, newPreviousTick, liquidityDelta < 0);
         }
         if (toggledTop) {
-          previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
+          newPreviousTick = _insertOrRemoveTick(topTick, currentTick, newPreviousTick, liquidityDelta < 0);
         }
-        if (cache.prevInitializedTick != previousTick) {
-          globalState.prevInitializedTick = previousTick;
+        if (prevInitializedTick != newPreviousTick) {
+          globalState.prevInitializedTick = newPreviousTick;
         }
       }
 
       int128 globalLiquidityDelta;
-      (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
+      (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, currentPrice);
       if (globalLiquidityDelta != 0) {
         uint128 liquidityBefore = liquidity;
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
