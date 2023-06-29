@@ -25,11 +25,11 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
     int24 prevInitializedTick; // The previous initialized tick in linked list
+    uint128 liquidityAtStart;
   }
 
   struct PriceMovementCache {
     uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
-    int24 nextTick; // The tick till the current step goes
     uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
@@ -55,6 +55,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       currentLiquidity = liquidity;
+      cache.liquidityAtStart = currentLiquidity;
 
       if (zeroToOne) {
         if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
@@ -69,9 +70,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     unchecked {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
-        step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
+        int24 nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
         step.stepSqrtPrice = currentPrice;
-        step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
+        step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
 
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
           zeroToOne,
@@ -111,19 +112,19 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           int128 liquidityDelta;
           if (zeroToOne) {
             liquidityDelta = -ticks.cross(
-              step.nextTick,
+              nextTick,
               cache.totalFeeGrowth, // A == 0
               cache.totalFeeGrowthB // B == 1
             );
-            currentTick = step.nextTick - 1;
+            currentTick = nextTick - 1;
             cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
           } else {
             liquidityDelta = ticks.cross(
-              step.nextTick,
+              nextTick,
               cache.totalFeeGrowthB, // B == 0
               cache.totalFeeGrowth // A == 1
             );
-            currentTick = step.nextTick;
+            currentTick = nextTick;
             cache.prevInitializedTick = currentTick;
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
@@ -145,7 +146,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
     (globalState.price, globalState.tick, globalState.prevInitializedTick) = (currentPrice, currentTick, cache.prevInitializedTick);
 
-    liquidity = currentLiquidity;
+    if (currentLiquidity != cache.liquidityAtStart) {
+      liquidity = currentLiquidity;
+    }
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {
