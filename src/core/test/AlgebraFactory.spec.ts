@@ -253,6 +253,31 @@ describe('AlgebraFactory', () => {
     })
   })
 
+  describe('#setDefaultFee', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setDefaultFee(200)).to.be.reverted
+    })
+
+    it('fails if new community fee greate than max fee', async () => {
+      await expect(factory.setDefaultFee(51000)).to.be.reverted
+    })
+
+    it('fails if new community fee eq current', async () => {
+      await expect(factory.setDefaultFee(100)).to.be.reverted
+    })
+
+    it('works correct', async () => {
+      await factory.setDefaultFee(60)
+      expect(await factory.defaultFee()).to.eq(60)
+    })
+
+    it('emits event', async () => {
+      await expect(factory.setDefaultFee(60))
+        .to.emit(factory, 'DefaultFee')
+        .withArgs(60)
+    })
+  })
+
   describe('#setDefaultTickspacing', () => {
     it('fails if caller is not owner', async () => {
       await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.reverted

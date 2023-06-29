@@ -40,12 +40,13 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     lastTimepointTimestamp = _blockTimestamp();
 
-    (uint16 _communityFee, int24 _tickSpacing) = IAlgebraFactory(factory).defaultConfigurationForPool();
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = IAlgebraFactory(factory).defaultConfigurationForPool();
     tickSpacing = _tickSpacing;
 
     uint8 pluginConfig = globalState.pluginConfig;
 
     globalState.price = initialPrice;
+    globalState.fee = _fee;
     globalState.communityFee = _communityFee;
     globalState.unlocked = true;
     globalState.tick = tick;
@@ -401,7 +402,10 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
-    if (msg.sender != plugin) revert(); // TODO
+    if (msg.sender != plugin) {
+      _checkIfAdministrator();
+      if (globalState.pluginConfig & Constants.DYNAMIC_FEE != 0) revert dynamicFeeActive();
+    }
     globalState.fee = newFee;
     emit Fee(newFee);
   }

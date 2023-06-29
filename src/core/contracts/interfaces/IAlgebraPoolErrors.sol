@@ -49,6 +49,8 @@ interface IAlgebraPoolErrors {
   error invalidNewTickSpacing();
   error invalidNewCommunityFee();
 
+  error dynamicFeeActive();
+
   // ####  LiquidityMath errors  ####
   /// @notice Emitted if liquidity underflows
   error liquiditySub();

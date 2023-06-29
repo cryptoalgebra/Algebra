@@ -33,6 +33,10 @@ interface IAlgebraFactory {
   /// @param newDefaultTickspacing The new default tickspacing value
   event DefaultTickspacing(int24 newDefaultTickspacing);
 
+  /// @notice Emitted when the default fee is changed
+  /// @param newDefaultFee The new default fee value
+  event DefaultFee(uint16 newDefaultFee);
+
   // TODO
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
@@ -59,6 +63,10 @@ interface IAlgebraFactory {
   /// @return Fee which will be set at the creation of the pool
   function defaultCommunityFee() external view returns (uint16);
 
+  /// @notice Returns the default fee
+  /// @return Fee which will be set at the creation of the pool
+  function defaultFee() external view returns (uint16);
+
   /// @notice Returns the default tickspacing
   /// @return Tickspacing which will be set at the creation of the pool
   function defaultTickspacing() external view returns (int24);
@@ -66,7 +74,8 @@ interface IAlgebraFactory {
   /// @notice Returns the default communityFee and tickspacing
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing);
+  /// @return fee which will be set at the creation of the pool
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
 
   /// @notice Returns the pool address for a given pair of tokens, or address 0 if it does not exist
   /// @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
@@ -89,6 +98,10 @@ interface IAlgebraFactory {
   /// @dev updates default community fee for new pools
   /// @param newDefaultCommunityFee The new community fee, _must_ be <= MAX_COMMUNITY_FEE
   function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external;
+
+  /// @dev updates default fee for new pools
+  /// @param newDefaultFee The new  fee, _must_ be <= MAX_DEFAULT_FEE
+  function setDefaultFee(uint16 newDefaultFee) external;
 
   /// @dev updates default tickspacing for new pools
   /// @param newDefaultTickspacing The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING

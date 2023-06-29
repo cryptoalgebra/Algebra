@@ -2182,6 +2182,27 @@ describe('AlgebraPool', () => {
         await expect(flash(100, 200, other.address)).not.to.be.emit(poolPlugin, 'AfterFlash')
       })
 
+      it('if dynamic fee is off, owner can set fee in pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await pool.setFee(20000)
+        const {fee} = await pool.globalState()
+        expect(fee).to.eq(20000)
+      })
+
+      it('only owner can set fee', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(pool.connect(other).setFee(20000)).to.be.reverted
+      })
+
+      it('if dynamic fee is on, owner can not set fee in pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await pool.setPluginConfig(128)
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await expect(pool.setFee(20000)).to.be.revertedWithCustomError(pool, 'dynamicFeeActive')
+      })
+
     })
 
     describe('#setPlugin', () => {

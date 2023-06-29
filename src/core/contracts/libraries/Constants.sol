@@ -13,6 +13,7 @@ library Constants {
 
   uint16 internal constant BASE_FEE = 0.0001e6; // init minimum fee value in hundredths of a bip (0.01%)
   uint24 internal constant FEE_DENOMINATOR = 1e6;
+  uint16 internal constant MAX_DEFAULT_FEE = 0.05e6;
 
   int24 internal constant INIT_DEFAULT_TICK_SPACING = 60;
   int24 internal constant MAX_TICK_SPACING = 500;
@@ -40,4 +41,5 @@ library Constants {
   uint256 internal constant BEFORE_FLASH_HOOK_FLAG = 1 << 4;
   uint256 internal constant AFTER_FLASH_HOOK_FLAG = 1 << 5;
   uint256 internal constant AFTER_INIT_HOOK_FLAG = 1 << 6;
+  uint256 internal constant DYNAMIC_FEE = 1 << 7;
 }
