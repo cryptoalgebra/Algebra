@@ -382,20 +382,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128))
         })
       })
-
-      describe('#getInnerCumulatives', () => {
-        it('tick inside', async () => {
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
-        })
-        it('tick above', async () => {
-          await swapToHigherPrice(MAX_SQRT_RATIO.sub(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
-        })
-        it('tick below', async () => {
-          await swapToLowerPrice(MIN_SQRT_RATIO.add(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
-        })
-      })
     })
   }
 })
