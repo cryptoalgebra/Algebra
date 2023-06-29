@@ -52,9 +52,6 @@ interface IAlgebraPoolState {
   /// If the balance exceeds uint128, the excess will be sent to the communityVault.
   function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
 
-  /// @notice The accumulator of seconds per liquidity since the pool was first initialized
-  function secondsPerLiquidityCumulative() external view returns (uint160);
-
   /// @notice Look up information about a specific tick in the pool
   /// @param tick The tick to look up
   /// @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper

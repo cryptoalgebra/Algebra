@@ -39,8 +39,6 @@ contract AlgebraPool is AlgebraPoolBase, ReentrancyGuard, Positions, SwapCalcula
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice);
     }
 
-    lastTimepointTimestamp = _blockTimestamp();
-
     (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = IAlgebraFactory(factory).defaultConfigurationForPool();
     tickSpacing = _tickSpacing;
 

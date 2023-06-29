@@ -40,9 +40,6 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   uint32 public override communityFeeLastTimestamp;
 
   /// @inheritdoc IAlgebraPoolState
-  uint160 public override secondsPerLiquidityCumulative;
-
-  /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState

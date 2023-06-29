@@ -54,11 +54,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint128 internal communityFeePending0;
   uint128 internal communityFeePending1;
 
-  /// @dev The timestamp of the last timepoint write to the DataStorage
-  uint32 internal lastTimepointTimestamp;
-  /// @inheritdoc IAlgebraPoolState
-  uint160 public override secondsPerLiquidityCumulative;
-
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
