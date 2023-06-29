@@ -59,10 +59,10 @@ interface IAlgebraPoolState {
   /// @param tick The tick to look up
   /// @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper
   /// @return liquidityDelta How much liquidity changes when the pool price crosses the tick
-  /// @return outerFeeGrowth0Token The fee growth on the other side of the tick from the current tick in token0
-  /// @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
   /// @return prevTick The previous tick in tick list
   /// @return nextTick The next tick in tick list
+  /// @return outerFeeGrowth0Token The fee growth on the other side of the tick from the current tick in token0
+  /// @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
   /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
   /// a specific position.
   function ticks(
@@ -71,12 +71,12 @@ interface IAlgebraPoolState {
     external
     view
     returns (
-      uint128 liquidityTotal,
+      uint256 liquidityTotal,
       int128 liquidityDelta,
-      uint256 outerFeeGrowth0Token,
-      uint256 outerFeeGrowth1Token,
       int24 prevTick,
-      int24 nextTick
+      int24 nextTick,
+      uint256 outerFeeGrowth0Token,
+      uint256 outerFeeGrowth1Token
     );
 
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information

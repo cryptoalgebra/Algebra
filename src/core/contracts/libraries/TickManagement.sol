@@ -12,14 +12,14 @@ import './Constants.sol';
 library TickManagement {
   // info stored for each initialized individual tick
   struct Tick {
-    uint128 liquidityTotal; // the total position liquidity that references this tick
+    uint256 liquidityTotal; // the total position liquidity that references this tick
     int128 liquidityDelta; // amount of net liquidity added (subtracted) when tick is crossed left-right (right-left),
+    int24 prevTick;
+    int24 nextTick;
     // fee growth per unit of liquidity on the _other_ side of this tick (relative to the current tick)
     // only has relative meaning, not absolute — the value depends on when the tick is initialized
     uint256 outerFeeGrowth0Token;
     uint256 outerFeeGrowth1Token;
-    int24 prevTick;
-    int24 nextTick;
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
@@ -87,7 +87,7 @@ library TickManagement {
     Tick storage data = self[tick];
 
     int128 liquidityDeltaBefore = data.liquidityDelta;
-    uint128 liquidityTotalBefore = data.liquidityTotal;
+    uint128 liquidityTotalBefore = uint128(data.liquidityTotal);
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
     if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();
