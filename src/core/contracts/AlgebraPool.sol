@@ -16,6 +16,7 @@ import './libraries/SafeTransfer.sol';
 import './libraries/SafeCast.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
+import './libraries/Plugins.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/callback/IAlgebraMintCallback.sol';
@@ -27,6 +28,7 @@ import './interfaces/callback/IAlgebraFlashCallback.sol';
 contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Positions, SwapCalculation, ReservesManager, TickStructure {
   using SafeCast for uint256;
   using SafeCast for uint128;
+  using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
@@ -55,7 +57,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     emit TickSpacing(_tickSpacing);
     emit CommunityFee(_communityFee);
 
-    if (pluginConfig & Constants.AFTER_INIT_HOOK_FLAG != 0) {
+    if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick);
     }
   }
@@ -70,13 +72,14 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     bytes calldata data
   ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
+
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender); // TODO REENTRANCY
+    }
+
     unchecked {
       int24 _tickSpacing = tickSpacing;
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
-    }
-
-    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender); // TODO REENTRANCY
     }
 
     _lock();
@@ -129,7 +132,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     _unlock();
 
-    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
       IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
   }
@@ -142,7 +145,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     if (amount > uint128(type(int128).max)) revert arithmeticError();
 
-    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
       IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
     }
 
@@ -162,7 +165,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     _unlock();
 
-    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
       IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
   }
@@ -206,7 +209,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       // TODO optimize
       IAlgebraPlugin(plugin).beforeSwap(msg.sender);
     }
@@ -239,7 +242,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     _unlock();
 
-    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       // TODO optimize
       IAlgebraPlugin(plugin).afterSwap(msg.sender);
     }
@@ -256,7 +259,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   ) external override returns (int256 amount0, int256 amount1) {
     if (amountRequired < 0) revert invalidAmountRequired(); // we support only exactInput here
 
-    if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       // TODO optimize
       IAlgebraPlugin(plugin).beforeSwap(msg.sender);
     }
@@ -307,7 +310,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     _unlock();
 
-    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       // TODO optimize
       IAlgebraPlugin(plugin).afterSwap(msg.sender);
     }
@@ -316,7 +319,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
   /// @inheritdoc IAlgebraPoolActions
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override {
     uint8 pluginConfig = globalState.pluginConfig;
-    if (pluginConfig & Constants.BEFORE_FLASH_HOOK_FLAG != 0) {
+    if (pluginConfig.hasFlag(Plugins.BEFORE_FLASH_FLAG)) {
       IAlgebraPlugin(plugin).beforeFlash(msg.sender, amount0, amount1);
     }
 
@@ -358,7 +361,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
     _unlock();
 
-    if (pluginConfig & Constants.AFTER_FLASH_HOOK_FLAG != 0) {
+    if (pluginConfig.hasFlag(Plugins.AFTER_FLASH_FLAG)) {
       IAlgebraPlugin(plugin).afterFlash(msg.sender, amount0, amount1);
     }
   }
@@ -402,7 +405,7 @@ contract AlgebraPool is AlgebraPoolBase, DerivedState, ReentrancyGuard, Position
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
-    bool isDynamicFeeEnabled = globalState.pluginConfig & Constants.DYNAMIC_FEE != 0;
+    bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
 
     if (msg.sender == plugin) {
       if (!isDynamicFeeEnabled) revert dynamicFeeDisabled();

@@ -2,6 +2,7 @@
 pragma solidity =0.8.17;
 
 import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
+import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
 
 import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
@@ -38,8 +39,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   address public override incentive;
 
-  uint8 public constant override defaultPluginConfig =
-    uint8(Constants.AFTER_INIT_HOOK_FLAG | Constants.BEFORE_SWAP_HOOK_FLAG | Constants.AFTER_POSITION_MODIFY_HOOK_FLAG);
+  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG);
 
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
@@ -166,9 +166,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     emit Incentive(newIncentive);
 
     (, , uint8 pluginConfig) = _getPoolState();
-    bool isHookActive = pluginConfig & uint8(Constants.AFTER_SWAP_HOOK_FLAG) != 0;
+    bool isHookActive = pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) != 0;
     if (turnOn != isHookActive) {
-      pluginConfig = pluginConfig ^ uint8(Constants.AFTER_SWAP_HOOK_FLAG);
+      pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
       IAlgebraPool(pool).setPluginConfig(pluginConfig);
     }
   }
@@ -178,7 +178,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     if (incentive != targetIncentive) return false;
     if (IAlgebraPool(pool).plugin() != address(this)) return false;
     (, , uint8 pluginConfig) = _getPoolState();
-    if (pluginConfig & uint8(Constants.AFTER_SWAP_HOOK_FLAG) == 0) return false;
+    if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
 
     return true;
   }

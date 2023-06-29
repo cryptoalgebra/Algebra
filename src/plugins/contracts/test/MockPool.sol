@@ -4,6 +4,7 @@ pragma abicoder v1;
 
 import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
@@ -92,18 +93,18 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     globalState.unlocked = true;
     globalState.tick = tick;
 
-    if (pluginConfig & Constants.AFTER_INIT_HOOK_FLAG != 0) {
+    if (pluginConfig & Plugins.AFTER_INIT_FLAG != 0) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick);
     }
   }
 
   /// @inheritdoc IAlgebraPoolActions
   function mint(address, address, int24, int24, uint128, bytes calldata) external override returns (uint256, uint256, uint128) {
-    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.BEFORE_POSITION_MODIFY_FLAG != 0) {
       IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender); // TODO REENTRANCY
     }
 
-    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.AFTER_POSITION_MODIFY_FLAG != 0) {
       IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
     return (0, 0, 0);
@@ -111,11 +112,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolActions
   function burn(int24, int24, uint128) external override returns (uint256, uint256) {
-    if (globalState.pluginConfig & Constants.BEFORE_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.BEFORE_POSITION_MODIFY_FLAG != 0) {
       IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
     }
 
-    if (globalState.pluginConfig & Constants.AFTER_POSITION_MODIFY_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.AFTER_POSITION_MODIFY_FLAG != 0) {
       IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
     }
     return (0, 0);
@@ -132,7 +133,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   function swapToTick(int24 targetTick) external {
-    if (globalState.pluginConfig & Constants.BEFORE_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.BEFORE_SWAP_FLAG != 0) {
       // TODO optimize
       IAlgebraPlugin(plugin).beforeSwap(msg.sender);
     }
@@ -140,7 +141,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     globalState.price = TickMath.getSqrtRatioAtTick(targetTick);
     globalState.tick = targetTick;
 
-    if (globalState.pluginConfig & Constants.AFTER_SWAP_HOOK_FLAG != 0) {
+    if (globalState.pluginConfig & Plugins.AFTER_SWAP_FLAG != 0) {
       // TODO optimize
       IAlgebraPlugin(plugin).afterSwap(msg.sender);
     }
@@ -154,11 +155,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolActions
   function flash(address, uint256 amount0, uint256 amount1, bytes calldata) external override {
     uint8 pluginConfig = globalState.pluginConfig;
-    if (pluginConfig & Constants.BEFORE_FLASH_HOOK_FLAG != 0) {
+    if (pluginConfig & Plugins.BEFORE_FLASH_FLAG != 0) {
       IAlgebraPlugin(plugin).beforeFlash(msg.sender, amount0, amount1);
     }
 
-    if (pluginConfig & Constants.AFTER_FLASH_HOOK_FLAG != 0) {
+    if (pluginConfig & Plugins.AFTER_FLASH_FLAG != 0) {
       IAlgebraPlugin(plugin).afterFlash(msg.sender, amount0, amount1);
     }
   }
