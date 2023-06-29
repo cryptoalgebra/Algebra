@@ -6,7 +6,7 @@ import '../../libraries/TickTree.sol';
 
 contract TickTreeEchidnaTest {
   using TickTree for mapping(int16 => uint256);
-  uint256 private word;
+  uint64 private word;
 
   mapping(int16 => uint256) private tickWordsTable;
   mapping(int16 => uint256) private bitmap;

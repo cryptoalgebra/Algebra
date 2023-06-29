@@ -19,8 +19,8 @@ library TickTree {
     mapping(int16 => uint256) storage leafs,
     mapping(int16 => uint256) storage secondLayer,
     int24 tick,
-    uint256 treeRoot
-  ) internal returns (uint256 newTreeRoot) {
+    uint64 treeRoot
+  ) internal returns (uint64 newTreeRoot) {
     newTreeRoot = treeRoot;
     (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
     if (toggledNode) {
@@ -62,7 +62,7 @@ library TickTree {
   function getNextTick(
     mapping(int16 => uint256) storage leafs,
     mapping(int16 => uint256) storage secondLayer,
-    uint256 treeRoot,
+    uint64 treeRoot,
     int24 tick
   ) internal view returns (int24 nextTick) {
     unchecked {

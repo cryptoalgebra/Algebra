@@ -28,21 +28,6 @@ interface IAlgebraPoolState {
   /// @dev This value can overflow the uint256
   function totalFeeGrowth1Token() external view returns (uint256);
 
-  /// @notice The currently in range liquidity available to the pool
-  /// @dev This value has no relationship to the total liquidity across all ticks.
-  /// Returned value cannot exceed type(uint128).max
-  function liquidity() external view returns (uint128);
-
-  /// @notice The current tick spacing
-  /// @dev Ticks can only be used at multiples of this value
-  /// e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
-  /// This value is an int24 to avoid casting even though it is always positive.
-  /// @return The current tick spacing
-  function tickSpacing() external view returns (int24);
-
-  /// @notice The timestamp of the last sending of tokens to community vault
-  function communityFeeLastTimestamp() external view returns (uint32);
-
   /// @notice The amounts of token0 and token1 that will be sent to the vault
   /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
   function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
@@ -78,6 +63,21 @@ interface IAlgebraPoolState {
 
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
   function tickTable(int16 wordPosition) external view returns (uint256);
+
+  /// @notice The currently in range liquidity available to the pool
+  /// @dev This value has no relationship to the total liquidity across all ticks.
+  /// Returned value cannot exceed type(uint128).max
+  function liquidity() external view returns (uint128);
+
+  /// @notice The current tick spacing
+  /// @dev Ticks can only be used at multiples of this value
+  /// e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+  /// This value is an int24 to avoid casting even though it is always positive.
+  /// @return The current tick spacing
+  function tickSpacing() external view returns (int24);
+
+  /// @notice The timestamp of the last sending of tokens to community vault
+  function communityFeeLastTimestamp() external view returns (uint32);
 
   /// @notice Returns the information about a position by the position's key
   /// @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
