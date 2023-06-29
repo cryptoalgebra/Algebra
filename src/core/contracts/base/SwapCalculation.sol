@@ -72,10 +72,10 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     }
 
     PriceMovementCache memory step;
-    step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
     unchecked {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
+        step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
         step.stepSqrtPrice = currentPrice;
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
 
@@ -124,6 +124,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               cache.secondsPerLiquidityCumulative,
               cache.blockTimestamp
             );
+            currentTick = step.nextTick - 1;
             cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
           } else {
             liquidityDelta = ticks.cross(
@@ -133,13 +134,10 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               cache.secondsPerLiquidityCumulative,
               cache.blockTimestamp
             );
-            cache.prevInitializedTick = step.nextTick;
+            currentTick = step.nextTick;
+            cache.prevInitializedTick = currentTick;
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
-
-          (currentTick, step.nextTick) = zeroToOne
-            ? (step.nextTick - 1, cache.prevInitializedTick)
-            : (step.nextTick, ticks[cache.prevInitializedTick].nextTick);
         } else if (currentPrice != step.stepSqrtPrice) {
           // if the price has changed but hasn't reached the target
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
