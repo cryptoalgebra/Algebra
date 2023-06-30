@@ -64,6 +64,9 @@ interface IAlgebraPoolState {
       uint256 outerFeeGrowth1Token
     );
 
+  // TODO
+  function plugin() external view returns (address pluginAddress);
+
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
   function tickTable(int16 wordPosition) external view returns (uint256);
 
@@ -89,7 +92,4 @@ interface IAlgebraPoolState {
   function positions(
     bytes32 key
   ) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
-
-  // TODO
-  function plugin() external view returns (address pluginAddress);
 }

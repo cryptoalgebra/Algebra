@@ -45,10 +45,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint8 pluginConfig = globalState.pluginConfig;
 
     globalState.price = initialPrice;
+    globalState.tick = tick;
     globalState.fee = _fee;
     globalState.communityFee = _communityFee;
     globalState.unlocked = true;
-    globalState.tick = tick;
 
     emit Initialize(initialPrice, tick);
     emit TickSpacing(_tickSpacing);

@@ -51,10 +51,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
-  address public override plugin;
+  mapping(int24 => TickManagement.Tick) public override ticks;
 
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManagement.Tick) public override ticks;
+  address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
@@ -81,7 +81,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   constructor() {
     (plugin, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
-    globalState.fee = Constants.BASE_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
   }
 

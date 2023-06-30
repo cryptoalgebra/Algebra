@@ -52,6 +52,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     communityVault = address(new AlgebraCommunityVault());
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.BASE_FEE;
+
+    emit DefaultTickspacing(Constants.INIT_DEFAULT_TICK_SPACING);
+    emit DefaultFee(Constants.BASE_FEE);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -154,7 +157,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xb5772655e5e4918d1beeff85519d05ffbde912c54121d6fb83a9b396a97f245e;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x665481a36bf138629c9a705b3df4e89c95e203de9697feb494e808afe6846906;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token
