@@ -1759,12 +1759,13 @@ describe('AlgebraPool', () => {
     it('flash overflows communityFee0', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await pool.setCommunityFee(1000);
+      const MAX_PENDING_FEE = BigNumber.from(2).pow(104).sub(1);
 
       await token0.approve(swapTarget.address, constants.MaxUint256);
       await token1.approve(swapTarget.address, constants.MaxUint256);
 
       await flash(0, 0, wallet.address, 1, 1)
-      await flash(0, 0, wallet.address, MaxUint128, 0)
+      await flash(0, 0, wallet.address, MAX_PENDING_FEE, 0)
       await flash(0, 0, wallet.address, 1, 1)
 
       const [reserve0after, reserve1after] = await pool.getReserves();
@@ -1775,12 +1776,13 @@ describe('AlgebraPool', () => {
     it('flash overflows communityFee1', async () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await pool.setCommunityFee(1000);
+      const MAX_PENDING_FEE = BigNumber.from(2).pow(104).sub(1);
 
       await token0.approve(swapTarget.address, constants.MaxUint256);
       await token1.approve(swapTarget.address, constants.MaxUint256);
 
       await flash(0, 0, wallet.address, 1, 1)
-      await flash(0, 0, wallet.address, 0, MaxUint128)
+      await flash(0, 0, wallet.address, 0, MAX_PENDING_FEE)
       await flash(0, 0, wallet.address, 1, 1)
 
       const [reserve0after, reserve1after] = await pool.getReserves();

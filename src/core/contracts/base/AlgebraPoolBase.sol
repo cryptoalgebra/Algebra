@@ -43,9 +43,12 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   GlobalState public override globalState;
 
+  /// @inheritdoc IAlgebraPoolState
+  uint32 public override communityFeeLastTimestamp;
+
   /// @dev The amounts of token0 and token1 that will be sent to the vault
-  uint128 internal communityFeePending0;
-  uint128 internal communityFeePending1;
+  uint104 internal communityFeePending0;
+  uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
@@ -60,8 +63,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
-  /// @inheritdoc IAlgebraPoolState
-  uint32 public override communityFeeLastTimestamp;
 
   /// @inheritdoc IAlgebraPoolImmutables
   function maxLiquidityPerTick() external pure override returns (uint128) {

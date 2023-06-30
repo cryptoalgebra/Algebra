@@ -20,6 +20,9 @@ interface IAlgebraPoolState {
     view
     returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
 
+  /// @notice The timestamp of the last sending of tokens to community vault
+  function communityFeeLastTimestamp() external view returns (uint32);
+
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256
   function totalFeeGrowth0Token() external view returns (uint256);
@@ -75,9 +78,6 @@ interface IAlgebraPoolState {
   /// This value is an int24 to avoid casting even though it is always positive.
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
-
-  /// @notice The timestamp of the last sending of tokens to community vault
-  function communityFeeLastTimestamp() external view returns (uint32);
 
   /// @notice Returns the information about a position by the position's key
   /// @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
