@@ -13,13 +13,13 @@ abstract contract ReentrancyGuard is AlgebraPoolBase {
   }
 
   /// @dev using private function to save bytecode
-  function _lock() private {
+  function _lock() internal {
     if (!globalState.unlocked) revert IAlgebraPoolErrors.locked();
     globalState.unlocked = false;
   }
 
   /// @dev using private function to save bytecode
-  function _unlock() private {
+  function _unlock() internal {
     globalState.unlocked = true;
   }
 }

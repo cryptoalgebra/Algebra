@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8251`;
+
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6218`;
+
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `7965`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
+Object {
+  "tickCumulatives": Array [
+    -13,
+    -31,
+    -43,
+    -37,
+    -15,
+    9,
+    15,
+  ],
+}
+`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `98600`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17729`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6218`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10026`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17320`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `16898`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 fetch many values 1`] = `
+Object {
+  "tickCumulatives": Array [
+    -13,
+    -31,
+    -43,
+    -37,
+    -15,
+    9,
+    15,
+  ],
+}
+`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `98252`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17671`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6218`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10055`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17291`;
+
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `16840`;
+
+exports[`DataStorage #initialize gas  [ @skip-on-coverage ] 1`] = `89546`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6226`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `42439`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6512`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago)  [ @skip-on-coverage ] 1`] = `39417`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ] 1`] = `40194`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `46521`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13 + 5)  [ @skip-on-coverage ] 1`] = `48439`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13)  [ @skip-on-coverage ] 1`] = `48385`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45450`;
+
+exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45450`;

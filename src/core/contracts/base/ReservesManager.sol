@@ -67,8 +67,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
         // underflow in timestamps is desired
         if (
           currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY ||
-          _cfPending0 > type(uint128).max ||
-          _cfPending1 > type(uint128).max
+          _cfPending0 > type(uint104).max ||
+          _cfPending1 > type(uint104).max
         ) {
           if (_cfPending0 > 0) SafeTransfer.safeTransfer(token0, communityVault, _cfPending0);
           if (_cfPending1 > 0) SafeTransfer.safeTransfer(token1, communityVault, _cfPending1);
@@ -77,7 +77,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
           (_cfPending0, _cfPending1) = (0, 0);
         }
         // the previous block guarantees that no overflow occurs
-        (communityFeePending0, communityFeePending1) = (uint128(_cfPending0), uint128(_cfPending1));
+        (communityFeePending0, communityFeePending1) = (uint104(_cfPending0), uint104(_cfPending1));
       }
     }
 

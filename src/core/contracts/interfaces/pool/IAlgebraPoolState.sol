@@ -12,13 +12,16 @@ interface IAlgebraPoolState {
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
   /// @return prevInitializedTick The previous initialized tick
   /// @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
-  /// @return timepointIndex The index of the last written timepoint
+  /// @return pluginConfig TODO
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
   function globalState()
     external
     view
-    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint16 timepointIndex, uint8 communityFee, bool unlocked);
+    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
+
+  /// @notice The timestamp of the last sending of tokens to community vault
+  function communityFeeLastTimestamp() external view returns (uint32);
 
   /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256
@@ -27,6 +30,45 @@ interface IAlgebraPoolState {
   /// @notice The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
   /// @dev This value can overflow the uint256
   function totalFeeGrowth1Token() external view returns (uint256);
+
+  /// @notice The amounts of token0 and token1 that will be sent to the vault
+  /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
+  function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
+
+  /// @notice The tracked token0 and token1 reserves of pool
+  /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
+  /// If the balance exceeds uint128, the excess will be sent to the communityVault.
+  function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
+
+  /// @notice Look up information about a specific tick in the pool
+  /// @param tick The tick to look up
+  /// @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper
+  /// @return liquidityDelta How much liquidity changes when the pool price crosses the tick
+  /// @return prevTick The previous tick in tick list
+  /// @return nextTick The next tick in tick list
+  /// @return outerFeeGrowth0Token The fee growth on the other side of the tick from the current tick in token0
+  /// @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
+  /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
+  /// a specific position.
+  function ticks(
+    int24 tick
+  )
+    external
+    view
+    returns (
+      uint256 liquidityTotal,
+      int128 liquidityDelta,
+      int24 prevTick,
+      int24 nextTick,
+      uint256 outerFeeGrowth0Token,
+      uint256 outerFeeGrowth1Token
+    );
+
+  // TODO
+  function plugin() external view returns (address pluginAddress);
+
+  /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
+  function tickTable(int16 wordPosition) external view returns (uint256);
 
   /// @notice The currently in range liquidity available to the pool
   /// @dev This value has no relationship to the total liquidity across all ticks.
@@ -40,52 +82,6 @@ interface IAlgebraPoolState {
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
 
-  /// @notice The timestamp of the last sending of tokens to community vault
-  function communityFeeLastTimestamp() external view returns (uint32);
-
-  /// @notice The amounts of token0 and token1 that will be sent to the vault
-  /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
-  function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
-
-  /// @notice The tracked token0 and token1 reserves of pool
-  /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
-  /// If the balance exceeds uint128, the excess will be sent to the communityVault.
-  function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
-
-  /// @notice The accumulator of seconds per liquidity since the pool was first initialized
-  function secondsPerLiquidityCumulative() external view returns (uint160);
-
-  /// @notice Look up information about a specific tick in the pool
-  /// @param tick The tick to look up
-  /// @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper
-  /// @return liquidityDelta How much liquidity changes when the pool price crosses the tick
-  /// @return outerFeeGrowth0Token The fee growth on the other side of the tick from the current tick in token0
-  /// @return outerFeeGrowth1Token The fee growth on the other side of the tick from the current tick in token1
-  /// @return prevTick The previous tick in tick list
-  /// @return nextTick The next tick in tick list
-  /// @return outerSecondsPerLiquidity The seconds spent per liquidity on the other side of the tick from the current tick
-  /// @return outerSecondsSpent The seconds spent on the other side of the tick from the current tick
-  /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
-  /// a specific position.
-  function ticks(
-    int24 tick
-  )
-    external
-    view
-    returns (
-      uint128 liquidityTotal,
-      int128 liquidityDelta,
-      uint256 outerFeeGrowth0Token,
-      uint256 outerFeeGrowth1Token,
-      int24 prevTick,
-      int24 nextTick,
-      uint160 outerSecondsPerLiquidity,
-      uint32 outerSecondsSpent
-    );
-
-  /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
-  function tickTable(int16 wordPosition) external view returns (uint256);
-
   /// @notice Returns the information about a position by the position's key
   /// @param key The position's key is a hash of a preimage composed by the owner, bottomTick and topTick
   /// @return liquidity The amount of liquidity in the position
@@ -96,9 +92,4 @@ interface IAlgebraPoolState {
   function positions(
     bytes32 key
   ) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
-
-  /// @notice Returns the information about active incentive
-  /// @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)
-  /// @return incentiveAddress The address associated with the current active incentive
-  function activeIncentive() external view returns (address incentiveAddress);
 }

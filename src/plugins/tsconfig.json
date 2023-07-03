@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "incremental": true,
+    "typeRoots": ["./typechain", "./node_modules/@types"],
+    "types": ["@nomiclabs/hardhat-ethers", "@nomicfoundation/hardhat-chai-matchers"]
+  },
+  "include": ["./test/**/*"],
+  "files": ["./hardhat.config.ts"]
+}

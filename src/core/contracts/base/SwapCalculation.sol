@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraVirtualPool.sol';
+import '../interfaces/IAlgebraPlugin.sol';
 import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
@@ -17,7 +17,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
   struct SwapCalculationCache {
     uint256 communityFee; // The community fee of the selling token, uint256 to minimize casts
-    uint160 secondsPerLiquidityCumulative; // The global secondPerLiquidity at the moment
     bool crossedAnyTick; //  If we have already crossed at least one active tick
     int256 amountRequiredInitial; // The initial value of the exact input\output amount
     int256 amountCalculated; // The additive amount of total output\input calculated through the swap
@@ -25,15 +24,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 totalFeeGrowthB;
     bool exactInput; // Whether the exact input or output is specified
     uint16 fee; // The current dynamic fee
-    uint16 timepointIndex; // The index of last written timepoint
     int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint32 blockTimestamp; // The timestamp of current block
+    uint128 liquidityAtStart;
   }
 
   struct PriceMovementCache {
     uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
-    int24 nextTick; // The tick till the current step goes
-    bool initialized; // True if the _nextTick_ is initialized
     uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
@@ -52,14 +48,14 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       // load from one storage slot
       currentPrice = globalState.price;
       currentTick = globalState.tick;
-      cache.fee = globalState.fee;
-      cache.timepointIndex = globalState.timepointIndex;
-      cache.communityFee = globalState.communityFee;
       cache.prevInitializedTick = globalState.prevInitializedTick;
+      cache.fee = globalState.fee;
+      cache.communityFee = globalState.communityFee;
 
       (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
       currentLiquidity = liquidity;
+      cache.liquidityAtStart = currentLiquidity;
 
       if (zeroToOne) {
         if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
@@ -68,29 +64,15 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
         cache.totalFeeGrowth = totalFeeGrowth1Token;
       }
-
-      cache.blockTimestamp = _blockTimestamp();
-
-      (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, cache.blockTimestamp, currentTick, currentLiquidity);
-
-      // new timepoint appears only for first swap/mint/burn in block
-      if (newTimepointIndex != cache.timepointIndex) {
-        cache.timepointIndex = newTimepointIndex;
-        if (cache.fee != newFee) {
-          cache.fee = newFee;
-          emit Fee(newFee);
-        }
-      }
     }
 
     PriceMovementCache memory step;
-    step.nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
     unchecked {
       // swap until there is remaining input or output tokens or we reach the price limit
       while (true) {
+        int24 nextTick = zeroToOne ? cache.prevInitializedTick : ticks[cache.prevInitializedTick].nextTick;
         step.stepSqrtPrice = currentPrice;
-        step.initialized = true; // TODO WHY?
-        step.nextTickPrice = TickMath.getSqrtRatioAtTick(step.nextTick);
+        step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
 
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
           zeroToOne,
@@ -119,41 +101,33 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         if (currentLiquidity > 0) cache.totalFeeGrowth += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
+        // min or max tick can not be crossed due to limitSqrtPrice check
         if (currentPrice == step.nextTickPrice) {
           // if the reached tick is initialized then we need to cross it
-          if (step.initialized) {
-            if (!cache.crossedAnyTick) {
-              cache.crossedAnyTick = true;
-              cache.secondsPerLiquidityCumulative = secondsPerLiquidityCumulative;
-              cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
-            }
-
-            int128 liquidityDelta;
-            if (zeroToOne) {
-              liquidityDelta = -ticks.cross(
-                step.nextTick,
-                cache.totalFeeGrowth, // A == 0
-                cache.totalFeeGrowthB, // B == 1
-                cache.secondsPerLiquidityCumulative,
-                cache.blockTimestamp
-              );
-              cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
-            } else {
-              liquidityDelta = ticks.cross(
-                step.nextTick,
-                cache.totalFeeGrowthB, // B == 0
-                cache.totalFeeGrowth, // A == 1
-                cache.secondsPerLiquidityCumulative,
-                cache.blockTimestamp
-              );
-              cache.prevInitializedTick = step.nextTick;
-            }
-            currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+          if (!cache.crossedAnyTick) {
+            cache.crossedAnyTick = true;
+            cache.totalFeeGrowthB = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
           }
 
-          (currentTick, step.nextTick) = zeroToOne
-            ? (step.nextTick - 1, cache.prevInitializedTick)
-            : (step.nextTick, ticks[cache.prevInitializedTick].nextTick);
+          int128 liquidityDelta;
+          if (zeroToOne) {
+            liquidityDelta = -ticks.cross(
+              nextTick,
+              cache.totalFeeGrowth, // A == 0
+              cache.totalFeeGrowthB // B == 1
+            );
+            currentTick = nextTick - 1;
+            cache.prevInitializedTick = ticks[cache.prevInitializedTick].prevTick;
+          } else {
+            liquidityDelta = ticks.cross(
+              nextTick,
+              cache.totalFeeGrowthB, // B == 0
+              cache.totalFeeGrowth // A == 1
+            );
+            currentTick = nextTick;
+            cache.prevInitializedTick = currentTick;
+          }
+          currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
           // if the price has changed but hasn't reached the target
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
@@ -161,27 +135,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         }
         // check stop condition
         if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
-          break;
-        }
-      }
-
-      if (cache.crossedAnyTick) {
-        // ticks cross data is needed to be duplicated in a virtual pool
-        address _activeIncentive = activeIncentive;
-        if (_activeIncentive != address(0)) {
-          bool isIncentiveActive; // if the incentive is stopped or faulty, the active incentive will be reset to 0
-          // errors without message will be propagated and revert transaction
-          try IAlgebraVirtualPool(_activeIncentive).crossTo(currentTick, zeroToOne) returns (bool success) {
-            isIncentiveActive = success;
-          } catch Panic(uint256) {
-            // pool will reset activeIncentive in this case
-          } catch Error(string memory) {
-            // pool will reset activeIncentive in this case
-          }
-          if (!isIncentiveActive) {
-            activeIncentive = address(0);
-            emit Incentive(address(0));
-          }
+          break; // TODO recheck if on tick
         }
       }
 
@@ -190,15 +144,11 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
     }
 
-    (globalState.price, globalState.tick, globalState.fee, globalState.timepointIndex, globalState.prevInitializedTick) = (
-      currentPrice,
-      currentTick,
-      cache.fee,
-      cache.timepointIndex,
-      cache.prevInitializedTick
-    );
+    (globalState.price, globalState.tick, globalState.prevInitializedTick) = (currentPrice, currentTick, cache.prevInitializedTick);
 
-    liquidity = currentLiquidity;
+    if (currentLiquidity != cache.liquidityAtStart) {
+      liquidity = currentLiquidity;
+    }
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowth;
     } else {

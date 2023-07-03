@@ -18,6 +18,10 @@ import './LiquidityAmounts.sol';
 contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgebraFlashCallback {
   using SafeCast for uint256;
 
+  function getPriceAtTick(int24 tick) external pure returns (uint160 sqrtPrice) {
+    return TickMath.getSqrtRatioAtTick(tick);
+  }
+
   function swapExact0For1(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }

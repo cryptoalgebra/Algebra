@@ -12,7 +12,7 @@ abstract contract TickStructure is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using TickTree for mapping(int16 => uint256);
 
-  uint256 internal tickTreeRoot; // The root of bitmap search tree
+  uint64 internal tickTreeRoot; // The root of bitmap search tree
   mapping(int16 => uint256) internal tickSecondLayer; // The second layer bitmap search tree
 
   // the leaves of the tree are stored in `tickTable`
@@ -35,7 +35,7 @@ abstract contract TickStructure is AlgebraPoolBase {
     int24 prevInitializedTick,
     bool remove
   ) internal override returns (int24 newPrevInitializedTick) {
-    uint256 oldTickTreeRoot = tickTreeRoot;
+    uint64 oldTickTreeRoot = tickTreeRoot;
 
     int24 prevTick;
     if (remove) {
@@ -54,7 +54,7 @@ abstract contract TickStructure is AlgebraPoolBase {
       ticks.insertTick(tick, prevTick, nextTick);
     }
 
-    uint256 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
+    uint64 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
     if (newTickTreeRoot != oldTickTreeRoot) tickTreeRoot = newTickTreeRoot;
     return prevInitializedTick;
   }

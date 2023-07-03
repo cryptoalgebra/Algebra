@@ -4,7 +4,6 @@ import { MockTimeAlgebraPool } from '../../typechain/test/MockTimeAlgebraPool'
 import { TestERC20 } from '../../typechain/test/TestERC20'
 import { AlgebraFactory } from '../../typechain/AlgebraFactory'
 import { AlgebraCommunityVault } from '../../typechain/AlgebraCommunityVault'
-import { DataStorageOperator } from "../../typechain/DataStorageOperator";
 import { TestAlgebraCallee } from '../../typechain/test/TestAlgebraCallee'
 import { TestAlgebraRouter } from '../../typechain/test/TestAlgebraRouter'
 import { MockTimeAlgebraPoolDeployer } from '../../typechain/test/MockTimeAlgebraPoolDeployer'
@@ -39,17 +38,6 @@ async function factoryFixture(): Promise<FactoryFixture> {
   const vault = (vaultFactory.attach(vaultAddress)) as AlgebraCommunityVault;
   return { factory, vault }
 }
-
-interface DataStorageFixture {
-  dataStorage: DataStorageOperator
-}
-
-async function dataStorageFixture(): Promise<DataStorageFixture> {
-  const dataStorageFactory = await ethers.getContractFactory('DataStorageOperator')
-  const dataStorage = (await dataStorageFactory.deploy()) as DataStorageOperator
-  return { dataStorage }
-}
-
 interface TokensFixture {
   token0: TestERC20
   token1: TestERC20
@@ -116,7 +104,8 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
       )
 
       const receipt = await tx.wait()
-      const poolAddress = receipt.events?.[1].args?.pool as string
+      const sortedTokens = (BigInt(firstToken.address) < BigInt(secondToken.address)) ? [firstToken.address, secondToken.address] : [secondToken.address, firstToken.address]; 
+      const poolAddress = await mockTimePoolDeployer.computeAddress(sortedTokens[0], sortedTokens[1]);
       return MockTimeAlgebraPoolFactory.attach(poolAddress) as MockTimeAlgebraPool;
     },
   }

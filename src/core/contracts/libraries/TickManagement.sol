@@ -12,16 +12,14 @@ import './Constants.sol';
 library TickManagement {
   // info stored for each initialized individual tick
   struct Tick {
-    uint128 liquidityTotal; // the total position liquidity that references this tick
+    uint256 liquidityTotal; // the total position liquidity that references this tick
     int128 liquidityDelta; // amount of net liquidity added (subtracted) when tick is crossed left-right (right-left),
+    int24 prevTick;
+    int24 nextTick;
     // fee growth per unit of liquidity on the _other_ side of this tick (relative to the current tick)
     // only has relative meaning, not absolute — the value depends on when the tick is initialized
     uint256 outerFeeGrowth0Token;
     uint256 outerFeeGrowth1Token;
-    int24 prevTick;
-    int24 nextTick;
-    uint160 outerSecondsPerLiquidity; // the seconds per unit of liquidity on the _other_ side of current tick, (relative meaning)
-    uint32 outerSecondsSpent; // the seconds spent on the other side of the current tick, only has relative meaning
   }
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
@@ -75,8 +73,6 @@ library TickManagement {
   /// @param liquidityDelta A new amount of liquidity to be added (subtracted) when tick is crossed from left to right (right to left)
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param secondsPerLiquidityCumulative The all-time seconds per max(1, liquidity) of the pool
-  /// @param time The current block timestamp cast to a uint32
   /// @param upper true for updating a position's upper tick, or false for updating a position's lower tick
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
   function update(
@@ -86,14 +82,12 @@ library TickManagement {
     int128 liquidityDelta,
     uint256 totalFeeGrowth0Token,
     uint256 totalFeeGrowth1Token,
-    uint160 secondsPerLiquidityCumulative,
-    uint32 time,
     bool upper
   ) internal returns (bool flipped) {
     Tick storage data = self[tick];
 
     int128 liquidityDeltaBefore = data.liquidityDelta;
-    uint128 liquidityTotalBefore = data.liquidityTotal;
+    uint128 liquidityTotalBefore = uint128(data.liquidityTotal);
 
     uint128 liquidityTotalAfter = LiquidityMath.addDelta(liquidityTotalBefore, liquidityDelta);
     if (liquidityTotalAfter > Constants.MAX_LIQUIDITY_PER_TICK) revert IAlgebraPoolErrors.liquidityOverflow();
@@ -110,8 +104,6 @@ library TickManagement {
       if (tick <= currentTick) {
         data.outerFeeGrowth0Token = totalFeeGrowth0Token;
         data.outerFeeGrowth1Token = totalFeeGrowth1Token;
-        data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative;
-        data.outerSecondsSpent = time;
       }
     }
   }
@@ -121,23 +113,16 @@ library TickManagement {
   /// @param tick The destination tick of the transition
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param secondsPerLiquidityCumulative The current seconds per liquidity
-  /// @param time The current block.timestamp
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
   function cross(
     mapping(int24 => Tick) storage self,
     int24 tick,
     uint256 totalFeeGrowth0Token,
-    uint256 totalFeeGrowth1Token,
-    uint160 secondsPerLiquidityCumulative,
-    uint32 time
+    uint256 totalFeeGrowth1Token
   ) internal returns (int128 liquidityDelta) {
     Tick storage data = self[tick];
 
     unchecked {
-      data.outerSecondsSpent = time - data.outerSecondsSpent;
-      data.outerSecondsPerLiquidity = secondsPerLiquidityCumulative - data.outerSecondsPerLiquidity;
-
       data.outerFeeGrowth1Token = totalFeeGrowth1Token - data.outerFeeGrowth1Token;
       data.outerFeeGrowth0Token = totalFeeGrowth0Token - data.outerFeeGrowth0Token;
     }

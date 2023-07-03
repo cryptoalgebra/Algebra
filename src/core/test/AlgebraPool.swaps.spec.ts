@@ -29,6 +29,7 @@ const { constants } = ethers
 interface BaseSwapTestCase {
   zeroToOne: boolean
   sqrtPriceLimit?: BigNumber
+  targetTick?: number
 }
 interface SwapExact0For1TestCase extends BaseSwapTestCase {
   zeroToOne: true
@@ -58,11 +59,11 @@ interface Swap1ForExact0TestCase extends BaseSwapTestCase {
 }
 interface SwapToHigherPrice extends BaseSwapTestCase {
   zeroToOne: false
-  sqrtPriceLimit: BigNumber
+  sqrtPriceLimit?: BigNumber
 }
 interface SwapToLowerPrice extends BaseSwapTestCase {
   zeroToOne: true
-  sqrtPriceLimit: BigNumber
+  sqrtPriceLimit?: BigNumber
 }
 type SwapTestCase =
   | SwapExact0For1TestCase
@@ -93,10 +94,18 @@ function swapCaseToDescription(testCase: SwapTestCase): string {
       }
     }
   } else {
-    if (testCase.zeroToOne) {
-      return `swap token0 for token1${priceClause}`
+    if ('sqrtPriceLimit' in testCase) {
+      if (testCase.zeroToOne) {
+        return `swap token0 for token1${priceClause}`
+      } else {
+        return `swap token1 for token0${priceClause}`
+      }
     } else {
-      return `swap token1 for token0${priceClause}`
+      if (testCase.zeroToOne) {
+        return `swap token0 for token1 to tick ${testCase.targetTick}`
+      } else {
+        return `swap token1 for token0 to tick ${testCase.targetTick}`
+      }     
     }
   }
 }
@@ -110,7 +119,8 @@ const POSITION_PROCEEDS_OUTPUT_ADDRESS = constants.AddressZero.slice(0, -1) + '2
 async function executeSwap(
   pool: MockTimeAlgebraPool,
   testCase: SwapTestCase,
-  poolFunctions: PoolFunctions
+  poolFunctions: PoolFunctions,
+  testCallee: TestAlgebraCallee
 ): Promise<ContractTransaction> {
   let swap: ContractTransaction
   if ('exactOut' in testCase) {
@@ -136,10 +146,16 @@ async function executeSwap(
       }
     }
   } else {
-    if (testCase.zeroToOne) {
-      swap = await poolFunctions.swapToLowerPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
+    let targetPrice;
+    if ('sqrtPriceLimit' in testCase) {
+      targetPrice = testCase.sqrtPriceLimit;
     } else {
-      swap = await poolFunctions.swapToHigherPrice(testCase.sqrtPriceLimit, SWAP_RECIPIENT_ADDRESS)
+      targetPrice = testCallee.getPriceAtTick(testCase.targetTick);
+    }
+    if (testCase.zeroToOne) {
+      swap = await poolFunctions.swapToLowerPrice(targetPrice, SWAP_RECIPIENT_ADDRESS)
+    } else {
+      swap = await poolFunctions.swapToHigherPrice(targetPrice, SWAP_RECIPIENT_ADDRESS)
     }
   }
   return swap
@@ -256,6 +272,24 @@ const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
   },
   {
     sqrtPriceLimit: encodePriceSqrt(2, 5),
+    zeroToOne: false,
+  },
+  // swap with incorrect limit price
+  {
+    sqrtPriceLimit: MAX_SQRT_RATIO,
+    zeroToOne: false,
+  },
+  {
+    sqrtPriceLimit: MIN_SQRT_RATIO,
+    zeroToOne: true,
+  },
+  // swap to tick using priceLimit
+  {
+    targetTick: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+    zeroToOne: true,
+  },
+  {
+    targetTick: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
     zeroToOne: false,
   },
 ]
@@ -464,45 +498,41 @@ const TEST_POOLS: PoolTestCase[] = [
 
 describe('AlgebraPool swap tests', () => {
   let wallet: Wallet, other: Wallet
+  const fixture = async () => {
+    const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
+    const pool = await createPool()
+    const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
 
+    return{
+      createPool, token0, token1, swapTarget, pool, poolFunctions
+    }
+  }
 
-  before('create fixture loader', async () => {
+  before('get signers', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
   })
 
   for (const poolCase of TEST_POOLS) {
-    describe(poolCase.description, () => {
-      const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
-        const { createPool, token0, token1, swapTargetCallee: swapTarget } = await loadFixture(poolFixture);
-        const pool = await createPool()
-        const poolFunctions = createPoolFunctions({ swapTarget, token0, token1, pool })
+      const poolCaseFixture = async () => {
+        const { createPool, token0, token1, swapTarget, pool, poolFunctions } = await loadFixture(fixture);
         await pool.initialize(poolCase.startingPrice)
 
         if (poolCase.tickSpacing != 60)
           await pool.setTickSpacing(poolCase.tickSpacing)
         // mint all positions
-        if (isDefl) {
-          if (zeroToOne)
-            await token0.setDefl();
-          else
-            await token1.setDefl();
-        }
-
         let _positions = [];
         for (const position of poolCase.positions) {
           let _position = {...position}
           let tx = await poolFunctions.mint(wallet.address, position.bottomTick, position.topTick, position.liquidity)
-          if (isDefl) {
-            let receipt = await tx.wait();
-            if (!receipt.events) continue;
+          let receipt = await tx.wait();
+          if (!receipt.events) continue;
 
-            for (let ev of receipt.events) {
-              if (ev.event == 'MintResult') {
-                if (ev.args) {
-                  _position.liquidity = ev.args[2];
-                }
-                break;
+          for (let ev of receipt.events) {
+            if (ev.event == 'MintResult') {
+              if (ev.args) {
+                _position.liquidity = ev.args[2];
               }
+              break;
             }
           }
           _positions.push(_position);
@@ -514,6 +544,22 @@ describe('AlgebraPool swap tests', () => {
         ])
 
         return { token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions }
+    }
+    
+    describe(poolCase.description, () => {
+
+    const setupPool = async (isDefl : boolean, zeroToOne : boolean) => {
+      const { token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions } = await loadFixture(poolCaseFixture);
+
+      if (isDefl) {
+        if (zeroToOne)
+          await token0.setDefl();
+        else
+          await token1.setDefl();
+      }
+      return {
+        token0, token1, pool, poolFunctions, poolBalance0, poolBalance1, swapTarget, _positions
+      }
     }
 
       let token0: TestERC20
@@ -544,8 +590,7 @@ describe('AlgebraPool swap tests', () => {
           )
 
           const globalState = await pool.globalState()
-
-          const tx = executeSwap(pool, testCase, poolFunctions)
+          const tx = executeSwap(pool, testCase, poolFunctions, swapTarget)
           try {
             await tx
           } catch (error: any) {

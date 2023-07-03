@@ -1,0 +1,29 @@
+{
+  "name": "@cryptoalgebra/plugins",
+  "description": "Plugins for Algebra Core",
+  "license": "GPL-2.0-or-later",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "keywords": [
+    "algebra"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptoalgebra/Algebra/"
+  },
+  "dependencies": {
+    "@cryptoalgebra/core": "3.1.0"
+  },
+  "scripts": {
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "compile": "hardhat compile",
+    "test": "hardhat test --parallel",
+    "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
+  }
+}

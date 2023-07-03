@@ -5,8 +5,9 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
-import '../interfaces/IDataStorageOperator.sol';
+import '../interfaces/IAlgebraPlugin.sol';
 import '../interfaces/IERC20Minimal.sol';
+
 import '../libraries/TickManagement.sol';
 import '../libraries/Constants.sol';
 import './common/Timestamp.sol';
@@ -21,13 +22,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     int24 tick; // The current tick
     int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint16 timepointIndex; // The index of the last written timepoint
-    uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
+    uint8 pluginConfig;
+    uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
 
-  /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override dataStorageOperator;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables
@@ -45,29 +44,25 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   GlobalState public override globalState;
 
   /// @inheritdoc IAlgebraPoolState
-  uint128 public override liquidity;
-  /// @inheritdoc IAlgebraPoolState
-  int24 public override tickSpacing;
-  /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
-  uint128 internal communityFeePending0;
-  uint128 internal communityFeePending1;
-
-  /// @dev The timestamp of the last timepoint write to the DataStorage
-  uint32 internal lastTimepointTimestamp;
-  /// @inheritdoc IAlgebraPoolState
-  uint160 public override secondsPerLiquidityCumulative;
-
-  /// @inheritdoc IAlgebraPoolState
-  address public override activeIncentive;
+  uint104 internal communityFeePending0;
+  uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
 
   /// @inheritdoc IAlgebraPoolState
+  address public override plugin;
+
+  /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
+
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override liquidity;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override tickSpacing;
 
   /// @inheritdoc IAlgebraPoolImmutables
   function maxLiquidityPerTick() external pure override returns (uint128) {
@@ -85,8 +80,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   constructor() {
-    (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
-    globalState.fee = Constants.BASE_FEE;
+    (plugin, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
     globalState.prevInitializedTick = TickMath.MIN_TICK;
   }
 
@@ -101,51 +95,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @dev Using function to save bytecode
   function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
-  }
-
-  /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeTimepoint(
-    uint16 timepointIndex,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 currentLiquidity
-  ) internal returns (uint16 newTimepointIndex, uint16 newFee) {
-    uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
-
-    unchecked {
-      // just timedelta if liquidity == 0
-      // overflow and underflow are desired
-      secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
-    lastTimepointTimestamp = blockTimestamp;
-
-    // failure should not occur. But in case of failure, the pool will remain operational
-    // errors without message will be propagated and revert transaction
-    bool failure;
-    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 _newTimepointIndex, uint16 _newFee) {
-      return (_newTimepointIndex, _newFee);
-    } catch Panic(uint256) {
-      failure = true;
-    } catch Error(string memory) {
-      failure = true;
-    }
-    if (failure) {
-      emit DataStorageFailure();
-      return (timepointIndex, 0);
-    }
-  }
-
-  /// @dev Get secondsPerLiquidityCumulative accumulator value for current blockTimestamp
-  function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal view returns (uint160 _secPerLiqCumulative) {
-    uint32 _lastTs;
-    (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
-    unchecked {
-      if (_lastTs != blockTimestamp)
-        // just timedelta if liquidity == 0
-        // overflow and underflow are desired
-        _secPerLiqCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
   }
 
   /// @dev Add or remove a tick to the corresponding data structure

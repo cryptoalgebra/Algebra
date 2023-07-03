@@ -2,7 +2,6 @@ import { ethers } from 'hardhat'
 import { Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool'
-import { MockTimeDataStorageOperator } from '../typechain/test/MockTimeDataStorageOperator'
 import { expect } from './shared/expect'
 
 import { poolFixture } from './shared/fixtures'
@@ -121,12 +120,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           expect((await pool.globalState()).tick).to.eq(-35586)
         })
 
-        it('first swap in block, large swap, no initialized crossings, prepaid dataStorage slot', async () => {
-          const dataStorageOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
-          const dsOperator = dataStorageOperatorFactory.attach(pool.dataStorageOperator()) as MockTimeDataStorageOperator;
-          await dsOperator.prepayTimepointsStorage(3, 1);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address))
-          expect((await pool.globalState()).tick).to.eq(-35586)
+        it.skip('first swap in block, large swap, no initialized crossings, prepaid dataStorage slot', async () => {
+          //const dataStorageOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
+          //const dsOperator = dataStorageOperatorFactory.attach(pool.plugin()) as MockTimeDataStorageOperator;
+          //await dsOperator.prepayTimepointsStorage(3, 1);
+          //await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address))
+          //expect((await pool.globalState()).tick).to.eq(-35586)
         })
 
         it('first swap in block, large swap crossing several initialized ticks', async () => {
@@ -381,20 +380,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
           await pool.burn(bottomTick, topTick, 0) // poke to accumulate fees
           await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128))
-        })
-      })
-
-      describe('#getInnerCumulatives', () => {
-        it('tick inside', async () => {
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
-        })
-        it('tick above', async () => {
-          await swapToHigherPrice(MAX_SQRT_RATIO.sub(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
-        })
-        it('tick below', async () => {
-          await swapToLowerPrice(MIN_SQRT_RATIO.add(1), wallet.address)
-          await snapshotGasCost(pool.estimateGas.getInnerCumulatives(minTick, maxTick))
         })
       })
     })

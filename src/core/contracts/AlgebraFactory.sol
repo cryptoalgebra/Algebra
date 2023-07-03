@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import './base/AlgebraFeeConfiguration.sol';
-
 import './libraries/Constants.sol';
-import './libraries/AdaptiveFee.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
-import './interfaces/IDataStorageOperator.sol';
+import './interfaces/IAlgebraPluginFactory.sol';
 
-import './DataStorageOperator.sol';
 import './AlgebraCommunityVault.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /// @title Algebra factory
-/// @notice Is used to deploy pools and its dataStorages
+/// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra V2.1
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
@@ -30,10 +26,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraFactory
-  address public override farmingAddress;
+  uint16 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
-  uint8 public override defaultCommunityFee;
+  uint16 public override defaultFee;
 
   /// @inheritdoc IAlgebraFactory
   int24 public override defaultTickspacing;
@@ -44,8 +40,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @dev time delay before ownership renouncement can be finished
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
-  /// @dev values of constants for sigmoids in fee calculation formula
-  AlgebraFeeConfiguration public defaultFeeConfiguration;
+  // TODO
+  IAlgebraPluginFactory public defaultPluginFactory;
 
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
@@ -55,7 +51,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     poolDeployer = _poolDeployer;
     communityVault = address(new AlgebraCommunityVault());
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
-    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
+    defaultFee = Constants.BASE_FEE;
+
+    emit DefaultTickspacing(Constants.INIT_DEFAULT_TICK_SPACING);
+    emit DefaultFee(Constants.BASE_FEE);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -69,8 +68,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view returns (uint8 communityFee, int24 tickSpacing) {
-    return (defaultCommunityFee, defaultTickspacing);
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
+    return (defaultCommunityFee, defaultTickspacing, defaultFee);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -80,10 +79,12 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(token0 != address(0));
     require(poolByPair[token0][token1] == address(0));
 
-    IDataStorageOperator dataStorage = new DataStorageOperator(_computeAddress(token0, token1));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
+    address defaultPlugin;
+    if (address(defaultPluginFactory) != address(0)) {
+      defaultPlugin = defaultPluginFactory.createPlugin(_computeAddress(token0, token1));
+    }
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(dataStorage), token0, token1);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(defaultPlugin), token0, token1);
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
@@ -91,18 +92,19 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setFarmingAddress(address newFarmingAddress) external override onlyOwner {
-    require(farmingAddress != newFarmingAddress);
-    farmingAddress = newFarmingAddress;
-    emit FarmingAddress(newFarmingAddress);
-  }
-
-  /// @inheritdoc IAlgebraFactory
-  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+  function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
     require(defaultCommunityFee != newDefaultCommunityFee);
     defaultCommunityFee = newDefaultCommunityFee;
     emit DefaultCommunityFee(newDefaultCommunityFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function setDefaultFee(uint16 newDefaultFee) external override onlyOwner {
+    require(newDefaultFee <= Constants.MAX_DEFAULT_FEE);
+    require(defaultFee != newDefaultFee);
+    defaultFee = newDefaultFee;
+    emit DefaultFee(newDefaultFee);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -115,10 +117,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
-    AdaptiveFee.validateFeeConfiguration(newConfig);
-    defaultFeeConfiguration = newConfig;
-    emit DefaultFeeConfiguration(newConfig);
+  function setDefaultPluginFactory(address newDefaultPluginFactory) external override onlyOwner {
+    require(newDefaultPluginFactory != address(defaultPluginFactory));
+    defaultPluginFactory = IAlgebraPluginFactory(newDefaultPluginFactory);
+    emit DefaultPluginFactory(newDefaultPluginFactory);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -155,7 +157,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x0a78a8dca4b3d7a50a21894a873d50edc93668d3a5f65d74eedd5d7f0ff25108;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x665481a36bf138629c9a705b3df4e89c95e203de9697feb494e808afe6846906;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

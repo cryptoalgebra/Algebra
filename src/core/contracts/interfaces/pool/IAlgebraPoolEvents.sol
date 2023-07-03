@@ -71,21 +71,18 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the community fee is changed by the pool
   /// @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
-  event CommunityFee(uint8 communityFeeNew);
+  event CommunityFee(uint16 communityFeeNew);
 
   /// @notice Emitted when the tick spacing changes
   /// @param newTickSpacing The updated value of the new tick spacing
   event TickSpacing(int24 newTickSpacing);
 
-  /// @notice Emitted when new activeIncentive is set
-  /// @param newIncentiveAddress The address of the new incentive
-  event Incentive(address indexed newIncentiveAddress);
+  // TODO
+  event Plugin(address indexed newIncentiveAddress);
+
+  event PluginConfig(uint8 newPluginConfig);
 
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
   event Fee(uint16 fee);
-
-  /// @notice Emitted in case of an error when trying to write to the DataStorage
-  /// @dev This shouldn't happen
-  event DataStorageFailure();
 }

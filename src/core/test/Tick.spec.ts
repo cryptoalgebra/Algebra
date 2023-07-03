@@ -119,81 +119,69 @@ describe('Tick', () => {
 
   describe('#update', async () => {
     it('flips from zero to nonzero', async () => {
-      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, 0, 0, false,)).to.eq(true)
+      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, false)).to.eq(true)
     })
     it('does not flip from nonzero to greater nonzero', async () => {
-      await tickTest.update(0, 0, 1, 0, 0, 0, 0, false,)
-      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, 0, 0, false,)).to.eq(false)
+      await tickTest.update(0, 0, 1, 0, 0, false,)
+      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, false)).to.eq(false)
     })
     it('flips from nonzero to zero', async () => {
-      await tickTest.update(0, 0, 1, 0, 0, 0, 0, false)
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, 0, 0, false,)).to.eq(true)
+      await tickTest.update(0, 0, 1, 0, 0,  false)
+      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(true)
     })
     it('does not flip from nonzero to lesser nonzero', async () => {
-      await tickTest.update(0, 0, 2, 0, 0, 0, 0, false,)
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, 0, 0, false,)).to.eq(false)
+      await tickTest.update(0, 0, 2, 0, 0, false)
+      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false)
     })
     it('does not flip from nonzero to lesser nonzero', async () => {
-      await tickTest.update(0, 0, 2, 0, 0, 0, 0, false,)
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, 0, 0, false,)).to.eq(false)
+      await tickTest.update(0, 0, 2, 0, 0, false)
+      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false)
     })
     it('reverts if total liquidity gross is greater than max', async () => {
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, false,)
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, true,)
-      await expect(tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, 0, 0, false,)).to.be.revertedWithCustomError(tickTest, 'liquidityOverflow')
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, false)
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, true)
+      await expect(tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, false)).to.be.revertedWithCustomError(tickTest, 'liquidityOverflow')
     })
     it('nets the liquidity based on upper flag', async () => {
-      await tickTest.update(0, 0, 2, 0, 0, 0, 0, false,)
-      await tickTest.update(0, 0, 1, 0, 0, 0, 0, true,)
-      await tickTest.update(0, 0, 3, 0, 0, 0, 0, true,)
-      await tickTest.update(0, 0, 1, 0, 0, 0, 0, false,)
+      await tickTest.update(0, 0, 2, 0, 0, false)
+      await tickTest.update(0, 0, 1, 0, 0, true)
+      await tickTest.update(0, 0, 3, 0, 0, true)
+      await tickTest.update(0, 0, 1, 0, 0, false)
       const { liquidityTotal, liquidityDelta } = await tickTest.ticks(0)
       expect(liquidityTotal).to.eq(2 + 1 + 3 + 1)
       expect(liquidityDelta).to.eq(2 - 1 - 3 + 1)
     })
     it('reverts on overflow liquidity gross', async () => {
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2).sub(1), 0, 0, 0, 0, false)
-      await expect(tickTest.update(0, 0,  MaxUint128.div(2).sub(1), 0, 0, 0, 0, false)).to.be.reverted
+      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2).sub(1), 0, 0, false)
+      await expect(tickTest.update(0, 0,  MaxUint128.div(2).sub(1), 0, 0, false)).to.be.reverted
     })
     it('assumes all growth happens below ticks lte current tick', async () => {
-      await tickTest.update(1, 1, 1, 1, 2, 3, 5, false)
+      await tickTest.update(1, 1, 1, 1, 2, false)
       const {
         outerFeeGrowth0Token,
-        outerFeeGrowth1Token,
-        outerSecondsSpent,
-        outerSecondsPerLiquidity,
+        outerFeeGrowth1Token
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
-      expect(outerSecondsPerLiquidity).to.eq(3)
-      expect(outerSecondsSpent).to.eq(5)
     })
     it('does not set any growth fields if tick is already initialized', async () => {
-      await tickTest.update(1, 1, 1, 1, 2, 3, 4, false)
-      await tickTest.update(1, 1, 1, 6, 7, 8, 9, false)
+      await tickTest.update(1, 1, 1, 1, 2, false)
+      await tickTest.update(1, 1, 1, 6, 7, false)
       const {
         outerFeeGrowth0Token,
-        outerFeeGrowth1Token,
-        outerSecondsSpent,
-        outerSecondsPerLiquidity,
+        outerFeeGrowth1Token
       } = await tickTest.ticks(1)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
-      expect(outerSecondsPerLiquidity).to.eq(3)
-      expect(outerSecondsSpent).to.eq(4)
     })
     it('does not set any growth fields for ticks gt current tick', async () => {
-      await tickTest.update(2, 1, 1, 1, 2, 3, 4, false)
+      await tickTest.update(2, 1, 1, 1, 2, false)
       const {
         outerFeeGrowth0Token,
-        outerFeeGrowth1Token,
-        outerSecondsSpent,
-        outerSecondsPerLiquidity,
+        outerFeeGrowth1Token
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
-      expect(outerSecondsPerLiquidity).to.eq(0)
-      expect(outerSecondsSpent).to.eq(0)
     })
   })
 
@@ -205,8 +193,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 2,
         liquidityTotal: 3,
         liquidityDelta: 4,
-        outerSecondsPerLiquidity: 5,
-        outerSecondsSpent: 7,
         prevTick: 0,
         nextTick: 0
       })
@@ -214,15 +200,11 @@ describe('Tick', () => {
       const {
         outerFeeGrowth0Token,
         outerFeeGrowth1Token,
-        outerSecondsSpent,
-        outerSecondsPerLiquidity,
         liquidityTotal,
         liquidityDelta,
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(0)
       expect(outerFeeGrowth1Token).to.eq(0)
-      expect(outerSecondsSpent).to.eq(0)
-      expect(outerSecondsPerLiquidity).to.eq(0)
       expect(liquidityTotal).to.eq(0)
       expect(liquidityDelta).to.eq(0)
     })
@@ -235,22 +217,16 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 2,
         liquidityTotal: 3,
         liquidityDelta: 4,
-        outerSecondsPerLiquidity: 5,
-        outerSecondsSpent: 7,
         prevTick: 0,
         nextTick: 0
       })
-      await tickTest.cross(2, 7, 9, 8, 10)
+      await tickTest.cross(2, 7, 9)
       const {
         outerFeeGrowth0Token,
-        outerFeeGrowth1Token,
-        outerSecondsSpent,
-        outerSecondsPerLiquidity,
+        outerFeeGrowth1Token
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(6)
       expect(outerFeeGrowth1Token).to.eq(7)
-      expect(outerSecondsPerLiquidity).to.eq(3)
-      expect(outerSecondsSpent).to.eq(3)
     })
     it('two flips are no op', async () => {
       await tickTest.setTick(2, {
@@ -258,13 +234,11 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 2,
         liquidityTotal: 3,
         liquidityDelta: 4,
-        outerSecondsPerLiquidity: 5,
-        outerSecondsSpent: 7,
         prevTick: 0,
         nextTick: 0
       })
-      await tickTest.cross(2, 7, 9, 8, 10)
-      await tickTest.cross(2, 7, 9, 8, 10)
+      await tickTest.cross(2, 7, 9)
+      await tickTest.cross(2, 7, 9)
       const {
         outerFeeGrowth0Token,
         outerFeeGrowth1Token,
@@ -273,8 +247,99 @@ describe('Tick', () => {
       } = await tickTest.ticks(2)
       expect(outerFeeGrowth0Token).to.eq(1)
       expect(outerFeeGrowth1Token).to.eq(2)
-      expect(outerSecondsPerLiquidity).to.eq(5)
-      expect(outerSecondsSpent).to.eq(7)
     })
   })
+
+  describe('#insertTick', () => {
+
+    beforeEach('insert ticks', async () => {
+      await tickTest.init()
+    })
+
+    it('works correct', async () => {
+      await tickTest.insertTick(0, -887272, 887272);
+      await tickTest.insertTick(100, 0, 887272);
+      await tickTest.insertTick(-100, -887272, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(0)
+      expect(prevTick).to.eq(-100)
+      expect(nextTick).to.eq(100)
+    })
+
+    it('insert MAX tick', async () => {
+      await tickTest.insertTick(887272, 0, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(887272)
+
+    })
+
+    it('insert MIN tick', async () => {
+      await tickTest.insertTick(-887272, 0, 0);
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(-887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(887272)
+
+    })
+
+    it('fails with incorrect input', async () => {
+      await expect(tickTest.insertTick(0, 887272, -887272)).to.be.revertedWithCustomError(tickTest, 'tickInvalidLinks')
+      await expect(tickTest.insertTick(0, -887272, -100)).to.be.revertedWithCustomError(tickTest, 'tickInvalidLinks')
+    })
+  })
+
+  describe('#removeTick', () => {
+    
+    beforeEach('insert ticks', async () => {
+      await tickTest.init()
+      await tickTest.insertTick(0, -887272, 887272);
+      await tickTest.insertTick(100, 0, 887272);
+      await tickTest.insertTick(-100, -887272, 0);
+    })
+    
+    it('works correct', async () => {
+      await tickTest.removeTick(0)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(0)
+      expect(prevTick).to.eq(0)
+      expect(nextTick).to.eq(0)
+    })
+
+    it('remove MIN tick', async () => {
+      await tickTest.removeTick(-887272)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(-887272)
+      expect(prevTick).to.eq(-887272)
+      expect(nextTick).to.eq(-100)
+    
+    })
+
+    it('remove MAX tick', async () => {
+      await tickTest.removeTick(887272)
+      const{
+        prevTick,
+        nextTick
+      } = await tickTest.ticks(887272)
+      expect(prevTick).to.eq(100)
+      expect(nextTick).to.eq(887272)
+    })
+
+    it('fails when remove not initialized tick', async () => {
+      await expect(tickTest.removeTick(1)).to.be.revertedWithCustomError(tickTest, 'tickIsNotInitialized')
+    })
+
+  })
+
 })
