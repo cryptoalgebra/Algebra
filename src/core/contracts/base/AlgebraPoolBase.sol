@@ -5,11 +5,13 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
-import '../interfaces/IAlgebraPlugin.sol';
 import '../interfaces/IERC20Minimal.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 
 import '../libraries/TickManagement.sol';
 import '../libraries/Constants.sol';
+import '../libraries/Plugins.sol';
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
@@ -72,6 +74,16 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external view returns (uint128, uint128) {
     return (communityFeePending0, communityFeePending1);
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function fee() external view returns (uint16 currentFee) {
+    currentFee = globalState.fee;
+    uint8 pluginConfig = globalState.pluginConfig;
+
+    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) {
+      return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
+    }
   }
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {

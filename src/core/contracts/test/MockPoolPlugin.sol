@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 pragma abicoder v1;
 
-import '../interfaces/IAlgebraPlugin.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin {

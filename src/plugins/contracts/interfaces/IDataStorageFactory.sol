@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import '../base/AlgebraFeeConfiguration.sol';
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPluginFactory.sol';
+import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
 /// @title The interface for the DataStorageFactory
 /// @notice TODO

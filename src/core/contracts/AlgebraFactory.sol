@@ -5,7 +5,7 @@ import './libraries/Constants.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
-import './interfaces/IAlgebraPluginFactory.sol';
+import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import './AlgebraCommunityVault.sol';
 
@@ -157,7 +157,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x665481a36bf138629c9a705b3df4e89c95e203de9697feb494e808afe6846906;
+  bytes32 private constant POOL_INIT_CODE_HASH = 0x7daf17a8cb094be8c4d49bbe53807d86c38c746072cbce9607a53061f42892a6;
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @param token0 first token

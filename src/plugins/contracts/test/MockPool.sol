@@ -11,7 +11,7 @@ import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolPermissionedActions.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolErrors.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPlugin.sol';
+import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
 contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlgebraPoolState {
@@ -61,6 +61,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external pure override returns (uint128, uint128) {
+    revert('not implemented');
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function fee() external pure returns (uint16) {
     revert('not implemented');
   }
 

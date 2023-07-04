@@ -11,7 +11,7 @@ interface IAlgebraPoolState {
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run;
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
   /// @return prevInitializedTick The previous initialized tick
-  /// @return fee The last pool fee value in hundredths of a bip, i.e. 1e-6
+  /// @return fee The last known pool fee value in hundredths of a bip, i.e. 1e-6
   /// @return pluginConfig TODO
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
@@ -34,6 +34,13 @@ interface IAlgebraPoolState {
   /// @notice The amounts of token0 and token1 that will be sent to the vault
   /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
   function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
+
+  /// @notice The current pool fee value
+  /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
+  /// If the plugin implements complex fee logic, this method may return an incorrect value or revert.
+  /// In this case, see the plugin implementation and related documentation.
+  /// @return currentFee The current pool fee value in hundredths of a bip, i.e. 1e-6
+  function fee() external view returns (uint16 currentFee);
 
   /// @notice The tracked token0 and token1 reserves of pool
   /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.

@@ -8,7 +8,7 @@ import './libraries/DataStorage.sol';
 import './libraries/AdaptiveFee.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPlugin.sol';
+import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
@@ -116,7 +116,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     emit FeeConfiguration(_config);
   }
 
-  /// @inheritdoc IDynamicFeeManager
+  /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
     AlgebraFeeConfiguration memory _feeConfig = feeConfig;
     if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {

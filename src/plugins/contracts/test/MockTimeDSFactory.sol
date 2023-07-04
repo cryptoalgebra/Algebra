@@ -8,7 +8,7 @@ import './MockTimeDataStorageOperator.sol';
 
 import '../interfaces/IDataStorageFactory.sol';
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPluginFactory.sol';
+import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
 contract MockTimeDSFactory is IDataStorageFactory {
   address public immutable algebraFactory;

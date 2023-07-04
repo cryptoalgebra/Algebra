@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.17;
 
-import '../interfaces/IAlgebraPlugin.sol';
 import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
