@@ -233,7 +233,7 @@ describe('AlgebraFactory', () => {
       await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.reverted
     })
 
-    it('fails if new community fee greate than max fee', async () => {
+    it('fails if new community fee greater than max fee', async () => {
       await expect(factory.setDefaultCommunityFee(1100)).to.be.reverted
     })
 
@@ -258,7 +258,7 @@ describe('AlgebraFactory', () => {
       await expect(factory.connect(other).setDefaultFee(200)).to.be.reverted
     })
 
-    it('fails if new community fee greate than max fee', async () => {
+    it('fails if new community fee greater than max fee', async () => {
       await expect(factory.setDefaultFee(51000)).to.be.reverted
     })
 
@@ -283,7 +283,7 @@ describe('AlgebraFactory', () => {
       await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.reverted
     })
 
-    it('fails if new community fee greate than max fee & lt min fee', async () => {
+    it('fails if new community fee greater than max fee & lt min fee', async () => {
       await expect(factory.setDefaultTickspacing(1100)).to.be.reverted
       await expect(factory.setDefaultTickspacing(-1100)).to.be.reverted
     })
@@ -301,31 +301,6 @@ describe('AlgebraFactory', () => {
       await expect(factory.setDefaultTickspacing(50))
         .to.emit(factory,'DefaultTickspacing')
         .withArgs(50)
-    })
-  })
-
-  describe('#setDefaultCommunityFee', () => {
-    it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setDefaultCommunityFee(30)).to.be.reverted
-    })
-
-    it('fails if new community fee greate than max fee', async () => {
-      await expect(factory.setDefaultCommunityFee(1100)).to.be.reverted
-    })
-
-    it('fails if new community fee eq current', async () => {
-      await expect(factory.setDefaultCommunityFee(0)).to.be.reverted
-    })
-
-    it('works correct', async () => {
-      await factory.setDefaultCommunityFee(60)
-      expect(await factory.defaultCommunityFee()).to.eq(60)
-    })
-
-    it('emits event', async () => {
-      await expect(factory.setDefaultCommunityFee(60))
-        .to.emit(factory, 'DefaultCommunityFee')
-        .withArgs(60)
     })
   })
 
