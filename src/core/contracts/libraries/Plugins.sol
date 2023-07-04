@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.17;
 
+import '../interfaces/IAlgebraPoolErrors.sol';
+
 library Plugins {
   function hasFlag(uint8 pluginConfig, uint256 flag) internal pure returns (bool res) {
     assembly {
       res := gt(and(pluginConfig, flag), 0)
     }
+  }
+
+  function checkReturnedSelector(bytes4 selector, bytes4 expectedSelector) internal pure {
+    if (selector != expectedSelector) revert IAlgebraPoolErrors.invalidHookResponse(expectedSelector);
   }
 
   uint256 internal constant BEFORE_SWAP_FLAG = 1;

@@ -52,6 +52,8 @@ interface IAlgebraPoolErrors {
   error dynamicFeeActive();
   error dynamicFeeDisabled();
 
+  error invalidHookResponse(bytes4 selector);
+
   // ####  LiquidityMath errors  ####
   /// @notice Emitted if liquidity underflows
   error liquiditySub();
