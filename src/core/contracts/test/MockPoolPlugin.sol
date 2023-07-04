@@ -45,7 +45,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @notice The hook called before a position is modified
   /// @param sender The initial msg.sender for the modify position call
   /// @return bytes4 The function selector for the hook
-  function beforeModifyPosition(address sender) external override returns (bytes4) {
+  function beforeModifyPosition(address sender, int24, int24, int128) external override returns (bytes4) {
     emit BeforeModifyPosition(sender);
     return IAlgebraPlugin.beforeModifyPosition.selector;
   }
@@ -53,7 +53,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
   /// @return bytes4 The function selector for the hook
-  function afterModifyPosition(address sender) external override returns (bytes4) {
+  function afterModifyPosition(address sender, int24, int24, int128, uint256, uint256) external override returns (bytes4) {
     emit AfterModifyPosition(sender);
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
@@ -61,7 +61,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @notice The hook called before a swap
   /// @param sender The initial msg.sender for the swap call
   /// @return bytes4 The function selector for the hook
-  function beforeSwap(address sender) external override returns (bytes4) {
+  function beforeSwap(address sender, bool, int256, uint160) external override returns (bytes4) {
     emit BeforeSwap(sender);
     return IAlgebraPlugin.beforeSwap.selector;
   }
@@ -69,7 +69,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @notice The hook called after a swap
   /// @param sender The initial msg.sender for the swap call
   /// @return bytes4 The function selector for the hook
-  function afterSwap(address sender) external override returns (bytes4) {
+  function afterSwap(address sender, bool, int256, uint160, int256, int256) external override returns (bytes4) {
     emit AfterSwap(sender);
     return IAlgebraPlugin.afterSwap.selector;
   }
@@ -90,11 +90,7 @@ contract MockPoolPlugin is IAlgebraPlugin {
   /// @param amount0 The amount of token0 being requested for flash
   /// @param amount1 The amount of token1 being requested for flash
   /// @return bytes4 The function selector for the hook
-  function afterFlash(
-    address sender,
-    uint256 amount0,
-    uint256 amount1 // TODO params
-  ) external override returns (bytes4) {
+  function afterFlash(address sender, uint256 amount0, uint256 amount1, uint256, uint256) external override returns (bytes4) {
     emit AfterFlash(sender, amount0, amount1);
     return IAlgebraPlugin.afterFlash.selector;
   }

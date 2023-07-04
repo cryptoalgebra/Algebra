@@ -21,23 +21,53 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called before a position is modified
   /// @param sender The initial msg.sender for the modify position call
+  /// @param bottomTick TODO
+  /// @param topTick TODO
+  /// @param desiredLiquidityDelta TODO
   /// @return bytes4 The function selector for the hook
-  function beforeModifyPosition(address sender) external returns (bytes4);
+  function beforeModifyPosition(address sender, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta) external returns (bytes4);
 
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
+  /// @param bottomTick TODO
+  /// @param topTick TODO
+  /// @param desiredLiquidityDelta TODO
+  /// @param amount0 TODO
+  /// @param amount1 TODO
   /// @return bytes4 The function selector for the hook
-  function afterModifyPosition(address sender) external returns (bytes4);
+  function afterModifyPosition(
+    address sender,
+    int24 bottomTick,
+    int24 topTick,
+    int128 desiredLiquidityDelta,
+    uint256 amount0,
+    uint256 amount1
+  ) external returns (bytes4);
 
   /// @notice The hook called before a swap
   /// @param sender The initial msg.sender for the swap call
+  /// @param zeroToOne TODO
+  /// @param amountRequired TODO
+  /// @param limitSqrtPrice TODO
   /// @return bytes4 The function selector for the hook
-  function beforeSwap(address sender) external returns (bytes4);
+  function beforeSwap(address sender, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice) external returns (bytes4);
 
   /// @notice The hook called after a swap
   /// @param sender The initial msg.sender for the swap call
+  /// @param zeroToOne TODO
+  /// @param amountRequired TODO
+  /// @param limitSqrtPrice TODO
+  /// @param amount0 TODO
+  /// @param amount1 TODO
   /// @return bytes4 The function selector for the hook
-  function afterSwap(address sender) external returns (bytes4);
+  function afterSwap(
+    address sender,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    int256 amount0,
+    int256 amount1
+  ) external returns (bytes4);
 
   /// @notice The hook called before flash
   /// @param sender The initial msg.sender for the flash call
@@ -50,10 +80,14 @@ interface IAlgebraPlugin {
   /// @param sender The initial msg.sender for the flash call
   /// @param amount0 The amount of token0 being requested for flash
   /// @param amount1 The amount of token1 being requested for flash
+  /// @param paid0 The amount of token0 being paid for flash
+  /// @param paid1 The amount of token1 being paid for flash
   /// @return bytes4 The function selector for the hook
   function afterFlash(
     address sender,
     uint256 amount0,
-    uint256 amount1 // TODO params
+    uint256 amount1, // TODO params
+    uint256 paid0,
+    uint256 paid1
   ) external returns (bytes4);
 }

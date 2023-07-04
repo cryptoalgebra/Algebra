@@ -71,7 +71,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
 
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender); // TODO REENTRANCY
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, bottomTick, topTick, liquidityDesired.toInt128()); // TODO REENTRANCY
     }
 
     unchecked {
@@ -130,7 +130,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _unlock();
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender, bottomTick, topTick, liquidityActual.toInt128(), amount0, amount1);
     }
   }
 
@@ -142,8 +142,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1) {
     if (amount > uint128(type(int128).max)) revert arithmeticError();
 
+    int128 liquidityDelta = -int128(amount);
+
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender);
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, bottomTick, topTick, liquidityDelta);
     }
 
     _lock();
@@ -151,7 +153,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _updateReserves();
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
-    int128 liquidityDelta = -int128(amount);
     (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
     if (amount0 | amount1 != 0) {
@@ -163,7 +164,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _unlock();
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender);
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1);
     }
   }
 
@@ -208,7 +209,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override returns (int256 amount0, int256 amount1) {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       // TODO optimize
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender);
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender, zeroToOne, amountRequired, limitSqrtPrice);
     }
 
     _lock();
@@ -241,7 +242,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       // TODO optimize
-      IAlgebraPlugin(plugin).afterSwap(msg.sender);
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1);
     }
   }
 
@@ -258,7 +259,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       // TODO optimize
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender);
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender, zeroToOne, amountRequired, limitSqrtPrice); // TODO amountRequired can change
     }
 
     _lock();
@@ -309,7 +310,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       // TODO optimize
-      IAlgebraPlugin(plugin).afterSwap(msg.sender);
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1);
     }
   }
 
@@ -359,7 +360,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _unlock();
 
     if (pluginConfig.hasFlag(Plugins.AFTER_FLASH_FLAG)) {
-      IAlgebraPlugin(plugin).afterFlash(msg.sender, amount0, amount1);
+      IAlgebraPlugin(plugin).afterFlash(msg.sender, amount0, amount1, paid0, paid1);
     }
   }
 
