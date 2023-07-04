@@ -10,7 +10,7 @@ library Plugins {
     }
   }
 
-  function checkReturnedSelector(bytes4 selector, bytes4 expectedSelector) internal pure {
+  function shouldReturn(bytes4 selector, bytes4 expectedSelector) internal pure {
     if (selector != expectedSelector) revert IAlgebraPoolErrors.invalidHookResponse(expectedSelector);
   }
 
