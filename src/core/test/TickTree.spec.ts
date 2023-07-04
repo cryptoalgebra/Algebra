@@ -149,10 +149,6 @@ describe('TickTree', () => {
       await initTicks(FULL_PACK)
       await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(255*60))
     })
-    it('gas cost on boundary', async () => {
-      await initTicks(FULL_PACK)
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(255*60))
-    })
     it('gas cost just below boundary', async () => {
       await initTicks(FULL_PACK)
       await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(254*60))
