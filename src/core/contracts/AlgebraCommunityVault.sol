@@ -7,6 +7,7 @@ import './libraries/FullMath.sol';
 import './interfaces/IAlgebraFactory.sol';
 
 // TODO natspecs
+// TODO events
 
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled
@@ -16,6 +17,8 @@ contract AlgebraCommunityVault {
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant COMMUNITY_FEE_WITHDRAWER_ROLE = keccak256('COMMUNITY_FEE_WITHDRAWER');
   address private immutable factory;
+
+  address public communityFeeReceiver;
 
   uint16 public algebraFee;
   bool public hasNewAlgebraFeeProposal;
@@ -28,8 +31,13 @@ contract AlgebraCommunityVault {
 
   uint16 constant ALGEBRA_FEE_DENOMINATOR = 1000;
 
+  modifier onlyFactoryOwner() {
+    require(msg.sender == IAlgebraFactory(factory).owner());
+    _;
+  }
+
   modifier onlyWithdrawer() {
-    require(IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender));
+    require(msg.sender == algebraFeeManager || IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender));
     _;
   }
 
@@ -43,24 +51,39 @@ contract AlgebraCommunityVault {
     algebraFeeManager = _algebraFeeManager;
   }
 
-  function withdraw(address token, address to, uint256 amount) external onlyWithdrawer {
+  function withdraw(address token, uint256 amount) external onlyWithdrawer {
     uint16 _algebraFee = algebraFee;
-    address _algebraFeeReceiver = algebraFeeReceiver;
-    _withdraw(token, to, amount, _algebraFee, _algebraFeeReceiver);
+    address _algebraFeeReceiver;
+    if (_algebraFee != 0) {
+      _algebraFeeReceiver = algebraFeeReceiver;
+      require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
+    }
+
+    address _communityFeeReceiver = communityFeeReceiver;
+    require(_communityFeeReceiver != address(0), 'invalid receiver');
+
+    _withdraw(token, _communityFeeReceiver, amount, _algebraFee, _algebraFeeReceiver);
   }
 
   struct WithdrawTokensParams {
     address token;
-    address to;
     uint256 amount;
   }
 
   function withdrawTokens(WithdrawTokensParams[] calldata params) external onlyWithdrawer {
     uint256 paramsLength = params.length;
     uint16 _algebraFee = algebraFee;
-    address _algebraFeeReceiver = algebraFeeReceiver;
+
+    address _algebraFeeReceiver;
+    if (_algebraFee != 0) {
+      _algebraFeeReceiver = algebraFeeReceiver;
+      require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
+    }
+    address _communityFeeReceiver = communityFeeReceiver;
+    require(_communityFeeReceiver != address(0), 'invalid receiver');
+
     unchecked {
-      for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, params[i].to, params[i].amount, _algebraFee, _algebraFeeReceiver);
+      for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, _communityFeeReceiver, params[i].amount, _algebraFee, _algebraFeeReceiver);
     }
   }
 
@@ -76,8 +99,9 @@ contract AlgebraCommunityVault {
     emit TokensWithdrawal(token, to, amount);
   }
 
-  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+  // ### algebra factory owner permissioned actions ###
+
+  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external onlyFactoryOwner {
     require(hasNewAlgebraFeeProposal, 'not proposed');
     require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
 
@@ -85,6 +109,11 @@ contract AlgebraCommunityVault {
 
     hasNewAlgebraFeeProposal = false;
     proposedNewAlgebraFee = 0;
+  }
+
+  function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external onlyFactoryOwner {
+    require(newCommunityFeeReceiver != address(0));
+    communityFeeReceiver = newCommunityFeeReceiver;
   }
 
   // ### algebra fee manager permissioned actions ###
@@ -111,6 +140,7 @@ contract AlgebraCommunityVault {
   }
 
   function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external onlyAlgebraFeeManager {
+    require(newAlgebraFeeReceiver != address(0));
     algebraFeeReceiver = newAlgebraFeeReceiver;
   }
 }
