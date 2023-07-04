@@ -576,7 +576,7 @@ describe('AlgebraPool swap tests', () => {
 
       afterEach('check can burn positions', async () => {
         for (const { liquidity, topTick, bottomTick } of _positions) {
-          await pool.burn(bottomTick, topTick, liquidity)
+          await pool.burn(bottomTick, topTick, liquidity, [])
           await pool.collect(POSITION_PROCEEDS_OUTPUT_ADDRESS, bottomTick, topTick, MaxUint128, MaxUint128)
         }
       })

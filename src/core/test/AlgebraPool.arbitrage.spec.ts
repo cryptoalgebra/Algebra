@@ -256,9 +256,10 @@ describe('AlgebraPool arbitrage tests', () => {
                 const { amount0: amount0Burn, amount1: amount1Burn } = await pool.callStatic.burn(
                   bottomTick,
                   topTick,
-                  BigNumber.from("40564824043007195767232224305152")
+                  BigNumber.from("40564824043007195767232224305152"),
+                  []
                 )
-                await pool.burn(bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"))
+                await pool.burn(bottomTick, topTick, BigNumber.from("40564824043007195767232224305152"), [])
                 arbBalance0 = arbBalance0.add(amount0Burn)
                 arbBalance1 = arbBalance1.add(amount1Burn)
 

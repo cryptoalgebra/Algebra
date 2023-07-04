@@ -42,7 +42,7 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     }
 
     // try to reenter burn
-    try IAlgebraPool(msg.sender).burn(0, tickSpacing, 0) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).burn(0, tickSpacing, 0, new bytes(0)) {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
 

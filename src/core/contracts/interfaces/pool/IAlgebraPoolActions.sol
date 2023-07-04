@@ -59,9 +59,10 @@ interface IAlgebraPoolActions {
   /// @param bottomTick The lower tick of the position for which to burn liquidity
   /// @param topTick The upper tick of the position for which to burn liquidity
   /// @param amount How much liquidity to burn
+  /// @param data Any data that should be passed through to the plugin
   /// @return amount0 The amount of token0 sent to the recipient
   /// @return amount1 The amount of token1 sent to the recipient
-  function burn(int24 bottomTick, int24 topTick, uint128 amount) external returns (uint256 amount0, uint256 amount1);
+  function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes calldata data) external returns (uint256 amount0, uint256 amount1);
 
   /// @notice Swap token0 for token1, or token1 for token0
   /// @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback

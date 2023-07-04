@@ -312,7 +312,7 @@ describe('AlgebraPool', () => {
 
           it('removing works', async () => {
             await mint(wallet.address, -240, 0, 10000)
-            await pool.burn(-240, 0, 10000)
+            await pool.burn(-240, 0, 10000, [])
             const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
             expect(amount0, 'amount0').to.eq(120)
             expect(amount1, 'amount1').to.eq(0)
@@ -321,7 +321,7 @@ describe('AlgebraPool', () => {
           it('removing works after tickSpacing increase', async () => {
             await mint(wallet.address, -240, 0, 10000)
             await pool.setTickSpacing(100)
-            await pool.burn(-240, 0, 10000)
+            await pool.burn(-240, 0, 10000, [])
             const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
             expect(amount0, 'amount0').to.eq(120)
             expect(amount1, 'amount1').to.eq(0)
@@ -330,7 +330,7 @@ describe('AlgebraPool', () => {
           it('removing works after tickSpacing decrease', async () => {
             await mint(wallet.address, -240, 0, 10000)
             await pool.setTickSpacing(1)
-            await pool.burn(-240, 0, 10000)
+            await pool.burn(-240, 0, 10000, [])
             const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128)
             expect(amount0, 'amount0').to.eq(120)
             expect(amount1, 'amount1').to.eq(0)
@@ -357,14 +357,14 @@ describe('AlgebraPool', () => {
           it('removes liquidity from liquidityTotal', async () => {
             await mint(wallet.address, -240, 0, 100)
             await mint(wallet.address, -240, 0, 40)
-            await pool.burn(-240, 0, 90)
+            await pool.burn(-240, 0, 90, [])
             expect((await pool.ticks(-240)).liquidityTotal).to.eq(50)
             expect((await pool.ticks(0)).liquidityTotal).to.eq(50)
           })
 
           it('clears tick lower if last position is removed', async () => {
             await mint(wallet.address, -240, 0, 100)
-            await pool.burn(-240, 0, 100)
+            await pool.burn(-240, 0, 100, [])
             const { liquidityTotal, outerFeeGrowth0Token, outerFeeGrowth1Token } = await pool.ticks(-240)
             expect(liquidityTotal).to.eq(0)
             expect(outerFeeGrowth0Token).to.eq(0)
@@ -373,7 +373,7 @@ describe('AlgebraPool', () => {
 
           it('clears tick upper if last position is removed', async () => {
             await mint(wallet.address, -240, 0, 100)
-            await pool.burn(-240, 0, 100)
+            await pool.burn(-240, 0, 100, [])
             const { liquidityTotal, outerFeeGrowth0Token, outerFeeGrowth1Token } = await pool.ticks(0)
             expect(liquidityTotal).to.eq(0)
             expect(outerFeeGrowth0Token).to.eq(0)
@@ -382,7 +382,7 @@ describe('AlgebraPool', () => {
           it('only clears the tick that is not used at all', async () => {
             await mint(wallet.address, -240, 0, 100)
             await mint(wallet.address, -tickSpacing, 0, 250)
-            await pool.burn(-240, 0, 100)
+            await pool.burn(-240, 0, 100, [])
 
             let { liquidityTotal, outerFeeGrowth0Token, outerFeeGrowth1Token } = await pool.ticks(-240)
             expect(liquidityTotal).to.eq(0)
@@ -430,7 +430,7 @@ describe('AlgebraPool', () => {
 
           it('removing works', async () => {
             await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100)
-            await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 100)
+            await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 100, [])
             const { amount0, amount1 } = await pool.callStatic.collect(
               wallet.address,
               minTick + tickSpacing,
@@ -469,7 +469,7 @@ describe('AlgebraPool', () => {
 
           it('removing works', async () => {
             await mint(wallet.address, -46080, -46020, 10000)
-            await pool.burn(-46080, -46020, 10000)
+            await pool.burn(-46080, -46020, 10000, [])
             const { amount0, amount1 } = await pool.callStatic.collect(
               wallet.address,
               -46080,
@@ -513,7 +513,7 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1).div(10), wallet.address)
         await swapExact1For0(expandTo18Decimals(1).div(100), wallet.address)
 
-        await expect(pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)).to.be.not.reverted
+        await expect(pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0, [])).to.be.not.reverted
         let {
           liquidity: l0,
           innerFeeGrowth0Token: ifg0,
@@ -542,7 +542,7 @@ describe('AlgebraPool', () => {
         expect(innerFeeGrowth0Token).to.eq('3402823669209373878308127703486852')
         expect(innerFeeGrowth1Token).to.eq('340282366920937387830812770348685')
 
-        await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 1)
+        await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 1, [])
         ;({
           liquidity,
           innerFeeGrowth0Token,
@@ -581,7 +581,7 @@ describe('AlgebraPool', () => {
       await mint(other.address, minTick, maxTick, expandTo18Decimals(1))
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
       await swapExact1For0(expandTo18Decimals(1), wallet.address)
-      await pool.connect(other).burn(minTick, maxTick, expandTo18Decimals(1))
+      await pool.connect(other).burn(minTick, maxTick, expandTo18Decimals(1), [])
       const {
         liquidity,
         fees0,
@@ -603,7 +603,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(10)
       await mint(wallet.address, bottomTick, topTick, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsClear(bottomTick)
       await checkTickIsClear(topTick)
     })
@@ -616,7 +616,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick, topTick, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
       await pool.setTickSpacing(200)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsClear(bottomTick)
       await checkTickIsClear(topTick)
     })
@@ -629,7 +629,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick, topTick, 1)
       await mint(wallet.address, bottomTick + tickSpacing, topTick, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsClear(bottomTick)
       await checkTickIsNotClear(topTick)
     })
@@ -643,7 +643,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick + tickSpacing, topTick, 1)
       await pool.setTickSpacing(5)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsClear(bottomTick)
       await checkTickIsNotClear(topTick)
     })
@@ -656,7 +656,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick, topTick, 1)
       await mint(wallet.address, bottomTick, topTick - tickSpacing, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsNotClear(bottomTick)
       await checkTickIsClear(topTick)
     })
@@ -670,7 +670,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick, topTick - tickSpacing, 1)
       await pool.setTickSpacing(100)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await pool.burn(bottomTick, topTick, 1)
+      await pool.burn(bottomTick, topTick, 1, [])
       await checkTickIsNotClear(bottomTick)
       await checkTickIsClear(topTick)
     })
@@ -682,7 +682,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(10)
       await mint(wallet.address, bottomTick, topTick, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await expect( pool.burn(topTick, bottomTick, 1)).to.be.revertedWithCustomError(pool, "topTickLowerOrEqBottomTick")
+      await expect( pool.burn(topTick, bottomTick, 1, [])).to.be.revertedWithCustomError(pool, "topTickLowerOrEqBottomTick")
     })
 
     it('fails when try to burn max int128 value', async () => {
@@ -692,7 +692,7 @@ describe('AlgebraPool', () => {
       await pool.advanceTime(10)
       await mint(wallet.address, bottomTick, topTick, 1)
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
-      await expect(pool.burn(bottomTick, topTick, BigNumber.from(2).pow(128).sub(1))).to.be.revertedWithCustomError(pool, "arithmeticError")
+      await expect(pool.burn(bottomTick, topTick, BigNumber.from(2).pow(128).sub(1), [])).to.be.revertedWithCustomError(pool, "arithmeticError")
     })
 
   })
@@ -773,7 +773,7 @@ describe('AlgebraPool', () => {
       const bottomTick = -tickSpacing
       const topTick = tickSpacing
       await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1000))
-      await expect(pool.burn(bottomTick, topTick, expandTo18Decimals(1001))).to.be.revertedWithCustomError(pool, 'liquiditySub')
+      await expect(pool.burn(bottomTick, topTick, expandTo18Decimals(1001), [])).to.be.revertedWithCustomError(pool, 'liquiditySub')
     })
 
     it('collect fees within the current price after swap', async () => {
@@ -796,10 +796,10 @@ describe('AlgebraPool', () => {
       const token0BalanceBeforeWallet = await token0.balanceOf(wallet.address)
       const token1BalanceBeforeWallet = await token1.balanceOf(wallet.address)
 
-      await pool.burn(bottomTick, topTick, 0)
+      await pool.burn(bottomTick, topTick, 0, [])
       await pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128)
 
-      await pool.burn(bottomTick, topTick, 0)
+      await pool.burn(bottomTick, topTick, 0, [])
       const { amount0: fees0, amount1: fees1 } = await pool.callStatic.collect(
         wallet.address,
         bottomTick,
@@ -903,7 +903,7 @@ describe('AlgebraPool', () => {
         .withArgs(wallet.address, pool.address, '5981737760509663')
       // somebody takes the limit order
       await swapExact1For0(expandTo18Decimals(2), other.address)
-      await expect(pool.burn(0, 120, expandTo18Decimals(1)))
+      await expect(pool.burn(0, 120, expandTo18Decimals(1), []))
         .to.emit(pool, 'Burn')
         .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165')
         .to.not.emit(token0, 'Transfer')
@@ -920,7 +920,7 @@ describe('AlgebraPool', () => {
         .withArgs(wallet.address, pool.address, '5981737760509663')
       // somebody takes the limit order
       await swapExact0For1(expandTo18Decimals(2), other.address)
-      await expect(pool.burn(-120, 0, expandTo18Decimals(1)))
+      await expect(pool.burn(-120, 0, expandTo18Decimals(1), []))
         .to.emit(pool, 'Burn')
         .withArgs(wallet.address, -120, 0, expandTo18Decimals(1), '6017734268818165', 0)
         .to.not.emit(token0, 'Transfer')
@@ -939,7 +939,7 @@ describe('AlgebraPool', () => {
           .withArgs(wallet.address, pool.address, '5981737760509663')
         // somebody takes the limit order
         await swapExact1For0(expandTo18Decimals(2), other.address)
-        await expect(pool.burn(0, 120, expandTo18Decimals(1)))
+        await expect(pool.burn(0, 120, expandTo18Decimals(1), []))
           .to.emit(pool, 'Burn')
           .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165')
           .to.not.emit(token0, 'Transfer')
@@ -955,7 +955,7 @@ describe('AlgebraPool', () => {
           .withArgs(wallet.address, pool.address, '5981737760509663')
         // somebody takes the limit order
         await swapExact0For1(expandTo18Decimals(2), other.address)
-        await expect(pool.burn(-120, 0, expandTo18Decimals(1)))
+        await expect(pool.burn(-120, 0, expandTo18Decimals(1), []))
           .to.emit(pool, 'Burn')
           .withArgs(wallet.address, -120, 0, expandTo18Decimals(1), '6017734268818165', 0)
           .to.not.emit(token0, 'Transfer')
@@ -1014,8 +1014,8 @@ describe('AlgebraPool', () => {
 
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
       // poke positions
-      await pool.burn(minTick, maxTick, 0)
-      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
+      await pool.burn(minTick, maxTick, 0, [])
+      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0, [])
 
       const { fees0: fees0Position0 } = await pool.positions(
         await getPositionKey(wallet.address, minTick, maxTick, pool)
@@ -1036,7 +1036,7 @@ describe('AlgebraPool', () => {
 
       await swapExact1For0(expandTo18Decimals(1), wallet.address)
 
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
 
       const { fees0: fees0Position0before, fees1: fees0Position1before} = await pool.positions(
         await getPositionKey(wallet.address, minTick, maxTick, pool)
@@ -1065,8 +1065,8 @@ describe('AlgebraPool', () => {
 
       await pool.setTickSpacing(200)
       // poke positions
-      await pool.burn(minTick, maxTick, 0)
-      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
+      await pool.burn(minTick, maxTick, 0, [])
+      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0, [])
 
       const { fees0: fees0Position0 } = await pool.positions(
         await getPositionKey(wallet.address, minTick, maxTick, pool)
@@ -1088,8 +1088,8 @@ describe('AlgebraPool', () => {
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
 
       // poke positions
-      await pool.burn(minTick, maxTick, 0)
-      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0)
+      await pool.burn(minTick, maxTick, 0, [])
+      await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 0, [])
 
       const { fees0: fees0Position0 } = await pool.positions(
         await getPositionKey(wallet.address, minTick, maxTick, pool)
@@ -1113,7 +1113,7 @@ describe('AlgebraPool', () => {
 
       it('works just before the cap binds', async () => {
         await pool.setTotalFeeGrowth0Token(magicNumber)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
 
         const { fees0, fees1 } = await pool.positions( await getPositionKey(wallet.address, minTick, maxTick, pool))
 
@@ -1123,7 +1123,7 @@ describe('AlgebraPool', () => {
 
       it('works just after the cap binds', async () => {
         await pool.setTotalFeeGrowth0Token(magicNumber.add(1))
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
 
         const { fees0, fees1 } = await pool.positions(await getPositionKey(wallet.address, minTick, maxTick, pool))
 
@@ -1133,7 +1133,7 @@ describe('AlgebraPool', () => {
 
       it('works well after the cap binds', async () => {
         await pool.setTotalFeeGrowth0Token(constants.MaxUint256)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
 
         const { fees0, fees1 } = await pool.positions(await getPositionKey(wallet.address, minTick, maxTick, pool))
 
@@ -1151,7 +1151,7 @@ describe('AlgebraPool', () => {
 
       it('token0', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1166,7 +1166,7 @@ describe('AlgebraPool', () => {
       it('unexpected donation', async () => {
         await token1.transfer(pool.address, expandTo18Decimals(1))
         await token0.transfer(pool.address, expandTo18Decimals(2))
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1180,7 +1180,7 @@ describe('AlgebraPool', () => {
       it('token0 with unexpected donation before burn', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
         await token0.transfer(pool.address, expandTo18Decimals(1))
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1194,7 +1194,7 @@ describe('AlgebraPool', () => {
       it('token0 with unexpected donation before swap', async () => {
         await token0.transfer(pool.address, expandTo18Decimals(1))
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1207,7 +1207,7 @@ describe('AlgebraPool', () => {
       })
       it('token1', async () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1221,7 +1221,7 @@ describe('AlgebraPool', () => {
       it('token1 with unexpected donation before burn', async () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
         await token1.transfer(pool.address, expandTo18Decimals(1))
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1235,7 +1235,7 @@ describe('AlgebraPool', () => {
       it('token1 with unexpected donation before swap', async () => {
         await token1.transfer(pool.address, expandTo18Decimals(1))
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1249,7 +1249,7 @@ describe('AlgebraPool', () => {
       it('token0 and token1', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1265,7 +1265,7 @@ describe('AlgebraPool', () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
         await token1.transfer(pool.address, expandTo18Decimals(1))
         await token0.transfer(pool.address, expandTo18Decimals(2))
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1281,7 +1281,7 @@ describe('AlgebraPool', () => {
         await token0.transfer(pool.address, expandTo18Decimals(2))
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
         await swapExact1For0(expandTo18Decimals(1), wallet.address)
-        await pool.burn(minTick, maxTick, 0)
+        await pool.burn(minTick, maxTick, 0, [])
         const { amount0, amount1 } = await pool.callStatic.collect(
           wallet.address,
           minTick,
@@ -1339,7 +1339,7 @@ describe('AlgebraPool', () => {
       }
       
 
-      if (poke) await pool.burn(minTick, maxTick, 0)
+      if (poke) await pool.burn(minTick, maxTick, 0, [])
 
       const { amount0: fees0, amount1: fees1 } = await pool.callStatic.collect(
         wallet.address,
@@ -1616,7 +1616,7 @@ describe('AlgebraPool', () => {
       expect(communityFeePending0).to.be.eq('17000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0)
 
-      await pool.burn(minTick, maxTick, 0) // poke to update fees
+      await pool.burn(minTick, maxTick, 0, []) // poke to update fees
       await expect(pool.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128))
         .to.emit(token0, 'Transfer')
         .withArgs(pool.address, wallet.address, '82999999999999')
@@ -1658,7 +1658,7 @@ describe('AlgebraPool', () => {
           const liquidityAmount = expandTo18Decimals(1).div(4)
           await mint(wallet.address, 120000, 121200, liquidityAmount)
           await swapExact1For0(expandTo18Decimals(1), wallet.address)
-          await expect(pool.burn(120000, 121200, liquidityAmount))
+          await expect(pool.burn(120000, 121200, liquidityAmount, []))
             .to.emit(pool, 'Burn')
             .withArgs(wallet.address, 120000, 121200, liquidityAmount, '30009977315155', '999899999999999999')
             .to.not.emit(token0, 'Transfer')
@@ -1669,7 +1669,7 @@ describe('AlgebraPool', () => {
           const liquidityAmount = expandTo18Decimals(1).div(4)
           await mint(wallet.address, -121200, -120000, liquidityAmount)
           await swapExact0For1(expandTo18Decimals(1), wallet.address)
-          await expect(pool.burn(-121200, -120000, liquidityAmount))
+          await expect(pool.burn(-121200, -120000, liquidityAmount, []))
             .to.emit(pool, 'Burn')
             .withArgs(wallet.address, -121200, -120000, liquidityAmount, '999899999999999999', '30009977315155')
             .to.not.emit(token0, 'Transfer')
@@ -1849,7 +1849,7 @@ describe('AlgebraPool', () => {
           expect(await pool.totalFeeGrowth0Token()).to.eq(0)
           expect(await pool.totalFeeGrowth1Token()).to.eq(0)
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1862,7 +1862,7 @@ describe('AlgebraPool', () => {
           await flash(1001, 2002, other.address)
           expect(await pool.totalFeeGrowth1Token()).to.eq(0)
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1875,7 +1875,7 @@ describe('AlgebraPool', () => {
           await flash(1001, 2002, other.address)
           expect(await pool.totalFeeGrowth0Token()).to.eq(0)
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1888,7 +1888,7 @@ describe('AlgebraPool', () => {
           await token1.transfer(pool.address, expandTo18Decimals(1))
           await flash(1001, 2002, other.address)
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1909,7 +1909,7 @@ describe('AlgebraPool', () => {
             .to.emit(token0, 'Transfer')
             .withArgs(wallet.address, pool.address, 567)
             .to.not.emit(token1, 'Transfer')
-            await pool.burn(minTick, maxTick, 0) 
+            await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(567).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1919,7 +1919,7 @@ describe('AlgebraPool', () => {
             .to.emit(token1, 'Transfer')
             .withArgs(wallet.address, pool.address, 678)
             .to.not.emit(token0, 'Transfer')
-            await pool.burn(minTick, maxTick, 0) 
+            await pool.burn(minTick, maxTick, 0, [], []) 
           expect(await pool.totalFeeGrowth1Token()).to.eq(
             BigNumber.from(678).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           )
@@ -1931,7 +1931,7 @@ describe('AlgebraPool', () => {
             .to.emit(token1, 'Transfer')
             .withArgs(wallet.address, pool.address, 1234)
 
-            await pool.burn(minTick, maxTick, 0) 
+            await pool.burn(minTick, maxTick, 0, [], []) 
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(789).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
@@ -1958,7 +1958,7 @@ describe('AlgebraPool', () => {
           expect(await pool.totalFeeGrowth0Token()).to.eq(0)
           expect(await pool.totalFeeGrowth1Token()).to.eq(0)
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, []) 
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(3).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
@@ -1976,7 +1976,7 @@ describe('AlgebraPool', () => {
             .withArgs(wallet.address, pool.address, 567)
             .to.not.emit(token1, 'Transfer')
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, []) 
 
           const [communityFeePending0,] = await pool.getCommunityFeePending();
           expect(Number((communityFeePending0).toString())).to.eq(0)
@@ -1992,7 +1992,7 @@ describe('AlgebraPool', () => {
             .withArgs(wallet.address, pool.address, 678)
             .to.not.emit(token0, 'Transfer')
 
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, []) 
 
           const [, communityFeePending1] = await pool.getCommunityFeePending();
           expect(Number((communityFeePending1).toString())).to.eq(0)
@@ -2009,7 +2009,7 @@ describe('AlgebraPool', () => {
             .to.emit(token1, 'Transfer')
             .withArgs(wallet.address, pool.address, 1234)
             
-          await pool.burn(minTick, maxTick, 0) 
+          await pool.burn(minTick, maxTick, 0, []) 
 
           const [communityFeePending0, communityFeePending1] = await pool.getCommunityFeePending();
           expect(Number((communityFeePending0).toString())).to.eq(0)
@@ -2131,13 +2131,13 @@ describe('AlgebraPool', () => {
       it('before burn the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
-        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'BeforeModifyPosition').withArgs(wallet.address)
+        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), [])).to.be.emit(poolPlugin, 'BeforeModifyPosition').withArgs(wallet.address)
       })
 
       it('after burn the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
-        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1))).to.be.emit(poolPlugin, 'AfterModifyPosition').withArgs(wallet.address)
+        await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), [])).to.be.emit(poolPlugin, 'AfterModifyPosition').withArgs(wallet.address)
       })
 
       it('before swap fee on transfer tokens the hook is called', async () => {
@@ -2279,7 +2279,7 @@ describe('AlgebraPool', () => {
 
       await flash(0, 0, wallet.address, MaxUint128.sub(1), MaxUint128.sub(1))
 
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
         pool.totalFeeGrowth0Token(),
         pool.totalFeeGrowth1Token(),
@@ -2306,7 +2306,7 @@ describe('AlgebraPool', () => {
       await flash(0, 0, wallet.address, MaxUint128, MaxUint128)
       await flash(0, 0, wallet.address, 1, 1)
 
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
       const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
         pool.totalFeeGrowth0Token(),
         pool.totalFeeGrowth1Token(),
@@ -2330,9 +2330,9 @@ describe('AlgebraPool', () => {
       await pool.initialize(encodePriceSqrt(1, 1))
       await mint(wallet.address, minTick, maxTick, 1)
       await flash(0, 0, wallet.address, MaxUint128, MaxUint128)
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
       await flash(0, 0, wallet.address, 1, 1)
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
 
       const { amount0, amount1 } = await pool.callStatic.collect(
         wallet.address,
@@ -2353,12 +2353,12 @@ describe('AlgebraPool', () => {
       const [reserve0before,] = await pool.getReserves();
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await flash(0, 0, wallet.address, MaxUint128, 0)
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
       const totalFeeGrowth0Token = await pool.totalFeeGrowth0Token()
       expect(totalFeeGrowth0Token).to.eq(MaxUint128.shl(128).sub(reserve0before.shl(128)).div(2))
       await flash(0, 0, wallet.address, 2, 0)
-      await pool.burn(minTick, maxTick, 0)
-      await pool.connect(other).burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
+      await pool.connect(other).burn(minTick, maxTick, 0, [])
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
       expect(amount0, 'amount0 of wallet').to.eq(MaxUint128.div(2).sub(1))
       ;({ amount0 } = await pool
@@ -2375,7 +2375,7 @@ describe('AlgebraPool', () => {
       const totalFeeGrowth0TokenBefore = await pool.totalFeeGrowth0Token()
       await flash(0, 0, wallet.address, MaxUint128, 0)
       await flash(0, 0, wallet.address, MaxUint128, 0)
-      await pool.burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
       const totalFeeGrowth0Token = await pool.totalFeeGrowth0Token()
       expect(totalFeeGrowth0Token).to.eq(
         totalFeeGrowth0TokenBefore.add(
@@ -2383,8 +2383,8 @@ describe('AlgebraPool', () => {
         )
       )
       await flash(0, 0, wallet.address, 2, 0)
-      await pool.burn(minTick, maxTick, 0)
-      await pool.connect(other).burn(minTick, maxTick, 0)
+      await pool.burn(minTick, maxTick, 0, [])
+      await pool.connect(other).burn(minTick, maxTick, 0, [])
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
       expect(amount0, 'amount0 of wallet').to.eq(MaxUint128.div(2))
       ;({ amount0 } = await pool
