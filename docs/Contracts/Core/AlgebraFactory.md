@@ -2,13 +2,18 @@
 
 # AlgebraFactory
 
+
 Algebra factory
+
 Is used to deploy pools and its dataStorages
+
+*Developer note: Version: Algebra V1.9*
 
 ## Modifiers
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -27,6 +32,10 @@ Returns the current owner of the factory
 ### address poolDeployer immutable
 
 Returns the current poolDeployerAddress
+
+### uint8 defaultCommunityFee 
+
+Returns the default community fee
 
 ### address farmingAddress 
 
@@ -52,7 +61,7 @@ Returns the pool address for a given pair of tokens and a fee, or address 0 if i
 ### constructor
 
 
-`constructor(address,address)`  public
+`constructor(address _poolDeployer, address _vaultAddress) public`  public
 
 
 
@@ -67,9 +76,12 @@ Returns the pool address for a given pair of tokens and a fee, or address 0 if i
 ### createPool
 
 
-`createPool(address,address)`  external
+`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
 Creates a pool for the given two tokens and fee
+*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
+from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
+are invalid.*
 
 
 
@@ -82,15 +94,15 @@ Creates a pool for the given two tokens and fee
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The address of the newly created pool |
 
 ### setOwner
 
-onlyOwner
 
-`setOwner(address)`  external
+`function setOwner(address _owner) external`  external
 
 Updates the owner of the factory
+*Developer note: Must be called by the current owner*
 
 
 
@@ -101,11 +113,11 @@ Updates the owner of the factory
 
 ### setFarmingAddress
 
-onlyOwner
 
-`setFarmingAddress(address)`  external
+`function setFarmingAddress(address _farmingAddress) external`  external
 
 
+*Developer note: updates tokenomics address on the factory*
 
 
 
@@ -114,13 +126,28 @@ onlyOwner
 | _farmingAddress | address | The new tokenomics contract address |
 
 
+### setDefaultCommunityFee
+
+
+`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
+
+
+*Developer note: updates default community fee for new pools*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
+
+
 ### setVaultAddress
 
-onlyOwner
 
-`setVaultAddress(address)`  external
+`function setVaultAddress(address _vaultAddress) external`  external
 
 
+*Developer note: updates vault address on the factory*
 
 
 
@@ -131,11 +158,13 @@ onlyOwner
 
 ### setBaseFeeConfiguration
 
-onlyOwner
 
-`setBaseFeeConfiguration(uint16,uint16,uint32,uint32,uint16,uint16,uint32,uint16,uint16)`  external
+`function setBaseFeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint32 volumeBeta, uint16 volumeGamma, uint16 baseFee) external`  external
 
 Changes initial fee configuration for new pools
+*Developer note: changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
+gammas must be &gt; 0*
 
 
 
@@ -153,7 +182,5 @@ Changes initial fee configuration for new pools
 
 
 
-
----
 
 

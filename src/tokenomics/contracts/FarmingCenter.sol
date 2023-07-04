@@ -33,6 +33,9 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
     mapping(uint256 => L2Nft) public override l2Nfts;
 
+    // reentrancy lock
+    bool private unlocked = true;
+
     /// @notice Represents the deposit of a liquidity NFT
     struct Deposit {
         uint256 L2TokenId;
@@ -48,13 +51,20 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         uint256 tokenId;
     }
 
+    modifier nonReentrant() {
+        require(unlocked);
+        unlocked = false;
+        _;
+        unlocked = true;
+    }
+
     constructor(
         IAlgebraLimitFarming _limitFarming,
         IAlgebraEternalFarming _eternalFarming,
         INonfungiblePositionManager _nonfungiblePositionManager,
         IFarmingCenterVault _farmingCenterVault
     )
-        ERC721Permit('Algebra Farming NFT-V2', 'ALGB-FARM', '2')
+        ERC721Permit('Algebra Farming NFT-V2.1', 'ALGB-FARM', '2.1')
         PeripheryPayments(INonfungiblePositionManager(_nonfungiblePositionManager).WNativeToken())
     {
         limitFarming = _limitFarming;
@@ -91,17 +101,13 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         return this.onERC721Received.selector;
     }
 
-    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
-        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
-    }
-
     /// @inheritdoc IFarmingCenter
     function enterFarming(
         IncentiveKey memory key,
         uint256 tokenId,
         uint256 tokensLocked,
         bool isLimit
-    ) external override {
+    ) external override nonReentrant {
         Deposit storage _deposit = deposits[tokenId];
         checkAuthorizationForToken(_deposit.L2TokenId);
         (uint32 numberOfFarms, bool inLimitFarming) = (_deposit.numberOfFarms, _deposit.inLimitFarming);
@@ -115,7 +121,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
 
         (_deposit.numberOfFarms, _deposit.inLimitFarming) = (numberOfFarms, inLimitFarming);
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        address multiplierToken = _getMultiplierTokenForFarming(_farming, incentiveId);
         if (tokensLocked > 0) {
             uint256 balanceBefore = _getTokenBalanceOfVault(multiplierToken);
             TransferHelper.safeTransferFrom(multiplierToken, msg.sender, address(farmingCenterVault), tokensLocked);
@@ -129,11 +135,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        bool isLimit
-    ) external override {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, bool isLimit) external override nonReentrant {
         Deposit storage deposit = deposits[tokenId];
         checkAuthorizationForToken(deposit.L2TokenId);
         IAlgebraFarming _farming;
@@ -148,18 +150,16 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
         _farming.exitFarming(key, tokenId, msg.sender);
 
         bytes32 incentiveId = IncentiveId.compute(key);
-        (, , , , , address multiplierToken, ) = _farming.incentives(incentiveId);
+        address multiplierToken = _getMultiplierTokenForFarming(_farming, incentiveId);
         if (multiplierToken != address(0)) {
             farmingCenterVault.claimTokens(multiplierToken, msg.sender, tokenId, incentiveId);
         }
     }
 
     /// @inheritdoc IFarmingCenter
-    function collect(INonfungiblePositionManager.CollectParams memory params)
-        external
-        override
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function collect(
+        INonfungiblePositionManager.CollectParams memory params
+    ) external override returns (uint256 amount0, uint256 amount1) {
         checkAuthorizationForToken(deposits[params.tokenId].L2TokenId);
         if (params.recipient == address(0)) {
             params.recipient = address(this);
@@ -168,15 +168,14 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function collectRewards(IncentiveKey memory key, uint256 tokenId)
-        external
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function collectRewards(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external override returns (uint256 reward, uint256 bonusReward) {
         checkAuthorizationForToken(deposits[tokenId].L2TokenId);
         address _virtualPool = _virtualPoolAddresses[address(key.pool)].eternalVirtualPool;
         if (_virtualPool != address(0)) {
-            IAlgebraVirtualPool(_virtualPool).increaseCumulative(uint32(block.timestamp));
+            _increaseCumulativeInVirtualPool(IAlgebraVirtualPool(_virtualPool), uint32(block.timestamp));
         }
         (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
     }
@@ -206,13 +205,26 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
+    function isIncentiveActiveInPool(IAlgebraPool pool, address virtualPool) external view override returns (bool) {
+        VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
+
+        address activeIncentiveInPool = _getActiveIncentiveInPool(pool);
+
+        if (activeIncentiveInPool == address(0)) return false;
+        if (activeIncentiveInPool == virtualPool) return true;
+        if (activeIncentiveInPool != address(this)) return false;
+
+        return virtualPools.eternalVirtualPool == virtualPool || virtualPools.limitVirtualPool == virtualPool;
+    }
+
+    /// @inheritdoc IFarmingCenter
     function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
         bool isLimitFarming = msg.sender == address(limitFarming);
         require(isLimitFarming || msg.sender == address(eternalFarming), 'only farming can call this');
 
         VirtualPoolAddresses storage virtualPools = _virtualPoolAddresses[address(pool)];
         address newIncentive;
-        if (pool.activeIncentive() == address(0)) {
+        if (_getActiveIncentiveInPool(pool) == address(0)) {
             newIncentive = newVirtualPool; // turn on pool directly
         } else {
             if (newVirtualPool == address(0)) {
@@ -223,7 +235,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
             }
         }
 
-        pool.setIncentive(newIncentive);
+        _setIncentive(pool, newIncentive);
 
         if (isLimitFarming) {
             virtualPools.limitVirtualPool = newVirtualPool;
@@ -233,11 +245,7 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     }
 
     /// @inheritdoc IFarmingCenter
-    function withdrawToken(
-        uint256 tokenId,
-        address to,
-        bytes memory data
-    ) external override {
+    function withdrawToken(uint256 tokenId, address to, bytes memory data) external override {
         require(to != address(this), 'cannot withdraw to farming');
         Deposit storage deposit = deposits[tokenId];
         uint256 l2TokenId = deposit.L2TokenId;
@@ -261,8 +269,8 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function cross(int24 nextTick, bool zeroToOne) external override {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
 
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).cross(nextTick, zeroToOne);
-        IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).cross(nextTick, zeroToOne);
+        _crossInVirtualPool(IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool), nextTick, zeroToOne);
+        _crossInVirtualPool(IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool), nextTick, zeroToOne);
     }
 
     /**
@@ -272,21 +280,31 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
      */
     function increaseCumulative(uint32 blockTimestamp) external override returns (Status status) {
         VirtualPoolAddresses storage _virtualPoolAddressesForPool = _virtualPoolAddresses[msg.sender];
-        Status eternalStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.eternalVirtualPool).increaseCumulative(
+        address eternalVirtualPool = _virtualPoolAddressesForPool.eternalVirtualPool;
+        address limitVirtualPool = _virtualPoolAddressesForPool.limitVirtualPool;
+
+        Status eternalStatus = _increaseCumulativeInVirtualPool(
+            IAlgebraVirtualPool(eternalVirtualPool),
             blockTimestamp
         );
+        Status limitStatus = _increaseCumulativeInVirtualPool(IAlgebraVirtualPool(limitVirtualPool), blockTimestamp);
 
-        Status limitStatus = IAlgebraVirtualPool(_virtualPoolAddressesForPool.limitVirtualPool).increaseCumulative(
-            blockTimestamp
-        );
+        if (eternalStatus == Status.NOT_EXIST || limitStatus == Status.NOT_EXIST) {
+            address newIncentiveAddress = eternalVirtualPool;
+            if (eternalStatus == Status.NOT_EXIST) {
+                _virtualPoolAddressesForPool.eternalVirtualPool = address(0);
+                newIncentiveAddress = limitVirtualPool;
+            }
 
-        if (eternalStatus == Status.ACTIVE || limitStatus == Status.ACTIVE) {
-            return Status.ACTIVE;
-        } else if (limitStatus == Status.NOT_STARTED) {
-            return Status.NOT_STARTED;
+            if (limitStatus == Status.NOT_EXIST) {
+                _virtualPoolAddressesForPool.limitVirtualPool = address(0);
+                if (newIncentiveAddress == limitVirtualPool) newIncentiveAddress = address(0);
+            }
+
+            _setIncentive(IAlgebraPool(msg.sender), newIncentiveAddress);
         }
 
-        return Status.NOT_EXIST;
+        status = eternalStatus == Status.ACTIVE ? Status.ACTIVE : limitStatus;
     }
 
     function virtualPoolAddresses(address pool) external view override returns (address limitVP, address eternalVP) {
@@ -311,5 +329,37 @@ contract FarmingCenter is IFarmingCenter, ERC721Permit, Multicall, PeripheryPaym
     function _approve(address to, uint256 tokenId) internal override(ERC721) {
         l2Nfts[tokenId].operator = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
+    }
+
+    // Wrapped external calls. Moved to separate functions to reduce bytecode size
+
+    function _getActiveIncentiveInPool(IAlgebraPool pool) private view returns (address virtualPool) {
+        virtualPool = pool.activeIncentive();
+    }
+
+    function _setIncentive(IAlgebraPool pool, address newIncentive) private {
+        pool.setIncentive(newIncentive);
+    }
+
+    function _crossInVirtualPool(IAlgebraVirtualPool virtualPool, int24 nextTick, bool zeroToOne) private {
+        virtualPool.cross(nextTick, zeroToOne);
+    }
+
+    function _getTokenBalanceOfVault(address token) private view returns (uint256 balance) {
+        return IERC20Minimal(token).balanceOf(address(farmingCenterVault));
+    }
+
+    function _getMultiplierTokenForFarming(
+        IAlgebraFarming farming,
+        bytes32 incentiveId
+    ) private view returns (address multiplierToken) {
+        (, , , , , multiplierToken, , ) = farming.incentives(incentiveId);
+    }
+
+    function _increaseCumulativeInVirtualPool(
+        IAlgebraVirtualPool virtualPool,
+        uint32 blockTimestamp
+    ) private returns (Status status) {
+        return virtualPool.increaseCumulative(blockTimestamp);
     }
 }

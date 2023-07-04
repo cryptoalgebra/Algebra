@@ -7,7 +7,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import './IFarmingCenter.sol';
 import './IIncentiveKey.sol';
 
 /// @title Algebra Farming Interface
@@ -16,11 +15,11 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @notice The nonfungible position manager with which this farming contract is compatible
     function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
-    /// @notice The farming Center
-    function farmingCenter() external view returns (IFarmingCenter);
-
     /// @notice The pool deployer
     function deployer() external returns (IAlgebraPoolDeployer);
+
+    /// @notice Users can withdraw liquidity without any checks if active.
+    function isEmergencyWithdrawActivated() external view returns (bool);
 
     /// @notice Updates the incentive maker
     /// @param _incentiveMaker The new incentive maker address
@@ -43,7 +42,9 @@ interface IAlgebraFarming is IIncentiveKey {
 
     /// @notice Represents a farming incentive
     /// @param incentiveId The ID of the incentive computed from its parameters
-    function incentives(bytes32 incentiveId)
+    function incentives(
+        bytes32 incentiveId
+    )
         external
         view
         returns (
@@ -53,16 +54,17 @@ interface IAlgebraFarming is IIncentiveKey {
             uint24 minimalPositionWidth,
             uint224 totalLiquidity,
             address multiplierToken,
+            bool deactivated,
             Tiers memory tiers
         );
 
-    /// @notice Detach incentive from the pool
+    /// @notice Detach incentive from the pool and deactivate it
     /// @param key The key of the incentive
-    function detachIncentive(IncentiveKey memory key) external;
+    function deactivateIncentive(IncentiveKey memory key) external;
 
-    /// @notice Attach incentive to the pool
-    /// @param key The key of the incentive
-    function attachIncentive(IncentiveKey memory key) external;
+    function addRewards(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external;
+
+    function decreaseRewardsAmount(IncentiveKey memory key, uint256 rewardAmount, uint256 bonusRewardAmount) external;
 
     /// @notice Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
     /// @param owner The owner for which the rewards owed are checked
@@ -74,25 +76,24 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param _farmingCenter The new farming center contract address
     function setFarmingCenterAddress(address _farmingCenter) external;
 
+    /// @notice Changes `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if activated.
+    /// User cannot enter to farmings if activated.
+    /// _Must_ only be used in emergency situations. Farmings may be unusable after activation.
+    /// @dev only owner
+    /// @param newStatus The new status of `isEmergencyWithdrawActivated`.
+    function setEmergencyWithdrawStatus(bool newStatus) external;
+
     /// @notice enter farming for Algebra LP token
     /// @param key The key of the incentive for which to enterFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
     /// @param tokensLocked The amount of tokens locked for boost
-    function enterFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        uint256 tokensLocked
-    ) external;
+    function enterFarming(IncentiveKey memory key, uint256 tokenId, uint256 tokensLocked) external;
 
     /// @notice exitFarmings for Algebra LP token
     /// @param key The key of the incentive for which to exitFarming the NFT
     /// @param tokenId The ID of the token to exitFarming
     /// @param _owner Owner of the token
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external;
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external;
 
     /// @notice Transfers `amountRequested` of accrued `rewardToken` rewards from the contract to the recipient `to`
     /// @param rewardToken The token being distributed as a reward
@@ -124,9 +125,10 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param tokenId The ID of the token
     /// @return reward The reward accrued to the NFT for the given incentive thus far
     /// @return bonusReward The bonus reward accrued to the NFT for the given incentive thus far
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        returns (uint256 reward, uint256 bonusReward);
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external returns (uint256 reward, uint256 bonusReward);
 
     /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
     /// @param rewardToken The token being distributed as a reward
@@ -135,23 +137,7 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param virtualPool The detached virtual pool address
     /// @param startTime The time when the incentive program begins
     /// @param endTime The time when rewards stop accruing
-    event IncentiveDetached(
-        IERC20Minimal indexed rewardToken,
-        IERC20Minimal indexed bonusRewardToken,
-        IAlgebraPool indexed pool,
-        address virtualPool,
-        uint256 startTime,
-        uint256 endTime
-    );
-
-    /// @notice Event emitted when a liquidity mining incentive has been runned again from the outside
-    /// @param rewardToken The token being distributed as a reward
-    /// @param bonusRewardToken The token being distributed as a bonus reward
-    /// @param pool The Algebra pool
-    /// @param virtualPool The attached virtual pool address
-    /// @param startTime The time when the incentive program begins
-    /// @param endTime The time when rewards stop accruing
-    event IncentiveAttached(
+    event IncentiveDeactivated(
         IERC20Minimal indexed rewardToken,
         IERC20Minimal indexed bonusRewardToken,
         IAlgebraPool indexed pool,
@@ -203,10 +189,16 @@ interface IAlgebraFarming is IIncentiveKey {
     /// @param incentiveId The ID of the incentive for which rewards were added
     event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
 
+    event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId);
+
     /// @notice Event emitted when a reward token has been claimed
     /// @param to The address where claimed rewards were sent to
     /// @param reward The amount of reward tokens claimed
     /// @param rewardAddress The token reward address
     /// @param owner The address where claimed rewards were sent to
     event RewardClaimed(address indexed to, uint256 reward, address indexed rewardAddress, address indexed owner);
+
+    /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes
+    /// @param newStatus New value of `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
+    event EmergencyWithdraw(bool newStatus);
 }

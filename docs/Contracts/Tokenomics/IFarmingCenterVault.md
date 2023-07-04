@@ -8,11 +8,14 @@
 
 
 
+
+
+
 ## Functions
 ### claimTokens
 
 
-`claimTokens(address,address,uint256,bytes32)`  external
+`function claimTokens(address token, address to, uint256 tokenId, bytes32 incentiveId) external`  external
 
 
 
@@ -29,7 +32,7 @@
 ### setFarmingCenter
 
 
-`setFarmingCenter(address)`  external
+`function setFarmingCenter(address farming) external`  external
 
 
 
@@ -43,7 +46,7 @@
 ### lockTokens
 
 
-`lockTokens(uint256,bytes32,uint256)`  external
+`function lockTokens(uint256 tokenId, bytes32 incentiveId, uint256 tokenAmount) external`  external
 
 
 
@@ -59,7 +62,7 @@
 ### balances
 
 
-`balances(uint256,bytes32)` view external
+`function balances(uint256 tokenId, bytes32 incentiveId) external view returns (uint256 balance)` view external
 
 
 
@@ -77,7 +80,5 @@
 | balance | uint256 |  |
 
 
-
----
 
 

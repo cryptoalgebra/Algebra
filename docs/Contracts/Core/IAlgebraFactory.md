@@ -2,15 +2,20 @@
 
 # IAlgebraFactory
 
+
 The interface for the Algebra Factory
 
+
+
+*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Events
 ### Owner
 
 
-`Owner(address)`  
+`event Owner(address newOwner)`  
 
 Emitted when the owner of the factory is changed
 
@@ -24,7 +29,7 @@ Emitted when the owner of the factory is changed
 ### VaultAddress
 
 
-`VaultAddress(address)`  
+`event VaultAddress(address newVaultAddress)`  
 
 Emitted when the vault address is changed
 
@@ -38,7 +43,7 @@ Emitted when the vault address is changed
 ### Pool
 
 
-`Pool(address,address,address)`  
+`event Pool(address token0, address token1, address pool)`  
 
 Emitted when a pool is created
 
@@ -54,7 +59,7 @@ Emitted when a pool is created
 ### FarmingAddress
 
 
-`FarmingAddress(address)`  
+`event FarmingAddress(address newFarmingAddress)`  
 
 Emitted when the farming address is changed
 
@@ -65,10 +70,24 @@ Emitted when the farming address is changed
 | newFarmingAddress | address | The farming address after the address was changed |
 
 
+### DefaultCommunityFee
+
+
+`event DefaultCommunityFee(uint8 newDefaultCommunityFee)`  
+
+Emitted when the default community fee is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new default community fee value |
+
+
 ### FeeConfiguration
 
 
-`FeeConfiguration(uint16,uint16,uint32,uint32,uint16,uint16,uint32,uint16,uint16)`  
+`event FeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint32 volumeBeta, uint16 volumeGamma, uint16 baseFee)`  
 
 
 
@@ -93,9 +112,10 @@ Emitted when the farming address is changed
 ### owner
 
 
-`owner()` view external
+`function owner() external view returns (address)` view external
 
 Returns the current owner of the factory
+*Developer note: Can be changed by the current owner via setOwner*
 
 
 
@@ -104,12 +124,12 @@ Returns the current owner of the factory
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The address of the factory owner |
 
 ### poolDeployer
 
 
-`poolDeployer()` view external
+`function poolDeployer() external view returns (address)` view external
 
 Returns the current poolDeployerAddress
 
@@ -120,14 +140,16 @@ Returns the current poolDeployerAddress
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The address of the poolDeployer |
 
 ### farmingAddress
 
 
-`farmingAddress()` view external
+`function farmingAddress() external view returns (address)` view external
 
 
+*Developer note: Is retrieved from the pools to restrict calling
+certain functions not by a tokenomics contract*
 
 
 
@@ -136,12 +158,28 @@ Returns the current poolDeployerAddress
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address |  |
+| [0] | address | The tokenomics contract address |
+
+### defaultCommunityFee
+
+
+`function defaultCommunityFee() external view returns (uint8)` view external
+
+Returns the default community fee
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint8 | Fee which will be set at the creation of the pool |
 
 ### vaultAddress
 
 
-`vaultAddress()` view external
+`function vaultAddress() external view returns (address)` view external
 
 
 
@@ -157,9 +195,10 @@ Returns the current poolDeployerAddress
 ### poolByPair
 
 
-`poolByPair(address,address)` view external
+`function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
 
 Returns the pool address for a given pair of tokens and a fee, or address 0 if it does not exist
+*Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
 
 
@@ -172,14 +211,17 @@ Returns the pool address for a given pair of tokens and a fee, or address 0 if i
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The pool address |
 
 ### createPool
 
 
-`createPool(address,address)`  external
+`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
 Creates a pool for the given two tokens and fee
+*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0. tickSpacing is retrieved
+from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
+are invalid.*
 
 
 
@@ -192,14 +234,15 @@ Creates a pool for the given two tokens and fee
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address |  |
+| pool | address | The address of the newly created pool |
 
 ### setOwner
 
 
-`setOwner(address)`  external
+`function setOwner(address _owner) external`  external
 
 Updates the owner of the factory
+*Developer note: Must be called by the current owner*
 
 
 
@@ -211,9 +254,10 @@ Updates the owner of the factory
 ### setFarmingAddress
 
 
-`setFarmingAddress(address)`  external
+`function setFarmingAddress(address _farmingAddress) external`  external
 
 
+*Developer note: updates tokenomics address on the factory*
 
 
 
@@ -222,12 +266,28 @@ Updates the owner of the factory
 | _farmingAddress | address | The new tokenomics contract address |
 
 
+### setDefaultCommunityFee
+
+
+`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
+
+
+*Developer note: updates default community fee for new pools*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
+
+
 ### setVaultAddress
 
 
-`setVaultAddress(address)`  external
+`function setVaultAddress(address _vaultAddress) external`  external
 
 
+*Developer note: updates vault address on the factory*
 
 
 
@@ -239,9 +299,12 @@ Updates the owner of the factory
 ### setBaseFeeConfiguration
 
 
-`setBaseFeeConfiguration(uint16,uint16,uint32,uint32,uint16,uint16,uint32,uint16,uint16)`  external
+`function setBaseFeeConfiguration(uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint32 volumeBeta, uint16 volumeGamma, uint16 baseFee) external`  external
 
 Changes initial fee configuration for new pools
+*Developer note: changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
+gammas must be &gt; 0*
 
 
 
@@ -259,7 +322,5 @@ Changes initial fee configuration for new pools
 
 
 
-
----
 
 

@@ -15,6 +15,10 @@ interface IAlgebraPoolPermissionedActions {
    */
   function setCommunityFee(uint8 communityFee0, uint8 communityFee1) external;
 
+  /// @notice Set the new tick spacing values. Only factory owner
+  /// @param newTickSpacing The new tick spacing value
+  function setTickSpacing(int24 newTickSpacing) external;
+
   /**
    * @notice Sets an active incentive
    * @param virtualPoolAddress The address of a virtual pool associated with the incentive

@@ -2,13 +2,17 @@
 
 # AlgebraVirtualPoolBase
 
+
 Abstract base contract for Algebra virtual pools
+
+
 
 
 ## Modifiers
 ### onlyFromPool
 
 
+`modifier onlyFromPool()`  internal
 
 only pool (or FarmingCenter as &quot;proxy&quot;) can call
 
@@ -19,6 +23,7 @@ only pool (or FarmingCenter as &quot;proxy&quot;) can call
 ### onlyFarming
 
 
+`modifier onlyFarming()`  internal
 
 
 
@@ -65,12 +70,16 @@ only pool (or FarmingCenter as &quot;proxy&quot;) can call
 
 
 
+### bool deactivated 
+
+
+
 
 ## Functions
 ### getInnerSecondsPerLiquidity
 
 
-`getInnerSecondsPerLiquidity(int24,int24)` view external
+`function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick) external view returns (uint160 innerSecondsSpentPerLiquidity)` view external
 
 get seconds per liquidity inside range
 
@@ -89,11 +98,12 @@ get seconds per liquidity inside range
 
 ### cross
 
-onlyFromPool
 
-`cross(int24,bool)`  external
+`function cross(int24 nextTick, bool zeroToOne) external`  external
 
 
+*Developer note: This function is called by the main pool when an initialized tick is crossed there.
+If the tick is also initialized in a virtual pool it should be crossed too*
 
 
 
@@ -105,11 +115,12 @@ onlyFromPool
 
 ### increaseCumulative
 
-onlyFromPool
 
-`increaseCumulative(uint32)`  external
+`function increaseCumulative(uint32 currentTimestamp) external returns (enum IAlgebraVirtualPool.Status res)`  external
 
 
+*Developer note: This function is called from the main pool before every swap To increase seconds per liquidity
+cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool*
 
 
 
@@ -121,15 +132,27 @@ onlyFromPool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | enum IAlgebraVirtualPool.Status |  |
+| res | enum IAlgebraVirtualPool.Status | Status The status of virtual pool |
+
+### deactivate
+
+
+`function deactivate() external`  external
+
+This function is used to deactivate virtual pool. Deactivated virtual pool will return Status.NOT_EXIST in increaseCumulative function
+
+
+
+
 
 ### applyLiquidityDeltaToPosition
 
-onlyFarming
 
-`applyLiquidityDeltaToPosition(uint32,int24,int24,int128,int24)`  external
+`function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external`  external
 
 
+*Developer note: This function is called when anyone farms their liquidity. The position in a virtual pool
+should be changed accordingly*
 
 
 
@@ -143,7 +166,5 @@ onlyFarming
 
 
 
-
----
 
 

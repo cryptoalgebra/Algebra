@@ -8,16 +8,18 @@ import './interfaces/IDataStorageOperator.sol';
 import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
 
-/**
- * @title Algebra factory
- * @notice Is used to deploy pools and its dataStorages
- */
+/// @title Algebra factory
+/// @notice Is used to deploy pools and its dataStorages
+/// @dev Version: Algebra V1.9
 contract AlgebraFactory is IAlgebraFactory {
   /// @inheritdoc IAlgebraFactory
   address public override owner;
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
+
+  /// @inheritdoc IAlgebraFactory
+  uint8 public override defaultCommunityFee;
 
   /// @inheritdoc IAlgebraFactory
   address public override farmingAddress;
@@ -88,6 +90,14 @@ contract AlgebraFactory is IAlgebraFactory {
   }
 
   /// @inheritdoc IAlgebraFactory
+  function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external override onlyOwner {
+    require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
+    require(defaultCommunityFee != newDefaultCommunityFee);
+    defaultCommunityFee = newDefaultCommunityFee;
+    emit DefaultCommunityFee(newDefaultCommunityFee);
+  }
+
+  /// @inheritdoc IAlgebraFactory
   function setVaultAddress(address _vaultAddress) external override onlyOwner {
     require(vaultAddress != _vaultAddress);
     emit VaultAddress(_vaultAddress);
@@ -113,7 +123,7 @@ contract AlgebraFactory is IAlgebraFactory {
     emit FeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, volumeBeta, volumeGamma, baseFee);
   }
 
-  bytes32 internal constant POOL_INIT_CODE_HASH = 0x6ec6c9c8091d160c0aa74b2b14ba9c1717e95093bd3ac085cee99a49aab294a4;
+  bytes32 internal constant POOL_INIT_CODE_HASH = 0xbce37a54eab2fcd71913a0d40723e04238970e7fc1159bfd58ad5b79531697e7;
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey
   /// @param token0 first token

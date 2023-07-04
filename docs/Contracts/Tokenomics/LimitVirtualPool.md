@@ -7,6 +7,9 @@
 
 
 
+
+
+
 ## Variables
 ### bool isFinished 
 
@@ -24,9 +27,8 @@
 ## Functions
 ### constructor
 
-AlgebraVirtualPoolBase
 
-`constructor(address,address,address,uint32,uint32)`  public
+`constructor(address _farmingCenterAddress, address _farmingAddress, address _pool, uint32 _desiredStartTimestamp, uint32 _desiredEndTimestamp) public`  public
 
 
 
@@ -43,11 +45,11 @@ AlgebraVirtualPoolBase
 
 ### finish
 
-onlyFarming
 
-`finish()`  external
+`function finish() external returns (bool wasFinished, uint32 activeTime)`  external
 
 Finishes incentive if it wasn&#x27;t
+*Developer note: This function is called by a AlgebraLimitFarming when someone calls #exitFarming() after the end timestamp*
 
 
 
@@ -56,11 +58,9 @@ Finishes incentive if it wasn&#x27;t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| wasFinished | bool |  |
-| activeTime | uint32 |  |
+| wasFinished | bool | Was incentive finished before this call or not |
+| activeTime | uint32 | The summary amount of seconds inside active positions |
 
 
-
----
 
 

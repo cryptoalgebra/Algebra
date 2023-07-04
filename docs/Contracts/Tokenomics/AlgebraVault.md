@@ -5,10 +5,14 @@
 
 
 
+
+
+
 ## Modifiers
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -19,6 +23,7 @@
 ### onlyRelayerOrOwner
 
 
+`modifier onlyRelayerOrOwner()`  internal
 
 
 
@@ -31,7 +36,7 @@
 ### Swap
 
 
-`Swap(contract IERC20,bytes,uint256,uint256)`  
+`event Swap(contract IERC20 swappedToken, bytes path, uint256 amountIn, uint256 amountOut)`  
 
 
 
@@ -92,7 +97,7 @@
 ### constructor
 
 
-`constructor(address,address,contract ISwapRouter)`  public
+`constructor(address _ALGB, address _stakingAddress, contract ISwapRouter _AlgebraRouter) public`  public
 
 
 
@@ -107,9 +112,8 @@
 
 ### swapToALGB
 
-onlyRelayerOrOwner
 
-`swapToALGB(contract IERC20,bytes,uint256,uint256)`  external
+`function swapToALGB(contract IERC20 tokenToSwap, bytes path, uint256 amountOutMin, uint256 withFee) external`  external
 
 
 
@@ -125,9 +129,8 @@ onlyRelayerOrOwner
 
 ### transferALGB
 
-onlyRelayerOrOwner
 
-`transferALGB(uint256)`  external
+`function transferALGB(uint256 percentToTransfer) external`  external
 
 
 
@@ -140,9 +143,8 @@ onlyRelayerOrOwner
 
 ### setRelayer
 
-onlyOwner
 
-`setRelayer(address)`  external
+`function setRelayer(address _relayer) external`  external
 
 
 
@@ -155,9 +157,8 @@ onlyOwner
 
 ### setStakingAddress
 
-onlyOwner
 
-`setStakingAddress(address)`  external
+`function setStakingAddress(address _staking) external`  external
 
 
 
@@ -170,9 +171,8 @@ onlyOwner
 
 ### sweepTokens
 
-onlyOwner
 
-`sweepTokens(contract IERC20,uint256,address)`  external
+`function sweepTokens(contract IERC20 token, uint256 amount, address _to) external`  external
 
 
 
@@ -187,9 +187,8 @@ onlyOwner
 
 ### transferALGBToStaking
 
-onlyRelayerOrOwner
 
-`transferALGBToStaking()`  external
+`function transferALGBToStaking() external`  external
 
 
 
@@ -199,9 +198,8 @@ onlyRelayerOrOwner
 
 ### collectAccumulatedALGB
 
-onlyOwner
 
-`collectAccumulatedALGB()`  external
+`function collectAccumulatedALGB() external`  external
 
 
 
@@ -211,11 +209,11 @@ onlyOwner
 
 ### setStartTime
 
-onlyOwner
 
-`setStartTime(uint256)`  external
+`function setStartTime(uint256 _startTime) external`  external
 
 
+*Developer note: Sets start time of backend transfers campaign*
 
 
 
@@ -226,9 +224,8 @@ onlyOwner
 
 ### setAmountByBack
 
-onlyOwner
 
-`setAmountByBack(uint256)`  external
+`function setAmountByBack(uint256 _amount) external`  external
 
 
 
@@ -241,9 +238,8 @@ onlyOwner
 
 ### setMaxCount
 
-onlyOwner
 
-`setMaxCount(uint256)`  external
+`function setMaxCount(uint256 _maxCount) external`  external
 
 
 
@@ -256,9 +252,8 @@ onlyOwner
 
 ### setRate
 
-onlyOwner
 
-`setRate(uint256)`  external
+`function setRate(uint256 _rate) external`  external
 
 
 
@@ -271,9 +266,8 @@ onlyOwner
 
 ### transferOwner
 
-onlyOwner
 
-`transferOwner(address)`  external
+`function transferOwner(address _newOwner) external`  external
 
 
 
@@ -285,7 +279,5 @@ onlyOwner
 
 
 
-
----
 
 

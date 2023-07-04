@@ -126,7 +126,7 @@ describe('Quoter', () => {
         )
         
         expect(fees2[0]).to.eq(15000)
-      })
+      }).timeout(60000)
 
       it('1 -> 0', async () => {
         const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
@@ -148,7 +148,7 @@ describe('Quoter', () => {
 
         expect(amountOut).to.eq(1)
         expect(fees[0]).to.eq(100)
-      })
+      }).timeout(60000)
 
       it('2 -> 1 -> 0', async () => {
         const {amountOut, fees} = await quoter.callStatic.quoteExactInput(

@@ -2,13 +2,17 @@
 
 # AlgebraFarming
 
+
 Abstract base contract for Algebra farmings
+
+
 
 
 ## Modifiers
 ### onlyIncentiveMaker
 
 
+`modifier onlyIncentiveMaker()`  internal
 
 
 
@@ -19,6 +23,7 @@ Abstract base contract for Algebra farmings
 ### onlyOwner
 
 
+`modifier onlyOwner()`  internal
 
 
 
@@ -29,6 +34,18 @@ Abstract base contract for Algebra farmings
 ### onlyFarmingCenter
 
 
+`modifier onlyFarmingCenter()`  internal
+
+
+
+
+
+
+
+### nonReentrant
+
+
+`modifier nonReentrant()`  internal
 
 
 
@@ -49,13 +66,25 @@ The pool deployer
 
 ### contract IFarmingCenter farmingCenter 
 
-The farming Center
+
 
 ### mapping(bytes32 &#x3D;&gt; struct AlgebraFarming.Incentive) incentives 
 
 Represents a farming incentive
 
 *Developer note: bytes32 refers to the return value of IncentiveId.compute*
+### address incentiveMaker 
+
+
+
+### address owner 
+
+
+
+### bool isEmergencyWithdrawActivated 
+
+Users can withdraw liquidity without any checks if active.
+
 ### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
@@ -65,9 +94,8 @@ Returns amounts of reward tokens owed to a given address according to the last t
 ## Functions
 ### setIncentiveMaker
 
-onlyOwner
 
-`setIncentiveMaker(address)`  external
+`function setIncentiveMaker(address _incentiveMaker) external`  external
 
 Updates the incentive maker
 
@@ -78,11 +106,24 @@ Updates the incentive maker
 | _incentiveMaker | address | The new incentive maker address |
 
 
+### setOwner
+
+
+`function setOwner(address _owner) external`  external
+
+Updates the owner address
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address |  |
+
+
 ### setFarmingCenterAddress
 
-onlyOwner
 
-`setFarmingCenterAddress(address)`  external
+`function setFarmingCenterAddress(address _farmingCenter) external`  external
 
 Updates farming center address
 
@@ -93,10 +134,27 @@ Updates farming center address
 | _farmingCenter | address | The new farming center contract address |
 
 
+### setEmergencyWithdrawStatus
+
+
+`function setEmergencyWithdrawStatus(bool newStatus) external`  external
+
+Changes &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if activated.
+User cannot enter to farmings if activated.
+_Must_ only be used in emergency situations. Farmings may be unusable after activation.
+*Developer note: only owner*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newStatus | bool | The new status of &#x60;isEmergencyWithdrawActivated&#x60;. |
+
+
 ### claimReward
 
 
-`claimReward(contract IERC20Minimal,address,uint256)`  external
+`function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 
@@ -112,13 +170,12 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 ### claimRewardFrom
 
-onlyFarmingCenter
 
-`claimRewardFrom(contract IERC20Minimal,address,address,uint256)`  external
+`function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)`  external
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
@@ -136,10 +193,8 @@ only for FarmingCenter
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of reward tokens claimed |
 
 
-
----
 
 

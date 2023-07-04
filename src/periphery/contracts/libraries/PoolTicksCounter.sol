@@ -24,11 +24,11 @@ library PoolTicksCounter {
 
         {
             // Get the key and offset in the tick bitmap of the active tick before and after the swap.
-            int16 wordPos = int16((tickBefore / self.tickSpacing()) >> 8);
-            uint8 bitPos = uint8((tickBefore / self.tickSpacing()) % 256);
+            int16 wordPos = int16(tickBefore >> 8);
+            uint8 bitPos = uint8(tickBefore % 256);
 
-            int16 wordPosAfter = int16((tickAfter / self.tickSpacing()) >> 8);
-            uint8 bitPosAfter = uint8((tickAfter / self.tickSpacing()) % 256);
+            int16 wordPosAfter = int16(tickAfter >> 8);
+            uint8 bitPosAfter = uint8(tickAfter % 256);
 
             // In the case where tickAfter is initialized, we only want to count it if we are swapping downwards.
             // If the initializable tick after the swap is initialized, our original tickAfter is a
@@ -36,15 +36,11 @@ library PoolTicksCounter {
             // and we shouldn't count it.
             tickAfterInitialized =
                 ((self.tickTable(wordPosAfter) & (1 << bitPosAfter)) > 0) &&
-                ((tickAfter % self.tickSpacing()) == 0) &&
                 (tickBefore > tickAfter);
 
             // In the case where tickBefore is initialized, we only want to count it if we are swapping upwards.
             // Use the same logic as above to decide whether we should count tickBefore or not.
-            tickBeforeInitialized =
-                ((self.tickTable(wordPos) & (1 << bitPos)) > 0) &&
-                ((tickBefore % self.tickSpacing()) == 0) &&
-                (tickBefore < tickAfter);
+            tickBeforeInitialized = ((self.tickTable(wordPos) & (1 << bitPos)) > 0) && (tickBefore < tickAfter);
 
             if (wordPos < wordPosAfter || (wordPos == wordPosAfter && bitPos <= bitPosAfter)) {
                 wordPosLower = wordPos;

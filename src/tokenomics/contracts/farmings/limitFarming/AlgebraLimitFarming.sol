@@ -103,6 +103,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         );
     }
 
+    /// @inheritdoc IAlgebraFarming
     function addRewards(
         IncentiveKey memory key,
         uint256 reward,
@@ -119,6 +120,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         }
     }
 
+    /// @inheritdoc IAlgebraFarming
     function decreaseRewardsAmount(
         IncentiveKey memory key,
         uint256 rewardAmount,
@@ -130,29 +132,24 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         require(block.timestamp < key.endTime || incentive.totalLiquidity == 0, 'incentive finished');
 
         uint256 _totalReward = incentive.totalReward;
-        if (rewardAmount > _totalReward) rewardAmount = _totalReward;
+        if (rewardAmount >= _totalReward) rewardAmount = _totalReward - 1; // to not trigger 'non-existent incentive'
         incentive.totalReward = _totalReward - rewardAmount;
 
         uint256 _bonusReward = incentive.bonusReward;
         if (bonusRewardAmount > _bonusReward) bonusRewardAmount = _bonusReward;
         incentive.bonusReward = _bonusReward - bonusRewardAmount;
 
-        TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
-        TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (rewardAmount > 0) TransferHelper.safeTransfer(address(key.rewardToken), msg.sender, rewardAmount);
+        if (bonusRewardAmount > 0)
+            TransferHelper.safeTransfer(address(key.bonusRewardToken), msg.sender, bonusRewardAmount);
 
         emit RewardAmountsDecreased(rewardAmount, bonusRewardAmount, incentiveId);
     }
 
     /// @inheritdoc IAlgebraFarming
-    function detachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _detachIncentive(key, _incentiveVirtualPool);
-    }
-
-    /// @inheritdoc IAlgebraFarming
-    function attachIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
-        (address _incentiveVirtualPool, ) = _getCurrentVirtualPools(key.pool);
-        _attachIncentive(key, _incentiveVirtualPool);
+    function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+        (, Incentive storage incentive) = _getIncentiveByKey(key);
+        _deactivateIncentive(key, incentive.virtualPoolAddress, incentive);
     }
 
     /// @inheritdoc IAlgebraFarming
@@ -161,6 +158,8 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
         uint256 tokenId,
         uint256 tokensLocked
     ) external override onlyFarmingCenter {
+        require(!isEmergencyWithdrawActivated, 'emergency activated');
+
         require(block.timestamp < key.startTime, 'incentive has already started');
 
         (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, ) = _enterFarming(
@@ -183,19 +182,23 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function exitFarming(
-        IncentiveKey memory key,
-        uint256 tokenId,
-        address _owner
-    ) external override onlyFarmingCenter {
+    function exitFarming(IncentiveKey memory key, uint256 tokenId, address _owner) external override onlyFarmingCenter {
         bytes32 incentiveId = IncentiveId.compute(key);
         Incentive storage incentive = incentives[incentiveId];
-        // anyone can call exitFarming if the block time is after the end time of the incentive
-        require(block.timestamp > key.endTime || block.timestamp < key.startTime, 'cannot exitFarming before end time');
 
         Farm memory farm = farms[tokenId][incentiveId];
-
         require(farm.liquidity != 0, 'farm does not exist');
+
+        if (isEmergencyWithdrawActivated) {
+            delete farms[tokenId][incentiveId];
+
+            emit FarmEnded(tokenId, incentiveId, address(key.rewardToken), address(key.bonusRewardToken), _owner, 0, 0);
+
+            return;
+        }
+
+        // anyone can call exitFarming if the block time is after the end time of the incentive
+        require(block.timestamp > key.endTime || block.timestamp < key.startTime, 'cannot exitFarming before end time');
 
         uint256 reward;
         uint256 bonusReward;
@@ -208,8 +211,7 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 bool wasFinished;
                 (wasFinished, activeTime) = virtualPool.finish();
                 if (!wasFinished) {
-                    (address _incentive, ) = _getCurrentVirtualPools(key.pool);
-                    if (address(virtualPool) == _incentive) {
+                    if (_isIncentiveActiveInPool(key.pool, address(virtualPool))) {
                         farmingCenter.connectVirtualPool(key.pool, address(0));
                     }
                 }
@@ -247,7 +249,12 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
                 }
             }
         } else {
-            (, int24 tick, , , , , ) = key.pool.globalState();
+            // pool can "detach" by itself
+            if (!incentive.deactivated) {
+                if (!_isIncentiveActiveInPool(key.pool, address(virtualPool)))
+                    _deactivateIncentive(key, address(virtualPool), incentive);
+            }
+            int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
             virtualPool.applyLiquidityDeltaToPosition(
                 uint32(block.timestamp),
@@ -273,12 +280,10 @@ contract AlgebraLimitFarming is AlgebraFarming, IAlgebraLimitFarming {
     }
 
     /// @inheritdoc IAlgebraFarming
-    function getRewardInfo(IncentiveKey memory key, uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256 reward, uint256 bonusReward)
-    {
+    function getRewardInfo(
+        IncentiveKey memory key,
+        uint256 tokenId
+    ) external view override returns (uint256 reward, uint256 bonusReward) {
         bytes32 incentiveId = IncentiveId.compute(key);
 
         Farm memory farm = farms[tokenId][incentiveId];

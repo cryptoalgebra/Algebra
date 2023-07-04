@@ -107,7 +107,7 @@ export class HelperCommands {
    * Creates a staking incentive owned by `incentiveCreator` for `totalReward` of `rewardToken`
    *
    * Side-Effects:
-   *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
+   * Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
    */
   createIncentiveFlow: HelperTypes.CreateIncentive.Command = async (params) => {
     const { startTime } = params
@@ -150,20 +150,28 @@ export class HelperCommands {
           rewardRate: params.rewardRate || 10,
           bonusRewardRate: params.bonusRewardRate || 10,
           minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address
+          multiplierToken: params.multiplierToken || params.rewardToken.address
         },
         {
-          tokenAmountForTier1: 0,
-          tokenAmountForTier2: 0,
-          tokenAmountForTier3: 0,
-          tier1Multiplier: 10000,
-          tier2Multiplier: 10000,
-          tier3Multiplier: 10000,
+          tokenAmountForTier1: params.algbAmountForTier1 || 0,
+          tokenAmountForTier2: params.algbAmountForTier2 || 0,
+          tokenAmountForTier3: params.algbAmountForTier3 || 0,
+          tier1Multiplier: params.tier1Multiplier || 10000,
+          tier2Multiplier: params.tier2Multiplier || 10000,
+          tier3Multiplier: params.tier3Multiplier || 10000,
         },
         
       )
-       // @ts-ignore
-       virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+
+      // @ts-ignore
+      const incentiveId = await testIncentiveId.compute({
+        rewardToken: params.rewardToken.address,
+        bonusRewardToken: params.bonusRewardToken.address,
+        pool: params.poolAddress,
+        ...times,
+          
+      })
+      virtualPoolAddress = (await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).incentives(incentiveId)).virtualPoolAddress
     } else {
       await params.rewardToken.connect(incentiveCreator).approve(this.farming.address, params.totalReward)
       await params.bonusRewardToken.connect(incentiveCreator).approve(this.farming.address, params.bonusReward)
@@ -177,18 +185,18 @@ export class HelperCommands {
           
         },
         {
-          tokenAmountForTier1: 0,
-          tokenAmountForTier2: 0,
-          tokenAmountForTier3: 0,
-          tier1Multiplier: 10000,
-          tier2Multiplier: 10000,
-          tier3Multiplier: 10000,
+          tokenAmountForTier1: params.algbAmountForTier1 || 0,
+          tokenAmountForTier2: params.algbAmountForTier2 || 0,
+          tokenAmountForTier3: params.algbAmountForTier3 || 0,
+          tier1Multiplier: params.tier1Multiplier || 10000,
+          tier2Multiplier: params.tier2Multiplier || 10000,
+          tier3Multiplier: params.tier3Multiplier || 10000,
         },
         {
           reward: params.totalReward,
           bonusReward: params.bonusReward,
           minimalPositionWidth: params.minimalPositionWidth || 0,
-          multiplierToken: params.rewardToken.address,
+          multiplierToken: params.multiplierToken || params.rewardToken.address,
           enterStartTime: params.enterStartTime || 0,
         }
       )
@@ -329,8 +337,8 @@ export class HelperCommands {
    * params.lp mints an NFT backed by a certain amount of `params.tokensToFarm`.
    *
    * Side-Effects:
-   *  Funds `params.lp` with enough `params.tokensToFarm` if they do not have enough.
-   *  Handles the ERC20 and ERC721 permits.
+   * Funds `params.lp` with enough `params.tokensToFarm` if they do not have enough.
+   * Handles the ERC20 and ERC721 permits.
    */
   mintDepositFarmFlow: HelperTypes.MintDepositFarm.Command = async (params) => {
     // Make sure LP has enough balance

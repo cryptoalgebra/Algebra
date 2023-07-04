@@ -188,7 +188,7 @@ describe('unit/Incentives', async () => {
       })
     })
 
-    describe('attach/detach incentive', () => {
+    describe('deactivate incentive', () => {
       let incentiveArgs: HelperTypes.CreateIncentive.Args
       let incentiveKey: ContractParams.IncentiveKey
       let virtualPool: Contract
@@ -221,30 +221,37 @@ describe('unit/Incentives', async () => {
 
       })
 
-      it('detach incentive', async () => {
+      it('deactivate incentive', async () => {
         
         let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
 
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
+        await context.farming.connect(incentiveCreator).deactivateIncentive(incentiveKey)
         let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
         expect(activeIncentiveBefore).to.equal(virtualPool.address)
         expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS) 
 
       })
 
-      it('attach incentive', async () => {
-
-        await context.farming.connect(incentiveCreator).detachIncentive(incentiveKey)
-        
+      it('deactivate incentive only incentiveMaker', async () => {
         let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        await context.farming.connect(incentiveCreator).attachIncentive(incentiveKey)
-
+  
+        expect(context.farming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
         let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
-        
-        expect(activeIncentiveBefore).to.equal(ZERO_ADDRESS)
+  
+        expect(activeIncentiveBefore).to.equal(virtualPool.address)
         expect(activeIncentiveAfter).to.equal(virtualPool.address) 
       })
+      
+      it('correct reward distribution after deactivate', async () => {
+        let activeIncentiveBefore = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(context.farming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
+        let activeIncentiveAfter = await context.poolObj.connect(incentiveCreator).activeIncentive()
+  
+        expect(activeIncentiveBefore).to.equal(virtualPool.address)
+        expect(activeIncentiveAfter).to.equal(virtualPool.address) 
+      })
+
     })
     
     describe('increase/decrease rewards', () => {
@@ -294,6 +301,19 @@ describe('unit/Incentives', async () => {
         expect(bonusRewardAmount).to.eq(BNe18(90))
       })
 
+      it('decrease rewards with 0 params', async () => {
+        let amount = BNe18(0)
+
+        await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, amount, amount)
+      
+        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        
+        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        
+        expect(rewardAmount).to.eq(BNe18(100))
+        expect(bonusRewardAmount).to.eq(BNe18(100))
+      })
+
       it('can decrease rewards after end if 0 liquidity', async () => {
         await Time.setAndMine(incentiveKey.endTime + 100);
 
@@ -334,15 +354,15 @@ describe('unit/Incentives', async () => {
       })
 
       it('decrease rewards completely', async () => {
-        let rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        let bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        let rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        let bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
 
         await context.farming.connect(incentiveCreator).decreaseRewardsAmount(incentiveKey, rewardAmount.mul(2), bonusRewardAmount.mul(2))
       
-        rewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
-        bonusRewardAmount = await (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
+        rewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).totalReward
+        bonusRewardAmount =  (await context.farming.connect(incentiveCreator).incentives(incentiveId)).bonusReward
         
-        expect(rewardAmount).to.eq(0)
+        expect(rewardAmount).to.eq(1)
         expect(bonusRewardAmount).to.eq(0)
       })
 
@@ -464,7 +484,7 @@ describe('unit/Incentives', async () => {
             ...timestamps,
             eternal: false
           }
-  
+
           await expect(helpers.createIncentiveWithMultiplierFlow(incentiveArgs)).to.be.revertedWith("already has active incentive")
         })
       })

@@ -8,13 +8,18 @@
 
 
 
+
+
+
 ## Functions
 ### cross
 
 
-`cross(int24,bool)`  external
+`function cross(int24 nextTick, bool zeroToOne) external`  external
 
 
+*Developer note: This function is called by the main pool when an initialized tick is crossed there.
+If the tick is also initialized in a virtual pool it should be crossed too*
 
 
 
@@ -27,9 +32,11 @@
 ### increaseCumulative
 
 
-`increaseCumulative(uint32)`  external
+`function increaseCumulative(uint32 currentTimestamp) external returns (enum IAlgebraVirtualPool.Status)`  external
 
 
+*Developer note: This function is called from the main pool before every swap To increase seconds per liquidity
+cumulative considering previous timestamp and liquidity. The liquidity is stored in a virtual pool*
 
 
 
@@ -41,10 +48,8 @@
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | enum IAlgebraVirtualPool.Status |  |
+| [0] | enum IAlgebraVirtualPool.Status | Status The status of virtual pool |
 
 
-
----
 
 

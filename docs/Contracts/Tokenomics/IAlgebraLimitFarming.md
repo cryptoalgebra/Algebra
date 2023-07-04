@@ -2,15 +2,18 @@
 
 # IAlgebraLimitFarming
 
+
 Algebra Farming Interface
+
 Allows farming nonfungible liquidity tokens in exchange for reward tokens
+
 
 
 ## Events
 ### LimitFarmingCreated
 
 
-`LimitFarmingCreated(contract IERC20Minimal,contract IERC20Minimal,contract IAlgebraPool,uint256,uint256,uint256,uint256,struct IAlgebraFarming.Tiers,address,uint32)`  
+`event LimitFarmingCreated(contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, uint256 startTime, uint256 endTime, uint256 reward, uint256 bonusReward, struct IAlgebraFarming.Tiers tiers, address multiplierToken, uint24 minimalAllowedPositionWidth, uint32 enterStartTime)`  
 
 Event emitted when a liquidity mining incentive has been created
 
@@ -27,23 +30,8 @@ Event emitted when a liquidity mining incentive has been created
 | bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
 | tiers | struct IAlgebraFarming.Tiers | The amounts of locked token for liquidity multipliers |
 | multiplierToken | address | The address of token which can be locked to get liquidity multiplier |
+| minimalAllowedPositionWidth | uint24 | The minimal allowed position width (tickUpper - tickLower) |
 | enterStartTime | uint32 | The time when enter becomes possible |
-
-
-### RewardAmountsDecreased
-
-
-`RewardAmountsDecreased(uint256,uint256,bytes32)`  
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-| incentiveId | bytes32 |  |
 
 
 
@@ -52,7 +40,7 @@ Event emitted when a liquidity mining incentive has been created
 ### maxIncentiveDuration
 
 
-`maxIncentiveDuration()` view external
+`function maxIncentiveDuration() external view returns (uint256)` view external
 
 The max duration of an incentive in seconds
 
@@ -68,7 +56,7 @@ The max duration of an incentive in seconds
 ### maxIncentiveStartLeadTime
 
 
-`maxIncentiveStartLeadTime()` view external
+`function maxIncentiveStartLeadTime() external view returns (uint256)` view external
 
 The max amount of seconds into the future the incentive startTime can be set
 
@@ -84,7 +72,7 @@ The max amount of seconds into the future the incentive startTime can be set
 ### farms
 
 
-`farms(uint256,bytes32)` view external
+`function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper)` view external
 
 Returns information about a farmd liquidity NFT
 
@@ -99,14 +87,14 @@ Returns information about a farmd liquidity NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 |  |
+| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower end of the tick range for the position, tickUpper The upper end of the tick range for the position |
 | tickLower | int24 |  |
 | tickUpper | int24 |  |
 
 ### createLimitFarming
 
 
-`createLimitFarming(struct IIncentiveKey.IncentiveKey,struct IAlgebraFarming.Tiers,struct IAlgebraLimitFarming.IncentiveParams)`  external
+`function createLimitFarming(struct IIncentiveKey.IncentiveKey key, struct IAlgebraFarming.Tiers tiers, struct IAlgebraLimitFarming.IncentiveParams params) external returns (address virtualPool)`  external
 
 
 
@@ -124,40 +112,6 @@ Returns information about a farmd liquidity NFT
 | ---- | ---- | ----------- |
 | virtualPool | address |  |
 
-### addRewards
 
-
-`addRewards(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-
-
-### decreaseRewardsAmount
-
-
-`decreaseRewardsAmount(struct IIncentiveKey.IncentiveKey,uint256,uint256)`  external
-
-
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| key | struct IIncentiveKey.IncentiveKey |  |
-| rewardAmount | uint256 |  |
-| bonusRewardAmount | uint256 |  |
-
-
-
-
----
 
 

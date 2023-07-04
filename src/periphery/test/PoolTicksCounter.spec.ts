@@ -10,7 +10,7 @@ import { Artifact } from 'hardhat/types'
 use(smock.matchers)
 
 describe('PoolTicksCounter', () => {
-  const TICK_SPACINGS = [200, 60, 10]
+  const TICK_SPACINGS = [1]
 
   TICK_SPACINGS.forEach((TICK_SPACING) => {
     let PoolTicksCounter: PoolTicksCounterTest

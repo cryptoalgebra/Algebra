@@ -8,6 +8,8 @@ contract TickTableEchidnaTest {
 
   mapping(int16 => uint256) private bitmap;
 
+  int24 constant tickSpacing = 60;
+
   // returns whether the given tick is initialized
   function isInitialized(int24 tick) private view returns (bool) {
     (int24 next, bool initialized) = bitmap.nextTickInTheSameRow(tick, true);

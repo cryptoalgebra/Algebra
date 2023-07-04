@@ -138,18 +138,14 @@ abstract contract FreezableToken is ERC20 {
 
     /**
      * @dev Mint the specified amount of token to the specified address and freeze it until the specified date.
-     *      Be careful, gas usage is not deterministic,
-     *      and depends on how many freezes _to address already has.
+     *     Be careful, gas usage is not deterministic,
+     *     and depends on how many freezes _to address already has.
      * @param _to Address to which token will be freeze.
      * @param _amount Amount of token to mint and freeze.
      * @param _until Release date, must be in future.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mintAndFreeze(
-        address _to,
-        uint256 _amount,
-        uint64 _until
-    ) internal returns (bool) {
+    function mintAndFreeze(address _to, uint256 _amount, uint64 _until) internal returns (bool) {
         _totalSupply = _totalSupply.add(_amount);
 
         bytes32 currentKey = toKey(_to, _until);

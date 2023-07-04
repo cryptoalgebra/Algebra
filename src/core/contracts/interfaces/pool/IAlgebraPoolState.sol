@@ -21,15 +21,7 @@ interface IAlgebraPoolState {
   function globalState()
     external
     view
-    returns (
-      uint160 price,
-      int24 tick,
-      uint16 fee,
-      uint16 timepointIndex,
-      uint8 communityFeeToken0,
-      uint8 communityFeeToken1,
-      bool unlocked
-    );
+    returns (uint160 price, int24 tick, uint16 fee, uint16 timepointIndex, uint8 communityFeeToken0, uint8 communityFeeToken1, bool unlocked);
 
   /**
    * @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
@@ -67,7 +59,9 @@ interface IAlgebraPoolState {
    * In addition, these values are only relative and must be used only in comparison to previous snapshots for
    * a specific position.
    */
-  function ticks(int24 tick)
+  function ticks(
+    int24 tick
+  )
     external
     view
     returns (
@@ -95,7 +89,9 @@ interface IAlgebraPoolState {
    * Returns fees0 The computed amount of token0 owed to the position as of the last mint/burn/poke;
    * Returns fees1 The computed amount of token1 owed to the position as of the last mint/burn/poke
    */
-  function positions(bytes32 key)
+  function positions(
+    bytes32 key
+  )
     external
     view
     returns (
@@ -121,7 +117,9 @@ interface IAlgebraPoolState {
    * Returns averageTick Time-weighted average tick;
    * Returns volumePerLiquidityCumulative Cumulative swap volume per liquidity for the life of the pool as of the timepoint timestamp;
    */
-  function timepoints(uint256 index)
+  function timepoints(
+    uint256 index
+  )
     external
     view
     returns (
@@ -145,4 +143,13 @@ interface IAlgebraPoolState {
    * @notice Returns the lock time for added liquidity
    */
   function liquidityCooldown() external view returns (uint32 cooldownInSeconds);
+
+  /**
+   * @notice The pool tick spacing
+   * @dev Ticks can only be used at multiples of this value
+   * e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+   * This value is an int24 to avoid casting even though it is always positive.
+   * @return The tick spacing
+   */
+  function tickSpacing() external view returns (int24);
 }

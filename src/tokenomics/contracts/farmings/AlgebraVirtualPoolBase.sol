@@ -31,6 +31,8 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     uint160 public override globalSecondsPerLiquidityCumulative;
     /// @inheritdoc IAlgebraVirtualPoolBase
     uint32 public override prevTimestamp;
+    /// @inheritdoc IAlgebraVirtualPoolBase
+    bool public override deactivated;
 
     /// @notice only pool (or FarmingCenter as "proxy") can call
     modifier onlyFromPool() {
@@ -43,23 +45,17 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         _;
     }
 
-    constructor(
-        address _farmingCenterAddress,
-        address _farmingAddress,
-        address _pool
-    ) {
+    constructor(address _farmingCenterAddress, address _farmingAddress, address _pool) {
         farmingCenterAddress = _farmingCenterAddress;
         farmingAddress = _farmingAddress;
         pool = _pool;
     }
 
     /// @notice get seconds per liquidity inside range
-    function getInnerSecondsPerLiquidity(int24 bottomTick, int24 topTick)
-        external
-        view
-        override
-        returns (uint160 innerSecondsSpentPerLiquidity)
-    {
+    function getInnerSecondsPerLiquidity(
+        int24 bottomTick,
+        int24 topTick
+    ) external view override returns (uint160 innerSecondsSpentPerLiquidity) {
         uint160 lowerSecondsPerLiquidity = ticks[bottomTick].outerSecondsPerLiquidity;
         uint160 upperSecondsPerLiquidity = ticks[topTick].outerSecondsPerLiquidity;
 
@@ -89,8 +85,9 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
     function _increaseCumulative(uint32 currentTimestamp) internal virtual returns (Status);
 
     /// @inheritdoc IAlgebraVirtualPool
-    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status) {
-        return _increaseCumulative(currentTimestamp);
+    function increaseCumulative(uint32 currentTimestamp) external override onlyFromPool returns (Status res) {
+        res = _increaseCumulative(currentTimestamp);
+        if (deactivated) res = Status.NOT_EXIST;
     }
 
     /// @dev logic of tick updating differs in virtual pools
@@ -100,6 +97,11 @@ abstract contract AlgebraVirtualPoolBase is IAlgebraVirtualPoolBase {
         int128 liquidityDelta,
         bool isTopTick
     ) internal virtual returns (bool updated);
+
+    /// @inheritdoc IAlgebraVirtualPoolBase
+    function deactivate() external override onlyFarming {
+        deactivated = true;
+    }
 
     /// @inheritdoc IAlgebraVirtualPoolBase
     function applyLiquidityDeltaToPosition(
