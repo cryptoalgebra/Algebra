@@ -2,8 +2,11 @@
 pragma solidity =0.8.17;
 
 import './libraries/SafeTransfer.sol';
+import './libraries/FullMath.sol';
 
 import './interfaces/IAlgebraFactory.sol';
+
+// TODO natspecs
 
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled
@@ -14,17 +17,36 @@ contract AlgebraCommunityVault {
   bytes32 public constant COMMUNITY_FEE_WITHDRAWER_ROLE = keccak256('COMMUNITY_FEE_WITHDRAWER');
   address private immutable factory;
 
+  uint16 public algebraFee;
+  bool public hasNewAlgebraFeeProposal;
+  uint16 public proposedNewAlgebraFee;
+
+  address public algebraFeeReceiver;
+
+  address public algebraFeeManager;
+  address private _pendingAlgebraFeeManager;
+
+  uint16 constant ALGEBRA_FEE_DENOMINATOR = 1000;
+
   modifier onlyWithdrawer() {
     require(IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender));
     _;
   }
 
-  constructor() {
+  modifier onlyAlgebraFeeManager() {
+    require(msg.sender == algebraFeeManager);
+    _;
+  }
+
+  constructor(address _algebraFeeManager) {
     factory = msg.sender;
+    algebraFeeManager = _algebraFeeManager;
   }
 
   function withdraw(address token, address to, uint256 amount) external onlyWithdrawer {
-    _withdraw(token, to, amount);
+    uint16 _algebraFee = algebraFee;
+    address _algebraFeeReceiver = algebraFeeReceiver;
+    _withdraw(token, to, amount, _algebraFee, _algebraFeeReceiver);
   }
 
   struct WithdrawTokensParams {
@@ -35,13 +57,60 @@ contract AlgebraCommunityVault {
 
   function withdrawTokens(WithdrawTokensParams[] calldata params) external onlyWithdrawer {
     uint256 paramsLength = params.length;
+    uint16 _algebraFee = algebraFee;
+    address _algebraFeeReceiver = algebraFeeReceiver;
     unchecked {
-      for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, params[i].to, params[i].amount);
+      for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, params[i].to, params[i].amount, _algebraFee, _algebraFeeReceiver);
     }
   }
 
-  function _withdraw(address token, address to, uint256 amount) private {
-    SafeTransfer.safeTransfer(token, to, amount);
+  function _withdraw(address token, address to, uint256 amount, uint16 _algebraFee, address _algebraFeeReceiver) private {
+    uint256 withdrawAmount = amount;
+    if (_algebraFee != 0 && _algebraFeeReceiver != address(0)) {
+      uint256 algebraFeeAmount = FullMath.mulDivRoundingUp(withdrawAmount, _algebraFee, ALGEBRA_FEE_DENOMINATOR);
+      withdrawAmount -= algebraFeeAmount;
+      SafeTransfer.safeTransfer(token, _algebraFeeReceiver, algebraFeeAmount);
+    }
+
+    SafeTransfer.safeTransfer(token, to, withdrawAmount);
     emit TokensWithdrawal(token, to, amount);
+  }
+
+  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external {
+    require(msg.sender == IAlgebraFactory(factory).owner());
+    require(hasNewAlgebraFeeProposal, 'not proposed');
+    require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
+
+    algebraFee = newAlgebraFee;
+
+    hasNewAlgebraFeeProposal = false;
+    proposedNewAlgebraFee = 0;
+  }
+
+  // ### algebra fee manager permissioned actions ###
+
+  function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external onlyAlgebraFeeManager {
+    _pendingAlgebraFeeManager = _newAlgebraFeeManager;
+  }
+
+  function acceptAlgebraFeeManagerRole() external {
+    require(msg.sender == _pendingAlgebraFeeManager);
+    _pendingAlgebraFeeManager = address(0);
+    algebraFeeManager = msg.sender;
+  }
+
+  function proposeAlgebraFeeChange(uint16 newAlgebraFee) external onlyAlgebraFeeManager {
+    require(newAlgebraFee <= ALGEBRA_FEE_DENOMINATOR);
+    proposedNewAlgebraFee = newAlgebraFee;
+    hasNewAlgebraFeeProposal = true;
+  }
+
+  function cancelAlgebraFeeChangeProposal() external onlyAlgebraFeeManager {
+    proposedNewAlgebraFee = 0;
+    hasNewAlgebraFeeProposal = false;
+  }
+
+  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external onlyAlgebraFeeManager {
+    algebraFeeReceiver = newAlgebraFeeReceiver;
   }
 }

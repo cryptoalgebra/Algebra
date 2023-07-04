@@ -49,7 +49,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
-    communityVault = address(new AlgebraCommunityVault());
+    communityVault = address(new AlgebraCommunityVault(msg.sender));
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.BASE_FEE;
 
