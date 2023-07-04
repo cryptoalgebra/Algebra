@@ -139,7 +139,7 @@ contract AlgebraCommunityVault {
     hasNewAlgebraFeeProposal = false;
   }
 
-  function setAlgebraFeeReceiver(address newAlgebraFeeReceiver) external onlyAlgebraFeeManager {
+  function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external onlyAlgebraFeeManager {
     require(newAlgebraFeeReceiver != address(0));
     algebraFeeReceiver = newAlgebraFeeReceiver;
   }
