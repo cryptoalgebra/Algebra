@@ -73,13 +73,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     // TODO REENTRANCY
     _beforeModifyPosition(recipient, bottomTick, topTick, liquidityDesired.toInt128(), data);
+    _lock();
 
     unchecked {
       int24 _tickSpacing = tickSpacing;
       if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
     }
-
-    _lock();
 
     (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(
       bottomTick,
