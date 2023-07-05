@@ -11,7 +11,6 @@ import './base/TickStructure.sol';
 
 import './libraries/FullMath.sol';
 import './libraries/Constants.sol';
-import './libraries/SafeTransfer.sol';
 import './libraries/SafeCast.sol';
 import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
@@ -88,7 +87,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     );
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
-    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+    _mintCallback(amount0, amount1, data); // IAlgebraMintCallback.algebraMintCallback to msg.sender
 
     receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
     receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
@@ -112,12 +111,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     unchecked {
       if (amount0 > 0) {
-        if (receivedAmount0 > amount0) SafeTransfer.safeTransfer(token0, sender, receivedAmount0 - amount0);
+        if (receivedAmount0 > amount0) _transfer(token0, sender, receivedAmount0 - amount0);
         else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
 
       if (amount1 > 0) {
-        if (receivedAmount1 > amount1) SafeTransfer.safeTransfer(token1, sender, receivedAmount1 - amount1);
+        if (receivedAmount1 > amount1) _transfer(token1, sender, receivedAmount1 - amount1);
         else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
     }
@@ -205,8 +204,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         // single SSTORE
         (position.fees0, position.fees1) = (positionFees0 - amount0, positionFees1 - amount1);
 
-        if (amount0 > 0) SafeTransfer.safeTransfer(token0, recipient, amount0);
-        if (amount1 > 0) SafeTransfer.safeTransfer(token1, recipient, amount1);
+        if (amount0 > 0) _transfer(token0, recipient, amount0);
+        if (amount1 > 0) _transfer(token1, recipient, amount1);
         _changeReserves(-int256(uint256(amount0)), -int256(uint256(amount1)), 0, 0);
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
@@ -233,14 +232,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       if (zeroToOne) {
         unchecked {
-          if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
+          if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         unchecked {
-          if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
+          if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
@@ -277,10 +276,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       uint256 balanceBefore;
       uint256 balanceAfter;
       if (zeroToOne) {
-        _swapCallback(amountRequired, 0, data);
+        _swapCallback(amountRequired, 0, data); // callback to get tokens from the caller
         (balanceBefore, balanceAfter) = (balance0Before, _balanceToken0());
       } else {
-        _swapCallback(0, amountRequired, data);
+        _swapCallback(0, amountRequired, data); // callback to get tokens from the caller
         (balanceBefore, balanceAfter) = (balance1Before, _balanceToken1());
       }
 
@@ -298,14 +297,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     unchecked {
       // only transfer to the recipient
       if (zeroToOne) {
-        if (amount1 < 0) SafeTransfer.safeTransfer(token1, recipient, uint256(-amount1));
+        if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
         // return the leftovers
-        if (amount0 < amountRequired) SafeTransfer.safeTransfer(token0, sender, uint256(amountRequired - amount0));
+        if (amount0 < amountRequired) _transfer(token0, sender, uint256(amountRequired - amount0));
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
-        if (amount0 < 0) SafeTransfer.safeTransfer(token0, recipient, uint256(-amount0));
+        if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
         // return the leftovers
-        if (amount1 < amountRequired) SafeTransfer.safeTransfer(token1, sender, uint256(amountRequired - amount1));
+        if (amount1 < amountRequired) _transfer(token1, sender, uint256(amountRequired - amount1));
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
     }
@@ -360,15 +359,15 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       uint256 fee0;
       if (amount0 > 0) {
         fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
-        SafeTransfer.safeTransfer(token0, recipient, amount0);
+        _transfer(token0, recipient, amount0);
       }
       uint256 fee1;
       if (amount1 > 0) {
         fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
-        SafeTransfer.safeTransfer(token1, recipient, amount1);
+        _transfer(token1, recipient, amount1);
       }
 
-      IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
+      _flashCallback(fee0, fee1, data); // IAlgebraFlashCallback.algebraFlashCallback to msg.sender
 
       paid0 = _balanceToken0();
       if (balance0Before + fee0 > paid0) revert flashInsufficientPaid0();

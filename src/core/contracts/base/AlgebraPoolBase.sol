@@ -2,6 +2,8 @@
 pragma solidity =0.8.17;
 
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
+import '../interfaces/callback/IAlgebraMintCallback.sol';
+import '../interfaces/callback/IAlgebraFlashCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
@@ -10,6 +12,7 @@ import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 
 import '../libraries/TickManagement.sol';
+import '../libraries/SafeTransfer.sol';
 import '../libraries/Constants.sol';
 import '../libraries/Plugins.sol';
 import './common/Timestamp.sol';
@@ -96,19 +99,37 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     globalState.prevInitializedTick = TickMath.MIN_TICK;
   }
 
-  function _balanceToken0() internal view returns (uint256) {
+  // The main external calls that are used by the pool. Can be overridden in tests
+
+  function _balanceToken0() internal view virtual returns (uint256) {
     return IERC20Minimal(token0).balanceOf(address(this));
   }
 
-  function _balanceToken1() internal view returns (uint256) {
+  function _balanceToken1() internal view virtual returns (uint256) {
     return IERC20Minimal(token1).balanceOf(address(this));
   }
 
+  function _transfer(address token, address to, uint256 amount) internal virtual {
+    SafeTransfer.safeTransfer(token, to, amount);
+  }
+
+  // These 'callback' functions are wrappers over the callbacks that the pool calls on the msg.sender
+  // These methods can be overridden in tests
+
   /// @dev Using function to save bytecode
-  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal virtual {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
+  function _mintCallback(uint256 amount0, uint256 amount1, bytes calldata data) internal virtual {
+    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
+  }
+
+  function _flashCallback(uint256 fee0, uint256 fee1, bytes calldata data) internal virtual {
+    IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
+  }
+
+  // This virtual function is implemented in TickStructure and used in Positions
   /// @dev Add or remove a tick to the corresponding data structure
   function _insertOrRemoveTick(
     int24 tick,
