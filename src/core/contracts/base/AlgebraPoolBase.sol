@@ -5,6 +5,7 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/callback/IAlgebraMintCallback.sol';
 import '../interfaces/callback/IAlgebraFlashCallback.sol';
 import '../interfaces/IAlgebraPool.sol';
+import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IERC20Minimal.sol';
@@ -95,8 +96,19 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   constructor() {
-    (plugin, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
+    (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
     globalState.prevInitializedTick = TickMath.MIN_TICK;
+  }
+
+  /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
+  /// Can be overridden in tests
+  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
+    return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
+  }
+
+  /// @dev Gets the default settings for pool initialization. Can be overridden in tests
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
+    return IAlgebraFactory(factory).defaultConfigurationForPool();
   }
 
   // The main external calls that are used by the pool. Can be overridden in tests

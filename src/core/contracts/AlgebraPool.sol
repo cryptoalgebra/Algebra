@@ -39,7 +39,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
-    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = IAlgebraFactory(factory).defaultConfigurationForPool();
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
     tickSpacing = _tickSpacing;
 
     uint8 pluginConfig = globalState.pluginConfig;
