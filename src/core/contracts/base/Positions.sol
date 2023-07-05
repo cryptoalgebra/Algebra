@@ -21,13 +21,11 @@ abstract contract Positions is AlgebraPoolBase {
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
 
-  /**
-   * @notice This function fetches certain position object
-   * @param owner The address owing the position
-   * @param bottomTick The position's bottom tick
-   * @param topTick The position's top tick
-   * @return position The Position object
-   */
+  /// @notice This function fetches certain position object
+  /// @param owner The address owing the position
+  /// @param bottomTick The position's bottom tick
+  /// @param topTick The position's top tick
+  /// @return position The Position object
   function getOrCreatePosition(address owner, int24 bottomTick, int24 topTick) internal view returns (Position storage) {
     bytes32 key;
     assembly {
@@ -36,11 +34,9 @@ abstract contract Positions is AlgebraPoolBase {
     return positions[key];
   }
 
-  /**
-   * @dev Updates position's ticks and its fees
-   * @return amount0 The abs amount of token0 that corresponds to liquidityDelta
-   * @return amount1 The abs amount of token1 that corresponds to liquidityDelta
-   */
+  /// @dev Updates position's ticks and its fees
+  /// @return amount0 The abs amount of token0 that corresponds to liquidityDelta
+  /// @return amount1 The abs amount of token1 that corresponds to liquidityDelta
   function _updatePositionTicksAndFees(
     Position storage position,
     int24 bottomTick,
@@ -111,13 +107,11 @@ abstract contract Positions is AlgebraPoolBase {
     }
   }
 
-  /**
-   * @notice Increases amounts of tokens owed to owner of the position
-   * @param position The position object to operate with
-   * @param liquidityDelta The amount on which to increase\decrease the liquidity
-   * @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
-   * @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
-   */
+  /// @notice Increases amounts of tokens owed to owner of the position
+  /// @param position The position object to operate with
+  /// @param liquidityDelta The amount on which to increase\decrease the liquidity
+  /// @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
   function _recalculatePosition(
     Position storage position,
     int128 liquidityDelta,

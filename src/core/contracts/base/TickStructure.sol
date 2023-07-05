@@ -21,14 +21,12 @@ abstract contract TickStructure is AlgebraPoolBase {
     ticks.initTickState();
   }
 
-  /**
-   * @notice Used to add or remove a tick from a doubly linked list and search tree
-   * @param tick The tick being removed or added now
-   * @param currentTick The current global tick in the pool
-   * @param prevInitializedTick Previous active tick before `currentTick`
-   * @param remove Remove or add the tick
-   * @return newPrevInitializedTick New previous active tick before `currentTick` if changed
-   */
+  /// @notice Used to add or remove a tick from a doubly linked list and search tree
+  /// @param tick The tick being removed or added now
+  /// @param currentTick The current global tick in the pool
+  /// @param prevInitializedTick Previous active tick before `currentTick`
+  /// @param remove Remove or add the tick
+  /// @return newPrevInitializedTick New previous active tick before `currentTick` if changed
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,

@@ -49,13 +49,11 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
-  /**
-   * @notice Applies deltas to reserves and pays communityFees
-   * @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
-   * @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
-   * @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
-   * @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
-   */
+  /// @notice Applies deltas to reserves and pays communityFees
+  /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
+  /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
+  /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
+  /// @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
   function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
     if (communityFee0 | communityFee1 != 0) {
       unchecked {
