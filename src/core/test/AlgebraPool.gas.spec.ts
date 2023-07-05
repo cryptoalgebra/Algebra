@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool';
+import { MockTimeAlgebraPool } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';

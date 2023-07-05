@@ -1,10 +1,6 @@
 import { ethers } from 'hardhat';
 import { BigNumber, BigNumberish, constants, Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { TestERC20 } from '../typechain/test/TestERC20';
-import { AlgebraFactory } from '../typechain/AlgebraFactory';
-import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool';
-import { TestAlgebraSwapPay } from '../typechain/test/TestAlgebraSwapPay';
 import { expect } from './shared/expect';
 
 import { poolFixture, TEST_POOL_START_TIME } from './shared/fixtures';
@@ -28,12 +24,18 @@ import {
   MIN_TICK,
   MAX_TICK,
 } from './shared/utilities';
-import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee';
-import { TestAlgebraReentrantCallee } from '../typechain/test/TestAlgebraReentrantCallee';
-import { MockPoolPlugin } from '../typechain/test/MockPoolPlugin';
-import { TickMathTest } from '../typechain/test/TickMathTest';
-import { TestVirtualPool } from '../typechain/test/TestVirtualPool';
-import { PriceMovementMathTest } from '../typechain/test/PriceMovementMathTest';
+
+import {
+  TestERC20,
+  AlgebraFactory,
+  MockTimeAlgebraPool,
+  TestAlgebraSwapPay,
+  TestAlgebraCallee,
+  TestAlgebraReentrantCallee,
+  MockPoolPlugin,
+  TickMathTest,
+  PriceMovementMathTest,
+} from '../typechain';
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 

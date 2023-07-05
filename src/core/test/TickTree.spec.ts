@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { TickTreeTest } from '../typechain/test/TickTreeTest';
+import { TickTreeTest } from '../typechain';
 import { expect } from './shared/expect';
 import snapshotGasCost from './shared/snapshotGasCost';
 

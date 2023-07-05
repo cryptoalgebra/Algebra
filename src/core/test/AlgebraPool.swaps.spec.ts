@@ -2,10 +2,8 @@ import { Decimal } from 'decimal.js';
 import { BigNumber, BigNumberish, ContractTransaction, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool';
-import { TestERC20 } from '../typechain/test/TestERC20';
+import { MockTimeAlgebraPool, TestERC20, TestAlgebraCallee } from '../typechain';
 
-import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee';
 import { expect } from './shared/expect';
 import { poolFixture } from './shared/fixtures';
 import { formatPrice, formatTokenAmount } from './shared/format';

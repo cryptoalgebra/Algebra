@@ -1,8 +1,7 @@
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
-import { TickTest } from '../typechain/test/TickTest';
+import { TickTest } from '../typechain';
 import { expect } from './shared/expect';
-import { FeeAmount, TICK_SPACINGS, getMaxLiquidityPerTick } from './shared/utilities';
 const MaxUint128 = BigNumber.from(2).pow(128).sub(1);
 
 const { constants } = ethers;
@@ -38,8 +37,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 3,
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -54,8 +51,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 3,
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -70,8 +65,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 3,
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -80,8 +73,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 1,
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -96,8 +87,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: constants.MaxUint256.sub(2),
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -106,8 +95,6 @@ describe('Tick', () => {
         outerFeeGrowth1Token: 5,
         liquidityTotal: 0,
         liquidityDelta: 0,
-        outerSecondsPerLiquidity: 0,
-        outerSecondsSpent: 0,
         prevTick: 0,
         nextTick: 0,
       });
@@ -220,8 +207,7 @@ describe('Tick', () => {
       });
       await tickTest.cross(2, 7, 9);
       await tickTest.cross(2, 7, 9);
-      const { outerFeeGrowth0Token, outerFeeGrowth1Token, outerSecondsSpent, outerSecondsPerLiquidity } =
-        await tickTest.ticks(2);
+      const { outerFeeGrowth0Token, outerFeeGrowth1Token } = await tickTest.ticks(2);
       expect(outerFeeGrowth0Token).to.eq(1);
       expect(outerFeeGrowth1Token).to.eq(2);
     });

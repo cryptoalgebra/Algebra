@@ -2,9 +2,7 @@ import Decimal from 'decimal.js';
 import { BigNumber, BigNumberish, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool } from '../typechain/test/MockTimeAlgebraPool';
-import { TickMathTest } from '../typechain/test/TickMathTest';
-import { AlgebraPoolSwapTest } from '../typechain/test/AlgebraPoolSwapTest';
+import { MockTimeAlgebraPool, TickMathTest, AlgebraPoolSwapTest } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';

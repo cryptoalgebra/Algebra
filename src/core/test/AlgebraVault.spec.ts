@@ -1,10 +1,7 @@
 import { Wallet, BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { AlgebraFactory } from '../typechain/AlgebraFactory';
-import { AlgebraPoolDeployer } from '../typechain/AlgebraPoolDeployer';
-import { AlgebraCommunityVault } from '../typechain/AlgebraCommunityVault';
-import { TestERC20 } from '../typechain/test/TestERC20';
+import { AlgebraFactory, AlgebraPoolDeployer, AlgebraCommunityVault, TestERC20 } from '../typechain';
 import { expect } from './shared/expect';
 
 const { constants } = ethers;

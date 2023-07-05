@@ -1,14 +1,15 @@
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
-import { MockTimeAlgebraPool } from '../../typechain/test/MockTimeAlgebraPool';
-import { TestERC20 } from '../../typechain/test/TestERC20';
-import { AlgebraFactory } from '../../typechain/AlgebraFactory';
-import { AlgebraCommunityVault } from '../../typechain/AlgebraCommunityVault';
-import { TestAlgebraCallee } from '../../typechain/test/TestAlgebraCallee';
-import { TestAlgebraRouter } from '../../typechain/test/TestAlgebraRouter';
-import { MockTimeAlgebraPoolDeployer } from '../../typechain/test/MockTimeAlgebraPoolDeployer';
-
-import { AlgebraPoolDeployer } from '../../typechain/AlgebraPoolDeployer';
+import {
+  MockTimeAlgebraPool,
+  TestERC20,
+  AlgebraFactory,
+  AlgebraCommunityVault,
+  TestAlgebraCallee,
+  TestAlgebraRouter,
+  MockTimeAlgebraPoolDeployer,
+  AlgebraPoolDeployer,
+} from '../../typechain';
 
 type Fixture<T> = () => Promise<T>;
 interface FactoryFixture {
