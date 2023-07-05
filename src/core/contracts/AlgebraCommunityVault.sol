@@ -40,7 +40,7 @@ contract AlgebraCommunityVault {
   /// @notice Address to which protocol commissions are sent from vault
   address public communityFeeReceiver;
   /// @notice The percentage of the protocol fee that Algebra will receive
-  /// @dev Value in thouthands,i.e. 1e-3
+  /// @dev Value in thousandths,i.e. 1e-3
   uint16 public algebraFee;
   /// @notice Represents whether there is a new Algebra fee proposal or not
   bool public hasNewAlgebraFeeProposal;
@@ -74,8 +74,8 @@ contract AlgebraCommunityVault {
     algebraFeeManager = _algebraFeeManager;
   }
 
-  /// @notice Withdrawa protocol fees from vault
-  /// Can only be called by algebraFeeManager or communityFeeReceiver
+  /// @notice Withdraw protocol fees from vault
+  /// @dev Can only be called by algebraFeeManager or communityFeeReceiver
   /// @param token The token address
   /// @param amount The amount of token
   function withdraw(address token, uint256 amount) external onlyWithdrawer {
@@ -97,9 +97,8 @@ contract AlgebraCommunityVault {
     uint256 amount;
   }
 
-  /// @notice Withdraw protocol fees from vault
-  /// Can be called by algebraFeeManager or communityFeeReceiver
-  /// Used to claim fees for multiple tokens
+  /// @notice Withdraw protocol fees from vault. Used to claim fees for multiple tokens
+  /// @dev Can be called by algebraFeeManager or communityFeeReceiver
   /// @param params Array of WithdrawTokensParams objects containing token addresses and amounts to withdraw
   function withdrawTokens(WithdrawTokensParams[] calldata params) external onlyWithdrawer {
     uint256 paramsLength = params.length;
@@ -133,9 +132,9 @@ contract AlgebraCommunityVault {
 
   // ### algebra factory owner permissioned actions ###
 
-  /// @notice Accepts the proposed new algebra fee
-  /// Can only be called by the factory owner
-  /// @param newAlgebraFee New algebra fee value
+  /// @notice Accepts the proposed new Algebra fee
+  /// @dev Can only be called by the factory owner
+  /// @param newAlgebraFee New Algebra fee value
   function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external onlyFactoryOwner {
     require(hasNewAlgebraFeeProposal, 'not proposed');
     require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
@@ -148,7 +147,7 @@ contract AlgebraCommunityVault {
   }
 
   /// @notice Change community fee receiver address
-  /// Can only be called by the factory owner
+  /// @dev Can only be called by the factory owner
   /// @param newCommunityFeeReceiver New community fee receiver address
   function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external onlyFactoryOwner {
     require(newCommunityFeeReceiver != address(0));

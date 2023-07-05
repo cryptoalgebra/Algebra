@@ -12,7 +12,7 @@ interface IAlgebraPoolState {
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary;
   /// @return prevInitializedTick The previous initialized tick
   /// @return fee The last known pool fee value in hundredths of a bip, i.e. 1e-6
-  /// @return pluginConfig The curent plugin config. Each bit of the config is responsible for enabling/disabling the hooks.
+  /// @return pluginConfig The current plugin config. Each bit of the config is responsible for enabling/disabling the hooks.
   /// The last bit indicates whether the plugin contains dynamic fees logic.
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
