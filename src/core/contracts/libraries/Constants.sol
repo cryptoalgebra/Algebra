@@ -3,13 +3,8 @@ pragma solidity =0.8.17;
 
 library Constants {
   uint8 internal constant RESOLUTION = 96;
-  uint256 internal constant Q32 = 1 << 32;
-  uint256 internal constant Q48 = 1 << 48;
-  uint256 internal constant Q64 = 1 << 64;
   uint256 internal constant Q96 = 1 << 96;
   uint256 internal constant Q128 = 1 << 128;
-  uint256 internal constant Q144 = 1 << 144;
-  int256 internal constant Q160 = 1 << 160;
 
   uint24 internal constant FEE_DENOMINATOR = 1e6;
   uint16 internal constant FLASH_FEE = 0.0001e6; // fee for flash loan in hundredths of a bip (0.01%)
