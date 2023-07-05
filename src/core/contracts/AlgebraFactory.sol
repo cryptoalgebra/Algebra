@@ -46,6 +46,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
+  /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
+  bytes32 private constant POOL_INIT_CODE_HASH = 0xfbc689cef13820d2a0e4bd382ded6ed4547c1577464bd7cde6eba9865c36414b;
+
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
@@ -73,6 +76,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
+  function computePoolAddress(address token0, address token1) public view override returns (address pool) {
+    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
+  }
+
+  /// @inheritdoc IAlgebraFactory
   function createPool(address tokenA, address tokenB) external override returns (address pool) {
     require(tokenA != tokenB);
     (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
@@ -81,7 +89,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     address defaultPlugin;
     if (address(defaultPluginFactory) != address(0)) {
-      defaultPlugin = defaultPluginFactory.createPlugin(_computeAddress(token0, token1));
+      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(defaultPlugin), token0, token1);
@@ -154,16 +162,5 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     _revokeRole(DEFAULT_ADMIN_ROLE, owner());
     super._transferOwnership(newOwner);
     _grantRole(DEFAULT_ADMIN_ROLE, owner());
-  }
-
-  /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0xfbc689cef13820d2a0e4bd382ded6ed4547c1577464bd7cde6eba9865c36414b;
-
-  /// @notice Deterministically computes the pool address given the token0 and token1
-  /// @param token0 first token
-  /// @param token1 second token
-  /// @return pool The contract address of the Algebra pool
-  function _computeAddress(address token0, address token1) private view returns (address pool) {
-    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
   }
 }

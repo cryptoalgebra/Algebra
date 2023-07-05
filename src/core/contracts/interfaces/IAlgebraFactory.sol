@@ -84,6 +84,13 @@ interface IAlgebraFactory {
   /// @return fee which will be set at the creation of the pool
   function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
 
+  /// @notice Deterministically computes the pool address given the token0 and token1
+  /// @dev The method does not check if such a pool has been created
+  /// @param token0 first token
+  /// @param token1 second token
+  /// @return pool The contract address of the Algebra pool
+  function computePoolAddress(address token0, address token1) external view returns (address pool);
+
   /// @notice Returns the pool address for a given pair of tokens, or address 0 if it does not exist
   /// @dev tokenA and tokenB may be passed in either token0/token1 or token1/token0 order
   /// @param tokenA The contract address of either token0 or token1
