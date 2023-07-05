@@ -71,7 +71,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
 
-    // TODO REENTRANCY
     _beforeModifyPosition(recipient, bottomTick, topTick, liquidityDesired.toInt128(), data);
     _lock();
 
@@ -346,6 +345,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolActions
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override {
     uint8 pluginConfig = globalState.pluginConfig;
+    uint256 _communityFee = globalState.communityFee;
+
     if (pluginConfig.hasFlag(Plugins.BEFORE_FLASH_FLAG)) {
       IAlgebraPlugin(plugin).beforeFlash(msg.sender, recipient, amount0, amount1, data).shouldReturn(IAlgebraPlugin.beforeFlash.selector);
     }
@@ -378,7 +379,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         paid0 -= balance0Before;
         paid1 -= balance1Before;
       }
-      uint256 _communityFee = globalState.communityFee; // TODO optimize
       if (_communityFee > 0) {
         uint256 communityFee0;
         if (paid0 > 0) communityFee0 = FullMath.mulDiv(paid0, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
