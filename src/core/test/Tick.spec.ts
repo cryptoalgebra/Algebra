@@ -133,10 +133,6 @@ describe('Tick', () => {
       await tickTest.update(0, 0, 2, 0, 0, false)
       expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false)
     })
-    it('does not flip from nonzero to lesser nonzero', async () => {
-      await tickTest.update(0, 0, 2, 0, 0, false)
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false)
-    })
     it('reverts if total liquidity gross is greater than max', async () => {
       await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, false)
       await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, true)

@@ -299,7 +299,7 @@ describe('TokenDeltaMath', () => {
       )
     })
 
-    it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
+    it(`gas cost for amount0 where roundUp = false  [ @skip-on-coverage ]`, async () => {
       await snapshotGasCost(
         sqrtPriceMath.getGasCostOfGetToken0Delta(
           encodePriceSqrt(100, 121),
