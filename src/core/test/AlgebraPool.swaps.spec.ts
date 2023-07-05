@@ -156,11 +156,14 @@ async function executeSwap(
     if ('sqrtPriceLimit' in testCase) {
       targetPrice = testCase.sqrtPriceLimit;
     } else {
-      targetPrice = testCallee.getPriceAtTick(testCase.targetTick);
+      if (testCase.targetTick === undefined) throw new Error('Invalid target tick');
+      targetPrice = await testCallee.getPriceAtTick(testCase.targetTick);
     }
     if (testCase.zeroToOne) {
+      if (targetPrice === undefined) throw new Error('Invalid target price');
       swap = await poolFunctions.swapToLowerPrice(targetPrice, SWAP_RECIPIENT_ADDRESS);
     } else {
+      if (targetPrice === undefined) throw new Error('Invalid target price');
       swap = await poolFunctions.swapToHigherPrice(targetPrice, SWAP_RECIPIENT_ADDRESS);
     }
   }

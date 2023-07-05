@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool } from '../typechain';
+import { MockTimeAlgebraPool, TestERC20, TestAlgebraCallee } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';
@@ -23,8 +23,6 @@ import {
   MAX_SQRT_RATIO,
   MIN_SQRT_RATIO,
 } from './shared/utilities';
-import { TestERC20 } from '../typechain/test/TestERC20';
-import { TestAlgebraCallee } from '../typechain/test/TestAlgebraCallee';
 
 describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet;

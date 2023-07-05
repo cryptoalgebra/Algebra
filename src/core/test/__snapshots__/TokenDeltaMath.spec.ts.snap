@@ -8,6 +8,8 @@ exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = false gas  [ @skip-o
 
 exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = true gas  [ @skip-on-coverage ] 1`] = `451`;
 
+exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = false  [ @skip-on-coverage ] 1`] = `437`;
+
 exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 1`] = `467`;
 
 exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 2`] = `437`;

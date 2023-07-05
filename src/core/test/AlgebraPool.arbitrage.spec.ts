@@ -93,7 +93,7 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.approve(tester.address, MaxUint256);
 
             await pool.initialize(startingPrice);
-            if (tickSpacing != 60) await pool.setTickSpacing(tickSpacing, tickSpacing);
+            if (tickSpacing != 60) await pool.setTickSpacing(tickSpacing);
             if (communityFee != 0) await pool.setCommunityFee(communityFee);
             await mint(wallet.address, minTick, maxTick, passiveLiquidity);
 

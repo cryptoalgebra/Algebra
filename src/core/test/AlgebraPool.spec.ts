@@ -1961,7 +1961,7 @@ describe('AlgebraPool', () => {
           expect(await pool.totalFeeGrowth0Token()).to.eq(0);
           expect(await pool.totalFeeGrowth1Token()).to.eq(0);
 
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -1974,7 +1974,7 @@ describe('AlgebraPool', () => {
           await flash(1001, 2002, other.address);
           expect(await pool.totalFeeGrowth1Token()).to.eq(0);
 
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -1987,7 +1987,7 @@ describe('AlgebraPool', () => {
           await flash(1001, 2002, other.address);
           expect(await pool.totalFeeGrowth0Token()).to.eq(0);
 
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(1).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -2000,7 +2000,7 @@ describe('AlgebraPool', () => {
           await token1.transfer(pool.address, expandTo18Decimals(1));
           await flash(1001, 2002, other.address);
 
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(expandTo18Decimals(2).add(1)).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -2021,7 +2021,7 @@ describe('AlgebraPool', () => {
             .to.emit(token0, 'Transfer')
             .withArgs(wallet.address, pool.address, 567)
             .to.not.emit(token1, 'Transfer');
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(567).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -2031,7 +2031,7 @@ describe('AlgebraPool', () => {
             .to.emit(token1, 'Transfer')
             .withArgs(wallet.address, pool.address, 678)
             .to.not.emit(token0, 'Transfer');
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
           expect(await pool.totalFeeGrowth1Token()).to.eq(
             BigNumber.from(678).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
           );
@@ -2043,7 +2043,7 @@ describe('AlgebraPool', () => {
             .to.emit(token1, 'Transfer')
             .withArgs(wallet.address, pool.address, 1234);
 
-          await pool.burn(minTick, maxTick, 0, [], []);
+          await pool.burn(minTick, maxTick, 0, []);
 
           expect(await pool.totalFeeGrowth0Token()).to.eq(
             BigNumber.from(789).mul(BigNumber.from(2).pow(128)).div(expandTo18Decimals(2))
