@@ -358,12 +358,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       uint256 fee0;
       if (amount0 > 0) {
-        fee0 = FullMath.mulDivRoundingUp(amount0, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
+        fee0 = FullMath.mulDivRoundingUp(amount0, Constants.FLASH_FEE, Constants.FEE_DENOMINATOR);
         _transfer(token0, recipient, amount0);
       }
       uint256 fee1;
       if (amount1 > 0) {
-        fee1 = FullMath.mulDivRoundingUp(amount1, Constants.BASE_FEE, Constants.FEE_DENOMINATOR);
+        fee1 = FullMath.mulDivRoundingUp(amount1, Constants.FLASH_FEE, Constants.FEE_DENOMINATOR);
         _transfer(token1, recipient, amount1);
       }
 

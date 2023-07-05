@@ -51,10 +51,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     poolDeployer = _poolDeployer;
     communityVault = address(new AlgebraCommunityVault(msg.sender));
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
-    defaultFee = Constants.BASE_FEE;
+    defaultFee = Constants.INIT_DEFAULT_FEE;
 
     emit DefaultTickspacing(Constants.INIT_DEFAULT_TICK_SPACING);
-    emit DefaultFee(Constants.BASE_FEE);
+    emit DefaultFee(Constants.INIT_DEFAULT_FEE);
   }
 
   /// @inheritdoc IAlgebraFactory

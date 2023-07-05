@@ -70,7 +70,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   constructor() {
-    globalState.fee = Constants.BASE_FEE;
+    globalState.fee = Constants.INIT_DEFAULT_FEE;
     globalState.prevInitializedTick = TickMath.MIN_TICK;
   }
 
