@@ -84,7 +84,10 @@ describe('AlgebraFactory', () => {
     tokens: [string, string]
   ) {
     const create2Address = getCreate2Address(poolDeployer.address, tokens, poolBytecode)
-    const addressCalculatedByFactory = await factory.computePoolAddress(tokens[0], tokens[1]);
+
+    const sortedTokens = BigInt(tokens[1]) > BigInt(tokens[0]) ? [tokens[0], tokens[1]] : [tokens[1], tokens[0]];
+    const addressCalculatedByFactory = await factory.computePoolAddress(sortedTokens[0], sortedTokens[1]);
+
     expect(addressCalculatedByFactory).to.be.eq(create2Address);
 
     const create = factory.createPool(tokens[0], tokens[1])
