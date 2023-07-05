@@ -10,8 +10,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
   using SafeCast for uint256;
 
   /// @dev The tracked token0 and token1 reserves of pool
-  uint128 private reserve0;
-  uint128 private reserve1;
+  uint128 internal reserve0;
+  uint128 internal reserve1;
 
   /// @inheritdoc IAlgebraPoolState
   function getReserves() external view returns (uint128, uint128) {

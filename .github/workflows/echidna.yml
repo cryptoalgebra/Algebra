@@ -52,5 +52,5 @@ jobs:
           files: ./src/core/contracts/test/echidna/${{ matrix.testName }}.sol
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
-          config: ./src/core/echidna.config.yml
+          config: ./src/core/contracts/test/echidna/echidna.config.yml
 
