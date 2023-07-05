@@ -3,9 +3,10 @@ pragma solidity =0.8.17;
 pragma abicoder v1;
 
 import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 
-contract MockPoolPlugin is IAlgebraPlugin {
+contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
 
   constructor(address _pool) {
@@ -22,6 +23,10 @@ contract MockPoolPlugin is IAlgebraPlugin {
   event AfterFlash(address sender, uint256 amount0, uint256 amount1);
 
   function defaultPluginConfig() external view override returns (uint8) {}
+
+  function getCurrentFee() external pure override returns (uint16 fee) {
+    return 220;
+  }
 
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call

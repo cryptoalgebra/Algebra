@@ -1733,6 +1733,22 @@ describe('AlgebraPool', () => {
     expect(await pool.liquidity(), 'pool has run tick transition and liquidity changed').to.eq(liquidity.mul(2))
   })
 
+  describe('#fee getter', async () => {
+    it('works without plugin', async() => {
+      await pool.setFee(150);
+      expect(await pool.fee()).to.be.eq(150);
+    })
+
+    it('works with plugin', async() => {
+      const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin')
+      const poolPlugin = (await MockPoolPluginFactory.deploy(pool.address)) as MockPoolPlugin
+      await pool.setPlugin(poolPlugin.address)
+      await pool.setPluginConfig(255)
+
+      expect(await pool.fee()).to.be.eq(220);
+    })
+  })
+
   describe('#flash', () => {
     it('fails if not initialized', async () => {
       await expect(flash(100, 200, other.address)).to.be.reverted
