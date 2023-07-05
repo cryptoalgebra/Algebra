@@ -10,7 +10,7 @@
     "moduleResolution": "node",
     "incremental": true,
     "typeRoots": ["./typechain", "./node_modules/@types"],
-    "types": ["@nomiclabs/hardhat-ethers", "@nomicfoundation/hardhat-chai-matchers"]
+    "types": ["@nomiclabs/hardhat-ethers"]
   },
   "include": ["./test/**/*"],
   "files": ["./hardhat.config.ts"]
