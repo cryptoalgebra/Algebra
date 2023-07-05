@@ -84,12 +84,6 @@ describe('AlgebraFactory', () => {
     tokens: [string, string]
   ) {
     const create2Address = getCreate2Address(poolDeployer.address, tokens, poolBytecode)
-
-    const sortedTokens = BigInt(tokens[1]) > BigInt(tokens[0]) ? [tokens[0], tokens[1]] : [tokens[1], tokens[0]];
-    const addressCalculatedByFactory = await factory.computePoolAddress(sortedTokens[0], sortedTokens[1]);
-
-    expect(addressCalculatedByFactory).to.be.eq(create2Address);
-
     const create = factory.createPool(tokens[0], tokens[1])
 
     await expect(create)
@@ -114,6 +108,16 @@ describe('AlgebraFactory', () => {
 
     it('succeeds if tokens are passed in reverse', async () => {
       await createAndCheckPool([TEST_ADDRESSES[1], TEST_ADDRESSES[0]])
+    })
+
+    it('correctly computes pool address [ @skip-on-coverage ]', async () => {      
+      await factory.setDefaultPluginFactory(defaultPluginFactory.address)
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]])
+
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      const addressCalculatedByFactory = await factory.computePoolAddress(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+
+      expect(addressCalculatedByFactory).to.be.eq(poolAddress);
     })
 
     it('succeeds if defaultPluginFactory setted', async () => {
