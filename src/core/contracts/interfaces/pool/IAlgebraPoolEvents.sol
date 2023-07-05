@@ -77,8 +77,9 @@ interface IAlgebraPoolEvents {
   /// @param newTickSpacing The updated value of the new tick spacing
   event TickSpacing(int24 newTickSpacing);
 
-  // TODO
-  event Plugin(address indexed newIncentiveAddress);
+  /// @notice Emitted when the plugin address changes
+  /// @param newPluginAddress New plugin address
+  event Plugin(address indexed newPluginAddress);
 
   event PluginConfig(uint8 newPluginConfig);
 

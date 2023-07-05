@@ -14,12 +14,18 @@ interface IAlgebraPoolPermissionedActions {
   /// @param newTickSpacing The new tick spacing value
   function setTickSpacing(int24 newTickSpacing) external;
 
-  // TODO
+  /// @notice Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+  /// @param newPluginAddress New plugin address
   function setPlugin(address newPluginAddress) external;
 
-  // TODO
+  /// @notice Set new plugin config
+  /// @param newConfig In the new configuration of the plugin,
+  /// each bit of which is responsible for a particular hook.
+  /// Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   function setPluginConfig(uint8 newConfig) external;
 
-  // TODO
+  /// @notice Set new pool fee. Can be called by owner if dynamic fee is disabled.
+  /// Called by the plugin if dynamic fee is enabled
+  /// @param newFee New fee value
   function setFee(uint16 newFee) external;
 }

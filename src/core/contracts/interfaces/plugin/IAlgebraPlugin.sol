@@ -3,7 +3,9 @@ pragma solidity >=0.5.0;
 
 /// TODO
 interface IAlgebraPlugin {
-  // TODO
+  /// @notice Returns plugin config
+  /// @return config Each bit of the config is responsible for enabling/disabling the hooks.
+  /// The last bit indicates whether the plugin contains dynamic fees logic
   function defaultPluginConfig() external view returns (uint8);
 
   /// @notice The hook called before the state of a pool is initialized
@@ -21,11 +23,12 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called before a position is modified
   /// @param sender The initial msg.sender for the modify position call
-  /// @param recipient TODO
-  /// @param bottomTick TODO
-  /// @param topTick TODO
-  /// @param desiredLiquidityDelta TODO
-  /// @param data TODO
+  /// @param recipient Address to which the liquidity will be assigned in case of a mint or
+  /// to which tokens will be sent in case of a burn
+  /// @param bottomTick The lower tick of the position
+  /// @param topTick The upper tick of the position
+  /// @param desiredLiquidityDelta The desired amount of liquidity to mint/burn
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function beforeModifyPosition(
     address sender,
@@ -38,13 +41,14 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
-  /// @param recipient TODO
-  /// @param bottomTick TODO
-  /// @param topTick TODO
-  /// @param desiredLiquidityDelta TODO
-  /// @param amount0 TODO
-  /// @param amount1 TODO
-  /// @param data TODO
+  /// @param recipient Address to which the liquidity will be assigned in case of a mint or
+  /// to which tokens will be sent in case of a burn
+  /// @param bottomTick The lower tick of the position
+  /// @param topTick The upper tick of the position
+  /// @param desiredLiquidityDelta The desired amount of liquidity to mint/burn
+  /// @param amount0 The amount of token0 sent to the recipient or was paid to mint
+  /// @param amount1 The amount of token0 sent to the recipient or was paid to mint
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterModifyPosition(
     address sender,
@@ -59,11 +63,12 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called before a swap
   /// @param sender The initial msg.sender for the swap call
-  /// @param recipient TODO
-  /// @param zeroToOne TODO
-  /// @param amountRequired TODO
-  /// @param limitSqrtPrice TODO
-  /// @param data TODO
+  /// @param recipient The address to receive the output of the swap
+  /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
+  /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function beforeSwap(
     address sender,
@@ -76,13 +81,14 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called after a swap
   /// @param sender The initial msg.sender for the swap call
-  /// @param recipient TODO
-  /// @param zeroToOne TODO
-  /// @param amountRequired TODO
-  /// @param limitSqrtPrice TODO
-  /// @param amount0 TODO
-  /// @param amount1 TODO
-  /// @param data TODO
+  /// @param recipient The address to receive the output of the swap
+  /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
+  /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
+  /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
+  /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
+  /// @param amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
+  /// @param amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterSwap(
     address sender,
@@ -97,21 +103,21 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called before flash
   /// @param sender The initial msg.sender for the flash call
-  /// @param recipient TODO
+  /// @param recipient The address which will receive the token0 and token1 amounts
   /// @param amount0 The amount of token0 being requested for flash
   /// @param amount1 The amount of token1 being requested for flash
-  /// @param data TODO
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function beforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external returns (bytes4);
 
   /// @notice The hook called after flash
   /// @param sender The initial msg.sender for the flash call
-  /// @param recipient TODO
+  /// @param recipient The address which will receive the token0 and token1 amounts
   /// @param amount0 The amount of token0 being requested for flash
   /// @param amount1 The amount of token1 being requested for flash
   /// @param paid0 The amount of token0 being paid for flash
   /// @param paid1 The amount of token1 being paid for flash
-  /// @param data TODO
+  /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterFlash(
     address sender,
