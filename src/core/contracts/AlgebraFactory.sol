@@ -40,7 +40,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @dev time delay before ownership renouncement can be finished
   uint256 private constant RENOUNCE_OWNERSHIP_DELAY = 1 days;
 
-  // TODO
+  /// @inheritdoc IAlgebraFactory
   IAlgebraPluginFactory public defaultPluginFactory;
 
   /// @inheritdoc IAlgebraFactory

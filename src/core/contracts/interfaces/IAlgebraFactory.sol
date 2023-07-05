@@ -2,6 +2,8 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
+import './plugin/IAlgebraPluginFactory.sol';
+
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
@@ -37,7 +39,8 @@ interface IAlgebraFactory {
   /// @param newDefaultFee The new default fee value
   event DefaultFee(uint16 newDefaultFee);
 
-  // TODO
+  /// @notice Emitted when the defaultPluginFactory address is changed
+  /// @param defaultPluginFactoryAddress The new defaultPluginFactory address
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
   /// @notice role that can change communityFee and tickspacing in pools
@@ -70,6 +73,10 @@ interface IAlgebraFactory {
   /// @notice Returns the default tickspacing
   /// @return Tickspacing which will be set at the creation of the pool
   function defaultTickspacing() external view returns (int24);
+
+  /// @notice Return the current pluginFactory address
+  /// @return Algebra plugin factory
+  function defaultPluginFactory() external view returns (IAlgebraPluginFactory);
 
   /// @notice Returns the default communityFee and tickspacing
   /// @return communityFee which will be set at the creation of the pool
@@ -107,7 +114,8 @@ interface IAlgebraFactory {
   /// @param newDefaultTickspacing The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING
   function setDefaultTickspacing(int24 newDefaultTickspacing) external;
 
-  // TODO
+  /// @dev updates pluginFactory address
+  /// @param newDefaultPluginFactory address of new plugin factory
   function setDefaultPluginFactory(address newDefaultPluginFactory) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
