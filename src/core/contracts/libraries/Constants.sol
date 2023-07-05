@@ -19,10 +19,6 @@ library Constants {
   int24 internal constant MAX_TICK_SPACING = 500;
   int24 internal constant MIN_TICK_SPACING = 1;
 
-  // Defines the maximum and minimum ticks allowed for limit orders. Corresponds to the range of possible
-  // price values ​​in UniswapV2. Due to this limitation, sufficient accuracy is achieved even with the minimum allowable tick
-  int24 constant MAX_LIMIT_ORDER_TICK = 776363; // TODO remove
-
   // the frequency with which the accumulated community fees are sent to the vault
   uint32 internal constant COMMUNITY_FEE_TRANSFER_FREQUENCY = 8 hours;
 

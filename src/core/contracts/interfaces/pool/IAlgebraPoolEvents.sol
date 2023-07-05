@@ -12,7 +12,6 @@ interface IAlgebraPoolEvents {
   event Initialize(uint160 price, int24 tick);
 
   /// @notice Emitted when liquidity is minted for a given position
-  /// @dev If the top and bottom ticks match, this should be treated as a limit order
   /// @param sender The address that minted the liquidity
   /// @param owner The owner of the position and recipient of any minted liquidity
   /// @param bottomTick The lower tick of the position
