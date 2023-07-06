@@ -2312,60 +2312,54 @@ describe('AlgebraPool', () => {
       });
 
       it('transaction reverted if plugin returns incorrect selector for beforeInitialized hook', async () => {
-        await poolPlugin.setSelectorDisable(64);
-        await expect(pool.initialize(encodePriceSqrt(1, 1))).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await poolPlugin.setSelectorDisable(128)
+        await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs('0x636fd804')
+      })
 
       it('transaction reverted if plugin returns incorrect selector for afterInitialized hook', async () => {
-        await poolPlugin.setSelectorDisable(64);
-        await expect(pool.initialize(encodePriceSqrt(1, 1))).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await poolPlugin.setSelectorDisable(64)
+        await expect(pool.initialize(encodePriceSqrt(1,1))).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x82dd6522")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for beforeModifyPosition hook', async () => {
-        await poolPlugin.setSelectorDisable(4);
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.revertedWithCustomError(
-          pool,
-          'invalidHookResponse'
-        );
-      });
+        await poolPlugin.setSelectorDisable(4)
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x5e2411b2")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for afterModifyPosition hook', async () => {
-        await poolPlugin.setSelectorDisable(8);
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.revertedWithCustomError(
-          pool,
-          'invalidHookResponse'
-        );
-      });
+        await poolPlugin.setSelectorDisable(8)
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0xd6852010")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for beforeSwap hook', async () => {
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        await poolPlugin.setSelectorDisable(1);
-        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await poolPlugin.setSelectorDisable(1)
+        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0xa15930f1")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for afterSwap hook', async () => {
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        await poolPlugin.setSelectorDisable(2);
-        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await poolPlugin.setSelectorDisable(2)
+        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x9cb5a963")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for beforeFlash hook', async () => {
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        await poolPlugin.setSelectorDisable(16);
-        await expect(flash(100, 200, other.address)).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await poolPlugin.setSelectorDisable(16)
+        await expect(flash(100, 200, other.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x8de0a8ee")
+      })
 
       it('transaction reverted if plugin returns incorrect selector for afterFlash hook', async () => {
-        await pool.initialize(encodePriceSqrt(1, 1));
-        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        await poolPlugin.setSelectorDisable(32);
-        await expect(flash(100, 200, other.address)).to.be.revertedWithCustomError(pool, 'invalidHookResponse');
-      });
+        await pool.initialize(encodePriceSqrt(1, 1))
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
+        await poolPlugin.setSelectorDisable(32)
+        await expect(flash(100, 200, other.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x343d37ff")
+      })
 
       it('hooks are disabled after a config change', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));

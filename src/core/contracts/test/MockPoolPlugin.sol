@@ -40,7 +40,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @return bytes4 The function selector for the hook
   function beforeInitialize(address sender, uint160 sqrtPriceX96) external override returns (bytes4) {
     emit BeforeInitialize(sender, sqrtPriceX96);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_INIT_FLAG)) return IAlgebraPlugin.beforeInitialize.selector;
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.DYNAMIC_FEE)) return IAlgebraPlugin.beforeInitialize.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 
