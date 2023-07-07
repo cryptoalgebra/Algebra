@@ -7,8 +7,9 @@ import './TickMath.sol';
 import './LiquidityMath.sol';
 import './Constants.sol';
 
-/// @title TickManagement
+/// @title Library for managing and interacting with ticks
 /// @notice Contains functions for managing tick processes and relevant calculations
+/// @dev Ticks are organized as a doubly linked list
 library TickManagement {
   // info stored for each initialized individual tick
   struct Tick {

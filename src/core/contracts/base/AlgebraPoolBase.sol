@@ -20,6 +20,7 @@ import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
+/// @dev Decoupling into a separate abstract contract simplifies testing
 abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 

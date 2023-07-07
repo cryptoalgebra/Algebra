@@ -6,6 +6,7 @@ import './AlgebraPoolBase.sol';
 
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
+/// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
 abstract contract ReservesManager is AlgebraPoolBase {
   using SafeCast for uint256;
 
@@ -54,6 +55,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
   /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
   /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
   /// @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
+  // TODO update comments
   function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
     if (communityFee0 | communityFee1 != 0) {
       unchecked {

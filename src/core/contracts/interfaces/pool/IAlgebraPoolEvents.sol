@@ -6,7 +6,7 @@ pragma solidity >=0.5.0;
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolEvents {
   /// @notice Emitted exactly once by a pool when #initialize is first called on the pool
-  /// @dev Mint/Burn/Swap cannot be emitted by the pool before Initialize
+  /// @dev Mint/Burn/Swaps cannot be emitted by the pool before Initialize
   /// @param price The initial sqrt price of the pool, as a Q64.96
   /// @param tick The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool
   event Initialize(uint160 price, int24 tick);
@@ -80,6 +80,8 @@ interface IAlgebraPoolEvents {
   /// @param newPluginAddress New plugin address
   event Plugin(address indexed newPluginAddress);
 
+  /// @notice Emitted when the plugin config changes
+  /// @param newPluginConfig New plugin config
   event PluginConfig(uint8 newPluginConfig);
 
   /// @notice Emitted when the fee changes inside the pool

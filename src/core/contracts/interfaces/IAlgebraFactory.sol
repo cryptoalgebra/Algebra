@@ -44,9 +44,13 @@ interface IAlgebraFactory {
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
   /// @notice role that can change communityFee and tickspacing in pools
+  /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
 
-  /// @dev Returns `true` if `account` has been granted `role` or `account` is owner.
+  /// @notice Returns `true` if `account` has been granted `role` or `account` is owner.
+  /// @param role The hash corresponding to the role
+  /// @param account The address for which the role is checked
+  /// @return bool Whether the address has this role or the owner role or not
   function hasRoleOrOwner(bytes32 role, address account) external view returns (bool);
 
   /// @notice Returns the current owner of the factory

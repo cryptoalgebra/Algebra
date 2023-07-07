@@ -8,8 +8,8 @@ interface IAlgebraPoolActions {
   /// @notice Sets the initial price for the pool
   /// @dev Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value
   /// @dev Initialization should be done in one transaction with pool creation to avoid front-running
-  /// @param price the initial sqrt price of the pool as a Q64.96
-  function initialize(uint160 price) external;
+  /// @param initialPrice The initial sqrt price of the pool as a Q64.96
+  function initialize(uint160 initialPrice) external;
 
   /// @notice Adds liquidity for the given recipient/bottomTick/topTick position
   /// @dev The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
@@ -19,7 +19,7 @@ interface IAlgebraPoolActions {
   /// @param recipient The address for which the liquidity will be created
   /// @param bottomTick The lower tick of the position in which to add liquidity
   /// @param topTick The upper tick of the position in which to add liquidity
-  /// @param amount The desired amount of liquidity to mint
+  /// @param liquidityDesired The desired amount of liquidity to mint
   /// @param data Any data that should be passed through to the callback
   /// @return amount0 The amount of token0 that was paid to mint the given amount of liquidity. Matches the value in the callback
   /// @return amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback
@@ -29,7 +29,7 @@ interface IAlgebraPoolActions {
     address recipient,
     int24 bottomTick,
     int24 topTick,
-    uint128 amount,
+    uint128 liquidityDesired,
     bytes calldata data
   ) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual);
 

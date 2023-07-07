@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0;
 
 /// @title An interface for a contract that is capable of deploying Algebra plugins
+/// @dev Such a factory is needed if the plugin should be automatically created and connected to each new pool
 interface IAlgebraPluginFactory {
   /// @notice Deploys new plugin contract for pool
   /// @param pool The address of the pool for which the new plugin will be created

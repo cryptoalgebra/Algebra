@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.17;
 
+/// @title Contains common constants for Algebra contracts
+/// @dev Constants moved to the library, not the base contract, to further emphasize their constant nature
 library Constants {
   uint8 internal constant RESOLUTION = 96;
   uint256 internal constant Q96 = 1 << 96;

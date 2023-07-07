@@ -8,6 +8,7 @@ import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled
+/// @dev Role system is used to withdraw tokens
 contract AlgebraCommunityVault {
   /// @notice Event emitted when a fees has been claimed
   /// @param token The address of token fee
@@ -185,6 +186,7 @@ contract AlgebraCommunityVault {
   }
 
   /// @notice Change Algebra community fee part receiver
+  /// @param newAlgebraFeeReceiver The address of new Algebra fee receiver
   function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external onlyAlgebraFeeManager {
     require(newAlgebraFeeReceiver != address(0));
     algebraFeeReceiver = newAlgebraFeeReceiver;

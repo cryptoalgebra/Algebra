@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// TODO
+// TODO
+/// @title The Algebra plugin interface
+/// @dev The plugin will be called by the pool using hook methods depending on the current pool settings
 interface IAlgebraPlugin {
   /// @notice Returns plugin config
   /// @return config Each bit of the config is responsible for enabling/disabling the hooks.
