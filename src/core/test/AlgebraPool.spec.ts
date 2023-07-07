@@ -2337,7 +2337,7 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1))
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1))
         await poolPlugin.setSelectorDisable(1)
-        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0xa15930f1")
+        await expect(swapExact0For1(10000, wallet.address)).to.be.revertedWithCustomError(pool, "invalidHookResponse").withArgs("0x029c1cb7")
       })
 
       it('transaction reverted if plugin returns incorrect selector for afterSwap hook', async () => {
