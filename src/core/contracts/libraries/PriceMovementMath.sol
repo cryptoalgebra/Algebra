@@ -40,10 +40,10 @@ library PriceMovementMath {
     unchecked {
       require(price != 0);
       require(liquidity != 0);
+      if (amount == 0) return price;
 
       if (zeroToOne == fromInput) {
         // rounding up or down
-        if (amount == 0) return price;
         uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
         if (fromInput) {
@@ -148,14 +148,10 @@ library PriceMovementMath {
           resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
           // should be always true if the price is in the allowed range
-          if (targetPrice != resultPrice) {
-            output = getAmountB(resultPrice, currentPrice, liquidity);
-          }
+          if (targetPrice != resultPrice) output = getAmountB(resultPrice, currentPrice, liquidity);
 
           // cap the output amount to not exceed the remaining output amount
-          if (output > uint256(amountAvailable)) {
-            output = uint256(amountAvailable);
-          }
+          if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
         }
 
         input = getAmountA(resultPrice, currentPrice, liquidity);
