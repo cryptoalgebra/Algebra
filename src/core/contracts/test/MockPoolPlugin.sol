@@ -76,7 +76,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @notice The hook called before a swap
   /// @param sender The initial msg.sender for the swap call
   /// @return bytes4 The function selector for the hook
-  function beforeSwap(address sender, address, bool, int256, uint160, bytes calldata) external override returns (bytes4) {
+  function beforeSwap(address sender, address, bool, int256, uint160, bool, bytes calldata) external override returns (bytes4) {
     emit BeforeSwap(sender);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return IAlgebraPlugin.beforeSwap.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;

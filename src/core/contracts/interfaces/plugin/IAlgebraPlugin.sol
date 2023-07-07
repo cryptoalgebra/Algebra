@@ -70,6 +70,7 @@ interface IAlgebraPlugin {
   /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
+  /// @param withPaymentInAdvance TODO
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function beforeSwap(
@@ -78,6 +79,7 @@ interface IAlgebraPlugin {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
     bytes calldata data
   ) external returns (bytes4);
 

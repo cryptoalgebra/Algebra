@@ -222,7 +222,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, data);
+    _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
     _lock();
 
     {
@@ -267,7 +267,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell < 0) revert invalidAmountRequired(); // we support only exactInput here
 
     // TODO amountToSell can change
-    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, data);
+    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     // firstly we are getting tokens from the original caller of the transaction
@@ -286,7 +286,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
 
       int256 amountReceived = (balanceAfter - balanceBefore).toInt256();
-      if (amountReceived != amountToSell) amountToSell = amountReceived;
+      if (amountReceived != amountToSell) amountToSell = amountReceived; // TODO think about < or !=
     }
     if (amountToSell == 0) revert insufficientInputAmount();
 
@@ -317,10 +317,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
   }
 
-  function _beforeSwap(address recipient, bool zto, int256 amountRequired, uint160 limitSqrtPrice, bytes calldata data) internal {
+  function _beforeSwap(
+    address recipient,
+    bool zto,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
+    bytes calldata data
+  ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       // TODO optimize
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, data).shouldReturn(
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, withPaymentInAdvance, data).shouldReturn(
         IAlgebraPlugin.beforeSwap.selector
       );
     }

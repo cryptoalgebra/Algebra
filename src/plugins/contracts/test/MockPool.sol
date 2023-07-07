@@ -144,7 +144,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   function swapToTick(int24 targetTick) external {
     if (globalState.pluginConfig & Plugins.BEFORE_SWAP_FLAG != 0) {
       // TODO optimize
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, msg.sender, true, 0, 0, '');
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender, msg.sender, true, 0, 0, false, '');
     }
 
     globalState.price = TickMath.getSqrtRatioAtTick(targetTick);
