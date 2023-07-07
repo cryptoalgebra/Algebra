@@ -236,14 +236,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         unchecked {
           if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         unchecked {
           if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
         }
-        _swapCallback(amount0, amount1, data); // callback to get tokens from the caller
+        _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
@@ -256,57 +256,57 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function swapSupportingFeeOnInputTokens(
-    address sender,
+  function swapWithPaymentInAdvance(
+    address leftoversRecipient,
     address recipient,
     bool zeroToOne,
-    int256 amountRequired,
+    int256 amountToSell,
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    if (amountRequired < 0) revert invalidAmountRequired(); // we support only exactInput here
+    if (amountToSell < 0) revert invalidAmountRequired(); // we support only exactInput here
 
-    // TODO amountRequired can change
-    _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, data);
+    // TODO amountToSell can change
+    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, data);
     _lock();
 
-    // Since the pool can get less tokens then sent, firstly we are getting tokens from the
-    // original caller of the transaction. And change the _amountRequired_
+    // firstly we are getting tokens from the original caller of the transaction
+    // since the pool can get less tokens then expected, _amountToSell_ can be changed
     {
       // scope to prevent "stack too deep"
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       uint256 balanceBefore;
       uint256 balanceAfter;
       if (zeroToOne) {
-        _swapCallback(amountRequired, 0, data); // callback to get tokens from the caller
+        _swapCallback(amountToSell, 0, data); // callback to get tokens from the msg.sender
         (balanceBefore, balanceAfter) = (balance0Before, _balanceToken0());
       } else {
-        _swapCallback(0, amountRequired, data); // callback to get tokens from the caller
+        _swapCallback(0, amountToSell, data); // callback to get tokens from the msg.sender
         (balanceBefore, balanceAfter) = (balance1Before, _balanceToken1());
       }
 
       int256 amountReceived = (balanceAfter - balanceBefore).toInt256();
-      if (amountReceived < amountRequired) amountRequired = amountReceived;
+      if (amountReceived != amountToSell) amountToSell = amountReceived;
     }
-    if (amountRequired == 0) revert insufficientInputAmount();
+    if (amountToSell == 0) revert insufficientInputAmount();
 
     uint160 currentPrice;
     int24 currentTick;
     uint128 currentLiquidity;
     uint256 communityFee;
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountToSell, limitSqrtPrice);
 
     unchecked {
-      // only transfer to the recipient
+      // transfer to the recipient
       if (zeroToOne) {
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
         // return the leftovers
-        if (amount0 < amountRequired) _transfer(token0, sender, uint256(amountRequired - amount0));
+        if (amount0 < amountToSell) _transfer(token0, leftoversRecipient, uint256(amountToSell - amount0));
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
         // return the leftovers
-        if (amount1 < amountRequired) _transfer(token1, sender, uint256(amountRequired - amount1));
+        if (amount1 < amountToSell) _transfer(token1, leftoversRecipient, uint256(amountToSell - amount1));
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
     }
@@ -314,7 +314,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
 
     _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
   }
 
   function _beforeSwap(address recipient, bool zto, int256 amountRequired, uint160 limitSqrtPrice, bytes calldata data) internal {

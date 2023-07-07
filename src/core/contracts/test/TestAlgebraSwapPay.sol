@@ -22,7 +22,7 @@ contract TestAlgebraSwapPay is IAlgebraSwapCallback, IAlgebraMintCallback {
     uint256 pay0,
     uint256 pay1
   ) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, zeroToOne, amountSpecified, price, abi.encode(msg.sender, pay0, pay1));
+    IAlgebraPool(pool).swapWithPaymentInAdvance(msg.sender, recipient, zeroToOne, amountSpecified, price, abi.encode(msg.sender, pay0, pay1));
   }
 
   function algebraSwapCallback(int256, int256, bytes calldata data) external override {

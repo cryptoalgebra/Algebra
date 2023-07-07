@@ -25,7 +25,7 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     }
 
     // try to reenter swap supporting fee
-    try IAlgebraPool(msg.sender).swapSupportingFeeOnInputTokens(address(0), address(0), false, 1, 0, new bytes(0)) {} catch (bytes memory reason) {
+    try IAlgebraPool(msg.sender).swapWithPaymentInAdvance(address(0), address(0), false, 1, 0, new bytes(0)) {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);
     }
 

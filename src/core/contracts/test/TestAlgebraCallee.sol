@@ -27,7 +27,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   }
 
   function swapExact0For1SupportingFee(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapWithPaymentInAdvance(msg.sender, recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap0ForExact1(address pool, uint256 amount1Out, address recipient, uint160 limitSqrtPrice) external {
@@ -41,7 +41,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   }
 
   function swapExact1For0SupportingFee(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapWithPaymentInAdvance(msg.sender, recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap1ForExact0(address pool, uint256 amount0Out, address recipient, uint160 limitSqrtPrice) external {

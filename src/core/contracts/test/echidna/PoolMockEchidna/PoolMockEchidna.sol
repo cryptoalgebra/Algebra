@@ -50,7 +50,7 @@ contract PoolMockEchidna is AlgebraPool {
 
   function swapSupportingFeeOnInputTokensWrapped(bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, uint256 pay0, uint256 pay1) public {
     bytes memory data = abi.encode(MintData(pay0, pay1));
-    IAlgebraPool(this).swapSupportingFeeOnInputTokens(address(this), address(this), zeroToOne, amountRequired, limitSqrtPrice, data);
+    IAlgebraPool(this).swapWithPaymentInAdvance(address(this), address(this), zeroToOne, amountRequired, limitSqrtPrice, data);
   }
 
   function hasRoleOrOwner(bytes32, address) public pure returns (bool) {

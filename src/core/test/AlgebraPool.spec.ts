@@ -1074,7 +1074,7 @@ describe('AlgebraPool', () => {
       });
     });
 
-    describe('#swapSupportingFeeOnInputTokens', async () => {
+    describe('#swapWithPaymentInAdvance', async () => {
       it('fails if not initialized', async () => {
         expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithoutReason;
       });
@@ -1086,7 +1086,7 @@ describe('AlgebraPool', () => {
 
         it('fails if required negative amount', async () => {
           await expect(
-            pool.swapSupportingFeeOnInputTokens(other.address, other.address, true, '-1', 0, [])
+            pool.swapWithPaymentInAdvance(other.address, other.address, true, '-1', 0, [])
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
         });
       });

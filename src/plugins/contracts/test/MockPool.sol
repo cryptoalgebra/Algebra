@@ -157,7 +157,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   /// @inheritdoc IAlgebraPoolActions
-  function swapSupportingFeeOnInputTokens(address, address, bool, int256, uint160, bytes calldata) external pure override returns (int256, int256) {
+  function swapWithPaymentInAdvance(address, address, bool, int256, uint160, bytes calldata) external pure override returns (int256, int256) {
     revert('Not implemented');
   }
 
