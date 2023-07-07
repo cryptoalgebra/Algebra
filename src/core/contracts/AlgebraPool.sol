@@ -61,7 +61,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
   /// @inheritdoc IAlgebraPoolActions
   function mint(
-    address sender,
+    address leftoversRecipient,
     address recipient,
     int24 bottomTick,
     int24 topTick,
@@ -111,12 +111,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     unchecked {
       if (amount0 > 0) {
-        if (receivedAmount0 > amount0) _transfer(token0, sender, receivedAmount0 - amount0);
+        if (receivedAmount0 > amount0)
+          _transfer(token0, leftoversRecipient, receivedAmount0 - amount0); // return leftovers
         else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
 
       if (amount1 > 0) {
-        if (receivedAmount1 > amount1) _transfer(token1, sender, receivedAmount1 - amount1);
+        if (receivedAmount1 > amount1)
+          _transfer(token1, leftoversRecipient, receivedAmount1 - amount1); // return leftovers
         else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint(); // should be impossible
       }
     }
