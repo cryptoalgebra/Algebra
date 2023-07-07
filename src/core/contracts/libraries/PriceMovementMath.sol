@@ -128,15 +128,11 @@ library PriceMovementMath {
           feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
           resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
-          if (targetPrice != resultPrice) {
-            input = getAmountA(resultPrice, currentPrice, liquidity);
+          assert(targetPrice != resultPrice); // should always be true
 
-            // we didn't reach the target, so take the remainder of the maximum input as fee
-            feeAmount = uint256(amountAvailable) - input;
-          } else {
-            // should not be possible
-            feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
-          }
+          input = getAmountA(resultPrice, currentPrice, liquidity);
+          // we didn't reach the target, so take the remainder of the maximum input as fee
+          feeAmount = uint256(amountAvailable) - input;
         }
 
         output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
