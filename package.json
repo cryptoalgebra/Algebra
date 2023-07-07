@@ -17,6 +17,7 @@
     "hardhat": "2.13.1",
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-dependency-compiler": "1.1.2",
+    "hardhat-output-validator": "^0.1.19",
     "hardhat-watcher": "^2.1.1",
     "husky": "^7.0.2",
     "lerna": "^6.1.0",
