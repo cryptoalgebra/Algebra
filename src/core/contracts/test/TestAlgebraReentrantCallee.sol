@@ -7,8 +7,6 @@ import '../interfaces/callback/IAlgebraSwapCallback.sol';
 
 import '../interfaces/IAlgebraPool.sol';
 
-import 'hardhat/console.sol';
-
 contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
   bytes4 private constant desiredSelector = bytes4(keccak256(bytes('locked()')));
 
