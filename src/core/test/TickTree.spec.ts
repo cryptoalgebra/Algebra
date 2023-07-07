@@ -32,6 +32,7 @@ describe('TickTree', () => {
     });
     it('is not changed by another flip to a different tick', async () => {
       await TickTree.toggleTick(120);
+      expect(await TickTree.isInitialized(120)).to.eq(true);
       expect(await TickTree.isInitialized(60)).to.eq(false);
     });
     it('is not changed by another flip to a different tick on another word', async () => {
@@ -100,6 +101,7 @@ describe('TickTree', () => {
 
     it('init is far behind', async () => {
       await initTicks([292530]);
+      expect(await TickTree.isInitialized(292530)).to.eq(true);
       await expectNextTickToBe(357728, 887272, false);
     });
   });

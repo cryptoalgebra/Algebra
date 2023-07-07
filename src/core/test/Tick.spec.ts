@@ -137,8 +137,9 @@ describe('Tick', () => {
       expect(liquidityDelta).to.eq(2 - 1 - 3 + 1);
     });
     it('reverts on overflow liquidity gross', async () => {
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2).sub(1), 0, 0, false);
-      await expect(tickTest.update(0, 0, MaxUint128.div(2).sub(1), 0, 0, false)).to.be.reverted;
+      const maxLiquidityPerTick = await tickTest.maxLiquidityPerTick();
+      await tickTest.update(0, 0, maxLiquidityPerTick.sub(1), 0, 0, false);
+      await expect(tickTest.update(0, 0, 2, 0, 0, false)).to.be.reverted;
     });
     it('assumes all growth happens below ticks lte current tick', async () => {
       await tickTest.update(1, 1, 1, 1, 2, false);
@@ -155,9 +156,10 @@ describe('Tick', () => {
     });
     it('does not set any growth fields for ticks gt current tick', async () => {
       await tickTest.update(2, 1, 1, 1, 2, false);
-      const { outerFeeGrowth0Token, outerFeeGrowth1Token } = await tickTest.ticks(2);
+      const { outerFeeGrowth0Token, outerFeeGrowth1Token, liquidityDelta } = await tickTest.ticks(2);
       expect(outerFeeGrowth0Token).to.eq(0);
       expect(outerFeeGrowth1Token).to.eq(0);
+      expect(liquidityDelta).to.be.eq(1);
     });
   });
 
@@ -172,6 +174,11 @@ describe('Tick', () => {
         prevTick: 0,
         nextTick: 0,
       });
+      const before = await tickTest.ticks(2);
+      expect(before.outerFeeGrowth0Token).to.eq(1);
+      expect(before.outerFeeGrowth1Token).to.eq(2);
+      expect(before.liquidityTotal).to.eq(3);
+      expect(before.liquidityDelta).to.eq(4);
       await tickTest.clear(2);
       const { outerFeeGrowth0Token, outerFeeGrowth1Token, liquidityTotal, liquidityDelta } = await tickTest.ticks(2);
       expect(outerFeeGrowth0Token).to.eq(0);

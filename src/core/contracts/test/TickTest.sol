@@ -13,6 +13,10 @@ contract TickTest {
     ticks[tick] = data;
   }
 
+  function maxLiquidityPerTick() external pure returns (uint128) {
+    return Constants.MAX_LIQUIDITY_PER_TICK;
+  }
+
   function getInnerFeeGrowth(
     int24 bottomTick,
     int24 topTick,
