@@ -30,11 +30,25 @@ contract PoolMockEchidna is AlgebraPool {
     lastMintedPosition = PositionData(bottomTick, topTick);
   }
 
+  function mintAroundCurrentTickWrapped(int24 tickDelta, uint128 liquidityDesired, uint256 pay0, uint256 pay1) public {
+    if (tickDelta < 0) tickDelta = -tickDelta;
+    if (tickDelta > (2 * TickMath.MAX_TICK)) tickDelta = 2 * TickMath.MAX_TICK;
+    int24 currentTick = globalState.tick;
+    int24 bottomTick = currentTick - tickDelta;
+    int24 topTick = currentTick + tickDelta;
+
+    bytes memory data = abi.encode(MintData(pay0, pay1));
+    IAlgebraPool(this).mint(msg.sender, address(this), bottomTick, topTick, liquidityDesired, data);
+    lastMintedPosition = PositionData(bottomTick, topTick);
+  }
+
   function burnLastMintedPosition(uint128 liquidityDelta) public {
+    require(lastMintedPosition.bottomTick != lastMintedPosition.topTick);
     IAlgebraPool(this).burn(lastMintedPosition.bottomTick, lastMintedPosition.topTick, liquidityDelta, '');
   }
 
   function collectLastMintedPosition(uint128 amount0Requested, uint128 amount1Requested) public {
+    require(lastMintedPosition.bottomTick != lastMintedPosition.topTick);
     IAlgebraPool(this).collect(address(this), lastMintedPosition.bottomTick, lastMintedPosition.topTick, amount0Requested, amount1Requested);
   }
 
