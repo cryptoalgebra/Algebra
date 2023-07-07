@@ -2,16 +2,16 @@
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9989",
-  "arbBalanceDelta1": "-0.0098756",
+  "arbBalanceDelta0": "9.9699",
+  "arbBalanceDelta1": "-0.0099043",
   "backrun": Object {
-    "delta0": "-9.9989",
-    "delta1": "0.0098756",
-    "executionPrice": "0.00098767",
+    "delta0": "-9.9699",
+    "delta1": "0.0099043",
+    "executionPrice": "0.00099342",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "9.7890",
+    "final": "9.7606",
   },
 }
 `;
@@ -21,58 +21,58 @@ Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
   "executionPrice": "0.00099900",
-  "priceAfter": "0.00000099820",
+  "priceAfter": "0.0000010040",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9999",
-  "arbBalanceDelta1": "-0.0099056",
+  "arbBalanceDelta0": "9.9990",
+  "arbBalanceDelta1": "-0.0099044",
   "backrun": Object {
     "delta0": "-0.30578",
-    "delta1": "0.0095690",
-    "executionPrice": "0.031294",
+    "delta1": "0.0095969",
+    "executionPrice": "0.031385",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.8464e+9",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "0.30593",
+    "delta0": "0.30682",
     "delta1": "-0.0096834",
-    "executionPrice": "0.031653",
+    "executionPrice": "0.031561",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.8464e+9",
   },
   "profit": Object {
-    "afterFrontrun": "-0.29012",
-    "afterSandwich": "9.4999",
-    "final": "9.7900",
+    "afterFrontrun": "-0.29100",
+    "afterSandwich": "9.4990",
+    "final": "9.7891",
   },
-  "sandwichedPrice": "0.0010020",
+  "sandwichedPrice": "0.00099910",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9990",
-  "arbBalanceDelta1": "-0.010026",
+  "arbBalanceDelta0": "9.9700",
+  "arbBalanceDelta1": "-0.010055",
   "backrun": Object {
-    "delta0": "-9.9990",
-    "delta1": "0.010026",
-    "executionPrice": "0.0010027",
+    "delta0": "-9.9700",
+    "delta1": "0.010055",
+    "executionPrice": "0.0010085",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "10.089",
+    "final": "10.060",
   },
 }
 `;
@@ -82,58 +82,58 @@ Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
   "executionPrice": "0.00099900",
-  "priceAfter": "0.00000099820",
+  "priceAfter": "0.0000010040",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.000",
-  "arbBalanceDelta1": "-0.010056",
+  "arbBalanceDelta0": "9.9991",
+  "arbBalanceDelta1": "-0.010055",
   "backrun": Object {
     "delta0": "-0.30593",
-    "delta1": "0.0097192",
-    "executionPrice": "0.031769",
+    "delta1": "0.0097475",
+    "executionPrice": "0.031862",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.8464e+9",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "0.30593",
+    "delta0": "0.30682",
     "delta1": "-0.0096834",
-    "executionPrice": "0.031653",
+    "executionPrice": "0.031561",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.8464e+9",
   },
   "profit": Object {
-    "afterFrontrun": "-0.29930",
-    "afterSandwich": "9.7907",
-    "final": "10.090",
+    "afterFrontrun": "-0.30020",
+    "afterSandwich": "9.7898",
+    "final": "10.089",
   },
-  "sandwichedPrice": "0.0010020",
+  "sandwichedPrice": "0.00099910",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9873",
-  "arbBalanceDelta1": "-0.89764",
+  "arbBalanceDelta0": "9.9583",
+  "arbBalanceDelta1": "-0.90001",
   "backrun": Object {
-    "delta0": "-9.9873",
-    "delta1": "0.89764",
-    "executionPrice": "0.089877",
+    "delta0": "-9.9583",
+    "delta1": "0.90001",
+    "executionPrice": "0.090377",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "8.8899",
+    "final": "8.8592",
   },
 }
 `;
@@ -141,60 +141,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-0.90908",
-  "executionPrice": "0.090908",
-  "priceAfter": "0.0082660",
+  "amount1Delta": "-0.90884",
+  "executionPrice": "0.090884",
+  "priceAfter": "0.0083097",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9881",
-  "arbBalanceDelta1": "-0.90119",
+  "arbBalanceDelta0": "9.9814",
+  "arbBalanceDelta1": "-0.90054",
   "backrun": Object {
     "delta0": "-2.2983",
-    "delta1": "0.68641",
-    "executionPrice": "0.29866",
+    "delta1": "0.68841",
+    "executionPrice": "0.29953",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.6709e+10",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "2.3102",
+    "delta0": "2.3169",
     "delta1": "-0.69788",
-    "executionPrice": "0.30209",
+    "executionPrice": "0.30121",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.6709e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.5661",
-    "afterSandwich": "7.3212",
-    "final": "8.8871",
+    "afterFrontrun": "-1.5727",
+    "afterSandwich": "7.3173",
+    "final": "8.8812",
   },
-  "sandwichedPrice": "0.091266",
+  "sandwichedPrice": "0.091001",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.002",
-  "arbBalanceDelta1": "-0.91265",
+  "arbBalanceDelta0": "9.9735",
+  "arbBalanceDelta1": "-0.91507",
   "backrun": Object {
-    "delta0": "-10.002",
-    "delta1": "0.91265",
-    "executionPrice": "0.091243",
+    "delta0": "-9.9735",
+    "delta1": "0.91507",
+    "executionPrice": "0.091750",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "9.1898",
+    "final": "9.1581",
   },
 }
 `;
@@ -202,60 +202,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-0.90908",
-  "executionPrice": "0.090908",
-  "priceAfter": "0.0082660",
+  "amount1Delta": "-0.90884",
+  "executionPrice": "0.090884",
+  "priceAfter": "0.0083097",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.003",
-  "arbBalanceDelta1": "-0.91621",
+  "arbBalanceDelta0": "9.9965",
+  "arbBalanceDelta1": "-0.91560",
   "backrun": Object {
     "delta0": "-2.3134",
-    "delta1": "0.70143",
-    "executionPrice": "0.30320",
+    "delta1": "0.70347",
+    "executionPrice": "0.30408",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.6709e+10",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "2.3102",
+    "delta0": "2.3169",
     "delta1": "-0.69788",
-    "executionPrice": "0.30209",
+    "executionPrice": "0.30121",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.6709e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.6354",
-    "afterSandwich": "7.5519",
-    "final": "9.1871",
+    "afterFrontrun": "-1.6422",
+    "afterSandwich": "7.5478",
+    "final": "9.1809",
   },
-  "sandwichedPrice": "0.091266",
+  "sandwichedPrice": "0.091001",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.8823",
-  "arbBalanceDelta1": "-4.8849",
+  "arbBalanceDelta0": "9.8533",
+  "arbBalanceDelta1": "-4.8918",
   "backrun": Object {
-    "delta0": "-9.8823",
-    "delta1": "4.8849",
-    "executionPrice": "0.49431",
+    "delta0": "-9.8533",
+    "delta1": "4.8918",
+    "executionPrice": "0.49646",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "4.7998",
+    "final": "4.7644",
   },
 }
 `;
@@ -263,60 +263,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-4.9997",
-  "executionPrice": "0.49997",
-  "priceAfter": "0.25003",
+  "amount1Delta": "-4.9925",
+  "executionPrice": "0.49925",
+  "priceAfter": "0.25075",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.8829",
-  "arbBalanceDelta1": "-4.9003",
+  "arbBalanceDelta0": "9.8709",
+  "arbBalanceDelta1": "-4.8940",
   "backrun": Object {
     "delta0": "-4.0029",
-    "delta1": "2.8026",
-    "executionPrice": "0.70013",
+    "delta1": "2.8107",
+    "executionPrice": "0.70217",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "8.6055e+10",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "4.1201",
+    "delta0": "4.1321",
     "delta1": "-2.9177",
-    "executionPrice": "0.70816",
+    "executionPrice": "0.70611",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "8.6055e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.1200",
-    "afterSandwich": "3.6646",
-    "final": "4.7849",
+    "afterFrontrun": "-1.1317",
+    "afterSandwich": "3.6674",
+    "final": "4.7795",
   },
-  "sandwichedPrice": "0.50154",
+  "sandwichedPrice": "0.50009",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.034",
-  "arbBalanceDelta1": "-5.0350",
+  "arbBalanceDelta0": "10.005",
+  "arbBalanceDelta1": "-5.0424",
   "backrun": Object {
-    "delta0": "-10.034",
-    "delta1": "5.0350",
-    "executionPrice": "0.50181",
+    "delta0": "-10.005",
+    "delta1": "5.0424",
+    "executionPrice": "0.50401",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "5.0990",
+    "final": "5.0623",
   },
 }
 `;
@@ -324,60 +324,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-4.9997",
-  "executionPrice": "0.49997",
-  "priceAfter": "0.25003",
+  "amount1Delta": "-4.9925",
+  "executionPrice": "0.49925",
+  "priceAfter": "0.25075",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.034",
-  "arbBalanceDelta1": "-5.0505",
+  "arbBalanceDelta0": "10.022",
+  "arbBalanceDelta1": "-5.0446",
   "backrun": Object {
     "delta0": "-4.1543",
-    "delta1": "2.9528",
-    "executionPrice": "0.71077",
+    "delta1": "2.9613",
+    "executionPrice": "0.71283",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "8.6055e+10",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "4.1201",
+    "delta0": "4.1321",
     "delta1": "-2.9177",
-    "executionPrice": "0.70816",
+    "executionPrice": "0.70611",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "8.6055e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.2436",
-    "afterSandwich": "3.8410",
-    "final": "5.0841",
+    "afterFrontrun": "-1.2557",
+    "afterSandwich": "3.8434",
+    "final": "5.0779",
   },
-  "sandwichedPrice": "0.50154",
+  "sandwichedPrice": "0.50009",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "8.8319",
-  "arbBalanceDelta1": "-7.9372",
+  "arbBalanceDelta0": "8.8029",
+  "arbBalanceDelta1": "-7.9363",
   "backrun": Object {
-    "delta0": "-8.8319",
-    "delta1": "7.9372",
-    "executionPrice": "0.89870",
+    "delta0": "-8.8029",
+    "delta1": "7.9363",
+    "executionPrice": "0.90155",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "0.71802",
+    "final": "0.69056",
   },
 }
 `;
@@ -385,60 +385,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-9.0901",
-  "executionPrice": "0.90901",
-  "priceAfter": "0.82646",
+  "amount1Delta": "-9.0661",
+  "executionPrice": "0.90661",
+  "priceAfter": "0.82690",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "8.8324",
-  "arbBalanceDelta1": "-7.9851",
+  "arbBalanceDelta0": "8.8190",
+  "arbBalanceDelta1": "-7.9680",
   "backrun": Object {
     "delta0": "-3.4354",
-    "delta1": "3.2467",
-    "executionPrice": "0.94507",
+    "delta1": "3.2562",
+    "executionPrice": "0.94781",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "1.1616e+11",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "4.6030",
+    "delta0": "4.6164",
     "delta1": "-4.4000",
-    "executionPrice": "0.95590",
+    "executionPrice": "0.95313",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "1.1616e+11",
   },
   "profit": Object {
-    "afterFrontrun": "-0.11091",
-    "afterSandwich": "0.55065",
-    "final": "0.67066",
+    "afterFrontrun": "-0.12404",
+    "afterSandwich": "0.56403",
+    "final": "0.67460",
   },
-  "sandwichedPrice": "0.91384",
+  "sandwichedPrice": "0.91119",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.346",
-  "arbBalanceDelta1": "-9.4389",
+  "arbBalanceDelta0": "10.317",
+  "arbBalanceDelta1": "-9.4423",
   "backrun": Object {
-    "delta0": "-10.346",
-    "delta1": "9.4389",
-    "executionPrice": "0.91235",
+    "delta0": "-10.317",
+    "delta1": "9.4423",
+    "executionPrice": "0.91525",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "1.0102",
+    "final": "0.97752",
   },
 }
 `;
@@ -446,60 +446,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-9.0901",
-  "executionPrice": "0.90901",
-  "priceAfter": "0.82646",
+  "amount1Delta": "-9.0661",
+  "executionPrice": "0.90661",
+  "priceAfter": "0.82690",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 0; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.346",
-  "arbBalanceDelta1": "-9.4868",
+  "arbBalanceDelta0": "10.333",
+  "arbBalanceDelta1": "-9.4741",
   "backrun": Object {
     "delta0": "-4.9492",
-    "delta1": "4.7484",
-    "executionPrice": "0.95942",
+    "delta1": "4.7622",
+    "executionPrice": "0.96221",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "1.1616e+11",
   },
   "collect": Object {
-    "amount0": "0.0010000",
+    "amount0": "0.030000",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "4.6030",
+    "delta0": "4.6164",
     "delta1": "-4.4000",
-    "executionPrice": "0.95590",
+    "executionPrice": "0.95313",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "1.1616e+11",
   },
   "profit": Object {
-    "afterFrontrun": "-0.24900",
-    "afterSandwich": "0.71256",
-    "final": "0.96288",
+    "afterFrontrun": "-0.26253",
+    "afterSandwich": "0.72554",
+    "final": "0.96205",
   },
-  "sandwichedPrice": "0.91384",
+  "sandwichedPrice": "0.91119",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9989",
-  "arbBalanceDelta1": "-0.0098756",
+  "arbBalanceDelta0": "9.9699",
+  "arbBalanceDelta1": "-0.0099043",
   "backrun": Object {
-    "delta0": "-9.9989",
-    "delta1": "0.0098756",
-    "executionPrice": "0.00098767",
+    "delta0": "-9.9699",
+    "delta1": "0.0099043",
+    "executionPrice": "0.00099342",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "9.7890",
+    "final": "9.7606",
   },
 }
 `;
@@ -509,58 +509,58 @@ Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
   "executionPrice": "0.00099900",
-  "priceAfter": "0.00000099820",
+  "priceAfter": "0.0000010040",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9997",
-  "arbBalanceDelta1": "-0.0099056",
+  "arbBalanceDelta0": "9.9939",
+  "arbBalanceDelta1": "-0.0099044",
   "backrun": Object {
     "delta0": "-0.30578",
-    "delta1": "0.0095690",
-    "executionPrice": "0.031294",
+    "delta1": "0.0095969",
+    "executionPrice": "0.031385",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.8464e+9",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "0.30593",
+    "delta0": "0.30682",
     "delta1": "-0.0096834",
-    "executionPrice": "0.031653",
+    "executionPrice": "0.031561",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.8464e+9",
   },
   "profit": Object {
-    "afterFrontrun": "-0.29012",
-    "afterSandwich": "9.4997",
-    "final": "9.7898",
+    "afterFrontrun": "-0.29100",
+    "afterSandwich": "9.4940",
+    "final": "9.7841",
   },
-  "sandwichedPrice": "0.0010020",
+  "sandwichedPrice": "0.00099910",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9990",
-  "arbBalanceDelta1": "-0.010026",
+  "arbBalanceDelta0": "9.9700",
+  "arbBalanceDelta1": "-0.010055",
   "backrun": Object {
-    "delta0": "-9.9990",
-    "delta1": "0.010026",
-    "executionPrice": "0.0010027",
+    "delta0": "-9.9700",
+    "delta1": "0.010055",
+    "executionPrice": "0.0010085",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "10.089",
+    "final": "10.060",
   },
 }
 `;
@@ -570,58 +570,58 @@ Object {
   "amount0Delta": "10.000",
   "amount1Delta": "-0.0099900",
   "executionPrice": "0.00099900",
-  "priceAfter": "0.00000099820",
+  "priceAfter": "0.0000010040",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 0.010000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9998",
-  "arbBalanceDelta1": "-0.010056",
+  "arbBalanceDelta0": "9.9940",
+  "arbBalanceDelta1": "-0.010055",
   "backrun": Object {
     "delta0": "-0.30593",
-    "delta1": "0.0097192",
-    "executionPrice": "0.031769",
+    "delta1": "0.0097475",
+    "executionPrice": "0.031862",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.8464e+9",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "0.30593",
+    "delta0": "0.30682",
     "delta1": "-0.0096834",
-    "executionPrice": "0.031653",
+    "executionPrice": "0.031561",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.8464e+9",
   },
   "profit": Object {
-    "afterFrontrun": "-0.29930",
-    "afterSandwich": "9.7905",
-    "final": "10.090",
+    "afterFrontrun": "-0.30020",
+    "afterSandwich": "9.7847",
+    "final": "10.084",
   },
-  "sandwichedPrice": "0.0010020",
+  "sandwichedPrice": "0.00099910",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9873",
-  "arbBalanceDelta1": "-0.89764",
+  "arbBalanceDelta0": "9.9583",
+  "arbBalanceDelta1": "-0.90001",
   "backrun": Object {
-    "delta0": "-9.9873",
-    "delta1": "0.89764",
-    "executionPrice": "0.089877",
+    "delta0": "-9.9583",
+    "delta1": "0.90001",
+    "executionPrice": "0.090377",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "8.8899",
+    "final": "8.8592",
   },
 }
 `;
@@ -629,60 +629,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-0.90908",
-  "executionPrice": "0.090908",
-  "priceAfter": "0.0082660",
+  "amount1Delta": "-0.90884",
+  "executionPrice": "0.090884",
+  "priceAfter": "0.0083097",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.9879",
-  "arbBalanceDelta1": "-0.90119",
+  "arbBalanceDelta0": "9.9763",
+  "arbBalanceDelta1": "-0.90054",
   "backrun": Object {
     "delta0": "-2.2983",
-    "delta1": "0.68641",
-    "executionPrice": "0.29866",
+    "delta1": "0.68841",
+    "executionPrice": "0.29953",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.6709e+10",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "2.3102",
+    "delta0": "2.3169",
     "delta1": "-0.69788",
-    "executionPrice": "0.30209",
+    "executionPrice": "0.30121",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.6709e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.5661",
-    "afterSandwich": "7.3211",
-    "final": "8.8870",
+    "afterFrontrun": "-1.5727",
+    "afterSandwich": "7.3123",
+    "final": "8.8762",
   },
-  "sandwichedPrice": "0.091266",
+  "sandwichedPrice": "0.091001",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.002",
-  "arbBalanceDelta1": "-0.91265",
+  "arbBalanceDelta0": "9.9735",
+  "arbBalanceDelta1": "-0.91507",
   "backrun": Object {
-    "delta0": "-10.002",
-    "delta1": "0.91265",
-    "executionPrice": "0.091243",
+    "delta0": "-9.9735",
+    "delta1": "0.91507",
+    "executionPrice": "0.091750",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "9.1898",
+    "final": "9.1581",
   },
 }
 `;
@@ -690,60 +690,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-0.90908",
-  "executionPrice": "0.090908",
-  "priceAfter": "0.0082660",
+  "amount1Delta": "-0.90884",
+  "executionPrice": "0.090884",
+  "priceAfter": "0.0083097",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 1.0000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.003",
-  "arbBalanceDelta1": "-0.91621",
+  "arbBalanceDelta0": "9.9914",
+  "arbBalanceDelta1": "-0.91560",
   "backrun": Object {
     "delta0": "-2.3134",
-    "delta1": "0.70143",
-    "executionPrice": "0.30320",
+    "delta1": "0.70347",
+    "executionPrice": "0.30408",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "3.6709e+10",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "2.3102",
+    "delta0": "2.3169",
     "delta1": "-0.69788",
-    "executionPrice": "0.30209",
+    "executionPrice": "0.30121",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "3.6709e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.6354",
-    "afterSandwich": "7.5517",
-    "final": "9.1869",
+    "afterFrontrun": "-1.6422",
+    "afterSandwich": "7.5426",
+    "final": "9.1757",
   },
-  "sandwichedPrice": "0.091266",
+  "sandwichedPrice": "0.091001",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "9.8823",
-  "arbBalanceDelta1": "-4.8849",
+  "arbBalanceDelta0": "9.8533",
+  "arbBalanceDelta1": "-4.8918",
   "backrun": Object {
-    "delta0": "-9.8823",
-    "delta1": "4.8849",
-    "executionPrice": "0.49431",
+    "delta0": "-9.8533",
+    "delta1": "4.8918",
+    "executionPrice": "0.49646",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "4.7998",
+    "final": "4.7644",
   },
 }
 `;
@@ -751,60 +751,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-4.9997",
-  "executionPrice": "0.49997",
-  "priceAfter": "0.25003",
+  "amount1Delta": "-4.9925",
+  "executionPrice": "0.49925",
+  "priceAfter": "0.25075",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "9.8827",
-  "arbBalanceDelta1": "-4.9003",
+  "arbBalanceDelta0": "9.8658",
+  "arbBalanceDelta1": "-4.8940",
   "backrun": Object {
     "delta0": "-4.0029",
-    "delta1": "2.8026",
-    "executionPrice": "0.70013",
+    "delta1": "2.8107",
+    "executionPrice": "0.70217",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "8.6055e+10",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "4.1201",
+    "delta0": "4.1321",
     "delta1": "-2.9177",
-    "executionPrice": "0.70816",
+    "executionPrice": "0.70611",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "8.6055e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.1200",
-    "afterSandwich": "3.6644",
-    "final": "4.7847",
+    "afterFrontrun": "-1.1317",
+    "afterSandwich": "3.6624",
+    "final": "4.7745",
   },
-  "sandwichedPrice": "0.50154",
+  "sandwichedPrice": "0.50009",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.034",
-  "arbBalanceDelta1": "-5.0350",
+  "arbBalanceDelta0": "10.005",
+  "arbBalanceDelta1": "-5.0424",
   "backrun": Object {
-    "delta0": "-10.034",
-    "delta1": "5.0350",
-    "executionPrice": "0.50181",
+    "delta0": "-10.005",
+    "delta1": "5.0424",
+    "executionPrice": "0.50401",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "5.0990",
+    "final": "5.0623",
   },
 }
 `;
@@ -812,60 +812,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-4.9997",
-  "executionPrice": "0.49997",
-  "priceAfter": "0.25003",
+  "amount1Delta": "-4.9925",
+  "executionPrice": "0.49925",
+  "priceAfter": "0.25075",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 10.000 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.034",
-  "arbBalanceDelta1": "-5.0505",
+  "arbBalanceDelta0": "10.017",
+  "arbBalanceDelta1": "-5.0446",
   "backrun": Object {
     "delta0": "-4.1543",
-    "delta1": "2.9528",
-    "executionPrice": "0.71077",
+    "delta1": "2.9613",
+    "executionPrice": "0.71283",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "8.6055e+10",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "4.1201",
+    "delta0": "4.1321",
     "delta1": "-2.9177",
-    "executionPrice": "0.70816",
+    "executionPrice": "0.70611",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "8.6055e+10",
   },
   "profit": Object {
-    "afterFrontrun": "-1.2436",
-    "afterSandwich": "3.8408",
-    "final": "5.0839",
+    "afterFrontrun": "-1.2557",
+    "afterSandwich": "3.8383",
+    "final": "5.0728",
   },
-  "sandwichedPrice": "0.50154",
+  "sandwichedPrice": "0.50009",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "8.8319",
-  "arbBalanceDelta1": "-7.9372",
+  "arbBalanceDelta0": "8.8029",
+  "arbBalanceDelta1": "-7.9363",
   "backrun": Object {
-    "delta0": "-8.8319",
-    "delta1": "7.9372",
-    "executionPrice": "0.89870",
+    "delta0": "-8.8029",
+    "delta1": "7.9363",
+    "executionPrice": "0.90155",
   },
   "finalPrice": "0.97706",
   "profit": Object {
-    "final": "0.71802",
+    "final": "0.69056",
   },
 }
 `;
@@ -873,60 +873,60 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-9.0901",
-  "executionPrice": "0.90901",
-  "priceAfter": "0.82646",
+  "amount1Delta": "-9.0661",
+  "executionPrice": "0.90661",
+  "priceAfter": "0.82690",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 0.98 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "8.8323",
-  "arbBalanceDelta1": "-7.9851",
+  "arbBalanceDelta0": "8.8139",
+  "arbBalanceDelta1": "-7.9680",
   "backrun": Object {
     "delta0": "-3.4354",
-    "delta1": "3.2467",
-    "executionPrice": "0.94507",
+    "delta1": "3.2562",
+    "executionPrice": "0.94781",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "1.1616e+11",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "0.97706",
   "frontrun": Object {
-    "delta0": "4.6030",
+    "delta0": "4.6164",
     "delta1": "-4.4000",
-    "executionPrice": "0.95590",
+    "executionPrice": "0.95313",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "1.1616e+11",
   },
   "profit": Object {
-    "afterFrontrun": "-0.11091",
-    "afterSandwich": "0.55048",
-    "final": "0.67050",
+    "afterFrontrun": "-0.12404",
+    "afterSandwich": "0.55903",
+    "final": "0.66960",
   },
-  "sandwichedPrice": "0.91384",
+  "sandwichedPrice": "0.91119",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 backrun to true price after swap only 1`] = `
 Object {
-  "arbBalanceDelta0": "10.346",
-  "arbBalanceDelta1": "-9.4389",
+  "arbBalanceDelta0": "10.317",
+  "arbBalanceDelta1": "-9.4423",
   "backrun": Object {
-    "delta0": "-10.346",
-    "delta1": "9.4389",
-    "executionPrice": "0.91235",
+    "delta0": "-10.317",
+    "delta1": "9.4423",
+    "executionPrice": "0.91525",
   },
   "finalPrice": "1.0070",
   "profit": Object {
-    "final": "1.0102",
+    "final": "0.97752",
   },
 }
 `;
@@ -934,44 +934,44 @@ Object {
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 not sandwiched 1`] = `
 Object {
   "amount0Delta": "10.000",
-  "amount1Delta": "-9.0901",
-  "executionPrice": "0.90901",
-  "priceAfter": "0.82646",
+  "amount1Delta": "-9.0661",
+  "executionPrice": "0.90661",
+  "priceAfter": "0.82690",
 }
 `;
 
 exports[`AlgebraPool arbitrage tests community fee = 170; passive liquidity of 100.00 exact input of 10e18 token0 with starting price of 1.0 and true price of 1.01 sandwiched with swap to execution price then mint max liquidity/target/burn max liquidity 1`] = `
 Object {
-  "arbBalanceDelta0": "10.346",
-  "arbBalanceDelta1": "-9.4868",
+  "arbBalanceDelta0": "10.328",
+  "arbBalanceDelta1": "-9.4741",
   "backrun": Object {
     "delta0": "-4.9492",
-    "delta1": "4.7484",
-    "executionPrice": "0.95942",
+    "delta1": "4.7622",
+    "executionPrice": "0.96221",
   },
   "burn": Object {
-    "amount0": "9.9990",
+    "amount0": "9.9700",
     "amount1": "1.1616e+11",
   },
   "collect": Object {
-    "amount0": "0.00083000",
+    "amount0": "0.024900",
     "amount1": "0.0000",
   },
   "finalPrice": "1.0070",
   "frontrun": Object {
-    "delta0": "4.6030",
+    "delta0": "4.6164",
     "delta1": "-4.4000",
-    "executionPrice": "0.95590",
+    "executionPrice": "0.95313",
   },
   "mint": Object {
     "amount0": "0.0000",
     "amount1": "1.1616e+11",
   },
   "profit": Object {
-    "afterFrontrun": "-0.24900",
-    "afterSandwich": "0.71238",
-    "final": "0.96271",
+    "afterFrontrun": "-0.26253",
+    "afterSandwich": "0.72039",
+    "final": "0.95690",
   },
-  "sandwichedPrice": "0.91384",
+  "sandwichedPrice": "0.91119",
 }
 `;

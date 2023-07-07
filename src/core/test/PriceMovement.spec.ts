@@ -1,6 +1,5 @@
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
-import * as fs from 'fs';
 import { expect } from './shared/expect';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { encodePriceSqrt, expandTo18Decimals } from './shared/utilities';
@@ -23,7 +22,6 @@ describe('PriceMovementMath', () => {
       const liquidity = BigNumber.from(2).pow(128).sub(1);
       const amount = expandTo18Decimals(1);
       const fee = 600;
-      const zeroToOne = false;
 
       expect(PriceMovementMath.movePriceTowardsTarget(0, priceTarget, liquidity, amount, fee)).to.be
         .revertedWithoutReason;
@@ -37,7 +35,6 @@ describe('PriceMovementMath', () => {
       const liquidity = expandTo18Decimals(2);
       const amount = '-57896044618658097711785492504343953926634992332820282019728792003956564819968';
       const fee = 600;
-      const zeroToOne = false;
 
       await expect(
         PriceMovementMath.movePriceTowardsTarget(price, priceTarget, liquidity, amount, fee)
@@ -50,7 +47,6 @@ describe('PriceMovementMath', () => {
       const liquidity = BigNumber.from(2).pow(128).sub(1);
       const amount = expandTo18Decimals(1);
       const fee = 600;
-      const zeroToOne = false;
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -73,7 +69,6 @@ describe('PriceMovementMath', () => {
       const liquidity = BigNumber.from(2).pow(128).sub(1);
       const amount = BigNumber.from(2).pow(128).sub(1);
       const fee = 0;
-      const zeroToOne = false;
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -96,7 +91,6 @@ describe('PriceMovementMath', () => {
       const liquidity = BigNumber.from(2).pow(128).sub(1);
       const amount = '79231140595944432132633395119';
       const fee = 0;
-      const zeroToOne = false;
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -119,7 +113,6 @@ describe('PriceMovementMath', () => {
       const liquidity = BigNumber.from(2).pow(128).sub(1);
       const amount = BigNumber.from(2).pow(128).sub(1);
       const fee = 0;
-      const zeroToOne = false;
 
       const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
@@ -265,9 +258,8 @@ describe('PriceMovementMath', () => {
       const liquidity = '4369999';
       const amount = -2;
       const fee = 39875;
-      const zeroToOne = false;
 
-      const { amountIn, amountOut, sqrtQ, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
+      const { amountIn, amountOut, feeAmount } = await PriceMovementMath.movePriceTowardsTarget(
         price,
         priceTarget,
         liquidity,

@@ -16,12 +16,9 @@ import {
   createPoolFunctions,
   SwapFunction,
   MintFunction,
-  AddLimitFunction,
   getMaxTick,
   MaxUint128,
   SwapToPriceFunction,
-  MAX_SQRT_RATIO,
-  MIN_SQRT_RATIO,
 } from './shared/utilities';
 
 describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
@@ -39,8 +36,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
       const startingPrice = encodePriceSqrt(100001, 100000);
       const startingTick = 0;
-      const feeAmount = FeeAmount.MEDIUM;
-      const tickSpacing = TICK_SPACINGS[feeAmount];
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
       const minTick = getMinTick(tickSpacing);
       const maxTick = getMaxTick(tickSpacing);
 

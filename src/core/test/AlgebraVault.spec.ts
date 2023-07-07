@@ -1,10 +1,8 @@
 import { Wallet, BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
-import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraPoolDeployer, AlgebraCommunityVault, TestERC20 } from '../typechain';
 import { expect } from './shared/expect';
-
-const { constants } = ethers;
 
 describe('AlgebraCommunityVault', () => {
   let wallet: Wallet, other: Wallet, third: Wallet;

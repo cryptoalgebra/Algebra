@@ -76,7 +76,7 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.transfer(arbitrageur.address, BigNumber.from(2).pow(254));
 
             const { swapExact0For1, swapToHigherPrice, swapToLowerPrice, swapExact1For0, mint } =
-              await createPoolFunctions({
+               createPoolFunctions({
                 swapTarget: fix.swapTargetCallee,
                 token0: fix.token0,
                 token1: fix.token1,
@@ -93,6 +93,8 @@ describe('AlgebraPool arbitrage tests', () => {
             await fix.token1.approve(tester.address, MaxUint256);
 
             await pool.initialize(startingPrice);
+            await pool.setFee(feeAmount);
+            
             if (tickSpacing != 60) await pool.setTickSpacing(tickSpacing);
             if (communityFee != 0) await pool.setCommunityFee(communityFee);
             await mint(wallet.address, minTick, maxTick, passiveLiquidity);

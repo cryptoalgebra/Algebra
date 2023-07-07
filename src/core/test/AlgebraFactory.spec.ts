@@ -62,7 +62,7 @@ describe('AlgebraFactory', () => {
     expect(await factory.owner()).to.eq(wallet.address);
   });
 
-  it('cannot deploy factory with incorrent poolDeployer', async () => {
+  it('cannot deploy factory with incorrect poolDeployer', async () => {
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
     expect(factoryFactory.deploy(ethers.constants.AddressZero)).to.be.revertedWithoutReason;
   });

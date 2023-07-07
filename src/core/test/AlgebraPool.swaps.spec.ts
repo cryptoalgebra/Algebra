@@ -115,7 +115,6 @@ const SWAP_RECIPIENT_ADDRESS = constants.AddressZero.slice(0, -1) + '1';
 const POSITION_PROCEEDS_OUTPUT_ADDRESS = constants.AddressZero.slice(0, -1) + '2';
 
 async function executeSwap(
-  pool: MockTimeAlgebraPool,
   testCase: SwapTestCase,
   poolFunctions: PoolFunctions,
   testCallee: TestAlgebraCallee
@@ -518,7 +517,6 @@ describe('AlgebraPool swap tests', () => {
     });
 
     return {
-      createPool,
       token0,
       token1,
       swapTarget,
@@ -533,10 +531,11 @@ describe('AlgebraPool swap tests', () => {
 
   for (const poolCase of TEST_POOLS) {
     const poolCaseFixture = async () => {
-      const { createPool, token0, token1, swapTarget, pool, poolFunctions } = await loadFixture(fixture);
+      const { token0, token1, swapTarget, pool, poolFunctions } = await loadFixture(fixture);
       await pool.initialize(poolCase.startingPrice);
 
       if (poolCase.tickSpacing != 60) await pool.setTickSpacing(poolCase.tickSpacing);
+      await pool.setFee(poolCase.feeAmount);
       // mint all positions
       let _positions = [];
       for (const position of poolCase.positions) {
@@ -620,7 +619,7 @@ describe('AlgebraPool swap tests', () => {
             await setupPool(withComission, testCase.zeroToOne));
 
           const globalState = await pool.globalState();
-          const tx = executeSwap(pool, testCase, poolFunctions, swapTarget);
+          const tx = executeSwap(testCase, poolFunctions, swapTarget);
           try {
             await tx;
           } catch (error: any) {

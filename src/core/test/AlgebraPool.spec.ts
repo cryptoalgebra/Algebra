@@ -3,7 +3,7 @@ import { BigNumber, BigNumberish, constants, Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 
-import { poolFixture, TEST_POOL_START_TIME } from './shared/fixtures';
+import { poolFixture } from './shared/fixtures';
 
 import {
   expandTo18Decimals,
@@ -12,7 +12,6 @@ import {
   getMaxTick,
   getMinTick,
   encodePriceSqrt,
-  TICK_SPACINGS,
   createPoolFunctions,
   SwapFunction,
   MintFunction,
@@ -21,8 +20,6 @@ import {
   MAX_SQRT_RATIO,
   MIN_SQRT_RATIO,
   SwapToPriceFunction,
-  MIN_TICK,
-  MAX_TICK,
 } from './shared/utilities';
 
 import {
@@ -241,19 +238,15 @@ describe('AlgebraPool', () => {
         });
 
         it('fails if bottomTick greater than topTick', async () => {
-          // should be TLU but...hardhat
-          await expect(mint(wallet.address, 1, 0, 1)).to.be.reverted;
+          await expect(mint(wallet.address, 1, 0, 1)).to.be.revertedWithCustomError(pool, 'topTickLowerOrEqBottomTick');
         });
         it('fails if bottomTick less than min tick', async () => {
-          // should be TLM but...hardhat
-          await expect(mint(wallet.address, -887273, 0, 1)).to.be.reverted;
+          await expect(mint(wallet.address, -887273, 0, 1)).to.be.revertedWithCustomError(pool, 'bottomTickLowerThanMIN');
         });
         it('fails if topTick greater than max tick', async () => {
-          // should be TUM but...hardhat
-          await expect(mint(wallet.address, 0, 887273, 1)).to.be.reverted;
+          await expect(mint(wallet.address, 0, 887273, 1)).to.be.revertedWithCustomError(pool, 'topTickAboveMAX');
         });
         it('fails if amount exceeds the max', async () => {
-          // these should fail with 'liquidityOverflow' but hardhat is bugged
           const maxLiquidityGross = await pool.maxLiquidityPerTick();
           await expect(
             mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, maxLiquidityGross.add(1))
@@ -262,19 +255,18 @@ describe('AlgebraPool', () => {
             .reverted;
         });
         it('fails if total amount at tick exceeds the max', async () => {
-          // these should fail with 'liquidityOverflow' but hardhat is bugged
           await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000);
 
           const maxLiquidityGross = await pool.maxLiquidityPerTick();
           await expect(
             mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, maxLiquidityGross.sub(1000).add(1))
-          ).to.be.reverted;
+          ).to.be.revertedWithCustomError(pool, 'liquidityOverflow');
           await expect(
             mint(wallet.address, minTick + tickSpacing * 2, maxTick - tickSpacing, maxLiquidityGross.sub(1000).add(1))
-          ).to.be.reverted;
+          ).to.be.revertedWithCustomError(pool, 'liquidityOverflow');
           await expect(
             mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing * 2, maxLiquidityGross.sub(1000).add(1))
-          ).to.be.reverted;
+          ).to.be.revertedWithCustomError(pool, 'liquidityOverflow');
           await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, maxLiquidityGross.sub(1000)))
             .to.not.be.reverted;
         });

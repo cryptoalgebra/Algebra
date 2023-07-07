@@ -6,7 +6,6 @@ import { expect } from './shared/expect';
 import { poolFixture } from './shared/fixtures';
 
 import {
-  FeeAmount,
   createPoolFunctions,
   PoolFunctions,
   createMultiPoolFunctions,
@@ -18,7 +17,6 @@ import {
 
 import { MockTimeAlgebraPool, TestERC20, AlgebraFactory, TestAlgebraRouter, TestAlgebraCallee } from '../typechain';
 
-const feeAmount = FeeAmount.MEDIUM;
 const tickSpacing = 60;
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;

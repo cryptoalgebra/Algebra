@@ -2,7 +2,6 @@ import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 import { TickTest } from '../typechain';
 import { expect } from './shared/expect';
-const MaxUint128 = BigNumber.from(2).pow(128).sub(1);
 
 const { constants } = ethers;
 
