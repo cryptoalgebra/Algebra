@@ -20,8 +20,8 @@ library Constants {
   // the frequency with which the accumulated community fees are sent to the vault
   uint32 internal constant COMMUNITY_FEE_TRANSFER_FREQUENCY = 8 hours;
 
-  // max(uint128) / ( (MAX_TICK - MIN_TICK) )
-  uint128 internal constant MAX_LIQUIDITY_PER_TICK = 40564824043007195767232224305152; // TODO
+  // max(uint128) / (MAX_TICK - MIN_TICK)
+  uint128 internal constant MAX_LIQUIDITY_PER_TICK = 191757638537527648490752896198553;
 
   uint16 internal constant MAX_COMMUNITY_FEE = 1e3; // 100%
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;

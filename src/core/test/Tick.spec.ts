@@ -120,10 +120,11 @@ describe('Tick', () => {
       expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false);
     });
     it('reverts if total liquidity gross is greater than max', async () => {
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, false);
-      await tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, true);
+      const maxLiquidityPerTick = await tickTest.maxLiquidityPerTick();
+      await tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, false);
+      await tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, true);
       await expect(
-        tickTest.update(0, 0, BigNumber.from('40564824043007195767232224305152').div(2), 0, 0, false)
+        tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, false)
       ).to.be.revertedWithCustomError(tickTest, 'liquidityOverflow');
     });
     it('nets the liquidity based on upper flag', async () => {
