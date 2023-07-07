@@ -24,8 +24,6 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
-  /// @notice Emitted if the pool received fewer tokens than it should have to mint calculated actual liquidity
-  error insufficientAmountReceivedAtMint();
 
   /// @notice Emitted if there was an attempt to mint zero liquidity
   error zeroLiquidityDesired();

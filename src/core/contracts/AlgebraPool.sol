@@ -94,7 +94,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     // scope to prevent "stack too deep"
     {
-      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
+      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick); // TODO move
       if (receivedAmount0 < amount0) {
         liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
       } else {
@@ -110,16 +110,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     unchecked {
+      // return leftovers
       if (amount0 > 0) {
-        if (receivedAmount0 > amount0)
-          _transfer(token0, leftoversRecipient, receivedAmount0 - amount0); // return leftovers
-        else if (receivedAmount0 != amount0) revert insufficientAmountReceivedAtMint(); // should be impossible
+        if (receivedAmount0 > amount0) _transfer(token0, leftoversRecipient, receivedAmount0 - amount0);
+        else assert(receivedAmount0 == amount0); // must always be true
       }
-
       if (amount1 > 0) {
-        if (receivedAmount1 > amount1)
-          _transfer(token1, leftoversRecipient, receivedAmount1 - amount1); // return leftovers
-        else if (receivedAmount1 != amount1) revert insufficientAmountReceivedAtMint(); // should be impossible
+        if (receivedAmount1 > amount1) _transfer(token1, leftoversRecipient, receivedAmount1 - amount1);
+        else assert(receivedAmount1 == amount1); // must always be true
       }
     }
 
