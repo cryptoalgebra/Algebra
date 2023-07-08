@@ -99,6 +99,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   constructor() {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
     globalState.prevInitializedTick = TickMath.MIN_TICK;
+    globalState.unlocked = true;
   }
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
