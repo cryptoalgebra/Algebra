@@ -94,20 +94,20 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     receivedAmount0 = amount0 == 0 ? 0 : _balanceToken0() - receivedAmount0;
     receivedAmount1 = amount1 == 0 ? 0 : _balanceToken1() - receivedAmount1;
 
+    if (receivedAmount0 < amount0) {
+      liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
+    } else {
+      liquidityActual = liquidityDesired;
+    }
+    if (receivedAmount1 < amount1) {
+      uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
+      if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+    }
+    if (liquidityActual == 0) revert zeroLiquidityActual();
+
     // scope to prevent "stack too deep"
     {
-      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick); // TODO move
-      if (receivedAmount0 < amount0) {
-        liquidityActual = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount0, amount0));
-      } else {
-        liquidityActual = liquidityDesired;
-      }
-      if (receivedAmount1 < amount1) {
-        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(liquidityDesired), receivedAmount1, amount1));
-        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
-      }
-      if (liquidityActual == 0) revert zeroLiquidityActual();
-
+      Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
       (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, liquidityActual.toInt128());
     }
 
