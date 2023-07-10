@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-// TODO
 /// @title The Algebra plugin interface
 /// @dev The plugin will be called by the pool using hook methods depending on the current pool settings
 interface IAlgebraPlugin {
@@ -70,7 +69,7 @@ interface IAlgebraPlugin {
   /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
   /// @param limitSqrtPrice The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
-  /// @param withPaymentInAdvance TODO
+  /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function beforeSwap(
