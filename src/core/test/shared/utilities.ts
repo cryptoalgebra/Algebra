@@ -213,7 +213,7 @@ export function createPoolFunctions({
   };
 
   const flash: FlashFunction = async (amount0, amount1, to, pay0?: BigNumberish, pay1?: BigNumberish) => {
-    const fee = (await pool.globalState()).fee;
+    const fee = 100;
     if (typeof pay0 === 'undefined') {
       pay0 = BigNumber.from(amount0)
         .mul(fee)

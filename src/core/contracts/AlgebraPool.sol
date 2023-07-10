@@ -234,14 +234,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       if (zeroToOne) {
         unchecked {
-          if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
+          if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         unchecked {
-          if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
+          if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
@@ -299,12 +299,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     unchecked {
       // transfer to the recipient
       if (zeroToOne) {
-        if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1));
+        if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         // return the leftovers
         if (amount0 < amountToSell) _transfer(token0, leftoversRecipient, uint256(amountToSell - amount0));
         _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
-        if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0));
+        if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         // return the leftovers
         if (amount1 < amountToSell) _transfer(token1, leftoversRecipient, uint256(amountToSell - amount1));
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
