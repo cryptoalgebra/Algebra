@@ -98,6 +98,7 @@ describe('AlgebraPoolRouter', () => {
 
     it('multi-swap', async () => {
       const token0OfPoolOutput = await pool1.token0();
+      expect(token0OfPoolOutput).to.be.oneOf([token1.address, token2.address]);
       const ForExact0 = outputToken.address === token0OfPoolOutput;
 
       const { swapForExact0Multi, swapForExact1Multi } = createMultiPoolFunctions({
