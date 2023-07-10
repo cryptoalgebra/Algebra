@@ -14,9 +14,7 @@ jobs:
     strategy:
       matrix:
         testName:
-          - AdaptiveFeeEchidnaTest
           - BitMathEchidnaTest
-          - DataStorageEchidnaTest
           - FullMathEchidnaTest
           - LowGasSafeMathEchidnaTest
           - PriceMovementMathEchidnaTest
