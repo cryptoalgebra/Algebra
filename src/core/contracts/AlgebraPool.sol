@@ -266,29 +266,34 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override returns (int256 amount0, int256 amount1) {
     if (amountToSell < 0) revert invalidAmountRequired(); // we support only exactInput here
 
-    // TODO amountToSell can change
-    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
-
     // firstly we are getting tokens from the original caller of the transaction
     // since the pool can get less tokens then expected, _amountToSell_ can be changed
     {
       // scope to prevent "stack too deep"
-      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      uint256 balanceBefore;
-      uint256 balanceAfter;
+      int256 amountReceived;
       if (zeroToOne) {
+        uint256 balanceBefore = _balanceToken0();
         _swapCallback(amountToSell, 0, data); // callback to get tokens from the msg.sender
-        (balanceBefore, balanceAfter) = (balance0Before, _balanceToken0());
+        uint256 balanceAfter = _balanceToken0();
+        amountReceived = (balanceAfter - balanceBefore).toInt256();
+        _changeReserves(amountReceived, 0, 0, 0);
       } else {
+        uint256 balanceBefore = _balanceToken1();
         _swapCallback(0, amountToSell, data); // callback to get tokens from the msg.sender
-        (balanceBefore, balanceAfter) = (balance1Before, _balanceToken1());
+        uint256 balanceAfter = _balanceToken1();
+        amountReceived = (balanceAfter - balanceBefore).toInt256();
+        _changeReserves(0, amountReceived, 0, 0);
       }
-
-      int256 amountReceived = (balanceAfter - balanceBefore).toInt256();
       if (amountReceived != amountToSell) amountToSell = amountReceived; // TODO think about < or !=
     }
     if (amountToSell == 0) revert insufficientInputAmount();
+
+    _unlock();
+    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    _lock();
+
+    _updateReserves();
 
     uint160 currentPrice;
     int24 currentTick;
@@ -300,14 +305,15 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       // transfer to the recipient
       if (zeroToOne) {
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
-        // return the leftovers
-        if (amount0 < amountToSell) _transfer(token0, leftoversRecipient, uint256(amountToSell - amount0));
-        _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
+        // TODO assert?
+        uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
+        if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
+        _changeReserves(-leftover.toInt256(), amount1, communityFee, 0); // reflect reserve change and pay communityFee
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
-        // return the leftovers
-        if (amount1 < amountToSell) _transfer(token1, leftoversRecipient, uint256(amountToSell - amount1));
-        _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
+        uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
+        if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
+        _changeReserves(amount0, -leftover.toInt256(), 0, communityFee); // reflect reserve change and pay communityFee
       }
     }
 
