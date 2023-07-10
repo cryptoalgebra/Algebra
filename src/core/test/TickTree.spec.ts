@@ -2,6 +2,7 @@ import { ethers } from 'hardhat';
 import { TickTreeTest } from '../typechain';
 import { expect } from './shared/expect';
 import snapshotGasCost from './shared/snapshotGasCost';
+import { BigNumber } from 'ethers';
 
 describe('TickTree', () => {
   let TickTree: TickTreeTest;
@@ -58,6 +59,25 @@ describe('TickTree', () => {
       expect(await TickTree.isInitialized(-240 - 256)).to.eq(false);
     });
 
+    it('initializes second layer and root', async () => {
+      const FULL_PACK = [-70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000];
+      const SECOND_LAYER_OFFSET = Math.ceil(887272 / 256);
+      for (const tick of FULL_PACK) {
+        await TickTree.toggleTick(tick);
+        const indexOfWord = (tick >> 8) + SECOND_LAYER_OFFSET;
+        const secondLayerNodeIndex = indexOfWord >> 8;
+        const secondLayerIndexMask = BigNumber.from(2).pow(indexOfWord & 0xFF);
+
+        const secondLayerNode = await TickTree.tickSecondLayer(secondLayerNodeIndex);
+        expect(secondLayerNode.and(secondLayerIndexMask), 'invalid index at second layer').to.be.eq(secondLayerIndexMask);
+
+        const rootLayerMask = BigNumber.from(2).pow(secondLayerNodeIndex);
+        
+        const root = await TickTree.root();
+        expect(root.and(rootLayerMask), 'invalid index at root layer').to.be.eq(rootLayerMask);
+      }
+    })
+
     it('reverts only itself', async () => {
       await initTicks([-240, -300, -180, 600, -240, -360, -300]);
       expect(await TickTree.isInitialized(-180)).to.eq(true);
@@ -78,15 +98,48 @@ describe('TickTree', () => {
   });
 
   async function expectNextTickToBe(startTick: number, expectedValue: number, isInit: boolean) {
-    const { next, initialized } = await TickTree.nextTickInTheSameNode(startTick);
+    const { next, initialized } = await TickTree.nextTick(startTick);
     expect(next).to.eq(expectedValue);
     expect(initialized).to.eq(isInit);
   }
 
-  describe('#nextTickInTheSameNode special cases', () => {
+  describe('#nextTickInSameNode', () => {
+    it('only first bit is active', async() => {
+      const {next, initialized} = await TickTree.nextTickInSameNode(1, 0);
+      expect(next).to.be.eq(0);
+      expect(initialized).to.be.true
+      const res2 = await TickTree.nextTickInSameNode(1, 1);
+      expect(res2.next).to.be.eq(255);
+      expect(res2.initialized).to.be.false
+    })
+
+    it('128 bit is active', async() => {
+      const {next, initialized} = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(128)), 0);
+      expect(next).to.be.eq(128);
+      expect(initialized).to.be.true;
+      const res2 = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(128)), 129);
+      expect(res2.next).to.be.eq(255);
+      expect(res2.initialized).to.be.false;
+    })
+
+    it('only last bit is active', async() => {
+      const {next, initialized} = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(255)), 0);
+      expect(next).to.be.eq(255);
+      expect(initialized).to.be.true;
+      const res2 = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(255)), 255);
+      expect(res2.next).to.be.eq(255);
+      expect(res2.initialized).to.be.true;
+    })
+  })
+
+  describe('#nextTick special cases', () => {
     it('works across all positive range', async () => {
       await initTicks([887272]);
       await expectNextTickToBe(0, 887272, true);
+    });
+    it('works across all negative', async () => {
+      await initTicks([-887272]);
+      await expectNextTickToBe(0, 887272, false);
     });
 
     it('works for huge gap', async () => {
@@ -98,14 +151,13 @@ describe('TickTree', () => {
       await initTicks([887272]);
       await expectNextTickToBe(-887272, 887272, true);
     });
-
     it('init is far behind', async () => {
       await initTicks([292530]);
       expect(await TickTree.isInitialized(292530)).to.eq(true);
       await expectNextTickToBe(357728, 887272, false);
     });
   });
-  describe('#nextTickInTheSameNode', () => {
+  describe('#nextTick', () => {
     beforeEach('set up some ticks', async () => {
       // word boundaries are at multiples of 256
       await initTicks([-70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000]);
@@ -146,29 +198,29 @@ describe('TickTree', () => {
     it('skips half word', async () => expectNextTickToBe(-100, 100, true));
   });
 
-  describe('#nextTickInTheSameNode gas  [ @skip-on-coverage ]', () => {
+  describe('#nextTick gas  [ @skip-on-coverage ]', () => {
     const FULL_PACK = [-70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000];
     it('gas cost on boundary', async () => {
       await initTicks(FULL_PACK);
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(255 * 60));
+      await snapshotGasCost(await TickTree.getGasCostOfNextTick(255 * 60));
     });
     it('gas cost just below boundary', async () => {
       await initTicks(FULL_PACK);
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(254 * 60));
+      await snapshotGasCost(await TickTree.getGasCostOfNextTick(254 * 60));
     });
     it('gas cost for entire word', async () => {
       await initTicks(FULL_PACK);
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(768 * 60));
+      await snapshotGasCost(await TickTree.getGasCostOfNextTick(768 * 60));
     });
 
     it('gas cost for all possible range', async () => {
       await initTicks([887272]);
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(-887272));
+      await snapshotGasCost(await TickTree.getGasCostOfNextTick(-887272));
     });
 
     it('gas cost for next subtree', async () => {
       await initTicks([70000]);
-      await snapshotGasCost(await TickTree.getGasCostOfNextTickInTheSameNode(0));
+      await snapshotGasCost(await TickTree.getGasCostOfNextTick(0));
     });
   });
 });
