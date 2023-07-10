@@ -305,7 +305,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       // transfer to the recipient
       if (zeroToOne) {
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
-        // TODO assert?
         uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
         _changeReserves(-leftover.toInt256(), amount1, communityFee, 0); // reflect reserve change and pay communityFee
@@ -332,7 +331,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      // TODO optimize
       IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, withPaymentInAdvance, data).shouldReturn(
         IAlgebraPlugin.beforeSwap.selector
       );
@@ -349,7 +347,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      // TODO optimize
       IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, amount0, amount1, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
