@@ -7,7 +7,7 @@ import './interfaces/IAlgebraPoolDeployer.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools
-/// @dev Version: Algebra V2.1
+/// @dev Version: Algebra Integral
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;

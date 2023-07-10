@@ -9,6 +9,7 @@ import './interfaces/IAlgebraFactory.sol';
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled
 /// @dev Role system is used to withdraw tokens
+/// @dev Version: Algebra Integral
 contract AlgebraCommunityVault {
   /// @notice Event emitted when a fees has been claimed
   /// @param token The address of token fee
