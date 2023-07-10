@@ -1,4 +1,4 @@
-name: Echidna
+name: Echidna Core
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - master
 
 jobs:
-  Core:
+  Asserts:
     strategy:
       matrix:
         testName:
