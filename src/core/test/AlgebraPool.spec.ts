@@ -12,6 +12,7 @@ import {
   getMaxTick,
   getMinTick,
   encodePriceSqrt,
+  encodeCallback,
   createPoolFunctions,
   SwapFunction,
   MintFunction,
@@ -34,6 +35,7 @@ import {
   PriceMovementMathTest,
   IERC20Minimal,
 } from '../typechain';
+import { callback } from '../typechain/contracts/interfaces';
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -453,6 +455,14 @@ describe('AlgebraPool', () => {
             await pool.burn(-240, 0, 10000, []);
             const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, MaxUint128, MaxUint128);
             expect(amount0, 'amount0').to.eq(120);
+            expect(amount1, 'amount1').to.eq(0);
+          });
+
+          it('removing works with min amounts', async () => {
+            await mint(wallet.address, -240, 0, 10000);
+            await pool.burn(-240, 0, 10000, []);
+            const { amount0, amount1 } = await pool.callStatic.collect(wallet.address, -240, 0, 1, 1);
+            expect(amount0, 'amount0').to.eq(1);
             expect(amount1, 'amount1').to.eq(0);
           });
 
@@ -1134,7 +1144,6 @@ describe('AlgebraPool', () => {
             )
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
         });
-      });
     });
 
     describe('#swapWithPaymentInAdvance', async () => {
@@ -1289,6 +1298,34 @@ describe('AlgebraPool', () => {
       expect(fees0Position0).to.be.eq('33333333333333');
       expect(fees0Position1).to.be.eq('66666666666666');
     });
+
+    it('works with zero fee', async () => {
+      await pool.setPluginConfig(0);
+      await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+      await pool.setFee(0);
+      await swap0ForExact1(expandTo18Decimals(1), other.address)
+      await pool.burn(minTick, maxTick, 0, []);
+      const { fees0: fee0, fees1: fee1 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+      expect(fee0).to.be.eq(0);
+      expect(fee1).to.be.eq(0);
+    });
+
+    it('works with uint16.max fee', async () => {
+      let amount = expandTo18Decimals(1)
+      await pool.setPluginConfig(0);
+      await mint(wallet.address, minTick, maxTick, amount);
+      await pool.setFee(65535);
+      await swap1ForExact0(amount, other.address)
+      await pool.burn(minTick, maxTick, 0, []);
+      const { fees0: fee0, fees1: fee1 } = await pool.positions(
+        await getPositionKey(wallet.address, minTick, maxTick, pool)
+      )
+      expect(fee0).to.be.eq(0);
+      expect(fee1).to.be.eq(BigNumber.from("10256490986335419"));
+    });
+  });
 
     describe('works across large increases', () => {
       beforeEach(async () => {
@@ -2040,6 +2077,12 @@ describe('AlgebraPool', () => {
             .withArgs(swapTarget.address, other.address, 1001, 2001, 1, 1);
         });
 
+        it('emits an event', async () => {
+          await expect(flash(1, 1, other.address))
+            .to.emit(pool, 'Flash')
+            .withArgs(swapTarget.address, other.address, 1, 1, 1, 1);
+        });
+
         it('transfers the amount0 to the recipient', async () => {
           await expect(flash(100, 200, other.address))
             .to.emit(token0, 'Transfer')
@@ -2340,11 +2383,13 @@ describe('AlgebraPool', () => {
 
     describe('#plugin', () => {
       let poolPlugin: MockPoolPlugin;
+      let callbackData: string
       beforeEach('create plugin', async () => {
         const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
         poolPlugin = (await MockPoolPluginFactory.deploy(pool.address)) as MockPoolPlugin;
         await pool.setPlugin(poolPlugin.address);
         await pool.setPluginConfig(255);
+        callbackData = encodeCallback(wallet.address)
       });
 
       it('before initialize the hook is called', async () => {
@@ -2363,14 +2408,14 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1)))
           .to.be.emit(poolPlugin, 'BeforeModifyPosition')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, minTick, maxTick, expandTo18Decimals(1), callbackData);
       });
 
       it('after mint the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await expect(mint(wallet.address, minTick, maxTick, expandTo18Decimals(1)))
           .to.be.emit(poolPlugin, 'AfterModifyPosition')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, minTick, maxTick, expandTo18Decimals(1), expandTo18Decimals(1), expandTo18Decimals(1), callbackData);
       });
 
       it('before burn the hook is called', async () => {
@@ -2378,7 +2423,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), []))
           .to.be.emit(poolPlugin, 'BeforeModifyPosition')
-          .withArgs(wallet.address);
+          .withArgs(wallet.address, wallet.address, minTick, maxTick, expandTo18Decimals(-1), '0x');
       });
 
       it('after burn the hook is called', async () => {
@@ -2386,7 +2431,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), []))
           .to.be.emit(poolPlugin, 'AfterModifyPosition')
-          .withArgs(wallet.address);
+          .withArgs(wallet.address, wallet.address, minTick, maxTick, expandTo18Decimals(-1), expandTo18Decimals(1).sub(1), expandTo18Decimals(1).sub(1), '0x');
       });
 
       it('before swap fee on transfer tokens the hook is called', async () => {
@@ -2394,7 +2439,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact1For0SupportingFee(10000, wallet.address))
           .to.be.emit(poolPlugin, 'BeforeSwap')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, false, 10000, MAX_SQRT_RATIO.sub(1), true, callbackData);
       });
 
       it('after swap fee on transfer tokens the hook is called', async () => {
@@ -2402,7 +2447,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact1For0SupportingFee(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, false, 10000, MAX_SQRT_RATIO.sub(1), -9998, 10000, callbackData);
       });
 
       it('before swap the hook is called', async () => {
@@ -2410,7 +2455,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact0For1(10000, wallet.address))
           .to.be.emit(poolPlugin, 'BeforeSwap')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, true, 10000, MIN_SQRT_RATIO.add(1), false, callbackData);
       });
 
       it('after swap the hook is called', async () => {
@@ -2418,23 +2463,25 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact0For1(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
-          .withArgs(swapTarget.address);
+          .withArgs(swapTarget.address, wallet.address, true, 10000, MIN_SQRT_RATIO.add(1), 10000, -9998, callbackData);
       });
 
       it('before flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        callbackData = encodeCallback(wallet.address, 101, 201)
         await expect(flash(100, 200, other.address))
           .to.be.emit(poolPlugin, 'BeforeFlash')
-          .withArgs(swapTarget.address, 100, 200);
+          .withArgs(swapTarget.address, other.address, 100, 200, callbackData);
       });
 
       it('after flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        callbackData = encodeCallback(wallet.address, 101, 201)
         await expect(flash(100, 200, other.address))
           .to.be.emit(poolPlugin, 'AfterFlash')
-          .withArgs(swapTarget.address, 100, 200);
+          .withArgs(swapTarget.address, other.address, 100, 200, 1, 1, callbackData);
       });
 
       it('transaction reverted if plugin returns incorrect selector for beforeInitialized hook', async () => {
@@ -2500,7 +2547,6 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(flash(100, 200, other.address))
           .to.be.emit(poolPlugin, 'AfterFlash')
-          .withArgs(swapTarget.address, 100, 200);
         await pool.setPluginConfig(223);
         await expect(flash(100, 200, other.address)).not.to.be.emit(poolPlugin, 'AfterFlash');
       });

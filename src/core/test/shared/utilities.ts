@@ -54,6 +54,11 @@ export function getCreate2Address(
   return utils.getAddress(`0x${utils.keccak256(sanitizedInputs).slice(-40)}`);
 }
 
+export function encodeCallback(address: string, paid0?: BigNumber, paid1?: BigNumber): string {
+  if(paid0) return utils.defaultAbiCoder.encode(['address', 'uint256', 'uint256'], [address, paid0, paid1])
+  return utils.defaultAbiCoder.encode(['address'], [address])
+} 
+
 bn.config({ EXPONENTIAL_AT: 999999, DECIMAL_PLACES: 40 });
 
 // returns the sqrt price as a 64x96

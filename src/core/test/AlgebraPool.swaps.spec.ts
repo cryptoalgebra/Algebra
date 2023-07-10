@@ -244,9 +244,21 @@ const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
     comissionOnTransaction: true,
   },
   {
+    zeroToOne: true,
+    exactOut: false,
+    amount0: 1,
+    comissionOnTransaction: true,
+  },
+  {
     zeroToOne: false,
     exactOut: false,
     amount1: 1000,
+    comissionOnTransaction: false,
+  },
+  {
+    zeroToOne: false,
+    exactOut: false,
+    amount1: 1,
     comissionOnTransaction: false,
   },
   {

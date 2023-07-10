@@ -17,12 +17,38 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
 
   event BeforeInitialize(address sender, uint160 sqrtPriceX96);
   event AfterInitialize(address sender, uint160 sqrtPriceX96, int24 tick);
-  event BeforeModifyPosition(address sender);
-  event AfterModifyPosition(address sender);
-  event BeforeSwap(address sender);
-  event AfterSwap(address sender);
-  event BeforeFlash(address sender, uint256 amount0, uint256 amount1);
-  event AfterFlash(address sender, uint256 amount0, uint256 amount1);
+  event BeforeModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, bytes data);
+  event AfterModifyPosition(
+    address sender,
+    address recipient,
+    int24 bottomTick,
+    int24 topTick,
+    int128 desiredLiquidityDelta,
+    uint256 amount0,
+    uint256 amount1,
+    bytes data
+  );
+  event BeforeSwap(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
+    bytes data
+  );
+  event AfterSwap(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes data
+  );
+  event BeforeFlash(address sender, address recepient, uint256 amount0, uint256 amount1, bytes data);
+  event AfterFlash(address sender, address recepient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
 
   function defaultPluginConfig() external view override returns (uint8) {}
 
@@ -58,8 +84,15 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @notice The hook called before a position is modified
   /// @param sender The initial msg.sender for the modify position call
   /// @return bytes4 The function selector for the hook
-  function beforeModifyPosition(address sender, address, int24, int24, int128, bytes calldata) external override returns (bytes4) {
-    emit BeforeModifyPosition(sender);
+  function beforeModifyPosition(
+    address sender,
+    address recipient,
+    int24 bottomTick,
+    int24 topTick,
+    int128 desiredLiquidityDelta,
+    bytes calldata data
+  ) external override returns (bytes4) {
+    emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG)) return IAlgebraPlugin.beforeModifyPosition.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
@@ -67,8 +100,17 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
   /// @return bytes4 The function selector for the hook
-  function afterModifyPosition(address sender, address, int24, int24, int128, uint256, uint256, bytes calldata) external override returns (bytes4) {
-    emit AfterModifyPosition(sender);
+  function afterModifyPosition(
+    address sender,
+    address recipient,
+    int24 bottomTick,
+    int24 topTick,
+    int128 desiredLiquidityDelta,
+    uint256 amount0,
+    uint256 amount1,
+    bytes calldata data
+  ) external override returns (bytes4) {
+    emit AfterModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, amount0, amount1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_POSITION_MODIFY_FLAG)) return IAlgebraPlugin.afterModifyPosition.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
@@ -76,8 +118,16 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @notice The hook called before a swap
   /// @param sender The initial msg.sender for the swap call
   /// @return bytes4 The function selector for the hook
-  function beforeSwap(address sender, address, bool, int256, uint160, bool, bytes calldata) external override returns (bytes4) {
-    emit BeforeSwap(sender);
+  function beforeSwap(
+    address sender,
+    address recipient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    bool withPaymentInAdvance,
+    bytes calldata data
+  ) external override returns (bytes4) {
+    emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return IAlgebraPlugin.beforeSwap.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
@@ -85,8 +135,17 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @notice The hook called after a swap
   /// @param sender The initial msg.sender for the swap call
   /// @return bytes4 The function selector for the hook
-  function afterSwap(address sender, address, bool, int256, uint160, int256, int256, bytes calldata) external override returns (bytes4) {
-    emit AfterSwap(sender);
+  function afterSwap(
+    address sender,
+    address recepient,
+    bool zeroToOne,
+    int256 amountRequired,
+    uint160 limitSqrtPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes calldata data
+  ) external override returns (bytes4) {
+    emit AfterSwap(sender, recepient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_SWAP_FLAG)) return IAlgebraPlugin.afterSwap.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
@@ -96,8 +155,8 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @param amount0 The amount of token0 being requested for flash
   /// @param amount1 The amount of token1 being requested for flash
   /// @return bytes4 The function selector for the hook
-  function beforeFlash(address sender, address, uint256 amount0, uint256 amount1, bytes calldata) external override returns (bytes4) {
-    emit BeforeFlash(sender, amount0, amount1);
+  function beforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override returns (bytes4) {
+    emit BeforeFlash(sender, recipient, amount0, amount1, data);
     IAlgebraPool(pool).setFee(200);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_FLASH_FLAG)) return IAlgebraPlugin.beforeFlash.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
@@ -110,14 +169,14 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @return bytes4 The function selector for the hook
   function afterFlash(
     address sender,
-    address,
+    address recipient,
     uint256 amount0,
     uint256 amount1,
-    uint256,
-    uint256,
-    bytes calldata
+    uint256 paid0,
+    uint256 paid1,
+    bytes calldata data
   ) external override returns (bytes4) {
-    emit AfterFlash(sender, amount0, amount1);
+    emit AfterFlash(sender, recipient, amount0, amount1, paid0, paid1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_FLASH_FLAG)) return IAlgebraPlugin.afterFlash.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
