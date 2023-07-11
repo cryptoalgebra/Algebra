@@ -429,14 +429,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address newPluginAddress) external override {
+  function setPlugin(address newPluginAddress) external override nonReentrant {
     _checkIfAdministrator();
     plugin = newPluginAddress;
     emit Plugin(newPluginAddress);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override {
+  function setPluginConfig(uint8 newConfig) external override nonReentrant {
     if (msg.sender != plugin) _checkIfAdministrator();
     globalState.pluginConfig = newConfig;
     emit PluginConfig(newConfig);
@@ -445,6 +445,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
     bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
+    if (!globalState.unlocked) revert IAlgebraPoolErrors.locked(); // cheaper to check lock here
 
     if (msg.sender == plugin) {
       if (!isDynamicFeeEnabled) revert dynamicFeeDisabled();

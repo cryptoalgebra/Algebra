@@ -59,6 +59,21 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    // try to reenter setPlugin
+    try IAlgebraPool(msg.sender).setPlugin(address(this)) {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
+    // try to reenter setPluginConfig
+    try IAlgebraPool(msg.sender).setPluginConfig(1) {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
+    // try to reenter setFee
+    try IAlgebraPool(msg.sender).setFee(120) {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
     require(false, 'Unable to reenter');
   }
 }
