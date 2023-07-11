@@ -6,10 +6,10 @@ import '../../libraries/TickTree.sol';
 
 contract TickTreeEchidnaTest {
   using TickTree for mapping(int16 => uint256);
-  uint64 private word;
+  uint32 private tickTreeRoot;
 
-  mapping(int16 => uint256) private tickWordsTable;
-  mapping(int16 => uint256) private bitmap;
+  mapping(int16 => uint256) private tickSecondLayerBitmap;
+  mapping(int16 => uint256) private tickBitmap;
 
   int24[] initedTicks;
   mapping(int24 => uint256) initedTicksIndexes;
@@ -25,7 +25,7 @@ contract TickTreeEchidnaTest {
       bitNumber := and(tick, 0xFF)
       rowNumber := sar(8, tick)
     }
-    uint256 word0 = bitmap[rowNumber];
+    uint256 word0 = tickBitmap[rowNumber];
     unchecked {
       return (word0 & (1 << bitNumber)) > 0;
     }
@@ -41,7 +41,7 @@ contract TickTreeEchidnaTest {
       assert(tick >= TickMath.MIN_TICK);
       assert(tick <= TickMath.MAX_TICK);
       bool before = _isInitialized(tick);
-      word = bitmap.toggleTick(tickWordsTable, tick, word);
+      tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tick, tickTreeRoot);
       assert(_isInitialized(tick) == !before);
 
       if (!before) {
@@ -83,7 +83,7 @@ contract TickTreeEchidnaTest {
       if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
       tick = (tick / TICK_SPACING) * TICK_SPACING;
 
-      int24 next = bitmap.getNextTick(tickWordsTable, word, tick);
+      int24 next = tickBitmap.getNextTick(tickSecondLayerBitmap, tickTreeRoot, tick);
 
       assert(next > tick);
       assert((next - tick) <= 2 * TickMath.MAX_TICK);

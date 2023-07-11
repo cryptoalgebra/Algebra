@@ -6,7 +6,7 @@ import '../libraries/TickTree.sol';
 
 contract TickTreeTest {
   using TickTree for mapping(int16 => uint256);
-  uint64 public root;
+  uint32 public root;
 
   mapping(int16 => uint256) public tickSecondLayer;
   mapping(int16 => uint256) public tickTable;

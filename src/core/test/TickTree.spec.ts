@@ -60,7 +60,7 @@ describe('TickTree', () => {
     });
 
     it('initializes second layer and root', async () => {
-      const FULL_PACK = [-70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000];
+      const FULL_PACK = [-887272, -887271, -70000, -20000, -10000, -300, -200, -100, 100, 200, 300, 65636, 65646, 150000, 800000, 887271, 887272];
       const SECOND_LAYER_OFFSET = Math.ceil(887272 / 256);
       for (const tick of FULL_PACK) {
         await TickTree.toggleTick(tick);
@@ -73,7 +73,7 @@ describe('TickTree', () => {
 
         const rootLayerMask = BigNumber.from(2).pow(secondLayerNodeIndex);
         
-        const root = await TickTree.root();
+        const root = BigNumber.from(await TickTree.root());
         expect(root.and(rootLayerMask), 'invalid index at root layer').to.be.eq(rootLayerMask);
       }
     })
