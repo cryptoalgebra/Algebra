@@ -101,8 +101,8 @@ abstract contract Positions is AlgebraPoolBase {
   /// @notice Increases amounts of tokens owed to owner of the position
   /// @param position The position object to operate with
   /// @param liquidityDelta The amount on which to increase\decrease the liquidity
-  /// @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
-  /// @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth0Token Total fee token0 fee growth per liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth1Token Total fee token1 fee growth per liquidity between position's lower and upper ticks
   function _recalculatePosition(
     Position storage position,
     int128 liquidityDelta,
