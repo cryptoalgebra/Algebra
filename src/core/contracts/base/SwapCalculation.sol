@@ -68,7 +68,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     PriceMovementCache memory step;
     unchecked {
       // swap until there is remaining input or output tokens or we reach the price limit
-      while (true) {
+      do {
         int24 nextTick = zeroToOne ? cache.prevInitializedTick : cache.nextInitializedTick;
         step.stepSqrtPrice = currentPrice;
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
@@ -134,11 +134,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
           break; // since the price hasn't reached the target, amountRequired should be 0
         }
-        // check stop condition
-        if (amountRequired == 0 || currentPrice == limitSqrtPrice) {
-          break; // TODO recheck if on tick
-        }
-      } // TODO do while
+      } while (amountRequired != 0 && currentPrice != limitSqrtPrice); // check stop condition
 
       (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less than initially specified (e.g. reached limit)
         ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less than initially specified (e.g. reached limit)
