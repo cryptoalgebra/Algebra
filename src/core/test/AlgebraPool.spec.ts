@@ -1144,6 +1144,7 @@ describe('AlgebraPool', () => {
             )
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
         });
+      });
     });
 
     describe('#swapWithPaymentInAdvance', async () => {
@@ -1317,15 +1318,14 @@ describe('AlgebraPool', () => {
       await pool.setPluginConfig(0);
       await mint(wallet.address, minTick, maxTick, amount);
       await pool.setFee(65535);
-      await swap1ForExact0(amount, other.address)
+      await swapExact1For0(amount, other.address)
       await pool.burn(minTick, maxTick, 0, []);
       const { fees0: fee0, fees1: fee1 } = await pool.positions(
         await getPositionKey(wallet.address, minTick, maxTick, pool)
       )
       expect(fee0).to.be.eq(0);
-      expect(fee1).to.be.eq(BigNumber.from("10256490986335419"));
+      expect(fee1).to.be.eq(amount.mul(65535).div(1000000).sub(1));
     });
-  });
 
     describe('works across large increases', () => {
       beforeEach(async () => {
@@ -2469,7 +2469,7 @@ describe('AlgebraPool', () => {
       it('before flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        callbackData = encodeCallback(wallet.address, 101, 201)
+        callbackData = encodeCallback(wallet.address, BigNumber.from(101), BigNumber.from(201))
         await expect(flash(100, 200, other.address))
           .to.be.emit(poolPlugin, 'BeforeFlash')
           .withArgs(swapTarget.address, other.address, 100, 200, callbackData);
@@ -2478,7 +2478,7 @@ describe('AlgebraPool', () => {
       it('after flash the hook is called', async () => {
         await pool.initialize(encodePriceSqrt(1, 1));
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
-        callbackData = encodeCallback(wallet.address, 101, 201)
+        callbackData = encodeCallback(wallet.address, BigNumber.from(101), BigNumber.from(201))
         await expect(flash(100, 200, other.address))
           .to.be.emit(poolPlugin, 'AfterFlash')
           .withArgs(swapTarget.address, other.address, 100, 200, 1, 1, callbackData);
