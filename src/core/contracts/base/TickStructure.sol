@@ -74,30 +74,16 @@ abstract contract TickStructure is AlgebraPoolBase {
     bool remove
   ) internal override {
     (int24 prevInitializedTick, int24 nextInitializedTick, uint32 oldTickTreeRoot) = (prevTickGlobal, nextTickGlobal, tickTreeRoot);
-    (int24 newPreviousTick, int24 newNextTick, uint32 newTickTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
+    (int24 newPrevTick, int24 newNextTick, uint32 newTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
     // TODO can be optimized?
     if (toggleBottom) {
-      (newPreviousTick, newNextTick, newTickTreeRoot) = _insertOrRemoveTick(
-        bottomTick,
-        currentTick,
-        newTickTreeRoot,
-        newPreviousTick,
-        newNextTick,
-        remove
-      );
+      (newPrevTick, newNextTick, newTreeRoot) = _insertOrRemoveTick(bottomTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
     }
     if (toggleTop) {
-      (newPreviousTick, newNextTick, newTickTreeRoot) = _insertOrRemoveTick(
-        topTick,
-        currentTick,
-        newTickTreeRoot,
-        newPreviousTick,
-        newNextTick,
-        remove
-      );
+      (newPrevTick, newNextTick, newTreeRoot) = _insertOrRemoveTick(topTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
     }
-    if (prevInitializedTick != newPreviousTick || nextInitializedTick != newNextTick || newTickTreeRoot != oldTickTreeRoot) {
-      (prevTickGlobal, nextTickGlobal, tickTreeRoot) = (newPreviousTick, newNextTick, newTickTreeRoot);
+    if (prevInitializedTick != newPrevTick || nextInitializedTick != newNextTick || newTreeRoot != oldTickTreeRoot) {
+      (prevTickGlobal, nextTickGlobal, tickTreeRoot) = (newPrevTick, newNextTick, newTreeRoot);
     }
   }
 }
