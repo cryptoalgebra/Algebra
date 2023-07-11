@@ -96,7 +96,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
         // min or max tick can not be crossed due to limitSqrtPrice check
         if (currentPrice == step.nextTickPrice) {
-          // if the reached tick is initialized then we need to cross it
+          // crossing tick
           if (!cache.crossedAnyTick) {
             cache.crossedAnyTick = true;
             cache.totalFeeGrowthOutput = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
