@@ -42,27 +42,21 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
+
     SwapCalculationCache memory cache;
-    {
-      // load from one storage slot
-      currentPrice = globalState.price;
-      currentTick = globalState.tick;
-      cache.fee = globalState.fee;
-      cache.communityFee = globalState.communityFee;
+    (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
 
-      (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
+    // load from one storage slot
+    (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.fee, globalState.communityFee);
+    // load from one storage slot too
+    (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
 
-      currentLiquidity = liquidity;
-      cache.prevInitializedTick = prevTickGlobal;
-      cache.nextInitializedTick = nextTickGlobal;
-
-      if (zeroToOne) {
-        if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
-        cache.totalFeeGrowth = totalFeeGrowth0Token;
-      } else {
-        if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
-        cache.totalFeeGrowth = totalFeeGrowth1Token;
-      }
+    if (zeroToOne) {
+      if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
+      cache.totalFeeGrowth = totalFeeGrowth0Token;
+    } else {
+      if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
+      cache.totalFeeGrowth = totalFeeGrowth1Token;
     }
 
     PriceMovementCache memory step;
@@ -125,7 +119,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
               cache.totalFeeGrowth // A == 1
             );
             currentTick = nextTick;
-            cache.prevInitializedTick = nextTick; // TODO opt
+            cache.prevInitializedTick = nextTick;
             cache.nextInitializedTick = ticks[nextTick].nextTick;
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
