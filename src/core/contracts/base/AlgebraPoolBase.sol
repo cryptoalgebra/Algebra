@@ -147,12 +147,13 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   // This virtual function is implemented in TickStructure and used in Positions
-  /// @dev Add or remove a tick to the corresponding data structure
-  function _insertOrRemoveTick(
-    int24 tick,
+  /// @dev Add or remove a pair of ticks to the corresponding data structure
+  function _insertOrRemovePairOfTicks(
+    int24 bottomTick,
+    int24 topTick,
+    bool toggleBottom,
+    bool toggleTop,
     int24 currentTick,
-    int24 prevInitializedTick,
-    int24 nextInitializedTick,
     bool remove
-  ) internal virtual returns (int24 newPrevInitializedTick, int24 newNextInitializedTick);
+  ) internal virtual;
 }

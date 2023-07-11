@@ -7,7 +7,7 @@ import '../libraries/TickManagement.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
-/// @dev Relies on method _insertOrRemoveTick, which is implemented in TickStructure
+/// @dev Relies on method _insertOrRemovePairOfTicks, which is implemented in TickStructure
 abstract contract Positions is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
@@ -95,21 +95,6 @@ abstract contract Positions is AlgebraPoolBase {
         uint128 liquidityBefore = liquidity;
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
-    }
-  }
-
-  function _insertOrRemovePairOfTicks(int24 bottomTick, int24 topTick, bool toggledBottom, bool toggledTop, int24 currentTick, bool remove) internal {
-    (int24 prevInitializedTick, int24 nextInitializedTick) = (prevTickGlobal, nextTickGlobal);
-    int24 newPreviousTick = prevInitializedTick;
-    int24 newNextTick = nextInitializedTick;
-    if (toggledBottom) {
-      (newPreviousTick, newNextTick) = _insertOrRemoveTick(bottomTick, currentTick, newPreviousTick, newNextTick, remove);
-    }
-    if (toggledTop) {
-      (newPreviousTick, newNextTick) = _insertOrRemoveTick(topTick, currentTick, newPreviousTick, newNextTick, remove);
-    }
-    if (prevInitializedTick != newPreviousTick || nextInitializedTick != newNextTick) {
-      (prevTickGlobal, nextTickGlobal) = (newPreviousTick, newNextTick);
     }
   }
 

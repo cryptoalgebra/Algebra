@@ -25,34 +25,28 @@ abstract contract TickStructure is AlgebraPoolBase {
   /// @param tick The tick being removed or added now
   /// @param currentTick The current global tick in the pool
   /// @param prevInitializedTick Previous active tick before `currentTick`
+  /// @param nextInitializedTick Next active tick after `currentTick`
   /// @param remove Remove or add the tick
   /// @return New previous active tick before `currentTick` if changed
-  // TODO
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,
+    uint32 oldTickTreeRoot,
     int24 prevInitializedTick,
     int24 nextInitializedTick,
     bool remove
-  ) internal override returns (int24, int24) {
-    uint32 oldTickTreeRoot = tickTreeRoot;
-
-    int24 prevTick;
-    int24 nextTick;
+  ) internal returns (int24, int24, uint32) {
     if (remove) {
-      // TODO refactor
-      (prevTick, nextTick) = ticks.removeTick(tick);
+      (int24 prevTick, int24 nextTick) = ticks.removeTick(tick);
       if (prevInitializedTick == tick) prevInitializedTick = prevTick;
       else if (nextInitializedTick == tick) nextInitializedTick = nextTick;
     } else {
-      if (prevInitializedTick < tick && tick <= currentTick) {
-        nextTick = nextInitializedTick;
-        prevTick = prevInitializedTick;
-        prevInitializedTick = tick;
-      } else if (nextInitializedTick > tick && tick > currentTick) {
-        nextTick = nextInitializedTick;
-        prevTick = prevInitializedTick;
-        nextInitializedTick = tick;
+      int24 prevTick;
+      int24 nextTick;
+      if (prevInitializedTick < tick && nextInitializedTick > tick) {
+        (prevTick, nextTick) = (prevInitializedTick, nextInitializedTick); // we know next and prev ticks
+        if (tick > currentTick) nextInitializedTick = tick;
+        else prevInitializedTick = tick;
       } else {
         nextTick = tickTable.getNextTick(tickSecondLayer, oldTickTreeRoot, tick);
         prevTick = ticks[nextTick].prevTick;
@@ -61,7 +55,49 @@ abstract contract TickStructure is AlgebraPoolBase {
     }
 
     uint32 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
-    if (newTickTreeRoot != oldTickTreeRoot) tickTreeRoot = newTickTreeRoot;
-    return (prevInitializedTick, nextInitializedTick);
+    return (prevInitializedTick, nextInitializedTick, newTickTreeRoot);
+  }
+
+  /// @notice Used to add or remove a pair of ticks from a doubly linked list and search tree
+  /// @param bottomTick The bottom tick being removed or added now
+  /// @param topTick The top tick being removed or added now
+  /// @param toggleBottom Should bottom tick be changed or not
+  /// @param toggleTop Should top tick be changed or not
+  /// @param currentTick The current global tick in the pool
+  /// @param remove Remove or add the tick
+  function _insertOrRemovePairOfTicks(
+    int24 bottomTick,
+    int24 topTick,
+    bool toggleBottom,
+    bool toggleTop,
+    int24 currentTick,
+    bool remove
+  ) internal override {
+    (int24 prevInitializedTick, int24 nextInitializedTick, uint32 oldTickTreeRoot) = (prevTickGlobal, nextTickGlobal, tickTreeRoot);
+    (int24 newPreviousTick, int24 newNextTick, uint32 newTickTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
+    // TODO can be optimized?
+    if (toggleBottom) {
+      (newPreviousTick, newNextTick, newTickTreeRoot) = _insertOrRemoveTick(
+        bottomTick,
+        currentTick,
+        newTickTreeRoot,
+        newPreviousTick,
+        newNextTick,
+        remove
+      );
+    }
+    if (toggleTop) {
+      (newPreviousTick, newNextTick, newTickTreeRoot) = _insertOrRemoveTick(
+        topTick,
+        currentTick,
+        newTickTreeRoot,
+        newPreviousTick,
+        newNextTick,
+        remove
+      );
+    }
+    if (prevInitializedTick != newPreviousTick || nextInitializedTick != newNextTick || newTickTreeRoot != oldTickTreeRoot) {
+      (prevTickGlobal, nextTickGlobal, tickTreeRoot) = (newPreviousTick, newNextTick, newTickTreeRoot);
+    }
   }
 }
