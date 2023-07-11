@@ -5,7 +5,7 @@ pragma solidity >=0.5.0;
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 library PoolAddress {
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0xb5e86d1ceacbe2849521fab614e0de039d024107ccaa6bf71407644e1c065eab;
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0xce590cc5a9e1590062855c70498c246337f8c211d5c35cd73d9c7817da3bfebe;
 
     /// @notice The identifying key of the pool
     struct PoolKey {

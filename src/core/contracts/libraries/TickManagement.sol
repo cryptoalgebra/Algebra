@@ -100,10 +100,7 @@ library TickManagement {
     if (liquidityTotalBefore == 0) {
       flipped = !flipped;
       // by convention, we assume that all growth before a tick was initialized happened _below_ the tick
-      if (tick <= currentTick) {
-        data.outerFeeGrowth0Token = totalFeeGrowth0Token;
-        data.outerFeeGrowth1Token = totalFeeGrowth1Token;
-      }
+      if (tick <= currentTick) (data.outerFeeGrowth0Token, data.outerFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
     }
   }
 
@@ -113,13 +110,18 @@ library TickManagement {
   /// @param feeGrowth0 The all-time global fee growth, per unit of liquidity, in token0
   /// @param feeGrowth1 The all-time global fee growth, per unit of liquidity, in token1
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
-  function cross(mapping(int24 => Tick) storage self, int24 tick, uint256 feeGrowth0, uint256 feeGrowth1) internal returns (int128 liquidityDelta) {
+  // TODO
+  function cross(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    uint256 feeGrowth0,
+    uint256 feeGrowth1
+  ) internal returns (int128 liquidityDelta, int24 prevTick, int24 nextTick) {
     Tick storage data = self[tick];
     unchecked {
-      data.outerFeeGrowth1Token = feeGrowth1 - data.outerFeeGrowth1Token;
-      data.outerFeeGrowth0Token = feeGrowth0 - data.outerFeeGrowth0Token;
+      (data.outerFeeGrowth1Token, data.outerFeeGrowth0Token) = (feeGrowth1 - data.outerFeeGrowth1Token, feeGrowth0 - data.outerFeeGrowth0Token);
     }
-    return data.liquidityDelta;
+    return (data.liquidityDelta, data.prevTick, data.nextTick);
   }
 
   /// @notice Used for initial setup if ticks list

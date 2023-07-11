@@ -22,14 +22,14 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 totalFeeGrowthInput; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthOutput; // The initial totalFeeGrowth for output token, should not change during swap
     bool exactInput; // Whether the exact input or output is specified
-    uint16 fee; // The current dynamic fee
+    uint16 fee; // The current fee value in hundredths of a bip, i.e. 1e-6
     int24 prevInitializedTick; // The previous initialized tick in linked list
     int24 nextInitializedTick; // The next initialized tick in linked list
   }
 
   struct PriceMovementCache {
-    uint160 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step
-    uint160 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_
+    uint256 stepSqrtPrice; // The Q64.96 sqrt of the price at the start of the step, uint256 to minimize casts
+    uint256 nextTickPrice; // The Q64.96 sqrt of the price calculated from the _nextTick_, uint256 to minimize casts
     uint256 input; // The additive amount of tokens that have been provided
     uint256 output; // The additive amount of token that have been withdrawn
     uint256 feeAmount; // The total amount of fee earned within a current step
@@ -72,7 +72,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           currentPrice,
           (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the target or to the limit
             ? limitSqrtPrice
-            : step.nextTickPrice,
+            : uint160(step.nextTickPrice), // cast is safe
           currentLiquidity,
           amountRequired,
           cache.fee
@@ -104,35 +104,22 @@ abstract contract SwapCalculation is AlgebraPoolBase {
 
           int128 liquidityDelta;
           if (zeroToOne) {
-            liquidityDelta = -ticks.cross(
-              nextTick,
-              cache.totalFeeGrowthInput, // input == 0
-              cache.totalFeeGrowthOutput // output == 1
-            );
-            currentTick = nextTick - 1;
-            cache.prevInitializedTick = ticks[nextTick].prevTick;
-            cache.nextInitializedTick = nextTick;
+            (liquidityDelta, cache.prevInitializedTick, ) = ticks.cross(nextTick, cache.totalFeeGrowthInput, cache.totalFeeGrowthOutput);
+            liquidityDelta = -liquidityDelta;
+            (currentTick, cache.nextInitializedTick) = (nextTick - 1, nextTick);
           } else {
-            liquidityDelta = ticks.cross(
-              nextTick,
-              cache.totalFeeGrowthOutput, // output == 0
-              cache.totalFeeGrowthInput // input == 1
-            );
-            currentTick = nextTick;
-            cache.prevInitializedTick = nextTick;
-            cache.nextInitializedTick = ticks[nextTick].nextTick;
+            (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(nextTick, cache.totalFeeGrowthOutput, cache.totalFeeGrowthInput);
+            (currentTick, cache.prevInitializedTick) = (nextTick, nextTick);
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
-          // if the price has changed but hasn't reached the target
-          currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
+          currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
           break; // since the price hasn't reached the target, amountRequired should be 0
         }
       } while (amountRequired != 0 && currentPrice != limitSqrtPrice); // check stop condition
 
-      (amount0, amount1) = zeroToOne == cache.exactInput // the amount to provide could be less than initially specified (e.g. reached limit)
-        ? (cache.amountRequiredInitial - amountRequired, cache.amountCalculated) // the amount to get could be less than initially specified (e.g. reached limit)
-        : (cache.amountCalculated, cache.amountRequiredInitial - amountRequired);
+      int256 amountSpent = cache.amountRequiredInitial - amountRequired; // spent amount could be less than initially specified (e.g. reached limit)
+      (amount0, amount1) = zeroToOne == cache.exactInput ? (amountSpent, cache.amountCalculated) : (cache.amountCalculated, amountSpent);
     }
 
     (globalState.price, globalState.tick) = (currentPrice, currentTick);
