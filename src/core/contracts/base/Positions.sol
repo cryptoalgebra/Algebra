@@ -46,7 +46,6 @@ abstract contract Positions is AlgebraPoolBase {
   ) internal returns (uint256 amount0, uint256 amount1) {
     uint160 currentPrice = globalState.price;
     int24 currentTick = globalState.tick;
-    int24 prevInitializedTick = globalState.prevInitializedTick;
 
     bool toggledBottom;
     bool toggledTop;
@@ -87,16 +86,7 @@ abstract contract Positions is AlgebraPoolBase {
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        int24 newPreviousTick = prevInitializedTick;
-        if (toggledBottom) {
-          newPreviousTick = _insertOrRemoveTick(bottomTick, currentTick, newPreviousTick, liquidityDelta < 0);
-        }
-        if (toggledTop) {
-          newPreviousTick = _insertOrRemoveTick(topTick, currentTick, newPreviousTick, liquidityDelta < 0);
-        }
-        if (prevInitializedTick != newPreviousTick) {
-          globalState.prevInitializedTick = newPreviousTick;
-        }
+        _insertOrRemovePairOfTicks(bottomTick, topTick, toggledBottom, toggledTop, currentTick, liquidityDelta < 0);
       }
 
       int128 globalLiquidityDelta;
@@ -105,6 +95,21 @@ abstract contract Positions is AlgebraPoolBase {
         uint128 liquidityBefore = liquidity;
         liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
       }
+    }
+  }
+
+  function _insertOrRemovePairOfTicks(int24 bottomTick, int24 topTick, bool toggledBottom, bool toggledTop, int24 currentTick, bool remove) internal {
+    (int24 prevInitializedTick, int24 nextInitializedTick) = (prevTickGlobal, nextTickGlobal);
+    int24 newPreviousTick = prevInitializedTick;
+    int24 newNextTick = nextInitializedTick;
+    if (toggledBottom) {
+      (newPreviousTick, newNextTick) = _insertOrRemoveTick(bottomTick, currentTick, newPreviousTick, newNextTick, remove);
+    }
+    if (toggledTop) {
+      (newPreviousTick, newNextTick) = _insertOrRemoveTick(topTick, currentTick, newPreviousTick, newNextTick, remove);
+    }
+    if (prevInitializedTick != newPreviousTick || nextInitializedTick != newNextTick) {
+      (prevTickGlobal, nextTickGlobal) = (newPreviousTick, newNextTick);
     }
   }
 

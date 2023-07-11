@@ -18,7 +18,6 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
-    int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint8 pluginConfig;
     uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
@@ -71,7 +70,6 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
-    globalState.prevInitializedTick = TickMath.MIN_TICK;
   }
 
   /// @inheritdoc IAlgebraPoolState

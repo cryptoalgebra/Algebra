@@ -27,7 +27,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
-    int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
     uint8 pluginConfig;
     uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
@@ -51,6 +50,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   GlobalState public override globalState;
 
   /// @inheritdoc IAlgebraPoolState
+  mapping(int24 => TickManagement.Tick) public override ticks;
+
+  /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
@@ -58,13 +60,13 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManagement.Tick) public override ticks;
-
-  /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
+
+  int24 internal nextTickGlobal; // The next initialized tick in linked list
+  int24 internal prevTickGlobal; // The previous initialized tick in linked list
 
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
@@ -98,7 +100,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   constructor() {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
-    globalState.prevInitializedTick = TickMath.MIN_TICK;
+    prevTickGlobal = TickMath.MIN_TICK;
+    nextTickGlobal = TickMath.MAX_TICK;
     globalState.unlocked = true;
   }
 
@@ -149,6 +152,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     int24 tick,
     int24 currentTick,
     int24 prevInitializedTick,
+    int24 nextInitializedTick,
     bool remove
-  ) internal virtual returns (int24 newPrevInitializedTick);
+  ) internal virtual returns (int24 newPrevInitializedTick, int24 newNextInitializedTick);
 }

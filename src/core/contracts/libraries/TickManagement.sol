@@ -133,20 +133,20 @@ library TickManagement {
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
   /// @return prevTick
-  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
-    (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
+  // TODO
+  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24 prevTick, int24 nextTick) {
+    (prevTick, nextTick) = (self[tick].prevTick, self[tick].nextTick);
     delete self[tick];
 
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) {
       // MIN_TICK and MAX_TICK cannot be removed from tick list
       (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
-      return prevTick;
     } else {
       if (prevTick == nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
       self[prevTick].nextTick = nextTick;
       self[nextTick].prevTick = prevTick;
-      return prevTick;
     }
+    return (prevTick, nextTick);
   }
 
   /// @notice Adds tick to linked list
