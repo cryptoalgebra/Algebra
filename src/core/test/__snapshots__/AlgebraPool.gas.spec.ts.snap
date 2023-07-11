@@ -1,5 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] #setFee by owner 1`] = `35373`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] #setFee by plugin 1`] = `29924`;
+
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn above current price burn entire position after some time passes 1`] = `115348`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn above current price burn when only position using ticks 1`] = `115348`;
@@ -82,6 +86,12 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact0For1 
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact0For1 small swap with filled dataStorage 1`] = `102904`;
 
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `105328`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 first swap in block with no tick movement 1`] = `105252`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swapExact1For0 second swap in block with no tick movement 1`] = `105292`;
+
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn above current price burn entire position after some time passes 1`] = `115348`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn above current price burn when only position using ticks 1`] = `115348`;
@@ -163,3 +173,9 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact0For1 s
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact0For1 small swap after several large swaps with pauses 1`] = `103145`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact0For1 small swap with filled dataStorage 1`] = `103141`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `113226`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact1For0 first swap in block with no tick movement 1`] = `105489`;
+
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swapExact1For0 second swap in block with no tick movement 1`] = `105529`;

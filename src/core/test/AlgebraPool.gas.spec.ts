@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool, TestERC20, TestAlgebraCallee } from '../typechain';
+import { MockTimeAlgebraPool, TestERC20, TestAlgebraCallee, AlgebraPool } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';
@@ -30,6 +30,25 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
   before('create fixture loader', async () => {
     [wallet, other] = await (ethers as any).getSigners();
+  });
+
+  describe('#setFee', () => {
+    let pool: AlgebraPool;
+    beforeEach('load fixture', async() => {
+      const fix = await poolFixture();
+      pool = await fix.createPool();
+      await pool.initialize(encodePriceSqrt(100001, 100000));
+    }) 
+
+    it('by owner', async () => {
+      await snapshotGasCost(pool.setFee(220));
+    });
+
+    it('by plugin', async () => {
+      await pool.setPlugin(other.address);
+      await pool.setPluginConfig(2**7);
+      await snapshotGasCost(pool.connect(other).setFee(220));
+    });
   });
 
   for (const communityFee of [0, 60]) {
@@ -90,6 +109,26 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           gasTestFixture
         ));
       });
+
+      describe('#swapExact1For0', () => {
+        it('first swap in block with no tick movement', async () => {
+          await snapshotGasCost(swapExact1For0(2000, wallet.address));
+          expect((await pool.globalState()).price).to.not.eq(startingPrice);
+          expect((await pool.globalState()).tick).to.eq(startingTick);
+        });
+
+        it('first swap in block moves tick, no initialized crossings', async () => {
+          await snapshotGasCost(swapExact1For0(expandTo18Decimals(1).div(10000), wallet.address));
+          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+        });
+
+        it('second swap in block with no tick movement', async () => {
+          await swapExact1For0(expandTo18Decimals(1).div(10000), wallet.address);
+          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+          await snapshotGasCost(swapExact1For0(2000, wallet.address));
+          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+        });
+      })
 
       describe('#swapExact0For1', () => {
         it('first swap in block with no tick movement', async () => {
