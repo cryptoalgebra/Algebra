@@ -52,7 +52,11 @@ library TickMath {
       if (absTick & 0x40000 != 0) ratio = (ratio * 0x2216e584f5fa1ea926041bedfe98) >> 128;
       if (absTick & 0x80000 != 0) ratio = (ratio * 0x48a170391f7dc42444e8fa2) >> 128;
 
-      if (tick > 0) ratio = type(uint256).max / ratio;
+      if (tick > 0) {
+        assembly {
+          ratio := div(not(0), ratio)
+        }
+      }
 
       // this divides by 1<<32 rounding up to go from a Q128.128 to a Q128.96.
       // we then downcast because we know the result always fits within 160 bits due to our tick input constraint
@@ -73,7 +77,7 @@ library TickMath {
       uint256 ratio = uint256(price) << 32;
 
       uint256 r = ratio;
-      uint256 msb = 0;
+      uint256 msb;
 
       assembly {
         let f := shl(7, gt(r, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))
