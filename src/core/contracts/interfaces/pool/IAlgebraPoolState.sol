@@ -103,9 +103,18 @@ interface IAlgebraPoolState {
   function liquidity() external view returns (uint128);
 
   /// @notice The current tick spacing
-  /// @dev Ticks can only be used at multiples of this value
+  /// @dev Ticks can only be initialized by new mints at multiples of this value
   /// e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+  /// However, tickspacing can be changed after the ticks have been initialized.
   /// This value is an int24 to avoid casting even though it is always positive.
   /// @return The current tick spacing
   function tickSpacing() external view returns (int24);
+
+  /// @notice The previous initialized tick before (or at) current global tick
+  /// @return The previous initialized tick
+  function prevTickGlobal() external view returns (int24);
+
+  /// @notice The next initialized tick after current global tick
+  /// @return The next initialized tick
+  function nextTickGlobal() external view returns (int24);
 }

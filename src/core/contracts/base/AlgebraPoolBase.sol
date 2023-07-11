@@ -65,8 +65,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
-  int24 internal nextTickGlobal; // The next initialized tick in linked list
-  int24 internal prevTickGlobal; // The previous initialized tick in linked list
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override nextTickGlobal;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override prevTickGlobal;
 
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;

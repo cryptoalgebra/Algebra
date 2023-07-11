@@ -32,6 +32,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   GlobalState public override globalState;
 
   /// @inheritdoc IAlgebraPoolState
+  int24 public override nextTickGlobal;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override prevTickGlobal;
+
+  /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
