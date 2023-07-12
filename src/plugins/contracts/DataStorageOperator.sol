@@ -51,7 +51,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   function _getPoolState() internal view returns (int24 tick, uint16 fee, uint8 pluginConfig) {
-    (, tick, , fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+    (, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
   }
 
   // ###### Volatility and TWAP oracle ######

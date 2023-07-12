@@ -27,9 +27,8 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   struct GlobalState {
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
-    int24 prevInitializedTick; // The previous initialized tick in linked list
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint8 pluginConfig;
+    uint8 pluginConfig; // The current plugin config as a bitmap
     uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
@@ -51,6 +50,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   GlobalState public override globalState;
 
   /// @inheritdoc IAlgebraPoolState
+  mapping(int24 => TickManagement.Tick) public override ticks;
+
+  /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
 
   /// @dev The amounts of token0 and token1 that will be sent to the vault
@@ -58,13 +60,15 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManagement.Tick) public override ticks;
-
-  /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
+
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override nextTickGlobal;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override prevTickGlobal;
 
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
@@ -98,7 +102,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   constructor() {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
-    globalState.prevInitializedTick = TickMath.MIN_TICK;
+    (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
   }
 
@@ -144,11 +148,13 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   }
 
   // This virtual function is implemented in TickStructure and used in Positions
-  /// @dev Add or remove a tick to the corresponding data structure
-  function _insertOrRemoveTick(
-    int24 tick,
+  /// @dev Add or remove a pair of ticks to the corresponding data structure
+  function _insertOrRemovePairOfTicks(
+    int24 bottomTick,
+    int24 topTick,
+    bool toggleBottom,
+    bool toggleTop,
     int24 currentTick,
-    int24 prevInitializedTick,
     bool remove
-  ) internal virtual returns (int24 newPrevInitializedTick);
+  ) internal virtual;
 }

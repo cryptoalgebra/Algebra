@@ -43,10 +43,10 @@ contract TickTest {
   }
 
   function cross(int24 tick, uint256 totalFeeGrowth0Token, uint256 totalFeeGrowth1Token) external returns (int128 liquidityDelta) {
-    return ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token);
+    (liquidityDelta, , ) = ticks.cross(tick, totalFeeGrowth0Token, totalFeeGrowth1Token);
   }
 
-  function removeTick(int24 tick) external returns (int24) {
+  function removeTick(int24 tick) external returns (int24, int24) {
     return ticks.removeTick(tick);
   }
 

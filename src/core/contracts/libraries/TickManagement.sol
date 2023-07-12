@@ -100,10 +100,7 @@ library TickManagement {
     if (liquidityTotalBefore == 0) {
       flipped = !flipped;
       // by convention, we assume that all growth before a tick was initialized happened _below_ the tick
-      if (tick <= currentTick) {
-        data.outerFeeGrowth0Token = totalFeeGrowth0Token;
-        data.outerFeeGrowth1Token = totalFeeGrowth1Token;
-      }
+      if (tick <= currentTick) (data.outerFeeGrowth0Token, data.outerFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
     }
   }
 
@@ -113,13 +110,19 @@ library TickManagement {
   /// @param feeGrowth0 The all-time global fee growth, per unit of liquidity, in token0
   /// @param feeGrowth1 The all-time global fee growth, per unit of liquidity, in token1
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
-  function cross(mapping(int24 => Tick) storage self, int24 tick, uint256 feeGrowth0, uint256 feeGrowth1) internal returns (int128 liquidityDelta) {
+  /// @return prevTick The previous active tick before _tick_
+  /// @return nextTick The next active tick after _tick_
+  function cross(
+    mapping(int24 => Tick) storage self,
+    int24 tick,
+    uint256 feeGrowth0,
+    uint256 feeGrowth1
+  ) internal returns (int128 liquidityDelta, int24 prevTick, int24 nextTick) {
     Tick storage data = self[tick];
     unchecked {
-      data.outerFeeGrowth1Token = feeGrowth1 - data.outerFeeGrowth1Token;
-      data.outerFeeGrowth0Token = feeGrowth0 - data.outerFeeGrowth0Token;
+      (data.outerFeeGrowth1Token, data.outerFeeGrowth0Token) = (feeGrowth1 - data.outerFeeGrowth1Token, feeGrowth0 - data.outerFeeGrowth0Token);
     }
-    return data.liquidityDelta;
+    return (data.liquidityDelta, data.prevTick, data.nextTick);
   }
 
   /// @notice Used for initial setup if ticks list
@@ -132,28 +135,28 @@ library TickManagement {
   /// @notice Removes tick from linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
-  /// @return prevTick
-  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24) {
-    (int24 prevTick, int24 nextTick) = (self[tick].prevTick, self[tick].nextTick);
+  /// @return prevTick The previous active tick before _tick_
+  /// @return nextTick The next active tick after _tick_
+  function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24 prevTick, int24 nextTick) {
+    (prevTick, nextTick) = (self[tick].prevTick, self[tick].nextTick);
     delete self[tick];
 
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) {
       // MIN_TICK and MAX_TICK cannot be removed from tick list
       (self[tick].prevTick, self[tick].nextTick) = (prevTick, nextTick);
-      return prevTick;
     } else {
       if (prevTick == nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
       self[prevTick].nextTick = nextTick;
       self[nextTick].prevTick = prevTick;
-      return prevTick;
     }
+    return (prevTick, nextTick);
   }
 
   /// @notice Adds tick to linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be inserted
-  /// @param prevTick The previous active tick
-  /// @param nextTick The next active tick
+  /// @param prevTick The previous active tick before _tick_
+  /// @param nextTick The next active tick after _tick_
   function insertTick(mapping(int24 => Tick) storage self, int24 tick, int24 prevTick, int24 nextTick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
     if (!(prevTick < tick && nextTick > tick)) revert IAlgebraPoolErrors.tickInvalidLinks();

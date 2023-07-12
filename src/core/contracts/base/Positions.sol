@@ -7,7 +7,7 @@ import '../libraries/TickManagement.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
-/// @dev Relies on method _insertOrRemoveTick, which is implemented in TickStructure
+/// @dev Relies on method _insertOrRemovePairOfTicks, which is implemented in TickStructure
 abstract contract Positions is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
@@ -44,75 +44,39 @@ abstract contract Positions is AlgebraPoolBase {
     int24 topTick,
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
-    uint160 currentPrice = globalState.price;
-    int24 currentTick = globalState.tick;
-    int24 prevInitializedTick = globalState.prevInitializedTick;
+    (uint160 currentPrice, int24 currentTick) = (globalState.price, globalState.tick);
 
     bool toggledBottom;
     bool toggledTop;
     {
       // scope to prevent "stack too deep"
-      (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
+      (uint256 _totalFeeGrowth0, uint256 _totalFeeGrowth1) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
-        toggledBottom = ticks.update(
-          bottomTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          false // isTopTick: false
-        );
-
-        toggledTop = ticks.update(
-          topTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          true // isTopTick: true
-        );
+        toggledBottom = ticks.update(bottomTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, false); // isTopTick: false
+        toggledTop = ticks.update(topTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, true); // isTopTick: true
       }
 
-      (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
-        bottomTick,
-        topTick,
-        currentTick,
-        _totalFeeGrowth0Token,
-        _totalFeeGrowth1Token
-      );
-
-      _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
+      (uint256 feeGrowth0, uint256 feeGrowth1) = ticks.getInnerFeeGrowth(bottomTick, topTick, currentTick, _totalFeeGrowth0, _totalFeeGrowth1);
+      _recalculatePosition(position, liquidityDelta, feeGrowth0, feeGrowth1);
     }
 
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        int24 newPreviousTick = prevInitializedTick;
-        if (toggledBottom) {
-          newPreviousTick = _insertOrRemoveTick(bottomTick, currentTick, newPreviousTick, liquidityDelta < 0);
-        }
-        if (toggledTop) {
-          newPreviousTick = _insertOrRemoveTick(topTick, currentTick, newPreviousTick, liquidityDelta < 0);
-        }
-        if (prevInitializedTick != newPreviousTick) {
-          globalState.prevInitializedTick = newPreviousTick;
-        }
+        _insertOrRemovePairOfTicks(bottomTick, topTick, toggledBottom, toggledTop, currentTick, liquidityDelta < 0);
       }
 
       int128 globalLiquidityDelta;
       (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, currentPrice);
-      if (globalLiquidityDelta != 0) {
-        uint128 liquidityBefore = liquidity;
-        liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
-      }
+      if (globalLiquidityDelta != 0) liquidity = LiquidityMath.addDelta(liquidity, liquidityDelta); // update global liquidity
     }
   }
 
   /// @notice Increases amounts of tokens owed to owner of the position
   /// @param position The position object to operate with
   /// @param liquidityDelta The amount on which to increase\decrease the liquidity
-  /// @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
-  /// @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth0Token Total fee token0 fee growth per liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth1Token Total fee token1 fee growth per liquidity between position's lower and upper ticks
   function _recalculatePosition(
     Position storage position,
     int128 liquidityDelta,

@@ -10,50 +10,12 @@ interface IAlgebraPoolState {
   /// @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @return prevInitializedTick The previous initialized tick
   /// @return fee The last known pool fee value in hundredths of a bip, i.e. 1e-6
   /// @return pluginConfig The current plugin config. Each bit of the config is responsible for enabling/disabling the hooks
   /// The last bit indicates whether the plugin contains dynamic fees logic
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
-  function globalState()
-    external
-    view
-    returns (uint160 price, int24 tick, int24 prevInitializedTick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
-
-  /// @notice The timestamp of the last sending of tokens to community vault
-  /// @return The timestamp truncated to 32 bits
-  function communityFeeLastTimestamp() external view returns (uint32);
-
-  /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
-  /// @dev This value can overflow the uint256
-  /// @return The fee growth accumulator for token0
-  function totalFeeGrowth0Token() external view returns (uint256);
-
-  /// @notice The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
-  /// @dev This value can overflow the uint256
-  /// @return The fee growth accumulator for token1
-  function totalFeeGrowth1Token() external view returns (uint256);
-
-  /// @notice The amounts of token0 and token1 that will be sent to the vault
-  /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
-  /// @return communityFeePending0 The amount of token0 that will be sent to the vault
-  /// @return communityFeePending1 The amount of token1 that will be sent to the vault
-  function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
-
-  /// @notice The current pool fee value
-  /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
-  /// If the plugin implements complex fee logic, this method may return an incorrect value or revert.
-  /// In this case, see the plugin implementation and related documentation.
-  /// @return currentFee The current pool fee value in hundredths of a bip, i.e. 1e-6
-  function fee() external view returns (uint16 currentFee);
-
-  /// @notice The tracked token0 and token1 reserves of pool
-  /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
-  /// If the balance exceeds uint128, the excess will be sent to the communityVault.
-  /// @return reserve0 The last known reserve of token0
-  /// @return reserve1 The last known reserve of token1
-  function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
+  function globalState() external view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice Look up information about a specific tick in the pool
   /// @param tick The tick to look up
@@ -79,6 +41,16 @@ interface IAlgebraPoolState {
       uint256 outerFeeGrowth1Token
     );
 
+  /// @notice The timestamp of the last sending of tokens to community vault
+  /// @return The timestamp truncated to 32 bits
+  function communityFeeLastTimestamp() external view returns (uint32);
+
+  /// @notice The amounts of token0 and token1 that will be sent to the vault
+  /// @dev Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp
+  /// @return communityFeePending0 The amount of token0 that will be sent to the vault
+  /// @return communityFeePending1 The amount of token1 that will be sent to the vault
+  function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
+
   /// @notice Returns the address of currently used plugin
   /// @dev The plugin is subject to change
   /// @return pluginAddress The address of currently used plugin
@@ -89,18 +61,29 @@ interface IAlgebraPoolState {
   /// @return The 256-bits word with packed ticks info
   function tickTable(int16 wordPosition) external view returns (uint256);
 
-  /// @notice The currently in range liquidity available to the pool
-  /// @dev This value has no relationship to the total liquidity across all ticks.
-  /// Returned value cannot exceed type(uint128).max
-  /// @return The current in range liquidity
-  function liquidity() external view returns (uint128);
+  /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
+  /// @dev This value can overflow the uint256
+  /// @return The fee growth accumulator for token0
+  function totalFeeGrowth0Token() external view returns (uint256);
 
-  /// @notice The current tick spacing
-  /// @dev Ticks can only be used at multiples of this value
-  /// e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
-  /// This value is an int24 to avoid casting even though it is always positive.
-  /// @return The current tick spacing
-  function tickSpacing() external view returns (int24);
+  /// @notice The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
+  /// @dev This value can overflow the uint256
+  /// @return The fee growth accumulator for token1
+  function totalFeeGrowth1Token() external view returns (uint256);
+
+  /// @notice The current pool fee value
+  /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
+  /// If the plugin implements complex fee logic, this method may return an incorrect value or revert.
+  /// In this case, see the plugin implementation and related documentation.
+  /// @return currentFee The current pool fee value in hundredths of a bip, i.e. 1e-6
+  function fee() external view returns (uint16 currentFee);
+
+  /// @notice The tracked token0 and token1 reserves of pool
+  /// @dev If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
+  /// If the balance exceeds uint128, the excess will be sent to the communityVault.
+  /// @return reserve0 The last known reserve of token0
+  /// @return reserve1 The last known reserve of token1
+  function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
 
   /// @notice Returns the information about a position by the position's key
   /// @param key The position's key is a packed concatenation of the owner address, bottomTick and topTick indexes
@@ -112,4 +95,26 @@ interface IAlgebraPoolState {
   function positions(
     bytes32 key
   ) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
+
+  /// @notice The currently in range liquidity available to the pool
+  /// @dev This value has no relationship to the total liquidity across all ticks.
+  /// Returned value cannot exceed type(uint128).max
+  /// @return The current in range liquidity
+  function liquidity() external view returns (uint128);
+
+  /// @notice The current tick spacing
+  /// @dev Ticks can only be initialized by new mints at multiples of this value
+  /// e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+  /// However, tickspacing can be changed after the ticks have been initialized.
+  /// This value is an int24 to avoid casting even though it is always positive.
+  /// @return The current tick spacing
+  function tickSpacing() external view returns (int24);
+
+  /// @notice The previous initialized tick before (or at) current global tick
+  /// @return The previous initialized tick
+  function prevTickGlobal() external view returns (int24);
+
+  /// @notice The next initialized tick after current global tick
+  /// @return The next initialized tick
+  function nextTickGlobal() external view returns (int24);
 }
