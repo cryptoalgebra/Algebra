@@ -12,13 +12,13 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn above curr
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn above current price partial position burn 1`] = `113526`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price burn entire position after some time passes 1`] = `125282`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price burn entire position after some time passes 1`] = `125280`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price burn when only position using ticks 1`] = `125282`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price burn when only position using ticks 1`] = `125280`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price entire position burn but other positions are using the ticks 1`] = `113142`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price entire position burn but other positions are using the ticks 1`] = `113140`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price partial position burn 1`] = `117942`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn around current price partial position burn 1`] = `117940`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #burn below current price burn entire position after some time passes 1`] = `124819`;
 
@@ -40,13 +40,13 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint above curr
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint above current price second position in same range 1`] = `143455`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price add to position after some time passes 1`] = `151515`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price add to position after some time passes 1`] = `151513`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price add to position existing 1`] = `151515`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price add to position existing 1`] = `151513`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price new position mint first in range 1`] = `358438`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price new position mint first in range 1`] = `358436`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price second position in same range 1`] = `168615`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint around current price second position in same range 1`] = `168613`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #mint below current price add to position after some time passes 1`] = `126954`;
 
@@ -100,13 +100,13 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn above curre
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn above current price partial position burn 1`] = `113526`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price burn entire position after some time passes 1`] = `125282`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price burn entire position after some time passes 1`] = `125280`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price burn when only position using ticks 1`] = `125282`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price burn when only position using ticks 1`] = `125280`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price entire position burn but other positions are using the ticks 1`] = `113142`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price entire position burn but other positions are using the ticks 1`] = `113140`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price partial position burn 1`] = `117942`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn around current price partial position burn 1`] = `117940`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #burn below current price burn entire position after some time passes 1`] = `124819`;
 
@@ -128,13 +128,13 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint above curre
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint above current price second position in same range 1`] = `143455`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price add to position after some time passes 1`] = `151515`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price add to position after some time passes 1`] = `151513`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price add to position existing 1`] = `151515`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price add to position existing 1`] = `151513`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price new position mint first in range 1`] = `358438`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price new position mint first in range 1`] = `358436`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price second position in same range 1`] = `168615`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint around current price second position in same range 1`] = `168613`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #mint below current price add to position after some time passes 1`] = `126954`;
 
