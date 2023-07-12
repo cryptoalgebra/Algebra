@@ -14,7 +14,8 @@ export default {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
-      loggingEnabled: false
+      loggingEnabled: false,
+      evm: 'paris'
     },
     hhnode: {
       url: `http://127.0.0.1:8545`,

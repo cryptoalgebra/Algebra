@@ -19,7 +19,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### getDeployParameters
 
 
-`function getDeployParameters() external view returns (address dataStorage, address factory, address communityVault, address token0, address token1)` view external
+`function getDeployParameters() external view returns (address plugin, address factory, address communityVault, address token0, address token1)` view external
 
 Get the parameters to be used in constructing the pool, set transiently during pool creation.
 *Developer note: Called by the pool constructor to fetch the parameters of the pool*
@@ -31,8 +31,8 @@ Get the parameters to be used in constructing the pool, set transiently during p
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| dataStorage | address | The pools associated dataStorage |
-| factory | address | The factory address |
+| plugin | address | The pool associated plugin (if any) |
+| factory | address | The Algebra Factory address |
 | communityVault | address | The community vault address |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
@@ -40,7 +40,7 @@ Get the parameters to be used in constructing the pool, set transiently during p
 ### deploy
 
 
-`function deploy(address dataStorage, address token0, address token1) external returns (address pool)`  external
+`function deploy(address plugin, address token0, address token1) external returns (address pool)`  external
 
 
 *Developer note: Deploys a pool with the given parameters by transiently setting the parameters in cache.*
@@ -49,7 +49,7 @@ Get the parameters to be used in constructing the pool, set transiently during p
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| dataStorage | address | The pools associated dataStorage |
+| plugin | address | The pool associated plugin (if any) |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
 

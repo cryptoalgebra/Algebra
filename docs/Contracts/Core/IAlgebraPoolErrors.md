@@ -67,17 +67,6 @@ Emitted if the pool received fewer tokens than it should have
 
 
 
-## insufficientAmountReceivedAtMint
-
-
-`error insufficientAmountReceivedAtMint()`  
-
-Emitted if the pool received fewer tokens than it should have to mint calculated actual liquidity
-
-
-
-
-
 ## zeroLiquidityDesired
 
 
@@ -188,26 +177,40 @@ Emitted if a method is called that is accessible only to the farming
 
 
 
-## invalidTickForLimitOrder
+## dynamicFeeActive
 
 
-`error invalidTickForLimitOrder()`  
-
-Emitted if tick is too low/high for limit order
-
+`error dynamicFeeActive()`  
 
 
 
 
-## invalidAmountForLimitOrder
-
-
-`error invalidAmountForLimitOrder()`  
-
-Emitted if amount is too high for limit order
 
 
 
+## dynamicFeeDisabled
+
+
+`error dynamicFeeDisabled()`  
+
+
+
+
+
+
+
+## invalidHookResponse
+
+
+`error invalidHookResponse(bytes4 selector)`  
+
+
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selector | bytes4 |  |
 
 
 ## liquiditySub
@@ -232,10 +235,10 @@ Emitted if liquidity overflows
 
 
 
-## topTickLowerThanBottomTick
+## topTickLowerOrEqBottomTick
 
 
-`error topTickLowerThanBottomTick()`  
+`error topTickLowerOrEqBottomTick()`  
 
 
 

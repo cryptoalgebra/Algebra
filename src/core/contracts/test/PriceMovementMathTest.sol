@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v1;
 
 import '../libraries/PriceMovementMath.sol';

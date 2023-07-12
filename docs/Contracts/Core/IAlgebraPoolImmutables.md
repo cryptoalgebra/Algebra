@@ -14,28 +14,12 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
-### dataStorageOperator
-
-
-`function dataStorageOperator() external view returns (address)` view external
-
-The contract that stores all the timepoints and can perform actions with them
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The operator address |
-
 ### factory
 
 
 `function factory() external view returns (address)` view external
 
-The contract that deployed the pool, which must adhere to the IAlgebraFactory interface
+The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 
 
 
