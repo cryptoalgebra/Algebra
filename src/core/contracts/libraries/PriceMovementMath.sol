@@ -5,7 +5,6 @@ import '../interfaces/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './LowGasSafeMath.sol';
 import './TokenDeltaMath.sol';
-import './TickMath.sol';
 import './Constants.sol';
 
 /// @title Computes the result of price movement

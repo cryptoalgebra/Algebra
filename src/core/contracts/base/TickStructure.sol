@@ -75,7 +75,6 @@ abstract contract TickStructure is AlgebraPoolBase {
   ) internal override {
     (int24 prevInitializedTick, int24 nextInitializedTick, uint32 oldTickTreeRoot) = (prevTickGlobal, nextTickGlobal, tickTreeRoot);
     (int24 newPrevTick, int24 newNextTick, uint32 newTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
-    // TODO can be optimized?
     if (toggleBottom) {
       (newPrevTick, newNextTick, newTreeRoot) = _insertOrRemoveTick(bottomTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
     }

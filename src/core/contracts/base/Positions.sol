@@ -44,43 +44,20 @@ abstract contract Positions is AlgebraPoolBase {
     int24 topTick,
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
-    uint160 currentPrice = globalState.price;
-    int24 currentTick = globalState.tick;
+    (uint160 currentPrice, int24 currentTick) = (globalState.price, globalState.tick);
 
     bool toggledBottom;
     bool toggledTop;
     {
       // scope to prevent "stack too deep"
-      (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
+      (uint256 _totalFeeGrowth0, uint256 _totalFeeGrowth1) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
-        toggledBottom = ticks.update(
-          bottomTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          false // isTopTick: false
-        );
-
-        toggledTop = ticks.update(
-          topTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          true // isTopTick: true
-        );
+        toggledBottom = ticks.update(bottomTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, false); // isTopTick: false
+        toggledTop = ticks.update(topTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, true); // isTopTick: true
       }
 
-      (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
-        bottomTick,
-        topTick,
-        currentTick,
-        _totalFeeGrowth0Token,
-        _totalFeeGrowth1Token
-      );
-
-      _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
+      (uint256 feeGrowth0, uint256 feeGrowth1) = ticks.getInnerFeeGrowth(bottomTick, topTick, currentTick, _totalFeeGrowth0, _totalFeeGrowth1);
+      _recalculatePosition(position, liquidityDelta, feeGrowth0, feeGrowth1);
     }
 
     if (liquidityDelta != 0) {
@@ -91,10 +68,7 @@ abstract contract Positions is AlgebraPoolBase {
 
       int128 globalLiquidityDelta;
       (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, currentPrice);
-      if (globalLiquidityDelta != 0) {
-        uint128 liquidityBefore = liquidity;
-        liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
-      }
+      if (globalLiquidityDelta != 0) liquidity = LiquidityMath.addDelta(liquidity, liquidityDelta); // update global liquidity
     }
   }
 

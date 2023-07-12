@@ -28,7 +28,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     uint160 price; // The square root of the current price in Q64.96 format
     int24 tick; // The current tick
     uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint8 pluginConfig;
+    uint8 pluginConfig; // The current plugin config as a bitmap
     uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
     bool unlocked; // True if the contract is unlocked, otherwise - false
   }
@@ -102,8 +102,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   constructor() {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
-    prevTickGlobal = TickMath.MIN_TICK;
-    nextTickGlobal = TickMath.MAX_TICK;
+    (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
   }
 

@@ -17,8 +17,6 @@ import './libraries/LiquidityMath.sol';
 import './libraries/Plugins.sol';
 
 import './interfaces/IAlgebraFactory.sol';
-import './interfaces/callback/IAlgebraMintCallback.sol';
-import './interfaces/callback/IAlgebraFlashCallback.sol';
 
 /// @title Algebra concentrated liquidity pool
 /// @notice This contract is responsible for liquidity positions, swaps and flashloans
@@ -34,7 +32,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
 
-    _lock();
+    _lock(); // lock prevents double initialization in hook
 
     if (plugin != address(0)) {
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
@@ -226,6 +224,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _lock();
 
     {
+      // scope to prevent "stack too deep"
       uint160 currentPrice;
       int24 currentTick;
       uint128 currentLiquidity;
@@ -285,7 +284,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         amountReceived = (balanceAfter - balanceBefore).toInt256();
         _changeReserves(0, amountReceived, 0, 0);
       }
-      if (amountReceived != amountToSell) amountToSell = amountReceived; // TODO think about < or !=
+      if (amountReceived != amountToSell) amountToSell = amountReceived;
     }
     if (amountToSell == 0) revert insufficientInputAmount();
 
@@ -358,7 +357,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_FLASH_FLAG)) {
       IAlgebraPlugin(plugin).beforeFlash(msg.sender, recipient, amount0, amount1, data).shouldReturn(IAlgebraPlugin.beforeFlash.selector);
     }
-
     _lock();
 
     uint256 paid0;
@@ -401,7 +399,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     _unlock();
-
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_FLASH_FLAG)) {
       IAlgebraPlugin(plugin).afterFlash(msg.sender, recipient, amount0, amount1, paid0, paid1, data).shouldReturn(IAlgebraPlugin.afterFlash.selector);
     }

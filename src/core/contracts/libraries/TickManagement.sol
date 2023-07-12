@@ -110,7 +110,8 @@ library TickManagement {
   /// @param feeGrowth0 The all-time global fee growth, per unit of liquidity, in token0
   /// @param feeGrowth1 The all-time global fee growth, per unit of liquidity, in token1
   /// @return liquidityDelta The amount of liquidity added (subtracted) when tick is crossed from left to right (right to left)
-  // TODO
+  /// @return prevTick The previous active tick before _tick_
+  /// @return nextTick The next active tick after _tick_
   function cross(
     mapping(int24 => Tick) storage self,
     int24 tick,
@@ -134,8 +135,8 @@ library TickManagement {
   /// @notice Removes tick from linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
-  /// @return prevTick
-  // TODO
+  /// @return prevTick The previous active tick before _tick_
+  /// @return nextTick The next active tick after _tick_
   function removeTick(mapping(int24 => Tick) storage self, int24 tick) internal returns (int24 prevTick, int24 nextTick) {
     (prevTick, nextTick) = (self[tick].prevTick, self[tick].nextTick);
     delete self[tick];
@@ -154,8 +155,8 @@ library TickManagement {
   /// @notice Adds tick to linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be inserted
-  /// @param prevTick The previous active tick
-  /// @param nextTick The next active tick
+  /// @param prevTick The previous active tick before _tick_
+  /// @param nextTick The next active tick after _tick_
   function insertTick(mapping(int24 => Tick) storage self, int24 tick, int24 prevTick, int24 nextTick) internal {
     if (tick == TickMath.MIN_TICK || tick == TickMath.MAX_TICK) return;
     if (!(prevTick < tick && nextTick > tick)) revert IAlgebraPoolErrors.tickInvalidLinks();
