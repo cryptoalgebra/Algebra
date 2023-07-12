@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 /// @title Contains common constants for Algebra contracts
 /// @dev Constants moved to the library, not the base contract, to further emphasize their constant nature

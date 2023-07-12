@@ -6,8 +6,9 @@ import { SolcUserConfig } from 'hardhat/types';
 import baseConfig from '../../hardhat.base.config';
 
 const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 1_000_000,
@@ -19,8 +20,9 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
 }
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 200,
@@ -32,8 +34,9 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
 }
 
 const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 0,
