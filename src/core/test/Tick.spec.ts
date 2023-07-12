@@ -1,16 +1,14 @@
 import { ethers } from 'hardhat';
-import { BigNumber } from 'ethers';
+import { MaxUint256 } from 'ethers';
 import { TickTest } from '../typechain';
 import { expect } from './shared/expect';
-
-const { constants } = ethers;
 
 describe('Tick', () => {
   let tickTest: TickTest;
 
   beforeEach('deploy TickTest', async () => {
     const tickTestFactory = await ethers.getContractFactory('TickTest');
-    tickTest = (await tickTestFactory.deploy()) as TickTest;
+    tickTest = (await tickTestFactory.deploy()) as any as TickTest;
   });
 
   describe('#getInnerFeeGrowth', () => {
@@ -82,8 +80,8 @@ describe('Tick', () => {
 
     it('works correctly with overflow on inside tick', async () => {
       await tickTest.setTick(-2, {
-        outerFeeGrowth0Token: constants.MaxUint256.sub(3),
-        outerFeeGrowth1Token: constants.MaxUint256.sub(2),
+        outerFeeGrowth0Token: MaxUint256 - 3n,
+        outerFeeGrowth1Token: MaxUint256 - 2n,
         liquidityTotal: 0,
         liquidityDelta: 0,
         prevTick: 0,
@@ -105,26 +103,26 @@ describe('Tick', () => {
 
   describe('#update', async () => {
     it('flips from zero to nonzero', async () => {
-      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, false)).to.eq(true);
+      expect(await tickTest.update.staticCall(0, 0, 1, 0, 0, false)).to.eq(true);
     });
     it('does not flip from nonzero to greater nonzero', async () => {
       await tickTest.update(0, 0, 1, 0, 0, false);
-      expect(await tickTest.callStatic.update(0, 0, 1, 0, 0, false)).to.eq(false);
+      expect(await tickTest.update.staticCall(0, 0, 1, 0, 0, false)).to.eq(false);
     });
     it('flips from nonzero to zero', async () => {
       await tickTest.update(0, 0, 1, 0, 0, false);
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(true);
+      expect(await tickTest.update.staticCall(0, 0, -1, 0, 0, false)).to.eq(true);
     });
     it('does not flip from nonzero to lesser nonzero', async () => {
       await tickTest.update(0, 0, 2, 0, 0, false);
-      expect(await tickTest.callStatic.update(0, 0, -1, 0, 0, false)).to.eq(false);
+      expect(await tickTest.update.staticCall(0, 0, -1, 0, 0, false)).to.eq(false);
     });
     it('reverts if total liquidity gross is greater than max', async () => {
       const maxLiquidityPerTick = await tickTest.maxLiquidityPerTick();
-      await tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, false);
-      await tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, true);
+      await tickTest.update(0, 0, maxLiquidityPerTick / 2n, 0, 0, false);
+      await tickTest.update(0, 0, maxLiquidityPerTick / 2n, 0, 0, true);
       await expect(
-        tickTest.update(0, 0, maxLiquidityPerTick.div(2), 0, 0, false)
+        tickTest.update(0, 0, maxLiquidityPerTick / 2n, 0, 0, false)
       ).to.be.revertedWithCustomError(tickTest, 'liquidityOverflow');
     });
     it('nets the liquidity based on upper flag', async () => {
@@ -138,7 +136,7 @@ describe('Tick', () => {
     });
     it('reverts on overflow liquidity gross', async () => {
       const maxLiquidityPerTick = await tickTest.maxLiquidityPerTick();
-      await tickTest.update(0, 0, maxLiquidityPerTick.sub(1), 0, 0, false);
+      await tickTest.update(0, 0, maxLiquidityPerTick - 1n, 0, 0, false);
       await expect(tickTest.update(0, 0, 2, 0, 0, false)).to.be.reverted;
     });
     it('assumes all growth happens below ticks lte current tick', async () => {

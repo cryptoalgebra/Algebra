@@ -1,4 +1,4 @@
-import { Wallet } from 'ethers';
+import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraPoolDeployer, MockDefaultPluginFactory } from '../typechain';
@@ -27,9 +27,9 @@ describe('AlgebraFactory', () => {
   const fixture = async () => {
     const [deployer] = await ethers.getSigners();
     // precompute
-    const poolDeployerAddress = ethers.utils.getContractAddress({
+    const poolDeployerAddress = getCreateAddress({
       from: deployer.address,
-      nonce: (await deployer.getTransactionCount()) + 1,
+      nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
     });
 
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
@@ -38,7 +38,7 @@ describe('AlgebraFactory', () => {
     const vaultAddress = await _factory.communityVault();
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory.address, vaultAddress)) as AlgebraPoolDeployer;
+    poolDeployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as AlgebraPoolDeployer;
 
     const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
     defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as MockDefaultPluginFactory;
@@ -64,21 +64,21 @@ describe('AlgebraFactory', () => {
 
   it('cannot deploy factory with incorrect poolDeployer', async () => {
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-    expect(factoryFactory.deploy(ethers.constants.AddressZero)).to.be.revertedWithoutReason;
+    expect(factoryFactory.deploy(ZeroAddress)).to.be.revertedWithoutReason;
   });
 
   it('factory bytecode size  [ @skip-on-coverage ]', async () => {
-    expect(((await ethers.provider.getCode(factory.address)).length - 2) / 2).to.matchSnapshot();
+    expect(((await ethers.provider.getCode(factory)).length - 2) / 2).to.matchSnapshot();
   });
 
   it('pool bytecode size  [ @skip-on-coverage ]', async () => {
     await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
-    const poolAddress = getCreate2Address(poolDeployer.address, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]], poolBytecode);
+    const poolAddress = getCreate2Address(await poolDeployer.getAddress(), [TEST_ADDRESSES[0], TEST_ADDRESSES[1]], poolBytecode);
     expect(((await ethers.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot();
   });
 
   async function createAndCheckPool(tokens: [string, string]) {
-    const create2Address = getCreate2Address(poolDeployer.address, tokens, poolBytecode);
+    const create2Address = getCreate2Address(await poolDeployer.getAddress(), tokens, poolBytecode);
     const create = factory.createPool(tokens[0], tokens[1]);
 
     await expect(create).to.emit(factory, 'Pool');
@@ -90,7 +90,7 @@ describe('AlgebraFactory', () => {
 
     const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
     const pool = poolContractFactory.attach(create2Address);
-    expect(await pool.factory(), 'pool factory address').to.eq(factory.address);
+    expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
     expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
     expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
   }
@@ -105,7 +105,7 @@ describe('AlgebraFactory', () => {
     });
 
     it('correctly computes pool address [ @skip-on-coverage ]', async () => {
-      await factory.setDefaultPluginFactory(defaultPluginFactory.address);
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
       let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
@@ -115,7 +115,7 @@ describe('AlgebraFactory', () => {
     });
 
     it('succeeds if defaultPluginFactory setted', async () => {
-      await factory.setDefaultPluginFactory(defaultPluginFactory.address);
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
       let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
@@ -135,9 +135,9 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if token a is 0 or token b is 0', async () => {
-      await expect(factory.createPool(TEST_ADDRESSES[0], constants.AddressZero)).to.be.reverted;
-      await expect(factory.createPool(constants.AddressZero, TEST_ADDRESSES[0])).to.be.reverted;
-      await expect(factory.createPool(constants.AddressZero, constants.AddressZero)).to.be.revertedWithoutReason;
+      await expect(factory.createPool(TEST_ADDRESSES[0], ZeroAddress)).to.be.reverted;
+      await expect(factory.createPool(ZeroAddress, TEST_ADDRESSES[0])).to.be.reverted;
+      await expect(factory.createPool(ZeroAddress, ZeroAddress)).to.be.revertedWithoutReason;
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
@@ -152,7 +152,7 @@ describe('AlgebraFactory', () => {
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-      await expect(poolDeployerFactory.deploy(constants.AddressZero, constants.AddressZero)).to.be.reverted;
+      await expect(poolDeployerFactory.deploy(ZeroAddress, ZeroAddress)).to.be.reverted;
     });
   });
 
@@ -307,7 +307,7 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if equals current value', async () => {
-      await expect(factory.setDefaultPluginFactory(ethers.constants.AddressZero)).to.be.reverted;
+      await expect(factory.setDefaultPluginFactory(ZeroAddress)).to.be.reverted;
     });
 
     it('emits event', async () => {

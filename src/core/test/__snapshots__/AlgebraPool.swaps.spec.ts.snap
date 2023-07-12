@@ -9,8 +9,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.99402",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -61,
-  "tickBefore": 0,
+  "tickAfter": -61n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -25,8 +25,8 @@ Object {
   "executionPrice": "0.99053",
   "poolPriceAfter": "0.99402",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -61,
-  "tickBefore": 0,
+  "tickAfter": -61n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -41,8 +41,8 @@ Object {
   "executionPrice": "1.0096",
   "poolPriceAfter": "1.0060",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 60,
-  "tickBefore": 0,
+  "tickAfter": 60n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -57,8 +57,8 @@ Object {
   "executionPrice": "0.67319",
   "poolPriceAfter": "0.45866",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -7795,
-  "tickBefore": 0,
+  "tickAfter": -7795n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -73,8 +73,8 @@ Object {
   "executionPrice": "1.4855",
   "poolPriceAfter": "2.1803",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 7794,
-  "tickBefore": 0,
+  "tickAfter": 7794n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -89,8 +89,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0060",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 60,
-  "tickBefore": 0,
+  "tickAfter": 60n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -105,8 +105,8 @@ Object {
   "executionPrice": "0.99100",
   "poolPriceAfter": "0.99402",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -61,
-  "tickBefore": 0,
+  "tickAfter": -61n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -121,8 +121,8 @@ Object {
   "executionPrice": "1.0091",
   "poolPriceAfter": "1.0060",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 60,
-  "tickBefore": 0,
+  "tickAfter": 60n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -137,8 +137,8 @@ Object {
   "executionPrice": "0.66201",
   "poolPriceAfter": "0.44355",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -8130,
-  "tickBefore": 0,
+  "tickAfter": -8130n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -153,8 +153,8 @@ Object {
   "executionPrice": "0.70287",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "421044862698692740725170743495410672",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -169,8 +169,8 @@ Object {
   "executionPrice": "1.5105",
   "poolPriceAfter": "2.2545",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 8129,
-  "tickBefore": 0,
+  "tickAfter": 8129n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -185,8 +185,8 @@ Object {
   "executionPrice": "1.4227",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "421044862698692740725170743495410672",
 }
@@ -201,8 +201,8 @@ Object {
   "executionPrice": "0.98912",
   "poolPriceAfter": "0.99402",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -61,
-  "tickBefore": 0,
+  "tickAfter": -61n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "680564733841876926926",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -217,8 +217,8 @@ Object {
   "executionPrice": "0.49403",
   "poolPriceAfter": "0.24701",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -13984,
-  "tickBefore": 0,
+  "tickAfter": -13984n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "1033184581225259164735720748018047287",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -233,8 +233,8 @@ Object {
   "executionPrice": "0.70287",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "421044862698692740725170743495410672",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -246,7 +246,7 @@ Object {
   "poolBalance1": "1994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -259,8 +259,8 @@ Object {
   "executionPrice": "0.62867",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "591962792073745646583043420635066071",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -272,7 +272,7 @@ Object {
   "poolBalance1": "1994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -285,8 +285,8 @@ Object {
   "executionPrice": "0.000000000000000000054028",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887221,
-  "tickBefore": 0,
+  "tickAfter": -887221n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "18838218521532665617855486530458292400438092096504502406",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -301,8 +301,8 @@ Object {
   "executionPrice": "1.0110",
   "poolPriceAfter": "1.0060",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 60,
-  "tickBefore": 0,
+  "tickAfter": 60n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "680564733841876926926",
 }
@@ -317,8 +317,8 @@ Object {
   "executionPrice": "2.0242",
   "poolPriceAfter": "4.0484",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 13983,
-  "tickBefore": 0,
+  "tickAfter": 13983n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1033184581225259164735720748018047287",
 }
@@ -333,8 +333,8 @@ Object {
   "executionPrice": "1.4227",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "421044862698692740725170743495410672",
 }
@@ -346,7 +346,7 @@ Object {
   "poolBalance1": "1994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -359,8 +359,8 @@ Object {
   "executionPrice": "1.5907",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "591962792073745646583043420635066071",
 }
@@ -372,7 +372,7 @@ Object {
   "poolBalance1": "1994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -385,8 +385,8 @@ Object {
   "executionPrice": "1.8509e+19",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384187871093926663459720147685742572523601",
 }
@@ -401,8 +401,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -417,8 +417,8 @@ Object {
   "executionPrice": "0.99579",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -433,8 +433,8 @@ Object {
   "executionPrice": "1.0042",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -449,8 +449,8 @@ Object {
   "executionPrice": "0.67659",
   "poolPriceAfter": "0.46053",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -7755,
-  "tickBefore": 0,
+  "tickAfter": -7755n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -465,8 +465,8 @@ Object {
   "executionPrice": "1.4780",
   "poolPriceAfter": "2.1714",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 7754,
-  "tickBefore": 0,
+  "tickAfter": 7754n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -481,8 +481,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -497,8 +497,8 @@ Object {
   "executionPrice": "0.99600",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -513,8 +513,8 @@ Object {
   "executionPrice": "1.0040",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -529,8 +529,8 @@ Object {
   "executionPrice": "0.66533",
   "poolPriceAfter": "0.44533",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -8090,
-  "tickBefore": 0,
+  "tickAfter": -8090n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -545,8 +545,8 @@ Object {
   "executionPrice": "0.70499",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "424121077477644648929101317621422688",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -561,8 +561,8 @@ Object {
   "executionPrice": "1.5030",
   "poolPriceAfter": "2.2455",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 8089,
-  "tickBefore": 0,
+  "tickAfter": 8089n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -577,8 +577,8 @@ Object {
   "executionPrice": "1.4185",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "424121077477644648929101317621422688",
 }
@@ -593,8 +593,8 @@ Object {
   "executionPrice": "0.99502",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "680564733841876926926",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -609,8 +609,8 @@ Object {
   "executionPrice": "0.49850",
   "poolPriceAfter": "0.25000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -13864,
-  "tickBefore": 0,
+  "tickAfter": -13864n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "1023918857334819954209013958517557896",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -625,8 +625,8 @@ Object {
   "executionPrice": "0.70499",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "424121077477644648929101317621422688",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -638,7 +638,7 @@ Object {
   "poolBalance1": "2000000000000000000",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -651,8 +651,8 @@ Object {
   "executionPrice": "0.63056",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "595039006852697554786973994761078087",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -664,7 +664,7 @@ Object {
   "poolBalance1": "2000000000000000000",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -677,8 +677,8 @@ Object {
   "executionPrice": "0.000000000000000000054190",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887221,
-  "tickBefore": 0,
+  "tickAfter": -887221n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "18838218521532665617858562745237244308642022670630514423",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -693,8 +693,8 @@ Object {
   "executionPrice": "1.0050",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "680564733841876926926",
 }
@@ -709,8 +709,8 @@ Object {
   "executionPrice": "2.0060",
   "poolPriceAfter": "4.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 13863,
-  "tickBefore": 0,
+  "tickAfter": 13863n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1023918857334819954209013958517557896",
 }
@@ -725,8 +725,8 @@ Object {
   "executionPrice": "1.4185",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "424121077477644648929101317621422688",
 }
@@ -738,7 +738,7 @@ Object {
   "poolBalance1": "2000000000000000000",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -751,8 +751,8 @@ Object {
   "executionPrice": "1.5859",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "595039006852697554786973994761078087",
 }
@@ -764,7 +764,7 @@ Object {
   "poolBalance1": "2000000000000000000",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -777,8 +777,8 @@ Object {
   "executionPrice": "1.8454e+19",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384187874170141442411628351616316698535617",
 }
@@ -793,8 +793,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -809,8 +809,8 @@ Object {
   "executionPrice": "0.99579",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -825,8 +825,8 @@ Object {
   "executionPrice": "1.0042",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -841,8 +841,8 @@ Object {
   "executionPrice": "0.80394",
   "poolPriceAfter": "0.65216",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -4275,
-  "tickBefore": 0,
+  "tickAfter": -4275n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "243989293820644779460803155327372589",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -857,8 +857,8 @@ Object {
   "executionPrice": "1.2439",
   "poolPriceAfter": "1.5334",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 4274,
-  "tickBefore": 0,
+  "tickAfter": 4274n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "243989293820644779460803155327372589",
 }
@@ -873,8 +873,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -889,8 +889,8 @@ Object {
   "executionPrice": "0.99600",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -905,8 +905,8 @@ Object {
   "executionPrice": "1.0040",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -921,8 +921,8 @@ Object {
   "executionPrice": "0.79593",
   "poolPriceAfter": "0.63923",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -4476,
-  "tickBefore": 0,
+  "tickAfter": -4476n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "256749882580179971840679703106063897",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -937,8 +937,8 @@ Object {
   "executionPrice": "0.79593",
   "poolPriceAfter": "0.63923",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -4476,
-  "tickBefore": 0,
+  "tickAfter": -4476n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "256749882580179971840679703106063897",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -953,8 +953,8 @@ Object {
   "executionPrice": "1.2564",
   "poolPriceAfter": "1.5644",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 4475,
-  "tickBefore": 0,
+  "tickAfter": 4475n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "256749882580179971840679703106063897",
 }
@@ -969,8 +969,8 @@ Object {
   "executionPrice": "1.2564",
   "poolPriceAfter": "1.5644",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 4475,
-  "tickBefore": 0,
+  "tickAfter": 4475n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "256749882580179971840679703106063897",
 }
@@ -985,8 +985,8 @@ Object {
   "executionPrice": "0.99502",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "680564733841876926926",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1001,8 +1001,8 @@ Object {
   "executionPrice": "0.74514",
   "poolPriceAfter": "0.56026",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -5794,
-  "tickBefore": 0,
+  "tickAfter": -5794n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "344037963272993171369654596359692757",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1017,8 +1017,8 @@ Object {
   "executionPrice": "0.74514",
   "poolPriceAfter": "0.56026",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -5794,
-  "tickBefore": 0,
+  "tickAfter": -5794n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "344037963272993171369654596359692757",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1030,7 +1030,7 @@ Object {
   "poolBalance1": "3994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -1043,8 +1043,8 @@ Object {
   "executionPrice": "0.62962",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "595039006852697724928157455230309818",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1056,7 +1056,7 @@ Object {
   "poolBalance1": "3994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -1069,8 +1069,8 @@ Object {
   "executionPrice": "0.000000000000000000054109",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887221,
-  "tickBefore": 0,
+  "tickAfter": -887221n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "18838218521532665617858562745237244478783206131099746153",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1085,8 +1085,8 @@ Object {
   "executionPrice": "1.0050",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "680564733841876926926",
 }
@@ -1101,8 +1101,8 @@ Object {
   "executionPrice": "1.3420",
   "poolPriceAfter": "1.7849",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 5793,
-  "tickBefore": 0,
+  "tickAfter": 5793n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "344037963272993171369654596359692757",
 }
@@ -1117,8 +1117,8 @@ Object {
   "executionPrice": "1.3420",
   "poolPriceAfter": "1.7849",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 5793,
-  "tickBefore": 0,
+  "tickAfter": 5793n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "344037963272993171369654596359692757",
 }
@@ -1130,7 +1130,7 @@ Object {
   "poolBalance1": "3994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -1143,8 +1143,8 @@ Object {
   "executionPrice": "1.5883",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "595039006852697724928157455230309818",
 }
@@ -1156,7 +1156,7 @@ Object {
   "poolBalance1": "3994009290088178439",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -1169,8 +1169,8 @@ Object {
   "executionPrice": "1.8481e+19",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384187874170141442411798492799777167767348",
 }
@@ -1185,8 +1185,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1201,8 +1201,8 @@ Object {
   "executionPrice": "0.098947",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1217,8 +1217,8 @@ Object {
   "executionPrice": "0.10033",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -1233,8 +1233,8 @@ Object {
   "executionPrice": "0.086714",
   "poolPriceAfter": "0.075646",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -25819,
-  "tickBefore": -23028,
+  "tickAfter": -25819n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1249,8 +1249,8 @@ Object {
   "executionPrice": "0.25051",
   "poolPriceAfter": "0.62379",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -4720,
-  "tickBefore": -23028,
+  "tickAfter": -4720n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -1265,8 +1265,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -1281,8 +1281,8 @@ Object {
   "executionPrice": "0.099000",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1297,8 +1297,8 @@ Object {
   "executionPrice": "0.10031",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -1313,8 +1313,8 @@ Object {
   "executionPrice": "0.086124",
   "poolPriceAfter": "0.074620",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -25955,
-  "tickBefore": -23028,
+  "tickAfter": -25955n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1326,7 +1326,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1339,8 +1339,8 @@ Object {
   "executionPrice": "0.25841",
   "poolPriceAfter": "0.66378",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -4099,
-  "tickBefore": -23028,
+  "tickAfter": -4099n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -1355,8 +1355,8 @@ Object {
   "executionPrice": "0.25841",
   "poolPriceAfter": "0.66378",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -4099,
-  "tickBefore": -23028,
+  "tickAfter": -4099n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -1371,8 +1371,8 @@ Object {
   "executionPrice": "0.099681",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "5274376687274546183682",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1387,8 +1387,8 @@ Object {
   "executionPrice": "0.000000000000000000017136",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -887272,
-  "tickBefore": -23028,
+  "tickAfter": -887272n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "18838218521532665615644565874197029415000244183060032083",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1400,7 +1400,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1410,7 +1410,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1420,7 +1420,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1430,7 +1430,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1443,8 +1443,8 @@ Object {
   "executionPrice": "0.000000000000000000017136",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -887221,
-  "tickBefore": -23028,
+  "tickAfter": -887221n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "18838218521532665615644565874197029415000244183060032083",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1459,8 +1459,8 @@ Object {
   "executionPrice": "0.10200",
   "poolPriceAfter": "0.10000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -23028,
-  "tickBefore": -23028,
+  "tickAfter": -23028n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -1475,8 +1475,8 @@ Object {
   "executionPrice": "0.11914",
   "poolPriceAfter": "0.14109",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -19585,
-  "tickBefore": -23028,
+  "tickAfter": -19585n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "60811007371978153949466126675899993",
 }
@@ -1491,8 +1491,8 @@ Object {
   "executionPrice": "0.11914",
   "poolPriceAfter": "0.14109",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -19585,
-  "tickBefore": -23028,
+  "tickAfter": -19585n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "60811007371978153949466126675899993",
 }
@@ -1507,8 +1507,8 @@ Object {
   "executionPrice": "0.20060",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": -9164,
-  "tickBefore": -23028,
+  "tickAfter": -9164n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "323791572837503501799197590655727196",
 }
@@ -1523,8 +1523,8 @@ Object {
   "executionPrice": "0.50150",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "0.10000",
-  "tickAfter": 9163,
-  "tickBefore": -23028,
+  "tickAfter": 9163n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1295166291350014007196790362622908787",
 }
@@ -1536,7 +1536,7 @@ Object {
   "poolBalance1": "632455532033675867",
   "poolPriceBefore": "0.10000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -23028,
+  "tickBefore": -23028n,
 }
 `;
 
@@ -1549,8 +1549,8 @@ Object {
   "executionPrice": "5.8355e+18",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "0.10000",
-  "tickAfter": 887220,
-  "tickBefore": -23028,
+  "tickAfter": 887220n,
+  "tickBefore": -23028n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384188574297425939728080761432684560366317",
 }
@@ -1565,8 +1565,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1581,8 +1581,8 @@ Object {
   "executionPrice": "9.9674",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1597,8 +1597,8 @@ Object {
   "executionPrice": "10.106",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -1613,8 +1613,8 @@ Object {
   "executionPrice": "3.9919",
   "poolPriceAfter": "1.6031",
   "poolPriceBefore": "10.000",
-  "tickAfter": 4719,
-  "tickBefore": 23027,
+  "tickAfter": 4719n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1629,8 +1629,8 @@ Object {
   "executionPrice": "11.532",
   "poolPriceAfter": "13.219",
   "poolPriceBefore": "10.000",
-  "tickAfter": 25818,
-  "tickBefore": 23027,
+  "tickAfter": 25818n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -1645,8 +1645,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -1661,8 +1661,8 @@ Object {
   "executionPrice": "9.9690",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1677,8 +1677,8 @@ Object {
   "executionPrice": "10.101",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -1693,8 +1693,8 @@ Object {
   "executionPrice": "3.8697",
   "poolPriceAfter": "1.5065",
   "poolPriceBefore": "10.000",
-  "tickAfter": 4098,
-  "tickBefore": 23027,
+  "tickAfter": 4098n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1709,8 +1709,8 @@ Object {
   "executionPrice": "3.8697",
   "poolPriceAfter": "1.5065",
   "poolPriceBefore": "10.000",
-  "tickAfter": 4098,
-  "tickBefore": 23027,
+  "tickAfter": 4098n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1725,8 +1725,8 @@ Object {
   "executionPrice": "11.611",
   "poolPriceAfter": "13.401",
   "poolPriceBefore": "10.000",
-  "tickAfter": 25954,
-  "tickBefore": 23027,
+  "tickAfter": 25954n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -1738,7 +1738,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1751,8 +1751,8 @@ Object {
   "executionPrice": "9.8039",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1767,8 +1767,8 @@ Object {
   "executionPrice": "8.3936",
   "poolPriceAfter": "7.0877",
   "poolPriceBefore": "10.000",
-  "tickAfter": 19584,
-  "tickBefore": 23027,
+  "tickAfter": 19584n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "60811007371978153949466126675899993",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1783,8 +1783,8 @@ Object {
   "executionPrice": "8.3936",
   "poolPriceAfter": "7.0877",
   "poolPriceBefore": "10.000",
-  "tickAfter": 19584,
-  "tickBefore": 23027,
+  "tickAfter": 19584n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "60811007371978153949466126675899993",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1796,7 +1796,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1809,8 +1809,8 @@ Object {
   "executionPrice": "1.9940",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "10.000",
-  "tickAfter": -9164,
-  "tickBefore": 23027,
+  "tickAfter": -9164n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "1295166291350014007196790362622908787",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1825,8 +1825,8 @@ Object {
   "executionPrice": "4.9850",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 9163,
-  "tickBefore": 23027,
+  "tickAfter": 9163n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "323791572837503501799197590655727196",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1841,8 +1841,8 @@ Object {
   "executionPrice": "0.00000000000000000017136",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "10.000",
-  "tickAfter": -887221,
-  "tickBefore": 23027,
+  "tickAfter": -887221n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "18838218521532665618558690029734560761051839038492345122",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1857,8 +1857,8 @@ Object {
   "executionPrice": "10.032",
   "poolPriceAfter": "10.000",
   "poolPriceBefore": "10.000",
-  "tickAfter": 23027,
-  "tickBefore": 23027,
+  "tickAfter": 23027n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "5274376687274546183682",
 }
@@ -1873,8 +1873,8 @@ Object {
   "executionPrice": "5.8355e+19",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "10.000",
-  "tickAfter": 887271,
-  "tickBefore": 23027,
+  "tickAfter": 887271n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384185660173270402196734709837829128053278",
 }
@@ -1886,7 +1886,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1896,7 +1896,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1906,7 +1906,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1916,7 +1916,7 @@ Object {
   "poolBalance1": "6324555320336758664",
   "poolPriceBefore": "10.000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 23027,
+  "tickBefore": 23027n,
 }
 `;
 
@@ -1929,8 +1929,8 @@ Object {
   "executionPrice": "5.8355e+19",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "10.000",
-  "tickAfter": 887220,
-  "tickBefore": 23027,
+  "tickAfter": 887220n,
+  "tickBefore": 23027n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384185660173270402196734709837829128053278",
 }
@@ -1945,8 +1945,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1961,8 +1961,8 @@ Object {
   "executionPrice": "2.7456e+34",
   "poolPriceAfter": "4.4588e+30",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 705759,
-  "tickBefore": 880340,
+  "tickAfter": 705759n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -1977,8 +1977,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -1993,8 +1993,8 @@ Object {
   "executionPrice": "2.7461e+19",
   "poolPriceAfter": "4.4588",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 14949,
-  "tickBefore": 880340,
+  "tickAfter": 14949n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2009,8 +2009,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -2025,8 +2025,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -2041,8 +2041,8 @@ Object {
   "executionPrice": "2.6084e+34",
   "poolPriceAfter": "4.0229e+30",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 704730,
-  "tickBefore": 880340,
+  "tickAfter": 704730n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2057,8 +2057,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -2073,8 +2073,8 @@ Object {
   "executionPrice": "2.6088e+19",
   "poolPriceAfter": "4.0241",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 13923,
-  "tickBefore": 880340,
+  "tickAfter": 13923n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2089,8 +2089,8 @@ Object {
   "executionPrice": "2.6088e+19",
   "poolPriceAfter": "4.0241",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 13923,
-  "tickBefore": 880340,
+  "tickAfter": 13923n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2105,8 +2105,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -2118,7 +2118,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2131,8 +2131,8 @@ Object {
   "executionPrice": "500.00",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2147,8 +2147,8 @@ Object {
   "executionPrice": "5.0000e+17",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2163,8 +2163,8 @@ Object {
   "executionPrice": "5.0000e+17",
   "poolPriceAfter": "1.7014e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 880340,
-  "tickBefore": 880340,
+  "tickAfter": 880340n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2176,7 +2176,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2189,8 +2189,8 @@ Object {
   "executionPrice": "8.2249e+18",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": -9164,
-  "tickBefore": 880340,
+  "tickAfter": -9164n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "1618957864187517508995987953278635983",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2205,8 +2205,8 @@ Object {
   "executionPrice": "2.0562e+19",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 9163,
-  "tickBefore": 880340,
+  "tickAfter": 9163n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "647583145675007003598395181311454393",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2221,8 +2221,8 @@ Object {
   "executionPrice": "0.70685",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": -887221,
-  "tickBefore": 880340,
+  "tickAfter": -887221n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "18838218521532665618882481602572064262851036629148072319",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2237,8 +2237,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 887271,
-  "tickBefore": 880340,
+  "tickAfter": 887271n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "5482407482066087054477299856254072312542046383926535301",
 }
@@ -2253,8 +2253,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 887271,
-  "tickBefore": 880340,
+  "tickAfter": 887271n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "5482407482066087054477299856254072312542046383926535301",
 }
@@ -2266,7 +2266,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2276,7 +2276,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2286,7 +2286,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2296,7 +2296,7 @@ Object {
   "poolBalance1": "26087635650665564424699143612505016738",
   "poolPriceBefore": "1.7014e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 880340,
+  "tickBefore": 880340n,
 }
 `;
 
@@ -2309,8 +2309,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.7014e+38",
-  "tickAfter": 887220,
-  "tickBefore": 880340,
+  "tickAfter": 887220n,
+  "tickBefore": 880340n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "5482407482066087054477299856254072312542046383926535301",
 }
@@ -2325,8 +2325,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2341,8 +2341,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "161634124287445770145102",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2357,8 +2357,8 @@ Object {
   "executionPrice": "0.000000000000000000000000000000000036491",
   "poolPriceAfter": "0.00000000000000000000000000000022427",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -705760,
-  "tickBefore": -880303,
+  "tickAfter": -705760n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -2373,8 +2373,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "161634124287445770145102938530089900441",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2389,8 +2389,8 @@ Object {
   "executionPrice": "0.000000000000000000036485",
   "poolPriceAfter": "0.22427",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -14950,
-  "tickBefore": -880303,
+  "tickAfter": -14950n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -2405,8 +2405,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -2421,8 +2421,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731687",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2437,8 +2437,8 @@ Object {
   "executionPrice": "0.000000000000000000000000000000000038412",
   "poolPriceAfter": "0.00000000000000000000000000000024858",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -704731,
-  "tickBefore": -880303,
+  "tickAfter": -704731n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -2453,8 +2453,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731687303715884105728",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2466,7 +2466,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2479,8 +2479,8 @@ Object {
   "executionPrice": "0.000000000000000000038406",
   "poolPriceAfter": "0.24850",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -13924,
-  "tickBefore": -880303,
+  "tickAfter": -13924n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -2495,8 +2495,8 @@ Object {
   "executionPrice": "0.000000000000000000038406",
   "poolPriceAfter": "0.24850",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -13924,
-  "tickBefore": -880303,
+  "tickAfter": -13924n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -2511,8 +2511,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -887272,
-  "tickBefore": -880303,
+  "tickAfter": -887272n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "5507930424444982259736347157352787128931407551935325049",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2527,8 +2527,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -887272,
-  "tickBefore": -880303,
+  "tickAfter": -887272n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "5507930424444982259736347157352787128931407551935325049",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2540,7 +2540,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2550,7 +2550,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2560,7 +2560,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2570,7 +2570,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2583,8 +2583,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -887221,
-  "tickBefore": -880303,
+  "tickAfter": -887221n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "5507930424444982259736347157352787128931407551935325049",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2599,8 +2599,8 @@ Object {
   "executionPrice": "0.0020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -2615,8 +2615,8 @@ Object {
   "executionPrice": "0.0000000000000000020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -2631,8 +2631,8 @@ Object {
   "executionPrice": "0.0000000000000000020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000059000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -880303,
-  "tickBefore": -880303,
+  "tickAfter": -880303n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -2647,8 +2647,8 @@ Object {
   "executionPrice": "0.000000000000000000048726",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": -9164,
-  "tickBefore": -880303,
+  "tickAfter": -9164n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "647583145675007003598395181311454393",
 }
@@ -2663,8 +2663,8 @@ Object {
   "executionPrice": "0.00000000000000000012182",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": 9163,
-  "tickBefore": -880303,
+  "tickAfter": 9163n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1618957864187517508995987953278635983",
 }
@@ -2676,7 +2676,7 @@ Object {
   "poolBalance1": "1",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -880303,
+  "tickBefore": -880303n,
 }
 `;
 
@@ -2689,8 +2689,8 @@ Object {
   "executionPrice": "1.4174",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "0.0000000000000000000000000000000000000059000",
-  "tickAfter": 887220,
-  "tickBefore": -880303,
+  "tickAfter": 887220n,
+  "tickBefore": -880303n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384188898088998777231582560630275216093514",
 }
@@ -2705,8 +2705,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 887219,
-  "tickBefore": 887271,
+  "tickAfter": 887219n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2721,8 +2721,8 @@ Object {
   "executionPrice": "3.8729e+34",
   "poolPriceAfter": "4.4592e+30",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 705760,
-  "tickBefore": 887271,
+  "tickAfter": 705760n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2734,7 +2734,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2747,8 +2747,8 @@ Object {
   "executionPrice": "3.8733e+19",
   "poolPriceAfter": "4.4588",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 14949,
-  "tickBefore": 887271,
+  "tickAfter": 14949n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2760,7 +2760,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2770,7 +2770,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2783,8 +2783,8 @@ Object {
   "executionPrice": "3.6792e+34",
   "poolPriceAfter": "4.0232e+30",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 704731,
-  "tickBefore": 887271,
+  "tickAfter": 704731n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2796,7 +2796,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2809,8 +2809,8 @@ Object {
   "executionPrice": "3.6796e+19",
   "poolPriceAfter": "4.0241",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 13923,
-  "tickBefore": 887271,
+  "tickAfter": 13923n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2825,8 +2825,8 @@ Object {
   "executionPrice": "3.6796e+19",
   "poolPriceAfter": "4.0241",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 13923,
-  "tickBefore": 887271,
+  "tickAfter": 13923n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2838,7 +2838,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2848,7 +2848,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2861,8 +2861,8 @@ Object {
   "executionPrice": "500.00",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 887219,
-  "tickBefore": 887271,
+  "tickAfter": 887219n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2877,8 +2877,8 @@ Object {
   "executionPrice": "5.0000e+17",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 887219,
-  "tickBefore": 887271,
+  "tickAfter": 887219n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2893,8 +2893,8 @@ Object {
   "executionPrice": "5.0000e+17",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 887219,
-  "tickBefore": 887271,
+  "tickAfter": 887219n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2906,7 +2906,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2919,8 +2919,8 @@ Object {
   "executionPrice": "1.1601e+19",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": -9164,
-  "tickBefore": 887271,
+  "tickAfter": -9164n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "1618957864187517508995987953278635983",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2935,8 +2935,8 @@ Object {
   "executionPrice": "2.9003e+19",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": 9163,
-  "tickBefore": 887271,
+  "tickAfter": 9163n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "647583145675007003598395181311454393",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2951,8 +2951,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "3.4026e+38",
-  "tickAfter": -887221,
-  "tickBefore": 887271,
+  "tickAfter": -887221n,
+  "tickBefore": 887271n,
   "totalFeeGrowth0TokenDelta": "18838218521532665618882481602572064262851036629148072319",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -2964,7 +2964,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2974,7 +2974,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2984,7 +2984,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -2994,7 +2994,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -3004,7 +3004,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -3014,7 +3014,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -3024,7 +3024,7 @@ Object {
   "poolBalance1": "36796311329002736532545403775337522448",
   "poolPriceBefore": "3.4026e+38",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 887271,
+  "tickBefore": 887271n,
 }
 `;
 
@@ -3034,7 +3034,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3044,7 +3044,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3057,8 +3057,8 @@ Object {
   "executionPrice": "0.000000000000000000000000000000000025821",
   "poolPriceAfter": "0.00000000000000000000000000000022425",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -705761,
-  "tickBefore": -887272,
+  "tickAfter": -705761n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -3070,7 +3070,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3083,8 +3083,8 @@ Object {
   "executionPrice": "0.000000000000000000025818",
   "poolPriceAfter": "0.22427",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -14950,
-  "tickBefore": -887272,
+  "tickAfter": -14950n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -3099,8 +3099,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -887220,
-  "tickBefore": -887272,
+  "tickAfter": -887220n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3112,7 +3112,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3125,8 +3125,8 @@ Object {
   "executionPrice": "0.000000000000000000000000000000000027180",
   "poolPriceAfter": "0.00000000000000000000000000000024856",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -704732,
-  "tickBefore": -887272,
+  "tickAfter": -704732n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -3138,7 +3138,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3148,7 +3148,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3161,8 +3161,8 @@ Object {
   "executionPrice": "0.000000000000000000027177",
   "poolPriceAfter": "0.24850",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -13924,
-  "tickBefore": -887272,
+  "tickAfter": -13924n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -3177,8 +3177,8 @@ Object {
   "executionPrice": "0.000000000000000000027177",
   "poolPriceAfter": "0.24850",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -13924,
-  "tickBefore": -887272,
+  "tickAfter": -13924n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -3190,7 +3190,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3200,7 +3200,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3210,7 +3210,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3220,7 +3220,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3230,7 +3230,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3240,7 +3240,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3250,7 +3250,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3263,8 +3263,8 @@ Object {
   "executionPrice": "0.0020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -887220,
-  "tickBefore": -887272,
+  "tickAfter": -887220n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3279,8 +3279,8 @@ Object {
   "executionPrice": "0.0000000000000000020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -887220,
-  "tickBefore": -887272,
+  "tickAfter": -887220n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3295,8 +3295,8 @@ Object {
   "executionPrice": "0.0000000000000000020000",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -887220,
-  "tickBefore": -887272,
+  "tickAfter": -887220n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3311,8 +3311,8 @@ Object {
   "executionPrice": "0.000000000000000000034479",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": -9164,
-  "tickBefore": -887272,
+  "tickAfter": -9164n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "647583145675007003598395181311454393",
 }
@@ -3327,8 +3327,8 @@ Object {
   "executionPrice": "0.000000000000000000086199",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": 9163,
-  "tickBefore": -887272,
+  "tickAfter": 9163n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1618957864187517508995987953278635983",
 }
@@ -3340,7 +3340,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": -887272,
+  "tickBefore": -887272n,
 }
 `;
 
@@ -3353,8 +3353,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "0.0000000000000000000000000000000000000029390",
-  "tickAfter": 887220,
-  "tickBefore": -887272,
+  "tickAfter": 887220n,
+  "tickBefore": -887272n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "18838218525064384188898088998777231582560630275216093514",
 }
@@ -3369,8 +3369,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3385,8 +3385,8 @@ Object {
   "executionPrice": "0.99789",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3401,8 +3401,8 @@ Object {
   "executionPrice": "1.0021",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3417,8 +3417,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3433,8 +3433,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3449,8 +3449,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3465,8 +3465,8 @@ Object {
   "executionPrice": "0.99800",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3481,8 +3481,8 @@ Object {
   "executionPrice": "1.0020",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3497,8 +3497,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3513,8 +3513,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3529,8 +3529,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3545,8 +3545,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3561,8 +3561,8 @@ Object {
   "executionPrice": "0.99800",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3577,8 +3577,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3593,8 +3593,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3606,7 +3606,7 @@ Object {
   "poolBalance1": "999700069986003",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -3619,8 +3619,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3632,7 +3632,7 @@ Object {
   "poolBalance1": "999700069986003",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -3645,8 +3645,8 @@ Object {
   "executionPrice": "0.99900",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887220,
-  "tickBefore": 0,
+  "tickAfter": -887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "85130172636557991529041720559172",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3661,8 +3661,8 @@ Object {
   "executionPrice": "1.0020",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -3677,8 +3677,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3693,8 +3693,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3706,7 +3706,7 @@ Object {
   "poolBalance1": "999700069986003",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -3719,8 +3719,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3732,7 +3732,7 @@ Object {
   "poolBalance1": "999700069986003",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -3745,8 +3745,8 @@ Object {
   "executionPrice": "1.0010",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "85130172636557991529041720559172",
 }
@@ -3761,8 +3761,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "8388607",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3777,8 +3777,8 @@ Object {
   "executionPrice": "0.53895",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "3665821259",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3793,8 +3793,8 @@ Object {
   "executionPrice": "1.8555",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "3665821259",
 }
@@ -3809,8 +3809,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "23907529950002868903594",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3825,8 +3825,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "23907529950003699375687",
 }
@@ -3841,8 +3841,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "8388607",
 }
@@ -3857,8 +3857,8 @@ Object {
   "executionPrice": "0.51200",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "4085251609",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3873,8 +3873,8 @@ Object {
   "executionPrice": "1.9531",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "4085251609",
 }
@@ -3889,8 +3889,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "25165821000001786773291",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3905,8 +3905,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "25165821000001786773291",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3921,8 +3921,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "25165821000001182793587",
 }
@@ -3937,8 +3937,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "25165821000001182793587",
 }
@@ -3953,8 +3953,8 @@ Object {
   "executionPrice": "0.97182",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "33554428",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3969,8 +3969,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "25241545636911368106849",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3985,8 +3985,8 @@ Object {
   "executionPrice": "0.99700",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "25241545636911368106849",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -3998,7 +3998,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4011,8 +4011,8 @@ Object {
   "executionPrice": "0.63056",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "595039006852697512464428097925104891",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4024,7 +4024,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4034,7 +4034,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "Transaction reverted without a reason string",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4047,8 +4047,8 @@ Object {
   "executionPrice": "1.0290",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "33554428",
 }
@@ -4063,8 +4063,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "25241545636911368106849",
 }
@@ -4079,8 +4079,8 @@ Object {
   "executionPrice": "1.0030",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "25241545636911368106849",
 }
@@ -4092,7 +4092,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4105,8 +4105,8 @@ Object {
   "executionPrice": "1.5859",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "595039006852697512464428097891550463",
 }
@@ -4118,7 +4118,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4128,7 +4128,7 @@ Object {
   "poolBalance1": "40564824043007195765027393299788",
   "poolPriceBefore": "1.0000",
   "swapError": "Transaction reverted without a reason string",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4141,8 +4141,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4157,8 +4157,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4173,8 +4173,8 @@ Object {
   "executionPrice": "1.0042",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -4189,8 +4189,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4205,8 +4205,8 @@ Object {
   "executionPrice": "1.4780",
   "poolPriceAfter": "2.1714",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 7754,
-  "tickBefore": 0,
+  "tickAfter": 7754n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "484902372862337310435308815590269701",
 }
@@ -4221,8 +4221,8 @@ Object {
   "executionPrice": "-Infinity",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "170141183460469231731",
 }
@@ -4237,8 +4237,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4253,8 +4253,8 @@ Object {
   "executionPrice": "1.0040",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195",
 }
@@ -4269,8 +4269,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4285,8 +4285,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4301,8 +4301,8 @@ Object {
   "executionPrice": "1.5030",
   "poolPriceAfter": "2.2455",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 8089,
-  "tickBefore": 0,
+  "tickAfter": 8089n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "510423550381407695195061911147652317",
 }
@@ -4317,8 +4317,8 @@ Object {
   "executionPrice": "1.4185",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "424121077477644648929101317621422688",
 }
@@ -4333,8 +4333,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4349,8 +4349,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029390",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887272,
-  "tickBefore": 0,
+  "tickAfter": -887272n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4365,8 +4365,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4378,7 +4378,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4391,8 +4391,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4404,7 +4404,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4417,8 +4417,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887220,
-  "tickBefore": 0,
+  "tickAfter": -887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4433,8 +4433,8 @@ Object {
   "executionPrice": "1.0050",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 0,
-  "tickBefore": 0,
+  "tickAfter": 0n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "680564733841876926926",
 }
@@ -4449,8 +4449,8 @@ Object {
   "executionPrice": "2.0060",
   "poolPriceAfter": "4.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 13863,
-  "tickBefore": 0,
+  "tickAfter": 13863n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "1023918857334819954209013958517557896",
 }
@@ -4465,8 +4465,8 @@ Object {
   "executionPrice": "1.4185",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "424121077477644648929101317621422688",
 }
@@ -4478,7 +4478,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4491,8 +4491,8 @@ Object {
   "executionPrice": "1.5859",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "595039006852697554786973994761078087",
 }
@@ -4504,7 +4504,7 @@ Object {
   "poolBalance1": "0",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4517,8 +4517,8 @@ Object {
   "executionPrice": "404.52",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "411930533732073409082078354252563077717",
 }
@@ -4533,8 +4533,8 @@ Object {
   "executionPrice": "0.0000",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "170141183460469231731",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4549,8 +4549,8 @@ Object {
   "executionPrice": "0.99579",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4565,8 +4565,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4581,8 +4581,8 @@ Object {
   "executionPrice": "0.67659",
   "poolPriceAfter": "0.46053",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -7755,
-  "tickBefore": 0,
+  "tickAfter": -7755n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "484902372862337310435308815590269701",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4597,8 +4597,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4613,8 +4613,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4629,8 +4629,8 @@ Object {
   "executionPrice": "0.99600",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4645,8 +4645,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4661,8 +4661,8 @@ Object {
   "executionPrice": "0.66533",
   "poolPriceAfter": "0.44533",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -8090,
-  "tickBefore": 0,
+  "tickAfter": -8090n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "510423550381407695195061911147652317",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4677,8 +4677,8 @@ Object {
   "executionPrice": "0.70499",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "424121077477644648929101317621422688",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4693,8 +4693,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4709,8 +4709,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4725,8 +4725,8 @@ Object {
   "executionPrice": "0.99502",
   "poolPriceAfter": "1.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -1,
-  "tickBefore": 0,
+  "tickAfter": -1n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "680564733841876926926",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4741,8 +4741,8 @@ Object {
   "executionPrice": "0.49850",
   "poolPriceAfter": "0.25000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -13864,
-  "tickBefore": 0,
+  "tickAfter": -13864n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "1023918857334819954209013958517557896",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4757,8 +4757,8 @@ Object {
   "executionPrice": "0.70499",
   "poolPriceAfter": "0.50000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -6932,
-  "tickBefore": 0,
+  "tickAfter": -6932n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "424121077477644648929101317621422688",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4770,7 +4770,7 @@ Object {
   "poolBalance1": "1995041008271423675",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4783,8 +4783,8 @@ Object {
   "executionPrice": "0.63056",
   "poolPriceAfter": "0.40000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -9164,
-  "tickBefore": 0,
+  "tickAfter": -9164n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "595039006852697554786973994761078087",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4796,7 +4796,7 @@ Object {
   "poolBalance1": "1995041008271423675",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4809,8 +4809,8 @@ Object {
   "executionPrice": "0.0024721",
   "poolPriceAfter": "0.0000000000000000000000000000000000000029543",
   "poolPriceBefore": "1.0000",
-  "tickAfter": -887220,
-  "tickBefore": 0,
+  "tickAfter": -887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "411930533732073409082078354252563077717",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4825,8 +4825,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4841,8 +4841,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.4026e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887271,
-  "tickBefore": 0,
+  "tickAfter": 887271n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4857,8 +4857,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "2.0000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 6931,
-  "tickBefore": 0,
+  "tickAfter": 6931n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4870,7 +4870,7 @@ Object {
   "poolBalance1": "1995041008271423675",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4883,8 +4883,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "2.5000",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 9163,
-  "tickBefore": 0,
+  "tickAfter": 9163n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }
@@ -4896,7 +4896,7 @@ Object {
   "poolBalance1": "1995041008271423675",
   "poolPriceBefore": "1.0000",
   "swapError": "VM Exception while processing transaction: reverted with custom error 'invalidLimitSqrtPrice()'",
-  "tickBefore": 0,
+  "tickBefore": 0n,
 }
 `;
 
@@ -4909,8 +4909,8 @@ Object {
   "executionPrice": "NaN",
   "poolPriceAfter": "3.3849e+38",
   "poolPriceBefore": "1.0000",
-  "tickAfter": 887220,
-  "tickBefore": 0,
+  "tickAfter": 887220n,
+  "tickBefore": 0n,
   "totalFeeGrowth0TokenDelta": "0",
   "totalFeeGrowth1TokenDelta": "0",
 }

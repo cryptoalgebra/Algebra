@@ -73,12 +73,12 @@ describe('AlgebraPoolRouter', () => {
   });
 
   it('constructor initializes immutables', async () => {
-    expect(await pool0.factory()).to.eq(factory.address);
-    expect(await pool0.token0()).to.eq(token0.address);
-    expect(await pool0.token1()).to.eq(token1.address);
-    expect(await pool1.factory()).to.eq(factory.address);
-    expect(await pool1.token0()).to.eq(token1.address);
-    expect(await pool1.token1()).to.eq(token2.address);
+    expect(await pool0.factory()).to.eq(await factory.getAddress());
+    expect(await pool0.token0()).to.eq(await token0.getAddress());
+    expect(await pool0.token1()).to.eq(await token1.getAddress());
+    expect(await pool1.factory()).to.eq(await factory.getAddress());
+    expect(await pool1.token0()).to.eq(await token1.getAddress());
+    expect(await pool1.token1()).to.eq(await token2.getAddress());
   });
 
   describe('multi-swaps', () => {
@@ -98,8 +98,8 @@ describe('AlgebraPoolRouter', () => {
 
     it('multi-swap', async () => {
       const token0OfPoolOutput = await pool1.token0();
-      expect(token0OfPoolOutput).to.be.oneOf([token1.address, token2.address]);
-      const ForExact0 = outputToken.address === token0OfPoolOutput;
+      expect(token0OfPoolOutput).to.be.oneOf([await token1.getAddress(), await token2.getAddress()]);
+      const ForExact0 = await outputToken.getAddress() === token0OfPoolOutput;
 
       const { swapForExact0Multi, swapForExact1Multi } = createMultiPoolFunctions({
         inputToken: token0,
@@ -110,13 +110,18 @@ describe('AlgebraPoolRouter', () => {
 
       const method = ForExact0 ? swapForExact0Multi : swapForExact1Multi;
 
+      const [pool0Address, pool1Address, inputTokenAddress] = [
+        await pool0.getAddress(),
+        await pool1.getAddress(),
+        await inputToken.getAddress()
+      ]
       await expect(method(100, wallet.address))
         .to.emit(outputToken, 'Transfer')
-        .withArgs(pool1.address, wallet.address, 100)
+        .withArgs(pool1Address, wallet.address, 100)
         .to.emit(token1, 'Transfer')
-        .withArgs(pool0.address, pool1.address, 102)
+        .withArgs(pool0Address, pool1Address, 102)
         .to.emit(inputToken, 'Transfer')
-        .withArgs(wallet.address, pool0.address, 104);
+        .withArgs(wallet.address, pool0Address, 104);
     });
   });
 });
