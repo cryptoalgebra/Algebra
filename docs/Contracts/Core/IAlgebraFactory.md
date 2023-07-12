@@ -71,39 +71,10 @@ Emitted when a pool is created
 | pool | address | The address of the created pool |
 
 
-### FarmingAddress
-
-
-`event FarmingAddress(address newFarmingAddress)`  
-
-Emitted when the farming address is changed
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newFarmingAddress | address | The farming address after the address was changed |
-
-
-### DefaultFeeConfiguration
-
-
-`event DefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig)`  
-
-Emitted when the default fee configuration is changed
-*Developer note: See the AdaptiveFee library for more details*
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newConfig | struct AlgebraFeeConfiguration | The structure with dynamic fee parameters |
-
-
 ### DefaultCommunityFee
 
 
-`event DefaultCommunityFee(uint8 newDefaultCommunityFee)`  
+`event DefaultCommunityFee(uint16 newDefaultCommunityFee)`  
 
 Emitted when the default community fee is changed
 
@@ -111,7 +82,49 @@ Emitted when the default community fee is changed
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultCommunityFee | uint8 | The new default community fee value |
+| newDefaultCommunityFee | uint16 | The new default community fee value |
+
+
+### DefaultTickspacing
+
+
+`event DefaultTickspacing(int24 newDefaultTickspacing)`  
+
+Emitted when the default tickspacing is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultTickspacing | int24 | The new default tickspacing value |
+
+
+### DefaultFee
+
+
+`event DefaultFee(uint16 newDefaultFee)`  
+
+Emitted when the default fee is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultFee | uint16 | The new default fee value |
+
+
+### DefaultPluginFactory
+
+
+`event DefaultPluginFactory(address defaultPluginFactoryAddress)`  
+
+Emitted when the defaultPluginFactory address is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| defaultPluginFactoryAddress | address | The new defaultPluginFactory address |
 
 
 
@@ -131,28 +144,27 @@ role that can change communityFee and tickspacing in pools
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes32 |  |
+| [0] | bytes32 | The hash corresponding to this role |
 
 ### hasRoleOrOwner
 
 
 `function hasRoleOrOwner(bytes32 role, address account) external view returns (bool)` view external
 
-
-*Developer note: Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.*
+Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| role | bytes32 |  |
-| account | address |  |
+| role | bytes32 | The hash corresponding to the role |
+| account | address | The address for which the role is checked |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | bool Whether the address has this role or the owner role or not |
 
 ### owner
 
@@ -187,23 +199,6 @@ Returns the current poolDeployerAddress
 | ---- | ---- | ----------- |
 | [0] | address | The address of the poolDeployer |
 
-### farmingAddress
-
-
-`function farmingAddress() external view returns (address)` view external
-
-
-*Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The tokenomics contract address |
-
 ### communityVault
 
 
@@ -223,7 +218,7 @@ Returns the current communityVaultAddress
 ### defaultCommunityFee
 
 
-`function defaultCommunityFee() external view returns (uint8)` view external
+`function defaultCommunityFee() external view returns (uint16)` view external
 
 Returns the default community fee
 
@@ -234,7 +229,94 @@ Returns the default community fee
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint8 | Fee which will be set at the creation of the pool |
+| [0] | uint16 | Fee which will be set at the creation of the pool |
+
+### defaultFee
+
+
+`function defaultFee() external view returns (uint16)` view external
+
+Returns the default fee
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint16 | Fee which will be set at the creation of the pool |
+
+### defaultTickspacing
+
+
+`function defaultTickspacing() external view returns (int24)` view external
+
+Returns the default tickspacing
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int24 | Tickspacing which will be set at the creation of the pool |
+
+### defaultPluginFactory
+
+
+`function defaultPluginFactory() external view returns (contract IAlgebraPluginFactory)` view external
+
+Return the current pluginFactory address
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | contract IAlgebraPluginFactory | Algebra plugin factory |
+
+### defaultConfigurationForPool
+
+
+`function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)` view external
+
+Returns the default communityFee and tickspacing
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| communityFee | uint16 | which will be set at the creation of the pool |
+| tickSpacing | int24 | which will be set at the creation of the pool |
+| fee | uint16 | which will be set at the creation of the pool |
+
+### computePoolAddress
+
+
+`function computePoolAddress(address token0, address token1) external view returns (address pool)` view external
+
+Deterministically computes the pool address given the token0 and token1
+*Developer note: The method does not check if such a pool has been created*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token0 | address | first token |
+| token1 | address | second token |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | address | The contract address of the Algebra pool |
 
 ### poolByPair
 
@@ -295,25 +377,10 @@ The call will revert if the pool already exists or the token arguments are inval
 | ---- | ---- | ----------- |
 | pool | address | The address of the newly created pool |
 
-### setFarmingAddress
-
-
-`function setFarmingAddress(address newFarmingAddress) external`  external
-
-
-*Developer note: updates tokenomics address on the factory*
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newFarmingAddress | address | The new tokenomics contract address |
-
-
 ### setDefaultCommunityFee
 
 
-`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
+`function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external`  external
 
 
 *Developer note: updates default community fee for new pools*
@@ -322,23 +389,52 @@ The call will revert if the pool already exists or the token arguments are inval
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
+| newDefaultCommunityFee | uint16 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
 
 
-### setDefaultFeeConfiguration
+### setDefaultFee
 
 
-`function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external`  external
+`function setDefaultFee(uint16 newDefaultFee) external`  external
 
-Changes initial fee configuration for new pools
-*Developer note: changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max and gammas must be &gt; 0*
+
+*Developer note: updates default fee for new pools*
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
+| newDefaultFee | uint16 | The new  fee, _must_ be &lt;&#x3D; MAX_DEFAULT_FEE |
+
+
+### setDefaultTickspacing
+
+
+`function setDefaultTickspacing(int24 newDefaultTickspacing) external`  external
+
+
+*Developer note: updates default tickspacing for new pools*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultTickspacing | int24 | The new tickspacing, _must_ be &lt;&#x3D; MAX_TICK_SPACING and &gt;&#x3D; MIN_TICK_SPACING |
+
+
+### setDefaultPluginFactory
+
+
+`function setDefaultPluginFactory(address newDefaultPluginFactory) external`  external
+
+
+*Developer note: updates pluginFactory address*
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultPluginFactory | address | address of new plugin factory |
 
 
 ### startRenounceOwnership

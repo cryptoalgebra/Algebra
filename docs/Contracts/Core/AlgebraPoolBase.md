@@ -7,6 +7,7 @@ Algebra pool base abstract contract
 
 Contains state variables, immutables and common internal functions
 
+*Developer note: Decoupling into a separate abstract contract simplifies testing*
 
 ## Modifiers
 ### onlyValidTicks
@@ -27,13 +28,9 @@ Contains state variables, immutables and common internal functions
 
 
 ## Variables
-### address dataStorageOperator immutable
-
-The contract that stores all the timepoints and can perform actions with them
-
 ### address factory immutable
 
-The contract that deployed the pool, which must adhere to the IAlgebraFactory interface
+The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 
 ### address token0 immutable
 
@@ -62,6 +59,31 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
 
+### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
+
+Look up information about a specific tick in the pool
+
+### uint32 communityFeeLastTimestamp 
+
+The timestamp of the last sending of tokens to community vault
+
+### address plugin 
+
+Returns the address of currently used plugin
+
+*Developer note: The plugin is subject to change*
+### mapping(int16 &#x3D;&gt; uint256) tickTable 
+
+Returns 256 packed tick initialized boolean values. See TickTree for more information
+
+### int24 nextTickGlobal 
+
+The next initialized tick after current global tick
+
+### int24 prevTickGlobal 
+
+The previous initialized tick before (or at) current global tick
+
 ### uint128 liquidity 
 
 The currently in range liquidity available to the pool
@@ -72,40 +94,10 @@ Returned value cannot exceed type(uint128).max*
 
 The current tick spacing
 
-*Developer note: Ticks can only be used at multiples of this value
+*Developer note: Ticks can only be initialized by new mints at multiples of this value
 e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
+However, tickspacing can be changed after the ticks have been initialized.
 This value is an int24 to avoid casting even though it is always positive.*
-### int24 tickSpacingLimitOrders 
-
-The current tick spacing for limit orders
-
-*Developer note: Ticks can only be used for limit orders at multiples of this value
-This value is an int24 to avoid casting even though it is always positive.*
-### uint32 communityFeeLastTimestamp 
-
-The timestamp of the last sending of tokens to community vault
-
-### uint160 secondsPerLiquidityCumulative 
-
-The accumulator of seconds per liquidity since the pool was first initialized
-
-### address activeIncentive 
-
-Returns the information about active incentive
-
-*Developer note: if there is no active incentive at the moment, incentiveAddress would be equal to address(0)*
-### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
-
-Look up information about a specific tick in the pool
-
-### mapping(int24 &#x3D;&gt; struct LimitOrderManagement.LimitOrder) limitOrders 
-
-Returns the summary information about a limit orders at tick
-
-### mapping(int16 &#x3D;&gt; uint256) tickTable 
-
-Returns 256 packed tick initialized boolean values. See TickTree for more information
-
 
 ## Functions
 ### maxLiquidityPerTick
@@ -143,6 +135,25 @@ The amounts of token0 and token1 that will be sent to the vault
 | ---- | ---- | ----------- |
 | [0] | uint128 |  |
 | [1] | uint128 |  |
+
+### fee
+
+
+`function fee() external view returns (uint16 currentFee)` view external
+
+The current pool fee value
+*Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
+If the plugin implements complex fee logic, this method may return an incorrect value or revert.
+In this case, see the plugin implementation and related documentation.*
+
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| currentFee | uint16 | The current pool fee value in hundredths of a bip, i.e. 1e-6 |
 
 
 

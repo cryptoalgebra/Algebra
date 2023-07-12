@@ -18,7 +18,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 `event Initialize(uint160 price, int24 tick)`  
 
 Emitted exactly once by a pool when #initialize is first called on the pool
-*Developer note: Mint/Burn/Swap cannot be emitted by the pool before Initialize*
+*Developer note: Mint/Burn/Swaps cannot be emitted by the pool before Initialize*
 
 
 
@@ -34,7 +34,6 @@ Emitted exactly once by a pool when #initialize is first called on the pool
 `event Mint(address sender, address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
 
 Emitted when liquidity is minted for a given position
-*Developer note: If the top and bottom ticks match, this should be treated as a limit order*
 
 
 
@@ -131,7 +130,7 @@ Emitted by the pool for any flashes of token0/token1
 ### CommunityFee
 
 
-`event CommunityFee(uint8 communityFeeNew)`  
+`event CommunityFee(uint16 communityFeeNew)`  
 
 Emitted when the community fee is changed by the pool
 
@@ -139,13 +138,13 @@ Emitted when the community fee is changed by the pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| communityFeeNew | uint8 | The updated value of the community fee in thousandths (1e-3) |
+| communityFeeNew | uint16 | The updated value of the community fee in thousandths (1e-3) |
 
 
 ### TickSpacing
 
 
-`event TickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders)`  
+`event TickSpacing(int24 newTickSpacing)`  
 
 Emitted when the tick spacing changes
 
@@ -154,21 +153,34 @@ Emitted when the tick spacing changes
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newTickSpacing | int24 | The updated value of the new tick spacing |
-| newTickSpacingLimitOrders | int24 | The updated value of the new tick spacing for limit orders |
 
 
-### Incentive
+### Plugin
 
 
-`event Incentive(address newIncentiveAddress)`  
+`event Plugin(address newPluginAddress)`  
 
-Emitted when new activeIncentive is set
+Emitted when the plugin address changes
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newIncentiveAddress | address | The address of the new incentive |
+| newPluginAddress | address | New plugin address |
+
+
+### PluginConfig
+
+
+`event PluginConfig(uint8 newPluginConfig)`  
+
+Emitted when the plugin config changes
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newPluginConfig | uint8 | New plugin config |
 
 
 ### Fee
@@ -183,18 +195,6 @@ Emitted when the fee changes inside the pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
-
-
-### DataStorageFailure
-
-
-`event DataStorageFailure()`  
-
-Emitted in case of an error when trying to write to the DataStorage
-*Developer note: This shouldn&#x27;t happen*
-
-
-
 
 
 

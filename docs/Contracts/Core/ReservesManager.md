@@ -7,6 +7,7 @@ Algebra reserves management abstract contract
 
 Encapsulates logic for tracking and changing pool reserves
 
+*Developer note: The reserve mechanism allows the pool to keep track of unexpected increases in balances*
 
 
 
