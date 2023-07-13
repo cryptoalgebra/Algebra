@@ -1,98 +1,107 @@
 
 
-# AlgebraCommunityVault
+# IAlgebraCommunityVault
 
 
-Algebra community fee vault
+The interface for the Algebra community fee vault
 
 Community fee from pools is sent here, if it is enabled
 
-*Developer note: Role system is used to withdraw tokens
-Version: Algebra Integral*
-
-## Modifiers
-### onlyFactoryOwner
+*Developer note: Version: Algebra Integral*
 
 
-`modifier onlyFactoryOwner()`  internal
+## Events
+### TokensWithdrawal
 
 
+`event TokensWithdrawal(address token, address to, uint256 amount)`  
 
-
-
-
-
-### onlyWithdrawer
-
-
-`modifier onlyWithdrawer()`  internal
-
-
-
-
-
-
-
-### onlyAlgebraFeeManager
-
-
-`modifier onlyAlgebraFeeManager()`  internal
-
-
-
-
-
-
-
-
-
-## Variables
-### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
-
-
-
-*Developer note: The role can be granted in AlgebraFactory*
-### address communityFeeReceiver 
-
-Address to which community fees are sent from vault
-
-### uint16 algebraFee 
-
-The percentage of the protocol fee that Algebra will receive
-
-*Developer note: Value in thousandths,i.e. 1e-3*
-### bool hasNewAlgebraFeeProposal 
-
-Represents whether there is a new Algebra fee proposal or not
-
-### uint16 proposedNewAlgebraFee 
-
-Suggested Algebra fee value
-
-### address algebraFeeReceiver 
-
-Address of recipient Algebra part of community fee
-
-### address algebraFeeManager 
-
-Address of Algebra fee manager
-
-
-## Functions
-### constructor
-
-
-`constructor(address _algebraFeeManager) public`  public
-
-
+Event emitted when a fees has been claimed
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _algebraFeeManager | address |  |
+| token | address | The address of token fee |
+| to | address | The address where claimed rewards were sent to |
+| amount | uint256 | The amount of fees tokens claimed by communityFeeReceiver |
 
 
+### AlgebraTokensWithdrawal
+
+
+`event AlgebraTokensWithdrawal(address token, address to, uint256 amount)`  
+
+Event emitted when a fees has been claimed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token | address | The address of token fee |
+| to | address | The address where claimed rewards were sent to |
+| amount | uint256 | The amount of fees tokens claimed by Algebra |
+
+
+### AlgebraFeeReceiver
+
+
+`event AlgebraFeeReceiver(address newAlgebraFeeReceiver)`  
+
+Emitted when a AlgebraFeeReceiver address changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newAlgebraFeeReceiver | address | New Algebra fee receiver address |
+
+
+### AlgebraFeeManager
+
+
+`event AlgebraFeeManager(address newAlgebraFeeManager)`  
+
+Emitted when a AlgebraFeeManager address changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newAlgebraFeeManager | address | New Algebra fee manager address |
+
+
+### AlgebraFee
+
+
+`event AlgebraFee(uint16 newAlgebraFee)`  
+
+Emitted when the Algebra fee is changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newAlgebraFee | uint16 | The new Algebra fee value |
+
+
+### CommunityFeeReceiver
+
+
+`event CommunityFeeReceiver(address newCommunityFeeReceiver)`  
+
+Emitted when a CommunityFeeReceiver address changed
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newCommunityFeeReceiver | address | New fee receiver address |
+
+
+
+
+## Functions
 ### withdraw
 
 

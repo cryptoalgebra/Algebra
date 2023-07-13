@@ -7,7 +7,7 @@ Algebra positions abstract contract
 
 Contains the logic of recalculation and change of liquidity positions
 
-*Developer note: Relies on method _insertOrRemovePairOfTicks, which is implemented in TickStructure*
+*Developer note: Relies on method _addOrRemoveTicks, which is implemented in TickStructure*
 
 
 

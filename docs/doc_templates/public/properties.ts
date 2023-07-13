@@ -11,6 +11,7 @@ export function notTest({ item }: DocItemContext): boolean {
         || item.name.endsWith('Mock')
         || item.name.startsWith('Mock')
         || item.name.startsWith('Simulation')
+        || item.name.endsWith('Echidna')
     )
 }
 
