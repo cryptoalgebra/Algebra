@@ -7,7 +7,7 @@ import '../libraries/TickManagement.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
-/// @dev Relies on method _insertOrRemovePairOfTicks, which is implemented in TickStructure
+/// @dev Relies on method _addOrRemoveTicks, which is implemented in TickStructure
 abstract contract Positions is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
