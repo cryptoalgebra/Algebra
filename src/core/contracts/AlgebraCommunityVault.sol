@@ -14,9 +14,9 @@ import './interfaces/IAlgebraCommunityVault.sol';
 contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant COMMUNITY_FEE_WITHDRAWER_ROLE = keccak256('COMMUNITY_FEE_WITHDRAWER');
-  /// @notice Factory contract address
   address private immutable factory;
-  /// @notice Address to which protocol commissions are sent from vault
+
+  /// @notice Address to which community fees are sent from vault
   address public communityFeeReceiver;
   /// @notice The percentage of the protocol fee that Algebra will receive
   /// @dev Value in thousandths,i.e. 1e-3
