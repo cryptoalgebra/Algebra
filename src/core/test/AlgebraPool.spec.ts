@@ -643,9 +643,9 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1) / 10n, wallet.address);
         await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
 
-        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('1700000000000');
+        expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('8500000000000');
         const [, communityFeePending1] = await pool.getCommunityFeePending();
-        expect(communityFeePending1.toString()).to.eq('170000000000');
+        expect(communityFeePending1.toString()).to.eq('850000000000');
       });
 
       it('positions are protected before community fee is turned on', async () => {
@@ -690,16 +690,16 @@ describe('AlgebraPool', () => {
         expect(liquidity).to.eq(1);
         expect(fees0, 'tokens owed 0 before').to.eq(0);
         expect(fees1, 'tokens owed 1 before').to.eq(0);
-        expect(innerFeeGrowth0Token).to.eq('3402823669209373878308127703486852');
-        expect(innerFeeGrowth1Token).to.eq('340282366920937387830812770348685');
+        expect(innerFeeGrowth0Token).to.eq('17014118346046869391540638517434263');
+        expect(innerFeeGrowth1Token).to.eq('1701411834604686939154063851743426');
 
         await pool.burn(minTick + tickSpacing, maxTick - tickSpacing, 1, '0x');
         ({ liquidity, innerFeeGrowth0Token, innerFeeGrowth1Token, fees1, fees0 } = await pool.positions(
           await pool.getKeyForPosition(wallet.address, minTick + tickSpacing, maxTick - tickSpacing)
         ));
         expect(liquidity).to.eq(0);
-        expect(innerFeeGrowth0Token).to.eq('3402823669209373878308127703486852');
-        expect(innerFeeGrowth1Token).to.eq('340282366920937387830812770348685');
+        expect(innerFeeGrowth0Token).to.eq('17014118346046869391540638517434263');
+        expect(innerFeeGrowth1Token).to.eq('1701411834604686939154063851743426');
         expect(fees0, 'tokens owed 0 after').to.eq(3);
         expect(fees1, 'tokens owed 1 after').to.eq(0);
       });
@@ -735,8 +735,8 @@ describe('AlgebraPool', () => {
       expect(liquidity).to.eq(0);
       expect(fees0).to.not.eq(0);
       expect(fees1).to.not.eq(0);
-      expect(innerFeeGrowth0Token).to.eq('11342745564031282115445820247725607');
-      expect(innerFeeGrowth1Token).to.eq('11342745564031282115445820247725607');
+      expect(innerFeeGrowth0Token).to.eq('56713727820156410577229101238628035');
+      expect(innerFeeGrowth1Token).to.eq('56713727820156410577229101238628035');
     });
 
     it('clears the tick if its the last position using it', async () => {
@@ -1070,7 +1070,7 @@ describe('AlgebraPool', () => {
         .to.not.emit(token1, 'Transfer');
       await expect(pool.collect(wallet.address, 0, 120, MaxUint128, MaxUint128))
         .to.emit(token1, 'Transfer')
-        .withArgs(poolAddress, wallet.address, BigInt('6018336102428407')) // roughly 0.3% despite other liquidity
+        .withArgs(poolAddress, wallet.address, BigInt('6020744641138734'))
         .to.not.emit(token0, 'Transfer');
       expect((await pool.globalState()).tick).to.be.gte(120);
     });
@@ -1088,7 +1088,7 @@ describe('AlgebraPool', () => {
         .to.not.emit(token1, 'Transfer');
       await expect(pool.collect(wallet.address, -120, 0, MaxUint128, MaxUint128))
         .to.emit(token0, 'Transfer')
-        .withArgs(poolAddress, wallet.address, BigInt('6018336102428407')); // roughly 0.3% despite other liquidity
+        .withArgs(poolAddress, wallet.address, BigInt('6020744641138734')); 
       expect((await pool.globalState()).tick).to.be.lt(-120);
     });
 
@@ -1108,7 +1108,7 @@ describe('AlgebraPool', () => {
           .to.not.emit(token1, 'Transfer');
         await expect(pool.collect(wallet.address, 0, 120, MaxUint128, MaxUint128))
           .to.emit(token1, 'Transfer')
-          .withArgs(poolAddress, wallet.address, BigInt('6017734268818165') + 499521896501n);
+          .withArgs(poolAddress, wallet.address, BigInt('6017734268818165') + 2498609026072n);
         expect((await pool.globalState()).tick).to.be.gte(120);
       });
       it('limit selling 1 for 0 at tick 0 thru -1', async () => {
@@ -1125,7 +1125,7 @@ describe('AlgebraPool', () => {
           .to.not.emit(token1, 'Transfer');
         await expect(pool.collect(wallet.address, -120, 0, MaxUint128, MaxUint128))
           .to.emit(token0, 'Transfer')
-          .withArgs(poolAddress, wallet.address, BigInt('6017734268818165') + 499521896501n);
+          .withArgs(poolAddress, wallet.address, BigInt('6017734268818165') + 2498609026072n);
         expect((await pool.globalState()).tick).to.be.lt(-120);
       });
     });
@@ -1214,8 +1214,8 @@ describe('AlgebraPool', () => {
         await getPositionKey(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, pool)
       );
 
-      expect(fees0Position0).to.be.eq('33333333333333');
-      expect(fees0Position1).to.be.eq('66666666666666');
+      expect(fees0Position0).to.be.eq('166666666666666');
+      expect(fees0Position1).to.be.eq('333333333333333');
     });
 
     it('collect part of fees', async () => {
@@ -1231,8 +1231,8 @@ describe('AlgebraPool', () => {
         await getPositionKey(wallet.address, minTick, maxTick, pool)
       );
 
-      expect(fees0Position0before).to.eq('99999999999999');
-      expect(fees0Position1before).to.eq('99999999999999');
+      expect(fees0Position0before).to.eq('499999999999999');
+      expect(fees0Position1before).to.eq('499999999999999');
 
       // collect the fees
       await pool.collect(wallet.address, minTick, maxTick, 1000, 1000);
@@ -1241,8 +1241,8 @@ describe('AlgebraPool', () => {
         await getPositionKey(wallet.address, minTick, maxTick, pool)
       );
 
-      expect(fees0Position0).to.be.eq('99999999998999');
-      expect(fees0Position1).to.be.eq('99999999998999');
+      expect(fees0Position0).to.be.eq('499999999998999');
+      expect(fees0Position1).to.be.eq('499999999998999');
     });
 
     it('emits event', async () => {
@@ -1282,8 +1282,8 @@ describe('AlgebraPool', () => {
         await getPositionKey(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, pool)
       );
 
-      expect(fees0Position0).to.be.eq('33333333333333');
-      expect(fees0Position1).to.be.eq('66666666666666');
+      expect(fees0Position0).to.be.eq('166666666666666');
+      expect(fees0Position1).to.be.eq('333333333333333');
     });
 
     it('works with multiple LPs after tickSpacing decrease', async () => {
@@ -1305,8 +1305,8 @@ describe('AlgebraPool', () => {
         await getPositionKey(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, pool)
       );
 
-      expect(fees0Position0).to.be.eq('33333333333333');
-      expect(fees0Position1).to.be.eq('66666666666666');
+      expect(fees0Position0).to.be.eq('166666666666666');
+      expect(fees0Position1).to.be.eq('333333333333333');
     });
 
     it('works with zero fee', async () => {
@@ -1393,7 +1393,7 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('99999999999999');
+        expect(amount0).to.be.eq('499999999999999');
         expect(amount1).to.be.eq(0);
       });
 
@@ -1422,7 +1422,7 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('1000099999999999999');
+        expect(amount0).to.be.eq('1000499999999999999');
         expect(amount1).to.be.eq(0);
       });
       it('token0 with unexpected donation before swap', async () => {
@@ -1436,7 +1436,7 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('1000099999999999999');
+        expect(amount0).to.be.eq('1000499999999999999');
         expect(amount1).to.be.eq(0);
       });
       it('token1', async () => {
@@ -1450,7 +1450,7 @@ describe('AlgebraPool', () => {
           MaxUint128
         );
         expect(amount0).to.be.eq(0);
-        expect(amount1).to.be.eq('99999999999999');
+        expect(amount1).to.be.eq('499999999999999');
       });
       it('token1 with unexpected donation before burn', async () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address);
@@ -1464,7 +1464,7 @@ describe('AlgebraPool', () => {
           MaxUint128
         );
         expect(amount0).to.be.eq(0);
-        expect(amount1).to.be.eq('1000099999999999999');
+        expect(amount1).to.be.eq('1000499999999999999');
       });
       it('token1 with unexpected donation before swap', async () => {
         await token1.transfer(pool, expandTo18Decimals(1));
@@ -1478,7 +1478,7 @@ describe('AlgebraPool', () => {
           MaxUint128
         );
         expect(amount0).to.be.eq(0);
-        expect(amount1).to.be.eq('1000099999999999999');
+        expect(amount1).to.be.eq('1000499999999999999');
       });
       it('token0 and token1', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address);
@@ -1491,8 +1491,8 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('99999999999999');
-        expect(amount1).to.be.eq('99999999999999');
+        expect(amount0).to.be.eq('499999999999999');
+        expect(amount1).to.be.eq('499999999999999');
       });
       it('token0 and token1 with unexpected donation before burn', async () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address);
@@ -1507,8 +1507,8 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('2000099999999999999');
-        expect(amount1).to.be.eq('1000099999999999999');
+        expect(amount0).to.be.eq('2000499999999999999');
+        expect(amount1).to.be.eq('1000499999999999999');
       });
       it('token0 and token1 with unexpected donation before swaps', async () => {
         await token1.transfer(pool, expandTo18Decimals(1));
@@ -1523,8 +1523,8 @@ describe('AlgebraPool', () => {
           MaxUint128,
           MaxUint128
         );
-        expect(amount0).to.be.eq('2000099999999999999');
-        expect(amount1).to.be.eq('1000099999999999999');
+        expect(amount0).to.be.eq('2000499999999999999');
+        expect(amount1).to.be.eq('1000499999999999999');
       });
     });
   });
@@ -1598,7 +1598,7 @@ describe('AlgebraPool', () => {
       });
 
       // 6 bips * 1e18
-      expect(token0Fees).to.eq('99999999999999');
+      expect(token0Fees).to.eq('499999999999999');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1610,21 +1610,21 @@ describe('AlgebraPool', () => {
         zeroToOne: true,
         poke: true,
       }));
-      expect(token0Fees).to.eq('99999999999999');
+      expect(token0Fees).to.eq('499999999999999');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: true,
         poke: true,
       }));
-      expect(token0Fees).to.eq('199999999999998');
+      expect(token0Fees).to.eq('999999999999998');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: true,
         poke: true,
       }));
-      expect(token0Fees).to.eq('299999999999997');
+      expect(token0Fees).to.eq('1499999999999997');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1637,7 +1637,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('99999999999999');
+      expect(token0Fees).to.eq('499999999999999');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1645,7 +1645,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('199999999999998');
+      expect(token0Fees).to.eq('999999999999998');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1653,7 +1653,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('299999999999997');
+      expect(token0Fees).to.eq('1499999999999997');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1667,7 +1667,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('82999999999999');
+      expect(token0Fees).to.eq('414999999999999');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1675,7 +1675,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('165999999999998');
+      expect(token0Fees).to.eq('829999999999998');
       expect(token1Fees).to.eq(0);
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
@@ -1683,7 +1683,7 @@ describe('AlgebraPool', () => {
         poke: true,
         supportingFee: true,
       }));
-      expect(token0Fees).to.eq('248999999999997');
+      expect(token0Fees).to.eq('1244999999999997');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1696,21 +1696,21 @@ describe('AlgebraPool', () => {
         poke: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('99999999999999');
+      expect(token1Fees).to.eq('499999999999999');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
         poke: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('199999999999998');
+      expect(token1Fees).to.eq('999999999999998');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
         poke: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('299999999999997');
+      expect(token1Fees).to.eq('1499999999999997');
     });
 
     it('swap fees accumulate as expected (1 for 0) supporting fee on transfer', async () => {
@@ -1723,7 +1723,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('99999999999999');
+      expect(token1Fees).to.eq('499999999999999');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
@@ -1731,7 +1731,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('199999999999998');
+      expect(token1Fees).to.eq('999999999999998');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
@@ -1739,7 +1739,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('299999999999997');
+      expect(token1Fees).to.eq('1499999999999997');
     });
 
     it('swap fees accumulate as expected (1 for 0) supporting fee on transfer community on', async () => {
@@ -1753,7 +1753,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('82999999999999');
+      expect(token1Fees).to.eq('414999999999999');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
@@ -1761,7 +1761,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('165999999999998');
+      expect(token1Fees).to.eq('829999999999998');
       ({ token0Fees, token1Fees } = await swapAndGetFeesOwed({
         amount: expandTo18Decimals(1),
         zeroToOne: false,
@@ -1769,7 +1769,7 @@ describe('AlgebraPool', () => {
         supportingFee: true,
       }));
       expect(token0Fees).to.eq(0);
-      expect(token1Fees).to.eq('248999999999997');
+      expect(token1Fees).to.eq('1244999999999997');
     });
 
     it('position owner gets partial fees when community fee is on', async () => {
@@ -1781,7 +1781,7 @@ describe('AlgebraPool', () => {
         poke: true,
       });
 
-      expect(token0Fees).to.be.eq('82999999999999');
+      expect(token0Fees).to.be.eq('414999999999999');
       expect(token1Fees).to.be.eq(0);
     });
 
@@ -1798,7 +1798,7 @@ describe('AlgebraPool', () => {
       });
 
       // 1 bips * 2e18
-      expect(token0Fees).to.eq('199999999999998');
+      expect(token0Fees).to.eq('999999999999998');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1817,7 +1817,7 @@ describe('AlgebraPool', () => {
         poke: true,
       });
 
-      expect(token0Fees).to.eq('182999999999999');
+      expect(token0Fees).to.eq('914999999999999');
       expect(token1Fees).to.eq(0);
     });
 
@@ -1830,7 +1830,7 @@ describe('AlgebraPool', () => {
         poke: true,
       });
 
-      expect(token0Fees).to.eq('82999999999999');
+      expect(token0Fees).to.eq('414999999999999');
       expect(token1Fees).to.eq(0);
 
       // collect the fees
@@ -1845,19 +1845,19 @@ describe('AlgebraPool', () => {
       expect(token0FeesNext).to.eq(0);
       expect(token1FeesNext).to.eq(0);
 
-      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('17000000000000');
+      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('85000000000000');
       const [communityFeePending0] = await pool.getCommunityFeePending();
-      expect(communityFeePending0).to.be.eq('17000000000000');
+      expect(communityFeePending0).to.be.eq('85000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
 
       await pool.burn(minTick, maxTick, 0, '0x'); // poke to update fees
       await expect(pool.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128))
         .to.emit(token0, 'Transfer')
-        .withArgs(await pool.getAddress(), wallet.address, '82999999999999');
-      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('17000000000000');
+        .withArgs(await pool.getAddress(), wallet.address, '414999999999999');
+      expect((await token0.balanceOf(vaultAddress)).toString()).to.eq('85000000000000');
 
       const [communityFeePending0After] = await pool.getCommunityFeePending();
-      expect(communityFeePending0After).to.be.eq('17000000000000');
+      expect(communityFeePending0After).to.be.eq('85000000000000');
       expect(Number((await token1.balanceOf(vaultAddress)).toString())).to.eq(0);
     });
 
@@ -1918,7 +1918,7 @@ describe('AlgebraPool', () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address);
         await expect(pool.burn(120000, 121200, liquidityAmount, '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, 120000, 121200, liquidityAmount, '30009977315155', '999899999999999999')
+          .withArgs(wallet.address, 120000, 121200, liquidityAmount, '30012388425661', '999499999999999999')
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         expect((await pool.globalState()).tick).to.eq(120197);
@@ -1929,7 +1929,7 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address);
         await expect(pool.burn(-121200, -120000, liquidityAmount, '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, -121200, -120000, liquidityAmount, '999899999999999999', '30009977315155')
+          .withArgs(wallet.address, -121200, -120000, liquidityAmount, '999499999999999999', '30012388425661')
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         expect((await pool.globalState()).tick).to.eq(-120198);
@@ -2452,7 +2452,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact1For0SupportingFee(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
-          .withArgs(await swapTarget.getAddress(), wallet.address, false, 10000, MAX_SQRT_RATIO- 1n, -9998, 10000, callbackData);
+          .withArgs(await swapTarget.getAddress(), wallet.address, false, 10000, MAX_SQRT_RATIO- 1n, -9994, 10000, callbackData);
       });
 
       it('before swap the hook is called', async () => {
@@ -2468,7 +2468,7 @@ describe('AlgebraPool', () => {
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
         await expect(swapExact0For1(10000, wallet.address))
           .to.be.emit(poolPlugin, 'AfterSwap')
-          .withArgs(await swapTarget.getAddress(), wallet.address, true, 10000, MIN_SQRT_RATIO + 1n, 10000, -9998, callbackData);
+          .withArgs(await swapTarget.getAddress(), wallet.address, true, 10000, MIN_SQRT_RATIO + 1n, 10000, -9994, callbackData);
       });
 
       it('before flash the hook is called', async () => {

@@ -262,7 +262,8 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if new default fee eq current', async () => {
-      await expect(factory.setDefaultFee(100)).to.be.reverted;
+      const fee = await factory.defaultFee();
+      await expect(factory.setDefaultFee(fee)).to.be.reverted;
     });
 
     it('works correct', async () => {

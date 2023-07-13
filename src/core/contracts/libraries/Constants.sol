@@ -10,7 +10,7 @@ library Constants {
 
   uint24 internal constant FEE_DENOMINATOR = 1e6;
   uint16 internal constant FLASH_FEE = 0.0001e6; // fee for flash loan in hundredths of a bip (0.01%)
-  uint16 internal constant INIT_DEFAULT_FEE = 0.0001e6; // init default fee value in hundredths of a bip (0.01%)
+  uint16 internal constant INIT_DEFAULT_FEE = 0.0005e6; // init default fee value in hundredths of a bip (0.05%)
   uint16 internal constant MAX_DEFAULT_FEE = 0.05e6;
 
   int24 internal constant INIT_DEFAULT_TICK_SPACING = 60;
