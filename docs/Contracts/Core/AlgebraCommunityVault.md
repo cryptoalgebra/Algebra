@@ -45,7 +45,6 @@ Version: Algebra Integral*
 
 
 
-
 ## Variables
 ### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
 
@@ -99,6 +98,7 @@ Address of Algebra fee manager
 `function withdraw(address token, uint256 amount) external`  external
 
 Withdraw protocol fees from vault
+
 *Developer note: Can only be called by algebraFeeManager or communityFeeReceiver*
 
 
@@ -115,6 +115,7 @@ Withdraw protocol fees from vault
 `function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external`  external
 
 Withdraw protocol fees from vault. Used to claim fees for multiple tokens
+
 *Developer note: Can be called by algebraFeeManager or communityFeeReceiver*
 
 
@@ -130,6 +131,7 @@ Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 `function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external`  external
 
 Accepts the proposed new Algebra fee
+
 *Developer note: Can only be called by the factory owner*
 
 
@@ -145,6 +147,7 @@ Accepts the proposed new Algebra fee
 `function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external`  external
 
 Change community fee receiver address
+
 *Developer note: Can only be called by the factory owner*
 
 
@@ -216,8 +219,5 @@ Change Algebra community fee part receiver
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFeeReceiver | address | The address of new Algebra fee receiver |
-
-
-
 
 

@@ -11,8 +11,6 @@ Contains pool methods that may only be called by permissioned addresses
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
-
-
 ## Functions
 ### setCommunityFee
 
@@ -83,8 +81,5 @@ Called by the plugin if dynamic fee is enabled
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newFee | uint16 | The new fee value |
-
-
-
 
 

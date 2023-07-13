@@ -11,8 +11,6 @@ The interface for the Algebra plugin with dynamic fee logic
 If the dynamic fee logic does not allow the fee to be calculated without additional data, the method should revert with the appropriate message*
 
 
-
-
 ## Functions
 ### getCurrentFee
 
@@ -29,7 +27,4 @@ Returns fee from plugin
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | fee | uint16 | The pool fee value in hundredths of a bip, i.e. 1e-6 |
-
-
-
 

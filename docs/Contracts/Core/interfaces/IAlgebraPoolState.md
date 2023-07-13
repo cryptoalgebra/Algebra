@@ -11,8 +11,6 @@ Pool state that can change
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
-
-
 ## Functions
 ### globalState
 
@@ -82,6 +80,7 @@ The timestamp of the last sending of tokens to community vault
 `function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1)` view external
 
 The amounts of token0 and token1 that will be sent to the vault
+
 *Developer note: Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
 
 
@@ -100,6 +99,7 @@ The amounts of token0 and token1 that will be sent to the vault
 `function plugin() external view returns (address pluginAddress)` view external
 
 Returns the address of currently used plugin
+
 *Developer note: The plugin is subject to change*
 
 
@@ -136,6 +136,7 @@ Returns 256 packed tick initialized boolean values. See TickTree for more inform
 `function totalFeeGrowth0Token() external view returns (uint256)` view external
 
 The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
+
 *Developer note: This value can overflow the uint256*
 
 
@@ -153,6 +154,7 @@ The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for 
 `function totalFeeGrowth1Token() external view returns (uint256)` view external
 
 The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
+
 *Developer note: This value can overflow the uint256*
 
 
@@ -170,6 +172,7 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 `function fee() external view returns (uint16 currentFee)` view external
 
 The current pool fee value
+
 *Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
 If the plugin implements complex fee logic, this method may return an incorrect value or revert.
 In this case, see the plugin implementation and related documentation.*
@@ -189,6 +192,7 @@ In this case, see the plugin implementation and related documentation.*
 `function getReserves() external view returns (uint128 reserve0, uint128 reserve1)` view external
 
 The tracked token0 and token1 reserves of pool
+
 *Developer note: If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
 If the balance exceeds uint128, the excess will be sent to the communityVault.*
 
@@ -231,6 +235,7 @@ Returns the information about a position by the position&#x27;s key
 `function liquidity() external view returns (uint128)` view external
 
 The currently in range liquidity available to the pool
+
 *Developer note: This value has no relationship to the total liquidity across all ticks.
 Returned value cannot exceed type(uint128).max*
 
@@ -249,6 +254,7 @@ Returned value cannot exceed type(uint128).max*
 `function tickSpacing() external view returns (int24)` view external
 
 The current tick spacing
+
 *Developer note: Ticks can only be initialized by new mints at multiples of this value
 e.g.: a tickSpacing of 60 means ticks can be initialized every 60th tick, i.e., ..., -120, -60, 0, 60, 120, ...
 However, tickspacing can be changed after the ticks have been initialized.
@@ -294,7 +300,4 @@ The next initialized tick after current global tick
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | int24 | The next initialized tick |
-
-
-
 

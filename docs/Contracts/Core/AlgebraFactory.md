@@ -10,7 +10,6 @@ Is used to deploy pools and its plugins
 *Developer note: Version: Algebra Integral*
 
 
-
 ## Variables
 ### bytes32 POOLS_ADMINISTRATOR_ROLE constant
 
@@ -71,6 +70,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 `function owner() public view returns (address)` view public
 
 Returns the current owner of the factory
+
 *Developer note: Can be changed by the current owner via transferOwnership(address newOwner)*
 
 
@@ -126,6 +126,7 @@ Returns the default communityFee and tickspacing
 `function computePoolAddress(address token0, address token1) public view returns (address pool)` view public
 
 Deterministically computes the pool address given the token0 and token1
+
 *Developer note: The method does not check if such a pool has been created*
 
 
@@ -147,6 +148,7 @@ Deterministically computes the pool address given the token0 and token1
 `function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
 Creates a pool for the given two tokens
+
 *Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
 The call will revert if the pool already exists or the token arguments are invalid.*
 
@@ -169,6 +171,7 @@ The call will revert if the pool already exists or the token arguments are inval
 `function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external`  external
 
 
+
 *Developer note: updates default community fee for new pools*
 
 
@@ -182,6 +185,7 @@ The call will revert if the pool already exists or the token arguments are inval
 
 
 `function setDefaultFee(uint16 newDefaultFee) external`  external
+
 
 
 *Developer note: updates default fee for new pools*
@@ -199,6 +203,7 @@ The call will revert if the pool already exists or the token arguments are inval
 `function setDefaultTickspacing(int24 newDefaultTickspacing) external`  external
 
 
+
 *Developer note: updates default tickspacing for new pools*
 
 
@@ -212,6 +217,7 @@ The call will revert if the pool already exists or the token arguments are inval
 
 
 `function setDefaultPluginFactory(address newDefaultPluginFactory) external`  external
+
 
 
 *Developer note: updates pluginFactory address*
@@ -252,12 +258,10 @@ Stops process of renounceOwnership and removes timer.
 `function renounceOwnership() public`  public
 
 
+
 *Developer note: Leaves the contract without owner. It will not be possible to call &#x60;onlyOwner&#x60; functions anymore.
 Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
 have passed since the call to the startRenounceOwnership() function.*
-
-
-
 
 
 

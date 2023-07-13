@@ -10,8 +10,6 @@ The Algebra plugin interface
 *Developer note: The plugin will be called by the pool using hook methods depending on the current pool settings*
 
 
-
-
 ## Functions
 ### defaultPluginConfig
 
@@ -218,7 +216,4 @@ The hook called after flash
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bytes4 | bytes4 The function selector for the hook |
-
-
-
 

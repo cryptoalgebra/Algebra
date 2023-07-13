@@ -18,6 +18,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 `event Initialize(uint160 price, int24 tick)`  
 
 Emitted exactly once by a pool when #initialize is first called on the pool
+
 *Developer note: Mint/Burn/Swaps cannot be emitted by the pool before Initialize*
 
 
@@ -54,6 +55,7 @@ Emitted when liquidity is minted for a given position
 `event Collect(address owner, address recipient, int24 bottomTick, int24 topTick, uint128 amount0, uint128 amount1)`  
 
 Emitted when fees are collected by the owner of a position
+
 *Developer note: Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees*
 
 
@@ -74,6 +76,7 @@ Emitted when fees are collected by the owner of a position
 `event Burn(address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)`  
 
 Emitted when a position&#x27;s liquidity is removed
+
 *Developer note: Does not withdraw any fees earned by the liquidity position, which must be withdrawn via #collect*
 
 
@@ -195,10 +198,5 @@ Emitted when the fee changes inside the pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
-
-
-
-
-
 
 

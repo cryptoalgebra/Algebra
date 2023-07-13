@@ -128,7 +128,6 @@ Emitted when the defaultPluginFactory address is changed
 
 
 
-
 ## Functions
 ### POOLS_ADMINISTRATOR_ROLE
 
@@ -172,6 +171,7 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 `function owner() external view returns (address)` view external
 
 Returns the current owner of the factory
+
 *Developer note: Can be changed by the current owner via transferOwnership(address newOwner)*
 
 
@@ -303,6 +303,7 @@ Returns the default communityFee and tickspacing
 `function computePoolAddress(address token0, address token1) external view returns (address pool)` view external
 
 Deterministically computes the pool address given the token0 and token1
+
 *Developer note: The method does not check if such a pool has been created*
 
 
@@ -324,6 +325,7 @@ Deterministically computes the pool address given the token0 and token1
 `function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
 
 Returns the pool address for a given pair of tokens, or address 0 if it does not exist
+
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
 
@@ -361,6 +363,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 `function createPool(address tokenA, address tokenB) external returns (address pool)`  external
 
 Creates a pool for the given two tokens
+
 *Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
 The call will revert if the pool already exists or the token arguments are invalid.*
 
@@ -383,6 +386,7 @@ The call will revert if the pool already exists or the token arguments are inval
 `function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external`  external
 
 
+
 *Developer note: updates default community fee for new pools*
 
 
@@ -396,6 +400,7 @@ The call will revert if the pool already exists or the token arguments are inval
 
 
 `function setDefaultFee(uint16 newDefaultFee) external`  external
+
 
 
 *Developer note: updates default fee for new pools*
@@ -413,6 +418,7 @@ The call will revert if the pool already exists or the token arguments are inval
 `function setDefaultTickspacing(int24 newDefaultTickspacing) external`  external
 
 
+
 *Developer note: updates default tickspacing for new pools*
 
 
@@ -426,6 +432,7 @@ The call will revert if the pool already exists or the token arguments are inval
 
 
 `function setDefaultPluginFactory(address newDefaultPluginFactory) external`  external
+
 
 
 *Developer note: updates pluginFactory address*
@@ -455,9 +462,6 @@ of time must pass before the ownership renounce can be completed.
 `function stopRenounceOwnership() external`  external
 
 Stops process of renounceOwnership and removes timer.
-
-
-
 
 
 

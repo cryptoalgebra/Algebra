@@ -11,8 +11,6 @@ Pool state that never changes
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
-
-
 ## Functions
 ### factory
 
@@ -84,6 +82,7 @@ The contract to which community fees are transferred
 `function maxLiquidityPerTick() external view returns (uint128)` view external
 
 The maximum amount of position liquidity that can use any tick in the range
+
 *Developer note: This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
 also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool*
 
@@ -95,7 +94,4 @@ also prevents out-of-range liquidity from being used to prevent adding in-range 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint128 | The max amount of liquidity per tick |
-
-
-
 

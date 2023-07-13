@@ -11,8 +11,6 @@ Permissionless pool actions
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
-
-
 ## Functions
 ### initialize
 
@@ -20,6 +18,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 `function initialize(uint160 initialPrice) external`  external
 
 Sets the initial price for the pool
+
 *Developer note: Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value
 Initialization should be done in one transaction with pool creation to avoid front-running*
 
@@ -36,6 +35,7 @@ Initialization should be done in one transaction with pool creation to avoid fro
 `function mint(address leftoversRecipient, address recipient, int24 bottomTick, int24 topTick, uint128 liquidityDesired, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)`  external
 
 Adds liquidity for the given recipient/bottomTick/topTick position
+
 *Developer note: The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
 in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
 on bottomTick, topTick, the amount of liquidity, and the current price.*
@@ -65,6 +65,7 @@ on bottomTick, topTick, the amount of liquidity, and the current price.*
 `function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)`  external
 
 Collects tokens owed to a position
+
 *Developer note: Does not recompute fees earned, which must be done either via mint or burn of any amount of liquidity.
 Collect must be called by the position owner. To withdraw only token0 or only token1, amount0Requested or
 amount1Requested may be set to zero. To withdraw all tokens owed, caller may pass any value greater than the
@@ -93,6 +94,7 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 `function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) external returns (uint256 amount0, uint256 amount1)`  external
 
 Burn liquidity from the sender and account tokens owed for the liquidity to the position
+
 *Developer note: Can be used to trigger a recalculation of fees owed to a position by calling with an amount of 0
 Fees must be collected separately via a call to #collect*
 
@@ -118,6 +120,7 @@ Fees must be collected separately via a call to #collect*
 `function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
 
 Swap token0 for token1, or token1 for token0
+
 *Developer note: The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback*
 
 
@@ -143,6 +146,7 @@ Swap token0 for token1, or token1 for token0
 `function swapWithPaymentInAdvance(address leftoversRecipient, address recipient, bool zeroToOne, int256 amountToSell, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)`  external
 
 Swap token0 for token1, or token1 for token0 with prepayment
+
 *Developer note: The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
 caller must send tokens in callback before swap calculation
 the actually sent amount of tokens is used for further calculations*
@@ -171,6 +175,7 @@ the actually sent amount of tokens is used for further calculations*
 `function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external`  external
 
 Receive token0 and/or token1 and pay it back, plus a fee, in the callback
+
 *Developer note: The caller of this method receives a callback in the form of IAlgebraFlashCallback#AlgebraFlashCallback
 All excess tokens paid in the callback are distributed to currently in-range liquidity providers as an additional fee.
 If there are no in-range liquidity providers, the fee will be transferred to the first active provider in the future*
@@ -183,8 +188,5 @@ If there are no in-range liquidity providers, the fee will be transferred to the
 | amount0 | uint256 | The amount of token0 to send |
 | amount1 | uint256 | The amount of token1 to send |
 | data | bytes | Any data to be passed through to the callback |
-
-
-
 
 

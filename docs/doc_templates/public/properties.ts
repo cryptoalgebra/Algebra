@@ -1,6 +1,6 @@
 import { DocItemWithContext, DocItemContext } from 'solidity-docgen/dist/site';
 import { NatSpec } from 'solidity-docgen/dist/utils/natspec';
-import { FunctionDefinition, VariableDeclaration } from 'solidity-ast';
+import { FunctionDefinition, VariableDeclaration, ContractDefinition } from 'solidity-ast';
 import { findAll, isNodeType } from 'solidity-ast/utils';
 
 export function notTest({ item }: DocItemContext): boolean {

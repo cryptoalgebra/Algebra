@@ -13,8 +13,6 @@ Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
-
-
 ## Functions
 ### getDeployParameters
 
@@ -22,6 +20,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 `function getDeployParameters() external view returns (address plugin, address factory, address communityVault, address token0, address token1)` view external
 
 Get the parameters to be used in constructing the pool, set transiently during pool creation.
+
 *Developer note: Called by the pool constructor to fetch the parameters of the pool*
 
 
@@ -43,6 +42,7 @@ Get the parameters to be used in constructing the pool, set transiently during p
 `function deploy(address plugin, address token0, address token1) external returns (address pool)`  external
 
 
+
 *Developer note: Deploys a pool with the given parameters by transiently setting the parameters in cache.*
 
 
@@ -58,7 +58,4 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | pool | address | The deployed pool&#x27;s address |
-
-
-
 

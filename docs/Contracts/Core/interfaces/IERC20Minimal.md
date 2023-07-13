@@ -45,7 +45,6 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 
 
 
-
 ## Functions
 ### balanceOf
 
@@ -146,7 +145,4 @@ Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool | Returns true for a successful transfer, false for unsuccessful |
-
-
-
 
