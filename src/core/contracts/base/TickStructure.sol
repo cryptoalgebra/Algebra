@@ -64,15 +64,8 @@ abstract contract TickStructure is AlgebraPoolBase {
   /// @param toggleBottom Should bottom tick be changed or not
   /// @param toggleTop Should top tick be changed or not
   /// @param currentTick The current global tick in the pool
-  /// @param remove Remove or add the tick
-  function _insertOrRemovePairOfTicks(
-    int24 bottomTick,
-    int24 topTick,
-    bool toggleBottom,
-    bool toggleTop,
-    int24 currentTick,
-    bool remove
-  ) internal override {
+  /// @param remove Remove or add the ticks
+  function _addOrRemoveTicks(int24 bottomTick, int24 topTick, bool toggleBottom, bool toggleTop, int24 currentTick, bool remove) internal override {
     (int24 prevInitializedTick, int24 nextInitializedTick, uint32 oldTickTreeRoot) = (prevTickGlobal, nextTickGlobal, tickTreeRoot);
     (int24 newPrevTick, int24 newNextTick, uint32 newTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
     if (toggleBottom) {

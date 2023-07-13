@@ -90,9 +90,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     currentFee = globalState.fee;
     uint8 pluginConfig = globalState.pluginConfig;
 
-    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) {
-      return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
-    }
+    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
 
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
@@ -149,12 +147,5 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
 
   // This virtual function is implemented in TickStructure and used in Positions
   /// @dev Add or remove a pair of ticks to the corresponding data structure
-  function _insertOrRemovePairOfTicks(
-    int24 bottomTick,
-    int24 topTick,
-    bool toggleBottom,
-    bool toggleTop,
-    int24 currentTick,
-    bool remove
-  ) internal virtual;
+  function _addOrRemoveTicks(int24 bottomTick, int24 topTick, bool toggleBottom, bool toggleTop, int24 currentTick, bool remove) internal virtual;
 }
