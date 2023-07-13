@@ -1,4 +1,4 @@
-import { Wallet, BigNumber } from 'ethers';
+import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraPoolDeployer, AlgebraCommunityVault, TestERC20 } from '../typechain';
@@ -14,29 +14,29 @@ describe('AlgebraCommunityVault', () => {
   let token0: TestERC20;
   let token1: TestERC20;
 
-  const AMOUNT = BigNumber.from(10).pow(18);
+  const AMOUNT = 10n ** 18n;
 
   const fixture = async () => {
     const [deployer] = await ethers.getSigners();
     // precompute
-    const poolDeployerAddress = ethers.utils.getContractAddress({
+    const poolDeployerAddress = getCreateAddress({
       from: deployer.address,
-      nonce: (await deployer.getTransactionCount()) + 1,
+      nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
     });
 
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory;
+    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const vaultAddress = await _factory.communityVault();
     const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
-    vault = vaultFactory.attach(vaultAddress) as AlgebraCommunityVault;
+    vault = vaultFactory.attach(vaultAddress) as any as AlgebraCommunityVault;
 
     const tokenFactory = await ethers.getContractFactory('TestERC20');
-    token0 = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20;
-    token1 = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20;
+    token0 = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20;
+    token1 = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory.address, vault.address)) as AlgebraPoolDeployer;
+    poolDeployer = (await poolDeployerFactory.deploy(_factory, vault)) as any as AlgebraPoolDeployer;
     return _factory;
   };
 
@@ -46,8 +46,8 @@ describe('AlgebraCommunityVault', () => {
 
   beforeEach('add tokens to vault', async () => {
     factory = await loadFixture(fixture);
-    await token0.transfer(vault.address, BigNumber.from(10).pow(18));
-    await token1.transfer(vault.address, BigNumber.from(10).pow(18));
+    await token0.transfer(vault, AMOUNT);
+    await token1.transfer(vault, AMOUNT);
   });
 
   describe('#Withdraw', async () => {
@@ -65,21 +65,21 @@ describe('AlgebraCommunityVault', () => {
       describe('Algebra fee off', async () => {
         it('withdraw works', async () => {
           let balanceBefore = await token0.balanceOf(communityFeeReceiver);
-          await vault.withdraw(token0.address, AMOUNT);
+          await vault.withdraw(token0, AMOUNT);
           let balanceAfter = await token0.balanceOf(communityFeeReceiver);
-          expect(balanceAfter.sub(balanceBefore)).to.eq(AMOUNT);
+          expect(balanceAfter - balanceBefore).to.eq(AMOUNT);
         });
 
         it('algebra fee manager can withdraw', async () => {
           let balanceBefore = await token0.balanceOf(communityFeeReceiver);
 
           const _vault = vault.connect(third);
-          await expect(_vault.withdraw(token0.address, AMOUNT)).to.be.reverted;
+          await expect(_vault.withdraw(token0, AMOUNT)).to.be.reverted;
 
-          await _vault.connect(other).withdraw(token0.address, AMOUNT);
+          await _vault.connect(other).withdraw(token0, AMOUNT);
 
           let balanceAfter = await token0.balanceOf(communityFeeReceiver);
-          expect(balanceAfter.sub(balanceBefore)).to.eq(AMOUNT);
+          expect(balanceAfter - balanceBefore).to.eq(AMOUNT);
         });
 
         it('withdrawTokens works', async () => {
@@ -87,24 +87,24 @@ describe('AlgebraCommunityVault', () => {
           let balance1Before = await token1.balanceOf(communityFeeReceiver);
           await vault.withdrawTokens([
             {
-              token: token0.address,
+              token: token0,
               amount: AMOUNT,
             },
             {
-              token: token1.address,
+              token: token1,
               amount: AMOUNT,
             },
           ]);
           let balance0After = await token0.balanceOf(communityFeeReceiver);
           let balance1After = await token1.balanceOf(communityFeeReceiver);
-          expect(balance0After.sub(balance0Before)).to.eq(AMOUNT);
-          expect(balance1After.sub(balance1Before)).to.eq(AMOUNT);
+          expect(balance0After - balance0Before).to.eq(AMOUNT);
+          expect(balance1After - balance1Before).to.eq(AMOUNT);
         });
       });
 
       describe('Algebra fee on', async () => {
         let algebraFeeReceiver: string;
-        const ALGEBRA_FEE = 100; // 10%
+        const ALGEBRA_FEE = 100n; // 10%
 
         beforeEach('turn on algebra fee', async () => {
           algebraFeeReceiver = other.address;
@@ -118,12 +118,12 @@ describe('AlgebraCommunityVault', () => {
           let balanceBefore = await token0.balanceOf(communityFeeReceiver);
           let balanceAlgebraBefore = await token0.balanceOf(algebraFeeReceiver);
 
-          await vault.withdraw(token0.address, AMOUNT);
+          await vault.withdraw(token0, AMOUNT);
           let balanceAfter = await token0.balanceOf(communityFeeReceiver);
           let balanceAlgebraAfter = await token0.balanceOf(algebraFeeReceiver);
 
-          expect(balanceAfter.sub(balanceBefore)).to.eq(AMOUNT.sub(AMOUNT.mul(ALGEBRA_FEE).div(1000)));
-          expect(balanceAlgebraAfter.sub(balanceAlgebraBefore)).to.eq(AMOUNT.mul(ALGEBRA_FEE).div(1000));
+          expect(balanceAfter - balanceBefore).to.eq(AMOUNT - (AMOUNT * ALGEBRA_FEE / 1000n));
+          expect(balanceAlgebraAfter - balanceAlgebraBefore).to.eq(AMOUNT * ALGEBRA_FEE / 1000n);
         });
 
         it('algebra fee manager can withdraw', async () => {
@@ -132,15 +132,15 @@ describe('AlgebraCommunityVault', () => {
 
           const _vault = vault.connect(third);
 
-          await expect(_vault.withdraw(token0.address, AMOUNT)).to.be.reverted;
+          await expect(_vault.withdraw(token0, AMOUNT)).to.be.reverted;
 
-          await expect(_vault.connect(other).withdraw(token0.address, AMOUNT))
+          await _vault.connect(other).withdraw(token0, AMOUNT)
 
           let balanceAfter = await token0.balanceOf(communityFeeReceiver);
           let balanceAlgebraAfter = await token0.balanceOf(algebraFeeReceiver);
 
-          expect(balanceAfter.sub(balanceBefore)).to.eq(AMOUNT.sub(AMOUNT.mul(ALGEBRA_FEE).div(1000)));
-          expect(balanceAlgebraAfter.sub(balanceAlgebraBefore)).to.eq(AMOUNT.mul(ALGEBRA_FEE).div(1000));
+          expect(balanceAfter - balanceBefore).to.eq(AMOUNT - (AMOUNT * ALGEBRA_FEE / 1000n));
+          expect(balanceAlgebraAfter - balanceAlgebraBefore).to.eq(AMOUNT * ALGEBRA_FEE / 1000n);
         });
 
         it('withdrawTokens works', async () => {
@@ -151,11 +151,11 @@ describe('AlgebraCommunityVault', () => {
 
           await vault.withdrawTokens([
             {
-              token: token0.address,
+              token: token0,
               amount: AMOUNT,
             },
             {
-              token: token1.address,
+              token: token1,
               amount: AMOUNT,
             },
           ]);
@@ -164,10 +164,10 @@ describe('AlgebraCommunityVault', () => {
           let balance0AlgebraAfter = await token0.balanceOf(algebraFeeReceiver);
           let balance1AlgebraAfter = await token1.balanceOf(algebraFeeReceiver);
 
-          expect(balance0After.sub(balance0Before)).to.eq(AMOUNT.sub(AMOUNT.mul(ALGEBRA_FEE).div(1000)));
-          expect(balance1After.sub(balance1Before)).to.eq(AMOUNT.sub(AMOUNT.mul(ALGEBRA_FEE).div(1000)));
-          expect(balance0AlgebraAfter.sub(balance0AlgebraBefore)).to.eq(AMOUNT.mul(ALGEBRA_FEE).div(1000));
-          expect(balance1AlgebraAfter.sub(balance1AlgebraBefore)).to.eq(AMOUNT.mul(ALGEBRA_FEE).div(1000));
+          expect(balance0After - balance0Before).to.eq(AMOUNT - (AMOUNT * ALGEBRA_FEE / 1000n));
+          expect(balance1After - balance1Before).to.eq(AMOUNT - (AMOUNT * ALGEBRA_FEE / 1000n));
+          expect(balance0AlgebraAfter - balance0AlgebraBefore).to.eq(AMOUNT * ALGEBRA_FEE / 1000n);
+          expect(balance1AlgebraAfter - balance1AlgebraBefore).to.eq(AMOUNT * ALGEBRA_FEE / 1000n);
         });
       });
     });
@@ -176,11 +176,11 @@ describe('AlgebraCommunityVault', () => {
       it('withdraw onlyWithdrawer', async () => {
         await vault.changeCommunityFeeReceiver(wallet.address);
         expect(await vault.communityFeeReceiver()).to.be.eq(wallet.address);
-        await expect(vault.connect(other).withdraw(token0.address, AMOUNT)).to.be.reverted;
+        await expect(vault.connect(other).withdraw(token0, AMOUNT)).to.be.reverted;
       });
 
       it('cannot withdraw without communityFeeReceiver', async () => {
-        await expect(vault.withdraw(token0.address, AMOUNT)).to.be.revertedWith('invalid receiver');
+        await expect(vault.withdraw(token0, AMOUNT)).to.be.revertedWith('invalid receiver');
       });
 
       it('withdrawTokens onlyWithdrawer', async () => {
@@ -189,7 +189,7 @@ describe('AlgebraCommunityVault', () => {
         await expect(
           vault.connect(other).withdrawTokens([
             {
-              token: token0.address,
+              token: token0,
               amount: AMOUNT,
             },
           ])
@@ -200,7 +200,7 @@ describe('AlgebraCommunityVault', () => {
         await expect(
           vault.withdrawTokens([
             {
-              token: token0.address,
+              token: token0,
               amount: AMOUNT,
             },
           ])
@@ -208,7 +208,7 @@ describe('AlgebraCommunityVault', () => {
       });
 
       describe('Algebra fee on', async () => {
-        const ALGEBRA_FEE = 100; // 10%
+        const ALGEBRA_FEE = 100n; // 10%
 
         beforeEach('turn on algebra fee', async () => {
           await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
@@ -218,7 +218,7 @@ describe('AlgebraCommunityVault', () => {
         it('cannot withdraw without algebraFeeReceiver', async () => {
           await vault.changeCommunityFeeReceiver(wallet.address);
           expect(await vault.communityFeeReceiver()).to.be.eq(wallet.address);
-          await expect(vault.withdraw(token0.address, AMOUNT)).to.be.revertedWith('invalid algebra fee receiver');
+          await expect(vault.withdraw(token0, AMOUNT)).to.be.revertedWith('invalid algebra fee receiver');
         });
 
         it('cannot withdrawTokens without algebraFeeReceiver', async () => {
@@ -227,7 +227,7 @@ describe('AlgebraCommunityVault', () => {
           await expect(
             vault.withdrawTokens([
               {
-                token: token0.address,
+                token: token0,
                 amount: AMOUNT,
               },
             ])
@@ -238,7 +238,7 @@ describe('AlgebraCommunityVault', () => {
   });
 
   describe('#FactoryOwner permissioned actions', async () => {
-    const ALGEBRA_FEE = 100; // 10%
+    const ALGEBRA_FEE = 100n; // 10%
 
     it('can accept fee change proposal', async () => {
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
@@ -255,7 +255,7 @@ describe('AlgebraCommunityVault', () => {
 
     it('can not accept invalid fee change proposal', async () => {
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
-      await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE - 1)).to.be.revertedWith('invalid new fee');
+      await expect(vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE - 1n)).to.be.revertedWith('invalid new fee');
     });
 
     it('can not accept fee if nothing proposed', async () => {
@@ -268,7 +268,7 @@ describe('AlgebraCommunityVault', () => {
     });
 
     it('can not change communityFeeReceiver to zero address', async () => {
-      await expect(vault.changeCommunityFeeReceiver(ethers.constants.AddressZero)).to.be.reverted;
+      await expect(vault.changeCommunityFeeReceiver(ZeroAddress)).to.be.reverted;
     });
 
     it('only factory owner can change communityFeeReceiver', async () => {
@@ -277,7 +277,7 @@ describe('AlgebraCommunityVault', () => {
   });
 
   describe('#AlgebraFeeManager permissioned actions', async () => {
-    const ALGEBRA_FEE = 100; // 10%
+    const ALGEBRA_FEE = 100n; // 10%
 
     it('can transfer AlgebraFeeManager role', async () => {
       await vault.transferAlgebraFeeManagerRole(other.address);
@@ -297,7 +297,7 @@ describe('AlgebraCommunityVault', () => {
 
     it('can change AlgebraFeeReceiver', async () => {
       await expect(vault.connect(other).changeAlgebraFeeReceiver(other.address)).to.be.reverted;
-      await expect(vault.changeAlgebraFeeReceiver(ethers.constants.AddressZero)).to.be.reverted;
+      await expect(vault.changeAlgebraFeeReceiver(ZeroAddress)).to.be.reverted;
 
       await vault.changeAlgebraFeeReceiver(other.address);
       expect(await vault.algebraFeeReceiver()).to.be.eq(other.address);

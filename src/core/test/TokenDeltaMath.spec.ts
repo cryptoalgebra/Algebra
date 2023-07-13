@@ -1,4 +1,4 @@
-import { BigNumber, constants } from 'ethers';
+import { MaxUint256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { TokenDeltaMathTest } from '../typechain';
 
@@ -6,28 +6,24 @@ import { expect } from './shared/expect';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { encodePriceSqrt, expandTo18Decimals, MaxUint128 } from './shared/utilities';
 
-const {
-  constants: { MaxUint256 },
-} = ethers;
-
 describe('TokenDeltaMath', () => {
   let sqrtPriceMath: TokenDeltaMathTest;
   before(async () => {
     const sqrtPriceMathTestFactory = await ethers.getContractFactory('TokenDeltaMathTest');
-    sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as TokenDeltaMathTest;
+    sqrtPriceMath = (await sqrtPriceMathTestFactory.deploy()) as any as TokenDeltaMathTest;
   });
 
   describe('#getNewPriceAfterInput', () => {
     it('fails if price is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterInput(0, 0, expandTo18Decimals(1).div(10), false)).to.be.reverted;
+      await expect(sqrtPriceMath.getNewPriceAfterInput(0, 0, expandTo18Decimals(1) / 10n, false)).to.be.reverted;
     });
 
     it('fails if liquidity is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterInput(1, 0, expandTo18Decimals(1).div(10), true)).to.be.reverted;
+      await expect(sqrtPriceMath.getNewPriceAfterInput(1, 0, expandTo18Decimals(1) / 10n, true)).to.be.reverted;
     });
 
     it('fails if input amount overflows the price', async () => {
-      const price = BigNumber.from(2).pow(160).sub(1);
+      const price = 2n ** 160n - 1n;
       const liquidity = 1024;
       const amountIn = 1024;
       await expect(sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, false)).to.be.reverted;
@@ -36,24 +32,24 @@ describe('TokenDeltaMath', () => {
     it('any input amount cannot underflow the price', async () => {
       const price = 1;
       const liquidity = 1;
-      const amountIn = BigNumber.from(2).pow(255);
+      const amountIn = 2n ** 255n;
       expect(await sqrtPriceMath.getNewPriceAfterInput(price, liquidity, amountIn, true)).to.eq(1);
     });
 
     it('returns input price if amount in is zero and zeroToOne = true', async () => {
       const price = encodePriceSqrt(1, 1);
-      expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1).div(10), 0, true)).to.eq(price);
+      expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1) / 10n, 0, true)).to.eq(price);
     });
 
     it('returns input price if amount in is zero and zeroToOne = false', async () => {
       const price = encodePriceSqrt(1, 1);
-      expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1).div(10), 0, false)).to.eq(price);
+      expect(await sqrtPriceMath.getNewPriceAfterInput(price, expandTo18Decimals(1) / 10n, 0, false)).to.eq(price);
     });
 
     it('returns the minimum price for max inputs', async () => {
-      const sqrtP = BigNumber.from(2).pow(160).sub(1);
+      const sqrtP = 2n ** 160n - 1n;
       const liquidity = MaxUint128;
-      const maxAmountNoOverflow = MaxUint256.sub(liquidity.shl(96).div(sqrtP));
+      const maxAmountNoOverflow = MaxUint256 - (liquidity << 96n / sqrtP);
       expect(await sqrtPriceMath.getNewPriceAfterInput(sqrtP, liquidity, maxAmountNoOverflow, true)).to.eq('1');
     });
 
@@ -61,7 +57,7 @@ describe('TokenDeltaMath', () => {
       const sqrtQ = await sqrtPriceMath.getNewPriceAfterInput(
         encodePriceSqrt(1, 1),
         expandTo18Decimals(1),
-        expandTo18Decimals(1).div(10),
+        expandTo18Decimals(1) / 10n,
         false
       );
       expect(sqrtQ).to.eq('87150978765690771352898345369');
@@ -71,7 +67,7 @@ describe('TokenDeltaMath', () => {
       const sqrtQ = await sqrtPriceMath.getNewPriceAfterInput(
         encodePriceSqrt(1, 1),
         expandTo18Decimals(1),
-        expandTo18Decimals(1).div(10),
+        expandTo18Decimals(1) / 10n,
         true
       );
       expect(sqrtQ).to.eq('72025602285694852357767227579');
@@ -82,7 +78,7 @@ describe('TokenDeltaMath', () => {
         await sqrtPriceMath.getNewPriceAfterInput(
           encodePriceSqrt(1, 1),
           expandTo18Decimals(10),
-          BigNumber.from(2).pow(100),
+          2n ** 100n,
           true
         )
         // perfect answer:
@@ -92,7 +88,7 @@ describe('TokenDeltaMath', () => {
 
     it('can return 1 with enough amountIn and zeroToOne = true', async () => {
       expect(
-        await sqrtPriceMath.getNewPriceAfterInput(encodePriceSqrt(1, 1), 1, constants.MaxUint256.div(2), true)
+        await sqrtPriceMath.getNewPriceAfterInput(encodePriceSqrt(1, 1), 1, MaxUint256 / 2n, true)
       ).to.eq(1);
     });
 
@@ -101,7 +97,7 @@ describe('TokenDeltaMath', () => {
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),
-          expandTo18Decimals(1).div(10),
+          expandTo18Decimals(1)/ 10n,
           true
         )
       );
@@ -112,7 +108,7 @@ describe('TokenDeltaMath', () => {
         sqrtPriceMath.getGasCostOfGetNewPriceAfterInput(
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),
-          expandTo18Decimals(1).div(10),
+          expandTo18Decimals(1)/ 10n,
           false
         )
       );
@@ -121,11 +117,11 @@ describe('TokenDeltaMath', () => {
 
   describe('#getNewPriceAfterOutput', () => {
     it('fails if price is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(0, 0, expandTo18Decimals(1).div(10), false)).to.be.reverted;
+      await expect(sqrtPriceMath.getNewPriceAfterOutput(0, 0, expandTo18Decimals(1)/ 10n, false)).to.be.reverted;
     });
 
     it('fails if liquidity is zero', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(1, 0, expandTo18Decimals(1).div(10), true)).to.be.reverted;
+      await expect(sqrtPriceMath.getNewPriceAfterOutput(1, 0, expandTo18Decimals(1)/ 10n, true)).to.be.reverted;
     });
 
     it('fails if output amount is exactly the virtual reserves of token0', async () => {
@@ -174,19 +170,19 @@ describe('TokenDeltaMath', () => {
 
     it('returns input price if amount in is zero and zeroToOne = true', async () => {
       const price = encodePriceSqrt(1, 1);
-      expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1).div(10), 0, true)).to.eq(price);
+      expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1)/ 10n, 0, true)).to.eq(price);
     });
 
     it('returns input price if amount in is zero and zeroToOne = false', async () => {
       const price = encodePriceSqrt(1, 1);
-      expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1).div(10), 0, false)).to.eq(price);
+      expect(await sqrtPriceMath.getNewPriceAfterOutput(price, expandTo18Decimals(1)/ 10n, 0, false)).to.eq(price);
     });
 
     it('output amount of 0.1 token1', async () => {
       const sqrtQ = await sqrtPriceMath.getNewPriceAfterOutput(
         encodePriceSqrt(1, 1),
         expandTo18Decimals(1),
-        expandTo18Decimals(1).div(10),
+        expandTo18Decimals(1)/ 10n,
         false
       );
       expect(sqrtQ).to.eq('88031291682515930659493278152');
@@ -196,19 +192,19 @@ describe('TokenDeltaMath', () => {
       const sqrtQ = await sqrtPriceMath.getNewPriceAfterOutput(
         encodePriceSqrt(1, 1),
         expandTo18Decimals(1),
-        expandTo18Decimals(1).div(10),
+        expandTo18Decimals(1)/ 10n,
         true
       );
       expect(sqrtQ).to.eq('71305346262837903834189555302');
     });
 
     it('reverts if amountOut is impossible in zero for one direction', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, constants.MaxUint256, true)).to.be
+      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, true)).to.be
         .reverted;
     });
 
     it('reverts if amountOut is impossible in one for zero direction', async () => {
-      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, constants.MaxUint256, false)).to.be
+      await expect(sqrtPriceMath.getNewPriceAfterOutput(encodePriceSqrt(1, 1), 1, MaxUint256, false)).to.be
         .reverted;
     });
 
@@ -217,7 +213,7 @@ describe('TokenDeltaMath', () => {
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),
-          expandTo18Decimals(1).div(10),
+          expandTo18Decimals(1)/ 10n,
           true
         )
       );
@@ -228,7 +224,7 @@ describe('TokenDeltaMath', () => {
         sqrtPriceMath.getGasCostOfGetNewPriceAfterOutput(
           encodePriceSqrt(1, 1),
           expandTo18Decimals(1),
-          expandTo18Decimals(1).div(10),
+          expandTo18Decimals(1)/ 10n,
           false
         )
       );
@@ -267,23 +263,23 @@ describe('TokenDeltaMath', () => {
         false
       );
 
-      expect(amount0RoundedDown).to.eq(amount0.sub(1));
+      expect(amount0RoundedDown).to.eq(amount0 - 1n);
     });
 
     it('works for prices that overflow', async () => {
       const amount0Up = await sqrtPriceMath.getToken0Delta(
-        encodePriceSqrt(BigNumber.from(2).pow(90), 1),
-        encodePriceSqrt(BigNumber.from(2).pow(96), 1),
+        encodePriceSqrt(2n ** 90n, 1),
+        encodePriceSqrt(2n ** 96n, 1),
         expandTo18Decimals(1),
         true
       );
       const amount0Down = await sqrtPriceMath.getToken0Delta(
-        encodePriceSqrt(BigNumber.from(2).pow(90), 1),
-        encodePriceSqrt(BigNumber.from(2).pow(96), 1),
+        encodePriceSqrt(2n ** 90n, 1),
+        encodePriceSqrt(2n ** 96n, 1),
         expandTo18Decimals(1),
         false
       );
-      expect(amount0Up).to.eq(amount0Down.add(1));
+      expect(amount0Up).to.eq(amount0Down + 1n);
     });
 
     it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {
@@ -340,7 +336,7 @@ describe('TokenDeltaMath', () => {
         false
       );
 
-      expect(amount1RoundedDown).to.eq(amount1.sub(1));
+      expect(amount1RoundedDown).to.eq(amount1 - 1n);
     });
 
     it(`gas cost for amount0 where roundUp = true  [ @skip-on-coverage ]`, async () => {

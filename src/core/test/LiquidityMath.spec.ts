@@ -4,13 +4,11 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import snapshotGasCost from './shared/snapshotGasCost';
 
-const { BigNumber } = ethers;
-
 describe('LiquidityMath', () => {
   let liquidityMath: LiquidityMathTest;
   const fixture = async () => {
     const factory = await ethers.getContractFactory('LiquidityMathTest');
-    return (await factory.deploy()) as LiquidityMathTest;
+    return (await factory.deploy()) as any as LiquidityMathTest;
   };
   beforeEach('deploy LiquidityMathTest', async () => {
     liquidityMath = await loadFixture(fixture);
@@ -27,7 +25,7 @@ describe('LiquidityMath', () => {
       expect(await liquidityMath.addDelta(1, 1)).to.eq(2);
     });
     it('2**128-15 + 15 overflows', async () => {
-      await expect(liquidityMath.addDelta(BigNumber.from(2).pow(128).sub(15), 15)).to.be.revertedWithCustomError(
+      await expect(liquidityMath.addDelta(2n ** 128n - 15n, 15)).to.be.revertedWithCustomError(
         liquidityMath,
         'liquidityAdd'
       );

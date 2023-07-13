@@ -2,14 +2,13 @@ import { ethers } from 'hardhat';
 import { TickTreeTest } from '../typechain';
 import { expect } from './shared/expect';
 import snapshotGasCost from './shared/snapshotGasCost';
-import { BigNumber } from 'ethers';
 
 describe('TickTree', () => {
   let TickTree: TickTreeTest;
 
   beforeEach('deploy TickTreeTest', async () => {
     const TickTreeTestFactory = await ethers.getContractFactory('TickTreeTest');
-    TickTree = (await TickTreeTestFactory.deploy()) as TickTreeTest;
+    TickTree = (await TickTreeTestFactory.deploy()) as any as TickTreeTest;
   });
 
   async function initTicks(ticks: number[]): Promise<void> {
@@ -66,15 +65,15 @@ describe('TickTree', () => {
         await TickTree.toggleTick(tick);
         const indexOfWord = (tick >> 8) + SECOND_LAYER_OFFSET;
         const secondLayerNodeIndex = indexOfWord >> 8;
-        const secondLayerIndexMask = BigNumber.from(2).pow(indexOfWord & 0xFF);
+        const secondLayerIndexMask = 2n ** (BigInt(indexOfWord & 0xFF));
 
         const secondLayerNode = await TickTree.tickSecondLayer(secondLayerNodeIndex);
-        expect(secondLayerNode.and(secondLayerIndexMask), 'invalid index at second layer').to.be.eq(secondLayerIndexMask);
+        expect(secondLayerNode & secondLayerIndexMask, 'invalid index at second layer').to.be.eq(secondLayerIndexMask);
 
-        const rootLayerMask = BigNumber.from(2).pow(secondLayerNodeIndex);
+        const rootLayerMask = 2n ** (BigInt(secondLayerNodeIndex));
         
-        const root = BigNumber.from(await TickTree.root());
-        expect(root.and(rootLayerMask), 'invalid index at root layer').to.be.eq(rootLayerMask);
+        const root = await TickTree.root();
+        expect(root & rootLayerMask, 'invalid index at root layer').to.be.eq(rootLayerMask);
       }
     })
 
@@ -114,19 +113,19 @@ describe('TickTree', () => {
     })
 
     it('128 bit is active', async() => {
-      const {next, initialized} = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(128)), 0);
+      const {next, initialized} = await TickTree.nextTickInSameNode(1n * (2n ** 128n), 0);
       expect(next).to.be.eq(128);
       expect(initialized).to.be.true;
-      const res2 = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(128)), 129);
+      const res2 = await TickTree.nextTickInSameNode(1n * (2n ** 128n), 129);
       expect(res2.next).to.be.eq(255);
       expect(res2.initialized).to.be.false;
     })
 
     it('only last bit is active', async() => {
-      const {next, initialized} = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(255)), 0);
+      const {next, initialized} = await TickTree.nextTickInSameNode(1n * (2n ** 255n), 0);
       expect(next).to.be.eq(255);
       expect(initialized).to.be.true;
-      const res2 = await TickTree.nextTickInSameNode(BigNumber.from(1).mul(BigNumber.from(2).pow(255)), 255);
+      const res2 = await TickTree.nextTickInSameNode(1n * (2n ** 255n), 255);
       expect(res2.next).to.be.eq(255);
       expect(res2.initialized).to.be.true;
     })
