@@ -259,7 +259,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     _lock();
     // firstly we are getting tokens from the original caller of the transaction
-    // since the pool can get less tokens then expected, _amountToSell_ can be changed
+    // since the pool can get less/more tokens then expected, _amountToSell_ can be changed
     {
       // scope to prevent "stack too deep"
       int256 amountReceived;
