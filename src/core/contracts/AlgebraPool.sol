@@ -70,7 +70,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   ) external override onlyValidTicks(bottomTick, topTick) returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
     if (liquidityDesired == 0) revert zeroLiquidityDesired();
 
-    _beforeModifyPosition(recipient, bottomTick, topTick, liquidityDesired.toInt128(), data);
+    _beforeModifyPos(recipient, bottomTick, topTick, liquidityDesired.toInt128(), data);
     _lock();
 
     unchecked {
@@ -125,7 +125,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     emit Mint(msg.sender, recipient, bottomTick, topTick, liquidityActual, amount0, amount1);
 
     _unlock();
-    _afterModifyPosition(recipient, bottomTick, topTick, liquidityActual.toInt128(), amount0, amount1, data);
+    _afterModifyPos(recipient, bottomTick, topTick, liquidityActual.toInt128(), amount0, amount1, data);
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -139,7 +139,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     int128 liquidityDelta = -int128(amount);
 
-    _beforeModifyPosition(msg.sender, bottomTick, topTick, liquidityDelta, data);
+    _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
     _lock();
 
     _updateReserves();
@@ -154,10 +154,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
 
     _unlock();
-    _afterModifyPosition(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
+    _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
 
-  function _beforeModifyPosition(address owner, int24 bottomTick, int24 topTick, int128 liquidityDelta, bytes calldata data) internal {
+  function _beforeModifyPos(address owner, int24 bottomTick, int24 topTick, int128 liquidityDelta, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
       IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data).shouldReturn(
         IAlgebraPlugin.beforeModifyPosition.selector
@@ -165,17 +165,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  function _afterModifyPosition(
-    address owner,
-    int24 bottomTick,
-    int24 topTick,
-    int128 liquidityDelta,
-    uint256 amount0,
-    uint256 amount1,
-    bytes calldata data
-  ) internal {
+  function _afterModifyPos(address owner, int24 bTick, int24 tTick, int128 deltaL, uint256 amount0, uint256 amount1, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin(plugin).afterModifyPosition(msg.sender, owner, bTick, tTick, deltaL, amount0, amount1, data).shouldReturn(
         IAlgebraPlugin.afterModifyPosition.selector
       );
     }
