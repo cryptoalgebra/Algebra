@@ -63,7 +63,7 @@ abstract contract Positions is AlgebraPoolBase {
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        _insertOrRemovePairOfTicks(bottomTick, topTick, toggledBottom, toggledTop, currentTick, liquidityDelta < 0);
+        _addOrRemoveTicks(bottomTick, topTick, toggledBottom, toggledTop, currentTick, liquidityDelta < 0);
       }
 
       int128 globalLiquidityDelta;
