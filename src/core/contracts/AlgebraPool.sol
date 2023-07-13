@@ -321,32 +321,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
   }
 
-  function _beforeSwap(
-    address recipient,
-    bool zto,
-    int256 amountRequired,
-    uint160 limitSqrtPrice,
-    bool withPaymentInAdvance,
-    bytes calldata data
-  ) internal {
+  function _beforeSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, bool payInAdvance, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, withPaymentInAdvance, data).shouldReturn(
+      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data).shouldReturn(
         IAlgebraPlugin.beforeSwap.selector
       );
     }
   }
 
-  function _afterSwap(
-    address recipient,
-    bool zto,
-    int256 amountRequired,
-    uint160 limitSqrtPrice,
-    int256 amount0,
-    int256 amount1,
-    bytes calldata data
-  ) internal {
+  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amountRequired, limitSqrtPrice, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
     }
