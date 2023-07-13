@@ -76,10 +76,10 @@ describe('AlgebraPool arbitrage tests', () => {
               });
 
             const testerFactory = await ethers.getContractFactory('AlgebraPoolSwapTest');
-            const tester = (await testerFactory.deploy()) as AlgebraPoolSwapTest;
+            const tester = (await testerFactory.deploy()) as any as AlgebraPoolSwapTest;
 
             const tickMathFactory = await ethers.getContractFactory('TickMathTest');
-            const tickMath = (await tickMathFactory.deploy()) as TickMathTest;
+            const tickMath = (await tickMathFactory.deploy()) as any as TickMathTest;
 
             await fix.token0.approve(tester, MaxUint256);
             await fix.token1.approve(tester, MaxUint256);

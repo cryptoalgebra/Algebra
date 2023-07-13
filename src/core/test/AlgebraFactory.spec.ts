@@ -8,8 +8,6 @@ import snapshotGasCost from './shared/snapshotGasCost';
 
 import { getCreate2Address } from './shared/utilities';
 
-const { constants } = ethers;
-
 const TEST_ADDRESSES: [string, string, string] = [
   '0x1000000000000000000000000000000000000000',
   '0x2000000000000000000000000000000000000000',
@@ -33,15 +31,15 @@ describe('AlgebraFactory', () => {
     });
 
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory;
+    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const vaultAddress = await _factory.communityVault();
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as AlgebraPoolDeployer;
+    poolDeployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as any as AlgebraPoolDeployer;
 
     const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
-    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as MockDefaultPluginFactory;
+    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
 
     return _factory;
   };
@@ -137,7 +135,7 @@ describe('AlgebraFactory', () => {
     it('fails if token a is 0 or token b is 0', async () => {
       await expect(factory.createPool(TEST_ADDRESSES[0], ZeroAddress)).to.be.reverted;
       await expect(factory.createPool(ZeroAddress, TEST_ADDRESSES[0])).to.be.reverted;
-      await expect(factory.createPool(ZeroAddress, ZeroAddress)).to.be.revertedWithoutReason;
+      expect(factory.createPool(ZeroAddress, ZeroAddress)).to.be.revertedWithoutReason;
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
@@ -201,7 +199,7 @@ describe('AlgebraFactory', () => {
       expect(await factory.renounceOwnershipStartTimestamp()).to.eq(0);
     });
 
-    it('stopRenounceOwnership doesnt works without start', async () => {
+    it('stopRenounceOwnership does not works without start', async () => {
       await expect(factory.stopRenounceOwnership()).to.be.reverted;
     });
 
@@ -210,7 +208,7 @@ describe('AlgebraFactory', () => {
       await expect(factory.stopRenounceOwnership()).to.emit(factory, 'RenounceOwnershipStop');
     });
 
-    it('renounceOwnership doesnt works without start', async () => {
+    it('renounceOwnership does not works without start', async () => {
       await expect(factory.renounceOwnership()).to.be.reverted;
     });
 
@@ -259,11 +257,11 @@ describe('AlgebraFactory', () => {
       await expect(factory.connect(other).setDefaultFee(200)).to.be.reverted;
     });
 
-    it('fails if new community fee greater than max fee', async () => {
+    it('fails if new default fee greater than max fee', async () => {
       await expect(factory.setDefaultFee(51000)).to.be.reverted;
     });
 
-    it('fails if new community fee eq current', async () => {
+    it('fails if new default fee eq current', async () => {
       await expect(factory.setDefaultFee(100)).to.be.reverted;
     });
 
@@ -282,12 +280,12 @@ describe('AlgebraFactory', () => {
       await expect(factory.connect(other).setDefaultTickspacing(30)).to.be.reverted;
     });
 
-    it('fails if new community fee greater than max fee & lt min fee', async () => {
+    it('fails if new default tickspacing greater than max & lt min', async () => {
       await expect(factory.setDefaultTickspacing(1100)).to.be.reverted;
       await expect(factory.setDefaultTickspacing(-1100)).to.be.reverted;
     });
 
-    it('fails if new community fee eq current', async () => {
+    it('fails if new default tickspacing eq current', async () => {
       await expect(factory.setDefaultTickspacing(60)).to.be.reverted;
     });
 

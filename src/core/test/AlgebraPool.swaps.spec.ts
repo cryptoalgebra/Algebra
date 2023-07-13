@@ -22,8 +22,6 @@ import {
 
 Decimal.config({ toExpNeg: -500, toExpPos: 500 });
 
-const { constants } = ethers;
-
 interface BaseSwapTestCase {
   zeroToOne: boolean;
   sqrtPriceLimit?: bigint;

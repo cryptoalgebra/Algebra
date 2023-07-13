@@ -184,7 +184,7 @@ describe('AlgebraPool', () => {
 
           beforeEach(async () => {
             const factory = await ethers.getContractFactory('TestAlgebraSwapPay');
-            payer = (await factory.deploy()) as TestAlgebraSwapPay;
+            payer = (await factory.deploy()) as any as TestAlgebraSwapPay;
             await token0.approve(payer, 2n ** 256n - 1n);
             await token1.approve(payer, 2n ** 256n - 1n);
           });
@@ -328,7 +328,7 @@ describe('AlgebraPool', () => {
 
         it('refund if overpayment', async () => {
           const factory = await ethers.getContractFactory('TestAlgebraSwapPay');
-          let payer = (await factory.deploy()) as TestAlgebraSwapPay;
+          let payer = (await factory.deploy()) as any as TestAlgebraSwapPay;
           await token0.approve(payer, 2n ** 256n - 1n);
           await token1.approve(payer, 2n ** 256n - 1n);
 
@@ -351,7 +351,7 @@ describe('AlgebraPool', () => {
 
         it('do not refund if not overpaid', async () => {
           const factory = await ethers.getContractFactory('TestAlgebraSwapPay');
-          let payer = (await factory.deploy()) as TestAlgebraSwapPay;
+          let payer = (await factory.deploy()) as any as TestAlgebraSwapPay;
           await token0.approve(payer, 2n ** 256n - 1n);
           await token1.approve(payer, 2n ** 256n - 1n);
 
@@ -376,7 +376,7 @@ describe('AlgebraPool', () => {
           // TODO improve tests, check liquiditys
           beforeEach(async () => {
             const factory = await ethers.getContractFactory('TestAlgebraSwapPay');
-            payer = (await factory.deploy()) as TestAlgebraSwapPay;
+            payer = (await factory.deploy()) as any as TestAlgebraSwapPay;
             await token0.approve(payer, 2n ** 256n - 1n);
             await token1.approve(payer, 2n ** 256n - 1n);
           });
@@ -1938,7 +1938,7 @@ describe('AlgebraPool', () => {
   });
 
   it('tickMath handles tick overflow', async () => {
-    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest;
+    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
     await expect(sqrtTickMath.getSqrtRatioAtTick(887273)).to.be.revertedWithCustomError(sqrtTickMath, 'tickOutOfRange');
     await expect(sqrtTickMath.getSqrtRatioAtTick(-887273)).to.be.revertedWithCustomError(
       sqrtTickMath,
@@ -1948,10 +1948,10 @@ describe('AlgebraPool', () => {
 
   it('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
     pool = await createPoolWrapped();
-    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest;
+    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as any as TickMathTest;
     const PriceMovementMath = (await (
       await ethers.getContractFactory('PriceMovementMathTest')
-    ).deploy()) as PriceMovementMathTest;
+    ).deploy()) as any as PriceMovementMathTest;
     const p0 = (await sqrtTickMath.getSqrtRatioAtTick(-24081)) + 1n;
     // initialize at a price of ~0.3 token1/token0
     // meaning if you swap in 2 token0, you should end up getting 0 token1
@@ -2004,7 +2004,7 @@ describe('AlgebraPool', () => {
 
     it('works with plugin', async () => {
       const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
-      const poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as MockPoolPlugin;
+      const poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
       await pool.setPlugin(poolPlugin);
       await pool.setPluginConfig(255);
 
@@ -2391,7 +2391,7 @@ describe('AlgebraPool', () => {
       let callbackData: string
       beforeEach('create plugin', async () => {
         const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
-        poolPlugin = (await MockPoolPluginFactory.deploy(pool)) as MockPoolPlugin;
+        poolPlugin = (await MockPoolPluginFactory.deploy(pool)) as any as MockPoolPlugin;
         await pool.setPlugin(poolPlugin);
         await pool.setPluginConfig(255);
         callbackData = encodeCallback(wallet.address)
@@ -2590,7 +2590,7 @@ describe('AlgebraPool', () => {
 
       beforeEach('create plugin', async () => {
         const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
-        poolPlugin = (await MockPoolPluginFactory.deploy(pool)) as MockPoolPlugin;
+        poolPlugin = (await MockPoolPluginFactory.deploy(pool)) as any as MockPoolPlugin;
         await pool.setPlugin(poolPlugin);
         await pool.setPluginConfig(255);
       });
@@ -2636,7 +2636,7 @@ describe('AlgebraPool', () => {
     it('cannot reenter from swap callback', async () => {
       const reentrant = (await (
         await ethers.getContractFactory('TestAlgebraReentrantCallee')
-      ).deploy()) as TestAlgebraReentrantCallee;
+      ).deploy()) as any as TestAlgebraReentrantCallee;
 
       // the tests happen in solidity
       await expect(reentrant.swapToReenter(pool)).to.be.revertedWith('Unable to reenter');
@@ -2767,7 +2767,7 @@ describe('AlgebraPool', () => {
     let poolAddress: string;
     beforeEach('deploy swap test', async () => {
       const underpayFactory = await ethers.getContractFactory('TestAlgebraSwapPay');
-      underpay = (await underpayFactory.deploy()) as TestAlgebraSwapPay;
+      underpay = (await underpayFactory.deploy()) as any as TestAlgebraSwapPay;
       await token0.approve(underpay, MaxUint256);
       await token1.approve(underpay, MaxUint256);
       await pool.initialize(encodePriceSqrt(1, 1));
