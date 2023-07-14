@@ -24,10 +24,13 @@ abstract contract TickStructure is AlgebraPoolBase {
   /// @notice Used to add or remove a tick from a doubly linked list and search tree
   /// @param tick The tick being removed or added now
   /// @param currentTick The current global tick in the pool
+  /// @param oldTickTreeRoot The current tick tree root
   /// @param prevInitializedTick Previous active tick before `currentTick`
   /// @param nextInitializedTick Next active tick after `currentTick`
   /// @param remove Remove or add the tick
   /// @return New previous active tick before `currentTick` if changed
+  /// @return New next active tick after `currentTick` if changed
+  /// @return New tick tree root if changed
   function _insertOrRemoveTick(
     int24 tick,
     int24 currentTick,

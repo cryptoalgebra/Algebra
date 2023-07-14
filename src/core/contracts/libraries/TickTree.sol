@@ -92,10 +92,10 @@ library TickTree {
   }
 
   /// @notice Calculates node with given tick and returns next active tick
-  /// @param row level of search tree
+  /// @param row The level of search tree
   /// @param tick The starting tick
-  /// @return nodeNumber Number of corresponding node
-  /// @return nextTick Number of next active tick or last tick in node
+  /// @return nodeNumber The number of corresponding node
+  /// @return nextTick The number of next active tick or last tick in node
   /// @return initialized Is nextTick initialized or not
   function _getNextActiveBitInSameNode(
     mapping(int16 => uint256) storage row,
@@ -108,8 +108,8 @@ library TickTree {
   }
 
   /// @notice Returns first active tick in given node
-  /// @param row level of search tree
-  /// @param nodeNumber Number of corresponding node
+  /// @param row The level of search tree
+  /// @param nodeNumber The number of corresponding node
   /// @return nextTick Number of next active tick or last tick in node
   function _getFirstActiveBitInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) internal view returns (int24 nextTick) {
     assembly {

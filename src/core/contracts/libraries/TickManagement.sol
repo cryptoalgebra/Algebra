@@ -74,7 +74,7 @@ library TickManagement {
   /// @param liquidityDelta A new amount of liquidity to be added (subtracted) when tick is crossed from left to right (right to left)
   /// @param totalFeeGrowth0Token The all-time global fee growth, per unit of liquidity, in token0
   /// @param totalFeeGrowth1Token The all-time global fee growth, per unit of liquidity, in token1
-  /// @param upper true for updating a position's upper tick, or false for updating a position's lower tick
+  /// @param upper True for updating a position's upper tick, or false for updating a position's lower tick
   /// @return flipped Whether the tick was flipped from initialized to uninitialized, or vice versa
   function update(
     mapping(int24 => Tick) storage self,
@@ -125,14 +125,14 @@ library TickManagement {
     return (data.liquidityDelta, data.prevTick, data.nextTick);
   }
 
-  /// @notice Used for initial setup if ticks list
+  /// @notice Used for initial setup of ticks list
   /// @param self The mapping containing all tick information for initialized ticks
   function initTickState(mapping(int24 => Tick) storage self) internal {
     (self[TickMath.MIN_TICK].prevTick, self[TickMath.MIN_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     (self[TickMath.MAX_TICK].prevTick, self[TickMath.MAX_TICK].nextTick) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
   }
 
-  /// @notice Removes tick from linked list
+  /// @notice Removes tick from the linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be removed
   /// @return prevTick The previous active tick before _tick_
@@ -152,7 +152,7 @@ library TickManagement {
     return (prevTick, nextTick);
   }
 
-  /// @notice Adds tick to linked list
+  /// @notice Adds tick to the linked list
   /// @param self The mapping containing all tick information for initialized ticks
   /// @param tick The tick that will be inserted
   /// @param prevTick The previous active tick before _tick_
