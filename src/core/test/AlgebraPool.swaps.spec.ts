@@ -228,6 +228,18 @@ const DEFAULT_POOL_SWAP_TESTS: SwapTestCase[] = [
     amount0: expandTo18Decimals(1),
     sqrtPriceLimit: encodePriceSqrt(200, 100),
   },
+  {
+    zeroToOne: false,
+    exactOut: false,
+    amount1: 2n ** 128n - 1n,
+    sqrtPriceLimit: 0n,
+  },
+  {
+    zeroToOne: false,
+    exactOut: false,
+    amount1: 2n ** 256n - 1n,
+    sqrtPriceLimit: 0n,
+  },
   // swap small amounts in/out
   {
     zeroToOne: true,

@@ -267,6 +267,19 @@ describe('AlgebraPool', () => {
           await expect(mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, maxLiquidityGross)).to.not.be
             .reverted;
         });
+
+        it('fails if amount exceeds the max uint128', async () => {
+          await expect(
+            mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, MaxUint128)
+          ).to.be.reverted;
+        });
+
+        it('fails if amount exceeds the 2**127', async () => {
+          await expect(
+            mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 2n ** 127n)
+          ).to.be.reverted;
+        });
+
         it('fails if total amount at tick exceeds the max', async () => {
           await mint(wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 1000);
 
@@ -831,7 +844,7 @@ describe('AlgebraPool', () => {
       );
     });
 
-    it('fails when try to burn max int128 value', async () => {
+    it('fails when try to burn max uint128 value', async () => {
       const bottomTick = minTick + tickSpacing;
       const topTick = maxTick - tickSpacing;
       // some activity that would make the ticks non-zero
@@ -839,6 +852,19 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, bottomTick, topTick, 1);
       await swapExact0For1(expandTo18Decimals(1), wallet.address);
       await expect(pool.burn(bottomTick, topTick, 2n ** 128n - 1n, '0x')).to.be.revertedWithCustomError(
+        pool,
+        'arithmeticError'
+      );
+    });
+
+    it('fails when try to burn max int128 + 1 value', async () => {
+      const bottomTick = minTick + tickSpacing;
+      const topTick = maxTick - tickSpacing;
+      // some activity that would make the ticks non-zero
+      await pool.advanceTime(10);
+      await mint(wallet.address, bottomTick, topTick, 1);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      await expect(pool.burn(bottomTick, topTick, 2n ** 127n, '0x')).to.be.revertedWithCustomError(
         pool,
         'arithmeticError'
       );
@@ -1169,6 +1195,30 @@ describe('AlgebraPool', () => {
         it('fails if required negative amount', async () => {
           await expect(
             pool.swapWithPaymentInAdvance(other.address, other.address, true, '-1', 0, '0x')
+          ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
+        });
+
+        it('fails if required 0 amount', async () => {
+          await expect(
+            swapExact0For1SupportingFee(0, other.address)
+          ).to.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+        });
+
+        it('fails if required uint128 max amount', async () => {
+          await expect(
+            swapExact0For1SupportingFee(2n ** 128n - 1n, other.address)
+          ).to.be.reverted;
+        });
+
+        it('fails if required int256 max amount', async () => {
+          await expect(
+            swapExact0For1SupportingFee(2n ** 255n - 1n, other.address)
+          ).to.be.reverted;
+        });
+
+        it('fails if required min256 amount', async () => {
+          await expect(
+            pool.swapWithPaymentInAdvance(other.address, other.address, true, '-57896044618658097711785492504343953926634992332820282019728792003956564819968', 0, '0x')
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
         });
 
@@ -2114,6 +2164,13 @@ describe('AlgebraPool', () => {
             .withArgs(await pool.getAddress(), other.address, 102)
             .to.not.emit(token0, 'Transfer');
         });
+        it('can flash max uint128', async () => {
+          await token0.transfer(pool.getAddress(), MaxUint128);
+          await token1.transfer(pool.getAddress(), MaxUint128);
+          await expect(flash(MaxUint128, MaxUint128, other.address))
+            .to.emit(token1, 'Transfer')
+            .withArgs(await pool.getAddress(), other.address, MaxUint128)
+        });
         it('can flash entire token balance', async () => {
           await expect(flash(balanceToken0, balanceToken1, other.address))
             .to.emit(token0, 'Transfer')
@@ -2324,6 +2381,10 @@ describe('AlgebraPool', () => {
       it('fails if fee is gt 100%', async () => {
         await expect(pool.setCommunityFee(1004)).to.be.reverted;
       });
+      it('succeeds for fee 100%', async () => {
+        await pool.setCommunityFee(1000);
+        expect((await pool.globalState()).communityFee).to.eq(1000);
+      });
       it('succeeds for fee 25%', async () => {
         await pool.setCommunityFee(250);
       });
@@ -2375,6 +2436,9 @@ describe('AlgebraPool', () => {
       });
       it('can set max tickspacing', async () => {
         await expect(pool.setTickSpacing(500)).to.not.be.reverted;
+      });
+      it('cannot setTickSpacing as min int24', async () => {
+        await expect(pool.setTickSpacing(-8388608)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
       });
       it('cannot setTickSpacing gt 500 & lt 1', async () => {
         await expect(pool.setTickSpacing(600)).to.be.revertedWithCustomError(pool, 'invalidNewTickSpacing');
