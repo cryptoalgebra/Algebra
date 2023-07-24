@@ -87,7 +87,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
 
   function _withdraw(address token, address to, uint256 amount, uint16 _algebraFee, address _algebraFeeReceiver) private {
     uint256 withdrawAmount = amount;
-    if (_algebraFee != 0 && _algebraFeeReceiver != address(0)) {
+    if (_algebraFee != 0) {
       uint256 algebraFeeAmount = FullMath.mulDivRoundingUp(withdrawAmount, _algebraFee, ALGEBRA_FEE_DENOMINATOR);
       withdrawAmount -= algebraFeeAmount;
       SafeTransfer.safeTransfer(token, _algebraFeeReceiver, algebraFeeAmount);
