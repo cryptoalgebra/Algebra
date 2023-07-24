@@ -133,6 +133,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   function startRenounceOwnership() external override onlyOwner {
+    require(renounceOwnershipStartTimestamp == 0);
     renounceOwnershipStartTimestamp = block.timestamp;
     emit RenounceOwnershipStart(renounceOwnershipStartTimestamp, renounceOwnershipStartTimestamp + RENOUNCE_OWNERSHIP_DELAY);
   }
