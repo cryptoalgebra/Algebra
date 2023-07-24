@@ -41,7 +41,7 @@ contract TickTreeEchidnaTest {
       assert(tick >= TickMath.MIN_TICK);
       assert(tick <= TickMath.MAX_TICK);
       bool before = _isInitialized(tick);
-      tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tick, tickTreeRoot);
+      tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tickTreeRoot, tick);
       assert(_isInitialized(tick) == !before);
 
       if (!before) {

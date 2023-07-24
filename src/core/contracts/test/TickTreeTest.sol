@@ -12,7 +12,7 @@ contract TickTreeTest {
   mapping(int16 => uint256) public tickTable;
 
   function toggleTick(int24 tick) external {
-    root = tickTable.toggleTick(tickSecondLayer, tick, root);
+    root = tickTable.toggleTick(tickSecondLayer, root, tick);
     (tickSecondLayer, tick, root);
   }
 
@@ -31,7 +31,7 @@ contract TickTreeTest {
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     unchecked {
       uint256 gasBefore = gasleft();
-      root = tickTable.toggleTick(tickSecondLayer, tick, root);
+      root = tickTable.toggleTick(tickSecondLayer, root, tick);
       (tickSecondLayer, tick, root);
       return gasBefore - gasleft();
     }
@@ -43,7 +43,7 @@ contract TickTreeTest {
   }
 
   function nextTickInSameNode(uint256 node, uint8 tick) external pure returns (int24 next, bool initialized) {
-    (next, initialized) = TickTree._nextActiveBitInTheSameNode(node, int24(uint24(tick)));
+    (next, initialized) = TickTree._nextActiveBitInWord(node, int24(uint24(tick)));
   }
 
   function getGasCostOfNextTick(int24 tick) external view returns (uint256) {

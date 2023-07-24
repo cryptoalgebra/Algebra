@@ -57,7 +57,7 @@ abstract contract TickStructure is AlgebraPoolBase {
       ticks.insertTick(tick, prevTick, nextTick);
     }
 
-    uint32 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
+    uint32 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, oldTickTreeRoot, tick);
     return (prevInitializedTick, nextInitializedTick, newTickTreeRoot);
   }
 
