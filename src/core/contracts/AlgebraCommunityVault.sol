@@ -54,35 +54,23 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
 
   /// @inheritdoc IAlgebraCommunityVault
   function withdraw(address token, uint256 amount) external override onlyWithdrawer {
-    uint16 _algebraFee = algebraFee;
-    address _algebraFeeReceiver;
-    if (_algebraFee != 0) {
-      _algebraFeeReceiver = algebraFeeReceiver;
-      require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
-    }
-
-    address _communityFeeReceiver = communityFeeReceiver;
-    require(_communityFeeReceiver != address(0), 'invalid receiver');
-
+    (uint16 _algebraFee, address _algebraFeeReceiver, address _communityFeeReceiver) = _readAndVerifyWithdrawSettings();
     _withdraw(token, _communityFeeReceiver, amount, _algebraFee, _algebraFeeReceiver);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
   function withdrawTokens(WithdrawTokensParams[] calldata params) external override onlyWithdrawer {
     uint256 paramsLength = params.length;
-    uint16 _algebraFee = algebraFee;
-
-    address _algebraFeeReceiver;
-    if (_algebraFee != 0) {
-      _algebraFeeReceiver = algebraFeeReceiver;
-      require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
-    }
-    address _communityFeeReceiver = communityFeeReceiver;
-    require(_communityFeeReceiver != address(0), 'invalid receiver');
+    (uint16 _algebraFee, address _algebraFeeReceiver, address _communityFeeReceiver) = _readAndVerifyWithdrawSettings();
 
     unchecked {
       for (uint256 i; i < paramsLength; ++i) _withdraw(params[i].token, _communityFeeReceiver, params[i].amount, _algebraFee, _algebraFeeReceiver);
     }
+  }
+
+  function _readAndVerifyWithdrawSettings() private view returns (uint16 _algebraFee, address _algebraFeeReceiver, address _communityFeeReceiver) {
+    if ((_algebraFee = algebraFee) != 0) require((_algebraFeeReceiver = algebraFeeReceiver) != address(0), 'invalid algebra fee receiver');
+    require((_communityFeeReceiver = communityFeeReceiver) != address(0), 'invalid receiver');
   }
 
   function _withdraw(address token, address to, uint256 amount, uint16 _algebraFee, address _algebraFeeReceiver) private {
