@@ -17,7 +17,7 @@ import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 /// @dev Version: Algebra Integral
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
-  bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
+  bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
