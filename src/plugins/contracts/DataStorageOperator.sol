@@ -39,7 +39,8 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   address public override incentive;
 
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
 
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
