@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import '../interfaces/IPeripheryImmutableState.sol';
 
@@ -15,11 +15,7 @@ abstract contract PeripheryImmutableState is IPeripheryImmutableState {
     /// @inheritdoc IPeripheryImmutableState
     address public immutable override WNativeToken;
 
-    constructor(
-        address _factory,
-        address _WNativeToken,
-        address _poolDeployer
-    ) {
+    constructor(address _factory, address _WNativeToken, address _poolDeployer) {
         factory = _factory;
         poolDeployer = _poolDeployer;
         WNativeToken = _WNativeToken;

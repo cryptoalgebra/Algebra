@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
@@ -50,7 +50,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         bool _flipRatio = flipRatio(token0, token1, ChainId.get());
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
         address baseTokenAddress = !_flipRatio ? token0 : token1;
-        (, int24 tick, , , , , ) = pool.globalState();
+        (, int24 tick, , , , ) = pool.globalState();
 
         return
             NFTDescriptor.constructTokenURI(

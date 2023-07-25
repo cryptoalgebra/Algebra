@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v2;
 
 import '../libraries/NFTDescriptor.sol';
@@ -9,19 +9,15 @@ import '../libraries/HexStrings.sol';
 contract NFTDescriptorTest {
     using HexStrings for uint256;
 
-    function constructTokenURI(NFTDescriptor.ConstructTokenURIParams calldata params)
-        public
-        pure
-        returns (string memory)
-    {
+    function constructTokenURI(
+        NFTDescriptor.ConstructTokenURIParams calldata params
+    ) public pure returns (string memory) {
         return NFTDescriptor.constructTokenURI(params);
     }
 
-    function getGasCostOfConstructTokenURI(NFTDescriptor.ConstructTokenURIParams calldata params)
-        public
-        view
-        returns (uint256)
-    {
+    function getGasCostOfConstructTokenURI(
+        NFTDescriptor.ConstructTokenURIParams calldata params
+    ) public view returns (uint256) {
         uint256 gasBefore = gasleft();
         NFTDescriptor.constructTokenURI(params);
         return gasBefore - gasleft();

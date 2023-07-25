@@ -29,11 +29,11 @@ contract TickLens is ITickLens {
             for (uint256 i = 0; i < 256; i++) {
                 if (bitmap & (1 << i) > 0) {
                     int24 populatedTick = ((int24(tickTableIndex) << 8) + int24(uint24(i)));
-                    (uint128 liquidityGross, int128 liquidityNet, , , , , , ) = IAlgebraPool(pool).ticks(populatedTick);
+                    (uint256 liquidityGross, int128 liquidityNet, , , , ) = IAlgebraPool(pool).ticks(populatedTick);
                     populatedTicks[--numberOfPopulatedTicks] = PopulatedTick({
                         tick: populatedTick,
                         liquidityNet: liquidityNet,
-                        liquidityGross: liquidityGross
+                        liquidityGross: uint128(liquidityGross)
                     });
                 }
             }

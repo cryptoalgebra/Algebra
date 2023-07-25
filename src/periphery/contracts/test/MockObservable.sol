@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 contract MockObservable {
     Timepoint private timepoint0;
@@ -45,7 +45,9 @@ contract MockObservable {
         );
     }
 
-    function getTimepoints(uint32[] calldata secondsAgos)
+    function getTimepoints(
+        uint32[] calldata secondsAgos
+    )
         external
         view
         returns (

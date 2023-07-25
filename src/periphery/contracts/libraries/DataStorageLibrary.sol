@@ -4,7 +4,7 @@ pragma solidity >=0.5.0 <0.9.0;
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IDataStorageOperator.sol';
+import '@cryptoalgebra/plugins/contracts/interfaces/IDataStorageOperator.sol';
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
 
 import '../libraries/PoolAddress.sol';
@@ -23,7 +23,7 @@ library DataStorageLibrary {
         secondAgos[0] = period;
         secondAgos[1] = 0;
 
-        IDataStorageOperator dsOperator = IDataStorageOperator(IAlgebraPool(pool).dataStorageOperator());
+        IDataStorageOperator dsOperator = IDataStorageOperator(IAlgebraPool(pool).plugin());
         (int56[] memory tickCumulatives, ) = dsOperator.getTimepoints(secondAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
 

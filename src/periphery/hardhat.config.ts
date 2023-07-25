@@ -8,7 +8,7 @@ import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
     optimizer: {
       enabled: true,
@@ -21,7 +21,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
 }
 
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
     viaIR: true,
     optimizer: {
@@ -35,7 +35,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
 }
 
 const DEFAULT_COMPILER_SETTINGS = {
-  version: '0.8.17',
+  version: '0.8.20',
   settings: {
     optimizer: {
       enabled: true,

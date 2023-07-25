@@ -6,8 +6,6 @@ async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
   const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
-  const incentiveMaker = '0xDeaD1F5aF792afc125812E875A891b038f888258'
-
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory('AlgebraEternalFarming')
   const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager)
 

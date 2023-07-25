@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v2;
 
 /// @notice A fork of Multicall2 specifically tailored for the Algebra Interface

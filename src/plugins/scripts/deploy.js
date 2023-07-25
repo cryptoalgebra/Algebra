@@ -3,30 +3,22 @@ const fs = require('fs');
 const path = require('path');
 
 async function main() {
-    const [deployer] = await hre.ethers.getSigners();
-    // precompute
-    const poolDeployerAddress = hre.ethers.utils.getContractAddress({
-      from: deployer.address, 
-      nonce: (await deployer.getTransactionCount()) + 1
-    })
 
-    const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-    const factory = await AlgebraFactory.deploy(poolDeployerAddress);
-    await factory.deployed();
+    const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
+    const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
-    const vaultAddress = await factory.communityVault();
+    const DataStorageFactory = await hre.ethers.getContractFactory("DataStorageFactory");
+    const dsFactory = await DataStorageFactory.deploy(deploysData.factory);
+    await dsFactory.deployed();
 
-    const PoolDeployerFactory = await hre.ethers.getContractFactory("AlgebraPoolDeployer");
-    const poolDeployer  = await PoolDeployerFactory.deploy(factory.address, vaultAddress);
-    await poolDeployer.deployed();
+    console.log("PluginFactory to:", dsFactory.address);
 
-    console.log("AlgebraPoolDeployer to:", poolDeployer.address);
-    console.log("AlgebraFactory deployed to:", factory.address);
-    
-    const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
-    let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
-    deploysData.poolDeployer = poolDeployer.address;
-    deploysData.factory = factory.address;
+    const factory = await hre.ethers.getContractAt('IAlgebraFactory', deploysData.factory)
+
+    await factory.setDefaultPluginFactory(dsFactory.address)
+    console.log('Updated plugin factory address in factory')
+
+    deploysData.dataStorageFactory = dsFactory.address;
     fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 
 }

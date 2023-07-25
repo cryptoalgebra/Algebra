@@ -1,5 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Multicall gas cost of pay w/ multicall [ @skip-on-coverage ] 1`] = `45973`;
+exports[`Multicall gas cost of pay w/ multicall [ @skip-on-coverage ] 1`] = `45957`;
 
-exports[`Multicall gas cost of pay w/o multicall [ @skip-on-coverage ] 1`] = `43427`;
+exports[`Multicall gas cost of pay w/o multicall [ @skip-on-coverage ] 1`] = `43425`;
