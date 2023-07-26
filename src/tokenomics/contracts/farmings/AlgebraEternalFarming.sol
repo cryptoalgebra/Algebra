@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import './EternalVirtualPool.sol';
 import '../libraries/IncentiveId.sol';
@@ -19,6 +19,8 @@ import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
 
 import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
+
+import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
 /// @title Algebra eternal (v2-like) farming
 contract AlgebraEternalFarming is IAlgebraEternalFarming {
@@ -362,7 +364,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _getCurrentVirtualPool(IAlgebraPool pool) internal view returns (address virtualPool) {
-    return pool.activeIncentive();
+    return IFarmingPlugin(pool.plugin()).incentive();
   }
 
   function _receiveRewards(
@@ -438,7 +440,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
-    (, tick, , , , , ) = pool.globalState();
+    (, tick, , , , ) = pool.globalState();
   }
 
   function _updatePositionInVirtualPool(

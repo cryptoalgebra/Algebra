@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import './interfaces/IFarmingCenter.sol';
 
@@ -9,6 +9,7 @@ import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
 import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
+import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
 import './libraries/IncentiveId.sol';
 
@@ -123,7 +124,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
     require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
     require(msg.sender == address(eternalFarming), 'only farming can call this');
-    pool.setIncentive(newVirtualPool);
+    IFarmingPlugin(pool.plugin()).setIncentive(newVirtualPool);
     virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
 }

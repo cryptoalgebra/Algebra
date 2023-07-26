@@ -211,9 +211,9 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.beforeSwap.selector;
   }
 
-  function afterSwap(address, address, bool, int256, uint160, int256, int256, bytes calldata) external onlyPool returns (bytes4) {
+  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external onlyPool returns (bytes4) {
     (int24 tick, , ) = _getPoolState();
-    IAlgebraVirtualPool(incentive).crossTo(tick);
+    IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
     return IAlgebraPlugin.afterSwap.selector;
   }
 

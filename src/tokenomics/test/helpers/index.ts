@@ -138,7 +138,7 @@ export class HelperCommands {
       }
     )
     // @ts-ignore
-    virtualPoolAddress = (await txResult.wait(1)).events[3].args['virtualPool']
+    virtualPoolAddress = (await txResult.wait(1)).events[4].args['virtualPool']
     
 
     return {
@@ -351,7 +351,6 @@ export class HelperCommands {
 
     const tok0 = erc20.attach(tok0Address) as TestERC20
     const tok1 = erc20.attach(tok1Address) as TestERC20
-
     const doTrade = async () => {
       /** If we want to push price down, we need to increase tok0.
          If we want to push price up, we need to increase tok1 */
@@ -374,7 +373,6 @@ export class HelperCommands {
         maxGas
       )
       let currTick = await getCurrentTick(this.pool.connect(actor))
-
       return currTick
     }
 

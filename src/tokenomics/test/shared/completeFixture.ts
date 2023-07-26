@@ -10,14 +10,6 @@ import {
   IAlgebraFactory,
 } from '@cryptoalgebra/periphery/typechain'
 
-import {
-  abi as NFTD_ABI,
-  bytecode as NFTD_BYTECODE,
-} from '@cryptoalgebra/periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json'
-import {
-  abi as NFT_ABI,
-  bytecode as NFT_BYTECODE,
-} from '@cryptoalgebra/periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 type Fixture<T> = () => Promise<T>
 
 const completeFixture: Fixture<{

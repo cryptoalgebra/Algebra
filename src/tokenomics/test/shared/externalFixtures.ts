@@ -8,9 +8,15 @@ import { ethers } from 'hardhat'
 import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '@cryptoalgebra/periphery/typechain'
 import { abi as SWAPROUTER_ABI, bytecode as SWAPROUTER_BYTECODE } from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
 import {
+  abi as PLUGIN_FACTORY_ABI,
+  bytecode as PLUGIN_FACTORY_BYTECODE,
+} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageFactory.sol/DataStorageFactory.json'
+import {
   abi as WNATIVE_ABI,
   bytecode as WNATIWE_BYTECODE,
 } from '@cryptoalgebra/periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json'
+
+
 
 //import WNativeToken from '../contracts/WNativeToken.json'
 import { Contract } from '@ethersproject/contracts'
@@ -45,6 +51,11 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE)
   const poolDeployer = await poolDeployerFactory.deploy(_factory.address, vaultAddress)
+
+  const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI,  PLUGIN_FACTORY_BYTECODE);
+  const pluginFactory = await pluginContractFactory.deploy(_factory.address);
+
+  await _factory.setDefaultPluginFactory(pluginFactory.address)
 
   return _factory
 }

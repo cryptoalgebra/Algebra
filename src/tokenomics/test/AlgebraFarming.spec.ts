@@ -283,7 +283,6 @@ describe('AlgebraFarming', () => {
         createIncentiveResult,
         ticks: ticksToFarm,
       }
-
       const farms = await Promise.all(
         actors.lpUsers().map((lp) =>
           helpers.mintDepositFarmFlow({
@@ -293,7 +292,6 @@ describe('AlgebraFarming', () => {
         )
       )
       await time.setNextBlockTimestamp(startTime + 1)
-
       const trader = actors.traderUser0()
       await helpers.makeTickGoFlow({
         trader,

@@ -12,6 +12,10 @@ import WNativeToken from './external/WNativeToken.json'
 import { linkLibraries } from './linkLibraries'
 import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/periphery/typechain'
 import {
+  abi as PLUGIN_FACTORY_ABI,
+  bytecode as PLUGIN_FACTORY_BYTECODE,
+} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageFactory.sol/DataStorageFactory.json'
+import {
   AlgebraEternalFarming,
   TestERC20,
   INonfungiblePositionManager,
@@ -20,7 +24,8 @@ import {
   IAlgebraPoolDeployer,
   IAlgebraPool,
   TestIncentiveId,
-  FarmingCenter
+  FarmingCenter,
+  IDataStorageFactory
 } from '../../typechain'
 import { FeeAmount, BigNumber, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
@@ -36,7 +41,7 @@ export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   return { wnative }
 }
 
-const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, Signer]> = async () => {
+const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, IDataStorageFactory, Signer]> = async () => {
   const [deployer] = await ethers.getSigners()
   // precompute
   const poolDeployerAddress = ethers.utils.getContractAddress({
@@ -50,7 +55,13 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const poolDeployerFactory = await ethers.getContractFactory(AlgebraPoolDeployerJson.abi, AlgebraPoolDeployerJson.bytecode)
   const _deployer = (await poolDeployerFactory.deploy(_factory.address, vaultAddress)) as IAlgebraPoolDeployer
 
-  return [_factory, _deployer, deployer]
+  const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI,  PLUGIN_FACTORY_BYTECODE);
+  const pluginFactory = await pluginContractFactory.deploy(_factory.address);
+
+  await _factory.setDefaultPluginFactory(pluginFactory.address)
+
+
+  return [_factory, _deployer, pluginFactory, deployer]
 }
 
 export const v3RouterFixture: () => Promise<{
@@ -58,14 +69,15 @@ export const v3RouterFixture: () => Promise<{
   factory: IAlgebraFactory
   deployer: IAlgebraPoolDeployer
   router: ISwapRouter
+  pluginFactory: IDataStorageFactory
   ownerSigner: Signer
 }> = async () => {
   const { wnative } = await wnativeFixture()
-  const [factory, deployer, ownerSigner] = await v3CoreFactoryFixture()
+  const [factory, deployer, pluginFactory, ownerSigner] = await v3CoreFactoryFixture()
   const routerFactory = await ethers.getContractFactory(SwapRouter.abi, SwapRouter.bytecode)
   const router = (await routerFactory.deploy(factory.address, wnative.address, deployer.address)) as ISwapRouter
 
-  return { factory, wnative, deployer, router, ownerSigner }
+  return { factory, wnative, deployer, router, pluginFactory, ownerSigner }
 }
 
 const nftDescriptorLibraryFixture: () => Promise<NFTDescriptor> = async () => {
@@ -80,11 +92,12 @@ type AlgebraFactoryFixture = {
   router: ISwapRouter
   nft: INonfungiblePositionManager
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
+  pluginFactory: IDataStorageFactory
   ownerSigner: Signer
 }
 
 export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async () => {
-  const { wnative, factory, deployer, router, ownerSigner } = await v3RouterFixture()
+  const { wnative, factory, deployer, router, pluginFactory, ownerSigner } = await v3RouterFixture()
 
   const tokenFactory = await ethers.getContractFactory('TestERC20')
   const tokens = (await Promise.all([
@@ -103,7 +116,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1464,
+              start: 1480,
             },
           ],
         },
@@ -130,6 +143,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
     router,
     tokens,
     nft,
+    pluginFactory,
     ownerSigner,
   }
 }
@@ -214,7 +228,7 @@ export type AlgebraFixtureType = {
   ownerSigner: Signer
 }
 export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
-  const { tokens, nft, factory, deployer, router, ownerSigner } = await algebraFactoryFixture()
+  const { tokens, nft, factory, deployer, router, pluginFactory, ownerSigner } = await algebraFactoryFixture()
   const wallets = (await ethers.getSigners()) as any as Wallet[]
   const signer = new ActorFixture(wallets, ethers.provider).farmingDeployer()
 
@@ -238,7 +252,7 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   await (factory as any as IAccessControl).grantRole(incentiveMakerRole, incentiveCreator.address)
 
-  await factory.setFarmingAddress(farmingCenter.address)
+  await pluginFactory.setFarmingAddress(farmingCenter.address)
 
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer)
   const testIncentiveId = (await testIncentiveIdFactory.deploy()) as TestIncentiveId

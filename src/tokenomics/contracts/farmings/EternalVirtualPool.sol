@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import '../libraries/VirtualTickManagement.sol';
 
@@ -102,7 +103,7 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
-    if (msg.sender != pool) revert onlyPool();
+    if (msg.sender != IAlgebraPool(pool).plugin()) revert onlyPool();
     _distributeRewards();
 
     int24 previousTick = globalPrevInitializedTick;

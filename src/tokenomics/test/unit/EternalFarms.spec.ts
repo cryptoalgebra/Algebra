@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { BigNumber, Contract, Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20, TestIncentiveId, AlgebraEternalFarming } from '../../typechain'
+import { TestERC20, TestIncentiveId, AlgebraEternalFarming, IFarmingCenter__factory } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
@@ -23,7 +23,7 @@ import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../he
 import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
-import { IAlgebraVirtualPool } from '@cryptoalgebra/core/typechain'
+import { IFarmingPlugin } from '@cryptoalgebra/plugins/typechain'
 import { AlgebraEternalFarming } from '../../typechain/contracts/farmings'
 
 describe('unit/EternalFarms', () => {
@@ -502,10 +502,8 @@ describe('unit/EternalFarms', () => {
       const rewardInfo = await context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId)
 
       const { tickLower, tickUpper } = await context.nft.positions(tokenId)
-      const { innerSecondsSpentPerLiquidity } = await pool.getInnerCumulatives(tickLower, tickUpper)
       const farm = await context.eternalFarming.farms(tokenId, incentiveId)
 
-      const expectedSecondsInPeriod = innerSecondsSpentPerLiquidity.mul(farm.liquidity)
 
       // @ts-ignore
       expect(rewardInfo.reward).to.be.closeTo(BN('9900'), BN('10000'))

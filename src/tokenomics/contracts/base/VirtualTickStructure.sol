@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
 
@@ -15,7 +15,7 @@ abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {
 
   mapping(int24 => VirtualTickManagement.Tick) public ticks;
 
-  uint256 internal tickTreeRoot; // The root of bitmap search tree
+  uint32 internal tickTreeRoot; // The root of bitmap search tree
   mapping(int16 => uint256) internal tickSecondLayer; // The second layer bitmap search tree
   mapping(int16 => uint256) internal tickTable; // the leaves of the tree
 
@@ -37,7 +37,7 @@ abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {
     int24 prevInitializedTick,
     bool remove
   ) internal returns (int24 newPrevInitializedTick) {
-    uint256 oldTickTreeRoot = tickTreeRoot;
+    uint32 oldTickTreeRoot = tickTreeRoot;
 
     int24 prevTick;
     if (remove) {
@@ -56,7 +56,7 @@ abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {
       ticks.insertTick(tick, prevTick, nextTick);
     }
 
-    uint256 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, tick, oldTickTreeRoot);
+    uint32 newTickTreeRoot = tickTable.toggleTick(tickSecondLayer, oldTickTreeRoot, tick);
     if (newTickTreeRoot != oldTickTreeRoot) tickTreeRoot = newTickTreeRoot;
     return prevInitializedTick;
   }

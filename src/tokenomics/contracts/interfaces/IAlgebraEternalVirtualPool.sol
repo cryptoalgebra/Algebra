@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraVirtualPool.sol';
+import '@cryptoalgebra/plugins/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   error onlyPool();

@@ -170,7 +170,6 @@ contract NonfungiblePositionManager is
                 amount1Min: params.amount1Min
             })
         );
-
         unchecked {
             _mint(params.recipient, (tokenId = _nextId++));
         }
@@ -284,8 +283,6 @@ contract NonfungiblePositionManager is
             })
         );
 
-        _applyLiquidityDeltaInFarming(params.tokenId, int256(actualLiquidity));
-
         // this is now updated to the current transaction
         uint128 positionLiquidity = position.liquidity;
         (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
@@ -302,6 +299,8 @@ contract NonfungiblePositionManager is
             position.tokensOwed1 += tokensOwed1;
             position.liquidity = positionLiquidity + uint128(actualLiquidity);
         }
+
+        _applyLiquidityDeltaInFarming(params.tokenId, int256(actualLiquidity));
 
         emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
     }
@@ -328,8 +327,6 @@ contract NonfungiblePositionManager is
         );
         require(positionLiquidity >= params.liquidity);
 
-        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
-
         IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
 
@@ -355,6 +352,8 @@ contract NonfungiblePositionManager is
                 position.liquidity = positionLiquidity - params.liquidity;
             }
         }
+
+        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
 
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
     }

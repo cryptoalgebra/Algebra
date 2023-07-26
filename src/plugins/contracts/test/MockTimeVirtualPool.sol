@@ -20,7 +20,7 @@ contract MockTimeVirtualPool is IAlgebraVirtualPool {
     isStarted = _isStarted;
   }
 
-  function crossTo(int24 nextTick) external override returns (bool) {
+  function crossTo(int24 nextTick, bool zeroToOne) external override returns (bool) {
     if (!isExist) return false;
     currentTick = nextTick;
     unchecked {
