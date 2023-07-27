@@ -7,7 +7,7 @@ import './TickMath.sol';
 /// @notice Stores a packed mapping of tick index to its initialized state and search tree
 /// @dev The leafs mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
 library TickTree {
-  int16 internal constant SECOND_LAYER_OFFSET = 3466; // ceil(MAX_TICK / 256)
+  int16 internal constant SECOND_LAYER_OFFSET = 3466; // ceil(-MIN_TICK / 256)
 
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param leafs The mapping of words with ticks
