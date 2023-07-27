@@ -4,18 +4,19 @@ pragma solidity =0.8.20;
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/callback/IAlgebraMintCallback.sol';
 import '../interfaces/callback/IAlgebraFlashCallback.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
-import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IERC20Minimal.sol';
-import '../interfaces/plugin/IAlgebraPlugin.sol';
-import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 
 import '../libraries/TickManagement.sol';
 import '../libraries/SafeTransfer.sol';
 import '../libraries/Constants.sol';
 import '../libraries/Plugins.sol';
+
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract

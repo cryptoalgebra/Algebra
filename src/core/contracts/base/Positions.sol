@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './AlgebraPoolBase.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickManagement.sol';
+import './AlgebraPoolBase.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions

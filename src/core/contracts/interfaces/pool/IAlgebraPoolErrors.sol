@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.8.4 <0.9.0;
+pragma solidity >=0.8.4;
 
 /// @title Errors emitted by a pool
 /// @notice Contains custom errors emitted by the pool

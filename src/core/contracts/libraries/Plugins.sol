@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import '../interfaces/IAlgebraPoolErrors.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 
 /// @title Contains logic and constants for interacting with the plugin through hooks
 /// @dev Allows pool to check which hooks are enabled, as well as control the return selector

@@ -2,14 +2,14 @@
 pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolFull.sol';
 
 import './PositionKey.sol';
 
 /// @title Implements commonly used interactions with Algebra pool
 library PoolInteraction {
     function _getPositionInPool(
-        IAlgebraPool pool,
+        IAlgebraPoolFull pool,
         address owner,
         int24 tickLower,
         int24 tickUpper
@@ -28,12 +28,12 @@ library PoolInteraction {
         return pool.positions(positionKey);
     }
 
-    function _getSqrtPrice(IAlgebraPool pool) internal view returns (uint160 sqrtPriceX96) {
+    function _getSqrtPrice(IAlgebraPoolFull pool) internal view returns (uint160 sqrtPriceX96) {
         (sqrtPriceX96, , , , , ) = pool.globalState();
     }
 
     function _burnPositionInPool(
-        IAlgebraPool pool,
+        IAlgebraPoolFull pool,
         int24 tickLower,
         int24 tickUpper,
         uint128 liquidity

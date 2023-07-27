@@ -10,7 +10,7 @@ import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolPermissionedActions.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolErrors.sol';
+import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
