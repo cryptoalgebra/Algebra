@@ -15,54 +15,51 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### RenounceOwnershipStart
 
 
-`event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp)`  
+```solidity
+event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp)
+```  
 
 Emitted when a process of ownership renounce is started
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | timestamp | uint256 | The timestamp of event |
 | finishTimestamp | uint256 | The timestamp when ownership renounce will be possible to finish |
 
-
 ### RenounceOwnershipStop
 
 
-`event RenounceOwnershipStop(uint256 timestamp)`  
+```solidity
+event RenounceOwnershipStop(uint256 timestamp)
+```  
 
 Emitted when a process of ownership renounce cancelled
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | timestamp | uint256 | The timestamp of event |
 
-
 ### RenounceOwnershipFinish
 
 
-`event RenounceOwnershipFinish(uint256 timestamp)`  
+```solidity
+event RenounceOwnershipFinish(uint256 timestamp)
+```  
 
 Emitted when a process of ownership renounce finished
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | timestamp | uint256 | The timestamp of ownership renouncement |
 
-
 ### Pool
 
 
-`event Pool(address token0, address token1, address pool)`  
+```solidity
+event Pool(address token0, address token1, address pool)
+```  
 
 Emitted when a pool is created
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -70,74 +67,68 @@ Emitted when a pool is created
 | token1 | address | The second token of the pool by address sort order |
 | pool | address | The address of the created pool |
 
-
 ### DefaultCommunityFee
 
 
-`event DefaultCommunityFee(uint16 newDefaultCommunityFee)`  
+```solidity
+event DefaultCommunityFee(uint16 newDefaultCommunityFee)
+```  
 
 Emitted when the default community fee is changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultCommunityFee | uint16 | The new default community fee value |
 
-
 ### DefaultTickspacing
 
 
-`event DefaultTickspacing(int24 newDefaultTickspacing)`  
+```solidity
+event DefaultTickspacing(int24 newDefaultTickspacing)
+```  
 
 Emitted when the default tickspacing is changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultTickspacing | int24 | The new default tickspacing value |
 
-
 ### DefaultFee
 
 
-`event DefaultFee(uint16 newDefaultFee)`  
+```solidity
+event DefaultFee(uint16 newDefaultFee)
+```  
 
 Emitted when the default fee is changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultFee | uint16 | The new default fee value |
 
-
 ### DefaultPluginFactory
 
 
-`event DefaultPluginFactory(address defaultPluginFactoryAddress)`  
+```solidity
+event DefaultPluginFactory(address defaultPluginFactoryAddress)
+```  
 
 Emitted when the defaultPluginFactory address is changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | defaultPluginFactoryAddress | address | The new defaultPluginFactory address |
 
 
-
 ## Functions
 ### POOLS_ADMINISTRATOR_ROLE
 
 
-`function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32)` view external
+```solidity
+function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32)
+``` view external
 
 role that can change communityFee and tickspacing in pools
-
-
-
 
 **Returns:**
 
@@ -148,11 +139,11 @@ role that can change communityFee and tickspacing in pools
 ### hasRoleOrOwner
 
 
-`function hasRoleOrOwner(bytes32 role, address account) external view returns (bool)` view external
+```solidity
+function hasRoleOrOwner(bytes32 role, address account) external view returns (bool)
+``` view external
 
 Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -168,14 +159,13 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 ### owner
 
 
-`function owner() external view returns (address)` view external
+```solidity
+function owner() external view returns (address)
+``` view external
 
 Returns the current owner of the factory
 
 *Developer note: Can be changed by the current owner via transferOwnership(address newOwner)*
-
-
-
 
 **Returns:**
 
@@ -186,12 +176,11 @@ Returns the current owner of the factory
 ### poolDeployer
 
 
-`function poolDeployer() external view returns (address)` view external
+```solidity
+function poolDeployer() external view returns (address)
+``` view external
 
 Returns the current poolDeployerAddress
-
-
-
 
 **Returns:**
 
@@ -202,12 +191,11 @@ Returns the current poolDeployerAddress
 ### communityVault
 
 
-`function communityVault() external view returns (address)` view external
+```solidity
+function communityVault() external view returns (address)
+``` view external
 
 Returns the current communityVaultAddress
-
-
-
 
 **Returns:**
 
@@ -218,12 +206,11 @@ Returns the current communityVaultAddress
 ### defaultCommunityFee
 
 
-`function defaultCommunityFee() external view returns (uint16)` view external
+```solidity
+function defaultCommunityFee() external view returns (uint16)
+``` view external
 
 Returns the default community fee
-
-
-
 
 **Returns:**
 
@@ -234,12 +221,11 @@ Returns the default community fee
 ### defaultFee
 
 
-`function defaultFee() external view returns (uint16)` view external
+```solidity
+function defaultFee() external view returns (uint16)
+``` view external
 
 Returns the default fee
-
-
-
 
 **Returns:**
 
@@ -250,12 +236,11 @@ Returns the default fee
 ### defaultTickspacing
 
 
-`function defaultTickspacing() external view returns (int24)` view external
+```solidity
+function defaultTickspacing() external view returns (int24)
+``` view external
 
 Returns the default tickspacing
-
-
-
 
 **Returns:**
 
@@ -266,12 +251,11 @@ Returns the default tickspacing
 ### defaultPluginFactory
 
 
-`function defaultPluginFactory() external view returns (contract IAlgebraPluginFactory)` view external
+```solidity
+function defaultPluginFactory() external view returns (contract IAlgebraPluginFactory)
+``` view external
 
 Return the current pluginFactory address
-
-
-
 
 **Returns:**
 
@@ -282,12 +266,11 @@ Return the current pluginFactory address
 ### defaultConfigurationForPool
 
 
-`function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)` view external
+```solidity
+function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
+``` view external
 
 Returns the default communityFee and tickspacing
-
-
-
 
 **Returns:**
 
@@ -300,13 +283,13 @@ Returns the default communityFee and tickspacing
 ### computePoolAddress
 
 
-`function computePoolAddress(address token0, address token1) external view returns (address pool)` view external
+```solidity
+function computePoolAddress(address token0, address token1) external view returns (address pool)
+``` view external
 
 Deterministically computes the pool address given the token0 and token1
 
 *Developer note: The method does not check if such a pool has been created*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -322,13 +305,13 @@ Deterministically computes the pool address given the token0 and token1
 ### poolByPair
 
 
-`function poolByPair(address tokenA, address tokenB) external view returns (address pool)` view external
+```solidity
+function poolByPair(address tokenA, address tokenB) external view returns (address pool)
+``` view external
 
 Returns the pool address for a given pair of tokens, or address 0 if it does not exist
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -344,10 +327,9 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 ### renounceOwnershipStartTimestamp
 
 
-`function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp)` view external
-
-
-
+```solidity
+function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp)
+``` view external
 
 
 
@@ -360,14 +342,14 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 ### createPool
 
 
-`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
+```solidity
+function createPool(address tokenA, address tokenB) external returns (address pool)
+```  external
 
 Creates a pool for the given two tokens
 
 *Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
 The call will revert if the pool already exists or the token arguments are invalid.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -383,87 +365,79 @@ The call will revert if the pool already exists or the token arguments are inval
 ### setDefaultCommunityFee
 
 
-`function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external`  external
+```solidity
+function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
+```  external
 
 
 
 *Developer note: updates default community fee for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultCommunityFee | uint16 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
-
+| newDefaultCommunityFee | uint16 | The new community fee, _must_ be <= MAX_COMMUNITY_FEE |
 
 ### setDefaultFee
 
 
-`function setDefaultFee(uint16 newDefaultFee) external`  external
+```solidity
+function setDefaultFee(uint16 newDefaultFee) external
+```  external
 
 
 
 *Developer note: updates default fee for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultFee | uint16 | The new  fee, _must_ be &lt;&#x3D; MAX_DEFAULT_FEE |
-
+| newDefaultFee | uint16 | The new fee, _must_ be <= MAX_DEFAULT_FEE |
 
 ### setDefaultTickspacing
 
 
-`function setDefaultTickspacing(int24 newDefaultTickspacing) external`  external
+```solidity
+function setDefaultTickspacing(int24 newDefaultTickspacing) external
+```  external
 
 
 
 *Developer note: updates default tickspacing for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultTickspacing | int24 | The new tickspacing, _must_ be &lt;&#x3D; MAX_TICK_SPACING and &gt;&#x3D; MIN_TICK_SPACING |
-
+| newDefaultTickspacing | int24 | The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING |
 
 ### setDefaultPluginFactory
 
 
-`function setDefaultPluginFactory(address newDefaultPluginFactory) external`  external
+```solidity
+function setDefaultPluginFactory(address newDefaultPluginFactory) external
+```  external
 
 
 
 *Developer note: updates pluginFactory address*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultPluginFactory | address | address of new plugin factory |
 
-
 ### startRenounceOwnership
 
 
-`function startRenounceOwnership() external`  external
+```solidity
+function startRenounceOwnership() external
+```  external
 
 Starts process of renounceOwnership. After that, a certain period
 of time must pass before the ownership renounce can be completed.
 
-
-
-
-
 ### stopRenounceOwnership
 
 
-`function stopRenounceOwnership() external`  external
+```solidity
+function stopRenounceOwnership() external
+```  external
 
 Stops process of renounceOwnership and removes timer.
-
-
-
-
 

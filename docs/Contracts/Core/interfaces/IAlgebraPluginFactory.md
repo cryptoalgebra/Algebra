@@ -14,11 +14,11 @@ An interface for a contract that is capable of deploying Algebra plugins
 ### createPlugin
 
 
-`function createPlugin(address pool) external returns (address)`  external
+```solidity
+function createPlugin(address pool) external returns (address)
+```  external
 
 Deploys new plugin contract for pool
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

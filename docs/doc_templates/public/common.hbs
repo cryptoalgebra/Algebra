@@ -5,37 +5,37 @@
 {{/if}}
 
 {{#if signature}}
-`{{signature}}` {{stateMutabilityFiltered}} {{visibility}}
+```solidity
+{{signature}}
+``` {{stateMutabilityFiltered}} {{visibility}}
 {{/if}}
 {{#else}}
 {{stateMutabilityFiltered}} {{visibility}}
 {{/else}}
-
 {{#with natspec}}
+
 {{notice}}
 {{#if dev}}
 
 *Developer note: {{dev}}*
 {{/if}}
-
 {{/with}}
-
-
 {{#if params}}
+
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {{#each params}}
-| {{name}} | {{type}} | {{joinLines natspec}} |
+| {{name}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
 {{/if}}
-
 {{#if returns}}
+
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 {{#each returns}}
-| {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{joinLines natspec}} |
+| {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
 {{/if}}
 

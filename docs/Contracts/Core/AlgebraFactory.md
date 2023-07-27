@@ -53,9 +53,9 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 ### constructor
 
 
-`constructor(address _poolDeployer) public`  public
-
-
+```solidity
+constructor(address _poolDeployer) public
+```  public
 
 
 
@@ -63,18 +63,16 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | ---- | ---- | ----------- |
 | _poolDeployer | address |  |
 
-
 ### owner
 
 
-`function owner() public view returns (address)` view public
+```solidity
+function owner() public view returns (address)
+``` view public
 
 Returns the current owner of the factory
 
 *Developer note: Can be changed by the current owner via transferOwnership(address newOwner)*
-
-
-
 
 **Returns:**
 
@@ -85,11 +83,11 @@ Returns the current owner of the factory
 ### hasRoleOrOwner
 
 
-`function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)` view public
+```solidity
+function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)
+``` view public
 
 Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -105,12 +103,11 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 ### defaultConfigurationForPool
 
 
-`function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)` view external
+```solidity
+function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
+``` view external
 
 Returns the default communityFee and tickspacing
-
-
-
 
 **Returns:**
 
@@ -123,13 +120,13 @@ Returns the default communityFee and tickspacing
 ### computePoolAddress
 
 
-`function computePoolAddress(address token0, address token1) public view returns (address pool)` view public
+```solidity
+function computePoolAddress(address token0, address token1) public view returns (address pool)
+``` view public
 
 Deterministically computes the pool address given the token0 and token1
 
 *Developer note: The method does not check if such a pool has been created*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -145,14 +142,14 @@ Deterministically computes the pool address given the token0 and token1
 ### createPool
 
 
-`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
+```solidity
+function createPool(address tokenA, address tokenB) external returns (address pool)
+```  external
 
 Creates a pool for the given two tokens
 
 *Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
 The call will revert if the pool already exists or the token arguments are invalid.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -168,102 +165,92 @@ The call will revert if the pool already exists or the token arguments are inval
 ### setDefaultCommunityFee
 
 
-`function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external`  external
+```solidity
+function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
+```  external
 
 
 
 *Developer note: updates default community fee for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultCommunityFee | uint16 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
-
+| newDefaultCommunityFee | uint16 | The new community fee, _must_ be <= MAX_COMMUNITY_FEE |
 
 ### setDefaultFee
 
 
-`function setDefaultFee(uint16 newDefaultFee) external`  external
+```solidity
+function setDefaultFee(uint16 newDefaultFee) external
+```  external
 
 
 
 *Developer note: updates default fee for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultFee | uint16 | The new  fee, _must_ be &lt;&#x3D; MAX_DEFAULT_FEE |
-
+| newDefaultFee | uint16 | The new fee, _must_ be <= MAX_DEFAULT_FEE |
 
 ### setDefaultTickspacing
 
 
-`function setDefaultTickspacing(int24 newDefaultTickspacing) external`  external
+```solidity
+function setDefaultTickspacing(int24 newDefaultTickspacing) external
+```  external
 
 
 
 *Developer note: updates default tickspacing for new pools*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultTickspacing | int24 | The new tickspacing, _must_ be &lt;&#x3D; MAX_TICK_SPACING and &gt;&#x3D; MIN_TICK_SPACING |
-
+| newDefaultTickspacing | int24 | The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING |
 
 ### setDefaultPluginFactory
 
 
-`function setDefaultPluginFactory(address newDefaultPluginFactory) external`  external
+```solidity
+function setDefaultPluginFactory(address newDefaultPluginFactory) external
+```  external
 
 
 
 *Developer note: updates pluginFactory address*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultPluginFactory | address | address of new plugin factory |
 
-
 ### startRenounceOwnership
 
 
-`function startRenounceOwnership() external`  external
+```solidity
+function startRenounceOwnership() external
+```  external
 
 Starts process of renounceOwnership. After that, a certain period
 of time must pass before the ownership renounce can be completed.
 
-
-
-
-
 ### stopRenounceOwnership
 
 
-`function stopRenounceOwnership() external`  external
+```solidity
+function stopRenounceOwnership() external
+```  external
 
 Stops process of renounceOwnership and removes timer.
-
-
-
-
 
 ### renounceOwnership
 
 
-`function renounceOwnership() public`  public
+```solidity
+function renounceOwnership() public
+```  public
 
 
 
 *Developer note: Leaves the contract without owner. It will not be possible to call &#x60;onlyOwner&#x60; functions anymore.
 Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
 have passed since the call to the startRenounceOwnership() function.*
-
-
-
-
 

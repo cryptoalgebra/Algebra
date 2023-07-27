@@ -15,11 +15,11 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### Transfer
 
 
-`event Transfer(address from, address to, uint256 value)`  
+```solidity
+event Transfer(address from, address to, uint256 value)
+```  
 
 Event emitted when tokens are transferred from one address to another, either via &#x60;#transfer&#x60; or &#x60;#transferFrom&#x60;.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -27,15 +27,14 @@ Event emitted when tokens are transferred from one address to another, either vi
 | to | address | The account to which the tokens were sent, i.e. the balance increased |
 | value | uint256 | The amount of tokens that were transferred |
 
-
 ### Approval
 
 
-`event Approval(address owner, address spender, uint256 value)`  
+```solidity
+event Approval(address owner, address spender, uint256 value)
+```  
 
 Event emitted when the approval amount for the spender of a given owner&#x27;s tokens changes.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -44,16 +43,15 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 | value | uint256 | The new allowance from the owner to the spender |
 
 
-
 ## Functions
 ### balanceOf
 
 
-`function balanceOf(address account) external view returns (uint256)` view external
+```solidity
+function balanceOf(address account) external view returns (uint256)
+``` view external
 
 Returns the balance of a token
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -68,11 +66,11 @@ Returns the balance of a token
 ### transfer
 
 
-`function transfer(address recipient, uint256 amount) external returns (bool)`  external
+```solidity
+function transfer(address recipient, uint256 amount) external returns (bool)
+```  external
 
 Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -88,11 +86,11 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 ### allowance
 
 
-`function allowance(address owner, address spender) external view returns (uint256)` view external
+```solidity
+function allowance(address owner, address spender) external view returns (uint256)
+``` view external
 
 Returns the current allowance given to a spender by an owner
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -103,21 +101,21 @@ Returns the current allowance given to a spender by an owner
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint256 | The current allowance granted by &#x60;owner&#x60; to &#x60;spender&#x60; |
+| [0] | uint256 | The current allowance granted by `owner` to `spender` |
 
 ### approve
 
 
-`function approve(address spender, uint256 amount) external returns (bool)`  external
+```solidity
+function approve(address spender, uint256 amount) external returns (bool)
+```  external
 
 Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | spender | address | The account which will be allowed to spend a given amount of the owners tokens |
-| amount | uint256 | The amount of tokens allowed to be used by &#x60;spender&#x60; |
+| amount | uint256 | The amount of tokens allowed to be used by `spender` |
 
 **Returns:**
 
@@ -128,11 +126,11 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 ### transferFrom
 
 
-`function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)`  external
+```solidity
+function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)
+```  external
 
 Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

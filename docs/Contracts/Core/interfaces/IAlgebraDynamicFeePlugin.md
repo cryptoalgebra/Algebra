@@ -15,12 +15,11 @@ If the dynamic fee logic does not allow the fee to be calculated without additio
 ### getCurrentFee
 
 
-`function getCurrentFee() external view returns (uint16 fee)` view external
+```solidity
+function getCurrentFee() external view returns (uint16 fee)
+``` view external
 
 Returns fee from plugin
-
-
-
 
 **Returns:**
 

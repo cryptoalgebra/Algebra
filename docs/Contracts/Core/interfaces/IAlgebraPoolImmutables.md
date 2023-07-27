@@ -15,12 +15,11 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ### factory
 
 
-`function factory() external view returns (address)` view external
+```solidity
+function factory() external view returns (address)
+``` view external
 
 The Algebra factory contract, which must adhere to the IAlgebraFactory interface
-
-
-
 
 **Returns:**
 
@@ -31,12 +30,11 @@ The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 ### token0
 
 
-`function token0() external view returns (address)` view external
+```solidity
+function token0() external view returns (address)
+``` view external
 
 The first of the two tokens of the pool, sorted by address
-
-
-
 
 **Returns:**
 
@@ -47,12 +45,11 @@ The first of the two tokens of the pool, sorted by address
 ### token1
 
 
-`function token1() external view returns (address)` view external
+```solidity
+function token1() external view returns (address)
+``` view external
 
 The second of the two tokens of the pool, sorted by address
-
-
-
 
 **Returns:**
 
@@ -63,12 +60,11 @@ The second of the two tokens of the pool, sorted by address
 ### communityVault
 
 
-`function communityVault() external view returns (address)` view external
+```solidity
+function communityVault() external view returns (address)
+``` view external
 
 The contract to which community fees are transferred
-
-
-
 
 **Returns:**
 
@@ -79,15 +75,14 @@ The contract to which community fees are transferred
 ### maxLiquidityPerTick
 
 
-`function maxLiquidityPerTick() external view returns (uint128)` view external
+```solidity
+function maxLiquidityPerTick() external view returns (uint128)
+``` view external
 
 The maximum amount of position liquidity that can use any tick in the range
 
 *Developer note: This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
 also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool*
-
-
-
 
 **Returns:**
 

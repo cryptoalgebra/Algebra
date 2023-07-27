@@ -13,9 +13,9 @@ Contains state variables, immutables and common internal functions
 ### onlyValidTicks
 
 
-`modifier onlyValidTicks(int24 bottomTick, int24 topTick)`  internal
-
-
+```solidity
+modifier onlyValidTicks(int24 bottomTick, int24 topTick)
+```  internal
 
 
 
@@ -23,7 +23,6 @@ Contains state variables, immutables and common internal functions
 | ---- | ---- | ----------- |
 | bottomTick | int24 |  |
 | topTick | int24 |  |
-
 
 
 ## Variables
@@ -102,15 +101,14 @@ This value is an int24 to avoid casting even though it is always positive.*
 ### maxLiquidityPerTick
 
 
-`function maxLiquidityPerTick() external pure returns (uint128)` pure external
+```solidity
+function maxLiquidityPerTick() external pure returns (uint128)
+``` pure external
 
 The maximum amount of position liquidity that can use any tick in the range
 
 *Developer note: This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
 also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool*
-
-
-
 
 **Returns:**
 
@@ -121,14 +119,13 @@ also prevents out-of-range liquidity from being used to prevent adding in-range 
 ### getCommunityFeePending
 
 
-`function getCommunityFeePending() external view returns (uint128, uint128)` view external
+```solidity
+function getCommunityFeePending() external view returns (uint128, uint128)
+``` view external
 
 The amounts of token0 and token1 that will be sent to the vault
 
 *Developer note: Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
-
-
-
 
 **Returns:**
 
@@ -140,16 +137,15 @@ The amounts of token0 and token1 that will be sent to the vault
 ### fee
 
 
-`function fee() external view returns (uint16 currentFee)` view external
+```solidity
+function fee() external view returns (uint16 currentFee)
+``` view external
 
 The current pool fee value
 
 *Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
 If the plugin implements complex fee logic, this method may return an incorrect value or revert.
 In this case, see the plugin implementation and related documentation.*
-
-
-
 
 **Returns:**
 

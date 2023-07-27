@@ -4,207 +4,171 @@
 ## locked
 
 
-`error locked()`  
+```solidity
+error locked()
+```  
 
 Emitted by the reentrancy guard
-
-
-
-
 
 ## arithmeticError
 
 
-`error arithmeticError()`  
+```solidity
+error arithmeticError()
+```  
 
 Emitted if arithmetic error occurred
-
-
-
-
 
 ## alreadyInitialized
 
 
-`error alreadyInitialized()`  
+```solidity
+error alreadyInitialized()
+```  
 
 Emitted if an attempt is made to initialize the pool twice
-
-
-
-
 
 ## zeroAmountRequired
 
 
-`error zeroAmountRequired()`  
+```solidity
+error zeroAmountRequired()
+```  
 
 Emitted if 0 is passed as amountRequired to swap function
-
-
-
-
 
 ## invalidAmountRequired
 
 
-`error invalidAmountRequired()`  
+```solidity
+error invalidAmountRequired()
+```  
 
 Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
-
-
-
-
 
 ## insufficientInputAmount
 
 
-`error insufficientInputAmount()`  
+```solidity
+error insufficientInputAmount()
+```  
 
 Emitted if the pool received fewer tokens than it should have
-
-
-
-
 
 ## zeroLiquidityDesired
 
 
-`error zeroLiquidityDesired()`  
+```solidity
+error zeroLiquidityDesired()
+```  
 
 Emitted if there was an attempt to mint zero liquidity
-
-
-
-
 
 ## zeroLiquidityActual
 
 
-`error zeroLiquidityActual()`  
+```solidity
+error zeroLiquidityActual()
+```  
 
 Emitted if actual amount of liquidity is zero (due to insufficient amount of tokens received)
-
-
-
-
 
 ## flashInsufficientPaid0
 
 
-`error flashInsufficientPaid0()`  
+```solidity
+error flashInsufficientPaid0()
+```  
 
 Emitted if the pool received fewer tokens{0,1} after flash than it should have
-
-
-
-
 
 ## flashInsufficientPaid1
 
 
-`error flashInsufficientPaid1()`  
-
-
-
-
+```solidity
+error flashInsufficientPaid1()
+```  
 
 
 
 ## invalidLimitSqrtPrice
 
 
-`error invalidLimitSqrtPrice()`  
+```solidity
+error invalidLimitSqrtPrice()
+```  
 
 Emitted if limitSqrtPrice param is incorrect
-
-
-
-
 
 ## tickIsNotSpaced
 
 
-`error tickIsNotSpaced()`  
+```solidity
+error tickIsNotSpaced()
+```  
 
 Tick must be divisible by tickspacing
-
-
-
-
 
 ## notAllowed
 
 
-`error notAllowed()`  
+```solidity
+error notAllowed()
+```  
 
 Emitted if a method is called that is accessible only to the factory owner or dedicated role
-
-
-
-
 
 ## onlyFarming
 
 
-`error onlyFarming()`  
+```solidity
+error onlyFarming()
+```  
 
 Emitted if a method is called that is accessible only to the farming
-
-
-
-
 
 ## invalidNewTickSpacing
 
 
-`error invalidNewTickSpacing()`  
-
-
-
-
+```solidity
+error invalidNewTickSpacing()
+```  
 
 
 
 ## invalidNewCommunityFee
 
 
-`error invalidNewCommunityFee()`  
-
-
-
-
+```solidity
+error invalidNewCommunityFee()
+```  
 
 
 
 ## dynamicFeeActive
 
 
-`error dynamicFeeActive()`  
-
-
-
-
+```solidity
+error dynamicFeeActive()
+```  
 
 
 
 ## dynamicFeeDisabled
 
 
-`error dynamicFeeDisabled()`  
-
-
-
-
+```solidity
+error dynamicFeeDisabled()
+```  
 
 
 
 ## invalidHookResponse
 
 
-`error invalidHookResponse(bytes4 selector)`  
-
-
+```solidity
+error invalidHookResponse(bytes4 selector)
+```  
 
 
 
@@ -212,125 +176,102 @@ Emitted if a method is called that is accessible only to the farming
 | ---- | ---- | ----------- |
 | selector | bytes4 |  |
 
-
 ## liquiditySub
 
 
-`error liquiditySub()`  
+```solidity
+error liquiditySub()
+```  
 
 Emitted if liquidity underflows
-
-
-
-
 
 ## liquidityAdd
 
 
-`error liquidityAdd()`  
+```solidity
+error liquidityAdd()
+```  
 
 Emitted if liquidity overflows
-
-
-
-
 
 ## topTickLowerOrEqBottomTick
 
 
-`error topTickLowerOrEqBottomTick()`  
-
-
-
-
+```solidity
+error topTickLowerOrEqBottomTick()
+```  
 
 
 
 ## bottomTickLowerThanMIN
 
 
-`error bottomTickLowerThanMIN()`  
-
-
-
-
+```solidity
+error bottomTickLowerThanMIN()
+```  
 
 
 
 ## topTickAboveMAX
 
 
-`error topTickAboveMAX()`  
-
-
-
-
+```solidity
+error topTickAboveMAX()
+```  
 
 
 
 ## liquidityOverflow
 
 
-`error liquidityOverflow()`  
-
-
-
-
+```solidity
+error liquidityOverflow()
+```  
 
 
 
 ## tickIsNotInitialized
 
 
-`error tickIsNotInitialized()`  
-
-
-
-
+```solidity
+error tickIsNotInitialized()
+```  
 
 
 
 ## tickInvalidLinks
 
 
-`error tickInvalidLinks()`  
-
-
-
-
+```solidity
+error tickInvalidLinks()
+```  
 
 
 
 ## transferFailed
 
 
-`error transferFailed()`  
-
-
-
-
+```solidity
+error transferFailed()
+```  
 
 
 
 ## tickOutOfRange
 
 
-`error tickOutOfRange()`  
-
-
-
-
+```solidity
+error tickOutOfRange()
+```  
 
 
 
 ## priceOutOfRange
 
 
-`error priceOutOfRange()`  
-
-
-
-
+```solidity
+error priceOutOfRange()
+```  
 
 
 

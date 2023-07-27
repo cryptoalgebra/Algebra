@@ -14,15 +14,14 @@ Encapsulates logic for tracking and changing pool reserves
 ### getReserves
 
 
-`function getReserves() external view returns (uint128, uint128)` view external
+```solidity
+function getReserves() external view returns (uint128, uint128)
+``` view external
 
 The tracked token0 and token1 reserves of pool
 
 *Developer note: If at any time the real balance is larger, the excess will be transferred to liquidity providers as additional fee.
 If the balance exceeds uint128, the excess will be sent to the communityVault.*
-
-
-
 
 **Returns:**
 

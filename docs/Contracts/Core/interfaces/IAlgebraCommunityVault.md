@@ -14,11 +14,11 @@ Community fee from pools is sent here, if it is enabled
 ### TokensWithdrawal
 
 
-`event TokensWithdrawal(address token, address to, uint256 amount)`  
+```solidity
+event TokensWithdrawal(address token, address to, uint256 amount)
+```  
 
 Event emitted when a fees has been claimed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -26,15 +26,14 @@ Event emitted when a fees has been claimed
 | to | address | The address where claimed rewards were sent to |
 | amount | uint256 | The amount of fees tokens claimed by communityFeeReceiver |
 
-
 ### AlgebraTokensWithdrawal
 
 
-`event AlgebraTokensWithdrawal(address token, address to, uint256 amount)`  
+```solidity
+event AlgebraTokensWithdrawal(address token, address to, uint256 amount)
+```  
 
 Event emitted when a fees has been claimed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -42,191 +41,175 @@ Event emitted when a fees has been claimed
 | to | address | The address where claimed rewards were sent to |
 | amount | uint256 | The amount of fees tokens claimed by Algebra |
 
-
 ### AlgebraFeeReceiver
 
 
-`event AlgebraFeeReceiver(address newAlgebraFeeReceiver)`  
+```solidity
+event AlgebraFeeReceiver(address newAlgebraFeeReceiver)
+```  
 
 Emitted when a AlgebraFeeReceiver address changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFeeReceiver | address | New Algebra fee receiver address |
 
-
 ### AlgebraFeeManager
 
 
-`event AlgebraFeeManager(address newAlgebraFeeManager)`  
+```solidity
+event AlgebraFeeManager(address newAlgebraFeeManager)
+```  
 
 Emitted when a AlgebraFeeManager address changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFeeManager | address | New Algebra fee manager address |
 
-
 ### AlgebraFee
 
 
-`event AlgebraFee(uint16 newAlgebraFee)`  
+```solidity
+event AlgebraFee(uint16 newAlgebraFee)
+```  
 
 Emitted when the Algebra fee is changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFee | uint16 | The new Algebra fee value |
 
-
 ### CommunityFeeReceiver
 
 
-`event CommunityFeeReceiver(address newCommunityFeeReceiver)`  
+```solidity
+event CommunityFeeReceiver(address newCommunityFeeReceiver)
+```  
 
 Emitted when a CommunityFeeReceiver address changed
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newCommunityFeeReceiver | address | New fee receiver address |
 
 
-
 ## Functions
 ### withdraw
 
 
-`function withdraw(address token, uint256 amount) external`  external
+```solidity
+function withdraw(address token, uint256 amount) external
+```  external
 
 Withdraw protocol fees from vault
 
 *Developer note: Can only be called by algebraFeeManager or communityFeeReceiver*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | token | address | The token address |
 | amount | uint256 | The amount of token |
 
-
 ### withdrawTokens
 
 
-`function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external`  external
+```solidity
+function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external
+```  external
 
 Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 
 *Developer note: Can be called by algebraFeeManager or communityFeeReceiver*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | params | struct IAlgebraCommunityVault.WithdrawTokensParams[] | Array of WithdrawTokensParams objects containing token addresses and amounts to withdraw |
 
-
 ### acceptAlgebraFeeChangeProposal
 
 
-`function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external`  external
+```solidity
+function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
+```  external
 
 Accepts the proposed new Algebra fee
 
 *Developer note: Can only be called by the factory owner*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFee | uint16 | New Algebra fee value |
 
-
 ### changeCommunityFeeReceiver
 
 
-`function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external`  external
+```solidity
+function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external
+```  external
 
 Change community fee receiver address
 
 *Developer note: Can only be called by the factory owner*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newCommunityFeeReceiver | address | New community fee receiver address |
 
-
 ### transferAlgebraFeeManagerRole
 
 
-`function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external`  external
+```solidity
+function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external
+```  external
 
 Transfers Algebra fee manager role
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _newAlgebraFeeManager | address | new Algebra fee manager address |
 
-
 ### acceptAlgebraFeeManagerRole
 
 
-`function acceptAlgebraFeeManagerRole() external`  external
+```solidity
+function acceptAlgebraFeeManagerRole() external
+```  external
 
 accept Algebra FeeManager role
-
-
-
-
 
 ### proposeAlgebraFeeChange
 
 
-`function proposeAlgebraFeeChange(uint16 newAlgebraFee) external`  external
+```solidity
+function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
+```  external
 
 Proposes new Algebra fee value for protocol
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFee | uint16 | new Algebra fee value |
 
-
 ### cancelAlgebraFeeChangeProposal
 
 
-`function cancelAlgebraFeeChangeProposal() external`  external
+```solidity
+function cancelAlgebraFeeChangeProposal() external
+```  external
 
 Cancels Algebra fee change proposal
-
-
-
-
 
 ### changeAlgebraFeeReceiver
 
 
-`function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external`  external
+```solidity
+function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external
+```  external
 
 Change Algebra community fee part receiver
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newAlgebraFeeReceiver | address | The address of new Algebra fee receiver |
-
 
