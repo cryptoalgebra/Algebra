@@ -16,7 +16,7 @@ Version: Algebra Integral*
 
 ```solidity
 modifier onlyFactoryOwner()
-```  internal
+```
 
 
 
@@ -25,7 +25,7 @@ modifier onlyFactoryOwner()
 
 ```solidity
 modifier onlyWithdrawer()
-```  internal
+```
 
 
 
@@ -34,7 +34,7 @@ modifier onlyWithdrawer()
 
 ```solidity
 modifier onlyAlgebraFeeManager()
-```  internal
+```
 
 
 
@@ -77,7 +77,7 @@ Address of Algebra fee manager
 
 ```solidity
 constructor(address _algebraFeeManager) public
-```  public
+```
 
 
 
@@ -90,7 +90,7 @@ constructor(address _algebraFeeManager) public
 
 ```solidity
 function withdraw(address token, uint256 amount) external
-```  external
+```
 
 Withdraw protocol fees from vault
 
@@ -106,7 +106,7 @@ Withdraw protocol fees from vault
 
 ```solidity
 function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external
-```  external
+```
 
 Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 
@@ -121,7 +121,7 @@ Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 
 ```solidity
 function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
-```  external
+```
 
 Accepts the proposed new Algebra fee
 
@@ -136,7 +136,7 @@ Accepts the proposed new Algebra fee
 
 ```solidity
 function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external
-```  external
+```
 
 Change community fee receiver address
 
@@ -151,7 +151,7 @@ Change community fee receiver address
 
 ```solidity
 function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external
-```  external
+```
 
 Transfers Algebra fee manager role
 
@@ -164,7 +164,7 @@ Transfers Algebra fee manager role
 
 ```solidity
 function acceptAlgebraFeeManagerRole() external
-```  external
+```
 
 accept Algebra FeeManager role
 
@@ -173,7 +173,7 @@ accept Algebra FeeManager role
 
 ```solidity
 function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
-```  external
+```
 
 Proposes new Algebra fee value for protocol
 
@@ -186,7 +186,7 @@ Proposes new Algebra fee value for protocol
 
 ```solidity
 function cancelAlgebraFeeChangeProposal() external
-```  external
+```
 
 Cancels Algebra fee change proposal
 
@@ -195,7 +195,7 @@ Cancels Algebra fee change proposal
 
 ```solidity
 function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external
-```  external
+```
 
 Change Algebra community fee part receiver
 

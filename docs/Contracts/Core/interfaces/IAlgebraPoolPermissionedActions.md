@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function setCommunityFee(uint16 newCommunityFee) external
-```  external
+```
 
 Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
@@ -30,7 +30,7 @@ Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINI
 
 ```solidity
 function setTickSpacing(int24 newTickSpacing) external
-```  external
+```
 
 Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
@@ -43,7 +43,7 @@ Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE 
 
 ```solidity
 function setPlugin(address newPluginAddress) external
-```  external
+```
 
 Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
@@ -56,7 +56,7 @@ Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 ```solidity
 function setPluginConfig(uint8 newConfig) external
-```  external
+```
 
 Set new plugin config
 
@@ -69,7 +69,7 @@ Set new plugin config
 
 ```solidity
 function setFee(uint16 newFee) external
-```  external
+```
 
 Set new pool fee. Can be called by owner if dynamic fee is disabled.
 Called by the plugin if dynamic fee is enabled

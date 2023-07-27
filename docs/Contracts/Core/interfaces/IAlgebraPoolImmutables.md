@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function factory() external view returns (address)
-``` view external
+```
 
 The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 
@@ -32,7 +32,7 @@ The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 
 ```solidity
 function token0() external view returns (address)
-``` view external
+```
 
 The first of the two tokens of the pool, sorted by address
 
@@ -47,7 +47,7 @@ The first of the two tokens of the pool, sorted by address
 
 ```solidity
 function token1() external view returns (address)
-``` view external
+```
 
 The second of the two tokens of the pool, sorted by address
 
@@ -62,7 +62,7 @@ The second of the two tokens of the pool, sorted by address
 
 ```solidity
 function communityVault() external view returns (address)
-``` view external
+```
 
 The contract to which community fees are transferred
 
@@ -77,7 +77,7 @@ The contract to which community fees are transferred
 
 ```solidity
 function maxLiquidityPerTick() external view returns (uint128)
-``` view external
+```
 
 The maximum amount of position liquidity that can use any tick in the range
 

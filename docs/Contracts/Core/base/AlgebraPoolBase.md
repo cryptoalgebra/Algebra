@@ -15,7 +15,7 @@ Contains state variables, immutables and common internal functions
 
 ```solidity
 modifier onlyValidTicks(int24 bottomTick, int24 topTick)
-```  internal
+```
 
 
 
@@ -103,7 +103,7 @@ This value is an int24 to avoid casting even though it is always positive.*
 
 ```solidity
 function maxLiquidityPerTick() external pure returns (uint128)
-``` pure external
+```
 
 The maximum amount of position liquidity that can use any tick in the range
 
@@ -121,7 +121,7 @@ also prevents out-of-range liquidity from being used to prevent adding in-range 
 
 ```solidity
 function getCommunityFeePending() external view returns (uint128, uint128)
-``` view external
+```
 
 The amounts of token0 and token1 that will be sent to the vault
 
@@ -139,7 +139,7 @@ The amounts of token0 and token1 that will be sent to the vault
 
 ```solidity
 function fee() external view returns (uint16 currentFee)
-``` view external
+```
 
 The current pool fee value
 

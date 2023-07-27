@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 event Transfer(address from, address to, uint256 value)
-```  
+```
 
 Event emitted when tokens are transferred from one address to another, either via &#x60;#transfer&#x60; or &#x60;#transferFrom&#x60;.
 
@@ -32,7 +32,7 @@ Event emitted when tokens are transferred from one address to another, either vi
 
 ```solidity
 event Approval(address owner, address spender, uint256 value)
-```  
+```
 
 Event emitted when the approval amount for the spender of a given owner&#x27;s tokens changes.
 
@@ -49,7 +49,7 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 
 ```solidity
 function balanceOf(address account) external view returns (uint256)
-``` view external
+```
 
 Returns the balance of a token
 
@@ -68,7 +68,7 @@ Returns the balance of a token
 
 ```solidity
 function transfer(address recipient, uint256 amount) external returns (bool)
-```  external
+```
 
 Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
@@ -88,7 +88,7 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
 ```solidity
 function allowance(address owner, address spender) external view returns (uint256)
-``` view external
+```
 
 Returns the current allowance given to a spender by an owner
 
@@ -108,7 +108,7 @@ Returns the current allowance given to a spender by an owner
 
 ```solidity
 function approve(address spender, uint256 amount) external returns (bool)
-```  external
+```
 
 Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
 
@@ -128,7 +128,7 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 
 ```solidity
 function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)
-```  external
+```
 
 Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
 

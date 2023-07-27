@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function algebraFlashCallback(uint256 fee0, uint256 fee1, bytes data) external
-```  external
+```
 
 Called to &#x60;msg.sender&#x60; after transferring to the recipient from IAlgebraPool#flash.
 

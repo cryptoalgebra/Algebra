@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function initialize(uint160 initialPrice) external
-```  external
+```
 
 Sets the initial price for the pool
 
@@ -33,7 +33,7 @@ Initialization should be done in one transaction with pool creation to avoid fro
 
 ```solidity
 function mint(address leftoversRecipient, address recipient, int24 bottomTick, int24 topTick, uint128 liquidityDesired, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)
-```  external
+```
 
 Adds liquidity for the given recipient/bottomTick/topTick position
 
@@ -63,7 +63,7 @@ on bottomTick, topTick, the amount of liquidity, and the current price.*
 
 ```solidity
 function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)
-```  external
+```
 
 Collects tokens owed to a position
 
@@ -92,7 +92,7 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 
 ```solidity
 function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) external returns (uint256 amount0, uint256 amount1)
-```  external
+```
 
 Burn liquidity from the sender and account tokens owed for the liquidity to the position
 
@@ -118,7 +118,7 @@ Fees must be collected separately via a call to #collect*
 
 ```solidity
 function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
-```  external
+```
 
 Swap token0 for token1, or token1 for token0
 
@@ -144,7 +144,7 @@ Swap token0 for token1, or token1 for token0
 
 ```solidity
 function swapWithPaymentInAdvance(address leftoversRecipient, address recipient, bool zeroToOne, int256 amountToSell, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
-```  external
+```
 
 Swap token0 for token1, or token1 for token0 with prepayment
 
@@ -173,7 +173,7 @@ the actually sent amount of tokens is used for further calculations*
 
 ```solidity
 function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external
-```  external
+```
 
 Receive token0 and/or token1 and pay it back, plus a fee, in the callback
 

@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function globalState() external view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked)
-``` view external
+```
 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
@@ -38,7 +38,7 @@ and is exposed as a single method to save gas when accessed externally.
 
 ```solidity
 function ticks(int24 tick) external view returns (uint256 liquidityTotal, int128 liquidityDelta, int24 prevTick, int24 nextTick, uint256 outerFeeGrowth0Token, uint256 outerFeeGrowth1Token)
-``` view external
+```
 
 Look up information about a specific tick in the pool
 
@@ -62,7 +62,7 @@ Look up information about a specific tick in the pool
 
 ```solidity
 function communityFeeLastTimestamp() external view returns (uint32)
-``` view external
+```
 
 The timestamp of the last sending of tokens to community vault
 
@@ -77,7 +77,7 @@ The timestamp of the last sending of tokens to community vault
 
 ```solidity
 function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1)
-``` view external
+```
 
 The amounts of token0 and token1 that will be sent to the vault
 
@@ -95,7 +95,7 @@ The amounts of token0 and token1 that will be sent to the vault
 
 ```solidity
 function plugin() external view returns (address pluginAddress)
-``` view external
+```
 
 Returns the address of currently used plugin
 
@@ -112,7 +112,7 @@ Returns the address of currently used plugin
 
 ```solidity
 function tickTable(int16 wordPosition) external view returns (uint256)
-``` view external
+```
 
 Returns 256 packed tick initialized boolean values. See TickTree for more information
 
@@ -131,7 +131,7 @@ Returns 256 packed tick initialized boolean values. See TickTree for more inform
 
 ```solidity
 function totalFeeGrowth0Token() external view returns (uint256)
-``` view external
+```
 
 The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
 
@@ -148,7 +148,7 @@ The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for 
 
 ```solidity
 function totalFeeGrowth1Token() external view returns (uint256)
-``` view external
+```
 
 The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
 
@@ -165,7 +165,7 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 
 ```solidity
 function fee() external view returns (uint16 currentFee)
-``` view external
+```
 
 The current pool fee value
 
@@ -184,7 +184,7 @@ In this case, see the plugin implementation and related documentation.*
 
 ```solidity
 function getReserves() external view returns (uint128 reserve0, uint128 reserve1)
-``` view external
+```
 
 The tracked token0 and token1 reserves of pool
 
@@ -203,7 +203,7 @@ If the balance exceeds uint128, the excess will be sent to the communityVault.*
 
 ```solidity
 function positions(bytes32 key) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1)
-``` view external
+```
 
 Returns the information about a position by the position&#x27;s key
 
@@ -226,7 +226,7 @@ Returns the information about a position by the position&#x27;s key
 
 ```solidity
 function liquidity() external view returns (uint128)
-``` view external
+```
 
 The currently in range liquidity available to the pool
 
@@ -244,7 +244,7 @@ Returned value cannot exceed type(uint128).max*
 
 ```solidity
 function tickSpacing() external view returns (int24)
-``` view external
+```
 
 The current tick spacing
 
@@ -264,7 +264,7 @@ This value is an int24 to avoid casting even though it is always positive.*
 
 ```solidity
 function prevTickGlobal() external view returns (int24)
-``` view external
+```
 
 The previous initialized tick before (or at) current global tick
 
@@ -279,7 +279,7 @@ The previous initialized tick before (or at) current global tick
 
 ```solidity
 function nextTickGlobal() external view returns (int24)
-``` view external
+```
 
 The next initialized tick after current global tick
 

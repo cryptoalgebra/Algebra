@@ -17,7 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes data) external
-```  external
+```
 
 Called to &#x60;msg.sender&#x60; after executing a swap via IAlgebraPool#swap.
 

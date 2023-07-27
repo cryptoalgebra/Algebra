@@ -55,7 +55,7 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 
 ```solidity
 constructor(address _poolDeployer) public
-```  public
+```
 
 
 
@@ -68,7 +68,7 @@ constructor(address _poolDeployer) public
 
 ```solidity
 function owner() public view returns (address)
-``` view public
+```
 
 Returns the current owner of the factory
 
@@ -85,7 +85,7 @@ Returns the current owner of the factory
 
 ```solidity
 function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)
-``` view public
+```
 
 Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.
 
@@ -105,7 +105,7 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 
 ```solidity
 function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
-``` view external
+```
 
 Returns the default communityFee and tickspacing
 
@@ -122,7 +122,7 @@ Returns the default communityFee and tickspacing
 
 ```solidity
 function computePoolAddress(address token0, address token1) public view returns (address pool)
-``` view public
+```
 
 Deterministically computes the pool address given the token0 and token1
 
@@ -144,7 +144,7 @@ Deterministically computes the pool address given the token0 and token1
 
 ```solidity
 function createPool(address tokenA, address tokenB) external returns (address pool)
-```  external
+```
 
 Creates a pool for the given two tokens
 
@@ -167,7 +167,7 @@ The call will revert if the pool already exists or the token arguments are inval
 
 ```solidity
 function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
-```  external
+```
 
 
 
@@ -182,7 +182,7 @@ function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
 
 ```solidity
 function setDefaultFee(uint16 newDefaultFee) external
-```  external
+```
 
 
 
@@ -197,7 +197,7 @@ function setDefaultFee(uint16 newDefaultFee) external
 
 ```solidity
 function setDefaultTickspacing(int24 newDefaultTickspacing) external
-```  external
+```
 
 
 
@@ -212,7 +212,7 @@ function setDefaultTickspacing(int24 newDefaultTickspacing) external
 
 ```solidity
 function setDefaultPluginFactory(address newDefaultPluginFactory) external
-```  external
+```
 
 
 
@@ -227,7 +227,7 @@ function setDefaultPluginFactory(address newDefaultPluginFactory) external
 
 ```solidity
 function startRenounceOwnership() external
-```  external
+```
 
 Starts process of renounceOwnership. After that, a certain period
 of time must pass before the ownership renounce can be completed.
@@ -237,7 +237,7 @@ of time must pass before the ownership renounce can be completed.
 
 ```solidity
 function stopRenounceOwnership() external
-```  external
+```
 
 Stops process of renounceOwnership and removes timer.
 
@@ -246,7 +246,7 @@ Stops process of renounceOwnership and removes timer.
 
 ```solidity
 function renounceOwnership() public
-```  public
+```
 
 
 
