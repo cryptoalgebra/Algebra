@@ -4,10 +4,9 @@ pragma solidity =0.8.20;
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/callback/IAlgebraMintCallback.sol';
 import '../interfaces/callback/IAlgebraFlashCallback.sol';
-import '../interfaces/pool/IAlgebraPoolErrors.sol';
 import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
-import '../interfaces/IAlgebraPool.sol';
+import '../interfaces/IAlgebraPoolFull.sol';
 import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
 import '../interfaces/IERC20Minimal.sol';
@@ -22,7 +21,7 @@ import './common/Timestamp.sol';
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
 /// @dev Decoupling into a separate abstract contract simplifies testing
-abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
+abstract contract AlgebraPoolBase is IAlgebraPoolFull, Timestamp {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   struct GlobalState {
