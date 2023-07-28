@@ -53,6 +53,20 @@ export default {
     bsc: {
       url: `https://bsc-dataseed3.binance.org`,
     },
+    zkSync: {
+      url: `https://mainnet.era.zksync.io`,
+      ethNetwork: `https://eth.llamarpc.com`,
+      chainId: 324,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      zksync: true,
+    },
+    zkSyncTestnet: {
+      url: `https://testnet.era.zksync.dev`,
+      ethNetwork: `https://rpc.ankr.com/eth_goerli`,
+      chainId: 280,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      zksync: true,
+    },
     maticTestnet: {
       url: `https://rpc-mumbai.maticvigil.com`,
       chainId: 80001,
@@ -69,5 +83,15 @@ export default {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
     apiKey: `${POLYGONSCAN_API_KEY}`,
+    customChains: [
+      {
+        network: "zkSyncTestnet",
+        chainId: 250,
+        urls: {
+          apiURL: "https://goerli.explorer.zksync.io/api",
+          browserURL: "https://goerli.explorer.zksync.io/"
+        }
+      }
+    ]
   },
 }

@@ -1,78 +1,22 @@
-import '@nomicfoundation/hardhat-toolbox';
-import 'hardhat-contract-sizer';
-import 'hardhat-watcher';
-import 'hardhat-dependency-compiler';
-import 'hardhat-contract-sizer';
-import 'solidity-coverage';
-import 'solidity-docgen';
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
 import baseConfig from '../../hardhat.base.config';
 
-const LOW_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.20',
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 2_000,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
+module.exports = {
+  zksolc: {
+    version: "1.3.13",
+    compilerSource: "binary",
+    settings: {}
   },
-}
-
-const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
-  version: '0.8.20',
-  settings: {
-    viaIR: true,
-    optimizer: {
-      enabled: true,
-      runs: 1_000,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
-  },
-}
-
-const DEFAULT_COMPILER_SETTINGS = {
-  version: '0.8.20',
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 1_000_000,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
-  },
-}
-
-export default {
+  defaultNetwork: "zkSyncTestnet",
   networks: baseConfig.networks,
-  etherscan: baseConfig.etherscan,
   solidity: {
-    compilers: [DEFAULT_COMPILER_SETTINGS],
-    overrides: {
-      'contracts/NonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/test/MockTimeNonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/test/NFTDescriptorTest.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/libraries/NFTSVG.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
-    },
+    version: "0.8.20",
+    settings: {
+      metadata: {
+        bytecodeHash: 'none',
+      },
+    }
   },
-  typechain: {
-    outDir: 'typechain'
-  },
-  docgen: {
-    outputDir: '../../docs/Contracts/Periphery',
-    pages: (x: any) => x.name.toString() + '.md',
-    templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
-  },
-  dependencyCompiler: {
-    paths: [
-      '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol',
-    ],
-  }
-}
+};

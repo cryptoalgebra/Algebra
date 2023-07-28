@@ -4,6 +4,10 @@
   "devDependencies": {
     "@defi-wonderland/smock": "^2.3.0",
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@matterlabs/hardhat-zksync-solc": "0.4.1",
+    "@matterlabs/hardhat-zksync-deploy": "0.6.3",
+    "@matterlabs/hardhat-zksync-verify": "0.2.0",
+    "@matterlabs/hardhat-zksync-upgradable": "0.0.1-alpha.1",
     "@typechain/ethers-v5": "^10.1.0",
     "@types/chai": "^4.2.6",
     "@types/console-log-level": "^1.4.0",
@@ -15,6 +19,7 @@
     "dotenv": "^10.0.0",
     "ethers": "5.7.2",
     "hardhat": "2.17.0",
+    "zksync-web3": "0.14.3",
     "hardhat-contract-sizer": "^2.8.0",
     "hardhat-dependency-compiler": "1.1.2",
     "hardhat-output-validator": "^0.1.19",

@@ -1,84 +1,22 @@
-import '@nomicfoundation/hardhat-toolbox';
-import 'hardhat-contract-sizer';
-import 'solidity-docgen';
-import { SolcUserConfig } from 'hardhat/types';
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
 import baseConfig from '../../hardhat.base.config';
 
-const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.20',
-  settings: {
-    evmVersion: 'paris',
-    optimizer: {
-      enabled: true,
-      runs: 1_000_000,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
+module.exports = {
+  zksolc: {
+    version: "1.3.13",
+    compilerSource: "binary",
+    settings: {}
   },
-}
-
-const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.20',
-  settings: {
-    evmVersion: 'paris',
-    optimizer: {
-      enabled: true,
-      runs: 200,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
-  },
-}
-
-const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
-  version: '0.8.20',
-  settings: {
-    evmVersion: 'paris',
-    optimizer: {
-      enabled: true,
-      runs: 0,
-    },
-    metadata: {
-      bytecodeHash: 'none',
-    },
-  },
-}
-
-
-
-if (process.env.RUN_COVERAGE == '1') {
-  /**
-   * Updates the default compiler settings when running coverage.
-   *
-   * See https://github.com/sc-forks/solidity-coverage/issues/417#issuecomment-730526466
-   */
-  console.info('Using coverage compiler settings')
-  const details = {
-    yul: true,
-    yulDetails: {
-      stackAllocation: true,
-    },
-  }
-
-  HIGHEST_OPTIMIZER_COMPILER_SETTINGS.settings.details = details;
-  DEFAULT_COMPILER_SETTINGS.settings.details = details;
-}
-
-export default {
+  defaultNetwork: "zkSyncTestnet",
   networks: baseConfig.networks,
-  etherscan: baseConfig.etherscan,
-  typechain: {
-    outDir: 'typechain',
-  },
   solidity: {
-    compilers: [HIGHEST_OPTIMIZER_COMPILER_SETTINGS],
+    version: "0.8.20",
+    settings: {
+      metadata: {
+        bytecodeHash: 'none',
+      },
+    }
   },
-  docgen: {
-    outputDir: '../../docs/Contracts/Plugins',
-    pages: (x: any) => x.name.toString() + '.md',
-    templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
-  },
-}
+};
