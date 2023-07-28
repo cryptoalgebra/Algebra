@@ -31,7 +31,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   address public algebraFeeManager;
   address private _pendingAlgebraFeeManager;
 
-  uint16 constant ALGEBRA_FEE_DENOMINATOR = 1000;
+  uint16 private constant ALGEBRA_FEE_DENOMINATOR = 1000;
 
   modifier onlyFactoryOwner() {
     require(msg.sender == IAlgebraFactory(factory).owner());
