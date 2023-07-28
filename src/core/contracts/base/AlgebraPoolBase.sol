@@ -93,6 +93,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
 
+  /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManagement.checkTickRangeValidity(bottomTick, topTick);
     _;
