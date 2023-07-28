@@ -2,7 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolFull.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './libraries/SafeERC20Namer.sol';
 import './libraries/ChainId.sol';
@@ -40,7 +40,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             tokenId
         );
 
-        IAlgebraPoolFull pool = IAlgebraPoolFull(
+        IAlgebraPool pool = IAlgebraPool(
             PoolAddress.computeAddress(
                 positionManager.poolDeployer(),
                 PoolAddress.PoolKey({token0: token0, token1: token1})

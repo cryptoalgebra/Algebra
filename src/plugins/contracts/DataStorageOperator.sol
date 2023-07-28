@@ -10,7 +10,7 @@ import './libraries/AdaptiveFee.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolFull.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/IDataStorageFactory.sol';
@@ -170,14 +170,14 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     bool isHookActive = pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) != 0;
     if (turnOn != isHookActive) {
       pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
-      IAlgebraPoolFull(pool).setPluginConfig(pluginConfig);
+      IAlgebraPool(pool).setPluginConfig(pluginConfig);
     }
   }
 
   /// @inheritdoc IFarmingPlugin
   function isIncentiveActive(address targetIncentive) external view returns (bool) {
     if (incentive != targetIncentive) return false;
-    if (IAlgebraPoolFull(pool).plugin() != address(this)) return false;
+    if (IAlgebraPool(pool).plugin() != address(this)) return false;
     (, , uint8 pluginConfig) = _getPoolState();
     if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
 
@@ -187,7 +187,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
-    IAlgebraPoolFull(msg.sender).setPluginConfig(defaultPluginConfig);
+    IAlgebraPool(msg.sender).setPluginConfig(defaultPluginConfig);
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
@@ -236,7 +236,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
       uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
 
       if (newFee != fee) {
-        IAlgebraPoolFull(pool).setFee(newFee);
+        IAlgebraPool(pool).setFee(newFee);
       }
     }
   }

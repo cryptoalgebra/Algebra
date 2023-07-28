@@ -2,7 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolFull.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
@@ -35,7 +35,7 @@ contract NonfungiblePositionManager is
     PeripheryValidation,
     SelfPermit
 {
-    using PoolInteraction for IAlgebraPoolFull;
+    using PoolInteraction for IAlgebraPool;
 
     // details about the Algebra position
     struct Position {
@@ -155,7 +155,7 @@ contract NonfungiblePositionManager is
         checkDeadline(params.deadline)
         returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
     {
-        IAlgebraPoolFull pool;
+        IAlgebraPool pool;
         uint256 actualLiquidity;
         (liquidity, actualLiquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
@@ -221,7 +221,7 @@ contract NonfungiblePositionManager is
 
     function _updateUncollectedFees(
         Position storage position,
-        IAlgebraPoolFull pool,
+        IAlgebraPool pool,
         address owner,
         int24 tickLower,
         int24 tickUpper,
@@ -267,7 +267,7 @@ contract NonfungiblePositionManager is
 
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
 
-        IAlgebraPoolFull pool;
+        IAlgebraPool pool;
         uint256 actualLiquidity;
         (liquidity, actualLiquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
@@ -327,7 +327,7 @@ contract NonfungiblePositionManager is
         );
         require(positionLiquidity >= params.liquidity);
 
-        IAlgebraPoolFull pool = IAlgebraPoolFull(getPoolById(poolId));
+        IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
@@ -367,7 +367,7 @@ contract NonfungiblePositionManager is
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;
 
         Position storage position = _positions[params.tokenId];
-        IAlgebraPoolFull pool = IAlgebraPoolFull(getPoolById(position.poolId));
+        IAlgebraPool pool = IAlgebraPool(getPoolById(position.poolId));
 
         (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
 
