@@ -193,6 +193,11 @@ describe('AlgebraFactory', () => {
       await expect(factory.renounceOwnership()).to.be.reverted;
     });
 
+    it('startRenounceOwner cannot be used twice in a row', async () => {
+      await factory.startRenounceOwnership();
+      await expect(factory.startRenounceOwnership()).to.be.reverted;
+    });
+
     it('stopRenounceOwnership works correct', async () => {
       await factory.startRenounceOwnership();
       await factory.stopRenounceOwnership();
