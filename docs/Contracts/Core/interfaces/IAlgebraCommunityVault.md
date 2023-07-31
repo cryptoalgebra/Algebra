@@ -54,6 +54,41 @@ Emitted when a AlgebraFeeReceiver address changed
 | ---- | ---- | ----------- |
 | newAlgebraFeeReceiver | address | New Algebra fee receiver address |
 
+### PendingAlgebraFeeManager
+
+
+```solidity
+event PendingAlgebraFeeManager(address pendingAlgebraFeeManager)
+```
+
+Emitted when a AlgebraFeeManager address change proposed
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pendingAlgebraFeeManager | address | New pending Algebra fee manager address |
+
+### AlgebraFeeProposal
+
+
+```solidity
+event AlgebraFeeProposal(uint16 proposedNewAlgebraFee)
+```
+
+Emitted when a new Algebra fee value proposed
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| proposedNewAlgebraFee | uint16 | The new proposed Algebra fee value |
+
+### CancelAlgebraFeeProposal
+
+
+```solidity
+event CancelAlgebraFeeProposal()
+```
+
+Emitted when a Algebra fee proposal canceled
+
 ### AlgebraFeeManager
 
 

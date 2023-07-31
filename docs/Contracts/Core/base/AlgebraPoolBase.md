@@ -17,7 +17,7 @@ Contains state variables, immutables and common internal functions
 modifier onlyValidTicks(int24 bottomTick, int24 topTick)
 ```
 
-
+Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
