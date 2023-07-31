@@ -96,6 +96,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
     algebraFee = newAlgebraFee;
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (0, false);
     emit AlgebraFee(newAlgebraFee);
+    emit ProposedAlgebraFee(0);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
@@ -110,6 +111,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external override onlyAlgebraFeeManager {
     _pendingAlgebraFeeManager = _newAlgebraFeeManager;
+    emit PendingAlgebraFeeManager(_newAlgebraFeeManager);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
@@ -117,17 +119,20 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
     require(msg.sender == _pendingAlgebraFeeManager);
     (_pendingAlgebraFeeManager, algebraFeeManager) = (address(0), msg.sender);
     emit AlgebraFeeManager(msg.sender);
+    emit PendingAlgebraFeeManager(address(0));
   }
 
   /// @inheritdoc IAlgebraCommunityVault
   function proposeAlgebraFeeChange(uint16 newAlgebraFee) external override onlyAlgebraFeeManager {
     require(newAlgebraFee <= ALGEBRA_FEE_DENOMINATOR);
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (newAlgebraFee, true);
+    emit ProposedAlgebraFee(newAlgebraFee);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
   function cancelAlgebraFeeChangeProposal() external override onlyAlgebraFeeManager {
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (0, false);
+    emit ProposedAlgebraFee(0);
   }
 
   /// @inheritdoc IAlgebraCommunityVault

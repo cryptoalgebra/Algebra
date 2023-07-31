@@ -21,6 +21,14 @@ interface IAlgebraCommunityVault {
   /// @param newAlgebraFeeReceiver New Algebra fee receiver address
   event AlgebraFeeReceiver(address newAlgebraFeeReceiver);
 
+  /// @notice Emmitted when a AlgebraFeeManager address changed proposed
+  /// @param pendingAlgebraFeeManager New pending Algebra fee manager address
+  event PendingAlgebraFeeManager(address pendingAlgebraFeeManager);
+
+  /// @notice Emitted when a new Algebra fee value proposed
+  /// @param proposedNewAlgebraFee The new proposed Algebra fee value
+  event ProposedAlgebraFee(uint16 proposedNewAlgebraFee);
+
   /// @notice Emitted when a AlgebraFeeManager address changed
   /// @param newAlgebraFeeManager New Algebra fee manager address
   event AlgebraFeeManager(address newAlgebraFeeManager);
