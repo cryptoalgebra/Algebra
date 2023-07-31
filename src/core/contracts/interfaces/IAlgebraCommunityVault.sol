@@ -27,7 +27,10 @@ interface IAlgebraCommunityVault {
 
   /// @notice Emitted when a new Algebra fee value proposed
   /// @param proposedNewAlgebraFee The new proposed Algebra fee value
-  event ProposedAlgebraFee(uint16 proposedNewAlgebraFee);
+  event AlgebraFeeProposal(uint16 proposedNewAlgebraFee);
+
+  /// @notice Emmitted when a Algebra fee proposal canceled
+  event CancelAlgebraFeeProposal();
 
   /// @notice Emitted when a AlgebraFeeManager address changed
   /// @param newAlgebraFeeManager New Algebra fee manager address
