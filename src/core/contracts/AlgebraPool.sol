@@ -381,6 +381,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (!IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender)) revert notAllowed();
   }
 
+  // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
+
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityFee(uint16 newCommunityFee) external override nonReentrant {
     _checkIfAdministrator();
