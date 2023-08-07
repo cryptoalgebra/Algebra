@@ -1,12 +1,13 @@
-import { BigNumber, BigNumberish, Wallet } from 'ethers'
+import { BigNumberish, Wallet, ZeroAddress } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME, pluginFixture } from './shared/fixtures'
+import { encodePriceSqrt, getMaxTick, getMinTick } from './shared/utilities';
 import snapshotGasCost from './shared/snapshotGasCost'
 
-import { MockFactory, MockPool, MockTimeDataStorageOperator, TestERC20, MockTimeDSFactory } from "../typechain";
+import { MockFactory, MockPool, MockTimeDataStorageOperator, TestERC20, MockTimeDSFactory, MockTimeVirtualPool, MockTimeVirtualPool__factory } from "../typechain";
 
 describe('DataStorageOperator', () => {
   let wallet: Wallet, other: Wallet
@@ -15,6 +16,13 @@ describe('DataStorageOperator', () => {
   let mockPool: MockPool; // mock of AlgebraPool
   let mockFactory: MockFactory; // mock of AlgebraFactory
   let mockPluginFactory: MockTimeDSFactory; // modified plugin factory
+
+  let minTick = getMinTick(60);
+  let maxTick = getMaxTick(60);
+
+  async function initializeAtZeroTick(pool: MockPool) {
+    await pool.initialize(encodePriceSqrt(1, 1));
+  }
 
   before('prepare signers', async () => {
     ;[wallet, other] = await (ethers as any).getSigners()
@@ -34,92 +42,96 @@ describe('DataStorageOperator', () => {
   })
 
   describe('#VolatilityOracle', () => {
-    it.skip('initializes timepoints slot', async () => {
-      /*await pool.initialize(encodePriceSqrt(1, 1))
-      checkTimepointEquals(await dsOperator.timepoints(0), {
+    beforeEach('connect plugin to pool', async () => {
+      await mockPool.setPlugin(plugin);
+    })
+
+    it('initializes timepoints slot', async () => {
+      await initializeAtZeroTick(mockPool);
+      checkTimepointEquals(await plugin.timepoints(0), {
         initialized: true,
-        blockTimestamp: TEST_POOL_START_TIME,
-        tickCumulative: 0,
-      })*/
+        blockTimestamp: BigInt(TEST_POOL_START_TIME),
+        tickCumulative: 0n,
+      })
     })
     
-    describe.skip('#getTimepoints', () => {
-      /*
-      beforeEach(() => initializeAtZeroTick(pool))
+    describe('#getTimepoints', () => {
+      
+      beforeEach(async () => await initializeAtZeroTick(mockPool))
   
       // zero tick
       it('current tick accumulator increases by tick over time', async () => {
         let {
           tickCumulatives: [tickCumulative],
-        } = await dsOperator.getTimepoints([0])
+        } = await plugin.getTimepoints([0])
         expect(tickCumulative).to.eq(0)
-        await pool.advanceTime(10)
+        await plugin.advanceTime(10)
         ;({
           tickCumulatives: [tickCumulative],
-        } = await dsOperator.getTimepoints([0]))
+        } = await plugin.getTimepoints([0]))
         expect(tickCumulative).to.eq(0)
       })
   
       it('current tick accumulator after single swap', async () => {
         // moves to tick -1
-        await swapExact0For1(1000, wallet.address)
-        await pool.advanceTime(4)
+        await mockPool.swapToTick(-1);
+
+        await plugin.advanceTime(4)
         let {
           tickCumulatives: [tickCumulative],
-        } = await dsOperator.getTimepoints([0])
+        } = await plugin.getTimepoints([0])
         expect(tickCumulative).to.eq(-4)
       })
   
       it('current tick accumulator after swaps', async () => {
-        await swapExact0For1(expandTo18Decimals(1).div(2), wallet.address);
-        expect((await pool.globalState()).tick).to.eq(-4463);
-        await pool.advanceTime(4);
-        await swapExact1For0(expandTo18Decimals(1).div(4), wallet.address);
-        expect((await pool.globalState()).tick).to.eq(-1560);
+        await mockPool.swapToTick(-4463);
+        expect((await mockPool.globalState()).tick).to.eq(-4463);
+        await plugin.advanceTime(4);
+        await mockPool.swapToTick(-1560);
+        expect((await mockPool.globalState()).tick).to.eq(-1560);
         let {
           tickCumulatives: [tickCumulative0],
-        } = await dsOperator.getTimepoints([0])
+        } = await plugin.getTimepoints([0])
         expect(tickCumulative0).to.eq(-17852);
-        await pool.advanceTime(60 * 5);
-        await swapExact0For1(100, wallet.address);
+        await plugin.advanceTime(60 * 5);
+        await mockPool.swapToTick(-1561);
         let {
           tickCumulatives: [tickCumulative1],
-        } = await dsOperator.getTimepoints([0]);
+        } = await plugin.getTimepoints([0]);
         expect(tickCumulative1).to.eq(-485852);
       })
-      */
     })
 
-    it.skip('writes an timepoint', async () => {
-      /*checkTimepointEquals(await dsOperator.timepoints(0), {
-        tickCumulative: 0,
-        blockTimestamp: TEST_POOL_START_TIME,
+    it('writes an timepoint', async () => {
+      await initializeAtZeroTick(mockPool);
+      checkTimepointEquals(await plugin.timepoints(0), {
+        tickCumulative: 0n,
+        blockTimestamp: BigInt(TEST_POOL_START_TIME),
         initialized: true,
       })
-      await pool.advanceTime(1)
-      await mint(wallet.address, minTick, maxTick, 100)
-      checkTimepointEquals(await dsOperator.timepoints(1), {
-        tickCumulative: -23028,
-        blockTimestamp: TEST_POOL_START_TIME + 1,
+      await plugin.advanceTime(1)
+      await mockPool.mint(wallet.address, wallet.address, minTick, maxTick, 100, '0x');
+      checkTimepointEquals(await plugin.timepoints(1), {
+        tickCumulative: 0n,
+        blockTimestamp: BigInt(TEST_POOL_START_TIME + 1),
         initialized: true,
       })
-      expect(await pool.secondsPerLiquidityCumulative()).to.be.eq('107650226801941937191829992860413859');
-      */
     })
 
-    it.skip('does not write an timepoint', async () => {
-      /*checkTimepointEquals(await dsOperator.timepoints(0), {
-        tickCumulative: 0,
-        blockTimestamp: TEST_POOL_START_TIME,
+    it('does not write an timepoint', async () => {
+      await initializeAtZeroTick(mockPool);
+      checkTimepointEquals(await plugin.timepoints(0), {
+        tickCumulative: 0n,
+        blockTimestamp: BigInt(TEST_POOL_START_TIME),
         initialized: true,
       })
-      await pool.advanceTime(1)
-      await mint(wallet.address, -240, 0, 100)
-      checkTimepointEquals(await dsOperator.timepoints(0), {
-        tickCumulative: 0,
-        blockTimestamp: TEST_POOL_START_TIME,
+      await plugin.advanceTime(1)
+      await mockPool.mint(wallet.address, wallet.address, -240, 0, 100, '0x');
+      checkTimepointEquals(await plugin.timepoints(0), {
+        tickCumulative: 0n,
+        blockTimestamp: BigInt(TEST_POOL_START_TIME),
         initialized: true,
-      })*/
+      })
     })
   })
 
@@ -327,40 +339,43 @@ describe('DataStorageOperator', () => {
 
   describe('#FarmingPlugin', () => {
     describe('virtual pool tests', () => {
-      /* let virtualPoolMock: MockTimeVirtualPool;
+       let virtualPoolMock: MockTimeVirtualPool;
    
        beforeEach('deploy virtualPoolMock', async () => {
-         await factory.setFarmingAddress(wallet.address);
+         await mockPluginFactory.setFarmingAddress(wallet);
          const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
-         virtualPoolMock = (await virtualPoolMockFactory.deploy()) as MockTimeVirtualPool;
+         virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
        })
    
        it('set incentive works', async() => {
-         await pool.setIncentive(virtualPoolMock.address);
-         expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);    
+         await plugin.setIncentive(virtualPoolMock);
+         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());    
        })
    
-       it('set incentive works only for Factory.farmingAddress', async() => {
-         await factory.setFarmingAddress(ethers.constants.AddressZero);
-         await expect(pool.setIncentive(virtualPoolMock.address)).to.be.reverted;  
+       it('set incentive works only for PluginFactory.farmingAddress', async() => {
+         await mockPluginFactory.setFarmingAddress(ZeroAddress);
+         await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;  
        })
    
        it('swap with active incentive', async() => {
-         await pool.setIncentive(virtualPoolMock.address);
-         await pool.initialize(encodePriceSqrt(1, 1));
-         await mint(wallet.address, -120, 120, 1);
-         await mint(wallet.address, minTick, maxTick, 1);
-         await swapToLowerPrice(encodePriceSqrt(1, 2), wallet.address);
+         await plugin.setIncentive(virtualPoolMock);
+         await mockPool.setPlugin(plugin);
+
+         await mockPool.initialize(encodePriceSqrt(1, 1));
+         await mockPool.mint(wallet.address, wallet.address, -120, 120, 1, '0x');
+         await mockPool.mint(wallet.address, wallet.address, minTick, maxTick, 1, '0x');
+
+         await mockPool.swapToTick(-130);
    
-         expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
+         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
    
-         const tick = (await pool.globalState()).tick;
+         const tick = (await mockPool.globalState()).tick;
          expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
          expect(await virtualPoolMock.timestamp()).to.be.gt(0);
        })
    
-       it('swap with finished incentive', async() => {
-         await virtualPoolMock.setIsExist(false);
+       it.skip('swap with finished incentive', async() => {
+         /*await virtualPoolMock.setIsExist(false);
          await pool.setIncentive(virtualPoolMock.address);
          await pool.initialize(encodePriceSqrt(1, 1));
          await mint(wallet.address, -120, 120, 1);
@@ -372,9 +387,11 @@ describe('DataStorageOperator', () => {
          expect(await pool.activeIncentive()).to.be.eq(ethers.constants.AddressZero);
          expect(await virtualPoolMock.currentTick()).to.be.eq(0);
          expect(await virtualPoolMock.timestamp()).to.be.eq(0);
+         */
        })
    
-       it('swap with not started yet incentive', async() => {
+       it.skip('swap with not started yet incentive', async() => {
+        /*
          await virtualPoolMock.setIsStarted(false);
          await pool.setIncentive(virtualPoolMock.address);
          await pool.initialize(encodePriceSqrt(1, 1));
@@ -388,24 +405,27 @@ describe('DataStorageOperator', () => {
          expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
          expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
          expect(await virtualPoolMock.timestamp()).to.be.eq(0); 
-       }) */
+         */
+       })
      })
 
      describe('#Incentive', () => {
-      /*
       it('incentive is not detached after swap', async () => {
-        await pool.initialize(encodePriceSqrt(1, 1))
-        await factory.setFarmingAddress(wallet.address)
+        await mockPool.setPlugin(plugin);
+        await initializeAtZeroTick(mockPool);
+        await mockPluginFactory.setFarmingAddress(wallet.address)
   
-        const vpStubFactory = await ethers.getContractFactory('TestVirtualPool')
-        let vpStub = (await vpStubFactory.deploy()) as TestVirtualPool
+        const vpStubFactory = await ethers.getContractFactory('MockTimeVirtualPool')
+        let vpStub = (await vpStubFactory.deploy()) as any as MockTimeVirtualPool
   
-        await pool.setIncentive(vpStub.address)
-  
-        await mint(wallet.address, -tickSpacing, tickSpacing, initializeLiquidityAmount)
-        expect(swapTarget.swapExact0For1(pool.address, initializeLiquidityAmount.mul(100), wallet.address, BigNumber.from("4295128740"), { gasLimit: 300000})).to.be.revertedWithoutReason;
+        await plugin.setIncentive(vpStub)
+        const initLiquidityAmount = 10000000000n;
+        await mockPool.mint(wallet.address, wallet.address, -120, 120, initLiquidityAmount, '0x');
+        await mockPool.mint(wallet.address, wallet.address, -1200, 1200, initLiquidityAmount, '0x');
+        await mockPool.swapToTick(-200);
+
+        expect(await plugin.incentive()).to.be.eq(await vpStub.getAddress());
       })
-      */
     })
   })
 

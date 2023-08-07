@@ -16,7 +16,7 @@ describe('Multicall', async () => {
 
   beforeEach('create multicall', async () => {
     const multicallTestFactory = await ethers.getContractFactory('TestMulticall')
-    multicall = (await multicallTestFactory.deploy()) as TestMulticall
+    multicall = (await multicallTestFactory.deploy()) as any as TestMulticall
   })
 
   it('revert messages are returned', async () => {
@@ -26,7 +26,7 @@ describe('Multicall', async () => {
   })
 
   it('return data is properly encoded', async () => {
-    const [data] = await multicall.callStatic.multicall([
+    const [data] = await multicall.multicall.staticCall([
       multicall.interface.encodeFunctionData('functionThatReturnsTuple', ['1', '2']),
     ])
     const {

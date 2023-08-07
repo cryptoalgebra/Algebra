@@ -16,10 +16,9 @@ import {
 } from '@cryptoalgebra/core/artifacts/contracts/test/MockTimeAlgebraPool.sol/MockTimeAlgebraPool.json'
 
 import { ethers } from 'hardhat'
-import { BigNumber } from 'ethers'
-import { MockTimeAlgebraPoolDeployer, TestAlgebraCallee, MockTimeAlgebraPool, AlgebraFactory } from '@cryptoalgebra/core/typechain'
-
-import {TestERC20} from '../../typechain'
+import { MockTimeAlgebraPoolDeployer, TestAlgebraCallee, MockTimeAlgebraPool, AlgebraFactory, TestERC20 } from '@cryptoalgebra/core/typechain'
+import { getCreateAddress } from 'ethers';
+import { ZERO_ADDRESS } from './fixtures'
 
 interface TokensFixture {
   token0: TestERC20
@@ -27,15 +26,18 @@ interface TokensFixture {
 }
 
 async function tokensFixture(): Promise<TokensFixture> {
-  const tokenFactory = await ethers.getContractFactory('TestERC20')
-  const tokenA = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
-  const tokenB = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
+  const tokenFactory = await ethers.getContractFactory('TestERC20');
+  const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+  const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+
+  tokenA.address_ = await tokenA.getAddress();
+  tokenB.address_ = await tokenB.getAddress();
 
   const [token0, token1] = [tokenA, tokenB].sort((tokenA, tokenB) =>
-    tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1
-  )
+    tokenA.address_.toLowerCase() < tokenB.address_.toLowerCase() ? -1 : 1
+  );
 
-  return { token0, token1 }
+  return { token0, token1 };
 }
 
 interface MockPoolDeployerFixture extends TokensFixture {
@@ -54,37 +56,35 @@ export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixtu
   const { token0, token1 } = await tokensFixture();
 
   // precompute
-  const poolDeployerAddress = ethers.utils.getContractAddress({
-    from: deployer.address, 
-    nonce: (await deployer.getTransactionCount()) + 1
-  })
+  const poolDeployerAddress = getCreateAddress({
+    from: deployer.address,
+    nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
+  });
 
   const factoryFactory = await ethers.getContractFactory(FACTORY_ABI,  FACTORY_BYTECODE);
-  const factory = (await factoryFactory.deploy(poolDeployerAddress)) as AlgebraFactory
-  await factory.deployed();
+  const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI,  POOL_DEPLOYER_BYTECODE);
   const poolDeployerContract = await poolDeployerFactory.deploy();
-  await poolDeployerContract.deployed();
-  const poolDeployer = (poolDeployerContract) as MockTimeAlgebraPoolDeployer;
+  const poolDeployer = (poolDeployerContract) as any as MockTimeAlgebraPoolDeployer;
 
   const calleeContractFactory = await ethers.getContractFactory(TEST_CALLEE_ABI,  TEST_CALLEE_BYTECODE);
-  const swapTargetCallee = (await calleeContractFactory.deploy()) as TestAlgebraCallee;
+  const swapTargetCallee = (await calleeContractFactory.deploy()) as any as TestAlgebraCallee;
 
   const MockTimeAlgebraPoolFactory = await ethers.getContractFactory(POOL_ABI,  POOL_BYTECODE);
 
   return { poolDeployer, swapTargetCallee, token0, token1, factory,     
     createPool: async (firstToken = token0, secondToken = token1) => {
     const tx = await poolDeployer.deployMock(
-      factory.address,
-      ethers.constants.AddressZero,
-      firstToken.address,
-      secondToken.address
+      factory,
+      ZERO_ADDRESS,
+      firstToken,
+      secondToken
     )
       
     const receipt = await tx.wait()
-    const sortedTokens = (BigInt(firstToken.address) < BigInt(secondToken.address)) ? [firstToken.address, secondToken.address] : [secondToken.address, firstToken.address]; 
+    const sortedTokens = (BigInt(await firstToken.getAddress()) < BigInt(await secondToken.getAddress())) ? [await firstToken.getAddress(), await secondToken.getAddress()] : [await secondToken.getAddress(), await firstToken.getAddress()]; 
     const poolAddress = await poolDeployer.computeAddress(sortedTokens[0], sortedTokens[1]);
-    return MockTimeAlgebraPoolFactory.attach(poolAddress) as MockTimeAlgebraPool;
+    return MockTimeAlgebraPoolFactory.attach(poolAddress) as any as MockTimeAlgebraPool;
   } };
 }

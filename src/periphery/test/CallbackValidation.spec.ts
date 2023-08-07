@@ -1,4 +1,4 @@
-import { Contract, constants, Wallet } from 'ethers'
+import { Contract, Wallet, MaxUint256 } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import completeFixture from './shared/completeFixture'
@@ -11,7 +11,7 @@ describe('CallbackValidation', () => {
   let callbackValidationFixture: () => Promise<{
     callbackValidation: TestCallbackValidation
     tokens: [TestERC20, TestERC20]
-    factory: IAlgebraFactory
+    factory: any
   }>;
 
   let callbackValidation: TestCallbackValidation
@@ -25,10 +25,10 @@ describe('CallbackValidation', () => {
       const tokenFactory = await ethers.getContractFactory('TestERC20')
       const callbackValidationFactory = await ethers.getContractFactory('TestCallbackValidation')
       const tokens: [TestERC20, TestERC20] = [
-        (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20, // do not use maxu256 to avoid overflowing
-        (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
+        (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20, // do not use maxu256 to avoid overflowing
+        (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20,
       ]
-      const callbackValidation = (await callbackValidationFactory.deploy()) as TestCallbackValidation
+      const callbackValidation = (await callbackValidationFactory.deploy()) as any as TestCallbackValidation
   
       return {
         tokens,
@@ -46,7 +46,7 @@ describe('CallbackValidation', () => {
     expect(
       callbackValidation
         .connect(nonpairAddr)
-        .verifyCallback(await factory.poolDeployer(), tokens[0].address, tokens[1].address)
+        .verifyCallback(await factory.poolDeployer(), await tokens[0].getAddress(), await tokens[1].getAddress())
     ).to.be.reverted
   })
 })

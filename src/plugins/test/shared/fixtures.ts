@@ -1,4 +1,3 @@
-import { BigNumber } from 'ethers'
 import { ethers } from 'hardhat'
 import { MockFactory, MockPool, MockTimeDataStorageOperator, TestERC20, MockTimeDSFactory, DataStorageFactory } from "../../typechain";
 
@@ -12,8 +11,7 @@ async function mockFactoryFixture(): Promise<MockFactoryFixture> {
   const [deployer] = await ethers.getSigners();
 
   const mockFactoryFactory = await ethers.getContractFactory('MockFactory')
-  const mockFactory = (await mockFactoryFactory.deploy()) as MockFactory
-  await mockFactory.deployed();
+  const mockFactory = (await mockFactoryFactory.deploy()) as any as MockFactory
 
   return { mockFactory }
 }
@@ -24,16 +22,20 @@ interface TokensFixture {
 }
 
 async function tokensFixture(): Promise<TokensFixture> {
-  const tokenFactory = await ethers.getContractFactory('TestERC20')
-  const tokenA = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
-  const tokenB = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
-  const tokenC = (await tokenFactory.deploy(BigNumber.from(2).pow(255))) as TestERC20
+  const tokenFactory = await ethers.getContractFactory('TestERC20');
+  const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+  const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+  const tokenC = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+
+  tokenA.address_ = await tokenA.getAddress();
+  tokenB.address_ = await tokenB.getAddress();
+  tokenC.address_ = await tokenC.getAddress();
 
   const [token0, token1, token2] = [tokenA, tokenB, tokenC].sort((tokenA, tokenB) =>
-    tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1
-  )
+    tokenA.address_.toLowerCase() < tokenB.address_.toLowerCase() ? -1 : 1
+  );
 
-  return { token0, token1, token2 }
+  return { token0, token1, token2 };
 }
 
 type TokensAndMockFactoryFixture = MockFactoryFixture & TokensFixture
@@ -53,18 +55,16 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
   //const { token0, token1, token2 } = await tokensFixture()
 
   const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory')
-  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory.address)) as MockTimeDSFactory
-  await mockPluginFactory.deployed();
+  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory)) as any as MockTimeDSFactory
 
   const mockPoolFactory = await ethers.getContractFactory('MockPool')
-  const mockPool = (await mockPoolFactory.deploy()) as MockPool
-  await mockPool.deployed();
+  const mockPool = (await mockPoolFactory.deploy()) as any as MockPool
 
-  await mockPluginFactory.createPlugin(mockPool.address);
-  const pluginAddress = await mockPluginFactory.pluginsForPools(mockPool.address);
+  await mockPluginFactory.createPlugin(mockPool);
+  const pluginAddress = await mockPluginFactory.pluginsForPools(mockPool);
 
   const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
-  const plugin = mockDSOperatorFactory.attach(pluginAddress) as MockTimeDataStorageOperator;
+  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
 
   return {
     plugin,
@@ -80,11 +80,9 @@ interface PluginFactoryFixture extends MockFactoryFixture {
 
 export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async function (): Promise<PluginFactoryFixture> {
   const { mockFactory } = await mockFactoryFixture()
-  //const { token0, token1, token2 } = await tokensFixture()
 
   const pluginFactoryFactory = await ethers.getContractFactory('DataStorageFactory')
-  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory.address)) as DataStorageFactory
-  await pluginFactory.deployed();
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as DataStorageFactory
 
   return {
     pluginFactory,

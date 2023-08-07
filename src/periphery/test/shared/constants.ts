@@ -1,6 +1,6 @@
-import { BigNumber } from 'ethers'
+import { MaxUint256 } from 'ethers'
 
-export const MaxUint128 = BigNumber.from(2).pow(128).sub(1)
+export const MaxUint128 = 2n ** 128n - 1n;
 
 export enum FeeAmount {
   ONE = 100,

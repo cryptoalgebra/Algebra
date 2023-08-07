@@ -75,6 +75,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
+    globalState.unlocked = true;
   }
 
   /// @inheritdoc IAlgebraPoolState
@@ -95,7 +96,6 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     uint8 pluginConfig = globalState.pluginConfig;
 
     globalState.price = initialPrice;
-    globalState.unlocked = true;
     globalState.tick = tick;
 
     if (pluginConfig & Plugins.AFTER_INIT_FLAG != 0) {

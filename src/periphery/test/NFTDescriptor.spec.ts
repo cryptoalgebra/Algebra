@@ -1,4 +1,4 @@
-import { BigNumber, constants, Wallet } from 'ethers'
+import {  Wallet, MaxUint256 } from 'ethers'
 import { encodePriceSqrt } from './shared/encodePriceSqrt'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
@@ -13,14 +13,15 @@ import { extractJSONFromURI } from './shared/extractJSONFromURI'
 import fs from 'fs'
 import isSvg from 'is-svg'
 
-const TEN = BigNumber.from(10)
+const TEN = 10n
 const LOWEST_SQRT_RATIO = 4310618292
-const HIGHEST_SQRT_RATIO = BigNumber.from(33849).mul(TEN.pow(34))
+const HIGHEST_SQRT_RATIO = 33849n * TEN ** 34n;
 
+type TestERC20MetadataWithAddress = TestERC20Metadata & {address: string};
 describe('NFTDescriptor', () => {
 
   const nftDescriptorFixture: () => Promise<{
-    tokens: [TestERC20Metadata, TestERC20Metadata, TestERC20Metadata, TestERC20Metadata]
+    tokens: [TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress]
     nftDescriptor: NFTDescriptorTest
   }> = async () => {
     const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
@@ -29,17 +30,21 @@ describe('NFTDescriptor', () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20Metadata')
     const NFTDescriptorFactory = await ethers.getContractFactory('NFTDescriptorTest', {
       libraries: {
-        NFTDescriptor: nftDescriptorLibrary.address,
+        NFTDescriptor: await nftDescriptorLibrary.getAddress(),
       },
     })
-    const nftDescriptor = (await NFTDescriptorFactory.deploy()) as NFTDescriptorTest
-    const TestERC20Metadata = tokenFactory.deploy(constants.MaxUint256.div(2), 'Test ERC20', 'TEST1')
-    const tokens: [TestERC20Metadata, TestERC20Metadata, TestERC20Metadata, TestERC20Metadata] = [
-      (await tokenFactory.deploy(constants.MaxUint256.div(2), 'Test ERC20', 'TEST1')) as TestERC20Metadata, // do not use maxu256 to avoid overflowing
-      (await tokenFactory.deploy(constants.MaxUint256.div(2), 'Test ERC20', 'TEST2')) as TestERC20Metadata,
-      (await tokenFactory.deploy(constants.MaxUint256.div(2), 'Test ERC20', 'TEST3')) as TestERC20Metadata,
-      (await tokenFactory.deploy(constants.MaxUint256.div(2), 'Test ERC20', 'TEST4')) as TestERC20Metadata,
+    const nftDescriptor = (await NFTDescriptorFactory.deploy()) as any as NFTDescriptorTest
+    const TestERC20Metadata = tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST1')
+    const tokens: [TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress] = [
+      (await tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST1')) as any as TestERC20MetadataWithAddress, // do not use maxu256 to avoid overflowing
+      (await tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST2')) as any as TestERC20MetadataWithAddress,
+      (await tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST3')) as any as TestERC20MetadataWithAddress,
+      (await tokenFactory.deploy(MaxUint256 / 2n, 'Test ERC20', 'TEST4')) as any as TestERC20MetadataWithAddress,
     ]
+    for (let token of tokens) {
+      token.address = await token.getAddress();
+    }
+
     tokens.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1))
     return {
       nftDescriptor,
@@ -48,7 +53,7 @@ describe('NFTDescriptor', () => {
   }
 
   let nftDescriptor: NFTDescriptorTest
-  let tokens: [TestERC20Metadata, TestERC20Metadata, TestERC20Metadata, TestERC20Metadata]
+  let tokens: [TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress, TestERC20MetadataWithAddress]
 
   beforeEach('load fixture', async () => {
     ;({ nftDescriptor, tokens } = await loadFixture(nftDescriptorFixture))
@@ -598,18 +603,18 @@ describe('NFTDescriptor', () => {
           return Math.floor(min + ((Math.random() * 100) % (max + 1 - min)))
         }
 
-        const inputs: [BigNumber, number, number][] = []
+        const inputs: [bigint, number, number][] = []
         let i = 0
         while (i <= 20) {
-          const ratio = BigNumber.from(`0x${randomBytes(random(7, 20)).toString('hex')}`)
+          const ratio = BigInt(`0x${randomBytes(random(7, 20)).toString('hex')}`)
           const decimals0 = random(3, 21)
           const decimals1 = random(3, 21)
-          const decimalDiff = Math.abs(decimals0 - decimals1)
+          const decimalDiff = BigInt(Math.abs(decimals0 - decimals1))
 
           // TODO: Address edgecase out of bounds prices due to decimal differences
           if (
-            ratio.div(TEN.pow(decimalDiff)).gt(LOWEST_SQRT_RATIO) &&
-            ratio.mul(TEN.pow(decimalDiff)).lt(HIGHEST_SQRT_RATIO)
+            ratio / (TEN ** (decimalDiff)) > (LOWEST_SQRT_RATIO) &&
+            ratio * (TEN ** (decimalDiff)) < (HIGHEST_SQRT_RATIO)
           ) {
             inputs.push([ratio, decimals0, decimals1])
             i++
@@ -617,7 +622,7 @@ describe('NFTDescriptor', () => {
         }
 
         for (let i in inputs) {
-          let ratio: BigNumber | number
+          let ratio: bigint | number
           let decimals0: number
           let decimals1: number
           ;[ratio, decimals0, decimals1] = inputs[i]

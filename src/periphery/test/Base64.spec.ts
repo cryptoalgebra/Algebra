@@ -12,7 +12,7 @@ function stringToHex(str: string): string {
 describe('Base64', () => {
   let base64: Base64Test
   before('deploy test contract', async () => {
-    base64 = (await (await ethers.getContractFactory('Base64Test')).deploy()) as Base64Test
+    base64 = (await (await ethers.getContractFactory('Base64Test')).deploy()) as any as Base64Test
   })
 
   describe('#encode', () => {

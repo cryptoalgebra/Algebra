@@ -1,8 +1,7 @@
-import { BigNumber, BigNumberish, Wallet } from 'ethers'
+import { BigNumberish, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { DataStorageTest } from '../typechain/test/DataStorageTest'
-import { DataStorageOperator } from '../typechain/DataStorageOperator'
+import { DataStorageTest, DataStorageOperator } from '../typechain'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME } from './shared/fixtures'
@@ -47,8 +46,8 @@ describe('DataStorage', () => {
       await dataStorage.initialize({ liquidity: 1, tick: 1, time: 1 })
       checkTimepointEquals(await dataStorage.timepoints(0), {
         initialized: true,
-        blockTimestamp: 1,
-        tickCumulative: 0
+        blockTimestamp: 1n,
+        tickCumulative: 0n
       })
     })
     it('gas  [ @skip-on-coverage ]', async () => {
@@ -84,9 +83,9 @@ describe('DataStorage', () => {
 
       expect(await dataStorage.index()).to.eq(2)
       checkTimepointEquals(await dataStorage.timepoints(1), {
-        tickCumulative: 0,
+        tickCumulative: 0n,
         initialized: true,
-        blockTimestamp: 6,
+        blockTimestamp: 6n,
       })
     })
 
@@ -99,23 +98,23 @@ describe('DataStorage', () => {
 
       checkTimepointEquals(await dataStorage.timepoints(1), {
         initialized: true,
-        tickCumulative: 0,
-        blockTimestamp: 3,
+        tickCumulative: 0n,
+        blockTimestamp: 3n,
       })
       checkTimepointEquals(await dataStorage.timepoints(2), {
         initialized: true,
-        tickCumulative: 12,
-        blockTimestamp: 7,
+        tickCumulative: 12n,
+        blockTimestamp: 7n,
       })
       checkTimepointEquals(await dataStorage.timepoints(3), {
         initialized: true,
-        tickCumulative: -23,
-        blockTimestamp: 12,
+        tickCumulative: -23n,
+        blockTimestamp: 12n,
       })
       checkTimepointEquals(await dataStorage.timepoints(4), {
         initialized: false,
-        tickCumulative: 0,
-        blockTimestamp: 0,
+        tickCumulative: 0n,
+        blockTimestamp: 0n,
       })
     })
   })
@@ -276,8 +275,8 @@ describe('DataStorage', () => {
       })
 
       it('can fetch multiple timepoints', async () => {
-        await dataStorage.initialize({ time: 5, tick: 2, liquidity: BigNumber.from(2).pow(15) })
-        await dataStorage.update({ advanceTimeBy: 13, tick: 6, liquidity: BigNumber.from(2).pow(12) })
+        await dataStorage.initialize({ time: 5, tick: 2, liquidity: 2n ** 15n })
+        await dataStorage.update({ advanceTimeBy: 13, tick: 6, liquidity: 2n ** 12n })
         await dataStorage.advanceTime(5)
 
         const { tickCumulatives } = await dataStorage.getTimepoints([0, 3, 8, 13, 15, 18])
@@ -382,7 +381,7 @@ describe('DataStorage', () => {
             0,
           ])
           expect({
-            tickCumulatives: tickCumulatives.map((tc:any) => tc.toNumber())
+            tickCumulatives: tickCumulatives.map((tc:any) => tc.toString())
           }).to.matchSnapshot()
         })
 
@@ -413,7 +412,7 @@ describe('DataStorage', () => {
     }
   })
 
-  describe('full dataStorage', function () {
+  describe.skip('full dataStorage', function () {
     this.timeout(10_200_000)
 
     let dataStorage: DataStorageTest

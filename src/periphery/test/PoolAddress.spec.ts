@@ -1,4 +1,4 @@
-import { constants } from 'ethers'
+import { ZeroAddress } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
@@ -12,7 +12,7 @@ describe('PoolAddress', () => {
 
   const poolAddressTestFixture = async () => {
     const poolAddressTestFactory = await ethers.getContractFactory('PoolAddressTest')
-    return (await poolAddressTestFactory.deploy()) as PoolAddressTest
+    return (await poolAddressTestFactory.deploy()) as any as PoolAddressTest
   }
 
   beforeEach('deploy PoolAddressTest', async () => {
@@ -27,7 +27,7 @@ describe('PoolAddress', () => {
 
   describe('#computeAddress', () => {
     it('all arguments equal zero', async () => {
-      await expect(poolAddress.computeAddress(constants.AddressZero, constants.AddressZero, constants.AddressZero, 0))
+      await expect(poolAddress.computeAddress(ZeroAddress, ZeroAddress, ZeroAddress, 0))
         .to.be.reverted
     })
 

@@ -36,9 +36,5 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.9.2"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "@typechain/ethers-v6": "^0.4.0"
   }
 }

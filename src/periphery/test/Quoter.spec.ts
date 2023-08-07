@@ -1,4 +1,4 @@
-import { constants, Wallet, ContractTransaction } from 'ethers'
+import { Wallet, ContractTransactionResponse, MaxUint256, ZeroAddress } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { IWNativeToken, MockTimeNonfungiblePositionManager, MockTimeSwapRouter, Quoter, TestERC20 } from '../typechain'
@@ -10,13 +10,15 @@ import { expect } from './shared/expect'
 import { encodePath } from './shared/path'
 import { createPool } from './shared/quoter'
 
+type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+
 describe('Quoter', () => {
   let wallet: Wallet
   let trader: Wallet
 
   const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager
-    tokens: [TestERC20, TestERC20, TestERC20]
+    tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
     quoter: Quoter,
     router: MockTimeSwapRouter,
     wnative: IWNativeToken,
@@ -25,14 +27,15 @@ describe('Quoter', () => {
 
     // approve & fund wallets
     for (const token of tokens) {
-      await token.approve(router.address, constants.MaxUint256)
-      await token.approve(nft.address, constants.MaxUint256)
-      await token.connect(trader).approve(router.address, constants.MaxUint256)
+      await token.approve(router, MaxUint256)
+      await token.approve(nft, MaxUint256)
+      await token.connect(trader).approve(router, MaxUint256)
       await token.transfer(trader.address, expandTo18Decimals(1_000_000))
+      token.address = await token.getAddress();
     }
 
     const quoterFactory = await ethers.getContractFactory('Quoter')
-    quoter = (await quoterFactory.deploy(factory.address, wnative.address, await factory.poolDeployer())) as Quoter
+    quoter = (await quoterFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as Quoter
 
     return {
       tokens,
@@ -44,7 +47,7 @@ describe('Quoter', () => {
   }
 
   let nft: MockTimeNonfungiblePositionManager
-  let tokens: [TestERC20, TestERC20, TestERC20]
+  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   let quoter: Quoter
   let router: MockTimeSwapRouter
   let wnative: IWNativeToken
@@ -62,14 +65,14 @@ describe('Quoter', () => {
 
   describe('quotes', () => {
     beforeEach(async () => {
-      await createPool(nft, wallet, tokens[0].address, tokens[1].address)
-      await createPool(nft, wallet, tokens[1].address, tokens[2].address)
+      await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress())
+      await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress())
     })
 
     describe('#quoteExactInput', () => {
       it('0 -> 1', async () => {
-        const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
-          encodePath([tokens[0].address, tokens[1].address]),
+        const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
+          encodePath([await tokens[0].address, tokens[1].address]),
           3
         )
 
@@ -82,15 +85,15 @@ describe('Quoter', () => {
           tokens: string[],
           amountIn: number = 3,
           amountOutMinimum: number = 1
-        ): Promise<ContractTransaction> {
-          const inputIsWNativeToken = wnative.address === tokens[0]
-          const outputIsWNativeToken = tokens[tokens.length - 1] === wnative.address
+        ): Promise<ContractTransactionResponse> {
+          const inputIsWNativeToken = await wnative.getAddress() === tokens[0]
+          const outputIsWNativeToken = tokens[tokens.length - 1] === await wnative.getAddress()
   
           const value = inputIsWNativeToken ? amountIn : 0
   
           const params = {
             path: encodePath(tokens),
-            recipient: outputIsWNativeToken ? constants.AddressZero : trader.address,
+            recipient: outputIsWNativeToken ? ZeroAddress : trader.address,
             deadline: 1,
             amountIn: expandTo18Decimals(amountIn),
             amountOutMinimum: 0
@@ -107,7 +110,7 @@ describe('Quoter', () => {
             : router.connect(trader).multicall(data, { value })
         }
 
-        const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
+        const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[1].address]),
           expandTo18Decimals(300000)
         )
@@ -120,7 +123,7 @@ describe('Quoter', () => {
         await ethers.provider.send('evm_increaseTime', [60*60*3])
         await ethers.provider.send('evm_mine', [])
         
-        const {amountOut: amountOut2, fees: fees2} = await quoter.callStatic.quoteExactInput(
+        const {amountOut: amountOut2, fees: fees2} = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[1].address]),
           expandTo18Decimals(300000)
         )
@@ -129,7 +132,7 @@ describe('Quoter', () => {
       })
 
       it('1 -> 0', async () => {
-        const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
+        const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[1].address, tokens[0].address]),
           3
         )
@@ -139,7 +142,7 @@ describe('Quoter', () => {
       })
 
       it('0 -> 1 -> 2', async () => {
-        const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
+        const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
           encodePath(
             tokens.map((token) => token.address)
           ),
@@ -151,7 +154,7 @@ describe('Quoter', () => {
       })
 
       it('2 -> 1 -> 0', async () => {
-        const {amountOut, fees} = await quoter.callStatic.quoteExactInput(
+        const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
           encodePath(tokens.map((token) => token.address).reverse()),
           5
         )
@@ -163,7 +166,7 @@ describe('Quoter', () => {
 
     describe('#quoteExactInputSingle', () => {
       it('0 -> 1', async () => {
-        const {amountOut, fee} = await quoter.callStatic.quoteExactInputSingle(
+        const {amountOut, fee} = await quoter.quoteExactInputSingle.staticCall(
           tokens[0].address,
           tokens[1].address,
           MaxUint128,
@@ -176,7 +179,7 @@ describe('Quoter', () => {
       })
 
       it('1 -> 0', async () => {
-        const {amountOut, fee} = await quoter.callStatic.quoteExactInputSingle(
+        const {amountOut, fee} = await quoter.quoteExactInputSingle.staticCall(
           tokens[1].address,
           tokens[0].address,
           MaxUint128,
@@ -191,7 +194,7 @@ describe('Quoter', () => {
 
     describe('#quoteExactOutput', () => {
       it('0 -> 1', async () => {
-        const {amountIn, fees} = await quoter.callStatic.quoteExactOutput(
+        const {amountIn, fees} = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[1].address, tokens[0].address]),
           1
         )
@@ -201,7 +204,7 @@ describe('Quoter', () => {
       })
 
       it('1 -> 0', async () => {
-        const {amountIn, fees} = await quoter.callStatic.quoteExactOutput(
+        const {amountIn, fees} = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[0].address, tokens[1].address]),
           1
         )
@@ -211,7 +214,7 @@ describe('Quoter', () => {
       })
 
       it('0 -> 1 -> 2', async () => {
-        const {amountIn, fees} = await quoter.callStatic.quoteExactOutput(
+        const {amountIn, fees} = await quoter.quoteExactOutput.staticCall(
           encodePath(tokens.map((token) => token.address).reverse()),
           1
         )
@@ -221,7 +224,7 @@ describe('Quoter', () => {
       })
 
       it('2 -> 1 -> 0', async () => {
-        const {amountIn, fees} = await quoter.callStatic.quoteExactOutput(
+        const {amountIn, fees} = await quoter.quoteExactOutput.staticCall(
           encodePath(
             tokens.map((token) => token.address)
           ),
@@ -235,7 +238,7 @@ describe('Quoter', () => {
 
     describe('#quoteExactOutputSingle', () => {
       it('0 -> 1', async () => {
-        const {amountIn, fee} = await quoter.callStatic.quoteExactOutputSingle(
+        const {amountIn, fee} = await quoter.quoteExactOutputSingle.staticCall(
           tokens[0].address,
           tokens[1].address,
           MaxUint128,
@@ -247,7 +250,7 @@ describe('Quoter', () => {
       })
 
       it('1 -> 0', async () => {
-        const {amountIn, fee} = await quoter.callStatic.quoteExactOutputSingle(
+        const {amountIn, fee} = await quoter.quoteExactOutputSingle.staticCall(
           tokens[1].address,
           tokens[0].address,
           MaxUint128,

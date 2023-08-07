@@ -1,4 +1,4 @@
-import { constants, Wallet } from 'ethers'
+import { MaxUint256, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain'
@@ -11,6 +11,8 @@ import { encodePath } from './shared/path'
 import { createPool, createPoolWithMultiplePositions, createPoolWithZeroTickInitialized } from './shared/quoter'
 import snapshotGasCost from './shared/snapshotGasCost'
 
+type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+
 describe('QuoterV2', function () {
   this.timeout(40000)
   let wallet: Wallet
@@ -18,21 +20,22 @@ describe('QuoterV2', function () {
 
   const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager
-    tokens: [TestERC20, TestERC20, TestERC20]
+    tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
     quoter: QuoterV2
   }> = async () => {
     const { wnative, factory, router, tokens, nft } = await completeFixture()
 
     // approve & fund wallets
     for (const token of tokens) {
-      await token.approve(router.address, constants.MaxUint256)
-      await token.approve(nft.address, constants.MaxUint256)
-      await token.connect(trader).approve(router.address, constants.MaxUint256)
+      await token.approve(router, MaxUint256)
+      await token.approve(nft, MaxUint256)
+      await token.connect(trader).approve(router, MaxUint256)
       await token.transfer(trader.address, expandTo18Decimals(1_000_000))
+      token.address = await token.getAddress();
     }
 
     const quoterFactory = await ethers.getContractFactory('QuoterV2')
-    quoter = (await quoterFactory.deploy(factory.address, wnative.address, await factory.poolDeployer())) as QuoterV2
+    quoter = (await quoterFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as QuoterV2
 
     return {
       tokens,
@@ -42,7 +45,7 @@ describe('QuoterV2', function () {
   }
 
   let nft: MockTimeNonfungiblePositionManager
-  let tokens: [TestERC20, TestERC20, TestERC20]
+  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   let quoter: QuoterV2
 
   before('create fixture loader', async () => {
@@ -69,7 +72,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           10000
         )
@@ -89,7 +92,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           6198
         )
@@ -108,7 +111,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           4000
         )
@@ -127,7 +130,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           10
         )
@@ -148,7 +151,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           10
         )
@@ -166,7 +169,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           10000
         )
@@ -188,7 +191,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           6250
         )
@@ -211,7 +214,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           200
         )
@@ -231,7 +234,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           103
         )
@@ -250,7 +253,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[2].address, tokens[1].address]),
           10000
         )
@@ -268,7 +271,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInput(
+        } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[0].address, tokens[2].address, tokens[1].address]),
           10000
         )
@@ -290,7 +293,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96After,
           initializedTicksCrossed,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInputSingle({
+        } = await quoter.quoteExactInputSingle.staticCall({
           tokenIn: tokens[0].address,
           tokenOut: tokens[2].address,
           amountIn: 10000,
@@ -309,7 +312,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96After,
           initializedTicksCrossed,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactInputSingle({
+        } = await quoter.quoteExactInputSingle.staticCall({
           tokenIn: tokens[2].address,
           tokenOut: tokens[0].address,
           amountIn: 10000,
@@ -329,7 +332,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96After,
             initializedTicksCrossed,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactInputSingle({
+          } = await quoter.quoteExactInputSingle.staticCall({
             tokenIn: tokens[0].address,
             tokenOut: tokens[2].address,
             amountIn: 10000,
@@ -346,7 +349,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96After,
             initializedTicksCrossed,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactInputSingle({
+          } = await quoter.quoteExactInputSingle.staticCall({
             tokenIn: tokens[2].address,
             tokenOut: tokens[0].address,
             amountIn: 10000,
@@ -366,7 +369,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           15000
         )
@@ -387,7 +390,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           6158
         )
@@ -405,7 +408,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           4000
         )
@@ -426,7 +429,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           100
         )
@@ -445,7 +448,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[2].address, tokens[0].address]),
           10
         )
@@ -464,7 +467,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           15000
         )
@@ -484,7 +487,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           6223
         )
@@ -502,7 +505,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[0].address, tokens[2].address]),
           6000
         )
@@ -520,7 +523,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[1].address, tokens[2].address]),
           9899
         )
@@ -537,7 +540,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96AfterList,
           initializedTicksCrossedList,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutput(
+        } = await quoter.quoteExactOutput.staticCall(
           encodePath([tokens[0].address, tokens[2].address, tokens[1].address].reverse()),
           9795
         )
@@ -557,7 +560,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[2].address, tokens[0].address]),
             15000
           )
@@ -573,7 +576,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[2].address, tokens[0].address]),
             6158
           )
@@ -587,7 +590,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[2].address, tokens[0].address]),
             4000
           )
@@ -603,7 +606,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[2].address, tokens[0].address]),
             100
           )
@@ -617,7 +620,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[2].address, tokens[0].address]),
             10
           )
@@ -631,7 +634,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[0].address, tokens[2].address]),
             15000
           )
@@ -647,7 +650,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[0].address, tokens[2].address]),
             6223
           )
@@ -661,7 +664,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[0].address, tokens[2].address]),
             6000
           )
@@ -675,7 +678,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[1].address, tokens[2].address]),
             9899
           )
@@ -689,7 +692,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96AfterList,
             initializedTicksCrossedList,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutput(
+          } = await quoter.quoteExactOutput.staticCall(
             encodePath([tokens[0].address, tokens[2].address, tokens[1].address].reverse()),
             9795
           )
@@ -706,7 +709,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96After,
           initializedTicksCrossed,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutputSingle({
+        } = await quoter.quoteExactOutputSingle.staticCall({
           tokenIn: tokens[0].address,
           tokenOut: tokens[1].address,
           amount: MaxUint128,
@@ -724,7 +727,7 @@ describe('QuoterV2', function () {
           sqrtPriceX96After,
           initializedTicksCrossed,
           gasEstimate,
-        } = await quoter.callStatic.quoteExactOutputSingle({
+        } = await quoter.quoteExactOutputSingle.staticCall({
           tokenIn: tokens[1].address,
           tokenOut: tokens[0].address,
           amount: MaxUint128,
@@ -743,7 +746,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96After,
             initializedTicksCrossed,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutputSingle({
+          } = await quoter.quoteExactOutputSingle.staticCall({
             tokenIn: tokens[0].address,
             tokenOut: tokens[1].address,
             amount: MaxUint128,
@@ -759,7 +762,7 @@ describe('QuoterV2', function () {
             sqrtPriceX96After,
             initializedTicksCrossed,
             gasEstimate,
-          } = await quoter.callStatic.quoteExactOutputSingle({
+          } = await quoter.quoteExactOutputSingle.staticCall({
             tokenIn: tokens[1].address,
             tokenOut: tokens[0].address,
             amount: MaxUint128,

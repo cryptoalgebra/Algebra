@@ -14,7 +14,7 @@ describe('PeripheryImmutableState', () => {
     const { wnative, factory } = await v3RouterFixture()
 
     const stateFactory = await ethers.getContractFactory('PeripheryImmutableStateTest')
-    const state = (await stateFactory.deploy(factory.address, wnative.address, await factory.poolDeployer())) as PeripheryImmutableStateTest
+    const state = (await stateFactory.deploy(factory, wnative, await factory.poolDeployer())) as PeripheryImmutableStateTest
 
     return {
       wnative,
@@ -32,18 +32,18 @@ describe('PeripheryImmutableState', () => {
   })
 
   it('bytecode size [ @skip-on-coverage ]', async () => {
-    expect(((await state.provider.getCode(state.address)).length - 2) / 2).to.matchSnapshot()
+    expect(((await ethers.provider.getCode(await state.getAddress())).length - 2) / 2).to.matchSnapshot()
   })
 
   describe('#WNativeToken', () => {
     it('points to WNativeToken', async () => {
-      expect(await state.WNativeToken()).to.eq(wnative.address)
+      expect(await state.WNativeToken()).to.eq(await wnative.getAddress())
     })
   })
 
   describe('#factory', () => {
     it('points to v3 core factory', async () => {
-      expect(await state.factory()).to.eq(factory.address)
+      expect(await state.factory()).to.eq(await factory.getAddress())
     })
   })
 })

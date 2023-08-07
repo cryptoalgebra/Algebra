@@ -1,8 +1,9 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { BigNumber, BigNumberish, constants, ContractFactory } from 'ethers'
+import { BigNumberish, ContractFactory, MaxUint256 } from 'ethers'
 import { TestERC20, WeightedDataStorageTest } from '../typechain'
+import { sortedTokens } from './shared/tokenSort'
 
 describe('WeightedDataStorageLibrary', () => {
   let tokens: TestERC20[]
@@ -10,19 +11,17 @@ describe('WeightedDataStorageLibrary', () => {
 
   const dataStorageTestFixture = async () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20')
-    const tokens = (await Promise.all([
-      tokenFactory.deploy(constants.MaxUint256.div(2)), // do not use maxu256 to avoid overflowing
-      tokenFactory.deploy(constants.MaxUint256.div(2)),
-    ])) as [TestERC20, TestERC20]
-
-    tokens.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1))
+    const tokens = await sortedTokens(
+      await tokenFactory.deploy(MaxUint256 / 2n) as any as TestERC20,
+      await tokenFactory.deploy(MaxUint256 / 2n) as any as TestERC20,
+    )
 
     const dataStorageFactory = await ethers.getContractFactory('WeightedDataStorageTest')
     const dataStorage = await dataStorageFactory.deploy()
 
     return {
       tokens: tokens as TestERC20[],
-      dataStorage: dataStorage as WeightedDataStorageTest,
+      dataStorage: dataStorage as any as WeightedDataStorageTest,
     }
   }
 
@@ -41,7 +40,7 @@ describe('WeightedDataStorageLibrary', () => {
     })
 
     it('reverts when period is 0', async () => {
-      await expect(dataStorage.consult(dataStorage.address, 0)).to.be.revertedWith('BP')
+      await expect(dataStorage.consult(dataStorage, 0)).to.be.revertedWith('BP')
     })
 
     it('correct output when tick is 0', async () => {
@@ -53,7 +52,7 @@ describe('WeightedDataStorageLibrary', () => {
         secondsPerLiqCumulatives,
         volumePerLiquidityCumulatives: [12, 12]
       })
-      const timepoint = await dataStorage.consult(mockObservable.address, period)
+      const timepoint = await dataStorage.consult(mockObservable, period)
 
       expect(timepoint.arithmeticMeanTick).to.equal(0)
       expect(timepoint.harmonicMeanLiquidity).to.equal(calculateHarmonicAvgLiq(period, secondsPerLiqCumulatives))
@@ -70,7 +69,7 @@ describe('WeightedDataStorageLibrary', () => {
         volumePerLiquidityCumulatives: [12, 12]
       })
 
-      const timepoint = await dataStorage.consult(mockObservable.address, period)
+      const timepoint = await dataStorage.consult(mockObservable, period)
 
       // Always round to negative infinity
       // In this case, we need to subtract one because integer division rounds to 0
@@ -89,20 +88,20 @@ describe('WeightedDataStorageLibrary', () => {
         volumePerLiquidityCumulatives: [12, 12]
       })
 
-      const timepoint = await dataStorage.consult(mockObservable.address, period)
+      const timepoint = await dataStorage.consult(mockObservable, period)
 
       expect(timepoint.arithmeticMeanTick).to.equal(0)
 
       // Make sure liquidity doesn't overflow uint128
-      expect(timepoint.harmonicMeanLiquidity).to.equal(BigNumber.from(2).pow(128).sub(1))
+      expect(timepoint.harmonicMeanLiquidity).to.equal(2n ** 128n - 1n)
     })
 
     function calculateHarmonicAvgLiq(period: number, secondsPerLiqCumulatives: [BigNumberish, BigNumberish]) {
-      const [secondsPerLiq0, secondsPerLiq1] = secondsPerLiqCumulatives.map(BigNumber.from)
-      const delta = secondsPerLiq1.sub(secondsPerLiq0)
+      const [secondsPerLiq0, secondsPerLiq1] = secondsPerLiqCumulatives.map(BigInt)
+      const delta = secondsPerLiq1 - secondsPerLiq0
 
-      const maxUint160 = BigNumber.from(2).pow(160).sub(1)
-      return maxUint160.mul(period).div(delta.shl(32))
+      const maxUint160 = 2n ** 160n - 1n
+      return maxUint160 * BigInt(period) / (delta << 32n);
     }
 
     function observableWith({
@@ -118,10 +117,10 @@ describe('WeightedDataStorageLibrary', () => {
     }) {
       return mockObservableFactory.deploy(
         [period, 0],
-        tickCumulatives.map(BigNumber.from),
-        secondsPerLiqCumulatives.map(BigNumber.from),
+        tickCumulatives.map(BigInt),
+        secondsPerLiqCumulatives.map(BigInt),
         [0,0],
-        volumePerLiquidityCumulatives.map(BigNumber.from)
+        volumePerLiquidityCumulatives.map(BigInt)
       )
     }
   })

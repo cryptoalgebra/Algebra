@@ -1,16 +1,14 @@
 import { expect } from './shared/expect'
-import { AdaptiveFeeTest } from '../typechain/test/AdaptiveFeeTest'
 import { ethers } from 'hardhat'
+import { AdaptiveFeeTest } from '../typechain'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import snapshotGasCost from './shared/snapshotGasCost'
-
-const { BigNumber } = ethers
 
 describe('AdaptiveFee', () => {
   let adaptiveFee: AdaptiveFeeTest
   const fixture = async () => {
     const factory = await ethers.getContractFactory('AdaptiveFeeTest')
-    return (await factory.deploy()) as AdaptiveFeeTest
+    return (await factory.deploy()) as any as AdaptiveFeeTest
   }
   beforeEach('deploy AdaptiveFeeTest', async () => {
     adaptiveFee = await loadFixture(fixture)
@@ -18,7 +16,7 @@ describe('AdaptiveFee', () => {
 
   describe('#getFee', () => {
     it('fee: 0 volat 0 volume', async () => {
-      console.log( (await adaptiveFee.getFee(BigNumber.from(0))).toString());
+      console.log( (await adaptiveFee.getFee(0)).toString());
     })
 
     it('fee grid snapshot', async () => {
@@ -54,7 +52,7 @@ describe('AdaptiveFee', () => {
       let prev = 0;
       for (let volat of volats) {
         let fee = getFee(volat);
-        let cFee = Number((await adaptiveFee.getFee(BigNumber.from(volat * 15))).toString())
+        let cFee = Number((await adaptiveFee.getFee(BigInt(volat * 15))).toString())
         expect(cFee).to.be.gte(prev);
         prev = cFee;
         let error = (cFee - fee) * 100 / fee;
@@ -73,15 +71,15 @@ describe('AdaptiveFee', () => {
 
   describe('#getFee gas cost  [ @skip-on-coverage ]', () => {
     it('gas cost of 0 volat', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(0)));
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(0));
     })
 
     it('gas cost of 100 volat', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(100)));
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(100));
     })
 
     it('gas cost of 2000 volat', async () => {
-      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(BigNumber.from(2000)));
+      await snapshotGasCost(adaptiveFee.getGasCostOfGetFee(2000));
     })
   })
 })

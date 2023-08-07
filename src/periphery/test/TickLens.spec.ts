@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, constants, Contract, ContractTransaction, Wallet } from 'ethers'
+import { BigNumberish, Contract, ContractTransactionResponse, Wallet, MaxUint256 } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { MockTimeNonfungiblePositionManager, TestERC20, TickLensTest } from '../typechain'
@@ -10,18 +10,21 @@ import { getMaxTick, getMinTick } from './shared/ticks'
 import { computePoolAddress } from './shared/computePoolAddress'
 import snapshotGasCost from './shared/snapshotGasCost'
 
+type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+
 describe('TickLens', () => {
   let wallets: Wallet[]
 
   const nftFixture: () => Promise<{
     factory: Contract
     nft: MockTimeNonfungiblePositionManager
-    tokens: [TestERC20, TestERC20, TestERC20]
+    tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   }> = async () => {
     const { factory, tokens, nft } = await completeFixture()
 
     for (const token of tokens) {
-      await token.approve(nft.address, constants.MaxUint256)
+      await token.approve(nft, MaxUint256)
+      token.address = await token.getAddress();
     }
 
     return {
@@ -33,7 +36,7 @@ describe('TickLens', () => {
 
   let factory: Contract
   let nft: MockTimeNonfungiblePositionManager
-  let tokens: [TestERC20, TestERC20, TestERC20]
+  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   let poolAddress: string
   let tickLens: TickLensTest
 
@@ -90,10 +93,10 @@ describe('TickLens', () => {
         deadline: 1,
       }
 
-      const { liquidity } = await nft.callStatic.mint(mintParams)
+      const { liquidity } = await nft.mint.staticCall(mintParams)
 
       await nft.mint(mintParams)
-      return liquidity.toNumber()
+      return Number(liquidity)
     }
 
     beforeEach(async () => {
@@ -103,20 +106,21 @@ describe('TickLens', () => {
 
     beforeEach(async () => {
       const lensFactory = await ethers.getContractFactory('TickLensTest')
-      tickLens = (await lensFactory.deploy()) as TickLensTest
+      tickLens = (await lensFactory.deploy()) as any as TickLensTest
     })
 
-    function getTickTableIndex(tick: BigNumberish, tickSpacing: number): BigNumber {
-      const intermediate = BigNumber.from(tick)
+    function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {
+      const intermediate = BigInt(tick)
       // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
-      return intermediate.lt(0) ? intermediate.add(1).div(BigNumber.from(2).pow(8)).sub(1) : intermediate.shr(8)
+      return intermediate < 0n ? (intermediate + 1n) / (2n ** 8n - 1n) : intermediate >> 8n
     }
 
     it('works for min/max', async () => {
-      const [min] = await tickLens.getPopulatedTicksInWord(
+      const res = await tickLens.getPopulatedTicksInWord(
         poolAddress,
         getTickTableIndex(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
       )
+      const [min] = res
 
       const [max] = await tickLens.getPopulatedTicksInWord(
         poolAddress,

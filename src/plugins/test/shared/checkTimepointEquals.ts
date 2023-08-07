@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from 'ethers'
+import { BigNumberish } from 'ethers'
 import { expect } from './expect'
 
 // helper function because we cannot do a simple deep equals with the
@@ -10,13 +10,13 @@ export default function checkTimepointEquals(
     blockTimestamp,
   }: {
     initialized: boolean
-    tickCumulative: BigNumber
-    blockTimestamp: number
+    tickCumulative: bigint
+    blockTimestamp: bigint
   },
   expected: {
     initialized: boolean
-    tickCumulative: BigNumberish
-    blockTimestamp: number
+    tickCumulative: bigint
+    blockTimestamp: bigint
   }
 ) {
   expect(

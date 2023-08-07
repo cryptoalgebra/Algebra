@@ -10,7 +10,7 @@ describe('LiquidityAmounts', async () => {
 
   before('deploy test library', async () => {
     const liquidityFromAmountsTestFactory = await ethers.getContractFactory('LiquidityAmountsTest')
-    liquidityFromAmounts = (await liquidityFromAmountsTestFactory.deploy()) as LiquidityAmountsTest
+    liquidityFromAmounts = (await liquidityFromAmountsTestFactory.deploy()) as any as LiquidityAmountsTest
   })
 
   describe('#getLiquidityForAmount0', () => {
