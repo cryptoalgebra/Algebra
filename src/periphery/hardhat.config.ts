@@ -1,9 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox';
-import 'hardhat-contract-sizer';
-import 'hardhat-watcher';
 import 'hardhat-dependency-compiler';
-import 'hardhat-contract-sizer';
-import 'solidity-coverage';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
 

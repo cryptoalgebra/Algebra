@@ -3,7 +3,6 @@ import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
 } from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json'
-import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import { ethers } from 'hardhat'
 import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '@cryptoalgebra/periphery/typechain'
 import { abi as SWAPROUTER_ABI, bytecode as SWAPROUTER_BYTECODE } from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json'
@@ -28,13 +27,6 @@ const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
   const wnative = (await wnativeFactory.deploy()) as IWNativeToken
 
   return { wnative }
-}
-
-export const v2FactoryFixture: () => Promise<{ factory: any }> = async () => {
-  const v2FactoryFactory = await ethers.getContractFactory(FACTORY_V2_ABI, FACTORY_V2_BYTECODE)
-  const factory = await v2FactoryFactory.deploy(ZeroAddress)
-
-  return { factory }
 }
 
 const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
