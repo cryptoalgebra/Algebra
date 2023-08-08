@@ -6,6 +6,7 @@ import baseConfig from '../../hardhat.base.config';
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 2_000,
@@ -19,6 +20,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     viaIR: true,
     optimizer: {
       enabled: true,
@@ -33,6 +35,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
 const DEFAULT_COMPILER_SETTINGS = {
   version: '0.8.20',
   settings: {
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 1_000_000,
