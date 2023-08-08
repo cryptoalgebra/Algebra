@@ -3,7 +3,6 @@ import { TestContext } from './types'
 import { AlgebraEternalFarming, TestERC20 } from '../typechain'
 import { ethers } from 'hardhat'
 import {
-  BigNumber,
   blockTimestamp,
   BN,
   BNe18,
@@ -17,7 +16,6 @@ import {
   days,
   bnSum,
   mintPosition,
-
 } from './shared'
 import { createTimeMachine } from './shared/time'
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers'
@@ -26,11 +24,9 @@ import { ActorFixture } from './shared/actors'
 import { HelperTypes } from './helpers/types'
 import { Wallet } from 'ethers'
 
-import './matchers/beWithin'
-
 describe('AlgebraFarming', () => {
   let wallets: Wallet[]
-  const Time = createTimeMachine(provider)
+  const Time = createTimeMachine()
   let actors: ActorFixture
   const e20h = new ERC20Helper()
 
@@ -46,7 +42,7 @@ describe('AlgebraFarming', () => {
     let subject: TestSubject
 
     const ticksToFarm: [number, number] = [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])]
-    const amountsToFarm: [BigNumber, BigNumber] = [BigNumber.from(100000), BNe18(10)]
+    const amountsToFarm: [bigint, bigint] = [BigInt(100000), BNe18(10)]
 
     const totalReward = BNe18(2_000_000)
     const bonusReward = BNe18(4_000)
@@ -81,11 +77,11 @@ describe('AlgebraFarming', () => {
       const balanceDeposited = amountsToFarm[0]
 
       // Someone starts staking
-      await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited, context.nft.address)
+      await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited, await context.nft.getAddress())
 
       const tokenId = await mintPosition(context.nft.connect(lpUser3), {
-        token0: context.token0.address,
-        token1: context.token1.address,
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
         fee: FeeAmount.MEDIUM,
         tickLower: ticksToFarm[0],
         tickUpper: ticksToFarm[0] + TICK_SPACINGS[FeeAmount.MEDIUM],
@@ -108,15 +104,15 @@ describe('AlgebraFarming', () => {
 
       await context.rewardToken.transfer(incentiveCreator.address, totalReward)
       await context.bonusRewardToken.transfer(incentiveCreator.address, bonusReward)
-      await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, totalReward)
-      await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming.address, bonusReward)
+      await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming, totalReward)
+      await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming, bonusReward)
 
       await expect(
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
             nonce,
           },
           {
@@ -134,8 +130,8 @@ describe('AlgebraFarming', () => {
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
             nonce,
           },
           {
@@ -153,8 +149,8 @@ describe('AlgebraFarming', () => {
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
             nonce
           },
           {
@@ -177,11 +173,11 @@ describe('AlgebraFarming', () => {
       const balanceDeposited = amountsToFarm[0]
 
       // Someone starts staking
-      await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited.mul(2), context.nft.address)
+      await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited * 2n, await context.nft.getAddress())
 
       const tokenId = await mintPosition(context.nft.connect(lpUser3), {
-        token0: context.token0.address,
-        token1: context.token1.address,
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
         fee: FeeAmount.MEDIUM,
         tickLower: ticksToFarm[0],
         tickUpper: ticksToFarm[0] + TICK_SPACINGS[FeeAmount.MEDIUM],
@@ -194,8 +190,8 @@ describe('AlgebraFarming', () => {
       })
 
       const tokenIdCorrect = await mintPosition(context.nft.connect(lpUser3), {
-        token0: context.token0.address,
-        token1: context.token1.address,
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
         fee: FeeAmount.MEDIUM,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -226,11 +222,11 @@ describe('AlgebraFarming', () => {
       })
 
       await expect(
-        context.farmingCenter.connect(lpUser3).enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenId)
+        context.farmingCenter.connect(lpUser3).enterFarming(await incentiveResultToFarmAdapter(createIncentiveResult), tokenId)
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'positionIsTooNarrow')
 
       await expect(
-        context.farmingCenter.connect(lpUser3).enterFarming(incentiveResultToFarmAdapter(createIncentiveResult), tokenIdCorrect)
+        context.farmingCenter.connect(lpUser3).enterFarming(await incentiveResultToFarmAdapter(createIncentiveResult), tokenIdCorrect)
       ).to.be.not.reverted
     })
   })
@@ -249,7 +245,7 @@ describe('AlgebraFarming', () => {
     
     const duration = days(1)
     const ticksToFarm: [number, number] = [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])]
-    const amountsToFarm: [BigNumber, BigNumber] = [BNe18(1), BNe18(1)]
+    const amountsToFarm: [bigint, bigint] = [BNe18(1), BNe18(1)]
 
     const scenario: () => Promise<TestSubject> = async () => {
       const context = await algebraFixture()
@@ -276,7 +272,6 @@ describe('AlgebraFarming', () => {
         totalReward,
         bonusReward,
       })
-
       const params = {
         tokensToFarm,
         amountsToFarm,
@@ -415,11 +410,11 @@ describe('AlgebraFarming', () => {
         const balanceDeposited = amountsToFarm[0]
 
         // Someone starts staking
-        await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited, context.nft.address)
+        await e20h.ensureBalancesAndApprovals(lpUser3, [context.token0, context.token1], balanceDeposited, await context.nft.getAddress())
 
         await mintPosition(context.nft.connect(lpUser3), {
-          token0: context.token0.address,
-          token1: context.token1.address,
+          token0: await context.token0.getAddress(),
+          token1: await context.token1.getAddress(),
           fee: FeeAmount.MEDIUM,
           tickLower: ticksToFarm[0],
           tickUpper: ticksToFarm[1],
@@ -458,14 +453,14 @@ describe('AlgebraFarming', () => {
          * Incentive Start -> Halfway Through:
          * 3 LPs, all staking the same amount. Each LP gets roughly (totalReward/2) * (1/3)
          */
-        const firstHalfRewards = totalReward.div(BN('2'))
+        const firstHalfRewards = totalReward / 2n
 
         /***
          * Halfway Through -> Incentive End:
          * 4 LPs, all providing the same liquidity. Only 3 LPs are staking, so they should
          * each get 1/4 the liquidity for that time. So That's 1/4 * 1/2 * 3_000e18 per farmd LP.
          * */
-        const secondHalfRewards = totalReward.div(BN('2')).mul('3').div('4')
+        const secondHalfRewards = totalReward / 2n * 3n / 4n;
         const rewardsEarned = bnSum(exitFarmings.map((s) => s.balance))
         // @ts-ignore
         expect(rewardsEarned).be.gte(883867)

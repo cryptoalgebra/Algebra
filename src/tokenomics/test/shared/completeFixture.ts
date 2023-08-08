@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { v3RouterFixture } from './externalFixtures'
-import { constants } from 'ethers'
+import { MaxUint256 } from 'ethers'
 import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
@@ -12,40 +12,50 @@ import {
 
 type Fixture<T> = () => Promise<T>
 
+type TestERC20WithAddress = TestERC20 & {address_: string | undefined}
+
 const completeFixture: Fixture<{
   wnative: IWNativeToken
   factory: IAlgebraFactory
   router: MockTimeSwapRouter
   nft: MockTimeNonfungiblePositionManager
   nftDescriptor: NonfungibleTokenPositionDescriptor
-  tokens: [TestERC20, TestERC20, TestERC20]
+  tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
 }> = async () => {
   const { wnative, factory, router } = await v3RouterFixture()
   const tokenFactory = await ethers.getContractFactory('TestERC20')
-  const tokens: [TestERC20, TestERC20, TestERC20] = [
-    (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20, // do not use maxu256 to avoid overflowing
-    (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
-    (await tokenFactory.deploy(constants.MaxUint256.div(2))) as TestERC20,
+  const tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress] = [
+    (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress, // do not use maxu256 to avoid overflowing
+    (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress,
+    (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress,
   ]
+
+  tokens[0].address = await tokens[0].getAddress();
+  tokens[1].address = await tokens[1].getAddress();
+  tokens[2].address = await tokens[2].getAddress();
+
+  tokens.sort((tokenA: TestERC20WithAddress, tokenB: TestERC20WithAddress) => {
+      if (!tokenA.address || !tokenB.address) return 0;
+      return tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1
+    }
+  );
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor')
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy()
   const positionDescriptorFactory = await ethers.getContractFactory('NonfungibleTokenPositionDescriptor', {
     libraries: {
-      NFTDescriptor: nftDescriptorLibrary.address,
+      NFTDescriptor: await nftDescriptorLibrary.getAddress(),
     },
   })
-  const nftDescriptor = (await positionDescriptorFactory.deploy(tokens[0].address)) as NonfungibleTokenPositionDescriptor
+  const nftDescriptor = (await positionDescriptorFactory.deploy(await tokens[0].getAddress)) as any as NonfungibleTokenPositionDescriptor
 
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager')
   const nft = (await positionManagerFactory.deploy(
-    factory.address,
-    wnative.address,
-    nftDescriptor.address,
+    factory,
+    wnative,
+    nftDescriptor,
     await factory.poolDeployer()
-  )) as MockTimeNonfungiblePositionManager
-
-  tokens.sort((a, b) => (a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1))
+  )) as any as MockTimeNonfungiblePositionManager
 
   return {
     wnative,

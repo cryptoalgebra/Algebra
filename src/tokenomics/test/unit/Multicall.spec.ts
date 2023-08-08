@@ -31,7 +31,7 @@ describe('unit/Multicall', () => {
   const totalReward = BNe18(100)
   const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
-  const Time = createTimeMachine(provider)
+  const Time = createTimeMachine()
   let helpers: HelperCommands
   let context: AlgebraFixtureType
 

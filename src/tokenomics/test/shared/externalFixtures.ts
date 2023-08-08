@@ -19,8 +19,7 @@ import {
 
 
 //import WNativeToken from '../contracts/WNativeToken.json'
-import { Contract } from '@ethersproject/contracts'
-import { constants } from 'ethers'
+import { ZeroAddress, getCreateAddress } from 'ethers'
 
 export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
@@ -31,9 +30,9 @@ const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
   return { wnative }
 }
 
-export const v2FactoryFixture: () => Promise<{ factory: Contract }> = async () => {
+export const v2FactoryFixture: () => Promise<{ factory: any }> = async () => {
   const v2FactoryFactory = await ethers.getContractFactory(FACTORY_V2_ABI, FACTORY_V2_BYTECODE)
-  const factory = await v2FactoryFactory.deploy(constants.AddressZero)
+  const factory = await v2FactoryFactory.deploy(ZeroAddress)
 
   return { factory }
 }
@@ -41,10 +40,10 @@ export const v2FactoryFixture: () => Promise<{ factory: Contract }> = async () =
 const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const [deployer] = await ethers.getSigners()
   // precompute
-  const poolDeployerAddress = ethers.utils.getContractAddress({
+  const poolDeployerAddress = getCreateAddress({
     from: deployer.address,
-    nonce: (await deployer.getTransactionCount()) + 1,
-  })
+    nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
+  });
 
   const v3FactoryFactory = await ethers.getContractFactory(FACTORY_ABI, FACTORY_BYTECODE)
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as IAlgebraFactory
@@ -68,7 +67,7 @@ export const v3RouterFixture: () => Promise<{
   const { wnative } = await wnativeFixture()
   const factory = await v3CoreFactoryFixture()
   const routerFactory = await ethers.getContractFactory(SWAPROUTER_ABI, SWAPROUTER_BYTECODE)
-  const router = (await routerFactory.deploy(factory.address, wnative.address, await factory.poolDeployer())) as MockTimeSwapRouter
+  const router = (await routerFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as MockTimeSwapRouter
 
   return { factory, wnative, router }
 }

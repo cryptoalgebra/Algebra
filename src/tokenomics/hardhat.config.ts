@@ -1,9 +1,6 @@
 import '@typechain/hardhat'
-import '@nomiclabs/hardhat-ethers'
-import '@nomicfoundation/hardhat-chai-matchers'
-import '@nomiclabs/hardhat-etherscan'
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-contract-sizer'
-import 'solidity-coverage'
 import 'solidity-docgen'
 
 import { HardhatUserConfig } from 'hardhat/config'

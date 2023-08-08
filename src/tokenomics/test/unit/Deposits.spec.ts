@@ -1,4 +1,4 @@
-import { constants, BigNumberish, Wallet } from 'ethers'
+import { ZeroAddress, Wallet, AbiCoder } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
@@ -9,20 +9,14 @@ import {
   FeeAmount,
   TICK_SPACINGS,
   blockTimestamp,
-  BN,
   BNe18,
-  snapshotGasCost,
   ActorFixture,
-  makeTimestamps,
-  maxGas,
 } from '../shared'
 import { provider } from '../shared/provider'
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
 
-import { ContractParams } from '../../types/contractParams'
 import { createTimeMachine } from '../shared/time'
 import { HelperTypes } from '../helpers/types'
-import { contracts } from '@cryptoalgebra/periphery/typechain'
 
 describe('unit/Deposits', () => {
   let actors: ActorFixture
@@ -31,7 +25,7 @@ describe('unit/Deposits', () => {
   const totalReward = BNe18(100)
   const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
-  const Time = createTimeMachine(provider)
+  const Time = createTimeMachine()
   let helpers: HelperCommands
   let incentiveCreator: Wallet
   let context: AlgebraFixtureType
@@ -56,11 +50,11 @@ describe('unit/Deposits', () => {
   const INCENTIVE_KEY_ABI = 'tuple(address rewardToken, address bonusRewardToken, address pool, uint256 nonce)'
 
   beforeEach(async () => {
-    await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, context.nft.address)
+    await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
 
     tokenId = await mintPosition(context.nft.connect(lpUser0), {
-      token0: context.token0.address,
-      token1: context.token1.address,
+      token0: await context.token0.getAddress(),
+      token1: await context.token1.getAddress(),
       fee: FeeAmount.MEDIUM,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -97,7 +91,7 @@ describe('unit/Deposits', () => {
       createIncentiveResult = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
-        poolAddress: context.poolObj.address,
+        poolAddress: await context.poolObj.getAddress(),
         nonce,
         totalReward,
         bonusReward,
@@ -114,7 +108,7 @@ describe('unit/Deposits', () => {
 
 
     xit('allows depositing and staking for a single incentive', async () => {
-      const data = ethers.utils.defaultAbiCoder.encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)])
+      const data = AbiCoder.defaultAbiCoder().encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)])
 
       await subject(data, lpUser0)
       const { deposit, incentive, farm } = await getTokenInfo(tokenId)
@@ -124,19 +118,19 @@ describe('unit/Deposits', () => {
 
     xdescribe('reverts when', () => {
       it('staking info is less than 160 bytes and greater than 0 bytes', async () => {
-        const data = ethers.utils.defaultAbiCoder.encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)])
+        const data = AbiCoder.defaultAbiCoder().encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)])
         const malformedData = data.slice(0, data.length - 2)
         await expect(subject(malformedData)).to.be.reverted
       })
 
       it('it has an invalid pool address', async () => {
-        const data = ethers.utils.defaultAbiCoder.encode(
+        const data = AbiCoder.defaultAbiCoder().encode(
           [INCENTIVE_KEY_ABI],
           [
             // Make the data invalid
             incentiveResultToFarmAdapter({
               ...createIncentiveResult,
-              poolAddress: constants.AddressZero,
+              poolAddress: ZeroAddress,
             }),
           ]
         )
@@ -145,7 +139,7 @@ describe('unit/Deposits', () => {
       })
 
       it('staking information is invalid and greater than 160 bytes', async () => {
-        const malformedData = ethers.utils.defaultAbiCoder.encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)]) + 'aaaa'
+        const malformedData = AbiCoder.defaultAbiCoder().encode([INCENTIVE_KEY_ABI], [incentiveResultToFarmAdapter(createIncentiveResult)]) + 'aaaa'
 
         await expect(subject(malformedData)).to.be.reverted
       })

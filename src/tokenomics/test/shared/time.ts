@@ -1,5 +1,5 @@
-import { providers } from 'ethers'
 import { log } from './logging'
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 type TimeSetterFunction = (timestamp: number) => Promise<void>
 
@@ -9,22 +9,21 @@ type TimeSetters = {
   setAndMine: TimeSetterFunction
 }
 
-export const createTimeMachine = (provider: providers.JsonRpcProvider): TimeSetters => {
+export const createTimeMachine = (): TimeSetters => {
   return {
     set: async (timestamp: number) => {
       log.debug(`🕒 setTime(${timestamp})`)
       // Not sure if I need both of those
-      await provider.send('evm_setNextBlockTimestamp', [timestamp])
+      await time.setNextBlockTimestamp(timestamp);
     },
 
     step: async (interval: number) => {
       log.debug(`🕒 increaseTime(${interval})`)
-      await provider.send('evm_increaseTime', [interval])
+      await time.increase(interval);
     },
 
     setAndMine: async (timestamp: number) => {
-      await provider.send('evm_setNextBlockTimestamp', [timestamp])
-      await provider.send('evm_mine', [])
+      await time.increaseTo(timestamp);
     },
   }
 }

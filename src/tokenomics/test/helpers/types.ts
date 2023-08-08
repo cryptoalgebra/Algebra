@@ -1,4 +1,4 @@
-import { BigNumber, Wallet, Contract, ContractTransaction } from 'ethers'
+import { Wallet, Contract, ContractTransaction } from 'ethers'
 import { TestERC20 } from '../../typechain'
 import { FeeAmount } from '../shared'
 
@@ -10,21 +10,21 @@ export module HelperTypes {
       rewardToken: TestERC20
       bonusRewardToken: TestERC20
       poolAddress: string
-      nonce: BigNumber
-      totalReward: BigNumber
-      bonusReward: BigNumber
+      nonce: bigint
+      totalReward: bigint
+      bonusReward: bigint
 
-      rewardRate?: BigNumber
-      bonusRewardRate?: BigNumber
+      rewardRate?: bigint
+      bonusRewardRate?: bigint
       minimalPositionWidth?: number
     }
     export type Result = {
       poolAddress: string
       rewardToken: TestERC20
       bonusRewardToken: TestERC20
-      bonusReward: BigNumber
-      totalReward: BigNumber
-      nonce: BigNumber
+      bonusReward: bigint
+      totalReward: bigint
+      nonce: bigint
       virtualPool: Contract
     }
 
@@ -35,7 +35,7 @@ export module HelperTypes {
     export type Args = {
       lp: Wallet
       tokensToFarm: [TestERC20, TestERC20]
-      amountsToFarm: [BigNumber, BigNumber]
+      amountsToFarm: [bigint, bigint]
       ticks: [number, number]
       createIncentiveResult: CreateIncentive.Result
     }
@@ -53,7 +53,7 @@ export module HelperTypes {
     type Args = {
       lp: Wallet
       tokens: [TestERC20, TestERC20]
-      amounts?: [BigNumber, BigNumber]
+      amounts?: [bigint, bigint]
       fee?: FeeAmount
       tickLower?: number
       tickUpper?: number
@@ -83,7 +83,7 @@ export module HelperTypes {
       createIncentiveResult: CreateIncentive.Result
     }
     export type Result = {
-      balance: BigNumber
+      balance: bigint
       exitFarmingdAt: number
     }
 
@@ -96,7 +96,7 @@ export module HelperTypes {
     }
 
     type Result = {
-      amountReturnedToCreator: BigNumber
+      amountReturnedToCreator: bigint
     }
 
     export type Command = CommandFunction<Args, Result>

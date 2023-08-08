@@ -7,9 +7,8 @@ export * from './logging'
 export * from './ticks'
 
 import { provider } from './provider'
-import { BigNumber, BigNumberish, Contract, ContractTransaction } from 'ethers'
+import { BigNumberish, Contract, ContractTransactionResponse , ContractTransaction} from 'ethers'
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/abstract-provider'
-import { constants } from 'ethers'
 
 import bn from 'bignumber.js'
 
@@ -19,8 +18,6 @@ import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot'
 import { IAlgebraPool, TestERC20 } from '../../typechain'
 import { isArray, isString } from 'lodash'
 import { ethers } from 'hardhat'
-
-export const { MaxUint256 } = constants
 
 export const blockTimestamp = async () => {
   const block = await provider.getBlock('latest')
@@ -37,46 +34,49 @@ use(jestSnapshotPlugin())
 export { expect }
 
 // returns the sqrt price as a 64x96
-export const encodePriceSqrt = (reserve1: BigNumberish, reserve0: BigNumberish): BigNumber => {
-  return BigNumber.from(new bn(reserve1.toString()).div(reserve0.toString()).sqrt().multipliedBy(new bn(2).pow(96)).integerValue(3).toString())
+export const encodePriceSqrt = (reserve1: BigNumberish, reserve0: BigNumberish): bigint => {
+  return BigInt(new bn(reserve1.toString()).div(reserve0.toString()).sqrt().multipliedBy(new bn(2).pow(96)).integerValue(3).toString())
 }
 
-export const BN = BigNumber.from
-export const BNe = (n: BigNumberish, exponent: BigNumberish) => BN(n).mul(BN(10).pow(exponent))
+export const BN = BigInt
+export const BNe = (n: BigNumberish, exponent: BigNumberish) => BN(n) * 10n ** BigInt(exponent);
 export const BNe18 = (n: BigNumberish) => BNe(n, 18)
 
-export const divE18 = (n: BigNumber) => n.div(BNe18('1')).toNumber()
-export const ratioE18 = (a: BigNumber, b: BigNumber) => (divE18(a) / divE18(b)).toFixed(2)
+export const divE18 = (n: bigint) => Number(n / BNe18('1'))
+export const ratioE18 = (a: bigint, b: bigint) => (divE18(a) / divE18(b)).toFixed(2)
 
-const bigNumberSum = (arr: Array<BigNumber>) => arr.reduce((acc, item) => acc.add(item), BN('0'))
+const bigNumberSum = (arr: Array<bigint>) => arr.reduce((acc, item) => acc + item, BN('0'))
 
 export const bnSum = bigNumberSum
 
-export { BigNumber, BigNumberish } from 'ethers'
+export { BigNumberish } from 'ethers'
 
 export async function snapshotGasCost(
   x:
     | TransactionResponse
     | Promise<TransactionResponse>
+    | ContractTransactionResponse
     | ContractTransaction
     | Promise<ContractTransaction>
+    | Promise<ContractTransactionResponse>
     | TransactionReceipt
-    | Promise<BigNumber>
-    | BigNumber
+    | Promise<BigInt>
+    | BigInt
     | Contract
     | Promise<Contract>
 ): Promise<void> {
-  const resolved = await x
-  if ('deployTransaction' in resolved) {
-    const receipt = await resolved.deployTransaction.wait()
-    expect(receipt.gasUsed.toNumber()).toMatchSnapshot()
+  const resolved = await x;
+  if (typeof resolved == 'bigint' || resolved instanceof Number || typeof resolved == 'number') {
+    expect(Number(resolved)).toMatchSnapshot();
+  } else if ('deployTransaction' in resolved) {
+    const receipt = await resolved.deployTransaction.wait();
+    expect(receipt.gasUsed.toNumber()).toMatchSnapshot();
   } else if ('wait' in resolved) {
-    const waited = await resolved.wait()
-    expect(waited.gasUsed.toNumber()).toMatchSnapshot()
-  } else if (BigNumber.isBigNumber(resolved)) {
-    expect(resolved.toNumber()).toMatchSnapshot()
+    const waited = await resolved.wait();
+    expect(Number(waited.gasUsed)).toMatchSnapshot();
   }
 }
+
 
 export function encodePath(path: string[]): string {
   let encoded = '0x'
@@ -88,8 +88,8 @@ export function encodePath(path: string[]): string {
   return encoded.toLowerCase()
 }
 
-export const MIN_SQRT_RATIO = BigNumber.from('4295128739')
-export const MAX_SQRT_RATIO = BigNumber.from('1461446703485210103287273052203988822378723970342')
+export const MIN_SQRT_RATIO = BigInt('4295128739')
+export const MAX_SQRT_RATIO = BigInt('1461446703485210103287273052203988822378723970342')
 
 export const MAX_GAS_LIMIT = 12_450_000
 export const maxGas = {
@@ -100,14 +100,11 @@ export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const days = (n: number) => 86_400 * n
 
 export const getSlot0 = async (pool: IAlgebraPool) => {
-  if (!pool.signer) {
-    throw new Error('Cannot getSlot0 without a signer')
-  }
   return await pool.globalState()
 }
 
 // This is currently lpUser0 but can be called from anybody.
-export const getCurrentTick = async (pool: IAlgebraPool): Promise<number> => (await getSlot0(pool)).tick
+export const getCurrentTick = async (pool: IAlgebraPool): Promise<number> => Number((await getSlot0(pool)).tick)
 
 export const arrayWrap = (x: any) => {
   if (!isArray(x)) {
@@ -119,7 +116,7 @@ export const arrayWrap = (x: any) => {
 export const erc20Wrap = async (x: string | TestERC20): Promise<TestERC20> => {
   if (isString(x)) {
     const factory = await ethers.getContractFactory('TestERC20')
-    return factory.attach(x) as TestERC20
+    return factory.attach(x) as any as TestERC20
   }
   return x
 }

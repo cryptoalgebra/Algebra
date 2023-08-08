@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { BigNumber, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20, AlgebraEternalFarming } from '../../typechain'
 import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
@@ -27,15 +27,15 @@ describe('unit/FarmingCenter', () => {
   let lpUser0: Wallet
   let incentiveCreator: Wallet
   const amountDesired = BNe18(10)
-  const totalReward = BN(10000)
-  const bonusReward = BN(200)
+  const totalReward = 10000n
+  const bonusReward = 200n
   const erc20Helper = new ERC20Helper()
-  const Time = createTimeMachine(provider)
+  const Time = createTimeMachine()
   let helpers: HelperCommands
   let context: AlgebraFixtureType
   let timestamps: ContractParams.Timestamps
   let tokenId: string
-  let nonce = BN(0)
+  let nonce = 0n
 
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[]
@@ -66,8 +66,8 @@ describe('unit/FarmingCenter', () => {
       tokenId = mintResult.tokenId
 
       let farmIncentiveKey = {
-        rewardToken: context.rewardToken.address,
-        bonusRewardToken: context.bonusRewardToken.address,
+        rewardToken: await context.rewardToken.getAddress(),
+        bonusRewardToken: await context.bonusRewardToken.getAddress(),
         pool: context.pool01,
         nonce: nonce
       }
@@ -78,10 +78,10 @@ describe('unit/FarmingCenter', () => {
           bonusRewardToken: context.bonusRewardToken,
           totalReward,
           bonusReward,
-          poolAddress: context.poolObj.address,
+          poolAddress: await context.poolObj.getAddress(),
           nonce: nonce,
-          rewardRate: BigNumber.from('10'),
-          bonusRewardRate: BigNumber.from('50'),
+          rewardRate: 10n,
+          bonusRewardRate: 50n,
         })
       )
 
@@ -91,7 +91,7 @@ describe('unit/FarmingCenter', () => {
           bonusRewardToken: context.bonusRewardToken,
           totalReward,
           bonusReward,
-          poolAddress: context.poolObj.address,
+          poolAddress: await context.poolObj.getAddress(),
           nonce,
         })
       )
@@ -132,7 +132,7 @@ describe('unit/FarmingCenter', () => {
   describe('#collectRewards', () => {
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result
     // The amount the user should be able to claim
-    let claimableEternal: BigNumber
+    let claimableEternal: bigint
 
     let tokenIdEternal: string
 
@@ -140,17 +140,17 @@ describe('unit/FarmingCenter', () => {
       timestamps = makeTimestamps(await blockTimestamp())
       const tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20]
 
-      await erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, context.nft.address)
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, await context.nft.getAddress())
 
       createIncentiveResultEternal = await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         totalReward,
         bonusReward,
-        poolAddress: context.poolObj.address,
+        poolAddress: await context.poolObj.getAddress(),
         nonce,
-        rewardRate: BigNumber.from('100'),
-        bonusRewardRate: BigNumber.from('50'),
+        rewardRate: 100n,
+        bonusRewardRate: 50n,
       })
 
       await Time.setAndMine(timestamps.startTime + 1)
@@ -173,20 +173,20 @@ describe('unit/FarmingCenter', () => {
     })
 
     it('is works', async () => {
-      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
       await erc20Helper.ensureBalancesAndApprovals(
         incentiveCreator,
         [context.rewardToken, context.bonusRewardToken],
         BNe18(1),
-        context.eternalFarming.address
+        await context.eternalFarming.getAddress()
       )
 
       await context.eternalFarming.connect(incentiveCreator).addRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
@@ -206,36 +206,36 @@ describe('unit/FarmingCenter', () => {
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
         tokenIdEternal
       )
 
-      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199699))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99549))
+      expect(balanceAfter - balanceBefore).to.equal(199699n)
+      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(99549n)
     })
 
     it('collect rewards after eternalFarming deactivate', async () => {
-      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
       await erc20Helper.ensureBalancesAndApprovals(
         incentiveCreator,
         [context.rewardToken, context.bonusRewardToken],
         BNe18(1),
-        context.eternalFarming.address
+        await context.eternalFarming.getAddress()
       )
 
       await context.eternalFarming.connect(incentiveCreator).addRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
@@ -254,67 +254,67 @@ describe('unit/FarmingCenter', () => {
       })
 
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
-        rewardToken: context.rewardToken.address,
-        bonusRewardToken: context.bonusRewardToken.address,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
         pool: context.pool01,
         nonce,
       })
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
         tokenIdEternal
       )
 
-      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
-      expect(balanceAfter.sub(balanceBefore)).to.equal(BN(199699))
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(BN(99549))
+      expect(balanceAfter - balanceBefore).to.equal(199699n)
+      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(99549n)
     })
 
     it('when requesting zero amount', async () => {
       await Time.set(timestamps.endTime + 10000)
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
         tokenIdEternal
       )
 
-      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
         tokenIdEternal
       )
 
-      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken.address)
-      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken.address)
+      let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)
+      let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)
 
-      expect(balanceAfter.sub(balanceBefore)).to.equal(0)
-      expect(bonusBalanceAfter.sub(bonusBalanceBefore)).to.equal(0)
+      expect(balanceAfter - balanceBefore).to.equal(0)
+      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(0)
     })
 
     it('collect with non-existent incentive', async () => {
       await expect(
         context.farmingCenter.connect(lpUser0).collectRewards(
           {
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
             pool: context.pool12,
             nonce,
           },
@@ -326,8 +326,8 @@ describe('unit/FarmingCenter', () => {
     it('collect with non-existent nft', async () => {
       await context.farmingCenter.connect(lpUser0).exitFarming(
         {
-          rewardToken: context.rewardToken.address,
-          bonusRewardToken: context.bonusRewardToken.address,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
           pool: context.pool01,
           nonce,
         },
@@ -337,8 +337,8 @@ describe('unit/FarmingCenter', () => {
       await expect(
         context.farmingCenter.connect(lpUser0).collectRewards(
           {
-            rewardToken: context.rewardToken.address,
-            bonusRewardToken: context.bonusRewardToken.address,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
             pool: context.pool01,
             nonce,
           },
