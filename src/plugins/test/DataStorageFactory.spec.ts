@@ -6,7 +6,7 @@ import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME, pluginFactoryFixture } from './shared/fixtures'
 import snapshotGasCost from './shared/snapshotGasCost'
 
-import { DataStorageFactory, MockFactory } from "../typechain";
+import { DataStorageFactory, DataStorageOperator, MockFactory } from "../typechain";
 
 describe('DataStorageFactory', () => {
   let wallet: Wallet, other: Wallet
@@ -25,8 +25,25 @@ describe('DataStorageFactory', () => {
     } = await loadFixture(pluginFactoryFixture));
   })
 
+  describe('#Create plugin', () => {
+    it('only factory', async() => {
+      expect(pluginFactory.createPlugin(wallet.address)).to.be.revertedWithoutReason;
+    })
+
+    it('factory can create plugin', async() => {
+      const pluginFactoryFactory = await ethers.getContractFactory('DataStorageFactory')
+      const pluginFactoryMock = (await pluginFactoryFactory.deploy(wallet.address)) as any as DataStorageFactory
+
+      const pluginAddress = await pluginFactoryMock.createPlugin.staticCall(wallet.address);
+      await pluginFactoryMock.createPlugin(wallet.address);
+
+      const pluginMock = (await ethers.getContractFactory('DataStorageOperator')).attach(pluginAddress) as any as DataStorageOperator;
+      const feeConfig = await pluginMock.feeConfig();
+      expect(feeConfig.baseFee).to.be.not.eq(0);
+    })
+  })
+
   describe('#Default fee configuration', () => {
-    /*
     describe('#setDefaultFeeConfiguration', () => {
       const configuration  = {
         alpha1: 3002,
@@ -38,17 +55,17 @@ describe('DataStorageFactory', () => {
         baseFee: 150
       }
       it('fails if caller is not owner', async () => {
-        await expect(factory.connect(other).setDefaultFeeConfiguration(
+        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(
           configuration
         )).to.be.reverted;
       })
   
       it('updates defaultFeeConfiguration', async () => {
-        await factory.setDefaultFeeConfiguration(
+        await pluginFactory.setDefaultFeeConfiguration(
           configuration
         )
   
-        const newConfig = await factory.defaultFeeConfiguration();
+        const newConfig = await pluginFactory.defaultFeeConfiguration();
   
         expect(newConfig.alpha1).to.eq(configuration.alpha1);
         expect(newConfig.alpha2).to.eq(configuration.alpha2);
@@ -60,9 +77,9 @@ describe('DataStorageFactory', () => {
       })
   
       it('emits event', async () => {
-        await expect(factory.setDefaultFeeConfiguration(
+        await expect(pluginFactory.setDefaultFeeConfiguration(
           configuration
-        )).to.emit(factory, 'DefaultFeeConfiguration')
+        )).to.emit(pluginFactory, 'DefaultFeeConfiguration')
           .withArgs(
             [
               configuration.alpha1, 
@@ -81,7 +98,7 @@ describe('DataStorageFactory', () => {
         conf2.alpha1 = 30000;
         conf2.alpha2 = 30000;
         conf2.baseFee = 15000;
-        await expect(factory.setDefaultFeeConfiguration(
+        await expect(pluginFactory.setDefaultFeeConfiguration(
           conf2
         )).to.be.revertedWith('Max fee exceeded');
       })
@@ -89,24 +106,24 @@ describe('DataStorageFactory', () => {
       it('cannot set zero gamma', async () => {
         let conf2 = {...configuration};
         conf2.gamma1 = 0
-        await expect(factory.setDefaultFeeConfiguration(
+        await expect(pluginFactory.setDefaultFeeConfiguration(
           conf2
         )).to.be.revertedWith('Gammas must be > 0');
   
         conf2 = {...configuration};
         conf2.gamma2 = 0
-        await expect(factory.setDefaultFeeConfiguration(
+        await expect(pluginFactory.setDefaultFeeConfiguration(
           conf2
         )).to.be.revertedWith('Gammas must be > 0');
   
         conf2 = {...configuration};
         conf2.gamma1 = 0
         conf2.gamma2 = 0
-        await expect(factory.setDefaultFeeConfiguration(
+        await expect(pluginFactory.setDefaultFeeConfiguration(
           conf2
         )).to.be.revertedWith('Gammas must be > 0');
       })
-    })*/
+    })
   })
 
   describe('#setFarmingAddress', () => {

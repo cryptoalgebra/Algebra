@@ -21,6 +21,17 @@ export enum FeeAmount {
   HIGH = 10000,
 }
 
+export const PLUGIN_FLAGS = {
+  BEFORE_SWAP_FLAG: 1,
+  AFTER_SWAP_FLAG: 1 << 1,
+  BEFORE_POSITION_MODIFY_FLAG: 1 << 2,
+  AFTER_POSITION_MODIFY_FLAG: 1 << 3,
+  BEFORE_FLASH_FLAG: 1 << 4,
+  AFTER_FLASH_FLAG: 1 << 5,
+  AFTER_INIT_FLAG: 1 << 6,
+  DYNAMIC_FEE: 1 << 7
+}
+
 export const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
   [FeeAmount.LOW]: 10,
   [FeeAmount.MEDIUM]: 60,

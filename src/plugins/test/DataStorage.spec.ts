@@ -16,7 +16,7 @@ describe('DataStorage', () => {
 
   const dataStorageFixture = async () => {
     const dataStorageTestFactory = await ethers.getContractFactory('DataStorageTest')
-    return (await dataStorageTestFactory.deploy()) as DataStorageTest
+    return (await dataStorageTestFactory.deploy()) as any as DataStorageTest
   }
 
   const initializedDataStorageFixture = async () => {
@@ -412,7 +412,7 @@ describe('DataStorage', () => {
     }
   })
 
-  describe.skip('full dataStorage', function () {
+  describe('full dataStorage', function () {
     this.timeout(10_200_000)
 
     let dataStorage: DataStorageTest

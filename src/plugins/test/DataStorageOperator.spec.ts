@@ -4,7 +4,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME, pluginFixture } from './shared/fixtures'
-import { encodePriceSqrt, getMaxTick, getMinTick } from './shared/utilities';
+import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTick } from './shared/utilities';
 import snapshotGasCost from './shared/snapshotGasCost'
 
 import { MockFactory, MockPool, MockTimeDataStorageOperator, TestERC20, MockTimeDSFactory, MockTimeVirtualPool, MockTimeVirtualPool__factory } from "../typechain";
@@ -21,7 +21,7 @@ describe('DataStorageOperator', () => {
   let maxTick = getMaxTick(60);
 
   async function initializeAtZeroTick(pool: MockPool) {
-    await pool.initialize(encodePriceSqrt(1, 1));
+    await mockPool.initialize(encodePriceSqrt(1, 1));
   }
 
   before('prepare signers', async () => {
@@ -39,6 +39,39 @@ describe('DataStorageOperator', () => {
 
   // plain tests for hooks functionality
   describe('#Hooks', () => {
+
+    it('only pool can call hooks', async () => {
+      expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith('only pool can call this');
+      expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith('only pool can call this');
+      expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+      expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+      expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith('only pool can call this');
+      expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+      expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+      expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+    })
+
+    describe('not implemented hooks', async () => {
+
+      beforeEach('connect plugin to pool', async () => {
+        await mockPool.setPlugin(plugin);
+      })
+
+      it('beforeModifyPosition', async() => {
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
+        expect(mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x')).to.be.revertedWith('Not implemented');
+      })
+
+      it('beforeFlash', async() => {
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
+        expect(mockPool.flash(wallet.address, 100, 100, '0x')).to.be.revertedWith('Not implemented');
+      })
+
+      it('afterFlash', async() => {
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_FLASH_FLAG);
+        expect(mockPool.flash(wallet.address, 100, 100, '0x')).to.be.revertedWith('Not implemented');
+      })
+    })
   })
 
   describe('#VolatilityOracle', () => {
@@ -133,207 +166,335 @@ describe('DataStorageOperator', () => {
         initialized: true,
       })
     })
+
+    describe('#getSingleTimepoint', () => {
+      
+      beforeEach(async () => await initializeAtZeroTick(mockPool))
+  
+      // zero tick
+      it('current tick accumulator increases by tick over time', async () => {
+        let {
+          tickCumulative,
+        } = await plugin.getSingleTimepoint(0);
+        expect(tickCumulative).to.eq(0)
+        await plugin.advanceTime(10)
+        ;({
+          tickCumulative
+        } = await plugin.getSingleTimepoint(0));
+        expect(tickCumulative).to.eq(0)
+      })
+  
+      it('current tick accumulator after single swap', async () => {
+        // moves to tick -1
+        await mockPool.swapToTick(-1);
+
+        await plugin.advanceTime(4)
+        let {
+          tickCumulative
+        } = await plugin.getSingleTimepoint(0)
+        expect(tickCumulative).to.eq(-4)
+      })
+  
+      it('current tick accumulator after swaps', async () => {
+        await mockPool.swapToTick(-4463);
+        expect((await mockPool.globalState()).tick).to.eq(-4463);
+        await plugin.advanceTime(4);
+        await mockPool.swapToTick(-1560);
+        expect((await mockPool.globalState()).tick).to.eq(-1560);
+        let {
+          tickCumulative: tickCumulative0
+        } = await plugin.getSingleTimepoint(0);
+        expect(tickCumulative0).to.eq(-17852);
+        await plugin.advanceTime(60 * 5);
+        await mockPool.swapToTick(-1561);
+        let {
+          tickCumulative: tickCumulative1
+        } = await plugin.getSingleTimepoint(0);
+        expect(tickCumulative1).to.eq(-485852);
+      })
+    })
+
+    describe('#prepayTimepointsStorageSlots', () => {
+      it('can prepay', async () => {
+        await plugin.prepayTimepointsStorageSlots(0, 50);
+      })
+
+      it('can prepay with space', async () => {
+        await plugin.prepayTimepointsStorageSlots(10, 50);
+      })
+      
+      it('writes after swap, prepaid after init', async () => {
+        await initializeAtZeroTick(mockPool);
+        await plugin.prepayTimepointsStorageSlots(1, 1);
+        expect((await plugin.timepoints(1)).blockTimestamp).to.be.eq(1);
+        await mockPool.swapToTick(-4463);
+        expect((await mockPool.globalState()).tick).to.eq(-4463);
+        await plugin.advanceTime(4);
+        await mockPool.swapToTick(-1560);
+        expect((await plugin.timepoints(1)).blockTimestamp).to.be.not.eq(1);
+        expect((await mockPool.globalState()).tick).to.eq(-1560);
+        let {
+          tickCumulative: tickCumulative0
+        } = await plugin.getSingleTimepoint(0);
+        expect(tickCumulative0).to.eq(-17852);
+      })
+
+      it('writes after swap, prepaid before init', async () => {
+        await plugin.prepayTimepointsStorageSlots(0, 2);
+        await initializeAtZeroTick(mockPool);
+        expect((await plugin.timepoints(1)).blockTimestamp).to.be.eq(1);
+        await mockPool.swapToTick(-4463);
+        expect((await mockPool.globalState()).tick).to.eq(-4463);
+        await plugin.advanceTime(4);
+        await mockPool.swapToTick(-1560);
+        expect((await plugin.timepoints(1)).blockTimestamp).to.be.not.eq(1);
+        expect((await mockPool.globalState()).tick).to.eq(-1560);
+        let {
+          tickCumulative: tickCumulative0
+        } = await plugin.getSingleTimepoint(0);
+        expect(tickCumulative0).to.eq(-17852);
+      })
+
+      describe('failure cases', async() => {
+        it('cannot rewrite initialized slot', async() => {
+          await initializeAtZeroTick(mockPool);
+          expect(plugin.prepayTimepointsStorageSlots(0, 2)).to.be.revertedWithoutReason;
+          await plugin.advanceTime(4);
+          await mockPool.swapToTick(-1560);
+          expect(plugin.prepayTimepointsStorageSlots(1, 2)).to.be.revertedWithoutReason;
+          expect(plugin.prepayTimepointsStorageSlots(2, 2)).to.be.not.reverted;
+        })
+
+        it('cannot prepay 0 slots', async() => {
+          expect(plugin.prepayTimepointsStorageSlots(0, 0)).to.be.revertedWithoutReason;
+        })
+
+        it('cannot overflow index', async() => {
+          await plugin.prepayTimepointsStorageSlots(0, 10);
+          expect(plugin.prepayTimepointsStorageSlots(11, 2n ** 16n - 5n)).to.be.revertedWithoutReason;
+        })
+      })
+    })
   })
 
   describe('#DynamicFeeManager', () => {
-    describe.skip('#adaptiveFee', function() {
-      /*
+    describe('#adaptiveFee', function() {
       this.timeout(0);
       const liquidity = expandTo18Decimals(1000);
       const DAY = 60*60*24;
+      let mint: any;
+
       beforeEach('initialize pool', async () => {
-        await initializeAtZeroTick(pool)
+        await mockPool.setPlugin(plugin);
+        await initializeAtZeroTick(mockPool);
+        mint = async (recipient: string, tickLower: number, tickUpper: number, liquidityDesired: number) => {
+          await mockPool.mint(recipient, recipient, tickLower, tickUpper, liquidityDesired, '0x')
+        }
       })
   
-      async function trade(count: number, proportion: number, amount: BigNumberish, pause: number) {
-        let vol0 = BigNumber.from(0);
-        let vol1 = BigNumber.from(0);
-        for (let i = 0; i < count; i++) {
-            if (i % proportion == 0 ) {
-              let b0 = await token0.balanceOf(wallet.address);
-              await swapExact1For0(amount, wallet.address);
-              vol0 = vol0.add((await token0.balanceOf(wallet.address)).sub(b0));
-              vol1 = vol1.add(amount);
-              await pool.advanceTime(pause);
-            } else {
-              let b1 = await token1.balanceOf(wallet.address);
-              await swapExact0For1(amount, wallet.address);
-              vol1 = vol1.add((await token1.balanceOf(wallet.address)).sub(b1));
-              vol0 = vol0.add(amount);
-              await pool.advanceTime(pause);
-            }
-        }
-        //console.log('Vol0: ', vol0.div(BigNumber.from(10).pow(18)).toString());
-        //console.log('Vol1: ', vol1.div(BigNumber.from(10).pow(18)).toString());
-      }
-  
       async function tradeStable(count: number, proportion: number, amount: number, pause: number) {
-        let ticks = [];
         for (let i = 0; i < count; i++) {
+          for (let i = 0; i < count; i++) {
             if (i % proportion == 0 ) {
-              await swapExact1For0(expandTo18Decimals(amount*5), wallet.address);
-              await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
-              await swapExact1For0(expandTo18Decimals(amount/2), wallet.address);
-              await pool.advanceTime(pause);
+              await mockPool.swapToTick(i + 1);
+              await plugin.advanceTime(pause);
             } else {
-              await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
-              await pool.advanceTime(pause);
+              await mockPool.swapToTick(-i - 1);
+              await plugin.advanceTime(pause);
             }
-            ticks.push((await pool.globalState()).tick);
+          }
         }
-        console.log(ticks)
       }
   
       async function getStatistics(time: number) {
-        let now = await dsOperator.getTimepoints([BigNumber.from(0)]);
-        let then = await dsOperator.getTimepoints([BigNumber.from(time)]);
-        return [now.volatilityCumulatives[0].sub(then.volatilityCumulatives[0]).div(BigNumber.from(DAY)),
+        let now = await plugin.getTimepoints([0]);
+        let then = await plugin.getTimepoints([time]);
+        return [now.volatilityCumulatives[0] - (then.volatilityCumulatives[0])/ BigInt(DAY),
         time]
       }
   
       it('doesnt change at 0 volume', async () => {
-        let fee1 = (await pool.globalState()).fee;
-        await mint(wallet.address, -6000, 6000, liquidity)
-        let fee2 = (await pool.globalState()).fee;
-        await pool.advanceTime(DAY + 600);
+        let fee1 = (await mockPool.globalState()).fee;
+        await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x')
+        let fee2 = (await mockPool.globalState()).fee;
+        await plugin.advanceTime(DAY + 600);
         await mint(wallet.address, -6000, 6000, 1)
-        let fee3 = (await pool.globalState()).fee;
+        let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(fee2);
         expect(fee3).to.be.equal(fee1);
+      })
+
+      it('doesnt change fee after first swap in block', async () => {
+        await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x')
+        await plugin.advanceTime(DAY + 600);
+        await mockPool.swapToTick(100);
+        let feeInit = (await mockPool.globalState()).fee;
+        await mockPool.swapToTick(100000);
+        await mockPool.swapToTick(100001);
+        let feeAfter = (await mockPool.globalState()).fee;
+        expect(feeAfter).to.be.equal(feeInit);
+      })
+
+      it('doesnt change if alphas are zeroes', async () => {
+        await plugin.changeFeeConfiguration({
+          alpha1: 0,
+          alpha2: 0,
+          beta1: 360,
+          beta2: 60000,
+          gamma1: 59,
+          gamma2: 8500,
+          baseFee: 100
+        })
+        await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x')
+        let feeInit = (await mockPool.globalState()).fee;
+        await plugin.advanceTime(DAY + 600);
+        await mockPool.swapToTick(100000);
+        await plugin.advanceTime(DAY + 600);
+        await mockPool.swapToTick(-100000);
+        let feeFinal = (await mockPool.globalState()).fee;
+        expect(feeFinal).to.be.equal(feeInit);
       })
   
       const AMOUNT = 500000000
       it('single huge step after day', async () => {
-        pool = await createPoolWrapped()
-        await pool.initialize(encodePriceSqrt(1, 1))
-        await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
+        await mint(wallet.address, -24000, 24000, liquidity * 1000000000n)
   
-        await pool.advanceTime(DAY)
-        await swapExact0For1(BigNumber.from(1000), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        let fee3 = (await pool.globalState()).fee;
+        await plugin.advanceTime(DAY)
+        await mockPool.swapToTick(10)
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10000);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10001);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-9999);
+        let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(3000);
   
         let stats = [];
+        const tick = -9999;
         for (let i = 0; i < 25; i++) {
-          await swapExact0For1(BigNumber.from(100), wallet.address);
-          const avgVolatility = await pool.getAverageVolatility();
-          let fee = (await pool.globalState()).fee;
-          stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
-          await pool.advanceTime(60*60)
+          await mockPool.swapToTick(tick - i);
+          let fee = (await mockPool.globalState()).fee;
+          stats.push(`Fee: ${fee} `);
+          await plugin.advanceTime(60*60)
         }
         expect(stats).to.matchSnapshot('fee stats after step');
       })
   
       it('single huge step after initialization', async () => {
-        pool = await createPoolWrapped()
-        await pool.initialize(encodePriceSqrt(1, 1))
-        await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
+        await mint(wallet.address, -24000, 24000, liquidity * 1000000000n)
   
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(1000), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        let fee3 = (await pool.globalState()).fee;
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(10)
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10000);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10001);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-9999);
+        let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(15000);
   
         let stats = [];
+        const tick = -9999;
         for (let i = 0; i < 25; i++) {
-          await swapExact0For1(BigNumber.from(100), wallet.address);
-          const avgVolatility = await pool.getAverageVolatility();
-          let fee = (await pool.globalState()).fee;
-          stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
-          await pool.advanceTime(60*60)
+          await mockPool.swapToTick(tick - i);
+          let fee = (await mockPool.globalState()).fee;
+          stats.push(`Fee: ${fee} `);
+          await plugin.advanceTime(60*60)
         }
         expect(stats).to.matchSnapshot('fee stats after step');
       })
   
       it('single huge spike after day', async () => {
-        pool = await createPoolWrapped()
-        await pool.initialize(encodePriceSqrt(1, 1))
-        await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
-        await pool.advanceTime(DAY)
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(1000), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        let fee3 = (await pool.globalState()).fee;
+        await mint(wallet.address, -24000, 24000, liquidity * 1000000000n)
+        await plugin.advanceTime(DAY)
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10000);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(0);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(10);
+        let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(3000);
   
-        await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
-        await pool.advanceTime(60);
-  
         let stats = [];
+        const tick = 10;
         for (let i = 0; i < 25; i++) {
-          await swapExact0For1(BigNumber.from(100), wallet.address);
-          let avgVolatility = await pool.getAverageVolatility();
-          let fee = (await pool.globalState()).fee;
-          stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
-          await pool.advanceTime(60*60)
+          await mockPool.swapToTick(tick - i);
+          let fee = (await mockPool.globalState()).fee;
+          stats.push(`Fee: ${fee} `);
+          await plugin.advanceTime(60*60)
         }
         expect(stats).to.matchSnapshot('fee stats after spike');
       })
   
       it('single huge spike after initialization', async () => {
-        pool = await createPoolWrapped()
-        await pool.initialize(encodePriceSqrt(1, 1))
-        await mint(wallet.address, -24000, 24000, liquidity.mul(BigNumber.from(1000000000)))
+        await mint(wallet.address, -24000, 24000, liquidity * 1000000000n)
   
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(1000), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact1For0(liquidity.mul(BigNumber.from(AMOUNT)), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        await pool.advanceTime(60)
-        await swapExact0For1(BigNumber.from(100), wallet.address);
-        let fee3 = (await pool.globalState()).fee;
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(10)
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-10000);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(-11);
+        await plugin.advanceTime(60)
+        await mockPool.swapToTick(0);
+        let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(15000);
   
-        await swapToLowerPrice(encodePriceSqrt(1, 1), wallet.address);
-        await pool.advanceTime(60);
-  
         let stats = [];
+        const tick = 0;
         for (let i = 0; i < 25; i++) {
-          await swapExact0For1(BigNumber.from(100), wallet.address);
-          let avgVolatility = await pool.getAverageVolatility();
-          let fee = (await pool.globalState()).fee;
-          stats.push(`Fee: ${fee}, Avg_volat: ${avgVolatility.toString()} `);
-          await pool.advanceTime(60*60)
+          await mockPool.swapToTick(tick - i);
+          let fee = (await mockPool.globalState()).fee;
+          stats.push(`Fee: ${fee} `);
+          await plugin.advanceTime(60*60)
         }
         expect(stats).to.matchSnapshot('fee stats after spike');
       })
   
-      xit('changes', async () => {
-        let fee1 = (await pool.globalState()).fee;
-        let tick0 = (await pool.globalState()).tick;
+      it.skip('changes', async () => {
+        let fee1 = (await mockPool.globalState()).fee;
+        let tick0 = (await mockPool.globalState()).tick;
         await mint(wallet.address, -6000, 6000, liquidity)
-        let fee2 = (await pool.globalState()).fee;
-        await pool.advanceTime(DAY + 600);
+        let fee2 = (await mockPool.globalState()).fee;
+        await plugin.advanceTime(DAY + 600);
         await tradeStable(240, 2, 10, 30);
-        let fee3 = (await pool.globalState()).fee;
+        let fee3 = (await mockPool.globalState()).fee;
         console.log(fee1, fee2, fee3);
-        let tick1 = (await pool.globalState()).tick;
+        let tick1 = (await mockPool.globalState()).tick;
         let stats = await getStatistics(DAY);
-        console.log('Tick:', tick1 - tick0)
-        console.log('Volt:', stats[0].toString())
-        console.log('Volm:', BigNumber.from(stats[1]).div(BigNumber.from(10).pow(18)).toString())
-        console.log(DAY)
       })
-      */
+
+      describe('#getCurrentFee', async () => {
+        it('works with dynamic fee', async() => {
+          await plugin.advanceTime(60)
+          await mockPool.swapToTick(10)
+          await plugin.advanceTime(60)
+          await mockPool.swapToTick(10)
+          const currentFee = await plugin.getCurrentFee();
+          expect(currentFee).to.be.eq(100);
+        })
+
+        it('works if alphas are zeroes', async() => {
+          await plugin.changeFeeConfiguration({
+              alpha1: 0,
+              alpha2: 0,
+              beta1: 1001,
+              beta2: 1006,
+              gamma1: 20,
+              gamma2: 22,
+              baseFee: 100
+          })
+          await plugin.advanceTime(60)
+          await mockPool.swapToTick(10)
+          await plugin.advanceTime(60)
+          await mockPool.swapToTick(10)
+          const currentFee = await plugin.getCurrentFee();
+          expect(currentFee).to.be.eq(100);
+        })
+      })
     })
   })
 
@@ -351,6 +512,30 @@ describe('DataStorageOperator', () => {
          await plugin.setIncentive(virtualPoolMock);
          expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());    
        })
+
+       it('can detach incentive', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await plugin.setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);    
+      })
+
+
+       it('cannot set same incentive twice', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('already active');    
+      })
+
+      it('cannot set incentive if has active', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('has active incentive');    
+      })
+   
+      it('can set incentive if afterSwap hook is active', async() => {
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        await plugin.setIncentive(virtualPoolMock);
+        expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());  
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);     
+      })
    
        it('set incentive works only for PluginFactory.farmingAddress', async() => {
          await mockPluginFactory.setFarmingAddress(ZeroAddress);
@@ -376,15 +561,15 @@ describe('DataStorageOperator', () => {
    
        it.skip('swap with finished incentive', async() => {
          /*await virtualPoolMock.setIsExist(false);
-         await pool.setIncentive(virtualPoolMock.address);
-         await pool.initialize(encodePriceSqrt(1, 1));
+         await mockPool.setIncentive(virtualPoolMock.address);
+         await mockPool.initialize(encodePriceSqrt(1, 1));
          await mint(wallet.address, -120, 120, 1);
          await mint(wallet.address, minTick, maxTick, 1);
-         expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);    
+         expect(await mockPool.activeIncentive()).to.be.eq(virtualPoolMock.address);    
    
          await swapToLowerPrice(encodePriceSqrt(1, 2), wallet.address);
    
-         expect(await pool.activeIncentive()).to.be.eq(ethers.constants.AddressZero);
+         expect(await mockPool.activeIncentive()).to.be.eq(ethers.constants.AddressZero);
          expect(await virtualPoolMock.currentTick()).to.be.eq(0);
          expect(await virtualPoolMock.timestamp()).to.be.eq(0);
          */
@@ -393,20 +578,56 @@ describe('DataStorageOperator', () => {
        it.skip('swap with not started yet incentive', async() => {
         /*
          await virtualPoolMock.setIsStarted(false);
-         await pool.setIncentive(virtualPoolMock.address);
-         await pool.initialize(encodePriceSqrt(1, 1));
+         await mockPool.setIncentive(virtualPoolMock.address);
+         await mockPool.initialize(encodePriceSqrt(1, 1));
          await mint(wallet.address, -120, 120, 1);
          await mint(wallet.address, minTick, maxTick, 1);
-         expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);    
+         expect(await mockPool.activeIncentive()).to.be.eq(virtualPoolMock.address);    
    
          await swapToLowerPrice(encodePriceSqrt(1, 2), wallet.address);
    
-         const tick = (await pool.globalState()).tick;
-         expect(await pool.activeIncentive()).to.be.eq(virtualPoolMock.address);
+         const tick = (await mockPool.globalState()).tick;
+         expect(await mockPool.activeIncentive()).to.be.eq(virtualPoolMock.address);
          expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
          expect(await virtualPoolMock.timestamp()).to.be.eq(0); 
          */
        })
+     })
+
+     describe('#isIncentiveActive', () => {
+      let virtualPoolMock: MockTimeVirtualPool;
+   
+      beforeEach('deploy virtualPoolMock', async () => {
+        await mockPluginFactory.setFarmingAddress(wallet);
+        const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
+        virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
+      })
+
+      it('true with active incentive', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPool.setPlugin(plugin);
+        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
+      })
+
+      it('false with invalid address', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPool.setPlugin(plugin);
+        expect(await plugin.isIncentiveActive(wallet.address)).to.be.false;
+      })
+
+      it('false if plugin detached', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPlugin(ZeroAddress);
+        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
+      })
+
+      it('false if hook deactivated', async() => {
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPluginConfig(0);
+        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
+      })
      })
 
      describe('#Incentive', () => {
