@@ -121,8 +121,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
       uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
       (, int24 tick, , ) = _getPoolState();
 
-      uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_blockTimestamp(), 0, tick, lastIndex, oldestIndex);
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex, lastVolatilityCumulative);
+      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
 
       return AdaptiveFee.getFee(volatilityAverage, feeConfig);
     }
@@ -133,14 +132,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
       return _feeConfig.baseFee;
     } else {
-      uint88 lastVolatilityCumulative = timepoints[lastTimepointIndex].volatilityCumulative;
-      uint88 volatilityAverage = timepoints.getAverageVolatility(
-        _blockTimestamp(),
-        currentTick,
-        lastTimepointIndex,
-        oldestTimepointIndex,
-        lastVolatilityCumulative
-      );
+      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
       return AdaptiveFee.getFee(volatilityAverage, _feeConfig);
     }
   }

@@ -159,7 +159,7 @@ contract DataStorageTest {
   function getAverageVolatility() external view returns (uint88) {
     uint16 lastIndex = index;
     uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-    return timepoints.getAverageVolatility(time, tick, lastIndex, oldestIndex, timepoints[lastIndex].volatilityCumulative);
+    return timepoints.getAverageVolatility(time, tick, lastIndex, oldestIndex);
   }
 
   function getAverageTick() external view returns (int256) {
@@ -174,6 +174,17 @@ contract DataStorageTest {
     (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
     (int256 avgTick, ) = timepoints._getAverageTick(_time, _tick, _index, oldestIndex, lastTimestamp, lastTickCumulative);
     return int24(avgTick);
+  }
+
+  function getTickCumulativeAt(uint32 secondsAgo) external view returns (int256) {
+    uint16 oldestIndex;
+    if (timepoints[index + 1].initialized) {
+      oldestIndex = index + 1;
+    }
+
+    (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
+    (int56 tickCumulative, ) = timepoints._getTickCumulativeAt(_time, secondsAgo, _tick, _index, oldestIndex);
+    return int56(tickCumulative);
   }
 
   function window() external pure returns (uint256) {

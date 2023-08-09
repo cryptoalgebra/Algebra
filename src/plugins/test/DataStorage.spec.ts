@@ -120,9 +120,81 @@ describe('DataStorage', () => {
   })
 
   describe('#getAverageTick', () => {
+    let window = 24 * 60 * 60;
     let dataStorage: DataStorageTest
     beforeEach('deploy initialized test dataStorage', async () => {
       dataStorage = await loadFixture(dataStorageFixture)
+    })
+
+    it('in the same block with init', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      const tick = await dataStorage.getAverageTick();
+      expect(tick).to.be.eq(7200);
+    })
+
+    it('in exactly 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.update({ advanceTimeBy: window, tick: 7400, liquidity: 6 });
+      const tick = await dataStorage.getAverageTick();
+      expect(tick).to.be.eq(7300);
+    })
+
+    it('last index is exactly 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.advanceTime(window);
+      const tick = await dataStorage.getAverageTick();
+      expect(tick).to.be.eq(7200);
+    })
+
+    it('last index is more then 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.advanceTime(window + 1);
+      const tick = await dataStorage.getAverageTick();
+      expect(tick).to.be.eq(7200);
+
+      const tickCumulative = await dataStorage.getTickCumulativeAt(0);
+      expect(tickCumulative).to.be.eq(630741700);
+    })
+
+    describe('oldest timepoint is more than WINDOW seconds ago', async() => {
+      beforeEach('initialize', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+        await dataStorage.update({ advanceTimeBy: window / 2, tick: 7300, liquidity: 6 });
+        await dataStorage.update({ advanceTimeBy: window / 2 + 1, tick: 7350, liquidity: 6 });
+      })
+
+      it('last timepoint is target', async() => {
+        const tick = await dataStorage.getAverageTick();
+        expect(tick).to.be.eq(7250);
+      })
+
+      it('target is after last timepoint', async() => {
+        await dataStorage.advanceTime(10);
+        const tick = await dataStorage.getAverageTick();
+        expect(tick).to.be.eq(7250);
+      })
+    })
+
+    describe('oldest timepoint is less than WINDOW seconds ago', async() => {
+      beforeEach('initialize', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+        await dataStorage.update({ advanceTimeBy: 2, tick: 7250, liquidity: 6 });
+        await dataStorage.update({ advanceTimeBy: window / 2, tick: 7230, liquidity: 6 });
+      })
+
+      it('last timepoint is target', async() => {
+        const tick = await dataStorage.getAverageTick();
+        expect(tick).to.be.eq(7249);
+      })
+
+      it('target is after last timepoint', async() => {
+        await dataStorage.advanceTime(10);
+        const tick = await dataStorage.getAverageTick();
+        expect(tick).to.be.eq(7249);
+      })
     })
 
     it('potential overflow scenario', async () => {
@@ -174,7 +246,7 @@ describe('DataStorage', () => {
       await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await dataStorage.advanceTime(window);
       const volatility = await dataStorage.getAverageVolatility();
-      expect(volatility).to.be.eq(0);
+      expect(volatility).to.be.eq(3333);
     })
 
     it('last index is more then 24h ago', async() => {
@@ -200,7 +272,7 @@ describe('DataStorage', () => {
       it('target is after last timepoint', async() => {
         await dataStorage.advanceTime(10);
         const volatility = await dataStorage.getAverageVolatility();
-        expect(volatility).to.be.eq(1666);
+        expect(volatility).to.be.eq(1667);
       })
     })
 
@@ -640,6 +712,9 @@ describe('DataStorage', () => {
     it('gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ]', async () => {
       await dataStorage.advanceTime(5)
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([5]))
+    })
+    it('gas cost of getTimepoints(middle)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 / 2 * step]))
     })
     it('gas cost of getTimepoints(oldest)  [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step]))

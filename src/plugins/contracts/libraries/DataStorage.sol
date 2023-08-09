@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
+import 'hardhat/console.sol';
+
 /// @title DataStorage
 /// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
@@ -181,14 +183,21 @@ library DataStorage {
     uint32 time,
     int24 tick,
     uint16 lastIndex,
-    uint16 oldestIndex,
-    uint88 lastCumulativeVolatility
+    uint16 oldestIndex
   ) internal view returns (uint88 volatilityAverage) {
     unchecked {
       uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+      uint88 lastCumulativeVolatility;
+
+      bool targetAtLastTimepoint = self[lastIndex].blockTimestamp == time; // TODO optimize?
+      if (targetAtLastTimepoint) {
+        lastCumulativeVolatility = self[lastIndex].volatilityCumulative;
+      } else {
+        lastCumulativeVolatility = _getVolatilityCumulativeAt(self, time, 0, tick, lastIndex, oldestIndex); // TODO interpolate?
+      }
 
       if (_lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
-        if (self[lastIndex].blockTimestamp == time) {
+        if (targetAtLastTimepoint) {
           // we can simplify the search, because when the timepoint was created, the search was already done
           oldestIndex = self[lastIndex].windowStartIndex;
           oldestTimestamp = self[oldestIndex].blockTimestamp;
@@ -196,6 +205,7 @@ library DataStorage {
         }
 
         uint88 cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, time, WINDOW, tick, lastIndex, oldestIndex); // TODO interpolate?
+
         return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
       } else if (time != oldestTimestamp) {
         // recorded timepoints are not enough, so we will extrapolate
@@ -313,7 +323,7 @@ library DataStorage {
         Timepoint storage _start = self[lastIndex - 1]; // considering underflow
         (bool initialized, uint32 startTimestamp, int56 startTickCumulative) = (_start.initialized, _start.blockTimestamp, _start.tickCumulative);
         avgTick = initialized ? (lastTickCumulative - startTickCumulative) / int56(uint56(lastTimestamp - startTimestamp)) : tick;
-        windowStartIndex = lastIndex;
+        windowStartIndex = lastIndex; // TODO check
       } else {
         if (time == lastTimestamp) {
           oldestIndex = self[lastIndex].windowStartIndex;
@@ -360,6 +370,7 @@ library DataStorage {
       if (samePoint) {
         // since target != beforeOrAt.blockTimestamp, `samePoint` means that target is newer than last timepoint
         (int24 avgTick, ) = _getAverageTickCasted(self, time, tick, lastIndex, oldestIndex, beforeOrAt.blockTimestamp, beforeOrAt.tickCumulative);
+
         return (beforeOrAt.volatilityCumulative +
           uint88(_volatilityOnRange(int256(uint256(target - beforeOrAt.blockTimestamp)), beforeOrAt.tick, tick, beforeOrAt.averageTick, avgTick)));
       }
@@ -385,7 +396,7 @@ library DataStorage {
     int24 tick,
     uint16 lastIndex,
     uint16 oldestIndex
-  ) private view returns (int56 tickCumulative, uint256 indexBeforeOrAt) {
+  ) internal view returns (int56 tickCumulative, uint256 indexBeforeOrAt) {
     unchecked {
       uint32 target = time - secondsAgo;
       (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool samePoint, uint256 _indexBeforeOrAt) = _getTimepointsAt(
