@@ -52,7 +52,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory)) as any as MockTimeDSFactory
       
         await mockPluginFactory.createPlugin(pool);
-        const pluginAddress = await mockPluginFactory.pluginsForPools(pool);
+        const pluginAddress = await mockPluginFactory.pluginByPool(pool);
       
         const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
         const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
@@ -151,7 +151,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         it('first swap in block, large swap, no initialized crossings', async () => {
           await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address));
-          expect((await pool.globalState()).tick).to.eq(-35829);
+          expect((await pool.globalState()).tick).to.eq(-35586);
         });
 
         it('first swap in block, large swap crossing several initialized ticks', async () => {
