@@ -19,6 +19,12 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     const dsFactory = await deployer.deploy(artifact, [deploysData.factory]);
     await dsFactory.deployed();
 
+    const verificationId = await hre.run("verify:verify", {
+        address: dsFactory.address,
+        contract: "contracts/DataStorageFactory.sol:DataStorageFactory",
+        constructorArguments: [deploysData.factory],
+      });
+
     console.log(`${artifact.contractName} was deployed to ${dsFactory.address}`);
 
     deploysData.dataStorageFactory = dsFactory.address;

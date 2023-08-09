@@ -49,6 +49,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
   bytes32 private constant POOL_INIT_CODE_HASH = 0x010015e1d6c8cd8cd29ea70c7dbfa43d0a25c1b3641ea054567ab0be51154fe9;
 
+  bytes32 private constant EMPTY_HASH = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
@@ -77,7 +79,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   function computePoolAddress(address token0, address token1) public view override returns (address pool) {
-    pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
+    bytes32 prefix = keccak256('zksyncCreate2');
+    pool = address(
+      uint160(uint256(keccak256(abi.encode(prefix, poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH, EMPTY_HASH))))
+    );
   }
 
   /// @inheritdoc IAlgebraFactory

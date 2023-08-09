@@ -17,7 +17,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   
   const factory = deploysData.factory;
   const poolDeployer = deploysData.poolDeployer;
-  const weth = "0xaAf221d04F50E2AC32B2B21F679997c2d7A835e4"; 
+  const weth = "0x20b28B1e4665FFf290650586ad76E977EAb90c5D"; 
 
   // Initialize the wallet.
   const wallet = new Wallet(hre.network.config.accounts[0]);
@@ -68,14 +68,9 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // console.log(`${NonfungibleTokenPositionDescriptorArtifact.contractName} was deployed to ${NonfungibleTokenPositionDescriptor.address}`);
   // deploysData.NonfungibleTokenPositionDescriptor = NonfungibleTokenPositionDescriptor.address;
 
-  const ProxyFactory = await deployer.loadArtifact("TransparentUpgradeableProxy")
-  const Proxy = await deployer.deploy(ProxyFactory, ["0x6aFbCDF398328aD3adcf96f6aD6916685EE5D67b",wallet.address , "0x"]) 
-  await Proxy.deployed()
-  console.log('Proxy deployed to:', Proxy.address)
-
   const NonfungiblePositionManagerArtifact = await deployer.loadArtifact("NonfungiblePositionManager");
   // `greeting` is an argument for contract constructor.
-  const NonfungiblePositionManager = await deployer.deploy(NonfungiblePositionManagerArtifact, [factory, weth, Proxy.address, poolDeployer]);
+  const NonfungiblePositionManager = await deployer.deploy(NonfungiblePositionManagerArtifact, [factory, weth, "0xf527b38E40fe87D33f3D0303967AE4afFdB5E7bf", poolDeployer]);
   await NonfungiblePositionManager.deployed()
   // Show the contract info.
   console.log(`${NonfungiblePositionManagerArtifact.contractName} was deployed to ${NonfungiblePositionManager.address}`);
@@ -84,7 +79,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const verificationId2 = await hre.run("verify:verify", {
     address: NonfungiblePositionManager.address,
     contract: "contracts/NonfungiblePositionManager.sol:NonfungiblePositionManager",
-    constructorArguments: [factory, weth, Proxy.address, poolDeployer],
+    constructorArguments: [factory, weth, "0xf527b38E40fe87D33f3D0303967AE4afFdB5E7bf", poolDeployer],
   });
 
   const mcallArtifacts = await deployer.loadArtifact("AlgebraInterfaceMulticall");

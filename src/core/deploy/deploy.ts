@@ -32,12 +32,24 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // Show the contract info.
   console.log(`${artifact.contractName} was deployed to ${factory.address}`);
 
+  const verificationId = await hre.run("verify:verify", {
+    address: factory.address,
+    contract: "contracts/AlgebraFactory.sol:AlgebraFactory",
+    constructorArguments: [poolDeployerAddress],
+  });
+
   const vaultAddress = await factory.communityVault();
     // Load contract
   const artifactPD = await deployer.loadArtifact("AlgebraPoolDeployer");
     // `greeting` is an argument for contract constructor.
   const poolDeployer = await deployer.deploy(artifactPD, [factory.address, vaultAddress]);
   await poolDeployer.deployed()
+
+  const verificationId1 = await hre.run("verify:verify", {
+    address: poolDeployer.address,
+    contract: "contracts/AlgebraPoolDeployer.sol:AlgebraPoolDeployer",
+    constructorArguments: [factory.address, vaultAddress],
+  });
 
   console.log(`${artifactPD.contractName} was deployed to ${poolDeployer.address}`);
 
