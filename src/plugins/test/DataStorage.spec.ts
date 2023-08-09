@@ -257,6 +257,16 @@ describe('DataStorage', () => {
       expect(volatility).to.be.eq(3333);
     })
 
+    it('specific case for binary search (atOrAfter)', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.update({ advanceTimeBy: 2 * 60 * 60, tick: 7300, liquidity: 6 });
+      await dataStorage.update({ advanceTimeBy: 2 * 60 * 60, tick: 73100, liquidity: 6 });
+      await dataStorage.advanceTime(window - 2 * 60*60);
+      const volatility = await dataStorage.getAverageVolatility();
+      expect(volatility).to.be.eq(1322990997);
+    })
+
     describe('oldest timepoint is more than WINDOW seconds ago', async() => {
       beforeEach('initialize', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
