@@ -100,20 +100,6 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     }
   }
 
-  function _writeTimepoint(
-    uint32 blockTimestamp,
-    int24 tick,
-    uint16 lastIndex
-  ) internal returns (bool updated, uint16 newLastIndex, uint16 oldestIndex) {
-    (newLastIndex, oldestIndex) = timepoints.write(lastIndex, blockTimestamp, tick);
-
-    if (lastIndex != newLastIndex) {
-      timepointIndex = newLastIndex;
-      lastTimepointTimestamp = blockTimestamp;
-      updated = true;
-    }
-  }
-
   // ###### Fee manager ######
 
   /// @inheritdoc IDynamicFeeManager
@@ -235,17 +221,19 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   function _writeTimepointAndUpdateFee() internal {
     (uint16 _lastIndex, uint32 _lastTimepointTimestamp) = (timepointIndex, lastTimepointTimestamp);
+    uint32 currentTimestamp = _blockTimestamp();
 
-    if (_lastTimepointTimestamp == _blockTimestamp()) return;
+    if (_lastTimepointTimestamp == currentTimestamp) return;
 
     (, int24 tick, uint16 fee, ) = _getPoolState();
-    (bool updated, uint16 newLastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick, _lastIndex);
-    if (updated) {
-      uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
+    (uint16 newLastIndex, uint16 oldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
 
-      if (newFee != fee) {
-        IAlgebraPool(pool).setFee(newFee);
-      }
+    timepointIndex = newLastIndex;
+    lastTimepointTimestamp = currentTimestamp;
+
+    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
+    if (newFee != fee) {
+      IAlgebraPool(pool).setFee(newFee);
     }
   }
 }

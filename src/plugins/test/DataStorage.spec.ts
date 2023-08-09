@@ -148,7 +148,7 @@ describe('DataStorage', () => {
     })
   })
 
-  describe.only('#getAverageVolatility', () => {
+  describe('#getAverageVolatility', () => {
     let dataStorage: DataStorageTest
     const window = 24 * 60 * 60;
     beforeEach('deploy initialized test dataStorage', async () => {
