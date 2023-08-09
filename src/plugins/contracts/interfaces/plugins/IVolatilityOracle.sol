@@ -32,11 +32,6 @@ interface IVolatilityOracle {
   // TODO
   function timepointIndex() external view returns (uint16);
 
-  /// @notice Initialize the timepoints array by writing the first slot. Called once for the lifecycle of the timepoints array
-  /// @param time The time of the volatility oracle initialization, via block.timestamp truncated to uint32
-  /// @param tick Initial tick
-  function initialize(uint32 time, int24 tick) external;
-
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values

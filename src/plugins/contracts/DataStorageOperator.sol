@@ -55,13 +55,19 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
   }
 
-  // ###### Volatility and TWAP oracle ######
-
-  /// @inheritdoc IVolatilityOracle
-  function initialize(uint32 time, int24 tick) external override onlyPool {
+  /// @inheritdoc IDataStorageOperator
+  function initialize() external override {
+    require(!timepoints[0].initialized, 'Already initialized');
+    require(IAlgebraPool(pool).plugin() == address(this), 'Plugin not attached');
+    (int24 tick, , ) = _getPoolState();
+    uint32 time = _blockTimestamp();
     lastTimepointTimestamp = time;
-    return timepoints.initialize(time, tick); // TODO "late" init?
+    timepoints.initialize(time, tick);
+
+    IAlgebraPool(pool).setPluginConfig(defaultPluginConfig);
   }
+
+  // ###### Volatility and TWAP oracle ######
 
   /// @inheritdoc IVolatilityOracle
   function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {

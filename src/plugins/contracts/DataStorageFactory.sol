@@ -16,6 +16,8 @@ contract DataStorageFactory is IDataStorageFactory {
   /// @inheritdoc IDataStorageFactory
   address public farmingAddress;
 
+  mapping(address => address) public pluginByPool;
+
   modifier onlyOwner() {
     require(msg.sender == IAlgebraFactory(algebraFactory).owner(), 'onlyOwner');
     _;
@@ -29,10 +31,24 @@ contract DataStorageFactory is IDataStorageFactory {
   /// @inheritdoc IAlgebraPluginFactory
   function createPlugin(address pool) external override returns (address) {
     require(msg.sender == algebraFactory);
+    return _createPlugin(pool);
+  }
 
+  //TODO
+  function createPluginForExistingPool(address token0, address token1) external returns (address) {
+    IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
+    require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
+
+    address pool = factory.poolByPair(token0, token1);
+    require(pool != address(0), 'pool not exist');
+
+    return _createPlugin(pool);
+  }
+
+  function _createPlugin(address pool) internal returns (address) {
     IDataStorageOperator dataStorage = new DataStorageOperator(pool, algebraFactory, address(this)); // TODO address this
     dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
-
+    pluginByPool[pool] = address(dataStorage);
     return address(dataStorage);
   }
 

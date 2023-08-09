@@ -10,5 +10,6 @@ import './plugins/IFarmingPlugin.sol';
 /// @notice This contract combines the standard implementations of the volatility oracle and the dynamic fee manager
 /// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
 interface IDataStorageOperator is IVolatilityOracle, IDynamicFeeManager, IFarmingPlugin {
-  // used only for combining interfaces
+  /// @notice Initialize the plugin externally TODO
+  function initialize() external;
 }
