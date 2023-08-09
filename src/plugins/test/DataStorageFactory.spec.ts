@@ -3,7 +3,7 @@ import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
-import { TEST_POOL_START_TIME, pluginFactoryFixture } from './shared/fixtures'
+import { TEST_POOL_START_TIME, ZERO_ADDRESS, pluginFactoryFixture } from './shared/fixtures'
 import snapshotGasCost from './shared/snapshotGasCost'
 
 import { DataStorageFactory, DataStorageOperator, MockFactory } from "../typechain";
@@ -37,6 +37,27 @@ describe('DataStorageFactory', () => {
       const pluginAddress = await pluginFactoryMock.createPlugin.staticCall(wallet.address);
       await pluginFactoryMock.createPlugin(wallet.address);
 
+      const pluginMock = (await ethers.getContractFactory('DataStorageOperator')).attach(pluginAddress) as any as DataStorageOperator;
+      const feeConfig = await pluginMock.feeConfig();
+      expect(feeConfig.baseFee).to.be.not.eq(0);
+    })
+  })
+
+  describe('#CreatePluginForExistingPool', () => {
+    it('only if has role', async() => {
+      expect(pluginFactory.connect(other).createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWithoutReason;
+    })
+
+    it('cannot create for nonexistent pool', async() => {
+      expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
+    })
+
+    it('can create for existing pool', async() => {
+      await mockAlgebraFactory.stubPool(wallet.address, other.address, other.address);
+
+      await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
+      const pluginAddress = await pluginFactory.pluginByPool(other.address);
+      expect(pluginAddress).to.not.be.eq(ZERO_ADDRESS);
       const pluginMock = (await ethers.getContractFactory('DataStorageOperator')).attach(pluginAddress) as any as DataStorageOperator;
       const feeConfig = await pluginMock.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);

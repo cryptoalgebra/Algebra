@@ -51,15 +51,17 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 
-  function _getPoolState() internal view returns (int24 tick, uint16 fee, uint8 pluginConfig) {
-    (, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+  function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+    (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
   }
 
   /// @inheritdoc IDataStorageOperator
   function initialize() external override {
     require(!timepoints[0].initialized, 'Already initialized');
     require(IAlgebraPool(pool).plugin() == address(this), 'Plugin not attached');
-    (int24 tick, , ) = _getPoolState();
+    (uint160 price, int24 tick, , ) = _getPoolState();
+    require(price != 0, 'Pool is not initialized');
+
     uint32 time = _blockTimestamp();
     lastTimepointTimestamp = time;
     timepoints.initialize(time, tick);
@@ -71,7 +73,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IVolatilityOracle
   function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
-    (int24 tick, , ) = _getPoolState();
+    (, int24 tick, , ) = _getPoolState();
     uint16 lastTimepointIndex = timepointIndex;
     uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
     DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
@@ -82,7 +84,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   function getTimepoints(
     uint32[] memory secondsAgos
   ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
-    (int24 tick, , ) = _getPoolState();
+    (, int24 tick, , ) = _getPoolState();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
   }
 
@@ -131,7 +133,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     } else {
       uint16 lastIndex = timepointIndex;
       uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-      (int24 tick, , ) = _getPoolState();
+      (, int24 tick, , ) = _getPoolState();
 
       uint88 lastVolatilityCumulative = timepoints._getVolatilityCumulativeAt(_blockTimestamp(), 0, tick, lastIndex, oldestIndex);
       uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex, lastVolatilityCumulative);
@@ -172,7 +174,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
-    (, , uint8 pluginConfig) = _getPoolState();
+    (, , , uint8 pluginConfig) = _getPoolState();
     bool isHookActive = pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) != 0;
     if (turnOn != isHookActive) {
       pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
@@ -184,7 +186,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   function isIncentiveActive(address targetIncentive) external view returns (bool) {
     if (incentive != targetIncentive) return false;
     if (IAlgebraPool(pool).plugin() != address(this)) return false;
-    (, , uint8 pluginConfig) = _getPoolState();
+    (, , , uint8 pluginConfig) = _getPoolState();
     if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
 
     return true;
@@ -218,7 +220,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external onlyPool returns (bytes4) {
-    (int24 tick, , ) = _getPoolState();
+    (, int24 tick, , ) = _getPoolState();
     IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
     return IAlgebraPlugin.afterSwap.selector;
   }
@@ -236,7 +238,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
     if (_lastTimepointTimestamp == _blockTimestamp()) return;
 
-    (int24 tick, uint16 fee, ) = _getPoolState();
+    (, int24 tick, uint16 fee, ) = _getPoolState();
     (bool updated, uint16 newLastIndex, uint16 oldestIndex) = _writeTimepoint(_blockTimestamp(), tick, _lastIndex);
     if (updated) {
       uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);

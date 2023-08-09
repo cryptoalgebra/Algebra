@@ -21,7 +21,7 @@ describe('DataStorageOperator', () => {
   let maxTick = getMaxTick(60);
 
   async function initializeAtZeroTick(pool: MockPool) {
-    await mockPool.initialize(encodePriceSqrt(1, 1));
+    await pool.initialize(encodePriceSqrt(1, 1));
   }
 
   before('prepare signers', async () => {
@@ -35,6 +35,34 @@ describe('DataStorageOperator', () => {
       mockFactory, 
       mockPluginFactory
     } = await loadFixture(pluginFixture));
+  })
+
+  describe('#Initialize', async() => {
+    it('cannot initialize twice', async() => {
+      await mockPool.setPlugin(plugin);
+      await initializeAtZeroTick(mockPool);
+
+      expect(plugin.initialize()).to.be.revertedWith('Already initialized');
+    })
+
+    it('cannot initialize detached plugin', async() => {
+      await initializeAtZeroTick(mockPool);
+      expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
+    })
+
+    it('cannot initialize if pool not initialized', async() => {
+      await mockPool.setPlugin(plugin);
+      expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
+    })
+
+    it('can initialize for existing pool', async() => {
+      await initializeAtZeroTick(mockPool);
+      await mockPool.setPlugin(plugin);
+      await plugin.initialize();
+
+      const timepoint = await plugin.timepoints(0);
+      expect(timepoint.initialized).to.be.true;
+    })
   })
 
   // plain tests for hooks functionality
@@ -650,12 +678,7 @@ describe('DataStorageOperator', () => {
     })
   })
 
-  describe('DataStorageOperator external methods', () => {
-  
-    it('cannot call onlyPool methods', async () => {
-      await expect(plugin.initialize(1000, 1)).to.be.revertedWith('only pool can call this');
-    })
-  
+  describe('DataStorageOperator external methods', () => {  
     describe('#changeFeeConfiguration', () => {
       const configuration  = {
         alpha1: 3002,

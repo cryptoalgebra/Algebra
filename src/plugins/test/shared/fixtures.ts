@@ -61,7 +61,7 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool
 
   await mockPluginFactory.createPlugin(mockPool);
-  const pluginAddress = await mockPluginFactory.pluginsForPools(mockPool);
+  const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
 
   const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator')
   const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;

@@ -192,10 +192,10 @@ library DataStorage {
           // we can simplify the search, because when the timepoint was created, the search was already done
           oldestIndex = self[lastIndex].windowStartIndex;
           oldestTimestamp = self[oldestIndex].blockTimestamp;
-          if (lastIndex != oldestIndex) lastIndex = oldestIndex + 1;
+          lastIndex = oldestIndex + 1;
         }
 
-        uint88 cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, time, WINDOW, tick, lastIndex, oldestIndex);
+        uint88 cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, time, WINDOW, tick, lastIndex, oldestIndex); // TODO interpolate?
         return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
       } else if (time != oldestTimestamp) {
         // recorded timepoints are not enough, so we will extrapolate
@@ -420,28 +420,28 @@ library DataStorage {
   /// @return indexBeforeOrAt The index of closest timepoint before ot at the moment of `target`
   function _getTimepointsAt(
     Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
+    uint32 currentTime,
     uint32 target,
     uint16 lastIndex,
     uint16 oldestIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool samePoint, uint256 indexBeforeOrAt) {
     // if target is newer than last timepoint
-    if (target == time || _lteConsideringOverflow(self[lastIndex].blockTimestamp, target, time)) {
+    if (target == currentTime || _lteConsideringOverflow(self[lastIndex].blockTimestamp, target, currentTime)) {
       return (self[lastIndex], self[lastIndex], true, lastIndex);
     }
 
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
-    if (!_lteConsideringOverflow(oldestTimestamp, target, time)) revert targetIsTooOld();
+    if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
 
     if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
 
     unchecked {
-      if (time - target <= WINDOW) {
+      if (currentTime - target <= WINDOW) {
         // we can limit the scope of the search
         uint16 windowStartIndex = self[lastIndex].windowStartIndex;
         if (windowStartIndex != oldestIndex) {
           uint32 windowStartTimestamp = self[windowStartIndex].blockTimestamp;
-          if (_lteConsideringOverflow(oldestTimestamp, windowStartTimestamp, time)) {
+          if (_lteConsideringOverflow(oldestTimestamp, windowStartTimestamp, currentTime)) {
             (oldestIndex, oldestTimestamp) = (windowStartIndex, windowStartTimestamp);
             if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
           }
@@ -451,7 +451,7 @@ library DataStorage {
       if (lastIndex == oldestIndex + 1) return (self[oldestIndex], self[lastIndex], false, oldestIndex);
     }
 
-    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, time, target, lastIndex, oldestIndex);
+    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex);
     return (beforeOrAt, atOrAfter, false, indexBeforeOrAt);
   }
 

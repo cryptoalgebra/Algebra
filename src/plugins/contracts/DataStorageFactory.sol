@@ -6,7 +6,8 @@ import './libraries/AdaptiveFee.sol';
 import './DataStorageOperator.sol';
 import './interfaces/IDataStorageFactory.sol';
 
-/// TODO
+/// @title Algebra default plugin factory
+/// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 contract DataStorageFactory is IDataStorageFactory {
   address public immutable algebraFactory;
 
@@ -16,6 +17,7 @@ contract DataStorageFactory is IDataStorageFactory {
   /// @inheritdoc IDataStorageFactory
   address public farmingAddress;
 
+  /// @inheritdoc IDataStorageFactory
   mapping(address => address) public pluginByPool;
 
   modifier onlyOwner() {
@@ -34,8 +36,8 @@ contract DataStorageFactory is IDataStorageFactory {
     return _createPlugin(pool);
   }
 
-  //TODO
-  function createPluginForExistingPool(address token0, address token1) external returns (address) {
+  /// @inheritdoc IDataStorageFactory
+  function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
 
@@ -46,7 +48,7 @@ contract DataStorageFactory is IDataStorageFactory {
   }
 
   function _createPlugin(address pool) internal returns (address) {
-    IDataStorageOperator dataStorage = new DataStorageOperator(pool, algebraFactory, address(this)); // TODO address this
+    IDataStorageOperator dataStorage = new DataStorageOperator(pool, algebraFactory, address(this));
     dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
     pluginByPool[pool] = address(dataStorage);
     return address(dataStorage);

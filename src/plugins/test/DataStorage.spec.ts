@@ -148,6 +148,82 @@ describe('DataStorage', () => {
     })
   })
 
+  describe.only('#getAverageVolatility', () => {
+    let dataStorage: DataStorageTest
+    const window = 24 * 60 * 60;
+    beforeEach('deploy initialized test dataStorage', async () => {
+      dataStorage = await loadFixture(dataStorageFixture)
+    })
+
+    it('in the same block with init', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      const volatility = await dataStorage.getAverageVolatility();
+      expect(volatility).to.be.eq(0);
+    })
+
+    it('in exactly 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.update({ advanceTimeBy: window, tick: 7400, liquidity: 6 });
+      const volatility = await dataStorage.getAverageVolatility();
+      expect(volatility).to.be.eq(3333);
+    })
+
+    it('last index is exactly 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.advanceTime(window);
+      const volatility = await dataStorage.getAverageVolatility();
+      expect(volatility).to.be.eq(0);
+    })
+
+    it('last index is more then 24h ago', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.advanceTime(window + 1);
+      const volatility = await dataStorage.getAverageVolatility();
+      expect(volatility).to.be.eq(3333);
+    })
+
+    describe('oldest timepoint is more than WINDOW seconds ago', async() => {
+      beforeEach('initialize', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+        await dataStorage.update({ advanceTimeBy: window / 2, tick: 7300, liquidity: 6 });
+        await dataStorage.update({ advanceTimeBy: window / 2 + 1, tick: 7350, liquidity: 6 });
+      })
+
+      it('last timepoint is target', async() => {
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(1666);
+      })
+
+      it('target is after last timepoint', async() => {
+        await dataStorage.advanceTime(10);
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(1666);
+      })
+    })
+
+    describe('oldest timepoint is less than WINDOW seconds ago', async() => {
+      beforeEach('initialize', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+        await dataStorage.update({ advanceTimeBy: 2, tick: 7250, liquidity: 6 });
+        await dataStorage.update({ advanceTimeBy: window / 2, tick: 7230, liquidity: 6 });
+      })
+
+      it('last timepoint is target', async() => {
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(833);
+      })
+
+      it('target is after last timepoint', async() => {
+        await dataStorage.advanceTime(10);
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(833);
+      })
+    })
+  })
+
   describe('#getTimepoints', () => {
     describe('before initialization', async () => {
       let dataStorage: DataStorageTest
@@ -524,6 +600,27 @@ describe('DataStorage', () => {
       await dataStorage.advanceTime(5)
       await checkGetPoints(step * 65534 + 5, {
         tickCumulative: '-175890',
+      })
+    })
+
+    describe('#getAverageVolatility', () => {
+      const window = 24 * 60 * 60;
+
+      describe('oldest timepoint is more than WINDOW seconds ago', async() => {
+        beforeEach('initialize', async () => {
+          await dataStorage.update({ advanceTimeBy: window + 1, tick: 7250, liquidity: 6 });
+        })
+  
+        it('last timepoint is target', async() => {
+          const volatility = await dataStorage.getAverageVolatility();
+          expect(volatility).to.be.eq(3684036);
+        })
+  
+        it('target is after last timepoint', async() => {
+          await dataStorage.advanceTime(10);
+          const volatility = await dataStorage.getAverageVolatility();
+          expect(volatility).to.be.eq(3683610);
+        })
       })
     })
 
