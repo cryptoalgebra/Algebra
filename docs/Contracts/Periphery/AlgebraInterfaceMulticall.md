@@ -11,16 +11,13 @@ A fork of Multicall2 specifically tailored for the Algebra Interface
 https://github.com/Uniswap/v3-periphery*
 
 
-
-
 ## Functions
 ### getCurrentBlockTimestamp
 
 
-`function getCurrentBlockTimestamp() public view returns (uint256 timestamp)` view public
-
-
-
+```solidity
+function getCurrentBlockTimestamp() public view returns (uint256 timestamp)
+```
 
 
 
@@ -33,9 +30,9 @@ https://github.com/Uniswap/v3-periphery*
 ### getEthBalance
 
 
-`function getEthBalance(address addr) public view returns (uint256 balance)` view public
-
-
+```solidity
+function getEthBalance(address addr) public view returns (uint256 balance)
+```
 
 
 
@@ -52,9 +49,9 @@ https://github.com/Uniswap/v3-periphery*
 ### multicall
 
 
-`function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData)`  public
-
-
+```solidity
+function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData)
+```
 
 
 
@@ -68,7 +65,4 @@ https://github.com/Uniswap/v3-periphery*
 | ---- | ---- | ----------- |
 | blockNumber | uint256 |  |
 | returnData | struct AlgebraInterfaceMulticall.Result[] |  |
-
-
-
 

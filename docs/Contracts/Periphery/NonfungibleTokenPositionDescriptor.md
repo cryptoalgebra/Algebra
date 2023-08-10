@@ -11,7 +11,6 @@ Produces a string containing the data URI for a JSON metadata string
 https://github.com/Uniswap/v3-periphery*
 
 
-
 ## Variables
 ### address WNativeToken immutable
 
@@ -22,9 +21,9 @@ https://github.com/Uniswap/v3-periphery*
 ### constructor
 
 
-`constructor(address _WNativeToken) public`  public
-
-
+```solidity
+constructor(address _WNativeToken) public
+```
 
 
 
@@ -32,16 +31,16 @@ https://github.com/Uniswap/v3-periphery*
 | ---- | ---- | ----------- |
 | _WNativeToken | address |  |
 
-
 ### tokenURI
 
 
-`function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)` view external
+```solidity
+function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
+```
 
 Produces the URI describing a particular token ID for a position manager
+
 *Developer note: Note this URI may be a data: URI with the JSON contents directly inlined*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -57,9 +56,9 @@ Produces the URI describing a particular token ID for a position manager
 ### flipRatio
 
 
-`function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool)` view public
-
-
+```solidity
+function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool)
+```
 
 
 
@@ -78,9 +77,9 @@ Produces the URI describing a particular token ID for a position manager
 ### tokenRatioPriority
 
 
-`function tokenRatioPriority(address token, uint256 chainId) public view returns (int256)` view public
-
-
+```solidity
+function tokenRatioPriority(address token, uint256 chainId) public view returns (int256)
+```
 
 
 
@@ -94,7 +93,4 @@ Produces the URI describing a particular token ID for a position manager
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | int256 |  |
-
-
-
 

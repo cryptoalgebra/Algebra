@@ -1,13 +1,15 @@
 
 
-# TickLens
+# ITickLens
 
 
-Tick Lens contract
+Tick Lens
 
+Provides functions for fetching chunks of tick data for a pool
 
-
-*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+*Developer note: This avoids the waterfall of fetching the tick bitmap, parsing the bitmap to know which ticks to fetch, and
+then sending additional multicalls to fetch the tick data
+Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
 
@@ -16,7 +18,7 @@ https://github.com/Uniswap/v3-periphery*
 
 
 ```solidity
-function getPopulatedTicksInWord(address pool, int16 tickTableIndex) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)
+function getPopulatedTicksInWord(address pool, int16 tickTableIndex) external view returns (struct ITickLens.PopulatedTick[] populatedTicks)
 ```
 
 Get all the tick data for the populated ticks from a word of the tick bitmap of a pool

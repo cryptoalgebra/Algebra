@@ -1,68 +1,89 @@
 
 
-# NonfungiblePositionManager
+# INonfungiblePositionManager
 
 
-NFT positions
+Non-fungible token for positions
 
-Wraps Algebra  positions in the ERC721 non-fungible token interface
+Wraps Algebra positions in a non-fungible token interface which allows for them to be transferred
+and authorized.
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-## Modifiers
-### isAuthorizedForToken
+
+## Events
+### IncreaseLiquidity
 
 
 ```solidity
-modifier isAuthorizedForToken(uint256 tokenId)
+event IncreaseLiquidity(uint256 tokenId, uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, address pool)
 ```
 
+Emitted when liquidity is increased for a position NFT
 
+*Developer note: Also emitted when a token is minted*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 |  |
+| tokenId | uint256 | The ID of the token for which liquidity was increased |
+| liquidity | uint128 | The amount by which liquidity for the NFT position was increased |
+| actualLiquidity | uint128 | the actual liquidity that was added into a pool. Could differ from _liquidity_ when using FeeOnTransfer tokens |
+| amount0 | uint256 | The amount of token0 that was paid for the increase in liquidity |
+| amount1 | uint256 | The amount of token1 that was paid for the increase in liquidity |
+| pool | address |  |
+
+### DecreaseLiquidity
 
 
-## Variables
-### address farmingCenter 
+```solidity
+event DecreaseLiquidity(uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
+```
+
+Emitted when liquidity is decreased for a position NFT
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 | The ID of the token for which liquidity was decreased |
+| liquidity | uint128 | The amount by which liquidity for the NFT position was decreased |
+| amount0 | uint256 | The amount of token0 that was accounted for the decrease in liquidity |
+| amount1 | uint256 | The amount of token1 that was accounted for the decrease in liquidity |
+
+### Collect
 
 
+```solidity
+event Collect(uint256 tokenId, address recipient, uint256 amount0, uint256 amount1)
+```
 
-*Developer note: The address of the farming center contract, which handles farmings logic*
-### mapping(uint256 &#x3D;&gt; address) farmingApprovals 
+Emitted when tokens are collected for a position NFT
+
+*Developer note: The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 | The ID of the token for which underlying tokens were collected |
+| recipient | address | The address of the account that received the collected tokens |
+| amount0 | uint256 | The amount of token0 owed to the position that was collected |
+| amount1 | uint256 | The amount of token1 owed to the position that was collected |
+
+### FarmingFailed
 
 
+```solidity
+event FarmingFailed(uint256 tokenId)
+```
 
-*Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
-### mapping(uint256 &#x3D;&gt; address) tokenFarmedIn 
+Emitted if farming failed in call from NonfungiblePositionManager.
 
+*Developer note: Should never be emitted*
 
-
-*Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
-### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
-
-
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 | The ID of corresponding token |
 
 
 ## Functions
-### constructor
-
-
-```solidity
-constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, address _poolDeployer) public
-```
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _factory | address |  |
-| _WNativeToken | address |  |
-| _tokenDescriptor_ | address |  |
-| _poolDeployer | address |  |
-
 ### positions
 
 
@@ -118,40 +139,6 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 | liquidity | uint128 | The amount of liquidity for this position |
 | amount0 | uint256 | The amount of token0 |
 | amount1 | uint256 | The amount of token1 |
-
-### tokenURI
-
-
-```solidity
-function tokenURI(uint256 tokenId) public view returns (string)
-```
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
-
-### baseURI
-
-
-```solidity
-function baseURI() public pure returns (string)
-```
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
 
 ### increaseLiquidity
 
@@ -246,7 +233,7 @@ Changes approval of token ID for farming.
 
 
 ```solidity
-function switchFarmingStatus(uint256 tokenId, bool toFarming) external
+function switchFarmingStatus(uint256 tokenId, bool isFarmed) external
 ```
 
 Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
@@ -256,7 +243,7 @@ Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | tokenId The ID of the token |
-| toFarming | bool |  |
+| isFarmed | bool |  |
 
 ### setFarmingCenter
 
@@ -272,29 +259,4 @@ Changes address of farmingCenter
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newFarmingCenter | address | The new address of farmingCenter |
-
-### getApproved
-
-
-```solidity
-function getApproved(uint256 tokenId) public view returns (address)
-```
-
-
-
-*Developer note: Returns the account approved for &#x60;tokenId&#x60; token.
-
-Requirements:
-
-- &#x60;tokenId&#x60; must exist.*
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address |  |
 

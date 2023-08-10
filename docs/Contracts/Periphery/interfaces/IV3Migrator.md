@@ -1,48 +1,17 @@
 
 
-# V3Migrator
+# IV3Migrator
 
 
 Algebra Migrator
 
-
+Enables migration of liquidity from Uniswap v2-compatible pairs into Algebra pools
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
 
-## Variables
-### address nonfungiblePositionManager immutable
-
-
-
-
 ## Functions
-### constructor
-
-
-```solidity
-constructor(address _factory, address _WNativeToken, address _nonfungiblePositionManager, address _poolDeployer) public
-```
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _factory | address |  |
-| _WNativeToken | address |  |
-| _nonfungiblePositionManager | address |  |
-| _poolDeployer | address |  |
-
-### receive
-
-
-```solidity
-receive() external payable
-```
-
-
-
 ### migrate
 
 

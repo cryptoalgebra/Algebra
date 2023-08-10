@@ -11,15 +11,13 @@
 https://github.com/Uniswap/v3-periphery*
 
 
-
-
 ## Functions
 ### constructTokenURI
 
 
-`function constructTokenURI(struct NFTDescriptor.ConstructTokenURIParams params) public pure returns (string)` pure public
-
-
+```solidity
+function constructTokenURI(struct NFTDescriptor.ConstructTokenURIParams params) public pure returns (string)
+```
 
 
 
@@ -32,7 +30,4 @@ https://github.com/Uniswap/v3-periphery*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | string |  |
-
-
-
 

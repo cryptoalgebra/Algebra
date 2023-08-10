@@ -66,7 +66,11 @@ export default {
   },
   docgen: {
     outputDir: '../../docs/Contracts/Periphery',
-    pages: (x: any) => x.name.toString() + '.md',
+    pages: (x: any) => {
+      if (x.name.toString().match(/^I[A-Z]/)) return `interfaces/${x.name.toString()}.md`;
+      if (x.abstract) return `base/${x.name.toString()}.md`;
+      return x.name.toString() + '.md';
+    },
     templates: '../../docs/doc_templates/public',
     collapseNewlines: true
   },
