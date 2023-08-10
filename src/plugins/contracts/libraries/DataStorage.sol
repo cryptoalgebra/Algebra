@@ -20,7 +20,7 @@ library DataStorage {
     uint88 volatilityCumulative; // the volatility accumulator; overflow after ~34800 years is desired :)
     int24 tick; // tick at this blockTimestamp
     int24 averageTick; // average tick at this blockTimestamp (for WINDOW seconds)
-    uint16 windowStartIndex; // index of closest timepoint >= WINDOW seconds ago, used to speed up searches
+    uint16 windowStartIndex; // index of closest timepoint >= WINDOW seconds ago (or oldest timepoint), used to speed up searches
   }
 
   /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
@@ -68,6 +68,7 @@ library DataStorage {
       last.blockTimestamp,
       last.tickCumulative
     );
+    if (windowStartIndex == indexUpdated) windowStartIndex++;
     self[indexUpdated] = _createNewTimepoint(last, blockTimestamp, tick, avgTick, windowStartIndex);
     if (oldestIndex == indexUpdated) oldestIndex++; // previous oldest index has been overwritten
   }

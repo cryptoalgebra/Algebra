@@ -15,6 +15,7 @@ contract DataStorageTest {
   uint32 public time;
   int24 public tick;
   uint16 public index;
+  uint32 private step = 13;
 
   struct InitializeParams {
     uint32 time;
@@ -27,6 +28,10 @@ contract DataStorageTest {
     time = params.time;
     tick = params.tick;
     timepoints.initialize(params.time, tick);
+  }
+
+  function setStep(uint32 newStep) external {
+    step = newStep;
   }
 
   function advanceTime(uint32 by) public {
@@ -72,12 +77,11 @@ contract DataStorageTest {
     uint128 liquidity;
   }
 
-  uint32 constant STEP = 13;
-
   function batchUpdateFast(uint256 length) external {
     // sload everything
     int24 _tick = tick;
     uint32 _time = time;
+    uint32 STEP = step;
 
     uint32 _initTime = initTime;
     uint256 _index = (_time - _initTime) / STEP;
@@ -104,6 +108,7 @@ contract DataStorageTest {
 
         last = DataStorage._createNewTimepoint(last, _time, _tick, avgTick, windowStartIndex);
 
+        if ((_index + 1) - uint256(_index - (uint256(24 hours) / STEP) + 1) > type(uint16).max) windowStartIndex = uint16(_index + 2);
         timepoints[nextIndex] = last;
 
         _tick--;
@@ -123,6 +128,7 @@ contract DataStorageTest {
     int24 _tick = tick;
     uint16 _index = index;
     uint32 _time = time;
+    uint32 STEP = step;
     unchecked {
       for (uint256 i; i < length; ++i) {
         _time += STEP;

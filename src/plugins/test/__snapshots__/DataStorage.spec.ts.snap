@@ -81,3 +81,21 @@ exports[`DataStorage full dataStorage gas cost of getTimepoints(middle)  [ @skip
 exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45450`;
 
 exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45450`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6355`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `8192`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6489`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `45331`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1 + 5)  [ @skip-on-coverage ] 1`] = `69788`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1)  [ @skip-on-coverage ] 1`] = `64398`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12382`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45536`;
+
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45536`;

@@ -757,4 +757,162 @@ describe('DataStorage', () => {
       await snapshotGasCost(dataStorage.getGasCostOfGetPoints([24 * 60 * 60]))
     })
   })
+
+  describe('full dataStorage, maximal density', function () {
+    this.timeout(10_200_000)
+
+    let dataStorage: DataStorageTest
+
+    let BATCH_SIZE = 1000;
+    let step = 1;
+
+    const STARTING_TIME = TEST_POOL_START_TIME
+
+    const maxedOutDataStorageFixture = async () => {
+      await ethers.provider.send("hardhat_setBalance", [
+        wallet.address,
+        "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000",
+      ]);
+      const dataStorage = await dataStorageFixture()
+      await dataStorage.initialize({ liquidity: 0, tick: 0, time: STARTING_TIME })
+      await dataStorage.setStep(step);
+
+      let i = 1;
+      for (i = 1; i < 65536; i += BATCH_SIZE) {
+        if (i + BATCH_SIZE > 65536) {
+          BATCH_SIZE = Math.ceil(65536 / 300) * 300 - i;
+          console.log('batch update starting at', i)
+          await dataStorage.batchUpdateFixedTimedelta(BATCH_SIZE)
+        } else {
+          console.log('batch update starting at', i)
+          await dataStorage.batchUpdateFast(BATCH_SIZE)
+        }
+      }
+      console.log('Length:', i);
+      return dataStorage
+    }
+
+    beforeEach('create a full dataStorage', async () => {
+      dataStorage = await loadFixture(maxedOutDataStorageFixture)
+    })
+
+    it('index wrapped around', async () => {
+      expect(await dataStorage.index()).to.eq(163)
+    })
+
+    async function checkGetPoints(
+      secondsAgo: number,
+      expected?: { tickCumulative: BigNumberish }
+    ) {
+      const { tickCumulatives } = await dataStorage.getTimepoints([secondsAgo])
+      const check = {
+        tickCumulative: tickCumulatives[0].toString(),
+      }
+      if (typeof expected === 'undefined') {
+        expect(check).to.matchSnapshot()
+      } else {
+        expect(check).to.deep.eq({
+          tickCumulative: expected.tickCumulative.toString()
+        })
+      }
+    }
+
+    it('can getTimepoints into the ordered portion with exact seconds ago', async () => {
+      await checkGetPoints(100 * step, {
+        tickCumulative: '-2151581601',
+      })
+    })
+
+    it('can getTimepoints into the ordered portion', async () => {
+      await checkGetPoints(100 * step + 5, {
+        tickCumulative: '-2151253621',
+      })
+    })
+
+    it('can getTimepoints at exactly the latest timepoint', async () => {
+      await checkGetPoints(0, {
+        tickCumulative: '-2158146451',
+      })
+    })
+
+    it('can getTimepoints at exactly the latest timepoint after some time passes', async () => {
+      await dataStorage.advanceTime(5)
+      await checkGetPoints(5, {
+        tickCumulative: '-2158146451',
+      })
+    })
+
+    it('can getTimepoints after the latest timepoint counterfactual', async () => {
+      await dataStorage.advanceTime(5)
+      await checkGetPoints(3, {
+        tickCumulative: '-2158277849',
+      })
+    })
+
+    it('can getTimepoints into the unordered portion of array at exact seconds ago of timepoint', async () => {
+      await checkGetPoints(200 * step, {
+        tickCumulative: '-2145026751',
+      })
+    })
+
+    it('can getTimepoints the oldest timepoint 65534 seconds ago', async () => {
+      await checkGetPoints(step * 65534, {
+        tickCumulative: '-13530',
+      })
+    })
+
+    it('can getTimepoints the oldest timepoint 65534 + 5 seconds ago if time has elapsed', async () => {
+      await dataStorage.advanceTime(5)
+      await checkGetPoints(step * 65534 + 5, {
+        tickCumulative: '-13530',
+      })
+    })
+
+    describe('#getAverageVolatility', () => {
+      const window = 24 * 60 * 60;
+  
+      it('last timepoint is target', async() => {
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(360563565);
+      })
+
+      it('target is after last timepoint', async() => {
+        await dataStorage.advanceTime(10);
+        const volatility = await dataStorage.getAverageVolatility();
+        expect(volatility).to.be.eq(360672374);
+      })
+    })
+
+    it('gas cost of getTimepoints(0)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
+    })
+    it(`gas cost of getTimepoints(200 * ${step})  [ @skip-on-coverage ]`, async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 * step]))
+    })
+    it(`gas cost of getTimepoints(200 * ${step} + 5)  [ @skip-on-coverage ]`, async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([200 * step + 5]))
+    })
+    it('gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(5)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]))
+    })
+    it('gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(5)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([5]))
+    })
+    it('gas cost of getTimepoints(middle)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 / 2 * step]))
+    })
+    it('gas cost of getTimepoints(oldest)  [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step]))
+    })
+    it('gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(5)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([65534 * step + 5]))
+    })
+    it('gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ]', async () => {
+      await dataStorage.advanceTime(12 * 60 * 60)
+      await snapshotGasCost(dataStorage.getGasCostOfGetPoints([24 * 60 * 60]))
+    })
+  })
 })
