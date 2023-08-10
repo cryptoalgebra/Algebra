@@ -11,7 +11,7 @@ import { encodePath } from './shared/path'
 import { getMaxTick, getMinTick } from './shared/ticks'
 import { computePoolAddress } from './shared/computePoolAddress'
 
-type TestERC20WithAddress = TestERC20 & {address_: string | undefined}
+type TestERC20WithAddress = TestERC20 & {address: string }
 
 describe('SwapRouter', function () {
   this.timeout(40000)
@@ -26,9 +26,9 @@ describe('SwapRouter', function () {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   }> = async () => {
     const { wnative, factory, router, tokens, nft } = await completeFixture()
-
+    let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
-    for (const token of tokens) {
+    for (const token of _tokens) {
       await token.approve(router, MaxUint256)
       await token.approve(nft, MaxUint256)
       await token.connect(trader).approve(router, MaxUint256)
@@ -38,9 +38,9 @@ describe('SwapRouter', function () {
 
     return {
       wnative,
-      factory,
+      factory: factory as any as Contract,
       router,
-      tokens,
+      tokens: _tokens,
       nft,
     }
   }
@@ -73,7 +73,7 @@ describe('SwapRouter', function () {
       if (typeof who == 'string') addr = who;
       else if ('getAddress' in who) {
         addr = await who.getAddress();
-      } 
+      } else throw new Error('Invalid who')
       const balances = await Promise.all([
         wnative.balanceOf(addr),
         tokens[0].balanceOf(addr),

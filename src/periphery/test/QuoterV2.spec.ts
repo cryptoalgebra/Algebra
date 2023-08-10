@@ -11,7 +11,7 @@ import { encodePath } from './shared/path'
 import { createPool, createPoolWithMultiplePositions, createPoolWithZeroTickInitialized } from './shared/quoter'
 import snapshotGasCost from './shared/snapshotGasCost'
 
-type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+type TestERC20WithAddress = TestERC20 & {address: string}
 
 describe('QuoterV2', function () {
   this.timeout(40000)
@@ -24,9 +24,9 @@ describe('QuoterV2', function () {
     quoter: QuoterV2
   }> = async () => {
     const { wnative, factory, router, tokens, nft } = await completeFixture()
-
+    let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
-    for (const token of tokens) {
+    for (const token of _tokens) {
       await token.approve(router, MaxUint256)
       await token.approve(nft, MaxUint256)
       await token.connect(trader).approve(router, MaxUint256)
@@ -38,7 +38,7 @@ describe('QuoterV2', function () {
     quoter = (await quoterFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as QuoterV2
 
     return {
-      tokens,
+      tokens: _tokens,
       nft,
       quoter,
     }

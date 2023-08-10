@@ -938,7 +938,7 @@ describe('NonfungiblePositionManager', () => {
       beforeEach('deploy test owner and create a position', async () => {
         testPositionNFTOwner = (await (
           await ethers.getContractFactory('TestPositionNFTOwner')
-        ).deploy()) as TestPositionNFTOwner
+        ).deploy()) as any as TestPositionNFTOwner
 
         await nft.createAndInitializePoolIfNecessary(
           tokens[0].getAddress(),

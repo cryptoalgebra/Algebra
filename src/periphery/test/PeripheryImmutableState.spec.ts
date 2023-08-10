@@ -8,13 +8,13 @@ import { v3RouterFixture } from './shared/externalFixtures'
 describe('PeripheryImmutableState', () => {
   const nonfungiblePositionManagerFixture: () => Promise<{
     wnative: IWNativeToken
-    factory: Contract
+    factory: any
     state: PeripheryImmutableStateTest
   }> = async () => {
     const { wnative, factory } = await v3RouterFixture()
 
     const stateFactory = await ethers.getContractFactory('PeripheryImmutableStateTest')
-    const state = (await stateFactory.deploy(factory, wnative, await factory.poolDeployer())) as PeripheryImmutableStateTest
+    const state = (await stateFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as PeripheryImmutableStateTest
 
     return {
       wnative,

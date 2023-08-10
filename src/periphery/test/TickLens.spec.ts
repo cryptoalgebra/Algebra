@@ -10,7 +10,7 @@ import { getMaxTick, getMinTick } from './shared/ticks'
 import { computePoolAddress } from './shared/computePoolAddress'
 import snapshotGasCost from './shared/snapshotGasCost'
 
-type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+type TestERC20WithAddress = TestERC20 & {address: string}
 
 describe('TickLens', () => {
   let wallets: Wallet[]
@@ -21,16 +21,17 @@ describe('TickLens', () => {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   }> = async () => {
     const { factory, tokens, nft } = await completeFixture()
+    let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
-    for (const token of tokens) {
+    for (const token of _tokens) {
       await token.approve(nft, MaxUint256)
       token.address = await token.getAddress();
     }
 
     return {
-      factory,
+      factory: factory as any as Contract,
       nft,
-      tokens,
+      tokens: _tokens,
     }
   }
 

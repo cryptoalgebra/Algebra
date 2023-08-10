@@ -15,10 +15,10 @@ describe('SelfPermit', () => {
     selfPermitTest: SelfPermitTest
   }> = async () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20PermitAllowed')
-    const token = (await tokenFactory.deploy(0)) as TestERC20PermitAllowed
+    const token = (await tokenFactory.deploy(0)) as any as TestERC20PermitAllowed
 
     const selfPermitTestFactory = await ethers.getContractFactory('SelfPermitTest')
-    const selfPermitTest = (await selfPermitTestFactory.deploy()) as SelfPermitTest
+    const selfPermitTest = (await selfPermitTestFactory.deploy()) as any as SelfPermitTest
 
     return {
       token,

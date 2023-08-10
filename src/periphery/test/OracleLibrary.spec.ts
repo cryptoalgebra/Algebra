@@ -13,7 +13,7 @@ describe('DataStorageLibrary', () => {
 
   const dataStorageTestFixture = async () => {
     const tokenFactory = await ethers.getContractFactory('TestERC20')
-    const tokens: [TestERC20, TestERC20] = await sortedTokens(
+    const tokens: [any, any] = await sortedTokens(
       (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20, // do not use maxu256 to avoid overflowing
       (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20,
     );
@@ -101,8 +101,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         0n,
         expandTo18Decimals(1),
-        tokens[0].address,
-        tokens[1].address
+        tokens[0],
+        tokens[1]
       )
 
       expect(quoteAmount).to.equal(expandTo18Decimals(1))
@@ -113,8 +113,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         0n,
         expandTo18Decimals(1),
-        tokens[1].address,
-        tokens[0].address
+        tokens[1],
+        tokens[0]
       )
 
       expect(quoteAmount).to.equal(expandTo18Decimals(1))
@@ -124,8 +124,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         -887272n,
         2n ** 128n - 1n,
-        tokens[0].address,
-        tokens[1].address
+        tokens[0],
+        tokens[1]
       )
       expect(quoteAmount).to.equal(1n)
     })
@@ -134,8 +134,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         -887272n,
         2n ** 128n - 1n,
-        tokens[1].address,
-        tokens[0].address
+        tokens[1],
+        tokens[0]
       )
       expect(quoteAmount).to.equal(
         '115783384738768196242144082653949453838306988932806144552194799290216044976282'
@@ -146,8 +146,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         887272n,
         2n ** 128n - 1n,
-        tokens[0].address,
-        tokens[1].address
+        tokens[0],
+        tokens[1]
       )
       expect(quoteAmount).to.equal(
         '115783384785599357996676985412062652720342362943929506828539444553934033845703'
@@ -158,8 +158,8 @@ describe('DataStorageLibrary', () => {
       const quoteAmount = await dataStorage.getQuoteAtTick(
         887272n,
         2n ** 128n - 1n,
-        tokens[1].address,
-        tokens[0].address
+        tokens[1],
+        tokens[0]
       )
       expect(quoteAmount).to.equal(1n)
     })
@@ -169,8 +169,8 @@ describe('DataStorageLibrary', () => {
         dataStorage.getGasCostOfGetQuoteAtTick(
           10n,
           expandTo18Decimals(1),
-          tokens[0].address,
-          tokens[1].address
+          tokens[0],
+          tokens[1]
         )
       )
     })

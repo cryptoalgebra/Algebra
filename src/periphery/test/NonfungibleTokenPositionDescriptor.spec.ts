@@ -24,15 +24,15 @@ describe('NonfungibleTokenPositionDescriptor', () => {
 
   const nftPositionDescriptorCompleteFixture: () => Promise<{
     nftPositionDescriptor: NonfungibleTokenPositionDescriptor
-    tokens: [TestERC20, TestERC20, TestERC20]
+    tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
     nft: MockTimeNonfungiblePositionManager
   }> = async () => {
     const { factory, nft, router, nftDescriptor } = await completeFixture()
     const tokenFactory = await ethers.getContractFactory('TestERC20')
-    const tokens: [TestERC20, TestERC20, TestERC20] = [
-      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20, // do not use maxu256 to avoid overflowing
-      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20,
-      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20,
+    const tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress] = [
+      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress, // do not use maxu256 to avoid overflowing
+      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress,
+      (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress,
     ]
 
     tokens[0].address = await tokens[0].getAddress();
@@ -53,7 +53,7 @@ describe('NonfungibleTokenPositionDescriptor', () => {
   }
 
   let nftPositionDescriptor: NonfungibleTokenPositionDescriptor
-  let tokens: [TestERC20, TestERC20, TestERC20]
+  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
   let nft: MockTimeNonfungiblePositionManager
   let wnative: TestERC20
 
@@ -93,13 +93,13 @@ describe('NonfungibleTokenPositionDescriptor', () => {
     })
 
     it('returns 0 for any non-ratioPriority token', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokens[0].address, MATIC_CHAIN_ID)).to.eq(0)
+      expect(await nftPositionDescriptor.tokenRatioPriority(tokens[0], MATIC_CHAIN_ID)).to.eq(0)
     })
   })
 
   describe('#flipRatio', () => {
     it('returns false if neither token has priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokens[0].address, tokens[2].address, MATIC_CHAIN_ID)).to.eq(false)
+      expect(await nftPositionDescriptor.flipRatio(tokens[0], tokens[2], MATIC_CHAIN_ID)).to.eq(false)
     })
 
     it('returns true if both tokens are numerators but token0 has a higher priority ordering', async () => {

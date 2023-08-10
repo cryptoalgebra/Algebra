@@ -20,7 +20,7 @@ describe('WeightedDataStorageLibrary', () => {
     const dataStorage = await dataStorageFactory.deploy()
 
     return {
-      tokens: tokens as TestERC20[],
+      tokens: tokens as any[] as TestERC20[],
       dataStorage: dataStorage as any as WeightedDataStorageTest,
     }
   }

@@ -21,7 +21,7 @@ describe('Path', () => {
 
   const pathTestFixture = async () => {
     const pathTestFactory = await ethers.getContractFactory('PathTest')
-    return (await pathTestFactory.deploy()) as PathTest
+    return (await pathTestFactory.deploy()) as any as PathTest
   }
 
   beforeEach('deploy PathTest', async () => {

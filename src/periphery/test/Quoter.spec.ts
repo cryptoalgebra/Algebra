@@ -10,7 +10,7 @@ import { expect } from './shared/expect'
 import { encodePath } from './shared/path'
 import { createPool } from './shared/quoter'
 
-type TestERC20WithAddress = TestERC20 & {address: string | undefined}
+type TestERC20WithAddress = TestERC20 & {address: string }
 
 describe('Quoter', () => {
   let wallet: Wallet
@@ -23,10 +23,12 @@ describe('Quoter', () => {
     router: MockTimeSwapRouter,
     wnative: IWNativeToken,
   }> = async () => {
+    let _tokens;
     const { wnative, factory, router, tokens, nft } = await completeFixture()
+    _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     // approve & fund wallets
-    for (const token of tokens) {
+    for (const token of _tokens) {
       await token.approve(router, MaxUint256)
       await token.approve(nft, MaxUint256)
       await token.connect(trader).approve(router, MaxUint256)
@@ -38,7 +40,7 @@ describe('Quoter', () => {
     quoter = (await quoterFactory.deploy(factory, wnative, await factory.poolDeployer())) as any as Quoter
 
     return {
-      tokens,
+      tokens: _tokens,
       nft,
       quoter,
       router,
@@ -72,7 +74,7 @@ describe('Quoter', () => {
     describe('#quoteExactInput', () => {
       it('0 -> 1', async () => {
         const {amountOut, fees} = await quoter.quoteExactInput.staticCall(
-          encodePath([await tokens[0].address, tokens[1].address]),
+          encodePath([tokens[0].address, tokens[1].address]),
           3
         )
 

@@ -34,10 +34,11 @@ describe('V3Migrator', () => {
     migrator: V3Migrator
   }> = async () => {
     const { factory, tokens, nft, wnative } = await completeFixture()
+    let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     const { factory: factoryV2 } = await v2FactoryFixture()
 
-    const token = tokens[0]
+    const token = _tokens[0]
     token.address = await token.getAddress();
 
     await token.approve(await factoryV2.getAddress(), MaxUint256)
@@ -113,7 +114,7 @@ describe('V3Migrator', () => {
 
       const pairAddress = await factoryV2.getPair(await token.getAddress(), await wnative.getAddress())
 
-      pair = new ethers.Contract(pairAddress, PAIR_V2_ABI, wallet) as IUniswapV2Pair
+      pair = new ethers.Contract(pairAddress, PAIR_V2_ABI, wallet) as any as IUniswapV2Pair
 
       await token.transfer(pairAddress, 10000)
       await wnative.transfer(pairAddress, 10000)
