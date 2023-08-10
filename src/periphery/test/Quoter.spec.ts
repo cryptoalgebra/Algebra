@@ -60,15 +60,16 @@ describe('Quoter', () => {
     ;[wallet, trader] = wallets
   })
 
-  // helper for getting wnative and token balances
-  beforeEach('load fixture', async () => {
-    ;({ tokens, nft, quoter, router, wnative} = await loadFixture(swapRouterFixture))
-  })
-
   describe('quotes', () => {
-    beforeEach(async () => {
+    const subFixture = async () => {
+      const { tokens, nft, quoter, router, wnative } = await swapRouterFixture();
       await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress())
       await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress())
+      return {tokens, nft, quoter, router, wnative};
+    }
+
+    beforeEach(async () => {
+      ;({ tokens, nft, quoter, router, wnative} = await loadFixture(subFixture))
     })
 
     describe('#quoteExactInput', () => {
