@@ -63,6 +63,8 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
 
+  address owner;
+
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external pure override returns (uint128, uint128) {
     revert('not implemented');
@@ -76,6 +78,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
     globalState.unlocked = true;
+    owner = msg.sender;
   }
 
   /// @inheritdoc IAlgebraPoolState
@@ -192,16 +195,27 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override {
+    require(msg.sender == owner);
     plugin = newPluginAddress;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override {
+    require(msg.sender == owner || msg.sender == plugin);
     globalState.pluginConfig = newConfig;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
+    require(msg.sender == owner || msg.sender == plugin);
+    bool isDynamicFeeEnabled = globalState.pluginConfig & uint8(Plugins.DYNAMIC_FEE) != 0;
+
+    if (msg.sender == plugin) {
+      require(isDynamicFeeEnabled);
+    } else {
+      require(!isDynamicFeeEnabled && msg.sender == owner);
+    }
+
     globalState.fee = newFee;
   }
 }

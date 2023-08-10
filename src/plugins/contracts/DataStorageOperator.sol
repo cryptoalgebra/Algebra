@@ -173,13 +173,18 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
-    IAlgebraPool(msg.sender).setPluginConfig(defaultPluginConfig);
+    uint8 newPluginConfig = defaultPluginConfig;
+    if (incentive != address(0)) newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
+
+    IAlgebraPool(msg.sender).setPluginConfig(newPluginConfig);
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
   function afterInitialize(address, uint160, int24 tick) external onlyPool returns (bytes4) {
     lastTimepointTimestamp = _blockTimestamp();
     timepoints.initialize(_blockTimestamp(), tick);
+
+    IAlgebraPool(pool).setFee(feeConfig.baseFee);
     return IAlgebraPlugin.afterInitialize.selector;
   }
 

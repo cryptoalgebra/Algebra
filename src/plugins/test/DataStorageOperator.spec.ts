@@ -342,14 +342,13 @@ describe('DataStorageOperator', () => {
       }
   
       it('doesnt change at 0 volume', async () => {
-        let fee1 = (await mockPool.globalState()).fee;
-        await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x')
+        await plugin.advanceTime(1);
+        await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x');
         let fee2 = (await mockPool.globalState()).fee;
         await plugin.advanceTime(DAY + 600);
         await mint(wallet.address, -6000, 6000, 1)
         let fee3 = (await mockPool.globalState()).fee;
         expect(fee3).to.be.equal(fee2);
-        expect(fee3).to.be.equal(fee1);
       })
 
       it('doesnt change fee after first swap in block', async () => {
@@ -570,10 +569,14 @@ describe('DataStorageOperator', () => {
          await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;  
        })
    
-       it('swap with active incentive', async() => {
-         await plugin.setIncentive(virtualPoolMock);
+       it('incentive can not be attached if plugin is not attached', async() => {
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;
+      })
+
+       it('incentive attached before initialization', async() => {
          await mockPool.setPlugin(plugin);
 
+         await plugin.setIncentive(virtualPoolMock);
          await mockPool.initialize(encodePriceSqrt(1, 1));
          await mockPool.mint(wallet.address, wallet.address, -120, 120, 1, '0x');
          await mockPool.mint(wallet.address, wallet.address, minTick, maxTick, 1, '0x');
@@ -581,11 +584,30 @@ describe('DataStorageOperator', () => {
          await mockPool.swapToTick(-130);
    
          expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
+         expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
    
          const tick = (await mockPool.globalState()).tick;
          expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
          expect(await virtualPoolMock.timestamp()).to.be.gt(0);
        })
+
+       it('incentive attached after initialization', async() => {
+        await mockPool.setPlugin(plugin);
+        await mockPool.initialize(encodePriceSqrt(1, 1));
+        await plugin.setIncentive(virtualPoolMock);
+
+        await mockPool.mint(wallet.address, wallet.address, -120, 120, 1, '0x');
+        await mockPool.mint(wallet.address, wallet.address, minTick, maxTick, 1, '0x');
+
+        await mockPool.swapToTick(-130);
+  
+        expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
+        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
+  
+        const tick = (await mockPool.globalState()).tick;
+        expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
+        expect(await virtualPoolMock.timestamp()).to.be.gt(0);
+      })
    
        it.skip('swap with finished incentive', async() => {
          /*await virtualPoolMock.setIsExist(false);

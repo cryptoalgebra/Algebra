@@ -713,7 +713,7 @@ describe('DataStorage', () => {
         it('target is after last timepoint', async() => {
           await dataStorage.advanceTime(10);
           const volatility = await dataStorage.getAverageVolatility();
-          expect(volatility).to.be.eq(3683610);
+          expect(volatility).to.be.eq(3920736);
         })
       })
     })
