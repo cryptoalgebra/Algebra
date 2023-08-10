@@ -1,5 +1,8 @@
 # Algebra
 
+ <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_plugins.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_plugins.yml/badge.svg"></a>
+  <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugins.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugins.yml/badge.svg"></a>
+
 This directory contains the core smart contracts for the Algebra DEX. For higher level contracts, see the `periphery` directory.
 
 ## License
