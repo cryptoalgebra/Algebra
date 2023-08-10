@@ -34,7 +34,7 @@
     "is-svg": "^4.3.1"
   },
   "scripts": {
-    "compile": "npm --prefix ../core run compile && hardhat compile",
+    "compile": "npm --prefix ../core run compile && npm --prefix ../plugins run compile  && hardhat compile",
     "test": "hardhat test --parallel",
     "precommit": "pretty-quick --staged --pattern **/*.sol",
     "coverage": "npm --prefix ../core run compile && hardhat coverage"

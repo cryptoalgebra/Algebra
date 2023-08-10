@@ -36,9 +36,10 @@ coverage: false
 # #balanceContract overrides balanceAddr for the contract address
 # balanceContract: 0
 # #solcArgs allows special args to solc
-# solcArgs: ""
+solcArgs: "--allow-paths node_modules/@cryptoalgebra/core/contracts/libraries/Constants.sol"
 # #solcLibs is solc libraries
 # solcLibs: []
+cryticArgs: ['--solc-remaps', '@=node_modules/@']
 # #cryticArgs allows special args to crytic
 # cryticArgs: []
 # #quiet produces (much) less verbose output
