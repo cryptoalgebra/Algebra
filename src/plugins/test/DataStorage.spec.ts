@@ -159,6 +159,18 @@ describe('DataStorage', () => {
       expect(tickCumulative).to.be.eq(630741700);
     })
 
+    it('find tick cumulative at the start of previous window', async() => {
+      await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await dataStorage.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await dataStorage.update({ advanceTimeBy: window, tick: 7350, liquidity: 6 });
+      await dataStorage.advanceTime(1);
+
+      const tickCumulative = await dataStorage.getTickCumulativeAt(window + 1);
+      expect(tickCumulative).to.be.eq(14400);
+      expect(await dataStorage.getTickCumulativeAt(window)).to.be.eq(tickCumulative + 7300n)
+      expect(await dataStorage.getTickCumulativeAt(window - 1)).to.be.eq(tickCumulative + 7300n * 2n)
+    })
+
     describe('oldest timepoint is more than WINDOW seconds ago', async() => {
       beforeEach('initialize', async () => {
         await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });

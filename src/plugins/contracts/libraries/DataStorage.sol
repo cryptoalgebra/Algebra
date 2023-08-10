@@ -434,9 +434,13 @@ library DataStorage {
     uint16 lastIndex,
     uint16 oldestIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool samePoint, uint256 indexBeforeOrAt) {
+    Timepoint storage lastTimepoint = self[lastIndex];
+    uint32 lastTimepointTimestamp = lastTimepoint.blockTimestamp;
+    uint16 windowStartIndex = lastTimepoint.windowStartIndex;
+
     // if target is newer than last timepoint
-    if (target == currentTime || _lteConsideringOverflow(self[lastIndex].blockTimestamp, target, currentTime)) {
-      return (self[lastIndex], self[lastIndex], true, lastIndex);
+    if (target == currentTime || _lteConsideringOverflow(lastTimepointTimestamp, target, currentTime)) {
+      return (lastTimepoint, lastTimepoint, true, lastIndex);
     }
 
     uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
@@ -445,9 +449,8 @@ library DataStorage {
     if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
 
     unchecked {
-      if (currentTime - target <= WINDOW) {
+      if (lastTimepointTimestamp - target <= WINDOW) {
         // we can limit the scope of the search
-        uint16 windowStartIndex = self[lastIndex].windowStartIndex;
         if (windowStartIndex != oldestIndex) {
           uint32 windowStartTimestamp = self[windowStartIndex].blockTimestamp;
           if (_lteConsideringOverflow(oldestTimestamp, windowStartTimestamp, currentTime)) {
@@ -457,7 +460,7 @@ library DataStorage {
         }
       }
       // no need to search if we already know the answer
-      if (lastIndex == oldestIndex + 1) return (self[oldestIndex], self[lastIndex], false, oldestIndex);
+      if (lastIndex == oldestIndex + 1) return (self[oldestIndex], lastTimepoint, false, oldestIndex);
     }
 
     (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex);
