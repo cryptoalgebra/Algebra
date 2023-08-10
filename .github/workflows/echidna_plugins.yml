@@ -40,7 +40,7 @@ jobs:
         uses: crytic/echidna-action@v2
         with:
           solc-version: 0.8.20
-          files: ./src/plugins/contracts/test/echidna/${{ matrix.testName }}.sol
+          files: ./src/plugins/
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
           solc-args: --evm-version paris
