@@ -47,7 +47,7 @@ describe('DataStorageLibrary', () => {
     it('correct output when tick is 0', async () => {
       const period = 3
       const tickCumulatives = [12n, 12n]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
+      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0])
       const dataStorageTick = await dataStorage.consult(mockObservable, period)
 
       expect(dataStorageTick).to.equal(0n)
@@ -56,7 +56,7 @@ describe('DataStorageLibrary', () => {
     it('correct output for positive tick', async () => {
       const period = 3
       const tickCumulatives = [7n, 12n]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
+      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0])
       const dataStorageTick = await dataStorage.consult(mockObservable, period)
 
       // Always round to negative infinity
@@ -67,7 +67,7 @@ describe('DataStorageLibrary', () => {
     it('correct output for negative tick', async () => {
       const period = 3
       const tickCumulatives = [-7n, -12n]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
+      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0])
       const dataStorageTick = await dataStorage.consult(mockObservable, period)
 
       // Always round to negative infinity
@@ -78,7 +78,7 @@ describe('DataStorageLibrary', () => {
     it('correct rounding for .5 negative tick', async () => {
       const period = 4
       const tickCumulatives = [-10n, -12n]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
+      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0])
       const dataStorageTick = await dataStorage.consult(mockObservable, period)
 
       // Always round to negative infinity
@@ -89,7 +89,7 @@ describe('DataStorageLibrary', () => {
     it('gas test [ @skip-on-coverage ]', async () => {
       const period = 3
       const tickCumulatives = [7n, 12n]
-      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0], [0,0], [0,0])
+      const mockObservable = await mockObservableFactory.deploy([period, 0], tickCumulatives, [0, 0])
 
       await snapshotGasCost(dataStorage.getGasCostOfConsult(mockObservable, period))
     })

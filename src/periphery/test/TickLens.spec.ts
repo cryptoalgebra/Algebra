@@ -113,7 +113,7 @@ describe('TickLens', () => {
     function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {
       const intermediate = BigInt(tick)
       // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
-      return intermediate < 0n ? (intermediate + 1n) / (2n ** 8n - 1n) : intermediate >> 8n
+      return intermediate >> 8n
     }
 
     it('works for min/max', async () => {
