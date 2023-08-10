@@ -1,4 +1,5 @@
-# Algebra-farming
+# Algebra farming
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_farmings.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_farmings.yml/badge.svg"></a>
 
 ## Verification
 
