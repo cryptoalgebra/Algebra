@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox';
+import 'hardhat-output-validator';
 import 'hardhat-dependency-compiler';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
@@ -73,5 +74,9 @@ export default {
     paths: [
       '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol',
     ],
-  }
+  },
+  outputValidator: {
+    runOnCompile: false,
+    exclude: ['contracts/test'],
+  },
 }

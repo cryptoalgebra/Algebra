@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox';
+import 'hardhat-output-validator';
 import 'hardhat-contract-sizer';
 import 'solidity-docgen';
 import { SolcUserConfig } from 'hardhat/types';
@@ -80,5 +81,9 @@ export default {
     pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public',
     collapseNewlines: true
+  },
+  outputValidator: {
+    runOnCompile: false,
+    exclude: ['contracts/test'],
   },
 }
