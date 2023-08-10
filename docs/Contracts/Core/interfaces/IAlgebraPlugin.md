@@ -13,7 +13,6 @@ The Algebra plugin interface
 ## Functions
 ### defaultPluginConfig
 
-
 ```solidity
 function defaultPluginConfig() external view returns (uint8)
 ```
@@ -27,7 +26,6 @@ Returns plugin config
 | [0] | uint8 | config Each bit of the config is responsible for enabling/disabling the hooks. The last bit indicates whether the plugin contains dynamic fees logic |
 
 ### beforeInitialize
-
 
 ```solidity
 function beforeInitialize(address sender, uint160 sqrtPriceX96) external returns (bytes4)
@@ -48,7 +46,6 @@ The hook called before the state of a pool is initialized
 
 ### afterInitialize
 
-
 ```solidity
 function afterInitialize(address sender, uint160 sqrtPriceX96, int24 tick) external returns (bytes4)
 ```
@@ -68,7 +65,6 @@ The hook called after the state of a pool is initialized
 | [0] | bytes4 | bytes4 The function selector for the hook |
 
 ### beforeModifyPosition
-
 
 ```solidity
 function beforeModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, bytes data) external returns (bytes4)
@@ -92,7 +88,6 @@ The hook called before a position is modified
 | [0] | bytes4 | bytes4 The function selector for the hook |
 
 ### afterModifyPosition
-
 
 ```solidity
 function afterModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, uint256 amount0, uint256 amount1, bytes data) external returns (bytes4)
@@ -119,7 +114,6 @@ The hook called after a position is modified
 
 ### beforeSwap
 
-
 ```solidity
 function beforeSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bool withPaymentInAdvance, bytes data) external returns (bytes4)
 ```
@@ -143,7 +137,6 @@ The hook called before a swap
 | [0] | bytes4 | bytes4 The function selector for the hook |
 
 ### afterSwap
-
 
 ```solidity
 function afterSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, int256 amount0, int256 amount1, bytes data) external returns (bytes4)
@@ -170,7 +163,6 @@ The hook called after a swap
 
 ### beforeFlash
 
-
 ```solidity
 function beforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data) external returns (bytes4)
 ```
@@ -192,7 +184,6 @@ The hook called before flash
 | [0] | bytes4 | bytes4 The function selector for the hook |
 
 ### afterFlash
-
 
 ```solidity
 function afterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data) external returns (bytes4)

@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### setCommunityFee
 
-
 ```solidity
 function setCommunityFee(uint16 newCommunityFee) external
 ```
@@ -26,7 +25,6 @@ Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINI
 | newCommunityFee | uint16 | The new community fee percent in thousandths (1e-3) |
 
 ### setTickSpacing
-
 
 ```solidity
 function setTickSpacing(int24 newTickSpacing) external
@@ -40,7 +38,6 @@ Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE 
 
 ### setPlugin
 
-
 ```solidity
 function setPlugin(address newPluginAddress) external
 ```
@@ -53,7 +50,6 @@ Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 ### setPluginConfig
 
-
 ```solidity
 function setPluginConfig(uint8 newConfig) external
 ```
@@ -65,7 +61,6 @@ Set new plugin config
 | newConfig | uint8 | In the new configuration of the plugin, each bit of which is responsible for a particular hook. Only factory owner or POOLS_ADMINISTRATOR_ROLE role |
 
 ### setFee
-
 
 ```solidity
 function setFee(uint16 newFee) external

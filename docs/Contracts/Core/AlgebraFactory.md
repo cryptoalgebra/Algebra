@@ -15,27 +15,34 @@ Is used to deploy pools and its plugins
 
 role that can change communityFee and tickspacing in pools
 
+
 ### address poolDeployer immutable
 
 Returns the current poolDeployerAddress
+
 
 ### address communityVault immutable
 
 Returns the current communityVaultAddress
 
+
 ### uint16 defaultCommunityFee 
 
 Returns the default community fee
+
 
 ### uint16 defaultFee 
 
 Returns the default fee
 
+
 ### int24 defaultTickspacing 
 
 Returns the default tickspacing
 
+
 ### uint256 renounceOwnershipStartTimestamp 
+
 
 
 
@@ -43,15 +50,16 @@ Returns the default tickspacing
 
 Return the current pluginFactory address
 
+
 ### mapping(address &#x3D;&gt; mapping(address &#x3D;&gt; address)) poolByPair 
 
 Returns the pool address for a given pair of tokens, or address 0 if it does not exist
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
+
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _poolDeployer) public
@@ -64,7 +72,6 @@ constructor(address _poolDeployer) public
 | _poolDeployer | address |  |
 
 ### owner
-
 
 ```solidity
 function owner() public view returns (address)
@@ -81,7 +88,6 @@ Returns the current owner of the factory
 | [0] | address | The address of the factory owner |
 
 ### hasRoleOrOwner
-
 
 ```solidity
 function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)
@@ -102,7 +108,6 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 
 ### defaultConfigurationForPool
 
-
 ```solidity
 function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
 ```
@@ -118,7 +123,6 @@ Returns the default communityFee and tickspacing
 | fee | uint16 | which will be set at the creation of the pool |
 
 ### computePoolAddress
-
 
 ```solidity
 function computePoolAddress(address token0, address token1) public view returns (address pool)
@@ -140,7 +144,6 @@ Deterministically computes the pool address given the token0 and token1
 | pool | address | The contract address of the Algebra pool |
 
 ### createPool
-
 
 ```solidity
 function createPool(address tokenA, address tokenB) external returns (address pool)
@@ -164,7 +167,6 @@ The call will revert if the pool already exists or the token arguments are inval
 
 ### setDefaultCommunityFee
 
-
 ```solidity
 function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
 ```
@@ -178,7 +180,6 @@ function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
 | newDefaultCommunityFee | uint16 | The new community fee, _must_ be <= MAX_COMMUNITY_FEE |
 
 ### setDefaultFee
-
 
 ```solidity
 function setDefaultFee(uint16 newDefaultFee) external
@@ -194,7 +195,6 @@ function setDefaultFee(uint16 newDefaultFee) external
 
 ### setDefaultTickspacing
 
-
 ```solidity
 function setDefaultTickspacing(int24 newDefaultTickspacing) external
 ```
@@ -208,7 +208,6 @@ function setDefaultTickspacing(int24 newDefaultTickspacing) external
 | newDefaultTickspacing | int24 | The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING |
 
 ### setDefaultPluginFactory
-
 
 ```solidity
 function setDefaultPluginFactory(address newDefaultPluginFactory) external
@@ -224,7 +223,6 @@ function setDefaultPluginFactory(address newDefaultPluginFactory) external
 
 ### startRenounceOwnership
 
-
 ```solidity
 function startRenounceOwnership() external
 ```
@@ -234,7 +232,6 @@ of time must pass before the ownership renounce can be completed.
 
 ### stopRenounceOwnership
 
-
 ```solidity
 function stopRenounceOwnership() external
 ```
@@ -242,7 +239,6 @@ function stopRenounceOwnership() external
 Stops process of renounceOwnership and removes timer.
 
 ### renounceOwnership
-
 
 ```solidity
 function renounceOwnership() public

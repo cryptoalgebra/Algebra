@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### initialize
 
-
 ```solidity
 function initialize(uint160 initialPrice) external
 ```
@@ -29,7 +28,6 @@ Initialization should be done in one transaction with pool creation to avoid fro
 | initialPrice | uint160 | The initial sqrt price of the pool as a Q64.96 |
 
 ### mint
-
 
 ```solidity
 function mint(address leftoversRecipient, address recipient, int24 bottomTick, int24 topTick, uint128 liquidityDesired, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)
@@ -60,7 +58,6 @@ on bottomTick, topTick, the amount of liquidity, and the current price.*
 
 ### collect
 
-
 ```solidity
 function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)
 ```
@@ -89,7 +86,6 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 
 ### burn
 
-
 ```solidity
 function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) external returns (uint256 amount0, uint256 amount1)
 ```
@@ -115,7 +111,6 @@ Fees must be collected separately via a call to #collect*
 
 ### swap
 
-
 ```solidity
 function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
 ```
@@ -140,7 +135,6 @@ Swap token0 for token1, or token1 for token0
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
 ### swapWithPaymentInAdvance
-
 
 ```solidity
 function swapWithPaymentInAdvance(address leftoversRecipient, address recipient, bool zeroToOne, int256 amountToSell, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
@@ -169,7 +163,6 @@ the actually sent amount of tokens is used for further calculations*
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
 ### flash
-
 
 ```solidity
 function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external

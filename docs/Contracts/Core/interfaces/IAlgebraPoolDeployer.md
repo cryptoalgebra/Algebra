@@ -16,7 +16,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### getDeployParameters
 
-
 ```solidity
 function getDeployParameters() external view returns (address plugin, address factory, address communityVault, address token0, address token1)
 ```
@@ -36,7 +35,6 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | token1 | address | The second token of the pool by address sort order |
 
 ### deploy
-
 
 ```solidity
 function deploy(address plugin, address token0, address token1) external returns (address pool)

@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Events
 ### Initialize
 
-
 ```solidity
 event Initialize(uint160 price, int24 tick)
 ```
@@ -29,7 +28,6 @@ Emitted exactly once by a pool when #initialize is first called on the pool
 | tick | int24 | The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool |
 
 ### Mint
-
 
 ```solidity
 event Mint(address sender, address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)
@@ -48,7 +46,6 @@ Emitted when liquidity is minted for a given position
 | amount1 | uint256 | How much token1 was required for the minted liquidity |
 
 ### Collect
-
 
 ```solidity
 event Collect(address owner, address recipient, int24 bottomTick, int24 topTick, uint128 amount0, uint128 amount1)
@@ -69,7 +66,6 @@ Emitted when fees are collected by the owner of a position
 
 ### Burn
 
-
 ```solidity
 event Burn(address owner, int24 bottomTick, int24 topTick, uint128 liquidityAmount, uint256 amount0, uint256 amount1)
 ```
@@ -89,7 +85,6 @@ Emitted when a position&#x27;s liquidity is removed
 
 ### Swap
 
-
 ```solidity
 event Swap(address sender, address recipient, int256 amount0, int256 amount1, uint160 price, uint128 liquidity, int24 tick)
 ```
@@ -108,7 +103,6 @@ Emitted by the pool for any swaps between token0 and token1
 
 ### Flash
 
-
 ```solidity
 event Flash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1)
 ```
@@ -126,7 +120,6 @@ Emitted by the pool for any flashes of token0/token1
 
 ### CommunityFee
 
-
 ```solidity
 event CommunityFee(uint16 communityFeeNew)
 ```
@@ -138,7 +131,6 @@ Emitted when the community fee is changed by the pool
 | communityFeeNew | uint16 | The updated value of the community fee in thousandths (1e-3) |
 
 ### TickSpacing
-
 
 ```solidity
 event TickSpacing(int24 newTickSpacing)
@@ -152,7 +144,6 @@ Emitted when the tick spacing changes
 
 ### Plugin
 
-
 ```solidity
 event Plugin(address newPluginAddress)
 ```
@@ -165,7 +156,6 @@ Emitted when the plugin address changes
 
 ### PluginConfig
 
-
 ```solidity
 event PluginConfig(uint8 newPluginConfig)
 ```
@@ -177,7 +167,6 @@ Emitted when the plugin config changes
 | newPluginConfig | uint8 | New plugin config |
 
 ### Fee
-
 
 ```solidity
 event Fee(uint16 fee)

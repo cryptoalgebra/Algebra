@@ -11,9 +11,34 @@ A fork of Multicall2 specifically tailored for the Algebra Interface
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### Call
+
+
+
+```solidity
+struct Call {
+  address target;
+  uint256 gasLimit;
+  bytes callData;
+}
+```
+
+### Result
+
+
+
+```solidity
+struct Result {
+  bool success;
+  uint256 gasUsed;
+  bytes returnData;
+}
+```
+
+
 ## Functions
 ### getCurrentBlockTimestamp
-
 
 ```solidity
 function getCurrentBlockTimestamp() public view returns (uint256 timestamp)
@@ -28,7 +53,6 @@ function getCurrentBlockTimestamp() public view returns (uint256 timestamp)
 | timestamp | uint256 |  |
 
 ### getEthBalance
-
 
 ```solidity
 function getEthBalance(address addr) public view returns (uint256 balance)
@@ -47,7 +71,6 @@ function getEthBalance(address addr) public view returns (uint256 balance)
 | balance | uint256 |  |
 
 ### multicall
-
 
 ```solidity
 function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData)

@@ -10,7 +10,6 @@ This contract creates Algebra default plugins for Algebra liquidity pools
 ## Modifiers
 ### onlyOwner
 
-
 ```solidity
 modifier onlyOwner()
 ```
@@ -23,24 +22,27 @@ modifier onlyOwner()
 
 
 
+
 ### struct AlgebraFeeConfiguration defaultFeeConfiguration 
 
 
 
 *Developer note: values of constants for sigmoids in fee calculation formula*
+
 ### address farmingAddress 
 
 
 
 *Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
+
 ### mapping(address &#x3D;&gt; address) pluginByPool 
 
 Returns address of plugin created for given AlgebraPool
 
 
+
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _algebraFactory) public
@@ -53,7 +55,6 @@ constructor(address _algebraFactory) public
 | _algebraFactory | address |  |
 
 ### createPlugin
-
 
 ```solidity
 function createPlugin(address pool) external returns (address)
@@ -72,7 +73,6 @@ Deploys new plugin contract for pool
 | [0] | address | New plugin address |
 
 ### createPluginForExistingPool
-
 
 ```solidity
 function createPluginForExistingPool(address token0, address token1) external returns (address)
@@ -93,7 +93,6 @@ Create plugin for already existing pool
 
 ### setDefaultFeeConfiguration
 
-
 ```solidity
 function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external
 ```
@@ -108,7 +107,6 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 | newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
 
 ### setFarmingAddress
-
 
 ```solidity
 function setFarmingAddress(address newFarmingAddress) external

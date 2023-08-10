@@ -11,9 +11,21 @@ Router for stateless execution of swaps against Algebra
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### SwapCallbackData
+
+
+
+```solidity
+struct SwapCallbackData {
+  bytes path;
+  address payer;
+}
+```
+
+
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _factory, address _WNativeToken, address _poolDeployer) public
@@ -28,7 +40,6 @@ constructor(address _factory, address _WNativeToken, address _poolDeployer) publ
 | _poolDeployer | address |  |
 
 ### algebraSwapCallback
-
 
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes _data) external
@@ -48,7 +59,6 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 
 ### exactInputSingle
 
-
 ```solidity
 function exactInputSingle(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
@@ -67,7 +77,6 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 
 ### exactInput
 
-
 ```solidity
 function exactInput(struct ISwapRouter.ExactInputParams params) external payable returns (uint256 amountOut)
 ```
@@ -85,7 +94,6 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 | amountOut | uint256 | The amount of the received token |
 
 ### exactInputSingleSupportingFeeOnTransferTokens
-
 
 ```solidity
 function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external returns (uint256 amountOut)
@@ -107,7 +115,6 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 
 ### exactOutputSingle
 
-
 ```solidity
 function exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params) external payable returns (uint256 amountIn)
 ```
@@ -125,7 +132,6 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another to
 | amountIn | uint256 | The amount of the input token |
 
 ### exactOutput
-
 
 ```solidity
 function exactOutput(struct ISwapRouter.ExactOutputParams params) external payable returns (uint256 amountIn)

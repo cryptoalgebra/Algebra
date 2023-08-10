@@ -11,9 +11,71 @@ Functions for swapping tokens via Algebra
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### ExactInputSingleParams
+
+
+
+```solidity
+struct ExactInputSingleParams {
+  address tokenIn;
+  address tokenOut;
+  address recipient;
+  uint256 deadline;
+  uint256 amountIn;
+  uint256 amountOutMinimum;
+  uint160 limitSqrtPrice;
+}
+```
+
+### ExactInputParams
+
+
+
+```solidity
+struct ExactInputParams {
+  bytes path;
+  address recipient;
+  uint256 deadline;
+  uint256 amountIn;
+  uint256 amountOutMinimum;
+}
+```
+
+### ExactOutputSingleParams
+
+
+
+```solidity
+struct ExactOutputSingleParams {
+  address tokenIn;
+  address tokenOut;
+  uint24 fee;
+  address recipient;
+  uint256 deadline;
+  uint256 amountOut;
+  uint256 amountInMaximum;
+  uint160 limitSqrtPrice;
+}
+```
+
+### ExactOutputParams
+
+
+
+```solidity
+struct ExactOutputParams {
+  bytes path;
+  address recipient;
+  uint256 deadline;
+  uint256 amountOut;
+  uint256 amountInMaximum;
+}
+```
+
+
 ## Functions
 ### exactInputSingle
-
 
 ```solidity
 function exactInputSingle(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
@@ -33,7 +95,6 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 
 ### exactInput
 
-
 ```solidity
 function exactInput(struct ISwapRouter.ExactInputParams params) external payable returns (uint256 amountOut)
 ```
@@ -51,7 +112,6 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 | amountOut | uint256 | The amount of the received token |
 
 ### exactOutputSingle
-
 
 ```solidity
 function exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params) external payable returns (uint256 amountIn)
@@ -71,7 +131,6 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another to
 
 ### exactOutput
 
-
 ```solidity
 function exactOutput(struct ISwapRouter.ExactOutputParams params) external payable returns (uint256 amountIn)
 ```
@@ -89,7 +148,6 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another al
 | amountIn | uint256 | The amount of the input token |
 
 ### exactInputSingleSupportingFeeOnTransferTokens
-
 
 ```solidity
 function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external returns (uint256 amountOut)

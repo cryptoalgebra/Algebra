@@ -13,9 +13,22 @@ Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### PopulatedTick
+
+
+
+```solidity
+struct PopulatedTick {
+  int24 tick;
+  int128 liquidityNet;
+  uint128 liquidityGross;
+}
+```
+
+
 ## Functions
 ### getPopulatedTicksInWord
-
 
 ```solidity
 function getPopulatedTicksInWord(address pool, int16 tickTableIndex) external view returns (struct ITickLens.PopulatedTick[] populatedTicks)

@@ -13,7 +13,6 @@ The interface for the Algebra dynamic fee manager
 ## Events
 ### FeeConfiguration
 
-
 ```solidity
 event FeeConfiguration(struct AlgebraFeeConfiguration feeConfig)
 ```
@@ -29,7 +28,6 @@ Emitted when the fee configuration is changed
 
 ## Functions
 ### changeFeeConfiguration
-
 
 ```solidity
 function changeFeeConfiguration(struct AlgebraFeeConfiguration feeConfig) external

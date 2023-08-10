@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Events
 ### Transfer
 
-
 ```solidity
 event Transfer(address from, address to, uint256 value)
 ```
@@ -28,7 +27,6 @@ Event emitted when tokens are transferred from one address to another, either vi
 | value | uint256 | The amount of tokens that were transferred |
 
 ### Approval
-
 
 ```solidity
 event Approval(address owner, address spender, uint256 value)
@@ -45,7 +43,6 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 
 ## Functions
 ### balanceOf
-
 
 ```solidity
 function balanceOf(address account) external view returns (uint256)
@@ -64,7 +61,6 @@ Returns the balance of a token
 | [0] | uint256 | The number of tokens held by the account |
 
 ### transfer
-
 
 ```solidity
 function transfer(address recipient, uint256 amount) external returns (bool)
@@ -85,7 +81,6 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
 ### allowance
 
-
 ```solidity
 function allowance(address owner, address spender) external view returns (uint256)
 ```
@@ -105,7 +100,6 @@ Returns the current allowance given to a spender by an owner
 
 ### approve
 
-
 ```solidity
 function approve(address spender, uint256 amount) external returns (bool)
 ```
@@ -124,7 +118,6 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 | [0] | bool | Returns true for a successful approval, false for unsuccessful |
 
 ### transferFrom
-
 
 ```solidity
 function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)

@@ -1,10 +1,10 @@
 {{h}} {{name}}
-
 {{#if withModifiers}}
+
 {{withModifiers}}
 {{/if}}
-
 {{#if signature}}
+
 ```solidity
 {{signature}}
 ```
@@ -38,4 +38,3 @@
 | {{#if name}}{{name}}{{else}}[{{@index}}]{{/if}} | {{type}} | {{{joinLines natspec}}} |
 {{/each}}
 {{/if}}
-

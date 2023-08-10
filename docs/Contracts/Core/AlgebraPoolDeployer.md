@@ -13,7 +13,6 @@ Is used by AlgebraFactory to deploy pools
 ## Functions
 ### constructor
 
-
 ```solidity
 constructor(address _factory, address _communityVault) public
 ```
@@ -26,7 +25,6 @@ constructor(address _factory, address _communityVault) public
 | _communityVault | address |  |
 
 ### getDeployParameters
-
 
 ```solidity
 function getDeployParameters() external view returns (address _plugin, address _factory, address _communityVault, address _token0, address _token1)
@@ -47,7 +45,6 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | _token1 | address |  |
 
 ### deploy
-
 
 ```solidity
 function deploy(address plugin, address token0, address token1) external returns (address pool)

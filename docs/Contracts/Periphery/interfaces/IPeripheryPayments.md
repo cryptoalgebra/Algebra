@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Functions
 ### unwrapWNativeToken
 
-
 ```solidity
 function unwrapWNativeToken(uint256 amountMinimum, address recipient) external payable
 ```
@@ -30,7 +29,6 @@ Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as Na
 
 ### refundNativeToken
 
-
 ```solidity
 function refundNativeToken() external payable
 ```
@@ -41,7 +39,6 @@ Refunds any NativeToken balance held by this contract to the &#x60;msg.sender&#x
 that use ether for the input amount*
 
 ### sweepToken
-
 
 ```solidity
 function sweepToken(address token, uint256 amountMinimum, address recipient) external payable

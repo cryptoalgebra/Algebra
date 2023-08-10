@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Functions
 ### tokenURI
 
-
 ```solidity
 function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
 ```

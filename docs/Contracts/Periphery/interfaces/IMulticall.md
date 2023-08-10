@@ -11,7 +11,6 @@ Enables calling multiple methods in a single call to the contract
 ## Functions
 ### multicall
 
-
 ```solidity
 function multicall(bytes[] data) external payable returns (bytes[] results)
 ```

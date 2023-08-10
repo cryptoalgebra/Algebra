@@ -1,6 +1,6 @@
 import { DocItemWithContext, DocItemContext } from 'solidity-docgen/dist/site';
 import { NatSpec } from 'solidity-docgen/dist/utils/natspec';
-import { FunctionDefinition, VariableDeclaration, ContractDefinition } from 'solidity-ast';
+import { FunctionDefinition, VariableDeclaration, ContractDefinition, StructDefinition } from 'solidity-ast';
 import { findAll, isNodeType } from 'solidity-ast/utils';
 
 export function notTest({ item }: DocItemContext): boolean {
@@ -41,6 +41,12 @@ export function publicVariables({ item }: DocItemContext): VariableDeclaration[]
     return (item.nodeType === 'ContractDefinition')
       ? item.nodes.filter(isNodeType('VariableDeclaration')).filter(v => v.stateVariable).filter(v => v.visibility == 'public')
       : undefined;
+}
+
+export function structures({item}: DocItemContext): StructDefinition[] | undefined {
+  return (item.nodeType === 'ContractDefinition')
+  ? item.nodes.filter(isNodeType('StructDefinition'))
+  : undefined;
 }
 
 

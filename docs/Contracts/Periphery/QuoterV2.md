@@ -16,7 +16,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Functions
 ### constructor
 
-
 ```solidity
 constructor(address _factory, address _WNativeToken, address _poolDeployer) public
 ```
@@ -30,7 +29,6 @@ constructor(address _factory, address _WNativeToken, address _poolDeployer) publ
 | _poolDeployer | address |  |
 
 ### algebraSwapCallback
-
 
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes path) external view
@@ -49,7 +47,6 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 | path | bytes |  |
 
 ### quoteExactInputSingle
-
 
 ```solidity
 function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) public returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
@@ -71,7 +68,6 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
 ### quoteExactInput
-
 
 ```solidity
 function quoteExactInput(bytes path, uint256 amountIn) public returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)
@@ -95,7 +91,6 @@ Returns the amount out received for a given exact input swap without executing t
 
 ### quoteExactOutputSingle
 
-
 ```solidity
 function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) public returns (uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
 ```
@@ -116,7 +111,6 @@ Returns the amount in required to receive the given exact output amount but for 
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
 ### quoteExactOutput
-
 
 ```solidity
 function quoteExactOutput(bytes path, uint256 amountOut) public returns (uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)

@@ -11,9 +11,31 @@ Enables migration of liquidity from Uniswap v2-compatible pairs into Algebra poo
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### MigrateParams
+
+
+
+```solidity
+struct MigrateParams {
+  address pair;
+  uint256 liquidityToMigrate;
+  uint8 percentageToMigrate;
+  address token0;
+  address token1;
+  int24 tickLower;
+  int24 tickUpper;
+  uint256 amount0Min;
+  uint256 amount1Min;
+  address recipient;
+  uint256 deadline;
+  bool refundAsNative;
+}
+```
+
+
 ## Functions
 ### migrate
-
 
 ```solidity
 function migrate(struct IV3Migrator.MigrateParams params) external

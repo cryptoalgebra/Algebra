@@ -3,7 +3,6 @@
 ## Errors
 ## locked
 
-
 ```solidity
 error locked()
 ```
@@ -11,7 +10,6 @@ error locked()
 Emitted by the reentrancy guard
 
 ## arithmeticError
-
 
 ```solidity
 error arithmeticError()
@@ -21,7 +19,6 @@ Emitted if arithmetic error occurred
 
 ## alreadyInitialized
 
-
 ```solidity
 error alreadyInitialized()
 ```
@@ -29,7 +26,6 @@ error alreadyInitialized()
 Emitted if an attempt is made to initialize the pool twice
 
 ## zeroAmountRequired
-
 
 ```solidity
 error zeroAmountRequired()
@@ -39,7 +35,6 @@ Emitted if 0 is passed as amountRequired to swap function
 
 ## invalidAmountRequired
 
-
 ```solidity
 error invalidAmountRequired()
 ```
@@ -47,7 +42,6 @@ error invalidAmountRequired()
 Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
 
 ## insufficientInputAmount
-
 
 ```solidity
 error insufficientInputAmount()
@@ -57,7 +51,6 @@ Emitted if the pool received fewer tokens than it should have
 
 ## zeroLiquidityDesired
 
-
 ```solidity
 error zeroLiquidityDesired()
 ```
@@ -65,7 +58,6 @@ error zeroLiquidityDesired()
 Emitted if there was an attempt to mint zero liquidity
 
 ## zeroLiquidityActual
-
 
 ```solidity
 error zeroLiquidityActual()
@@ -75,7 +67,6 @@ Emitted if actual amount of liquidity is zero (due to insufficient amount of tok
 
 ## flashInsufficientPaid0
 
-
 ```solidity
 error flashInsufficientPaid0()
 ```
@@ -83,7 +74,6 @@ error flashInsufficientPaid0()
 Emitted if the pool received fewer tokens{0,1} after flash than it should have
 
 ## flashInsufficientPaid1
-
 
 ```solidity
 error flashInsufficientPaid1()
@@ -93,7 +83,6 @@ error flashInsufficientPaid1()
 
 ## invalidLimitSqrtPrice
 
-
 ```solidity
 error invalidLimitSqrtPrice()
 ```
@@ -101,7 +90,6 @@ error invalidLimitSqrtPrice()
 Emitted if limitSqrtPrice param is incorrect
 
 ## tickIsNotSpaced
-
 
 ```solidity
 error tickIsNotSpaced()
@@ -111,7 +99,6 @@ Tick must be divisible by tickspacing
 
 ## notAllowed
 
-
 ```solidity
 error notAllowed()
 ```
@@ -119,7 +106,6 @@ error notAllowed()
 Emitted if a method is called that is accessible only to the factory owner or dedicated role
 
 ## onlyFarming
-
 
 ```solidity
 error onlyFarming()
@@ -129,7 +115,6 @@ Emitted if a method is called that is accessible only to the farming
 
 ## invalidNewTickSpacing
 
-
 ```solidity
 error invalidNewTickSpacing()
 ```
@@ -137,7 +122,6 @@ error invalidNewTickSpacing()
 
 
 ## invalidNewCommunityFee
-
 
 ```solidity
 error invalidNewCommunityFee()
@@ -147,7 +131,6 @@ error invalidNewCommunityFee()
 
 ## dynamicFeeActive
 
-
 ```solidity
 error dynamicFeeActive()
 ```
@@ -156,7 +139,6 @@ error dynamicFeeActive()
 
 ## dynamicFeeDisabled
 
-
 ```solidity
 error dynamicFeeDisabled()
 ```
@@ -164,7 +146,6 @@ error dynamicFeeDisabled()
 
 
 ## invalidHookResponse
-
 
 ```solidity
 error invalidHookResponse(bytes4 selector)
@@ -178,7 +159,6 @@ error invalidHookResponse(bytes4 selector)
 
 ## liquiditySub
 
-
 ```solidity
 error liquiditySub()
 ```
@@ -186,7 +166,6 @@ error liquiditySub()
 Emitted if liquidity underflows
 
 ## liquidityAdd
-
 
 ```solidity
 error liquidityAdd()
@@ -196,7 +175,6 @@ Emitted if liquidity overflows
 
 ## topTickLowerOrEqBottomTick
 
-
 ```solidity
 error topTickLowerOrEqBottomTick()
 ```
@@ -204,7 +182,6 @@ error topTickLowerOrEqBottomTick()
 
 
 ## bottomTickLowerThanMIN
-
 
 ```solidity
 error bottomTickLowerThanMIN()
@@ -214,7 +191,6 @@ error bottomTickLowerThanMIN()
 
 ## topTickAboveMAX
 
-
 ```solidity
 error topTickAboveMAX()
 ```
@@ -222,7 +198,6 @@ error topTickAboveMAX()
 
 
 ## liquidityOverflow
-
 
 ```solidity
 error liquidityOverflow()
@@ -232,7 +207,6 @@ error liquidityOverflow()
 
 ## tickIsNotInitialized
 
-
 ```solidity
 error tickIsNotInitialized()
 ```
@@ -240,7 +214,6 @@ error tickIsNotInitialized()
 
 
 ## tickInvalidLinks
-
 
 ```solidity
 error tickInvalidLinks()
@@ -250,7 +223,6 @@ error tickInvalidLinks()
 
 ## transferFailed
 
-
 ```solidity
 error transferFailed()
 ```
@@ -259,7 +231,6 @@ error transferFailed()
 
 ## tickOutOfRange
 
-
 ```solidity
 error tickOutOfRange()
 ```
@@ -267,7 +238,6 @@ error tickOutOfRange()
 
 
 ## priceOutOfRange
-
 
 ```solidity
 error priceOutOfRange()

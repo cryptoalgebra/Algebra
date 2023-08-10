@@ -3,7 +3,6 @@
 ## Errors
 ## targetIsTooOld
 
-
 ```solidity
 error targetIsTooOld()
 ```

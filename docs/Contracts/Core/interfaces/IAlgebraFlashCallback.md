@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### algebraFlashCallback
 
-
 ```solidity
 function algebraFlashCallback(uint256 fee0, uint256 fee1, bytes data) external
 ```

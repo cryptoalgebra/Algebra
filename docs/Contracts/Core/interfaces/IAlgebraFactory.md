@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Events
 ### RenounceOwnershipStart
 
-
 ```solidity
 event RenounceOwnershipStart(uint256 timestamp, uint256 finishTimestamp)
 ```
@@ -28,7 +27,6 @@ Emitted when a process of ownership renounce is started
 
 ### RenounceOwnershipStop
 
-
 ```solidity
 event RenounceOwnershipStop(uint256 timestamp)
 ```
@@ -41,7 +39,6 @@ Emitted when a process of ownership renounce cancelled
 
 ### RenounceOwnershipFinish
 
-
 ```solidity
 event RenounceOwnershipFinish(uint256 timestamp)
 ```
@@ -53,7 +50,6 @@ Emitted when a process of ownership renounce finished
 | timestamp | uint256 | The timestamp of ownership renouncement |
 
 ### Pool
-
 
 ```solidity
 event Pool(address token0, address token1, address pool)
@@ -69,7 +65,6 @@ Emitted when a pool is created
 
 ### DefaultCommunityFee
 
-
 ```solidity
 event DefaultCommunityFee(uint16 newDefaultCommunityFee)
 ```
@@ -81,7 +76,6 @@ Emitted when the default community fee is changed
 | newDefaultCommunityFee | uint16 | The new default community fee value |
 
 ### DefaultTickspacing
-
 
 ```solidity
 event DefaultTickspacing(int24 newDefaultTickspacing)
@@ -95,7 +89,6 @@ Emitted when the default tickspacing is changed
 
 ### DefaultFee
 
-
 ```solidity
 event DefaultFee(uint16 newDefaultFee)
 ```
@@ -107,7 +100,6 @@ Emitted when the default fee is changed
 | newDefaultFee | uint16 | The new default fee value |
 
 ### DefaultPluginFactory
-
 
 ```solidity
 event DefaultPluginFactory(address defaultPluginFactoryAddress)
@@ -123,7 +115,6 @@ Emitted when the defaultPluginFactory address is changed
 ## Functions
 ### POOLS_ADMINISTRATOR_ROLE
 
-
 ```solidity
 function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32)
 ```
@@ -137,7 +128,6 @@ role that can change communityFee and tickspacing in pools
 | [0] | bytes32 | The hash corresponding to this role |
 
 ### hasRoleOrOwner
-
 
 ```solidity
 function hasRoleOrOwner(bytes32 role, address account) external view returns (bool)
@@ -158,7 +148,6 @@ Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60
 
 ### owner
 
-
 ```solidity
 function owner() external view returns (address)
 ```
@@ -175,7 +164,6 @@ Returns the current owner of the factory
 
 ### poolDeployer
 
-
 ```solidity
 function poolDeployer() external view returns (address)
 ```
@@ -189,7 +177,6 @@ Returns the current poolDeployerAddress
 | [0] | address | The address of the poolDeployer |
 
 ### communityVault
-
 
 ```solidity
 function communityVault() external view returns (address)
@@ -205,7 +192,6 @@ Returns the current communityVaultAddress
 
 ### defaultCommunityFee
 
-
 ```solidity
 function defaultCommunityFee() external view returns (uint16)
 ```
@@ -219,7 +205,6 @@ Returns the default community fee
 | [0] | uint16 | Fee which will be set at the creation of the pool |
 
 ### defaultFee
-
 
 ```solidity
 function defaultFee() external view returns (uint16)
@@ -235,7 +220,6 @@ Returns the default fee
 
 ### defaultTickspacing
 
-
 ```solidity
 function defaultTickspacing() external view returns (int24)
 ```
@@ -250,7 +234,6 @@ Returns the default tickspacing
 
 ### defaultPluginFactory
 
-
 ```solidity
 function defaultPluginFactory() external view returns (contract IAlgebraPluginFactory)
 ```
@@ -264,7 +247,6 @@ Return the current pluginFactory address
 | [0] | contract IAlgebraPluginFactory | Algebra plugin factory |
 
 ### defaultConfigurationForPool
-
 
 ```solidity
 function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
@@ -281,7 +263,6 @@ Returns the default communityFee and tickspacing
 | fee | uint16 | which will be set at the creation of the pool |
 
 ### computePoolAddress
-
 
 ```solidity
 function computePoolAddress(address token0, address token1) external view returns (address pool)
@@ -304,7 +285,6 @@ Deterministically computes the pool address given the token0 and token1
 
 ### poolByPair
 
-
 ```solidity
 function poolByPair(address tokenA, address tokenB) external view returns (address pool)
 ```
@@ -326,7 +306,6 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 
 ### renounceOwnershipStartTimestamp
 
-
 ```solidity
 function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp)
 ```
@@ -340,7 +319,6 @@ function renounceOwnershipStartTimestamp() external view returns (uint256 timest
 | timestamp | uint256 | The timestamp of the beginning of the renounceOwnership process |
 
 ### createPool
-
 
 ```solidity
 function createPool(address tokenA, address tokenB) external returns (address pool)
@@ -364,7 +342,6 @@ The call will revert if the pool already exists or the token arguments are inval
 
 ### setDefaultCommunityFee
 
-
 ```solidity
 function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
 ```
@@ -378,7 +355,6 @@ function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
 | newDefaultCommunityFee | uint16 | The new community fee, _must_ be <= MAX_COMMUNITY_FEE |
 
 ### setDefaultFee
-
 
 ```solidity
 function setDefaultFee(uint16 newDefaultFee) external
@@ -394,7 +370,6 @@ function setDefaultFee(uint16 newDefaultFee) external
 
 ### setDefaultTickspacing
 
-
 ```solidity
 function setDefaultTickspacing(int24 newDefaultTickspacing) external
 ```
@@ -408,7 +383,6 @@ function setDefaultTickspacing(int24 newDefaultTickspacing) external
 | newDefaultTickspacing | int24 | The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING |
 
 ### setDefaultPluginFactory
-
 
 ```solidity
 function setDefaultPluginFactory(address newDefaultPluginFactory) external
@@ -424,7 +398,6 @@ function setDefaultPluginFactory(address newDefaultPluginFactory) external
 
 ### startRenounceOwnership
 
-
 ```solidity
 function startRenounceOwnership() external
 ```
@@ -433,7 +406,6 @@ Starts process of renounceOwnership. After that, a certain period
 of time must pass before the ownership renounce can be completed.
 
 ### stopRenounceOwnership
-
 
 ```solidity
 function stopRenounceOwnership() external

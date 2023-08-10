@@ -11,7 +11,6 @@ Using these methods farmingCenter receives information about changes in the posi
 ## Functions
 ### applyLiquidityDelta
 
-
 ```solidity
 function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external
 ```

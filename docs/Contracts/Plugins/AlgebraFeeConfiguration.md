@@ -2,9 +2,6 @@
 
 
 
-
-
-
 ```solidity
 struct AlgebraFeeConfiguration {
   uint16 alpha1;

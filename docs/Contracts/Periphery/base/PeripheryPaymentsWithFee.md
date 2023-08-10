@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Functions
 ### unwrapWNativeTokenWithFee
 
-
 ```solidity
 function unwrapWNativeTokenWithFee(uint256 amountMinimum, address recipient, uint256 feeBips, address feeRecipient) public payable
 ```
@@ -32,7 +31,6 @@ Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as Na
 | feeRecipient | address |  |
 
 ### sweepTokenWithFee
-
 
 ```solidity
 function sweepTokenWithFee(address token, uint256 amountMinimum, address recipient, uint256 feeBips, address feeRecipient) public payable

@@ -13,7 +13,6 @@ This contract is responsible for liquidity positions, swaps and flashloans
 ## Functions
 ### initialize
 
-
 ```solidity
 function initialize(uint160 initialPrice) external
 ```
@@ -28,7 +27,6 @@ Initialization should be done in one transaction with pool creation to avoid fro
 | initialPrice | uint160 | The initial sqrt price of the pool as a Q64.96 |
 
 ### mint
-
 
 ```solidity
 function mint(address leftoversRecipient, address recipient, int24 bottomTick, int24 topTick, uint128 liquidityDesired, bytes data) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual)
@@ -59,7 +57,6 @@ on bottomTick, topTick, the amount of liquidity, and the current price.*
 
 ### burn
 
-
 ```solidity
 function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) external returns (uint256 amount0, uint256 amount1)
 ```
@@ -84,7 +81,6 @@ Fees must be collected separately via a call to #collect*
 | amount1 | uint256 | The amount of token1 sent to the recipient |
 
 ### collect
-
 
 ```solidity
 function collect(address recipient, int24 bottomTick, int24 topTick, uint128 amount0Requested, uint128 amount1Requested) external returns (uint128 amount0, uint128 amount1)
@@ -114,7 +110,6 @@ actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated 
 
 ### swap
 
-
 ```solidity
 function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
 ```
@@ -139,7 +134,6 @@ Swap token0 for token1, or token1 for token0
 | amount1 | int256 | The delta of the balance of token1 of the pool, exact when negative, minimum when positive |
 
 ### swapWithPaymentInAdvance
-
 
 ```solidity
 function swapWithPaymentInAdvance(address leftoversRecipient, address recipient, bool zeroToOne, int256 amountToSell, uint160 limitSqrtPrice, bytes data) external returns (int256 amount0, int256 amount1)
@@ -169,7 +163,6 @@ the actually sent amount of tokens is used for further calculations*
 
 ### flash
 
-
 ```solidity
 function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) external
 ```
@@ -189,7 +182,6 @@ If there are no in-range liquidity providers, the fee will be transferred to the
 
 ### setCommunityFee
 
-
 ```solidity
 function setCommunityFee(uint16 newCommunityFee) external
 ```
@@ -201,7 +193,6 @@ Set the community&#x27;s % share of the fees. Only factory owner or POOLS_ADMINI
 | newCommunityFee | uint16 | The new community fee percent in thousandths (1e-3) |
 
 ### setTickSpacing
-
 
 ```solidity
 function setTickSpacing(int24 newTickSpacing) external
@@ -215,7 +206,6 @@ Set the new tick spacing values. Only factory owner or POOLS_ADMINISTRATOR_ROLE 
 
 ### setPlugin
 
-
 ```solidity
 function setPlugin(address newPluginAddress) external
 ```
@@ -228,7 +218,6 @@ Set the new plugin address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
 
 ### setPluginConfig
 
-
 ```solidity
 function setPluginConfig(uint8 newConfig) external
 ```
@@ -240,7 +229,6 @@ Set new plugin config
 | newConfig | uint8 | In the new configuration of the plugin, each bit of which is responsible for a particular hook. Only factory owner or POOLS_ADMINISTRATOR_ROLE role |
 
 ### setFee
-
 
 ```solidity
 function setFee(uint16 newFee) external

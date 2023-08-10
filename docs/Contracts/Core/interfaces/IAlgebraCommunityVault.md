@@ -13,7 +13,6 @@ Community fee from pools is sent here, if it is enabled
 ## Events
 ### TokensWithdrawal
 
-
 ```solidity
 event TokensWithdrawal(address token, address to, uint256 amount)
 ```
@@ -27,7 +26,6 @@ Event emitted when a fees has been claimed
 | amount | uint256 | The amount of fees tokens claimed by communityFeeReceiver |
 
 ### AlgebraTokensWithdrawal
-
 
 ```solidity
 event AlgebraTokensWithdrawal(address token, address to, uint256 amount)
@@ -43,7 +41,6 @@ Event emitted when a fees has been claimed
 
 ### AlgebraFeeReceiver
 
-
 ```solidity
 event AlgebraFeeReceiver(address newAlgebraFeeReceiver)
 ```
@@ -55,7 +52,6 @@ Emitted when a AlgebraFeeReceiver address changed
 | newAlgebraFeeReceiver | address | New Algebra fee receiver address |
 
 ### PendingAlgebraFeeManager
-
 
 ```solidity
 event PendingAlgebraFeeManager(address pendingAlgebraFeeManager)
@@ -69,7 +65,6 @@ Emitted when a AlgebraFeeManager address change proposed
 
 ### AlgebraFeeProposal
 
-
 ```solidity
 event AlgebraFeeProposal(uint16 proposedNewAlgebraFee)
 ```
@@ -82,7 +77,6 @@ Emitted when a new Algebra fee value proposed
 
 ### CancelAlgebraFeeProposal
 
-
 ```solidity
 event CancelAlgebraFeeProposal()
 ```
@@ -90,7 +84,6 @@ event CancelAlgebraFeeProposal()
 Emitted when a Algebra fee proposal canceled
 
 ### AlgebraFeeManager
-
 
 ```solidity
 event AlgebraFeeManager(address newAlgebraFeeManager)
@@ -104,7 +97,6 @@ Emitted when a AlgebraFeeManager address changed
 
 ### AlgebraFee
 
-
 ```solidity
 event AlgebraFee(uint16 newAlgebraFee)
 ```
@@ -117,7 +109,6 @@ Emitted when the Algebra fee is changed
 
 ### CommunityFeeReceiver
 
-
 ```solidity
 event CommunityFeeReceiver(address newCommunityFeeReceiver)
 ```
@@ -129,9 +120,21 @@ Emitted when a CommunityFeeReceiver address changed
 | newCommunityFeeReceiver | address | New fee receiver address |
 
 
+## Structs
+### WithdrawTokensParams
+
+
+
+```solidity
+struct WithdrawTokensParams {
+  address token;
+  uint256 amount;
+}
+```
+
+
 ## Functions
 ### withdraw
-
 
 ```solidity
 function withdraw(address token, uint256 amount) external
@@ -148,7 +151,6 @@ Withdraw protocol fees from vault
 
 ### withdrawTokens
 
-
 ```solidity
 function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external
 ```
@@ -162,7 +164,6 @@ Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 | params | struct IAlgebraCommunityVault.WithdrawTokensParams[] | Array of WithdrawTokensParams objects containing token addresses and amounts to withdraw |
 
 ### acceptAlgebraFeeChangeProposal
-
 
 ```solidity
 function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
@@ -178,7 +179,6 @@ Accepts the proposed new Algebra fee
 
 ### changeCommunityFeeReceiver
 
-
 ```solidity
 function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external
 ```
@@ -193,7 +193,6 @@ Change community fee receiver address
 
 ### transferAlgebraFeeManagerRole
 
-
 ```solidity
 function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external
 ```
@@ -206,7 +205,6 @@ Transfers Algebra fee manager role
 
 ### acceptAlgebraFeeManagerRole
 
-
 ```solidity
 function acceptAlgebraFeeManagerRole() external
 ```
@@ -214,7 +212,6 @@ function acceptAlgebraFeeManagerRole() external
 accept Algebra FeeManager role
 
 ### proposeAlgebraFeeChange
-
 
 ```solidity
 function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
@@ -228,7 +225,6 @@ Proposes new Algebra fee value for protocol
 
 ### cancelAlgebraFeeChangeProposal
 
-
 ```solidity
 function cancelAlgebraFeeChangeProposal() external
 ```
@@ -236,7 +232,6 @@ function cancelAlgebraFeeChangeProposal() external
 Cancels Algebra fee change proposal
 
 ### changeAlgebraFeeReceiver
-
 
 ```solidity
 function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external

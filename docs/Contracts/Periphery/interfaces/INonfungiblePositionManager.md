@@ -15,7 +15,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Events
 ### IncreaseLiquidity
 
-
 ```solidity
 event IncreaseLiquidity(uint256 tokenId, uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, address pool)
 ```
@@ -35,7 +34,6 @@ Emitted when liquidity is increased for a position NFT
 
 ### DecreaseLiquidity
 
-
 ```solidity
 event DecreaseLiquidity(uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
 ```
@@ -50,7 +48,6 @@ Emitted when liquidity is decreased for a position NFT
 | amount1 | uint256 | The amount of token1 that was accounted for the decrease in liquidity |
 
 ### Collect
-
 
 ```solidity
 event Collect(uint256 tokenId, address recipient, uint256 amount0, uint256 amount1)
@@ -69,7 +66,6 @@ Emitted when tokens are collected for a position NFT
 
 ### FarmingFailed
 
-
 ```solidity
 event FarmingFailed(uint256 tokenId)
 ```
@@ -83,9 +79,71 @@ Emitted if farming failed in call from NonfungiblePositionManager.
 | tokenId | uint256 | The ID of corresponding token |
 
 
+## Structs
+### MintParams
+
+
+
+```solidity
+struct MintParams {
+  address token0;
+  address token1;
+  int24 tickLower;
+  int24 tickUpper;
+  uint256 amount0Desired;
+  uint256 amount1Desired;
+  uint256 amount0Min;
+  uint256 amount1Min;
+  address recipient;
+  uint256 deadline;
+}
+```
+
+### IncreaseLiquidityParams
+
+
+
+```solidity
+struct IncreaseLiquidityParams {
+  uint256 tokenId;
+  uint256 amount0Desired;
+  uint256 amount1Desired;
+  uint256 amount0Min;
+  uint256 amount1Min;
+  uint256 deadline;
+}
+```
+
+### DecreaseLiquidityParams
+
+
+
+```solidity
+struct DecreaseLiquidityParams {
+  uint256 tokenId;
+  uint128 liquidity;
+  uint256 amount0Min;
+  uint256 amount1Min;
+  uint256 deadline;
+}
+```
+
+### CollectParams
+
+
+
+```solidity
+struct CollectParams {
+  uint256 tokenId;
+  address recipient;
+  uint128 amount0Max;
+  uint128 amount1Max;
+}
+```
+
+
 ## Functions
 ### positions
-
 
 ```solidity
 function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
@@ -117,7 +175,6 @@ Returns the position information associated with a given token ID.
 
 ### mint
 
-
 ```solidity
 function mint(struct INonfungiblePositionManager.MintParams params) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
 ```
@@ -142,7 +199,6 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 
 ### increaseLiquidity
 
-
 ```solidity
 function increaseLiquidity(struct INonfungiblePositionManager.IncreaseLiquidityParams params) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1)
 ```
@@ -163,7 +219,6 @@ Increases the amount of liquidity in a position, with tokens paid by the &#x60;m
 
 ### decreaseLiquidity
 
-
 ```solidity
 function decreaseLiquidity(struct INonfungiblePositionManager.DecreaseLiquidityParams params) external payable returns (uint256 amount0, uint256 amount1)
 ```
@@ -182,7 +237,6 @@ Decreases the amount of liquidity in a position and accounts it to the position
 | amount1 | uint256 | The amount of token1 accounted to the position's tokens owed |
 
 ### collect
-
 
 ```solidity
 function collect(struct INonfungiblePositionManager.CollectParams params) external payable returns (uint256 amount0, uint256 amount1)
@@ -203,7 +257,6 @@ Collects up to a maximum amount of fees owed to a specific position to the recip
 
 ### burn
 
-
 ```solidity
 function burn(uint256 tokenId) external payable
 ```
@@ -217,7 +270,6 @@ must be collected first.
 
 ### approveForFarming
 
-
 ```solidity
 function approveForFarming(uint256 tokenId, bool approve) external payable
 ```
@@ -230,7 +282,6 @@ Changes approval of token ID for farming.
 | approve | bool | New status of approval |
 
 ### switchFarmingStatus
-
 
 ```solidity
 function switchFarmingStatus(uint256 tokenId, bool isFarmed) external
@@ -246,7 +297,6 @@ Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
 | isFarmed | bool |  |
 
 ### setFarmingCenter
-
 
 ```solidity
 function setFarmingCenter(address newFarmingCenter) external

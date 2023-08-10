@@ -13,7 +13,6 @@ Encapsulates logic for tracking and changing pool reserves
 ## Functions
 ### getReserves
 
-
 ```solidity
 function getReserves() external view returns (uint128, uint128)
 ```

@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### globalState
 
-
 ```solidity
 function globalState() external view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked)
 ```
@@ -34,7 +33,6 @@ and is exposed as a single method to save gas when accessed externally.
 | unlocked | bool | Whether the pool is currently locked to reentrancy |
 
 ### ticks
-
 
 ```solidity
 function ticks(int24 tick) external view returns (uint256 liquidityTotal, int128 liquidityDelta, int24 prevTick, int24 nextTick, uint256 outerFeeGrowth0Token, uint256 outerFeeGrowth1Token)
@@ -59,7 +57,6 @@ Look up information about a specific tick in the pool
 
 ### communityFeeLastTimestamp
 
-
 ```solidity
 function communityFeeLastTimestamp() external view returns (uint32)
 ```
@@ -73,7 +70,6 @@ The timestamp of the last sending of tokens to community vault
 | [0] | uint32 | The timestamp truncated to 32 bits |
 
 ### getCommunityFeePending
-
 
 ```solidity
 function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1)
@@ -92,7 +88,6 @@ The amounts of token0 and token1 that will be sent to the vault
 
 ### plugin
 
-
 ```solidity
 function plugin() external view returns (address pluginAddress)
 ```
@@ -108,7 +103,6 @@ Returns the address of currently used plugin
 | pluginAddress | address | The address of currently used plugin |
 
 ### tickTable
-
 
 ```solidity
 function tickTable(int16 wordPosition) external view returns (uint256)
@@ -128,7 +122,6 @@ Returns 256 packed tick initialized boolean values. See TickTree for more inform
 
 ### totalFeeGrowth0Token
 
-
 ```solidity
 function totalFeeGrowth0Token() external view returns (uint256)
 ```
@@ -145,7 +138,6 @@ The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for 
 
 ### totalFeeGrowth1Token
 
-
 ```solidity
 function totalFeeGrowth1Token() external view returns (uint256)
 ```
@@ -161,7 +153,6 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 | [0] | uint256 | The fee growth accumulator for token1 |
 
 ### fee
-
 
 ```solidity
 function fee() external view returns (uint16 currentFee)
@@ -181,7 +172,6 @@ In this case, see the plugin implementation and related documentation.*
 
 ### getReserves
 
-
 ```solidity
 function getReserves() external view returns (uint128 reserve0, uint128 reserve1)
 ```
@@ -199,7 +189,6 @@ If the balance exceeds uint128, the excess will be sent to the communityVault.*
 | reserve1 | uint128 | The last known reserve of token1 |
 
 ### positions
-
 
 ```solidity
 function positions(bytes32 key) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1)
@@ -223,7 +212,6 @@ Returns the information about a position by the position&#x27;s key
 
 ### liquidity
 
-
 ```solidity
 function liquidity() external view returns (uint128)
 ```
@@ -240,7 +228,6 @@ Returned value cannot exceed type(uint128).max*
 | [0] | uint128 | The current in range liquidity |
 
 ### tickSpacing
-
 
 ```solidity
 function tickSpacing() external view returns (int24)
@@ -261,7 +248,6 @@ This value is an int24 to avoid casting even though it is always positive.*
 
 ### prevTickGlobal
 
-
 ```solidity
 function prevTickGlobal() external view returns (int24)
 ```
@@ -275,7 +261,6 @@ The previous initialized tick before (or at) current global tick
 | [0] | int24 | The previous initialized tick |
 
 ### nextTickGlobal
-
 
 ```solidity
 function nextTickGlobal() external view returns (int24)

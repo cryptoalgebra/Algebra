@@ -17,9 +17,9 @@ https://github.com/Uniswap/v3-periphery*
 
 
 
+
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _WNativeToken) public
@@ -32,7 +32,6 @@ constructor(address _WNativeToken) public
 | _WNativeToken | address |  |
 
 ### tokenURI
-
 
 ```solidity
 function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
@@ -55,7 +54,6 @@ Produces the URI describing a particular token ID for a position manager
 
 ### flipRatio
 
-
 ```solidity
 function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool)
 ```
@@ -75,7 +73,6 @@ function flipRatio(address token0, address token1, uint256 chainId) public view 
 | [0] | bool |  |
 
 ### tokenRatioPriority
-
 
 ```solidity
 function tokenRatioPriority(address token, uint256 chainId) public view returns (int256)

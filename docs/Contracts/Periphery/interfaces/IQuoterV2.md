@@ -14,9 +14,36 @@ Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### QuoteExactInputSingleParams
+
+
+
+```solidity
+struct QuoteExactInputSingleParams {
+  address tokenIn;
+  address tokenOut;
+  uint256 amountIn;
+  uint160 limitSqrtPrice;
+}
+```
+
+### QuoteExactOutputSingleParams
+
+
+
+```solidity
+struct QuoteExactOutputSingleParams {
+  address tokenIn;
+  address tokenOut;
+  uint256 amount;
+  uint160 limitSqrtPrice;
+}
+```
+
+
 ## Functions
 ### quoteExactInput
-
 
 ```solidity
 function quoteExactInput(bytes path, uint256 amountIn) external returns (uint256 amountOut, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)
@@ -40,7 +67,6 @@ Returns the amount out received for a given exact input swap without executing t
 
 ### quoteExactInputSingle
 
-
 ```solidity
 function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
 ```
@@ -61,7 +87,6 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
 ### quoteExactOutput
-
 
 ```solidity
 function quoteExactOutput(bytes path, uint256 amountOut) external returns (uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate)
@@ -84,7 +109,6 @@ Returns the amount in required for a given exact output swap without executing t
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
 
 ### quoteExactOutputSingle
-
 
 ```solidity
 function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) external returns (uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)

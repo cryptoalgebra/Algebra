@@ -11,7 +11,6 @@ Extension to IERC20 that includes token metadata
 ## Functions
 ### name
 
-
 ```solidity
 function name() external view returns (string)
 ```
@@ -26,7 +25,6 @@ function name() external view returns (string)
 
 ### symbol
 
-
 ```solidity
 function symbol() external view returns (string)
 ```
@@ -40,7 +38,6 @@ function symbol() external view returns (string)
 | [0] | string | The symbol of the token |
 
 ### decimals
-
 
 ```solidity
 function decimals() external view returns (uint8)

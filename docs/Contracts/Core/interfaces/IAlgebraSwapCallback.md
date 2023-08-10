@@ -14,7 +14,6 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ## Functions
 ### algebraSwapCallback
 
-
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes data) external
 ```

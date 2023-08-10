@@ -13,7 +13,6 @@ https://github.com/Uniswap/v3-periphery*
 ## Modifiers
 ### isAuthorizedForToken
 
-
 ```solidity
 modifier isAuthorizedForToken(uint256 tokenId)
 ```
@@ -25,30 +24,54 @@ modifier isAuthorizedForToken(uint256 tokenId)
 | tokenId | uint256 |  |
 
 
+## Structs
+### Position
+
+
+
+```solidity
+struct Position {
+  uint88 nonce;
+  address operator;
+  uint80 poolId;
+  int24 tickLower;
+  int24 tickUpper;
+  uint128 liquidity;
+  uint256 feeGrowthInside0LastX128;
+  uint256 feeGrowthInside1LastX128;
+  uint128 tokensOwed0;
+  uint128 tokensOwed1;
+}
+```
+
+
 ## Variables
 ### address farmingCenter 
 
 
 
 *Developer note: The address of the farming center contract, which handles farmings logic*
+
 ### mapping(uint256 &#x3D;&gt; address) farmingApprovals 
 
 
 
 *Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
+
 ### mapping(uint256 &#x3D;&gt; address) tokenFarmedIn 
 
 
 
 *Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
+
 ### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
+
 
 
 
 
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, address _poolDeployer) public
@@ -64,7 +87,6 @@ constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, 
 | _poolDeployer | address |  |
 
 ### positions
-
 
 ```solidity
 function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
@@ -96,7 +118,6 @@ Returns the position information associated with a given token ID.
 
 ### mint
 
-
 ```solidity
 function mint(struct INonfungiblePositionManager.MintParams params) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
 ```
@@ -121,7 +142,6 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 
 ### tokenURI
 
-
 ```solidity
 function tokenURI(uint256 tokenId) public view returns (string)
 ```
@@ -140,7 +160,6 @@ function tokenURI(uint256 tokenId) public view returns (string)
 
 ### baseURI
 
-
 ```solidity
 function baseURI() public pure returns (string)
 ```
@@ -154,7 +173,6 @@ function baseURI() public pure returns (string)
 | [0] | string |  |
 
 ### increaseLiquidity
-
 
 ```solidity
 function increaseLiquidity(struct INonfungiblePositionManager.IncreaseLiquidityParams params) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1)
@@ -176,7 +194,6 @@ Increases the amount of liquidity in a position, with tokens paid by the &#x60;m
 
 ### decreaseLiquidity
 
-
 ```solidity
 function decreaseLiquidity(struct INonfungiblePositionManager.DecreaseLiquidityParams params) external payable returns (uint256 amount0, uint256 amount1)
 ```
@@ -195,7 +212,6 @@ Decreases the amount of liquidity in a position and accounts it to the position
 | amount1 | uint256 | The amount of token1 accounted to the position's tokens owed |
 
 ### collect
-
 
 ```solidity
 function collect(struct INonfungiblePositionManager.CollectParams params) external payable returns (uint256 amount0, uint256 amount1)
@@ -216,7 +232,6 @@ Collects up to a maximum amount of fees owed to a specific position to the recip
 
 ### burn
 
-
 ```solidity
 function burn(uint256 tokenId) external payable
 ```
@@ -230,7 +245,6 @@ must be collected first.
 
 ### approveForFarming
 
-
 ```solidity
 function approveForFarming(uint256 tokenId, bool approve) external payable
 ```
@@ -243,7 +257,6 @@ Changes approval of token ID for farming.
 | approve | bool | New status of approval |
 
 ### switchFarmingStatus
-
 
 ```solidity
 function switchFarmingStatus(uint256 tokenId, bool toFarming) external
@@ -260,7 +273,6 @@ Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
 
 ### setFarmingCenter
 
-
 ```solidity
 function setFarmingCenter(address newFarmingCenter) external
 ```
@@ -274,7 +286,6 @@ Changes address of farmingCenter
 | newFarmingCenter | address | The new address of farmingCenter |
 
 ### getApproved
-
 
 ```solidity
 function getApproved(uint256 tokenId) public view returns (address)

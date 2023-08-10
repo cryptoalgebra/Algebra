@@ -13,7 +13,6 @@ The interface for the Algebra farming plugin
 ## Events
 ### Incentive
 
-
 ```solidity
 event Incentive(address newIncentive)
 ```
@@ -28,7 +27,6 @@ event Incentive(address newIncentive)
 ## Functions
 ### setIncentive
 
-
 ```solidity
 function setIncentive(address newIncentive) external
 ```
@@ -40,7 +38,6 @@ function setIncentive(address newIncentive) external
 | newIncentive | address |  |
 
 ### isIncentiveActive
-
 
 ```solidity
 function isIncentiveActive(address targetIncentive) external view returns (bool)
@@ -59,7 +56,6 @@ function isIncentiveActive(address targetIncentive) external view returns (bool)
 | [0] | bool |  |
 
 ### incentive
-
 
 ```solidity
 function incentive() external view returns (address)

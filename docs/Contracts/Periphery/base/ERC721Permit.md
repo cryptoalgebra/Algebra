@@ -15,9 +15,9 @@ The permit typehash used in the permit signature
 
 *Developer note: Value is equal to keccak256(&quot;Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)&quot;);*
 
+
 ## Functions
 ### DOMAIN_SEPARATOR
-
 
 ```solidity
 function DOMAIN_SEPARATOR() public view returns (bytes32)
@@ -32,7 +32,6 @@ The domain separator used in the permit signature
 | [0] | bytes32 | The domain separator used in encoding of permit signature |
 
 ### permit
-
 
 ```solidity
 function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external payable

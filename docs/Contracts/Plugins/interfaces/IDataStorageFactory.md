@@ -11,7 +11,6 @@ TODO
 ## Events
 ### DefaultFeeConfiguration
 
-
 ```solidity
 event DefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig)
 ```
@@ -26,7 +25,6 @@ Emitted when the default fee configuration is changed
 
 ### FarmingAddress
 
-
 ```solidity
 event FarmingAddress(address newFarmingAddress)
 ```
@@ -40,7 +38,6 @@ Emitted when the farming address is changed
 
 ## Functions
 ### farmingAddress
-
 
 ```solidity
 function farmingAddress() external view returns (address)
@@ -57,7 +54,6 @@ function farmingAddress() external view returns (address)
 | [0] | address | The tokenomics contract address |
 
 ### pluginByPool
-
 
 ```solidity
 function pluginByPool(address pool) external view returns (address)
@@ -76,7 +72,6 @@ Returns address of plugin created for given AlgebraPool
 | [0] | address | The address of corresponding plugin |
 
 ### createPluginForExistingPool
-
 
 ```solidity
 function createPluginForExistingPool(address token0, address token1) external returns (address)
@@ -97,7 +92,6 @@ Create plugin for already existing pool
 
 ### setDefaultFeeConfiguration
 
-
 ```solidity
 function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external
 ```
@@ -112,7 +106,6 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 | newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
 
 ### setFarmingAddress
-
 
 ```solidity
 function setFarmingAddress(address newFarmingAddress) external

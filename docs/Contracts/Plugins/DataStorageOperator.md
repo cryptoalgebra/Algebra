@@ -10,7 +10,6 @@ This contract stores timepoints and calculates adaptive fee and statistical aver
 ## Modifiers
 ### onlyPool
 
-
 ```solidity
 modifier onlyPool()
 ```
@@ -24,7 +23,9 @@ modifier onlyPool()
 Returns data belonging to a certain timepoint
 
 *Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
+
 ### uint16 timepointIndex 
+
 
 
 
@@ -32,7 +33,9 @@ Returns data belonging to a certain timepoint
 
 
 
+
 ### struct AlgebraFeeConfiguration feeConfig 
+
 
 
 
@@ -41,7 +44,9 @@ Returns data belonging to a certain timepoint
 
 
 *Developer note: The role can be granted in AlgebraFactory*
+
 ### address incentive 
+
 
 
 
@@ -50,9 +55,9 @@ Returns data belonging to a certain timepoint
 Returns plugin config
 
 
+
 ## Functions
 ### constructor
-
 
 ```solidity
 constructor(address _pool, address _factory, address _pluginFactory) public
@@ -68,7 +73,6 @@ constructor(address _pool, address _factory, address _pluginFactory) public
 
 ### initialize
 
-
 ```solidity
 function initialize() external
 ```
@@ -76,7 +80,6 @@ function initialize() external
 Initialize the plugin externally TODO
 
 ### getSingleTimepoint
-
 
 ```solidity
 function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative)
@@ -102,7 +105,6 @@ at exactly the timestamp between the two timepoints.*
 
 ### getTimepoints
 
-
 ```solidity
 function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)
 ```
@@ -124,7 +126,6 @@ Returns the accumulator values as of each time seconds ago from the given time i
 
 ### prepayTimepointsStorageSlots
 
-
 ```solidity
 function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external
 ```
@@ -140,7 +141,6 @@ Fills uninitialized timepoints with nonzero value
 
 ### changeFeeConfiguration
 
-
 ```solidity
 function changeFeeConfiguration(struct AlgebraFeeConfiguration _config) external
 ```
@@ -152,7 +152,6 @@ Changes fee configuration for the pool
 | _config | struct AlgebraFeeConfiguration |  |
 
 ### getCurrentFee
-
 
 ```solidity
 function getCurrentFee() external view returns (uint16 fee)
@@ -168,7 +167,6 @@ Returns fee from plugin
 
 ### setIncentive
 
-
 ```solidity
 function setIncentive(address newIncentive) external
 ```
@@ -180,7 +178,6 @@ function setIncentive(address newIncentive) external
 | newIncentive | address |  |
 
 ### isIncentiveActive
-
 
 ```solidity
 function isIncentiveActive(address targetIncentive) external view returns (bool)
@@ -199,7 +196,6 @@ function isIncentiveActive(address targetIncentive) external view returns (bool)
 | [0] | bool |  |
 
 ### beforeInitialize
-
 
 ```solidity
 function beforeInitialize(address, uint160) external returns (bytes4)
@@ -220,7 +216,6 @@ function beforeInitialize(address, uint160) external returns (bytes4)
 
 ### afterInitialize
 
-
 ```solidity
 function afterInitialize(address, uint160, int24 tick) external returns (bytes4)
 ```
@@ -240,7 +235,6 @@ function afterInitialize(address, uint160, int24 tick) external returns (bytes4)
 | [0] | bytes4 |  |
 
 ### beforeModifyPosition
-
 
 ```solidity
 function beforeModifyPosition(address, address, int24, int24, int128, bytes) external view returns (bytes4)
@@ -264,7 +258,6 @@ function beforeModifyPosition(address, address, int24, int24, int128, bytes) ext
 | [0] | bytes4 |  |
 
 ### afterModifyPosition
-
 
 ```solidity
 function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes) external returns (bytes4)
@@ -291,7 +284,6 @@ function afterModifyPosition(address, address, int24, int24, int128, uint256, ui
 
 ### beforeSwap
 
-
 ```solidity
 function beforeSwap(address, address, bool, int256, uint160, bool, bytes) external returns (bytes4)
 ```
@@ -315,7 +307,6 @@ function beforeSwap(address, address, bool, int256, uint160, bool, bytes) extern
 | [0] | bytes4 |  |
 
 ### afterSwap
-
 
 ```solidity
 function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes) external returns (bytes4)
@@ -342,7 +333,6 @@ function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, in
 
 ### beforeFlash
 
-
 ```solidity
 function beforeFlash(address, address, uint256, uint256, bytes) external view returns (bytes4)
 ```
@@ -364,7 +354,6 @@ function beforeFlash(address, address, uint256, uint256, bytes) external view re
 | [0] | bytes4 |  |
 
 ### afterFlash
-
 
 ```solidity
 function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes) external view returns (bytes4)

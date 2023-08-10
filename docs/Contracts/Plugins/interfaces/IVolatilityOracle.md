@@ -13,7 +13,6 @@ The interface for the Algebra volatility oracle
 ## Functions
 ### timepoints
 
-
 ```solidity
 function timepoints(uint256 index) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 tick, int24 averageTick, uint16 windowStartIndex)
 ```
@@ -40,7 +39,6 @@ Returns data belonging to a certain timepoint
 
 ### timepointIndex
 
-
 ```solidity
 function timepointIndex() external view returns (uint16)
 ```
@@ -54,7 +52,6 @@ function timepointIndex() external view returns (uint16)
 | [0] | uint16 |  |
 
 ### getSingleTimepoint
-
 
 ```solidity
 function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative)
@@ -80,7 +77,6 @@ at exactly the timestamp between the two timepoints.*
 
 ### getTimepoints
 
-
 ```solidity
 function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)
 ```
@@ -101,7 +97,6 @@ Returns the accumulator values as of each time seconds ago from the given time i
 | volatilityCumulatives | uint112[] | The cumulative volatility values since the pool was first initialized, as of each `secondsAgo` |
 
 ### prepayTimepointsStorageSlots
-
 
 ```solidity
 function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external

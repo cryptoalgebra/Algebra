@@ -13,7 +13,6 @@ The interface for the virtual pool
 ## Functions
 ### crossTo
 
-
 ```solidity
 function crossTo(int24 targetTick, bool zeroToOne) external returns (bool success)
 ```

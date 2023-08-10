@@ -13,7 +13,6 @@ This contract combines the standard implementations of the volatility oracle and
 ## Functions
 ### initialize
 
-
 ```solidity
 function initialize() external
 ```
