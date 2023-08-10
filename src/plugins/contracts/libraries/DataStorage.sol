@@ -453,11 +453,8 @@ library DataStorage {
       if (lastTimepointTimestamp - target <= WINDOW) {
         // we can limit the scope of the search
         if (windowStartIndex != oldestIndex) {
-          uint32 windowStartTimestamp = self[windowStartIndex].blockTimestamp;
-          if (_lteConsideringOverflow(oldestTimestamp, windowStartTimestamp, currentTime)) {
-            (oldestIndex, oldestTimestamp) = (windowStartIndex, windowStartTimestamp);
-            if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
-          }
+          (oldestIndex, oldestTimestamp) = (windowStartIndex, self[windowStartIndex].blockTimestamp);
+          if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
         }
       }
       // no need to search if we already know the answer
@@ -490,9 +487,9 @@ library DataStorage {
       uint256 left = oldestIndex; // oldest timepoint
       uint256 right = lastIndex < oldestIndex ? lastIndex + UINT16_MODULO : lastIndex; // newest timepoint considering one index overflow
       indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
-
+      beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
+      atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
       do {
-        beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
         (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
         if (initializedBefore) {
           if (_lteConsideringOverflow(timestampBefore, target, time)) {
@@ -519,10 +516,8 @@ library DataStorage {
           left = indexBeforeOrAt + 1;
         }
         indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
+        beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
       } while (true);
-
-      atOrAfter = beforeOrAt; // code is unreachable, to suppress compiler warning
-      assert(false); // code is unreachable, used for fuzzy testing
     }
   }
 }
