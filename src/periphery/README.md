@@ -1,4 +1,5 @@
 # Algebra Periphery
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml/badge.svg"></a>
 
 This directory contains the periphery smart contracts for the Algebra DEX. For the lower level core contracts, see the `core` directory.
 
