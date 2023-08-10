@@ -18,7 +18,7 @@
   },
   "scripts": {
     "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
-    "compile": "hardhat compile",
+    "compile": "npm --prefix ../core run compile && hardhat compile",
     "test": "hardhat test --parallel",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
   },
