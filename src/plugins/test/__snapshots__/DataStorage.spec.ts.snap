@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8251`;
+exports[`DataStorage #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8228`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6218`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `7965`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `8094`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
 Object {
@@ -20,17 +20,17 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `98610`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `97151`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17730`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17628`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6218`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10026`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10155`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17321`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17217`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `16898`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `16794`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 fetch many values 1`] = `
 Object {
@@ -46,41 +46,41 @@ Object {
 }
 `;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `98262`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `96803`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17672`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17570`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6218`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10055`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10184`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17292`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17188`;
 
-exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `16840`;
+exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `16736`;
 
-exports[`DataStorage #initialize gas  [ @skip-on-coverage ] 1`] = `89524`;
+exports[`DataStorage #initialize gas  [ @skip-on-coverage ] 1`] = `72424`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6226`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6355`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `42439`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `42317`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6512`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6489`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago)  [ @skip-on-coverage ] 1`] = `39418`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago)  [ @skip-on-coverage ] 1`] = `39165`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ] 1`] = `40195`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ] 1`] = `39944`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `46522`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `46269`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13 + 5)  [ @skip-on-coverage ] 1`] = `48440`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13 + 5)  [ @skip-on-coverage ] 1`] = `48183`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13)  [ @skip-on-coverage ] 1`] = `48385`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(200 * 13)  [ @skip-on-coverage ] 1`] = `48128`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12296`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12353`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45450`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45535`;
 
-exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45450`;
+exports[`DataStorage full dataStorage gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45535`;
 
 exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6355`;
 
@@ -88,14 +88,14 @@ exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints
 
 exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6489`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `45331`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `45354`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1 + 5)  [ @skip-on-coverage ] 1`] = `69788`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1 + 5)  [ @skip-on-coverage ] 1`] = `69821`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1)  [ @skip-on-coverage ] 1`] = `64398`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(200 * 1)  [ @skip-on-coverage ] 1`] = `64427`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12382`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12387`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45536`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `45569`;
 
-exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45536`;
+exports[`DataStorage full dataStorage, maximal density gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `45569`;
