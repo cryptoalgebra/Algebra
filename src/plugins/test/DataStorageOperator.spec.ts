@@ -536,11 +536,13 @@ describe('DataStorageOperator', () => {
        })
    
        it('set incentive works', async() => {
+         await mockPool.setPlugin(plugin);
          await plugin.setIncentive(virtualPoolMock);
          expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());    
        })
 
        it('can detach incentive', async() => {
+        await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await plugin.setIncentive(ZeroAddress);
         expect(await plugin.incentive()).to.be.eq(ZeroAddress);    
@@ -548,11 +550,13 @@ describe('DataStorageOperator', () => {
 
 
        it('cannot set same incentive twice', async() => {
+        await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('already active');    
       })
 
       it('cannot set incentive if has active', async() => {
+        await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('has active incentive');    
       })
@@ -654,27 +658,27 @@ describe('DataStorageOperator', () => {
       })
 
       it('true with active incentive', async() => {
-        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
         expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
       })
 
       it('false with invalid address', async() => {
-        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
         expect(await plugin.isIncentiveActive(wallet.address)).to.be.false;
       })
 
       it('false if plugin detached', async() => {
-        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(ZeroAddress);
         expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
       })
 
       it('false if hook deactivated', async() => {
-        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPluginConfig(0);
         expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
       })
