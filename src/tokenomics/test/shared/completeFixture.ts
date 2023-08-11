@@ -12,7 +12,7 @@ import {
 
 type Fixture<T> = () => Promise<T>
 
-type TestERC20WithAddress = TestERC20 & {address_: string | undefined}
+type TestERC20WithAddress = TestERC20 & {address: string | undefined}
 
 const completeFixture: Fixture<{
   wnative: IWNativeToken

@@ -38,7 +38,7 @@ export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
 export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   const wnativeFactory = await ethers.getContractFactory(WNativeToken.abi, WNativeToken.bytecode)
-  const wnative = (await wnativeFactory.deploy()) as IWNativeToken
+  const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken
 
   return { wnative }
 }
@@ -118,7 +118,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1480,
+              start: 1499,
             },
           ],
         },

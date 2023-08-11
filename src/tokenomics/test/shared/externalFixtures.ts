@@ -24,7 +24,7 @@ export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a'
 
 const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
   const wnativeFactory = await ethers.getContractFactory(WNATIVE_ABI, WNATIWE_BYTECODE)
-  const wnative = (await wnativeFactory.deploy()) as IWNativeToken
+  const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken
 
   return { wnative }
 }
@@ -38,15 +38,15 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   });
 
   const v3FactoryFactory = await ethers.getContractFactory(FACTORY_ABI, FACTORY_BYTECODE)
-  const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as IAlgebraFactory
+  const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE)
-  const poolDeployer = await poolDeployerFactory.deploy(_factory.address, vaultAddress)
+  const poolDeployer = await poolDeployerFactory.deploy(_factory, vaultAddress)
 
   const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI,  PLUGIN_FACTORY_BYTECODE);
-  const pluginFactory = await pluginContractFactory.deploy(_factory.address);
+  const pluginFactory = await pluginContractFactory.deploy(_factory);
 
-  await _factory.setDefaultPluginFactory(pluginFactory.address)
+  await _factory.setDefaultPluginFactory(pluginFactory)
 
   return _factory
 }
