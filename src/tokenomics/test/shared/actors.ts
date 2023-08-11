@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 export const WALLET_USER_INDEXES = {
   WETH_OWNER: 0,
   TOKENS_OWNER: 1,
-  UNISWAP_ROOT: 2,
+  ALGEBRA_ROOT: 2,
   STAKER_DEPLOYER: 3,
   LP_USER_0: 4,
   LP_USER_1: 5,
@@ -35,7 +35,7 @@ export class ActorFixture {
   }
 
   algebraRootUser() {
-    return this._getActor(WALLET_USER_INDEXES.UNISWAP_ROOT)
+    return this._getActor(WALLET_USER_INDEXES.ALGEBRA_ROOT)
   }
 
   /** EOA that will deploy the tokenomics */

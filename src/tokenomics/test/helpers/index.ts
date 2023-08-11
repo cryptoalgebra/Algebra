@@ -416,7 +416,7 @@ export class HelperCommands {
       const amountIn = 5n * 10n ** 16n
 
       const erc20Helper = new ERC20Helper()
-      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
+      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress())
 
       const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
 
@@ -476,7 +476,7 @@ export class HelperCommands {
     const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1)
 
     const erc20Helper = new ERC20Helper()
-    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, this.router.address)
+    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress())
 
     const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
 

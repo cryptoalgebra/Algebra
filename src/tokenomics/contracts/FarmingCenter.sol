@@ -69,19 +69,6 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     _updatePosition(tokenId);
   }
 
-  // function for compatibility with older versions of NonfungiblePositionManager
-  function increaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external {
-    liquidityDelta; // reserved for future versions
-    _updatePosition(tokenId);
-  }
-
-  // function for compatibility with older versions of NonfungiblePositionManager
-  function decreaseLiquidity(uint256 tokenId, uint256 liquidityDelta) external returns (bool success) {
-    liquidityDelta; // reserved for future versions
-    _updatePosition(tokenId);
-    return true;
-  }
-
   function _updatePosition(uint256 tokenId) private {
     require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
 

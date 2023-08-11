@@ -277,7 +277,7 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const pool12 = await factory.poolByPair(tokens[1], tokens[2])
 
-  const poolObj = poolFactory.attach(pool01) as IAlgebraPool
+  const poolObj = poolFactory.attach(pool01) as any as IAlgebraPool
 
   return {
     nft,
