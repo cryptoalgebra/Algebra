@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20, AlgebraEternalFarming } from '../../typechain'
+import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter } from '../../typechain'
 import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
 import {
   expect,
@@ -242,6 +242,30 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000
       })).to.emit(context.eternalFarming, 'FarmEnded')
       expect((await context.farmingCenter.deposits(tokenIdEternal))).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+    })
+
+    it('do nothing if nft position manager calls for invalid token', async () => {
+      const nftPosMockFactory = await ethers.getContractFactory('NftPosManagerMock');
+      const nftPosMock = (await nftPosMockFactory.deploy()) as any as NftPosManagerMock;
+
+      const farmingCenterFactory = await ethers.getContractFactory('FarmingCenter');
+      const farmingCenter = (await farmingCenterFactory.deploy(ZERO_ADDRESS, nftPosMock)) as any as FarmingCenter;
+
+      await nftPosMock.setPosition(0, {
+        nonce: 0,
+        operator: ZERO_ADDRESS,
+        poolId: 0,
+        tickLower: -60,
+        tickUpper: 60,
+        liquidity: 100, 
+        feeGrowthInside0LastX128: 1,
+        feeGrowthInside1LastX128: 1,
+        tokensOwed0: 0,
+        tokensOwed1: 0
+      })
+
+      await nftPosMock.applyLiquidityDeltaInFC(farmingCenter, 0, 100);
+      expect(await farmingCenter.deposits(0)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     })
 
   })

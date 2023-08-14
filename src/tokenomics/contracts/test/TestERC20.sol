@@ -42,9 +42,19 @@ contract TestERC20 is IERC20Minimal {
   }
 
   bool isDeflationary = false;
+  uint128 transferFeePercent = 5;
+  bool overrideNextTransfer;
 
-  function setDefl() external {
-    isDeflationary = true;
+  uint256 nextTransferAmount;
+
+  function setDefl(bool _isDeflationary, uint128 percent) external {
+    isDeflationary = _isDeflationary;
+    transferFeePercent = percent;
+  }
+
+  function setNextTransferAmount(uint256 _nextTransferAmount) external {
+    overrideNextTransfer = true;
+    nextTransferAmount = _nextTransferAmount;
   }
 
   function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
@@ -55,10 +65,17 @@ contract TestERC20 is IERC20Minimal {
 
     uint256 balanceRecipient = balanceOf[recipient];
     require(balanceRecipient + amount >= balanceRecipient, 'overflow balance recipient');
+
+    if (overrideNextTransfer) {
+      amount = nextTransferAmount;
+      nextTransferAmount = 0;
+      overrideNextTransfer = false;
+    }
+
     if (!isDeflationary) {
       balanceOf[recipient] = balanceRecipient + amount;
     } else {
-      balanceOf[recipient] = balanceRecipient + (amount - (amount * 5) / 100);
+      balanceOf[recipient] = balanceRecipient + (amount - (amount * uint256(transferFeePercent)) / 100);
     }
     uint256 balanceSender = balanceOf[sender];
     require(balanceSender >= amount, 'underflow balance sender');

@@ -173,7 +173,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    virtualPool.distributeRewards();
+    _distributeRewards(virtualPool);
     (uint128 rewardReserve0, uint128 rewardReserve1) = virtualPool.rewardReserves();
     if (rewardAmount > rewardReserve0) rewardAmount = rewardReserve0;
     if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
@@ -276,7 +276,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
-    virtualPool.distributeRewards();
+    _distributeRewards(virtualPool);
 
     (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
@@ -314,7 +314,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (farm.liquidity == 0) revert farmDoesNotExist();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    virtualPool.distributeRewards();
+    _distributeRewards(virtualPool);
 
     uint256 innerRewardGrowth0;
     uint256 innerRewardGrowth1;
@@ -348,6 +348,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     );
   }
 
+  function _distributeRewards(IAlgebraEternalVirtualPool virtualPool) private {
+    virtualPool.distributeRewards();
+  }
+
   function _addRewards(IAlgebraEternalVirtualPool virtualPool, uint128 amount0, uint128 amount1, bytes32 incentiveId) private {
     virtualPool.addRewards(amount0, amount1);
     emit RewardsAdded(amount0, amount1, incentiveId);
@@ -375,8 +379,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (reward > 0) receivedReward = _receiveToken(key.rewardToken, reward);
     if (bonusReward > 0) receivedBonusReward = _receiveToken(key.bonusRewardToken, bonusReward);
 
-    incentive.totalReward = incentive.totalReward + receivedReward;
-    incentive.bonusReward = incentive.bonusReward + receivedBonusReward;
+    (uint128 _totalRewardBefore, uint128 _bonusRewardBefore) = (incentive.totalReward, incentive.bonusReward);
+    incentive.totalReward = _totalRewardBefore + receivedReward;
+    incentive.bonusReward = _bonusRewardBefore + receivedBonusReward;
   }
 
   function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128) {
@@ -385,8 +390,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint256 balanceAfter = token.balanceOf(address(this));
     require(balanceAfter > balanceBefore);
     unchecked {
-      uint256 received = uint128(balanceAfter - balanceBefore);
-      require(received <= type(uint128).max, 'invalid token amount');
+      uint256 received = balanceAfter - balanceBefore;
+      if (received > type(uint128).max) revert invalidTokenAmount();
       return (uint128(received));
     }
   }

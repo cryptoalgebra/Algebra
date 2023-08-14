@@ -1808,6 +1808,48 @@ describe('unit/EternalFarms', () => {
         expect(incentiveAfter.totalReward - amountDesired).to.eq(incentiveBefore.totalReward)
         expect(incentiveAfter.bonusReward - amountDesired).to.eq(incentiveBefore.bonusReward)
       })
+
+      it('can add rewards in deflationary token', async () => {
+        await context.rewardToken.setDefl(true, 5);
+
+        let incentiveBefore = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+  
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.rewardToken, context.bonusRewardToken],
+          amountDesired,
+          await context.eternalFarming.getAddress()
+        )
+  
+        await context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amountDesired, amountDesired)
+  
+        let incentiveAfter = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+  
+        expect(incentiveAfter.totalReward).to.be.gt(incentiveBefore.totalReward)
+        expect(incentiveAfter.bonusReward - amountDesired).to.eq(incentiveBefore.bonusReward)
+      })
+
+      it('cannot add rewards if token does incorrect transfer', async () => {
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.rewardToken, context.bonusRewardToken],
+          2n**128n + 10n,
+          await context.eternalFarming.getAddress()
+        )
+
+        await context.rewardToken.setDefl(true, 100);
+  
+        expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amountDesired, amountDesired)).to.be.revertedWithoutReason;
+  
+        await context.rewardToken.setDefl(false, 0);
+
+        await context.rewardToken.setNextTransferAmount(2n**128n);
+
+        await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amountDesired, amountDesired)).to.be.revertedWithCustomError(
+          context.eternalFarming,
+          'invalidTokenAmount'
+        );
+      })
   
       it('can add rewards with 0 amounts', async () => {
         let incentiveBefore = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
