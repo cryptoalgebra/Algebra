@@ -282,7 +282,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
     if (liquidityDelta != 0) {
-      _updatePositionInVirtualPool(address(virtualPool), uint32(block.timestamp), farm.tickLower, farm.tickUpper, liquidityDelta, tick);
+      _updatePositionInVirtualPool(address(virtualPool), farm.tickLower, farm.tickUpper, liquidityDelta, tick);
     }
 
     mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
@@ -415,7 +415,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     }
 
     int24 tick = _getTickInPool(pool);
-    _updatePositionInVirtualPool(virtualPool, uint32(block.timestamp), tickLower, tickUpper, int256(uint256(liquidity)).toInt128(), tick);
+    _updatePositionInVirtualPool(virtualPool, tickLower, tickUpper, int256(uint256(liquidity)).toInt128(), tick);
   }
 
   function _claimReward(IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) internal returns (uint256 reward) {
@@ -443,14 +443,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (, tick, , , , ) = pool.globalState();
   }
 
-  function _updatePositionInVirtualPool(
-    address virtualPool,
-    uint32 timestamp,
-    int24 tickLower,
-    int24 tickUpper,
-    int128 liquidityDelta,
-    int24 currentTick
-  ) internal {
-    IAlgebraEternalVirtualPool(virtualPool).applyLiquidityDeltaToPosition(timestamp, tickLower, tickUpper, liquidityDelta, currentTick);
+  function _updatePositionInVirtualPool(address virtualPool, int24 tickLower, int24 tickUpper, int128 liquidityDelta, int24 currentTick) internal {
+    IAlgebraEternalVirtualPool(virtualPool).applyLiquidityDeltaToPosition(tickLower, tickUpper, liquidityDelta, currentTick);
   }
 }

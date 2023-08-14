@@ -14,12 +14,12 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
     external
     view
     returns (
-      uint128 liquidityTotal,
+      uint256 liquidityTotal,
       int128 liquidityDelta,
-      uint256 outerFeeGrowth0Token,
-      uint256 outerFeeGrowth1Token,
       int24 prevTick,
-      int24 nextTick
+      int24 nextTick,
+      uint256 outerFeeGrowth0Token,
+      uint256 outerFeeGrowth1Token
     );
 
   // returns the current liquidity in virtual pool
@@ -33,12 +33,11 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
 
   /// @dev This function is called when anyone farms their liquidity. The position in a virtual pool
   /// should be changed accordingly
-  /// @param currentTimestamp The timestamp of current block
   /// @param bottomTick The bottom tick of a position
   /// @param topTick The top tick of a position
   /// @param liquidityDelta The amount of liquidity in a position
   /// @param currentTick The current tick in the main pool
-  function applyLiquidityDeltaToPosition(uint32 currentTimestamp, int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external;
+  function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external;
 
   /// @dev This function is called from the main pool before every swap To increase rewards per liquidity
   /// cumulative considering previous liquidity. The liquidity is stored in a virtual pool

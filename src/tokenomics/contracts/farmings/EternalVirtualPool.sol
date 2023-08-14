@@ -5,16 +5,15 @@ import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-
-import '../libraries/VirtualTickManagement.sol';
 
 import '../base/VirtualTickStructure.sol';
 
 /// @title Algebra eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
 contract EternalVirtualPool is VirtualTickStructure {
-  using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
+  using TickManagement for mapping(int24 => TickManagement.Tick);
 
   address public immutable farmingAddress;
   address public immutable pool;
@@ -25,8 +24,6 @@ contract EternalVirtualPool is VirtualTickStructure {
   int24 public override globalTick;
   /// @inheritdoc IAlgebraEternalVirtualPool
   uint32 public override prevTimestamp;
-
-  int24 internal globalPrevInitializedTick;
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
@@ -44,6 +41,8 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   constructor(address _farmingAddress, address _pool) {
     globalPrevInitializedTick = TickMath.MIN_TICK;
+    globalNextInitializedTick = TickMath.MAX_TICK;
+
     farmingAddress = _farmingAddress;
     pool = _pool;
     prevTimestamp = uint32(block.timestamp);
@@ -103,10 +102,12 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
-    if (msg.sender != IAlgebraPool(pool).plugin()) revert onlyPool();
+    if (msg.sender != IAlgebraPool(pool).plugin()) revert onlyPool(); // TODO
     _distributeRewards();
 
     int24 previousTick = globalPrevInitializedTick;
+    int24 nextTick = globalNextInitializedTick;
+
     uint128 _currentLiquidity = currentLiquidity;
     int24 _globalTick = globalTick;
 
@@ -117,25 +118,27 @@ contract EternalVirtualPool is VirtualTickStructure {
       while (_globalTick != TickMath.MIN_TICK) {
         if (targetTick >= previousTick) break;
         unchecked {
-          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -ticks.cross(previousTick, rewardGrowth0, rewardGrowth1));
+          int128 liquidityDelta;
           _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
-          previousTick = ticks[previousTick].prevTick;
-          if (_globalTick < TickMath.MIN_TICK) _globalTick = TickMath.MIN_TICK;
+          (liquidityDelta, previousTick, nextTick) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
+          _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -liquidityDelta);
         }
       }
     } else {
       while (_globalTick != TickMath.MAX_TICK - 1) {
-        int24 nextTick = ticks[previousTick].nextTick;
         if (targetTick < nextTick) break;
-
-        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, ticks.cross(nextTick, rewardGrowth0, rewardGrowth1));
-        (_globalTick, previousTick) = (nextTick, nextTick);
+        int128 liquidityDelta;
+        _globalTick = nextTick;
+        (liquidityDelta, previousTick, nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
+        _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
     }
 
     globalTick = targetTick;
     currentLiquidity = _currentLiquidity;
+
     globalPrevInitializedTick = previousTick;
+    globalNextInitializedTick = nextTick;
     return true;
   }
 
@@ -146,7 +149,6 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   /// @inheritdoc IAlgebraEternalVirtualPool
   function applyLiquidityDeltaToPosition(
-    uint32 currentTimestamp,
     int24 bottomTick,
     int24 topTick,
     int128 liquidityDelta,
@@ -154,7 +156,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   ) external override onlyFromFarming {
     globalTick = currentTick;
 
-    if (currentTimestamp > prevTimestamp) {
+    if (uint32(block.timestamp) > prevTimestamp) {
       _distributeRewards();
     }
 
@@ -176,14 +178,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       }
 
       if (flippedBottom || flippedTop) {
-        int24 previousTick = globalPrevInitializedTick;
-        if (flippedBottom) {
-          previousTick = _insertOrRemoveTick(bottomTick, currentTick, previousTick, liquidityDelta < 0);
-        }
-        if (flippedTop) {
-          previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
-        }
-        globalPrevInitializedTick = previousTick;
+        _addOrRemoveTicks(bottomTick, topTick, flippedBottom, flippedTop, currentTick, liquidityDelta < 0);
       }
     }
   }

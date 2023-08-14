@@ -5,6 +5,7 @@ module.exports = {
     'test/TestERC20.sol',
     'test/TestIncentiveId.sol',
     'test/TestRewardMath.sol',
+    'test/PoolMock.sol',
     'base/ERC20.sol',
     'base/FreezableToken.sol',
     'base/PeripheryPayments.sol',
