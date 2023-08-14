@@ -15,6 +15,11 @@ import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
 } from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageFactory.sol/DataStorageFactory.json'
+
+import {
+  abi as PLUGIN_ABI,
+  bytecode as PLUGIN_BYTECODE,
+} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageOperator.sol/DataStorageOperator.json'
 import {
   AlgebraEternalFarming,
   TestERC20,
@@ -28,7 +33,7 @@ import {
 } from '../../typechain'
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
-import { IDataStorageFactory } from '@cryptoalgebra/plugins/typechain'
+import { IDataStorageFactory, IDataStorageOperator } from '@cryptoalgebra/plugins/typechain'
 
 type WNativeTokenFixture = { wnative: IWNativeToken }
 
@@ -222,6 +227,8 @@ export type AlgebraFixtureType = {
   pool12: string
   factory: IAlgebraFactory
   poolObj: IAlgebraPool
+  pluginObj: IDataStorageOperator,
+  pluginFactory: IDataStorageFactory,
   router: ISwapRouter
   eternalFarming: AlgebraEternalFarming
   farmingCenter: FarmingCenter
@@ -279,6 +286,10 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const poolObj = poolFactory.attach(pool01) as any as IAlgebraPool
 
+  const pluginContractFactory = new ethers.ContractFactory(PLUGIN_ABI, PLUGIN_BYTECODE, signer);
+
+  const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as IDataStorageOperator;
+
   return {
     nft,
     router,
@@ -292,6 +303,8 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
     pool12,
     fee,
     poolObj,
+    pluginObj,
+    pluginFactory,
     token0: tokens[0],
     token1: tokens[1],
     rewardToken: tokens[2],

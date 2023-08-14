@@ -96,7 +96,7 @@ export class HelperCommands {
    * Creates a staking incentive owned by `incentiveCreator` for `totalReward` of `rewardToken`
    *
    * Side-Effects:
-   *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient blaance.
+   *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient balance.
    */
   createIncentiveFlow: HelperTypes.CreateIncentive.Command = async (params) => {
     const { nonce } = params

@@ -156,7 +156,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (incentive.deactivated) revert incentiveStopped();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    if (address(virtualPool) == address(0)) revert incentiveNotExist();
 
     incentive.deactivated = true;
 
