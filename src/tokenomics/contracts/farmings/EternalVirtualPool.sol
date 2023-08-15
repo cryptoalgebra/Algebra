@@ -24,6 +24,8 @@ contract EternalVirtualPool is VirtualTickStructure {
   int24 public override globalTick;
   /// @inheritdoc IAlgebraEternalVirtualPool
   uint32 public override prevTimestamp;
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  bool public override deactivated;
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
@@ -90,12 +92,17 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  function deactivate() external override onlyFromFarming {
+    deactivated = true;
+  }
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
     _applyRewardsDelta(true, token0Amount, token1Amount);
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
     _applyRewardsDelta(false, token0Amount, token1Amount);
   }
@@ -103,14 +110,24 @@ contract EternalVirtualPool is VirtualTickStructure {
   /// @inheritdoc IAlgebraVirtualPool
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != IAlgebraPool(pool).plugin()) revert onlyPool(); // TODO
+
+    uint128 _currentLiquidity = currentLiquidity;
+    int24 _globalTick = globalTick;
+    bool _deactivated = deactivated;
+
+    {
+      if (targetTick > _globalTick == zeroToOne) {
+        _deactivated = true;
+        deactivated = true;
+      }
+    }
+    if (deactivated) return false;
+
     _distributeRewards();
 
     // TODO optimize if without crosses
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
-
-    uint128 _currentLiquidity = currentLiquidity;
-    int24 _globalTick = globalTick;
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
     // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
@@ -155,7 +172,23 @@ contract EternalVirtualPool is VirtualTickStructure {
     int128 liquidityDelta,
     int24 currentTick
   ) external override onlyFromFarming {
-    globalTick = currentTick;
+    bool _deactivated = deactivated;
+    {
+      int24 _lastKnownTick = globalTick;
+      int24 _nextActiveTick = globalNextInitializedTick;
+      int24 _prevActiveTick = globalPrevInitializedTick;
+
+      if (
+        (currentTick < _nextActiveTick != _lastKnownTick < _nextActiveTick) || (currentTick >= _prevActiveTick != _lastKnownTick >= _prevActiveTick)
+      ) {
+        _deactivated = true;
+        deactivated = true;
+      }
+    }
+
+    if (!_deactivated) {
+      globalTick = currentTick;
+    }
 
     if (uint32(block.timestamp) > prevTimestamp) {
       _distributeRewards();

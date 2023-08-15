@@ -2,7 +2,7 @@ import { ethers } from 'hardhat'
 import { Wallet } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter } from '../../typechain'
-import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
+import { algebraFixture, AlgebraFixtureType, mintPosition } from '../shared/fixtures'
 import {
   expect,
   getMaxTick,
@@ -204,7 +204,46 @@ describe('unit/FarmingCenter', () => {
     })
 
     it('works if liquidity decreased and incentive detached indirectly', async () => {
-      await context.poolObj.connect(actors.wallets[0]).setPlugin(ZERO_ADDRESS);
+      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+
+      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+  
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
+  
+      const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+  
+      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true)
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: nonce,
+        },
+        _tokenId
+      )
+  
+      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+  
+      const tick = (await context.poolObj.connect(actors.algebraRootUser()).globalState()).tick
+  
+      await helpers.makeTickGoFlow({direction: 'down', desiredValue: Number(tick) - 200, trader: actors.farmingDeployer()});
+  
+      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
+  
+      await helpers.makeTickGoFlow({direction: 'up', desiredValue: Number(tick) - 100, trader: actors.farmingDeployer()});
 
       // TODO
       await expect(context.nft.connect(lpUser0).decreaseLiquidity({

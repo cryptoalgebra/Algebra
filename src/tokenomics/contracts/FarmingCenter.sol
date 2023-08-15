@@ -82,9 +82,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       if (liquidity == 0 || virtualPoolAddresses[address(key.pool)] == address(0)) {
         _exitFarming(key, tokenId, tokenOwner);
       } else {
-        if (!IAlgebraEternalFarming(eternalFarming).isIncentiveActiveInPool(IncentiveId.compute(key), key.pool)) {
+        if (!IAlgebraEternalFarming(eternalFarming).isIncentiveActive(IncentiveId.compute(key))) {
           // exit if incentive stopped
-          _exitFarming(key, tokenId, tokenOwner);
+          _exitFarming(key, tokenId, tokenOwner); // TODO
         } else {
           // reenter with new liquidity value
           IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
@@ -111,7 +111,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
     require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
     require(msg.sender == address(eternalFarming), 'only farming can call this');
-    IFarmingPlugin(pool.plugin()).setIncentive(newVirtualPool);
+    IFarmingPlugin(pool.plugin()).setIncentive(newVirtualPool); // TODO
     virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
 }

@@ -31,6 +31,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   // returns the timestamp after previous swap (like the last timepoint in a default pool)
   function prevTimestamp() external view returns (uint32);
 
+  // returns true if virtual pool is deactivated
+  function deactivated() external view returns (bool);
+
   /// @dev This function is called when anyone farms their liquidity. The position in a virtual pool
   /// should be changed accordingly
   /// @param bottomTick The bottom tick of a position
@@ -47,6 +50,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @param rate0 The new rate of main token distribution per sec
   /// @param rate1 The new rate of bonus token distribution per sec
   function setRates(uint128 rate0, uint128 rate1) external;
+
+  /// @notice This function is used to deactivate virtual pool
+  function deactivate() external;
 
   /// @notice Top up rewards reserves
   /// @param token0Amount The amount of token0

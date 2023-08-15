@@ -39,6 +39,51 @@ describe('unit/EternalFarms', () => {
   let timestamps: ContractParams.Timestamps
   let tokenId: string
 
+  const detachIncentiveIndirectly = async (localNonce: any) => {
+    await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+
+    const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+
+    await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
+
+    const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
+      token0: await context.token0.getAddress(),
+      token1: await context.token1.getAddress(),
+      fee: FeeAmount.MEDIUM,
+      tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      recipient: lpUser0.address,
+      amount0Desired: amountDesired,
+      amount1Desired: amountDesired,
+      amount0Min: 0,
+      amount1Min: 0,
+      deadline: (await blockTimestamp()) + 1000,
+    })
+
+    await context.nft.connect(lpUser0).approveForFarming(_tokenId, true)
+    await context.farmingCenter.connect(lpUser0).enterFarming(
+      {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: localNonce,
+      },
+      _tokenId
+    )
+
+    await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+
+    const tick = (await context.poolObj.connect(actors.algebraRootUser()).globalState()).tick
+
+    await helpers.makeTickGoFlow({direction: 'down', desiredValue: Number(tick) - 200, trader: actors.farmingDeployer()});
+
+    await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
+
+    await helpers.makeTickGoFlow({direction: 'up', desiredValue: Number(tick) - 100, trader: actors.farmingDeployer()});
+
+    await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+  }
+
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[]
     actors = new ActorFixture(wallets, provider)
@@ -315,7 +360,7 @@ describe('unit/EternalFarms', () => {
     })
 
     it('true if incentive active', async () => {
-      expect(await context.eternalFarming.isIncentiveActiveInPool(incentiveId, context.pool01)).to.be.true;
+      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.true;
     })
 
     it('false if incentive deactivated', async () => {
@@ -325,14 +370,13 @@ describe('unit/EternalFarms', () => {
         bonusRewardToken: context.bonusRewardToken,
         nonce: localNonce,
       })
-      expect(await context.eternalFarming.isIncentiveActiveInPool(incentiveId, context.pool01)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
     })
 
     it('false if incentive deactivated indirectly', async () => {
-      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+      await detachIncentiveIndirectly(localNonce);
 
-      expect(await context.eternalFarming.isIncentiveActiveInPool(incentiveId, context.pool01)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
     })
   })
 
@@ -428,9 +472,7 @@ describe('unit/EternalFarms', () => {
       context = await loadFixture(algebraFixture)
       helpers = HelperCommands.fromTestContext(context, actors, provider)
 
-      /** We will be doing a lot of time-testing here, so leave some room between
-        and when the incentive starts */
-        localNonce = await context.eternalFarming.numOfIncentives()
+      localNonce = await context.eternalFarming.numOfIncentives()
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
 
@@ -551,8 +593,7 @@ describe('unit/EternalFarms', () => {
       })
 
       it('farming indirectly deactivated', async () => {
-        await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-        await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await detachIncentiveIndirectly(localNonce);
 
         await expect(subject(tokenId, lpUser0)).to.be.revertedWithCustomError(
           context.eternalFarming,
@@ -996,9 +1037,12 @@ describe('unit/EternalFarms', () => {
     let virtualPool: EternalVirtualPool
     let virtualPoolAddress: string;
 
+    let localNonce = 0n;
+
     let factoryOwner: Wallet;
 
     beforeEach('set up incentive and farm', async () => {
+      localNonce = await context.eternalFarming.numOfIncentives();
       factoryOwner = actors.wallets[0];
       incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -1006,13 +1050,13 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.pool01,
-        nonce: 0n,
+        nonce: localNonce,
         rewardRate: 10000n,
         bonusRewardRate: 50000n
       }
 
       incentiveKey = {
-        nonce: 0n,
+        nonce: localNonce,
         rewardToken: await context.rewardToken.getAddress(),
         bonusRewardToken: await context.bonusRewardToken.getAddress(),
         
@@ -1080,43 +1124,9 @@ describe('unit/EternalFarms', () => {
     })
 
     it('can deactivate manually after indirect deactivation', async () => {
-      await context.pluginFactory.setFarmingAddress(factoryOwner.address);
-      await context.pluginObj.connect(factoryOwner).setIncentive(ZERO_ADDRESS);
+      await detachIncentiveIndirectly(localNonce);
       
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
-    })
-
-    it.skip('deactivates if activated forcefully', async () => {
-      await erc20Helper.ensureBalancesAndApprovals(
-        lpUser0,
-        [context.token0, context.token1],
-        amountDesired,
-        await context.nft.getAddress()
-      )
-
-      const tokenId = await mintPosition(context.nft.connect(lpUser0), {
-        token0: await context.token0.getAddress(),
-        token1: await context.token1.getAddress(),
-        fee: FeeAmount.MEDIUM,
-        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        recipient: lpUser0.address,
-        amount0Desired: amountDesired,
-        amount1Desired: amountDesired,
-        amount0Min: 0,
-        amount1Min: 0,
-        deadline: (await blockTimestamp()) + 1000,
-      })
-
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
-
-      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(virtualPool);
-
-      await helpers.makeTickGoFlow({direction: 'up', desiredValue: 10, trader: actors.farmingDeployer()});
-
-      const currentIncentive = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
-      expect(currentIncentive).to.be.eq(ZERO_ADDRESS);
     })
 
     it('cross lower after deactivate', async () => {
@@ -1219,7 +1229,7 @@ describe('unit/EternalFarms', () => {
       let vpTick = await virtualPool.globalTick()
       expect(rewards).to.eq(1595250)
       expect(bonusRewards).to.eq(7976251)
-      expect(vpTick).to.eq(151)
+      expect(vpTick).to.eq(120)
     })
   
     it('cross upper after deactivate', async () => {
@@ -1799,8 +1809,7 @@ describe('unit/EternalFarms', () => {
       })
   
       it('can exit from indirectly deactivated farming', async () => {
-        await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-        await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await detachIncentiveIndirectly(localNonce);
         await subject(lpUser0);
       })
 
@@ -2034,8 +2043,7 @@ describe('unit/EternalFarms', () => {
   
       it('#addRewards to indirectly deactivated incentive', async () => {
   
-        await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-        await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await detachIncentiveIndirectly(localNonce);
         
         await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 1, 1)).to.be.revertedWithCustomError(
           context.eternalFarming,
@@ -2110,8 +2118,7 @@ describe('unit/EternalFarms', () => {
   
   
       it('cannot set nonzero to indirectly deactivated incentive', async () => {
-        await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-        await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await detachIncentiveIndirectly(localNonce);
         
         await expect(context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 1, 1)).to.be.revertedWithCustomError(
           context.eternalFarming,
@@ -2120,8 +2127,7 @@ describe('unit/EternalFarms', () => {
       })
   
       it('set zero to indirectly deactivated incentive', async () => {
-        await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
-        await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+        await detachIncentiveIndirectly(localNonce);
   
         await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
       })

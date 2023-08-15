@@ -73,6 +73,7 @@ describe('unit/EternalVirtualPool', () => {
       100, 110, 100, 100
     )).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
     await expect(virtualPool.setRates(100, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
+    await expect(virtualPool.deactivate()).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
   })
 
   it('has correct init configuration', async() => {
@@ -372,6 +373,48 @@ describe('unit/EternalVirtualPool', () => {
 
       liquidity = await virtualPool.currentLiquidity();
       expect(liquidity).to.be.eq(0);
+    })
+
+    it('deactivates virtual pool if new tick is higher than should be', async () => {
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+        -100,
+        100,
+        1,
+        0
+      );
+      
+      expect(await virtualPool.deactivated()).to.be.false;
+
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+        -110,
+        110,
+        1,
+        105
+      );
+
+      expect(await virtualPool.deactivated()).to.be.true;
+      expect(await virtualPool.globalTick()).to.be.eq(0);
+    })
+
+    it('deactivates virtual pool if new tick is lower than should be', async () => {
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+        -100,
+        100,
+        1,
+        0
+      );
+      
+      expect(await virtualPool.deactivated()).to.be.false;
+
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+        -110,
+        110,
+        1,
+        -105
+      );
+
+      expect(await virtualPool.deactivated()).to.be.true;
+      expect(await virtualPool.globalTick()).to.be.eq(0);
     })
   })
 
@@ -697,6 +740,27 @@ describe('unit/EternalVirtualPool', () => {
         const tickDataAfter = await virtualPool.ticks(MAX_TICK - 1);
         expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(1n * 2n ** 128n / 2000n  + 1n)
       })
+
+      it('deactivates if invalid direction', async () => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+        
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+          -100,
+          100,
+          1000,
+          1
+        );
+
+        await virtualPool.connect(pseudoFarming).setRates(1, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+        expect(await virtualPool.deactivated()).to.be.false;
+        await poolMock.crossTo(-1, false);
+        const globalTick = await virtualPool.globalTick();
+        expect(globalTick).to.be.eq(1);
+        expect(await virtualPool.deactivated()).to.be.true;
+      })
     })
 
     describe('zto', async() => {
@@ -878,6 +942,27 @@ describe('unit/EternalVirtualPool', () => {
 
         const tickDataMin = await virtualPool.ticks(MIN_TICK);
         expect(tickDataMin.outerFeeGrowth0Token).to.be.eq(1n);
+      })
+
+      it('deactivates if invalid direction', async () => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+        
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+          -100,
+          100,
+          1000,
+          1
+        );
+
+        await virtualPool.connect(pseudoFarming).setRates(1, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+        expect(await virtualPool.deactivated()).to.be.false;
+        await poolMock.crossTo(2, true);
+        const globalTick = await virtualPool.globalTick();
+        expect(globalTick).to.be.eq(1);
+        expect(await virtualPool.deactivated()).to.be.true;
       })
     })
   })

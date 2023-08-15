@@ -45,12 +45,11 @@ interface IAlgebraEternalFarming {
     bytes32 incentiveId
   ) external view returns (uint128 totalReward, uint128 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated);
 
-  /// @notice Check if incentive is active in Algebra pool
-  /// @dev Does not check that the pool is indeed an Algebra pool
+  /// @notice Check if incentive is active
+  /// @dev Does not check that the incentive is indeed currently connected to the Algebra pool
   /// @param incentiveId The ID of the incentive computed from its parameters
-  /// @param pool Corresponding Algebra pool
-  /// @return res True if incentive is active in Algebra pool
-  function isIncentiveActiveInPool(bytes32 incentiveId, IAlgebraPool pool) external view returns (bool res);
+  /// @return res True if incentive is active
+  function isIncentiveActive(bytes32 incentiveId) external view returns (bool res);
 
   /// @notice Users can withdraw liquidity without any checks if active.
   function isEmergencyWithdrawActivated() external view returns (bool);

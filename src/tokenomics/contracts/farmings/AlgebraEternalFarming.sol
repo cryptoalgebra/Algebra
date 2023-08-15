@@ -98,14 +98,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   /// @inheritdoc IAlgebraEternalFarming
-  function isIncentiveActiveInPool(bytes32 incentiveId, IAlgebraPool pool) external view override returns (bool res) {
-    Incentive storage incentive = incentives[incentiveId];
-    if (incentive.deactivated) return false;
-
-    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    if (_getCurrentVirtualPool(pool) != address(virtualPool)) return false; // pool can "detach" by itself
-
-    return true;
+  function isIncentiveActive(bytes32 incentiveId) external view override returns (bool res) {
+    return _isIncentiveActive(incentives[incentiveId]);
   }
 
   function _checkIsFarmingCenter() internal view {
@@ -162,6 +156,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
     incentive.deactivated = true;
+    virtualPool.deactivate();
 
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
     if (rewardRate0 | rewardRate1 != 0) _setRewardRates(virtualPool, 0, 0, incentiveId);
@@ -211,10 +206,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external override {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
-    if (incentive.deactivated) revert incentiveStopped();
+
+    if (!_isIncentiveActive(incentive)) revert incentiveStopped();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) revert incentiveStopped(); // pool can "detach" by itself
 
     (rewardAmount, bonusRewardAmount) = _receiveRewards(key, rewardAmount, bonusRewardAmount, incentive);
 
@@ -228,8 +223,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     bytes32 incentiveId = IncentiveId.compute(key);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentives[incentiveId].virtualPoolAddress);
 
-    if ((incentives[incentiveId].deactivated || _getCurrentVirtualPool(key.pool) != address(virtualPool)) && (rewardRate | bonusRewardRate != 0))
-      revert incentiveStopped();
+    if ((rewardRate | bonusRewardRate != 0) && (!_isIncentiveActive(incentives[incentiveId]))) revert incentiveStopped();
+
     _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
   }
 
@@ -345,6 +340,17 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     emit RewardsCollected(tokenId, incentiveId, reward, bonusReward);
   }
 
+  function _isIncentiveActive(Incentive storage incentive) private view returns (bool) {
+    address virtualPoolAddress = incentive.virtualPoolAddress;
+    bool _deactivated = incentive.deactivated;
+    if (!_deactivated) {
+      IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(virtualPoolAddress);
+      // TODO
+      _deactivated = virtualPool.deactivated();
+    }
+    return !_deactivated;
+  }
+
   function _getInnerRewardsGrowth(IAlgebraEternalVirtualPool virtualPool, int24 tickLower, int24 tickUpper) private view returns (uint256, uint256) {
     return virtualPool.getInnerRewardsGrowth(tickLower, tickUpper);
   }
@@ -428,9 +434,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
     virtualPool = incentive.virtualPoolAddress;
     uint24 minimalAllowedTickWidth = incentive.minimalPositionWidth;
-    bool deactivated = incentive.deactivated;
 
-    if (_getCurrentVirtualPool(key.pool) != address(virtualPool) || deactivated) revert incentiveStopped(); // pool can "detach" by itself
+    if (!_isIncentiveActive(incentive)) revert incentiveStopped();
 
     IAlgebraPool pool;
     (pool, tickLower, tickUpper, liquidity) = NFTPositionInfo.getPositionInfo(deployer, nonfungiblePositionManager, tokenId);
