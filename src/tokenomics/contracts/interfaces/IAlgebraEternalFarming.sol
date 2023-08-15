@@ -34,6 +34,8 @@ interface IAlgebraEternalFarming {
 
   error emergencyActivated();
 
+  error reentrancyLock();
+
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 

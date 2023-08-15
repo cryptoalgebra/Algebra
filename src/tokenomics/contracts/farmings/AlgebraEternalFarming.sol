@@ -55,6 +55,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   IFarmingCenter public farmingCenter;
   /// @inheritdoc IAlgebraEternalFarming
   bool public override isEmergencyWithdrawActivated;
+  // reentrancy lock
+  bool private unlocked = true;
 
   /// @dev bytes32 refers to the return value of IncentiveId.compute
   /// @inheritdoc IAlgebraEternalFarming
@@ -392,8 +394,11 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint128 bonusReward,
     Incentive storage incentive
   ) internal returns (uint128 receivedReward, uint128 receivedBonusReward) {
+    if (!unlocked) revert reentrancyLock();
+    unlocked = false; // reentrancy lock
     if (reward > 0) receivedReward = _receiveToken(key.rewardToken, reward);
     if (bonusReward > 0) receivedBonusReward = _receiveToken(key.bonusRewardToken, bonusReward);
+    unlocked = true;
 
     (uint128 _totalRewardBefore, uint128 _bonusRewardBefore) = (incentive.totalReward, incentive.bonusReward);
     incentive.totalReward = _totalRewardBefore + receivedReward;
@@ -401,9 +406,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _receiveToken(IERC20Minimal token, uint128 amount) private returns (uint128) {
-    uint256 balanceBefore = token.balanceOf(address(this));
+    uint256 balanceBefore = _getBalanceOf(token);
     TransferHelper.safeTransferFrom(address(token), msg.sender, address(this), amount);
-    uint256 balanceAfter = token.balanceOf(address(this));
+    uint256 balanceAfter = _getBalanceOf(token);
     require(balanceAfter > balanceBefore);
     unchecked {
       uint256 received = balanceAfter - balanceBefore;
@@ -465,6 +470,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
     (, tick, , , , ) = pool.globalState();
+  }
+
+  function _getBalanceOf(IERC20Minimal token) internal view returns (uint256) {
+    return token.balanceOf(address(this));
   }
 
   function _updatePositionInVirtualPool(address virtualPool, int24 tickLower, int24 tickUpper, int128 liquidityDelta, int24 currentTick) internal {
