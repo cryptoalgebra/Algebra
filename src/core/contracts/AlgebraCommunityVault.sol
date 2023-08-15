@@ -14,6 +14,8 @@ import './interfaces/IAlgebraCommunityVault.sol';
 contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant COMMUNITY_FEE_WITHDRAWER_ROLE = keccak256('COMMUNITY_FEE_WITHDRAWER');
+  /// @dev The role can be granted in AlgebraFactory
+  bytes32 public constant COMMUNITY_FEE_VAULT_ADMINISTRATOR = keccak256('COMMUNITY_FEE_VAULT_ADMINISTRATOR');
   address private immutable factory;
 
   /// @notice Address to which community fees are sent from vault
@@ -33,18 +35,18 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
 
   uint16 private constant ALGEBRA_FEE_DENOMINATOR = 1000;
 
-  modifier onlyFactoryOwner() {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+  modifier onlyAdministrator() {
+    require(IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_VAULT_ADMINISTRATOR, msg.sender), 'only administrator');
     _;
   }
 
   modifier onlyWithdrawer() {
-    require(msg.sender == algebraFeeManager || IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender));
+    require(msg.sender == algebraFeeManager || IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender), 'only withdrawer');
     _;
   }
 
   modifier onlyAlgebraFeeManager() {
-    require(msg.sender == algebraFeeManager);
+    require(msg.sender == algebraFeeManager, 'only algebra fee manager');
     _;
   }
 
@@ -89,7 +91,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   // ### algebra factory owner permissioned actions ###
 
   /// @inheritdoc IAlgebraCommunityVault
-  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external override onlyFactoryOwner {
+  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external override onlyAdministrator {
     require(hasNewAlgebraFeeProposal, 'not proposed');
     require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
 
@@ -99,7 +101,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   }
 
   /// @inheritdoc IAlgebraCommunityVault
-  function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external override onlyFactoryOwner {
+  function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external override onlyAdministrator {
     require(newCommunityFeeReceiver != address(0));
     communityFeeReceiver = newCommunityFeeReceiver;
     emit CommunityFeeReceiver(newCommunityFeeReceiver);
