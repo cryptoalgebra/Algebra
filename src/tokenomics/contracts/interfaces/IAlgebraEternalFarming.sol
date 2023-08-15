@@ -32,6 +32,8 @@ interface IAlgebraEternalFarming {
 
   error invalidTokenAmount();
 
+  error emergencyActivated();
+
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
@@ -48,6 +50,9 @@ interface IAlgebraEternalFarming {
   /// @return res True if incentive is active in Algebra pool
   function isIncentiveActiveInPool(bytes32 incentiveId, IAlgebraPool pool) external view returns (bool res);
 
+  /// @notice Users can withdraw liquidity without any checks if active.
+  function isEmergencyWithdrawActivated() external view returns (bool);
+
   /// @notice Detach incentive from the pool and deactivate it
   /// @param key The key of the incentive
   function deactivateIncentive(IncentiveKey memory key) external;
@@ -55,6 +60,13 @@ interface IAlgebraEternalFarming {
   function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
 
   function decreaseRewardsAmount(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
+
+  /// @notice Changes `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if activated.
+  /// User cannot enter to farmings if activated.
+  /// _Must_ only be used in emergency situations. Farmings may be unusable after activation.
+  /// @dev only farmings administrator
+  /// @param newStatus The new status of `isEmergencyWithdrawActivated`.
+  function setEmergencyWithdrawStatus(bool newStatus) external;
 
   /// @notice Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
   /// @param owner The owner for which the rewards owed are checked
@@ -206,4 +218,8 @@ interface IAlgebraEternalFarming {
     uint256 bonusReward,
     uint24 minimalAllowedPositionWidth
   );
+
+  /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes
+  /// @param newStatus New value of `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
+  event EmergencyWithdraw(bool newStatus);
 }

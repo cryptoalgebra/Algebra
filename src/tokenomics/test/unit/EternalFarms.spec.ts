@@ -144,6 +144,135 @@ describe('unit/EternalFarms', () => {
     })
   })
 
+  describe('#EmergencyWithdraw', async () => {
+    beforeEach(async () => {
+      context = await loadFixture(algebraFixture)
+    })
+
+    it('only administrator', async () => {
+      expect(context.eternalFarming.connect(actors.lpUser0()).setEmergencyWithdrawStatus(true)).to.be.revertedWithoutReason;
+    })
+
+    it('cannot set the current value', async () => {
+      expect(context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(false)).to.be.revertedWithoutReason;
+    })
+
+    it('can set new value', async () => {
+      await context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(true);
+      expect(await context.eternalFarming.isEmergencyWithdrawActivated()).to.be.eq(true);
+    }) 
+
+    it('can not enter in farming if emergency', async () => {
+      const helpers = HelperCommands.fromTestContext(context, actors, provider)
+
+      const localNonce = await context.eternalFarming.numOfIncentives()
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: localNonce,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+      }
+
+      const incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+
+
+      await context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(true);
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true)
+
+      await expect(
+        context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      )).to.be.revertedWithCustomError(context.eternalFarming, 'emergencyActivated');
+    })
+
+    it('can exit from farming if emergency', async () => {
+      const helpers = HelperCommands.fromTestContext(context, actors, provider)
+
+      const localNonce = await context.eternalFarming.numOfIncentives()
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: localNonce,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+      }
+
+      const incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs))
+
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true)
+
+      await 
+        context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      );
+
+      await context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(true);
+
+      await context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      )
+    })
+  })
+
   describe('#isIncentiveActive', async () => {
     let localNonce = 0n;
     let incentiveArgs;

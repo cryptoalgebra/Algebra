@@ -53,6 +53,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   IAlgebraFactory private immutable factory;
 
   IFarmingCenter public farmingCenter;
+  /// @inheritdoc IAlgebraEternalFarming
+  bool public override isEmergencyWithdrawActivated;
 
   /// @dev bytes32 refers to the return value of IncentiveId.compute
   /// @inheritdoc IAlgebraEternalFarming
@@ -198,6 +200,13 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   /// @inheritdoc IAlgebraEternalFarming
+  function setEmergencyWithdrawStatus(bool newStatus) external override onlyAdministrator {
+    require(isEmergencyWithdrawActivated != newStatus);
+    isEmergencyWithdrawActivated = newStatus;
+    emit EmergencyWithdraw(newStatus);
+  }
+
+  /// @inheritdoc IAlgebraEternalFarming
   function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external override {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
     if (incentive.deactivated) revert incentiveStopped();
@@ -224,6 +233,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   /// @inheritdoc IAlgebraEternalFarming
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
+    if (isEmergencyWithdrawActivated) revert emergencyActivated();
     (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPoolAddress) = _enterFarming(key, tokenId);
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(virtualPoolAddress);
@@ -240,7 +250,11 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Farm memory farm = farms[tokenId][incentiveId];
     if (farm.liquidity == 0) revert farmDoesNotExist();
 
-    (uint256 reward, uint256 bonusReward) = _updatePosition(farm, key, incentiveId, _owner, -int256(uint256(farm.liquidity)).toInt128());
+    uint256 reward;
+    uint256 bonusReward;
+    if (!isEmergencyWithdrawActivated) {
+      (reward, bonusReward) = _updatePosition(farm, key, incentiveId, _owner, -int256(uint256(farm.liquidity)).toInt128());
+    }
 
     delete farms[tokenId][incentiveId];
 
