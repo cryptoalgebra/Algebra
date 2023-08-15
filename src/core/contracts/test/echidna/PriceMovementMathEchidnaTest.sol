@@ -14,8 +14,7 @@ contract PriceMovementMathEchidnaTest {
   ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips > 0);
-    require(feePips < 1e6);
+    require(feePips <= 1e6);
 
     (uint160 sqrtQ, uint256 amountIn, uint256 amountOut, uint256 feeAmount) = PriceMovementMath.movePriceTowardsTarget(
       sqrtPriceTargetRaw <= sqrtPriceRaw,
@@ -31,6 +30,8 @@ contract PriceMovementMathEchidnaTest {
 
       if (amountRemaining < 0) {
         assert(amountOut <= uint256(-amountRemaining));
+        assert(amountIn >= feeAmount);
+        assert(feeAmount <= FullMath.mulDivRoundingUp(amountIn, feePips, 1000000 - feePips));
       } else {
         assert(amountIn + feeAmount <= uint256(amountRemaining));
       }
@@ -44,8 +45,10 @@ contract PriceMovementMathEchidnaTest {
 
       // didn't reach price target, entire amount must be consumed
       if (sqrtQ != sqrtPriceTargetRaw) {
-        if (amountRemaining < 0) assert(amountOut == uint256(-amountRemaining));
-        else assert(amountIn + feeAmount == uint256(amountRemaining));
+        if (amountRemaining < 0) {
+          assert(amountOut == uint256(-amountRemaining));
+          assert(feeAmount <= FullMath.mulDivRoundingUp(amountIn, feePips, 1000000 - feePips));
+        } else assert(amountIn + feeAmount == uint256(amountRemaining));
       }
 
       // next price is between price and price target
