@@ -162,6 +162,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   function _transferOwnership(address newOwner) internal override {
     _revokeRole(DEFAULT_ADMIN_ROLE, owner());
     super._transferOwnership(newOwner);
-    _grantRole(DEFAULT_ADMIN_ROLE, owner());
+    if (owner() != address(0)) {
+      _grantRole(DEFAULT_ADMIN_ROLE, owner());
+    }
   }
 }
