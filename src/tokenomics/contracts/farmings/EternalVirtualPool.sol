@@ -105,6 +105,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     if (msg.sender != IAlgebraPool(pool).plugin()) revert onlyPool(); // TODO
     _distributeRewards();
 
+    // TODO optimize if without crosses
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
 
