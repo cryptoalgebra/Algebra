@@ -15,7 +15,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./src/tokenomics
+        working-directory: ./src/farming
 
     steps:
       - uses: actions/checkout@v3

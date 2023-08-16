@@ -8,4 +8,4 @@ execSync(`cd src/plugins && npx hardhat run --network ${network} scripts/deploy.
 
 execSync(`cd src/periphery && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});
 
-execSync(`cd src/tokenomics && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});
+execSync(`cd src/farming && npx hardhat run --network ${network} scripts/deploy.js`, {stdio: 'inherit'});
