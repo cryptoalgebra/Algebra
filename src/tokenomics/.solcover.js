@@ -3,6 +3,7 @@ module.exports = {
     'AlgebraTokenStaking.sol',
     'AlgebraVault.sol',
     'test/TestERC20.sol',
+    'test/TestERC20Reentrant.sol',
     'test/TestIncentiveId.sol',
     'test/TestRewardMath.sol',
     'test/PoolMock.sol',

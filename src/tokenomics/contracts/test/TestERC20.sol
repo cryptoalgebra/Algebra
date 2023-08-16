@@ -57,7 +57,7 @@ contract TestERC20 is IERC20Minimal {
     nextTransferAmount = _nextTransferAmount;
   }
 
-  function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
+  function transferFrom(address sender, address recipient, uint256 amount) external virtual override returns (bool) {
     uint256 allowanceBefore = allowance[sender][msg.sender];
     require(allowanceBefore >= amount, 'allowance insufficient');
 

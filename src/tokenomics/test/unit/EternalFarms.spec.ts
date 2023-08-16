@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
-import { Contract, Wallet } from 'ethers'
+import { Contract, Wallet, MaxUint256 } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestERC20, AlgebraEternalFarming, EternalVirtualPool } from '../../typechain'
+import { TestERC20, AlgebraEternalFarming, EternalVirtualPool, TestERC20Reentrant } from '../../typechain'
 import { mintPosition, AlgebraFixtureType, algebraFixture } from '../shared/fixtures'
 import {
   expect,
@@ -1981,7 +1981,7 @@ describe('unit/EternalFarms', () => {
         await erc20Helper.ensureBalancesAndApprovals(
           lpUser0,
           [context.rewardToken, context.bonusRewardToken],
-          amountDesired,
+          amountDesired * 2n,
           await context.eternalFarming.getAddress()
         )
   
@@ -2067,7 +2067,7 @@ describe('unit/EternalFarms', () => {
         )    
       })
   
-      it('#addRewards to indirectly deactivated incentive', async () => {
+      it('addRewards to indirectly deactivated incentive', async () => {
   
         await detachIncentiveIndirectly(localNonce);
         
@@ -2075,6 +2075,42 @@ describe('unit/EternalFarms', () => {
           context.eternalFarming,
           "incentiveStopped"
         )     
+      })
+
+      it('cannot reenter to addRewards', async () => {
+  
+        const _factory = await ethers.getContractFactory('TestERC20Reentrant');
+        const tokenReentrant = (await _factory.deploy(MaxUint256 / 2n)) as any as TestERC20Reentrant;
+
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [tokenReentrant, context.bonusRewardToken],
+          amountDesired,
+          await context.eternalFarming.getAddress()
+        )
+        
+        const nonce = await context.eternalFarming.numOfIncentives();
+        await helpers.createIncentiveFlow({
+          rewardToken: tokenReentrant,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress: context.pool12,
+          nonce: nonce,
+          rewardRate: 10n,
+          bonusRewardRate: 50n,
+        })
+
+        const incentiveKey2 = {
+          rewardToken: await tokenReentrant.getAddress(),
+          bonusRewardToken: await context.bonusRewardToken.getAddress(),
+          pool: context.pool12,
+          nonce: nonce,
+        }
+
+        await tokenReentrant.prepareAttack(incentiveKey, 500, 500);
+
+        await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey2, 1, 1)).to.be.revertedWith('STF');    
       })
     })
 
