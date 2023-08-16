@@ -965,5 +965,147 @@ describe('unit/EternalVirtualPool', () => {
         expect(await virtualPool.deactivated()).to.be.true;
       })
     })
+
+    describe('gas checks [ @skip-on-coverage ]', async() => {
+      describe('without cross', async() => {
+        it('otz', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+
+          await snapshotGasCost(poolMock.crossTo(50, false));
+        })
+
+        it('zto', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+
+          await snapshotGasCost(poolMock.crossTo(-50, true));
+        })
+      })
+
+      describe('with one cross', async() => {
+        it('otz', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+
+          await snapshotGasCost(poolMock.crossTo(101, false));
+        })
+
+        it('zto', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+
+          await snapshotGasCost(poolMock.crossTo(-101, true));
+        })
+      })
+
+      describe('with two crosses', async() => {
+        it('otz', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -110,
+            110,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+          
+          await snapshotGasCost(poolMock.crossTo(120, false));
+        })
+
+        it('zto', async() => {
+          await poolMock.setPlugin(poolMock);
+          await poolMock.setVirtualPool(virtualPool);
+  
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -100,
+            100,
+            1000,
+            1
+          );
+
+          await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+            -110,
+            110,
+            1000,
+            1
+          );
+  
+          await virtualPool.connect(pseudoFarming).setRates(1, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+          const timestamp = await blockTimestamp();
+          await Time.setAndMine(timestamp + 10000);
+
+          await snapshotGasCost(poolMock.crossTo(-110, true));
+        })
+      })
+    })
   })
 })

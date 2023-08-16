@@ -12,7 +12,6 @@ import {
   blockTimestamp,
   BN,
   BNe18,
-  snapshotGasCost,
   ActorFixture,
   makeTimestamps,
   ZERO_ADDRESS,
@@ -67,80 +66,6 @@ describe('unit/FarmingCenter', () => {
       .to.be.revertedWith('invalid pool')
     await setBalance(eternalFarmingAddress, 0);
     await stopImpersonatingAccount(eternalFarmingAddress);
-  })
-
-  xdescribe('swap gas [ @skip-on-coverage ]', async () => {
-    it('3 swaps', async () => {
-      nonce = await context.eternalFarming.numOfIncentives()
-
-      const mintResult = await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-      })
-      tokenId = mintResult.tokenId
-
-      let farmIncentiveKey = {
-        rewardToken: await context.rewardToken.getAddress(),
-        bonusRewardToken: await context.bonusRewardToken.getAddress(),
-        pool: context.pool01,
-        nonce: nonce
-      }
-
-      let incentiveIdEternal = await helpers.getIncentiveId(
-        await helpers.createIncentiveFlow({
-          rewardToken: context.rewardToken,
-          bonusRewardToken: context.bonusRewardToken,
-          totalReward,
-          bonusReward,
-          poolAddress: await context.poolObj.getAddress(),
-          nonce: nonce,
-          rewardRate: 10n,
-          bonusRewardRate: 50n,
-        })
-      )
-
-      let incentiveId = await helpers.getIncentiveId(
-        await helpers.createIncentiveFlow({
-          rewardToken: context.rewardToken,
-          bonusRewardToken: context.bonusRewardToken,
-          totalReward,
-          bonusReward,
-          poolAddress: await context.poolObj.getAddress(),
-          nonce,
-        })
-      )
-
-      // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
-      await context.eternalFarming.farms(tokenId, incentiveId)
-
-      const pool = context.poolObj.connect(actors.lpUser0())
-
-      Time.set(timestamps.startTime + 10)
-      //await provider.send('evm_mine', [timestamps.startTime + 100])
-      const trader = actors.traderUser0()
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 10,
-        })
-      )
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 10,
-        })
-      )
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 10,
-        })
-      )
-    })
   })
 
   describe('#applyLiquidityDelta', () => {
