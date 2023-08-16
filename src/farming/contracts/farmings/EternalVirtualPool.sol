@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
+pragma abicoder v1;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
@@ -15,9 +16,6 @@ import '../base/VirtualTickStructure.sol';
 contract EternalVirtualPool is VirtualTickStructure {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
-  address public immutable farmingAddress;
-  address public immutable plugin;
-
   /// @inheritdoc IAlgebraEternalVirtualPool
   uint128 public override currentLiquidity;
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -27,14 +25,17 @@ contract EternalVirtualPool is VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
 
+  address public immutable farmingAddress;
+  address public immutable plugin;
+
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
 
   uint128 internal rewardReserve0;
   uint128 internal rewardReserve1;
 
-  uint256 public totalRewardGrowth0 = 1;
-  uint256 public totalRewardGrowth1 = 1;
+  uint256 internal totalRewardGrowth0 = 1;
+  uint256 internal totalRewardGrowth1 = 1;
 
   modifier onlyFromFarming() {
     _checkIsFromFarming();
@@ -42,35 +43,42 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   constructor(address _farmingAddress, address _plugin) {
-    globalPrevInitializedTick = TickMath.MIN_TICK;
-    globalNextInitializedTick = TickMath.MAX_TICK;
-
     farmingAddress = _farmingAddress;
     plugin = _plugin;
+
     prevTimestamp = uint32(block.timestamp);
+    globalPrevInitializedTick = TickMath.MIN_TICK;
+    globalNextInitializedTick = TickMath.MAX_TICK;
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function rewardReserves() external view override returns (uint128 reserve0, uint128 reserve1) {
     return (rewardReserve0, rewardReserve1);
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function rewardRates() external view override returns (uint128 rate0, uint128 rate1) {
     return (rewardRate0, rewardRate1);
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  function totalRewardGrowth() external view override returns (uint256 rewardGrowth0, uint256 rewardGrowth1) {
+    return (totalRewardGrowth0, totalRewardGrowth1);
+  }
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function getInnerRewardsGrowth(
     int24 bottomTick,
     int24 topTick
   ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
     unchecked {
       // check if ticks are initialized
-      if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
-      if (ticks[topTick].prevTick == ticks[topTick].nextTick) revert IAlgebraPoolErrors.tickIsNotInitialized();
+      if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick || ticks[topTick].prevTick == ticks[topTick].nextTick)
+        revert IAlgebraPoolErrors.tickIsNotInitialized();
 
       uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
+      int24 _globalTick = globalTick;
+
       (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
 
       if (timeDelta > 0) {
@@ -88,7 +96,7 @@ contract EternalVirtualPool is VirtualTickStructure {
         }
       }
 
-      return ticks.getInnerFeeGrowth(bottomTick, topTick, globalTick, _totalRewardGrowth0, _totalRewardGrowth1);
+      return ticks.getInnerFeeGrowth(bottomTick, topTick, _globalTick, _totalRewardGrowth0, _totalRewardGrowth1);
     }
   }
 
@@ -113,21 +121,26 @@ contract EternalVirtualPool is VirtualTickStructure {
 
     uint128 _currentLiquidity = currentLiquidity;
     int24 _globalTick = globalTick;
+    uint32 _prevTimestamp = prevTimestamp;
     bool _deactivated = deactivated;
 
-    {
-      if (targetTick > _globalTick == zeroToOne) {
-        _deactivated = true;
-        deactivated = true;
-      }
-    }
-    if (deactivated) return false;
-
-    _distributeRewards();
-
-    // TODO optimize if without crosses
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
+
+    if (_deactivated) return false;
+    else if (targetTick > _globalTick == zeroToOne) {
+      deactivated = true; // deactivate if invalid input params (possibly desynchronization)
+      return false;
+    }
+
+    // early return if without any crosses
+    if (zeroToOne) {
+      if (targetTick >= previousTick) return true;
+    } else {
+      if (targetTick < nextTick) return true;
+    }
+
+    _distributeRewards(_prevTimestamp, _currentLiquidity);
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
     // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
@@ -152,8 +165,8 @@ contract EternalVirtualPool is VirtualTickStructure {
       }
     }
 
-    globalTick = targetTick;
     currentLiquidity = _currentLiquidity;
+    globalTick = targetTick;
 
     globalPrevInitializedTick = previousTick;
     globalNextInitializedTick = nextTick;
@@ -172,6 +185,8 @@ contract EternalVirtualPool is VirtualTickStructure {
     int128 liquidityDelta,
     int24 currentTick
   ) external override onlyFromFarming {
+    uint128 _currentLiquidity = currentLiquidity;
+    uint32 _prevTimestamp = prevTimestamp;
     bool _deactivated = deactivated;
     {
       int24 _lastKnownTick = globalTick;
@@ -190,25 +205,18 @@ contract EternalVirtualPool is VirtualTickStructure {
       globalTick = currentTick;
     }
 
-    if (uint32(block.timestamp) > prevTimestamp) {
-      _distributeRewards();
+    if (uint32(block.timestamp) > _prevTimestamp) {
+      _distributeRewards(_prevTimestamp, _currentLiquidity);
     }
 
     if (liquidityDelta != 0) {
       // if we need to update the ticks, do it
-      bool flippedBottom;
-      bool flippedTop;
 
-      if (_updateTick(bottomTick, currentTick, liquidityDelta, false)) {
-        flippedBottom = true;
-      }
-
-      if (_updateTick(topTick, currentTick, liquidityDelta, true)) {
-        flippedTop = true;
-      }
+      bool flippedBottom = _updateTick(bottomTick, currentTick, liquidityDelta, false);
+      bool flippedTop = _updateTick(topTick, currentTick, liquidityDelta, true);
 
       if (currentTick >= bottomTick && currentTick < topTick) {
-        currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
+        currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
 
       if (flippedBottom || flippedTop) {
@@ -217,7 +225,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     }
   }
 
-  // @inheritdoc IAlgebraEternalVirtualPool
+  /// @inheritdoc IAlgebraEternalVirtualPool
   function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
     _distributeRewards();
     (rewardRate0, rewardRate1) = (rate0, rate1);
@@ -231,18 +239,27 @@ contract EternalVirtualPool is VirtualTickStructure {
     _distributeRewards();
     if (token0Delta | token1Delta != 0) {
       (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
-      _rewardReserve0 = add ? _rewardReserve0 + token0Delta : _rewardReserve0 - token0Delta;
-      _rewardReserve1 = add ? _rewardReserve1 + token1Delta : _rewardReserve1 - token1Delta;
+      if (add) {
+        _rewardReserve0 = _rewardReserve0 + token0Delta;
+        _rewardReserve1 = _rewardReserve1 + token1Delta;
+      } else {
+        _rewardReserve0 = _rewardReserve0 - token0Delta;
+        _rewardReserve1 = _rewardReserve1 - token1Delta;
+      }
       (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
     }
   }
 
   function _distributeRewards() internal {
+    _distributeRewards(prevTimestamp, currentLiquidity);
+  }
+
+  function _distributeRewards(uint32 _prevTimestamp, uint256 _currentLiquidity) internal {
+    // currentLiquidity is uint128
     unchecked {
-      uint256 timeDelta = uint32(block.timestamp) - prevTimestamp; // safe until timedelta > 136 years
+      uint256 timeDelta = uint32(block.timestamp) - _prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return; // only once per block
 
-      uint256 _currentLiquidity = currentLiquidity; // currentLiquidity is uint128
       if (_currentLiquidity > 0) {
         (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
         (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);

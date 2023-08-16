@@ -1357,7 +1357,7 @@ describe('unit/EternalFarms', () => {
       let vpTick = await virtualPool.globalTick()
       expect(rewards).to.eq(1535428)
       expect(bonusRewards).to.eq(7677141)
-      expect(vpTick).to.eq(-151)
+      expect(vpTick).to.eq(-121)
     })
   })
 

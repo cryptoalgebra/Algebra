@@ -100,10 +100,9 @@ describe('unit/EternalVirtualPool', () => {
     expect(rewardReserves.reserve0).to.be.eq(0);
     expect(rewardReserves.reserve1).to.be.eq(0);
 
-    const totalRewardGrowth0 = await virtualPool.totalRewardGrowth0();
-    expect(totalRewardGrowth0).to.be.eq(1);
-    const totalRewardGrowth1 = await virtualPool.totalRewardGrowth1();
-    expect(totalRewardGrowth1).to.be.eq(1);
+    const totalRewardGrowth = await virtualPool.totalRewardGrowth();
+    expect(totalRewardGrowth[0]).to.be.eq(1);
+    expect(totalRewardGrowth[1]).to.be.eq(1);
   })
 
   describe('#add and decrease rewards', async() => {
@@ -439,8 +438,9 @@ describe('unit/EternalVirtualPool', () => {
       expect(reserves.reserve0).to.be.eq(10000);
       expect(reserves.reserve1).to.be.eq(10000);
 
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(1);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(1);
+      const totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(1);
+      expect(totalRewardGrowth[1]).to.be.eq(1);
     })
 
     it('distributes all rewards correctly in normal case', async () => {
@@ -463,13 +463,15 @@ describe('unit/EternalVirtualPool', () => {
       expect(reserves.reserve0).to.be.eq(0);
       expect(reserves.reserve1).to.be.eq(0);
 
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(3402823669209384634633746074317682114561n);
+      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
+      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
-      
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(3402823669209384634633746074317682114561n);
+
+      totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
+      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
     })
 
     it('can distribute reward0 only', async () => {
@@ -492,13 +494,15 @@ describe('unit/EternalVirtualPool', () => {
       expect(reserves.reserve0).to.be.eq(0);
       expect(reserves.reserve1).to.be.eq(0);
 
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(1);
+      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
+      expect(totalRewardGrowth[1]).to.be.eq(1n);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
-      
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(1);
+
+      totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
+      expect(totalRewardGrowth[1]).to.be.eq(1n);
     })
 
     it('can distribute reward1 only', async () => {
@@ -521,13 +525,15 @@ describe('unit/EternalVirtualPool', () => {
       expect(reserves.reserve0).to.be.eq(0);
       expect(reserves.reserve1).to.be.eq(0);
 
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(1);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(3402823669209384634633746074317682114561n);
+      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(1);
+      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
       
-      expect(await virtualPool.totalRewardGrowth0()).to.be.eq(1);
-      expect(await virtualPool.totalRewardGrowth1()).to.be.eq(3402823669209384634633746074317682114561n);
+      totalRewardGrowth = await virtualPool.totalRewardGrowth();
+      expect(totalRewardGrowth[0]).to.be.eq(1);
+      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
     })
   })
 
@@ -632,6 +638,34 @@ describe('unit/EternalVirtualPool', () => {
     })
 
     describe('otz', async() => {
+      it('without cross', async() => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+          -100,
+          100,
+          1000,
+          1
+        );
+
+        await virtualPool.connect(pseudoFarming).setRates(1, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+        const timestamp = await blockTimestamp();
+        await Time.setAndMine(timestamp + 10000);
+
+        await poolMock.crossTo(50, false);
+
+        const globalTick = await virtualPool.globalTick();
+        expect(globalTick).to.be.eq(1);
+
+        expect(await virtualPool.deactivated()).to.be.false;
+
+        const tickDataAfter = await virtualPool.ticks(100);
+        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(0n)
+      })
+
       it('can cross one tick otz', async () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
@@ -764,6 +798,34 @@ describe('unit/EternalVirtualPool', () => {
     })
 
     describe('zto', async() => {
+      it('without cross', async() => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(
+          -100,
+          100,
+          1000,
+          1
+        );
+
+        await virtualPool.connect(pseudoFarming).setRates(1, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+
+        const timestamp = await blockTimestamp();
+        await Time.setAndMine(timestamp + 10000);
+
+        await poolMock.crossTo(-50, true);
+
+        const globalTick = await virtualPool.globalTick();
+        expect(globalTick).to.be.eq(1);
+
+        expect(await virtualPool.deactivated()).to.be.false;
+
+        const tickDataAfter = await virtualPool.ticks(-100);
+        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(1n)
+      })
+
       it('can cross one tick zto', async () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);

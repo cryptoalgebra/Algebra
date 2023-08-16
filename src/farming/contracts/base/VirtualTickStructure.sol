@@ -13,14 +13,14 @@ abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using TickTree for mapping(int16 => uint256);
 
-  int24 internal globalPrevInitializedTick; // TODO packing
-  int24 internal globalNextInitializedTick;
-
   mapping(int24 => TickManagement.Tick) public ticks;
 
   uint32 internal tickTreeRoot; // The root of bitmap search tree
   mapping(int16 => uint256) internal tickSecondLayer; // The second layer bitmap search tree
   mapping(int16 => uint256) internal tickTable; // the leaves of the tree
+
+  int24 internal globalPrevInitializedTick;
+  int24 internal globalNextInitializedTick;
 
   constructor() {
     ticks.initTickState();

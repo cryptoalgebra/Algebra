@@ -75,4 +75,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @return rate0 The rate of token0, rewards / sec
   /// @return rate1 The rate of token1, rewards / sec
   function rewardRates() external view returns (uint128 rate0, uint128 rate1);
+
+  /// @notice Get reward growth accumulators
+  /// @return rewardGrowth0 The reward growth for reward0, has only relative meaning
+  /// @return rewardGrowth1 The reward growth for reward1, has only relative meaning
+  function totalRewardGrowth() external view returns (uint256 rewardGrowth0, uint256 rewardGrowth1);
 }
