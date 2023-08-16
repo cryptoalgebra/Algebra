@@ -71,7 +71,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @dev Parses a revert reason that should contain the numeric quote
-    function parseRevertReason(bytes memory reason) private view returns (uint256, uint16) {
+    function parseRevertReason(bytes memory reason) private pure returns (uint256, uint16) {
         if (reason.length != 64) {
             if (reason.length < 68) revert('Unexpected error');
             assembly {
