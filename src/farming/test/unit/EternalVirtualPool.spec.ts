@@ -1103,7 +1103,7 @@ describe('unit/EternalVirtualPool', () => {
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
 
-          await snapshotGasCost(poolMock.crossTo(-110, true));
+          await snapshotGasCost(poolMock.crossTo(-120, true));
         })
       })
     })
