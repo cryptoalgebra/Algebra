@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 import '@cryptoalgebra/plugins/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
-  error onlyPool();
+  error onlyPlugin();
   error onlyFarming();
 
   // returns data associated with a tick

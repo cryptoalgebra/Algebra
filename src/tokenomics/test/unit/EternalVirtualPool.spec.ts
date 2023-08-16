@@ -80,7 +80,7 @@ describe('unit/EternalVirtualPool', () => {
     const farmingAddress = await virtualPool.farmingAddress();
     expect(farmingAddress).to.be.eq(pseudoFarming.address);
 
-    const poolAddress = await virtualPool.pool();
+    const poolAddress = await virtualPool.plugin();
     expect(poolAddress).to.be.eq(await poolMock.getAddress());
 
     const liquidity = await virtualPool.currentLiquidity();
@@ -628,7 +628,7 @@ describe('unit/EternalVirtualPool', () => {
 
   describe('#crossTo', async() => {
     it('reverts if not from pool', async () => {
-      await expect(virtualPool.crossTo(100, true)).to.be.revertedWithCustomError(virtualPool, 'onlyPool');
+      await expect(virtualPool.crossTo(100, true)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     })
 
     describe('otz', async() => {

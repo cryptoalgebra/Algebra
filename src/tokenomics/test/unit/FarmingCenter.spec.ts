@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 import { Wallet } from 'ethers'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, impersonateAccount, stopImpersonatingAccount, setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter } from '../../typechain'
 import { algebraFixture, AlgebraFixtureType, mintPosition } from '../shared/fixtures'
 import {
@@ -51,16 +51,22 @@ describe('unit/FarmingCenter', () => {
   })
 
   it('cannot call connectVirtualPool directly', async () => {
-    await expect(context.farmingCenter.connectVirtualPool(context.pool01, context.pool01)).to.be.revertedWith(
+    await expect(context.farmingCenter.connectVirtualPoolToPlugin(context.pool01, context.pool01)).to.be.revertedWith(
       'only farming can call this'
     )
   })
 
   it('cannot connect virtual pool to invalid pool', async () => {
     const newContext = await algebraFixture();
-    await expect(context.farmingCenter.connectVirtualPool(newContext.pool01, context.pool01)).to.be.revertedWith(
-      'invalid pool'
-    )
+    const eternalFarmingAddress = await context.eternalFarming.getAddress();
+    await impersonateAccount(eternalFarmingAddress);
+    await setBalance(eternalFarmingAddress, 10**18);
+    const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+    await expect(
+      context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(newContext.pluginObj, context.pool01, {from: eternalFarmingAddress}))
+      .to.be.revertedWith('invalid pool')
+    await setBalance(eternalFarmingAddress, 0);
+    await stopImpersonatingAccount(eternalFarmingAddress);
   })
 
   xdescribe('swap gas [ @skip-on-coverage ]', async () => {

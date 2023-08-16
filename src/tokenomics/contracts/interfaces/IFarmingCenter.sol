@@ -2,11 +2,12 @@
 pragma solidity >=0.7.6;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
 
 import '@cryptoalgebra/periphery/contracts/interfaces/IMulticall.sol';
 import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
+
+import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
 import '../base/IncentiveKey.sol';
 import '../interfaces/IAlgebraEternalFarming.sol';
@@ -28,11 +29,11 @@ interface IFarmingCenter is IMulticall {
   /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
   function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId);
 
-  /// @notice Updates activeIncentive in AlgebraPool
+  /// @notice Updates incentive in AlgebraPool plugin
   /// @dev only farming can do it
-  /// @param pool The AlgebraPool for which farming was created
+  /// @param plugin The Algebra farming plugin
   /// @param virtualPool The virtual pool to be connected
-  function connectVirtualPool(IAlgebraPool pool, address virtualPool) external;
+  function connectVirtualPoolToPlugin(IFarmingPlugin plugin, address virtualPool) external;
 
   /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
   /// @dev token must be deposited in FarmingCenter

@@ -33,7 +33,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
 
-  address private immutable pool;
+  address public immutable override pool;
   address private immutable factory;
   address private immutable pluginFactory;
 

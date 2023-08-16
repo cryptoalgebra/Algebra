@@ -21,6 +21,7 @@ interface IAlgebraEternalFarming {
   error incentiveNotExist();
   error incentiveStopped();
   error anotherFarmingIsActive();
+  error pluginNotConnected();
 
   error minimalPositionWidthTooWide();
   error zeroRewardAmount();
@@ -43,7 +44,17 @@ interface IAlgebraEternalFarming {
   /// @param incentiveId The ID of the incentive computed from its parameters
   function incentives(
     bytes32 incentiveId
-  ) external view returns (uint128 totalReward, uint128 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated);
+  )
+    external
+    view
+    returns (
+      uint128 totalReward,
+      uint128 bonusReward,
+      address virtualPoolAddress,
+      uint24 minimalPositionWidth,
+      bool deactivated,
+      address pluginAddress
+    );
 
   /// @notice Check if incentive is active
   /// @dev Does not check that the incentive is indeed currently connected to the Algebra pool

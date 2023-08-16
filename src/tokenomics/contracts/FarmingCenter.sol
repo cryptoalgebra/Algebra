@@ -107,11 +107,12 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function connectVirtualPool(IAlgebraPool pool, address newVirtualPool) external override {
+  function connectVirtualPoolToPlugin(IFarmingPlugin plugin, address newVirtualPool) external override {
+    require(msg.sender == address(eternalFarming), 'only farming can call this');
+    IAlgebraPool pool = IAlgebraPool(plugin.pool());
     PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
     require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
-    require(msg.sender == address(eternalFarming), 'only farming can call this');
-    IFarmingPlugin(pool.plugin()).setIncentive(newVirtualPool); // TODO
+    plugin.setIncentive(newVirtualPool); // TODO
     virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
 }

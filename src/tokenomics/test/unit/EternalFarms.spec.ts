@@ -410,6 +410,25 @@ describe('unit/EternalFarms', () => {
       )
     })
 
+    it('cannot create farming if plugin is not connected', async () => {
+      await context.poolObj.connect(actors.wallets[0]).setPlugin(ZERO_ADDRESS);
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward: 10n,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: localNonce,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+      }
+
+      await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(
+        context.eternalFarming as AlgebraEternalFarming,
+        'pluginNotConnected'
+      )
+    })
+
     it('cannot set too wide minimal position width', async () => {
       const incentiveArgs = {
         rewardToken: context.rewardToken,
@@ -1125,6 +1144,13 @@ describe('unit/EternalFarms', () => {
 
     it('can deactivate manually after indirect deactivation', async () => {
       await detachIncentiveIndirectly(localNonce);
+      
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+    })
+
+    it('can deactivate manually if farming detached manually from plugin', async () => {
+      await context.pluginFactory.setFarmingAddress(incentiveCreator.address);
+      await context.pluginObj.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
       
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
     })

@@ -8,6 +8,9 @@ interface IFarmingPlugin {
   event Incentive(address newIncentive);
 
   // TODO
+  function pool() external returns (address);
+
+  // TODO
   function setIncentive(address newIncentive) external;
 
   // TODO

@@ -35,6 +35,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     address virtualPoolAddress;
     uint24 minimalPositionWidth;
     bool deactivated;
+    address pluginAddress;
   }
 
   /// @notice Represents the farm for nft
@@ -115,10 +116,12 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IncentiveKey memory key,
     IncentiveParams memory params
   ) external override onlyIncentiveMaker returns (address virtualPool) {
-    if (_getCurrentVirtualPool(key.pool) != address(0)) revert farmingAlreadyExists();
+    address connectedPlugin = key.pool.plugin();
+    if (connectedPlugin == address(0)) revert pluginNotConnected();
+    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert farmingAlreadyExists();
 
-    virtualPool = address(new EternalVirtualPool(address(this), address(key.pool)));
-    _connectPoolToVirtualPool(key.pool, virtualPool);
+    virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
+    _connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
 
     key.nonce = numOfIncentives++;
     bytes32 incentiveId = IncentiveId.compute(key);
@@ -131,7 +134,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       if (int256(uint256(params.minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)))
         revert minimalPositionWidthTooWide();
     }
-    (newIncentive.virtualPoolAddress, newIncentive.minimalPositionWidth) = (virtualPool, params.minimalPositionWidth);
+    newIncentive.virtualPoolAddress = virtualPool;
+    newIncentive.minimalPositionWidth = params.minimalPositionWidth;
+    newIncentive.pluginAddress = connectedPlugin;
 
     emit EternalFarmingCreated(
       key.rewardToken,
@@ -161,8 +166,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
     if (rewardRate0 | rewardRate1 != 0) _setRewardRates(virtualPool, 0, 0, incentiveId);
 
-    if (address(virtualPool) == _getCurrentVirtualPool(key.pool)) {
-      _connectPoolToVirtualPool(key.pool, address(0));
+    IFarmingPlugin plugin = IFarmingPlugin(incentive.pluginAddress); // TODO optimize
+    if (address(virtualPool) == _getCurrentVirtualPoolInPlugin(plugin)) {
+      _connectVirtualPoolToPlugin(address(0), IFarmingPlugin(plugin));
     }
     emit IncentiveDeactivated(incentiveId);
   }
@@ -282,7 +288,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Incentive storage incentive = incentives[incentiveId];
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    if (_getCurrentVirtualPool(key.pool) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
+    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(incentive.pluginAddress)) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
     int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
@@ -381,12 +387,12 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     emit RewardsRatesChanged(rate0, rate1, incentiveId);
   }
 
-  function _connectPoolToVirtualPool(IAlgebraPool pool, address virtualPool) private {
-    farmingCenter.connectVirtualPool(pool, virtualPool);
+  function _connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) private {
+    farmingCenter.connectVirtualPoolToPlugin(plugin, virtualPool);
   }
 
-  function _getCurrentVirtualPool(IAlgebraPool pool) internal view returns (address virtualPool) {
-    return IFarmingPlugin(pool.plugin()).incentive();
+  function _getCurrentVirtualPoolInPlugin(IFarmingPlugin plugin) internal view returns (address virtualPool) {
+    return plugin.incentive();
   }
 
   function _getFarm(uint256 tokenId, bytes32 incentiveId) private view returns (Farm memory result) {
