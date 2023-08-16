@@ -171,6 +171,11 @@ describe('AlgebraPool', () => {
   describe('#mint', () => {
     it('fails if not initialized', async () => {
       expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithoutReason;
+      expect(mint(wallet.address, getMinTick(1), getMaxTick(1), 100)).to.be.revertedWithoutReason;
+      expect(mint(wallet.address, 0, getMaxTick(1), 100)).to.be.revertedWithoutReason;
+      expect(mint(wallet.address, getMinTick(1), 0, 100)).to.be.revertedWithoutReason;
+      expect(mint(wallet.address, getMaxTick(1) - 1, getMaxTick(1), 100)).to.be.revertedWithoutReason;
+      expect(mint(wallet.address, getMinTick(1), getMinTick(1) + 1, 100)).to.be.revertedWithoutReason;
     });
     describe('after initialization', () => {
       beforeEach('initialize the pool at price of 10:1', async () => {
