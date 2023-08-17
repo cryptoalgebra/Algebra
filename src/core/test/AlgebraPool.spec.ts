@@ -1365,7 +1365,6 @@ describe('AlgebraPool', () => {
     });
 
     it('works with zero fee', async () => {
-      await pool.setPluginConfig(0);
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
       await pool.setFee(0);
       await swap0ForExact1(expandTo18Decimals(1), other.address)
@@ -1379,7 +1378,6 @@ describe('AlgebraPool', () => {
 
     it('works with uint16.max fee', async () => {
       let amount = expandTo18Decimals(1)
-      await pool.setPluginConfig(0);
       await mint(wallet.address, minTick, maxTick, amount);
       await pool.setFee(65535);
       await swapExact1For0(amount, other.address)
@@ -2650,7 +2648,7 @@ describe('AlgebraPool', () => {
         await expect(pool.connect(other).setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
       });
       it('reverts if admin sets non-zero pluginConfig in pool with zero plugin', async () => {
-        await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotSetted')
+        await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotConnected')
       });
       it('emits an event when changed', async () => {
         await pool.setPlugin(other.address);
