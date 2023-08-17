@@ -94,15 +94,14 @@ abstract contract Positions is AlgebraPoolBase {
 
     unchecked {
       // update the position
-      uint256 _innerFeeGrowth0Token;
+      (uint256 _innerFeeGrowth0Token, uint256 _innerFeeGrowth1Token) = (position.innerFeeGrowth0Token, position.innerFeeGrowth1Token);
       uint128 fees0;
-      if ((_innerFeeGrowth0Token = position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
+      if (_innerFeeGrowth0Token != innerFeeGrowth0Token) {
         position.innerFeeGrowth0Token = innerFeeGrowth0Token;
         fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
-      uint256 _innerFeeGrowth1Token;
       uint128 fees1;
-      if ((_innerFeeGrowth1Token = position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
+      if (_innerFeeGrowth1Token != innerFeeGrowth1Token) {
         position.innerFeeGrowth1Token = innerFeeGrowth1Token;
         fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
