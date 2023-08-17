@@ -404,6 +404,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _checkIfAdministrator();
     plugin = newPluginAddress;
     globalState.pluginConfig = 0;
+    emit PluginConfig(0);
     emit Plugin(newPluginAddress);
   }
 
