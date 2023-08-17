@@ -304,6 +304,22 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | ---- | ---- | ----------- |
 | pool | address | The pool address |
 
+### POOL_INIT_CODE_HASH
+
+```solidity
+function POOL_INIT_CODE_HASH() external view returns (bytes32)
+```
+
+returns keccak256 of AlgebraPool init bytecode.
+
+*Developer note: the hash value changes with any change in the pool bytecode*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | Keccak256 hash of AlgebraPool contract init bytecode |
+
 ### renounceOwnershipStartTimestamp
 
 ```solidity

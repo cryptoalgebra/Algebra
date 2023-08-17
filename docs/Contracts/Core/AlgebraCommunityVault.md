@@ -11,10 +11,10 @@ Community fee from pools is sent here, if it is enabled
 Version: Algebra Integral*
 
 ## Modifiers
-### onlyFactoryOwner
+### onlyAdministrator
 
 ```solidity
-modifier onlyFactoryOwner()
+modifier onlyAdministrator()
 ```
 
 
@@ -38,6 +38,12 @@ modifier onlyAlgebraFeeManager()
 
 ## Variables
 ### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
+
+
+
+*Developer note: The role can be granted in AlgebraFactory*
+
+### bytes32 COMMUNITY_FEE_VAULT_ADMINISTRATOR constant
 
 
 

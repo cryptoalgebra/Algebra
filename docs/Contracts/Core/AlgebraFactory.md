@@ -57,6 +57,12 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
+### bytes32 POOL_INIT_CODE_HASH constant
+
+returns keccak256 of AlgebraPool init bytecode.
+
+*Developer note: keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically*
+
 
 ## Functions
 ### constructor

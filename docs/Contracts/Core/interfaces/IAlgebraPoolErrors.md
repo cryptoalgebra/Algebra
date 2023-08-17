@@ -145,6 +145,14 @@ error dynamicFeeDisabled()
 
 
 
+## pluginIsNotConnected
+
+```solidity
+error pluginIsNotConnected()
+```
+
+
+
 ## invalidHookResponse
 
 ```solidity
