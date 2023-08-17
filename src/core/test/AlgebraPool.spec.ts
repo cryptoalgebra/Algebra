@@ -2653,6 +2653,7 @@ describe('AlgebraPool', () => {
         await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotSetted')
       });
       it('emits an event when changed', async () => {
+        await pool.setPlugin(other.address);
         await expect(pool.setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
       });
     });
