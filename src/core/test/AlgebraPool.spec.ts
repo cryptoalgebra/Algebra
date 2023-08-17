@@ -2649,6 +2649,9 @@ describe('AlgebraPool', () => {
         await pool.setPlugin(other.address);
         await expect(pool.connect(other).setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
       });
+      it('reverts if admin sets non-zero pluginConfig in pool with zero plugin', async () => {
+        await expect(pool.setPluginConfig(63)).to.be.revertedWithCustomError(pool, 'pluginIsNotSetted')
+      });
       it('emits an event when changed', async () => {
         await expect(pool.setPluginConfig(1)).to.be.emit(pool, 'PluginConfig').withArgs(1);
       });

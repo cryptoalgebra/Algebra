@@ -51,6 +51,8 @@ interface IAlgebraPoolErrors {
   error dynamicFeeActive();
   error dynamicFeeDisabled();
 
+  error pluginIsNotSetted();
+
   error invalidHookResponse(bytes4 selector);
 
   // ####  LiquidityMath errors  ####
