@@ -1,4 +1,4 @@
-import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
+import { Wallet, getCreateAddress, ZeroAddress, keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraPoolDeployer, MockDefaultPluginFactory } from '../typechain';
@@ -58,6 +58,14 @@ describe('AlgebraFactory', () => {
 
   it('owner is deployer', async () => {
     expect(await factory.owner()).to.eq(wallet.address);
+  });
+
+  it('has POOL_INIT_CODE_HASH', async () => {
+    expect(await factory.POOL_INIT_CODE_HASH()).to.be.not.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+  });
+
+  it('has correct POOL_INIT_CODE_HASH [ @skip-on-coverage ]', async () => {
+    expect(await factory.POOL_INIT_CODE_HASH()).to.be.eq(keccak256(poolBytecode));
   });
 
   it('cannot deploy factory with incorrect poolDeployer', async () => {
