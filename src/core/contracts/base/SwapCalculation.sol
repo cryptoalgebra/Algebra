@@ -68,9 +68,9 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         step.nextTickPrice = TickMath.getSqrtRatioAtTick(nextTick);
 
         (currentPrice, step.input, step.output, step.feeAmount) = PriceMovementMath.movePriceTowardsTarget(
-          zeroToOne,
+          zeroToOne, // if zeroToOne then the price is moving down
           currentPrice,
-          (zeroToOne ? step.nextTickPrice < limitSqrtPrice : step.nextTickPrice > limitSqrtPrice) // move the price to the target or to the limit
+          (zeroToOne == (step.nextTickPrice < limitSqrtPrice)) // move the price to the nearest of the next tick and the limit price
             ? limitSqrtPrice
             : uint160(step.nextTickPrice), // cast is safe
           currentLiquidity,
