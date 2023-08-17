@@ -103,6 +103,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external override onlyAdministrator {
     require(newCommunityFeeReceiver != address(0));
+    require(newCommunityFeeReceiver != communityFeeReceiver);
     communityFeeReceiver = newCommunityFeeReceiver;
     emit CommunityFeeReceiver(newCommunityFeeReceiver);
   }
@@ -125,6 +126,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function proposeAlgebraFeeChange(uint16 newAlgebraFee) external override onlyAlgebraFeeManager {
     require(newAlgebraFee <= ALGEBRA_FEE_DENOMINATOR);
+    require(newAlgebraFee != proposedNewAlgebraFee && newAlgebraFee != algebraFee);
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (newAlgebraFee, true);
     emit AlgebraFeeProposal(newAlgebraFee);
   }
@@ -138,6 +140,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external override onlyAlgebraFeeManager {
     require(newAlgebraFeeReceiver != address(0));
+    require(newAlgebraFeeReceiver != algebraFeeReceiver);
     algebraFeeReceiver = newAlgebraFeeReceiver;
     emit AlgebraFeeReceiver(newAlgebraFeeReceiver);
   }

@@ -271,6 +271,11 @@ describe('AlgebraCommunityVault', () => {
       await expect(vault.changeCommunityFeeReceiver(ZeroAddress)).to.be.reverted;
     });
 
+    it('can not change communityFeeReceiver to same address', async () => {
+      await vault.changeCommunityFeeReceiver(other.address);
+      await expect(vault.changeCommunityFeeReceiver(other.address)).to.be.reverted;
+    });
+
     it('only administrator can change communityFeeReceiver', async () => {
       await expect(vault.connect(other).changeCommunityFeeReceiver(other.address)).to.be.revertedWith('only administrator');
     });
@@ -301,6 +306,7 @@ describe('AlgebraCommunityVault', () => {
 
       await vault.changeAlgebraFeeReceiver(other.address);
       expect(await vault.algebraFeeReceiver()).to.be.eq(other.address);
+      await expect(vault.changeAlgebraFeeReceiver(other.address)).to.be.reverted;
     });
 
     it('can propose new fee and cancel proposal', async () => {
@@ -310,7 +316,9 @@ describe('AlgebraCommunityVault', () => {
       await expect(vault.connect(other).proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.revertedWith('only algebra fee manager');
       await expect(vault.proposeAlgebraFeeChange(1001)).to.be.reverted;
 
+
       await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
+      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.reverted;
       expect(await vault.proposedNewAlgebraFee()).to.be.eq(ALGEBRA_FEE);
       expect(await vault.hasNewAlgebraFeeProposal()).to.be.eq(true);
 
@@ -319,6 +327,10 @@ describe('AlgebraCommunityVault', () => {
 
       expect(await vault.proposedNewAlgebraFee()).to.be.eq(0);
       expect(await vault.hasNewAlgebraFeeProposal()).to.be.eq(false);
+
+      await vault.proposeAlgebraFeeChange(ALGEBRA_FEE);
+      await vault.acceptAlgebraFeeChangeProposal(ALGEBRA_FEE);
+      await expect(vault.proposeAlgebraFeeChange(ALGEBRA_FEE)).to.be.reverted;
     });
   });
 });
