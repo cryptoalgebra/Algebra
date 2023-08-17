@@ -71,8 +71,9 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   }
 
   function _readAndVerifyWithdrawSettings() private view returns (uint16 _algebraFee, address _algebraFeeReceiver, address _communityFeeReceiver) {
-    if ((_algebraFee = algebraFee) != 0) require((_algebraFeeReceiver = algebraFeeReceiver) != address(0), 'invalid algebra fee receiver');
-    require((_communityFeeReceiver = communityFeeReceiver) != address(0), 'invalid receiver');
+    (_algebraFee, _algebraFeeReceiver, _communityFeeReceiver) = (algebraFee, algebraFeeReceiver, communityFeeReceiver);
+    if (_algebraFee != 0) require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
+    require(_communityFeeReceiver != address(0), 'invalid receiver');
   }
 
   function _withdraw(address token, address to, uint256 amount, uint16 _algebraFee, address _algebraFeeReceiver) private {
