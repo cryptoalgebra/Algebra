@@ -112,12 +112,27 @@ describe('AlgebraFactory', () => {
       expect(addressCalculatedByFactory).to.be.eq(poolAddress);
     });
 
-    it('succeeds if defaultPluginFactory setted', async () => {
+    it('succeeds if defaultPluginFactory setted [ @skip-on-coverage ]', async () => {
       await factory.setDefaultPluginFactory(defaultPluginFactory);
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
       let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
       let pluginAddress = await defaultPluginFactory.pluginsForPools(poolAddress);
+
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+      expect(await pool.plugin()).to.be.eq(pluginAddress);
+    });
+
+    it('creates plugin in defaultPluginFactory', async () => {
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      // in coverage mode bytecode hash can be different from specified in factory
+      let pluginAddress = await defaultPluginFactory.pluginsForPools(
+        await factory.computePoolAddress(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      );
 
       const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
       let pool = poolContractFactory.attach(poolAddress);

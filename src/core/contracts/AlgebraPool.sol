@@ -402,13 +402,19 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override nonReentrant {
     _checkIfAdministrator();
+    globalState.pluginConfig = 0;
     plugin = newPluginAddress;
+    emit PluginConfig(0);
     emit Plugin(newPluginAddress);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override nonReentrant {
-    if (msg.sender != plugin) _checkIfAdministrator();
+    address _plugin = plugin;
+    if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
+
+    if (msg.sender != _plugin) _checkIfAdministrator();
+
     globalState.pluginConfig = newConfig;
     emit PluginConfig(newConfig);
   }
