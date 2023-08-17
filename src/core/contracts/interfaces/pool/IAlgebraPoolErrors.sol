@@ -51,7 +51,7 @@ interface IAlgebraPoolErrors {
   error dynamicFeeActive();
   error dynamicFeeDisabled();
 
-  error pluginIsNotSetted();
+  error pluginIsNotConnected();
 
   error invalidHookResponse(bytes4 selector);
 

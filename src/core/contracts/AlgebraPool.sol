@@ -402,8 +402,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override nonReentrant {
     _checkIfAdministrator();
-    plugin = newPluginAddress;
     globalState.pluginConfig = 0;
+    plugin = newPluginAddress;
     emit PluginConfig(0);
     emit Plugin(newPluginAddress);
   }
@@ -411,11 +411,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override nonReentrant {
     address _plugin = plugin;
-    if (msg.sender != _plugin) {
-      _checkIfAdministrator();
-      // admin cannot set non-zero plugin config if plugin is not setted
-      if (_plugin == address(0) && newConfig != 0) revert pluginIsNotSetted();
-    }
+    if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
+
+    if (msg.sender != _plugin) _checkIfAdministrator();
+
     globalState.pluginConfig = newConfig;
     emit PluginConfig(newConfig);
   }
