@@ -403,6 +403,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   function setPlugin(address newPluginAddress) external override nonReentrant {
     _checkIfAdministrator();
     plugin = newPluginAddress;
+    globalState.pluginConfig = 0;
     emit Plugin(newPluginAddress);
   }
 
