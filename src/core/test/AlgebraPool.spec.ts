@@ -1229,7 +1229,7 @@ describe('AlgebraPool', () => {
 
     describe('#swapWithPaymentInAdvance', async () => {
       it('fails if not initialized', async () => {
-        expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithCustomError(pool, 'notInitialized');
+        await expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithCustomError(pool, 'notInitialized');
       });
       describe('after initialization', () => {
         beforeEach('initialize the pool at price of 10:1', async () => {
