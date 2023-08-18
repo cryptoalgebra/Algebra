@@ -1,0 +1,24 @@
+name: checks
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request: {}
+  workflow_dispatch: {}
+
+env:
+  NODE_OPTIONS: --max_old_space_size=5120
+
+jobs:
+  codespell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run CodeSpell
+        uses: codespell-project/actions-codespell@v2.0
+        with:
+          check_hidden: true
+          check_filenames: true
+          skip: package-lock.json,node_modules
