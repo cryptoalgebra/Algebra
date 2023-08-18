@@ -143,6 +143,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
     if (amount0 | amount1 != 0) {
+      // since we do not support tokens whose total supply can exceed uint128, these casts are safe
+      // and, theoretically, unchecked cast prevents a complete blocking of burn
       (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
     }
 
