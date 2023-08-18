@@ -131,7 +131,7 @@ library PriceMovementMath {
 
           input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
           // we didn't reach the target, so take the remainder of the maximum input as fee
-          feeAmount = uint256(amountAvailable) - input;
+          feeAmount = uint256(amountAvailable) - input; // input <= amountAvailable due to used formulas. This invariant is checked by fuzzy tests
         }
 
         output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
