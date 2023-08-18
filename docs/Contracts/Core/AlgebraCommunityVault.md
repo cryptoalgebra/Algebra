@@ -11,10 +11,10 @@ Community fee from pools is sent here, if it is enabled
 Version: Algebra Integral*
 
 ## Modifiers
-### onlyFactoryOwner
+### onlyAdministrator
 
 ```solidity
-modifier onlyFactoryOwner()
+modifier onlyAdministrator()
 ```
 
 
@@ -38,6 +38,12 @@ modifier onlyAlgebraFeeManager()
 
 ## Variables
 ### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
+
+
+
+*Developer note: The role can be granted in AlgebraFactory*
+
+### bytes32 COMMUNITY_FEE_VAULT_ADMINISTRATOR constant
 
 
 
@@ -125,7 +131,8 @@ function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
 
 Accepts the proposed new Algebra fee
 
-*Developer note: Can only be called by the factory owner*
+*Developer note: Can only be called by the factory owner.
+The new value will also be used for previously accumulated tokens that have not yet been withdrawn*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -172,6 +179,8 @@ function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
 ```
 
 Proposes new Algebra fee value for protocol
+
+*Developer note: the new value will also be used for previously accumulated tokens that have not yet been withdrawn*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

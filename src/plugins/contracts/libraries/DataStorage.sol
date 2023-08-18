@@ -387,7 +387,7 @@ library DataStorage {
   /// @notice Calculates cumulative tick at the moment of `time` - `secondsAgo`
   /// @dev More optimal than via `getSingleTimepoint`
   /// @return tickCumulative The cumulative tick
-  /// @return indexBeforeOrAt The index of closest timepoint before ot at the moment of `time` - `secondsAgo`
+  /// @return indexBeforeOrAt The index of closest timepoint before or at the moment of `time` - `secondsAgo`
   function _getTickCumulativeAt(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -427,7 +427,7 @@ library DataStorage {
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   /// @return samePoint Are `beforeOrAt` and `atOrAfter` the same or not
-  /// @return indexBeforeOrAt The index of closest timepoint before ot at the moment of `target`
+  /// @return indexBeforeOrAt The index of closest timepoint before or at the moment of `target`
   function _getTimepointsAt(
     Timepoint[UINT16_MODULO] storage self,
     uint32 currentTime,

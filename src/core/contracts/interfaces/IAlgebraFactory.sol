@@ -102,6 +102,11 @@ interface IAlgebraFactory {
   /// @return pool The pool address
   function poolByPair(address tokenA, address tokenB) external view returns (address pool);
 
+  /// @notice returns keccak256 of AlgebraPool init bytecode.
+  /// @dev the hash value changes with any change in the pool bytecode
+  /// @return Keccak256 hash of AlgebraPool contract init bytecode
+  function POOL_INIT_CODE_HASH() external view returns (bytes32);
+
   /// @return timestamp The timestamp of the beginning of the renounceOwnership process
   function renounceOwnershipStartTimestamp() external view returns (uint256 timestamp);
 

@@ -701,7 +701,7 @@ describe('unit/EternalFarms', () => {
     })
   })
 
-  xdescribe('swap gas [ @skip-on-coverage ]', async () => {
+  describe.skip('swap gas [ @skip-on-coverage ]', async () => {
     it('3 swaps', async () => {
       timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
 

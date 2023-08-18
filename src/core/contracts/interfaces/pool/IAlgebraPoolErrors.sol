@@ -16,10 +16,13 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if an attempt is made to initialize the pool twice
   error alreadyInitialized();
 
+  /// @notice Emitted if an attempt is made to mint or swap in uninitialized pool
+  error notInitialized();
+
   /// @notice Emitted if 0 is passed as amountRequired to swap function
   error zeroAmountRequired();
 
-  /// @notice Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
+  /// @notice Emitted if invalid amount is passed as amountRequired to swap function
   error invalidAmountRequired();
 
   /// @notice Emitted if the pool received fewer tokens than it should have

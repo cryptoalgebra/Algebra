@@ -25,6 +25,14 @@ error alreadyInitialized()
 
 Emitted if an attempt is made to initialize the pool twice
 
+## notInitialized
+
+```solidity
+error notInitialized()
+```
+
+Emitted if an attempt is made to mint or swap in uninitialized pool
+
 ## zeroAmountRequired
 
 ```solidity
@@ -39,7 +47,7 @@ Emitted if 0 is passed as amountRequired to swap function
 error invalidAmountRequired()
 ```
 
-Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
+Emitted if invalid amount is passed as amountRequired to swap function
 
 ## insufficientInputAmount
 
@@ -141,6 +149,14 @@ error dynamicFeeActive()
 
 ```solidity
 error dynamicFeeDisabled()
+```
+
+
+
+## pluginIsNotConnected
+
+```solidity
+error pluginIsNotConnected()
 ```
 
 

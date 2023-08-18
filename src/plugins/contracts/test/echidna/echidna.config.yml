@@ -46,7 +46,7 @@ cryticArgs: ['--hardhat-ignore-compile']
 # quiet: false
 # #initialize the blockchain with some data
 # initialize: null
-# #whether ot not to use the multi-abi mode of testing
+# #whether or not to use the multi-abi mode of testing
 # multi-abi: false
 # #benchmarkMode enables benchmark mode
 # benchmarkMode: false

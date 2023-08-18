@@ -364,7 +364,7 @@ describe('NFTDescriptor', () => {
     let minTick: number
     let maxTick: number
 
-    xdescribe('when tickspacing is 10', () => {
+    describe.skip('when tickspacing is 10', () => {
       before(() => {
         tickSpacing = TICK_SPACINGS[FeeAmount.LOW]
         minTick = getMinTick(tickSpacing)
@@ -418,7 +418,7 @@ describe('NFTDescriptor', () => {
       })
     })
 
-    xdescribe('when tickspacing is 200', () => {
+    describe.skip('when tickspacing is 200', () => {
       before(() => {
         tickSpacing = TICK_SPACINGS[FeeAmount.HIGH]
         minTick = getMinTick(tickSpacing)

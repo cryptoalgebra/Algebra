@@ -5,7 +5,7 @@ import '../../libraries/PriceMovementMath.sol';
 import '../../libraries/TickMath.sol';
 
 contract PriceMovementMathEchidnaTest {
-  function checkmovePriceTowardsTargetInvariants(
+  function checkMovePriceTowardsTargetInvariants(
     uint160 sqrtPriceRaw,
     uint160 sqrtPriceTargetRaw,
     uint128 liquidity,
@@ -60,5 +60,17 @@ contract PriceMovementMathEchidnaTest {
         assert(sqrtQ <= sqrtPriceTargetRaw);
       }
     }
+  }
+
+  function checkGetNewPriceAfterInputInvariantZtO(uint160 price, uint128 liquidity, uint256 amount) external pure {
+    uint160 newPrice = PriceMovementMath.getNewPriceAfterInput(price, liquidity, amount, true);
+    uint256 requiredTokenAmount = PriceMovementMath.getInputTokenDelta01(newPrice, price, liquidity);
+    assert(requiredTokenAmount <= amount);
+  }
+
+  function checkGetNewPriceAfterInputInvariantOtZ(uint160 price, uint128 liquidity, uint256 amount) external pure {
+    uint160 newPrice = PriceMovementMath.getNewPriceAfterInput(price, liquidity, amount, false);
+    uint256 requiredTokenAmount = PriceMovementMath.getInputTokenDelta10(newPrice, price, liquidity);
+    assert(requiredTokenAmount <= amount);
   }
 }
