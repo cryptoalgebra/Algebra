@@ -93,7 +93,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
       defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
     }
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(defaultPlugin), token0, token1);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
