@@ -171,7 +171,8 @@ function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
 
 Accepts the proposed new Algebra fee
 
-*Developer note: Can only be called by the factory owner*
+*Developer note: Can only be called by the factory owner.
+The new value will also be used for previously accumulated tokens that have not yet been withdrawn*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -218,6 +219,8 @@ function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
 ```
 
 Proposes new Algebra fee value for protocol
+
+*Developer note: the new value will also be used for previously accumulated tokens that have not yet been withdrawn*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
