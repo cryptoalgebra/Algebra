@@ -120,7 +120,7 @@ describe('AlgebraFactory', () => {
       expect(addressCalculatedByFactory).to.be.eq(poolAddress);
     });
 
-    it('succeeds if defaultPluginFactory setted [ @skip-on-coverage ]', async () => {
+    it('succeeds if defaultPluginFactory set [ @skip-on-coverage ]', async () => {
       await factory.setDefaultPluginFactory(defaultPluginFactory);
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 

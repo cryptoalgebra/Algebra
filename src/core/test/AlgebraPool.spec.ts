@@ -196,7 +196,7 @@ describe('AlgebraPool', () => {
             await token1.approve(payer, 2n ** 256n - 1n);
           });
 
-          it('fails if token0 payed 0', async () => {
+          it('fails if token0 paid 0', async () => {
             await expect(
               payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 0, 100)
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
@@ -205,7 +205,7 @@ describe('AlgebraPool', () => {
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           });
 
-          it('fails if token1 payed 0', async () => {
+          it('fails if token1 paid 0', async () => {
             await expect(
               payer.mint(pool, wallet.address, minTick + tickSpacing, maxTick - tickSpacing, 100, 100, 0)
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
@@ -222,7 +222,7 @@ describe('AlgebraPool', () => {
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           });
 
-          it('fails if token0 hardly underpayed', async () => {
+          it('fails if token0 hardly underpaid', async () => {
             await expect(
               payer.mint(
                 pool,
@@ -236,7 +236,7 @@ describe('AlgebraPool', () => {
             ).to.be.revertedWithCustomError(pool, 'zeroLiquidityActual');
           });
 
-          it('fails if token1 hardly underpayed', async () => {
+          it('fails if token1 hardly underpaid', async () => {
             await swapToHigherPrice(encodePriceSqrt(10, 1), wallet.address);
             await expect(
               payer.mint(

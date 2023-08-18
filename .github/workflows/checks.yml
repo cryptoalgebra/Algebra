@@ -20,4 +20,4 @@ jobs:
         with:
           check_hidden: true
           check_filenames: true
-          skip: *.yml,package-lock.json,node_modules
+          skip: package-lock.json,node_modules
