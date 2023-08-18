@@ -1,17 +1,16 @@
-name: checks
+name: Checks
 
 on:
   push:
     branches:
       - master
       - staged
-  pull_request: {}
-
-env:
-  NODE_OPTIONS: --max_old_space_size=5120
+  pull_request:
+    branches:
+      - dev
 
 jobs:
-  codespell:
+  Codespell:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
