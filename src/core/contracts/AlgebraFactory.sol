@@ -72,7 +72,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
+  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
     return (defaultCommunityFee, defaultTickspacing, defaultFee);
   }
 
