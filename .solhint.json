@@ -1,6 +1,15 @@
 {
-  "extends": "solhint:default",
+  "extends": "solhint:recommended",
+  "plugins": [],
   "rules": {
-    "max-line-length": "off"
+    "max-line-length": "off",
+    "no-global-import": "off",
+    "quotes": ["error", "single"],
+    "custom-errors": "off",
+    "func-visibility": ["warn", {"ignoreConstructors":true}],
+    "no-inline-assembly": "off",
+    "compiler-version": "off",
+    "comprehensive-interface": "warn",
+    "modifier-name-mixedcase": "error"
   }
 }
