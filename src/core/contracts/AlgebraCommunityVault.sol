@@ -96,6 +96,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
     require(hasNewAlgebraFeeProposal, 'not proposed');
     require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
 
+    // note that the new value will be used for previously accumulated tokens that have not yet been withdrawn
     algebraFee = newAlgebraFee;
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (0, false);
     emit AlgebraFee(newAlgebraFee);

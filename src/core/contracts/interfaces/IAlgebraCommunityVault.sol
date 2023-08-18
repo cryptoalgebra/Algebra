@@ -63,7 +63,8 @@ interface IAlgebraCommunityVault {
   // ### algebra factory owner permissioned actions ###
 
   /// @notice Accepts the proposed new Algebra fee
-  /// @dev Can only be called by the factory owner
+  /// @dev Can only be called by the factory owner.
+  /// The new value will also be used for previously accumulated tokens that have not yet been withdrawn
   /// @param newAlgebraFee New Algebra fee value
   function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external;
 
@@ -82,6 +83,7 @@ interface IAlgebraCommunityVault {
   function acceptAlgebraFeeManagerRole() external;
 
   /// @notice Proposes new Algebra fee value for protocol
+  /// @dev the new value will also be used for previously accumulated tokens that have not yet been withdrawn
   /// @param newAlgebraFee new Algebra fee value
   function proposeAlgebraFeeChange(uint16 newAlgebraFee) external;
 
