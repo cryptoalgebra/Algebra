@@ -172,12 +172,12 @@ describe('AlgebraPool', () => {
 
   describe('#mint', () => {
     it('fails if not initialized', async () => {
-      expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithoutReason;
-      expect(mint(wallet.address, getMinTick(1), getMaxTick(1), 100)).to.be.revertedWithoutReason;
-      expect(mint(wallet.address, 0, getMaxTick(1), 100)).to.be.revertedWithoutReason;
-      expect(mint(wallet.address, getMinTick(1), 0, 100)).to.be.revertedWithoutReason;
-      expect(mint(wallet.address, getMaxTick(1) - 1, getMaxTick(1), 100)).to.be.revertedWithoutReason;
-      expect(mint(wallet.address, getMinTick(1), getMinTick(1) + 1, 100)).to.be.revertedWithoutReason;
+      await expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithCustomError(pool, 'notInitialized');
+      await expect(mint(wallet.address, getMinTick(1), getMaxTick(1), 100)).to.be.revertedWithCustomError(pool, 'notInitialized');
+      await expect(mint(wallet.address, 0, getMaxTick(1), 100)).to.be.revertedWithCustomError(pool, 'notInitialized');
+      await expect(mint(wallet.address, getMinTick(1), 0, 100)).to.be.revertedWithCustomError(pool, 'notInitialized');
+      await expect(mint(wallet.address, getMaxTick(1) - 1, getMaxTick(1), 100)).to.be.revertedWithCustomError(pool, 'notInitialized');
+      await expect(mint(wallet.address, getMinTick(1), getMinTick(1) + 1, 100)).to.be.revertedWithCustomError(pool, 'notInitialized');
     });
     describe('after initialization', () => {
       beforeEach('initialize the pool at price of 10:1', async () => {
@@ -1167,7 +1167,7 @@ describe('AlgebraPool', () => {
   describe('#swaps', () => {
     describe('#swap', async () => {
       it('fails if not initialized', async () => {
-        expect(swapToLowerPrice(encodePriceSqrt(1, 5), other.address)).to.be.revertedWithoutReason;
+        await expect(swapToLowerPrice(encodePriceSqrt(1, 5), other.address)).to.be.revertedWithCustomError(pool, 'notInitialized');
       });
       describe('after initialization', () => {
         beforeEach('initialize the pool at price of 10:1', async () => {
@@ -1229,7 +1229,7 @@ describe('AlgebraPool', () => {
 
     describe('#swapWithPaymentInAdvance', async () => {
       it('fails if not initialized', async () => {
-        expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithoutReason;
+        expect(swapExact0For1SupportingFee(100, other.address)).to.be.revertedWithCustomError(pool, 'notInitialized');
       });
       describe('after initialization', () => {
         beforeEach('initialize the pool at price of 10:1', async () => {

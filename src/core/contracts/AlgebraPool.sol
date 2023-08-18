@@ -68,18 +68,19 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _beforeModifyPos(recipient, bottomTick, topTick, liquidityDesired.toInt128(), data);
     _lock();
 
-    unchecked {
-      int24 _tickSpacing = tickSpacing;
-      if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
-    }
+    {
+      // scope to prevent stack too deep
+      int24 currentTick = globalState.tick;
+      uint160 currentPrice = globalState.price;
+      if (currentPrice == 0) revert notInitialized();
 
-    (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(
-      bottomTick,
-      topTick,
-      liquidityDesired.toInt128(),
-      globalState.tick,
-      globalState.price
-    );
+      unchecked {
+        int24 _tickSpacing = tickSpacing;
+        if (bottomTick % _tickSpacing | topTick % _tickSpacing != 0) revert tickIsNotSpaced();
+      }
+
+      (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDesired.toInt128(), currentTick, currentPrice);
+    }
 
     (uint256 receivedAmount0, uint256 receivedAmount1) = _updateReserves();
     _mintCallback(amount0, amount1, data); // IAlgebraMintCallback.algebraMintCallback to msg.sender
