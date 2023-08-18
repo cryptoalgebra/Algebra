@@ -6,7 +6,6 @@ on:
       - master
       - staged
   pull_request: {}
-  workflow_dispatch: {}
 
 env:
   NODE_OPTIONS: --max_old_space_size=5120
@@ -21,4 +20,4 @@ jobs:
         with:
           check_hidden: true
           check_filenames: true
-          skip: package-lock.json,node_modules
+          skip: *.yml,package-lock.json,node_modules
