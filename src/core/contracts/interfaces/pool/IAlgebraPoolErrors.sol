@@ -22,7 +22,7 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if 0 is passed as amountRequired to swap function
   error zeroAmountRequired();
 
-  /// @notice Emitted if invalid amount is passed as amountRequired to swapSupportingFeeOnInputTokens function
+  /// @notice Emitted if invalid amount is passed as amountRequired to swap function
   error invalidAmountRequired();
 
   /// @notice Emitted if the pool received fewer tokens than it should have
