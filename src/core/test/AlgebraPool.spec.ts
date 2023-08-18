@@ -21,6 +21,8 @@ import {
   MAX_SQRT_RATIO,
   MIN_SQRT_RATIO,
   SwapToPriceFunction,
+  MAX_TICK,
+  MIN_TICK,
 } from './shared/utilities';
 
 import {
@@ -1170,10 +1172,48 @@ describe('AlgebraPool', () => {
       describe('after initialization', () => {
         beforeEach('initialize the pool at price of 10:1', async () => {
           await pool.initialize(encodePriceSqrt(1, 10));
-          await mint(wallet.address, minTick, maxTick, 3161);
         });
 
+        describe('swaps without liquidity', async() => {
+          it('can swap to max tick', async() => {
+            await swapExact1For0(1, wallet.address);
+            const tick = (await pool.globalState()).tick;
+            expect(tick).to.be.eq(MAX_TICK - 1);
+          })
+
+          it('can swap to min tick', async() => {
+            await swapExact0For1(1, wallet.address);
+            const tick = (await pool.globalState()).tick;
+            expect(tick).to.be.eq(MIN_TICK);
+          })
+
+          it('can swap through whole price range', async() => {
+            await swapExact0For1(1, wallet.address);
+            let tick = (await pool.globalState()).tick;
+            expect(tick).to.be.eq(MIN_TICK);
+            await swapExact1For0(1, wallet.address);
+            tick = (await pool.globalState()).tick;
+            expect(tick).to.be.eq(MAX_TICK - 1);
+            await swapExact0For1(1, wallet.address);
+            tick = (await pool.globalState()).tick;
+            expect(tick).to.be.eq(MIN_TICK);
+          })
+
+          it('can swap to lower price', async() => {
+            await swapExact0For1(1, wallet.address, encodePriceSqrt(1, 1000));
+            const price = (await pool.globalState()).price;
+            expect(price).to.be.eq(encodePriceSqrt(1, 1000));
+          })
+
+          it('can swap to higher price', async() => {
+            await swapExact1For0(1, wallet.address, encodePriceSqrt(1000, 1));
+            const price = (await pool.globalState()).price;
+            expect(price).to.be.eq(encodePriceSqrt(1000, 1));
+          })
+        })
+
         it('fails if required int256.min', async () => {
+          await mint(wallet.address, minTick, maxTick, 3161);
           await expect(
             pool.swap(
               other.address,
