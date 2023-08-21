@@ -363,24 +363,24 @@ library DataStorage {
   ) internal view returns (uint88 volatilityCumulative) {
     unchecked {
       uint32 target = time - secondsAgo;
-      (Timepoint memory beforeOrAt, Timepoint storage atOrAfter, bool samePoint, ) = _getTimepointsAt(self, time, target, lastIndex, oldestIndex);
+      (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool samePoint, ) = _getTimepointsAt(self, time, target, lastIndex, oldestIndex);
 
-      if (target == beforeOrAt.blockTimestamp) return beforeOrAt.volatilityCumulative; // we're at the left boundary
+      (uint32 timestampBefore, uint88 volatilityCumulativeBefore) = (beforeOrAt.blockTimestamp, beforeOrAt.volatilityCumulative);
+      if (target == timestampBefore) return volatilityCumulativeBefore; // we're at the left boundary
       if (samePoint) {
         // since target != beforeOrAt.blockTimestamp, `samePoint` means that target is newer than last timepoint
-        (int24 avgTick, ) = _getAverageTickCasted(self, time, tick, lastIndex, oldestIndex, beforeOrAt.blockTimestamp, beforeOrAt.tickCumulative);
+        (int24 avgTick, ) = _getAverageTickCasted(self, time, tick, lastIndex, oldestIndex, timestampBefore, beforeOrAt.tickCumulative);
 
-        return (beforeOrAt.volatilityCumulative +
-          uint88(_volatilityOnRange(int256(uint256(target - beforeOrAt.blockTimestamp)), beforeOrAt.tick, tick, beforeOrAt.averageTick, avgTick)));
+        return (volatilityCumulativeBefore +
+          uint88(_volatilityOnRange(int256(uint256(target - timestampBefore)), beforeOrAt.tick, tick, beforeOrAt.averageTick, avgTick)));
       }
 
       (uint32 timestampAfter, uint88 volatilityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.volatilityCumulative);
       if (target == timestampAfter) return volatilityCumulativeAfter; // we're at the right boundary
 
       // we're in the middle
-      (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - beforeOrAt.blockTimestamp, target - beforeOrAt.blockTimestamp);
-
-      return beforeOrAt.volatilityCumulative + ((volatilityCumulativeAfter - beforeOrAt.volatilityCumulative) / timepointTimeDelta) * targetDelta;
+      (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - timestampBefore, target - timestampBefore);
+      return volatilityCumulativeBefore + ((volatilityCumulativeAfter - volatilityCumulativeBefore) / timepointTimeDelta) * targetDelta;
     }
   }
 
