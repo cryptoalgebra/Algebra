@@ -6,17 +6,19 @@ import snapshotGasCost from './shared/snapshotGasCost'
 
 describe('AdaptiveFee', () => {
   let adaptiveFee: AdaptiveFeeTest
-  const fixture = async () => {
+  
+  async function adaptiveFeeFixture() {
     const factory = await ethers.getContractFactory('AdaptiveFeeTest')
     return (await factory.deploy()) as any as AdaptiveFeeTest
   }
+  
   beforeEach('deploy AdaptiveFeeTest', async () => {
-    adaptiveFee = await loadFixture(fixture)
+    adaptiveFee = await loadFixture(adaptiveFeeFixture)
   })
 
   describe('#getFee', () => {
     it('fee: 0 volat 0 volume', async () => {
-      console.log( (await adaptiveFee.getFee(0)).toString());
+      expect(await adaptiveFee.getFee(0)).to.be.eq(100);
     })
 
     it('fee grid snapshot', async () => {

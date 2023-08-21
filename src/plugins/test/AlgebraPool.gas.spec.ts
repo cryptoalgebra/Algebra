@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool, TestERC20, TestAlgebraCallee } from '../../core/typechain'
-import { MockFactory, MockPool, MockTimeDataStorageOperator, MockTimeDSFactory, DataStorageFactory } from "../typechain";
+import { loadFixture, reset as resetNetwork } from '@nomicfoundation/hardhat-network-helpers';
+import { MockTimeAlgebraPool } from '../../core/typechain'
+import { MockTimeDataStorageOperator, MockTimeDSFactory, MockTimeVirtualPool } from "../typechain";
 import { expect } from './shared/expect'
 
 import { algebraPoolDeployerMockFixture } from './shared/externalFixtures'
@@ -20,19 +20,14 @@ import {
   MintFunction,
   getMaxTick,
   MaxUint128,
-  SwapToPriceFunction,
-  MAX_SQRT_RATIO,
-  MIN_SQRT_RATIO,
+  SwapToPriceFunction
 } from '../../core/test/shared/utilities'
 
 describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet;
 
-  let token0: TestERC20;
-  let token1: TestERC20;
-  let swapTarget: TestAlgebraCallee;
-
   before('create fixture loader', async () => {
+    await resetNetwork();
     [wallet, other] = await (ethers as any).getSigners();
   });
 
@@ -44,7 +39,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       const minTick = getMinTick(tickSpacing);
       const maxTick = getMaxTick(tickSpacing);
 
-      const gasTestFixture = async () => {
+      async function gasTestFixture() {
         const fix = await algebraPoolDeployerMockFixture()
         const pool = await fix.createPool()
 
@@ -71,13 +66,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           pool,
         })
 
-        token0 = fix.token0
-        token1 = fix.token1
-        swapTarget = fix.swapTargetCallee;
+        const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
+        const virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool
 
         await pool.initialize(encodePriceSqrt(1, 1))
-        if (communityFee != 0)
-          await pool.setCommunityFee(communityFee)
+        if (communityFee != 0) await pool.setCommunityFee(communityFee)
+
         await advanceTime(1)
         await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2))
         await swapExact0For1(expandTo18Decimals(1), wallet.address)
@@ -87,7 +81,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         expect((await pool.globalState()).tick).to.eq(startingTick)
         expect((await pool.globalState()).price).to.eq(startingPrice)
 
-        return { advanceTime, pool, plugin, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice}
+        return { advanceTime, pool, plugin, virtualPoolMock, mockPluginFactory, swapExact0For1, swapExact1For0, mint, swapToHigherPrice, swapToLowerPrice}
       }
 
       let swapExact0For1: SwapFunction;
@@ -96,246 +90,275 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapToLowerPrice: SwapToPriceFunction;
       let pool: MockTimeAlgebraPool;
       let plugin: MockTimeDataStorageOperator;
+      let virtualPoolMock: MockTimeVirtualPool;
+      let mockPluginFactory: MockTimeDSFactory;
       let mint: MintFunction
       let advanceTime: any;
 
       beforeEach('load the fixture', async () => {
-        ;({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, mint, swapToHigherPrice, swapToLowerPrice} = await loadFixture(gasTestFixture))
+        ;({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice, swapToLowerPrice} = await loadFixture(gasTestFixture))
       })
 
-      describe('#swapExact1For0', () => {
-        it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact1For0(2000, wallet.address));
-          expect((await pool.globalState()).price).to.not.eq(startingPrice);
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-        });
+      describe('#swap', async() => {
+        describe('#swapExact1For0', () => {
+          it('first swap in block with no tick movement', async () => {
+            await snapshotGasCost(swapExact1For0(2000, wallet.address));
+            expect((await pool.globalState()).price).to.not.eq(startingPrice);
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+          });
 
-        it('first swap in block moves tick, no initialized crossings', async () => {
-          await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
-          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
-        });
+          it('first swap in block moves tick, no initialized crossings', async () => {
+            await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+          });
 
-        it('second swap in block with no tick movement', async () => {
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
-          await snapshotGasCost(swapExact1For0(2000, wallet.address));
-          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
-        });
-      })
+          it('second swap in block with no tick movement', async () => {
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+            await snapshotGasCost(swapExact1For0(2000, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+          });
+        })
 
-      describe('#swapExact0For1', () => {
-        it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact0For1(2000, wallet.address));
-          expect((await pool.globalState()).price).to.not.eq(startingPrice);
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-        });
+        describe('#swapExact0For1', () => {
+          it('first swap in block with no tick movement', async () => {
+            await snapshotGasCost(swapExact0For1(2000, wallet.address));
+            expect((await pool.globalState()).price).to.not.eq(startingPrice);
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+          });
 
-        it('first swap in block moves tick, no initialized crossings', async () => {
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address));
-          expect((await pool.globalState()).tick).to.eq(startingTick - 1);
-        });
+          it('first swap in block moves tick, no initialized crossings', async () => {
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick - 1);
+          });
 
-        it('second swap in block with no tick movement', async () => {
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          expect((await pool.globalState()).tick).to.eq(startingTick - 1);
-          await snapshotGasCost(swapExact0For1(2000, wallet.address));
-          expect((await pool.globalState()).tick).to.eq(startingTick - 1);
-        });
+          it('second swap in block with no tick movement', async () => {
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            expect((await pool.globalState()).tick).to.eq(startingTick - 1);
+            await snapshotGasCost(swapExact0For1(2000, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick - 1);
+          });
 
-        it('second swap in block moves tick, no initialized crossings', async () => {
-          await swapExact0For1(1000, wallet.address);
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address));
-          expect((await pool.globalState()).tick).to.eq(startingTick - 1);
-        });
+          it('second swap in block moves tick, no initialized crossings', async () => {
+            await swapExact0For1(1000, wallet.address);
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick - 1);
+          });
 
-        it('first swap in block, large swap, no initialized crossings', async () => {
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address));
-          expect((await pool.globalState()).tick).to.eq(-35586);
-        });
+          it('first swap in block, large swap, no initialized crossings', async () => {
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(10), wallet.address));
+            expect((await pool.globalState()).tick).to.eq(-35586);
+          });
 
-        it('first swap in block, large swap crossing several initialized ticks', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
-        });
-
-        it('several large swaps with pauses', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60 * 60);
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60 * 60);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(5 * 60 * 60);
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(19 * 60 * 60);
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
-        });
-
-        it('small swap after several large swaps with pauses', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          expect((await pool.globalState()).tick).to.eq(startingTick);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60 * 60);
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60 * 60);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(5 * 60 * 60);
-          await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(19 * 60 * 60);
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await pool.advanceTime(60);
-          await snapshotGasCost(swapExact0For1(1000, wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(0);
-        });
-
-        it('first swap in block, large swap crossing a single initialized tick', async () => {
-          await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing); // we crossed the last tick
-        });
-
-        it('second swap in block, large swap crossing several initialized ticks', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
-        });
-
-        it('second swap in block, large swap crossing a single initialized tick', async () => {
-          await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
-          await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-          expect((await pool.globalState()).tick).to.be.gt(startingTick - 2 * tickSpacing); // we didn't cross the initialized tick
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing); // we crossed the last tick
-        });
-
-        it('large swap crossing several initialized ticks after some time passes', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          await swapExact0For1(2, wallet.address);
-          await pool.advanceTime(1);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
-        });
-
-        it('large swap crossing several initialized ticks second time after some time passes', async () => {
-          await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-          await mint(
-            wallet.address,
-            startingTick - 4 * tickSpacing,
-            startingTick - 2 * tickSpacing,
-            expandTo18Decimals(1)
-          );
-          await swapExact0For1(expandTo18Decimals(1), wallet.address);
-          await swapToHigherPrice(startingPrice, wallet.address);
-          await pool.advanceTime(1);
-          await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-          expect((await pool.globalState()).tick).to.be.lt(tickSpacing * -4);
-        });
-
-        describe('Filled DataStorage', function() {
-          this.timeout(600_000)
-
-          const filledStorageFixture = async () => {
-            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+          it('first swap in block, large swap crossing several initialized ticks', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
             await mint(
               wallet.address,
               startingTick - 4 * tickSpacing,
               startingTick - 2 * tickSpacing,
               expandTo18Decimals(1)
-            )
-            expect((await pool.globalState()).tick).to.eq(startingTick)
+            );
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
+          });
 
-            const BATCH_SIZE = 300;
-            let summaryTimeDelta = 0;
-            for (let i = 0; i < 1500; i += BATCH_SIZE) {
-              
-              const batch = [];
-              for (let j = 0; j < BATCH_SIZE; j++) {
-                const timeDelta = (i + j) % 2 == 0 ? 60 : 90;
-                summaryTimeDelta += timeDelta;
-                batch.push({
-                  advanceTimeBy: timeDelta,
-                  tick: startingTick + i - j
-                })
+          it('several large swaps with pauses', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            );
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60 * 60);
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60 * 60);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(5 * 60 * 60);
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(19 * 60 * 60);
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
+          });
+
+          it('small swap after several large swaps with pauses', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            );
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60 * 60);
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60 * 60);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(5 * 60 * 60);
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(19 * 60 * 60);
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await pool.advanceTime(60);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(0);
+          });
+
+          it('first swap in block, large swap crossing a single initialized tick', async () => {
+            await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing); // we crossed the last tick
+          });
+
+          it('second swap in block, large swap crossing several initialized ticks', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            );
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
+          });
+
+          it('second swap in block, large swap crossing a single initialized tick', async () => {
+            await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+            await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
+            expect((await pool.globalState()).tick).to.be.gt(startingTick - 2 * tickSpacing); // we didn't cross the initialized tick
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing); // we crossed the last tick
+          });
+
+          it('large swap crossing several initialized ticks after some time passes', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            );
+            await swapExact0For1(2, wallet.address);
+            await pool.advanceTime(1);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
+          });
+
+          it('large swap crossing several initialized ticks second time after some time passes', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(
+              wallet.address,
+              startingTick - 4 * tickSpacing,
+              startingTick - 2 * tickSpacing,
+              expandTo18Decimals(1)
+            );
+            await swapExact0For1(expandTo18Decimals(1), wallet.address);
+            await swapToHigherPrice(startingPrice, wallet.address);
+            await pool.advanceTime(1);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(tickSpacing * -4);
+          });
+
+          describe('Filled DataStorage', function() {
+            this.timeout(600_000)
+
+            const filledStorageFixture = async () => {
+              await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+              await mint(
+                wallet.address,
+                startingTick - 4 * tickSpacing,
+                startingTick - 2 * tickSpacing,
+                expandTo18Decimals(1)
+              )
+              expect((await pool.globalState()).tick).to.eq(startingTick)
+
+              const BATCH_SIZE = 300;
+              let summaryTimeDelta = 0;
+              for (let i = 0; i < 1500; i += BATCH_SIZE) {
+                
+                const batch = [];
+                for (let j = 0; j < BATCH_SIZE; j++) {
+                  const timeDelta = (i + j) % 2 == 0 ? 60 : 90;
+                  summaryTimeDelta += timeDelta;
+                  batch.push({
+                    advanceTimeBy: timeDelta,
+                    tick: startingTick + i - j
+                  })
+                }
+                await plugin.batchUpdate(batch)
               }
-              await plugin.batchUpdate(batch)
+              await pool.advanceTime(summaryTimeDelta);
             }
-            await pool.advanceTime(summaryTimeDelta);
-          }
 
-          beforeEach('load inner fixture', async() => {
-            await loadFixture(filledStorageFixture);
+            beforeEach('load inner fixture', async() => {
+              await loadFixture(filledStorageFixture);
+            })
+
+            it('small swap with filled dataStorage', async () => {
+              await advanceTime(15);
+              await snapshotGasCost(swapExact0For1(1000, wallet.address))
+            })
+
+            it('small swap with filled dataStorage after 4h', async () => {
+              await advanceTime(4 * 60 * 60);
+              await snapshotGasCost(swapExact0For1(1000, wallet.address))
+            })
+
+            it('small swap with filled dataStorage after 8h', async () => {
+              await advanceTime(8 * 60 * 60);
+              await snapshotGasCost(swapExact0For1(1000, wallet.address))
+            })
+
+            it('large swap crossing several initialized ticks', async () => {
+              await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
+              await mint(
+                wallet.address,
+                startingTick - 4 * tickSpacing,
+                startingTick - 2 * tickSpacing,
+                expandTo18Decimals(1)
+              )
+              await swapExact0For1(2, wallet.address)
+              await advanceTime(15);
+              await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
+              expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing)
+            })
+          })
+        })
+
+        describe('farming connected', async() => {
+          beforeEach('connect virtual pool', async () => {
+              await mockPluginFactory.setFarmingAddress(wallet);
+              await plugin.connect(wallet).setIncentive(virtualPoolMock);
           })
 
-          it('small swap with filled dataStorage', async () => {
-            await advanceTime(15);
-            await snapshotGasCost(swapExact0For1(1000, wallet.address))
-          })
+          it('first swap in block with no tick movement', async () => {
+            await snapshotGasCost(swapExact1For0(2000, wallet.address));
+            expect((await pool.globalState()).price).to.not.eq(startingPrice);
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+          });
 
-          it('small swap with filled dataStorage after 4h', async () => {
-            await advanceTime(4 * 60 * 60);
-            await snapshotGasCost(swapExact0For1(1000, wallet.address))
-          })
+          it('first swap in block moves tick, no initialized crossings', async () => {
+            await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+          });
 
-          it('small swap with filled dataStorage after 8h', async () => {
-            await advanceTime(8 * 60 * 60);
-            await snapshotGasCost(swapExact0For1(1000, wallet.address))
-          })
-
-          it('large swap crossing several initialized ticks', async () => {
-            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1))
-            await mint(
-              wallet.address,
-              startingTick - 4 * tickSpacing,
-              startingTick - 2 * tickSpacing,
-              expandTo18Decimals(1)
-            )
-            await swapExact0For1(2, wallet.address)
-            await advanceTime(15);
-            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address))
-            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing)
-          })
+          it('second swap in block with no tick movement', async () => {
+            await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+            await snapshotGasCost(swapExact1For0(2000, wallet.address));
+            expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+          });
         })
       })
 

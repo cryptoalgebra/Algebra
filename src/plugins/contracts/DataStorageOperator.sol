@@ -23,24 +23,24 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
-  DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  // TODO
-  uint16 public override timepointIndex;
-  uint32 public lastTimepointTimestamp;
-
-  AlgebraFeeConfiguration public feeConfig;
-
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
+
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
 
   address public immutable override pool;
   address private immutable factory;
   address private immutable pluginFactory;
 
+  DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
+  // TODO
+  uint16 public override timepointIndex;
+  uint32 public lastTimepointTimestamp;
+
   address public override incentive;
 
-  uint8 public constant override defaultPluginConfig =
-    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
+  AlgebraFeeConfiguration public feeConfig;
 
   modifier onlyPool() {
     require(msg.sender == pool, 'only pool can call this');
