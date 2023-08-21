@@ -11,16 +11,19 @@ import '../interfaces/IDataStorageFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
 contract MockTimeDSFactory is IDataStorageFactory {
-  address public immutable algebraFactory;
+  /// @inheritdoc IDataStorageFactory
+  bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
+
+  address public immutable override algebraFactory;
 
   /// @dev values of constants for sigmoids in fee calculation formula
-  AlgebraFeeConfiguration public defaultFeeConfiguration;
+  AlgebraFeeConfiguration public override defaultFeeConfiguration;
 
   /// @inheritdoc IDataStorageFactory
-  mapping(address => address) public pluginByPool;
+  mapping(address => address) public override pluginByPool;
 
   /// @inheritdoc IDataStorageFactory
-  address public farmingAddress;
+  address public override farmingAddress;
 
   constructor(address _algebraFactory) {
     algebraFactory = _algebraFactory;

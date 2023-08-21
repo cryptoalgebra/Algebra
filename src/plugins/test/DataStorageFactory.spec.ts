@@ -71,7 +71,7 @@ describe('DataStorageFactory', () => {
         baseFee: 150,
       };
       it('fails if caller is not owner', async () => {
-        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.reverted;
+        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.revertedWith('only administrator');
       });
 
       it('updates defaultFeeConfiguration', async () => {
@@ -129,7 +129,7 @@ describe('DataStorageFactory', () => {
 
   describe('#setFarmingAddress', () => {
     it('fails if caller is not owner', async () => {
-      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.reverted;
+      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.revertedWith('only administrator');
     });
 
     it('updates farmingAddress', async () => {

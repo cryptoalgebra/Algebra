@@ -1,33 +1,37 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './libraries/AdaptiveFee.sol';
-
-import './DataStorageOperator.sol';
 import './interfaces/IDataStorageFactory.sol';
+import './libraries/AdaptiveFee.sol';
+import './DataStorageOperator.sol';
 
 /// @title Algebra default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 contract DataStorageFactory is IDataStorageFactory {
-  address public immutable algebraFactory;
-
-  /// @dev values of constants for sigmoids in fee calculation formula
-  AlgebraFeeConfiguration public defaultFeeConfiguration;
+  /// @inheritdoc IDataStorageFactory
+  bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
 
   /// @inheritdoc IDataStorageFactory
-  address public farmingAddress;
+  address public immutable override algebraFactory;
 
   /// @inheritdoc IDataStorageFactory
-  mapping(address => address) public pluginByPool;
+  AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
-  modifier onlyOwner() {
-    require(msg.sender == IAlgebraFactory(algebraFactory).owner(), 'onlyOwner');
+  /// @inheritdoc IDataStorageFactory
+  address public override farmingAddress;
+
+  /// @inheritdoc IDataStorageFactory
+  mapping(address => address) public override pluginByPool;
+
+  modifier onlyAdministrator() {
+    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_ADMINISTRATOR, msg.sender), 'only administrator');
     _;
   }
 
   constructor(address _algebraFactory) {
     algebraFactory = _algebraFactory;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
+    emit DefaultFeeConfiguration(defaultFeeConfiguration);
   }
 
   /// @inheritdoc IAlgebraPluginFactory
@@ -55,14 +59,14 @@ contract DataStorageFactory is IDataStorageFactory {
   }
 
   /// @inheritdoc IDataStorageFactory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyOwner {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
   /// @inheritdoc IDataStorageFactory
-  function setFarmingAddress(address newFarmingAddress) external override onlyOwner {
+  function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);

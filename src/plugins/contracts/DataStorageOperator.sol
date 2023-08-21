@@ -4,9 +4,6 @@ pragma solidity =0.8.20;
 import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
 
-import './libraries/DataStorage.sol';
-import './libraries/AdaptiveFee.sol';
-
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
@@ -15,6 +12,9 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import './interfaces/IDataStorageOperator.sol';
 import './interfaces/IDataStorageFactory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
+
+import './libraries/DataStorage.sol';
+import './libraries/AdaptiveFee.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
@@ -26,20 +26,28 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
 
+  /// @inheritdoc IAlgebraPlugin
   uint8 public constant override defaultPluginConfig =
     uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
 
+  /// @inheritdoc IFarmingPlugin
   address public immutable override pool;
   address private immutable factory;
   address private immutable pluginFactory;
 
+  /// @inheritdoc IVolatilityOracle
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  // TODO
-  uint16 public override timepointIndex;
-  uint32 public lastTimepointTimestamp;
 
+  /// @inheritdoc IVolatilityOracle
+  uint16 public override timepointIndex;
+
+  /// @inheritdoc IVolatilityOracle
+  uint32 public override lastTimepointTimestamp;
+
+  /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
+  /// @inheritdoc IDynamicFeeManager
   AlgebraFeeConfiguration public feeConfig;
 
   modifier onlyPool() {

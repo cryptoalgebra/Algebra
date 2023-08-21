@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-// coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-// alpha1 + alpha2 + baseFee must be <= type(uint16).max
+/// @notice coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
+/// @dev alpha1 + alpha2 + baseFee must be <= type(uint16).max
 struct AlgebraFeeConfiguration {
   uint16 alpha1; // max value of the first sigmoid
   uint16 alpha2; // max value of the second sigmoid

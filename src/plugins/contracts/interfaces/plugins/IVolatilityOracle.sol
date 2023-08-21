@@ -29,9 +29,13 @@ interface IVolatilityOracle {
       uint16 windowStartIndex
     );
 
-  // @notice Returns the index of the last timepoint that was written.
-  // @return index of the last timestamp written
+  /// @notice Returns the index of the last timepoint that was written.
+  /// @return index of the last timepoint written
   function timepointIndex() external view returns (uint16);
+
+  /// @notice Returns the timestamp of the last timepoint that was written.
+  /// @return timestamp of the last timepoint
+  function lastTimepointTimestamp() external view returns (uint32);
 
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.

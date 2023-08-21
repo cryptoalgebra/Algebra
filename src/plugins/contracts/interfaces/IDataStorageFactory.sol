@@ -2,12 +2,12 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import '../base/AlgebraFeeConfiguration.sol';
-
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
+import '../base/AlgebraFeeConfiguration.sol';
+
 /// @title The interface for the DataStorageFactory
-/// @notice TODO
+/// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 interface IDataStorageFactory is IAlgebraPluginFactory {
   /// @notice Emitted when the default fee configuration is changed
   /// @param newConfig The structure with dynamic fee parameters
@@ -17,6 +17,22 @@ interface IDataStorageFactory is IAlgebraPluginFactory {
   /// @notice Emitted when the farming address is changed
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
+
+  /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_ADMINISTRATOR' used as role
+  /// @dev allows to change settings of DataStorageFactory
+  function ALGEBRA_BASE_PLUGIN_ADMINISTRATOR() external pure returns (bytes32);
+
+  /// @notice Returns the address of AlgebraFactory
+  /// @return The AlgebraFactory contract address
+  function algebraFactory() external view returns (address);
+
+  /// @notice Current default dynamic fee configuration
+  /// @dev See the AdaptiveFee struct for more details about params.
+  /// This value is set by default in new plugins
+  function defaultFeeConfiguration()
+    external
+    view
+    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
 
   /// @notice Returns current farming address
   /// @return The farming contract address
