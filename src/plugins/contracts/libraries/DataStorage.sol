@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 /// @title DataStorage
 /// @notice Provides price and volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
-/// Timepoints are overwritten when the full length of the dataStorage array is populated.
+/// Timepoints are overwritten when the full length of the timepoints array is populated.
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint()
 library DataStorage {
   /// @notice `target` timestamp is older than oldest timepoint
@@ -23,8 +23,8 @@ library DataStorage {
     uint16 windowStartIndex; // index of closest timepoint >= WINDOW seconds ago (or oldest timepoint), used to speed up searches
   }
 
-  /// @notice Initialize the dataStorage array by writing the first slot. Called once for the lifecycle of the timepoints array
-  /// @param self The stored dataStorage array
+  /// @notice Initialize the timepoints array by writing the first slot. Called once for the lifecycle of the timepoints array
+  /// @param self The stored timepoints array
   /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
   /// @param tick Initial tick
   function initialize(Timepoint[UINT16_MODULO] storage self, uint32 time, int24 tick) internal {
@@ -33,14 +33,14 @@ library DataStorage {
     (_zero.initialized, _zero.blockTimestamp, _zero.tick, _zero.averageTick) = (true, time, tick, tick);
   }
 
-  /// @notice Writes a dataStorage timepoint to the array
-  /// @dev Writable at most once per block. Index represents the most recently written element. index must be tracked externally.
-  /// @param self The stored dataStorage array
+  /// @notice Writes a timepoint to the array
+  /// @dev Writable at most once per block. `lastIndex` must be tracked externally.
+  /// @param self The stored timepoints array
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param blockTimestamp The timestamp of the new timepoint
   /// @param tick The active tick at the time of the new timepoint
-  /// @return indexUpdated The new index of the most recently written element in the dataStorage array
-  /// @return oldestIndex The index of the oldest timepoint
+  /// @return indexUpdated The new index of the most recently written element in the timepoints array
+  /// @return oldestIndex The new index of the oldest timepoint
   function write(
     Timepoint[UINT16_MODULO] storage self,
     uint16 lastIndex,
@@ -77,13 +77,13 @@ library DataStorage {
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
-  /// @param self The stored dataStorage array
+  /// @param self The stored timepoints array
   /// @param time The current block timestamp
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param oldestIndex The index of the oldest timepoint
-  /// @return targetTimepoint desired timepoint or it's approximation
+  /// @return targetTimepoint desired timepoint or it's interpolation
   function getSingleTimepoint(
     Timepoint[UINT16_MODULO] storage self,
     uint32 time,
@@ -129,12 +129,12 @@ library DataStorage {
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
-  /// @param self The stored dataStorage array
+  /// @param self The stored timepoints array
   /// @param currentTime The current block.timestamp
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
-  /// @return tickCumulatives The tick * time elapsed since the pool was first initialized, as of each `secondsAgo`
+  /// @return tickCumulatives The cumulative time-weighted tick since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
     Timepoint[UINT16_MODULO] storage self,
@@ -158,7 +158,7 @@ library DataStorage {
   }
 
   /// @notice Returns the index of the oldest timepoint
-  /// @param self The stored dataStorage array
+  /// @param self The stored timepoints array
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @return oldestIndex The index of the oldest timepoint
   function getOldestIndex(Timepoint[UINT16_MODULO] storage self, uint16 lastIndex) internal view returns (uint16 oldestIndex) {
@@ -168,8 +168,8 @@ library DataStorage {
     }
   }
 
-  /// @notice Returns average volatility in the range from time-WINDOW to time
-  /// @param self The stored dataStorage array
+  /// @notice Returns average volatility in the range from currentTime-WINDOW to currentTime
+  /// @param self The stored timepoints array
   /// @param currentTime The current block.timestamp
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
@@ -189,7 +189,7 @@ library DataStorage {
       uint16 windowStartIndex = lastTimepoint.windowStartIndex; // index of timepoint before of at lastTimepoint.blockTimestamp - WINDOW
 
       if (!timeAtLastTimepoint) {
-        lastCumulativeVolatility = _getVolatilityCumulativeAt(self, currentTime, 0, tick, lastIndex, oldestIndex); // TODO interpolate?
+        lastCumulativeVolatility = _getVolatilityCumulativeAt(self, currentTime, 0, tick, lastIndex, oldestIndex);
       }
 
       uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
@@ -283,7 +283,7 @@ library DataStorage {
 
   /// @notice Calculates average tick for WINDOW seconds at the moment of `time`
   /// @dev Guaranteed that the result is within the bounds of int24
-  /// @return avgTick int256 for fuzzy tests
+  /// @return avgTick The average tick
   /// @return windowStartIndex The index of closest timepoint <= WINDOW seconds ago
   function _getAverageTickCasted(
     Timepoint[UINT16_MODULO] storage self,
@@ -473,18 +473,17 @@ library DataStorage {
 
   /// @notice Fetches the timepoints beforeOrAt and atOrAfter a target, i.e. where [beforeOrAt, atOrAfter] is satisfied.
   /// The result may be the same timepoint, or adjacent timepoints.
-  /// @dev The answer must be contained in the array, used when the target is located within the stored timepoint
-  /// boundaries: older than the most recent timepoint and younger, or the same age as, the oldest timepoint
-  /// @param self The stored dataStorage array
-  /// @param time The current block.timestamp
-  /// @param target The timestamp at which the reserved timepoint should be for
+  /// @dev The answer must be older than the most recent timepoint and younger, or the same age as, the oldest timepoint
+  /// @param self The stored timepoints array
+  /// @param currentTime The current block.timestamp
+  /// @param target The timestamp at which the timepoint should be
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param oldestIndex The index of the oldest timepoint in the timepoints array
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   function _binarySearch(
     Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
+    uint32 currentTime,
     uint32 target,
     uint16 lastIndex,
     uint16 oldestIndex
@@ -498,12 +497,12 @@ library DataStorage {
       do {
         (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
         if (initializedBefore) {
-          if (_lteConsideringOverflow(timestampBefore, target, time)) {
+          if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
             // is current point before or at `target`?
             atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
             (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
             if (initializedAfter) {
-              if (_lteConsideringOverflow(target, timestampAfter, time)) {
+              if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
                 // is the "next" point after or at `target`?
                 return (beforeOrAt, atOrAfter, indexBeforeOrAt); // the only fully correct way to finish
               }
