@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
+import 'hardhat/console.sol';
+
 /// @title DataStorage
 /// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
@@ -168,48 +170,53 @@ library DataStorage {
     }
   }
 
-  // TODO MORE EFFECTIVE VERSION FOR LAST TIMEPOINT
-
   /// @notice Returns average volatility in the range from time-WINDOW to time
   /// @param self The stored dataStorage array
-  /// @param time The current block.timestamp
+  /// @param currentTime The current block.timestamp
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
   /// @param oldestIndex The index of the oldest timepoint
   /// @return volatilityAverage The average volatility in the recent range
   function getAverageVolatility(
     Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
+    uint32 currentTime,
     int24 tick,
     uint16 lastIndex,
     uint16 oldestIndex
   ) internal view returns (uint88 volatilityAverage) {
     unchecked {
-      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
-      uint88 lastCumulativeVolatility;
+      Timepoint storage lastTimepoint = self[lastIndex];
+      bool timeAtLastTimepoint = lastTimepoint.blockTimestamp == currentTime;
+      uint88 lastCumulativeVolatility = lastTimepoint.volatilityCumulative;
+      uint16 windowStartIndex = lastTimepoint.windowStartIndex; // index of timepoint before of at lastTimepoint.blockTimestamp - WINDOW
 
-      bool targetAtLastTimepoint = self[lastIndex].blockTimestamp == time; // TODO optimize?
-      if (targetAtLastTimepoint) {
-        lastCumulativeVolatility = self[lastIndex].volatilityCumulative;
-      } else {
-        lastCumulativeVolatility = _getVolatilityCumulativeAt(self, time, 0, tick, lastIndex, oldestIndex); // TODO interpolate?
+      if (!timeAtLastTimepoint) {
+        lastCumulativeVolatility = _getVolatilityCumulativeAt(self, currentTime, 0, tick, lastIndex, oldestIndex); // TODO interpolate?
       }
 
-      if (_lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
-        if (targetAtLastTimepoint) {
-          // we can simplify the search, because when the timepoint was created, the search was already done
-          oldestIndex = self[lastIndex].windowStartIndex;
-          oldestTimestamp = self[oldestIndex].blockTimestamp;
-          lastIndex = oldestIndex + 1;
+      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+      if (_lteConsideringOverflow(oldestTimestamp, currentTime - WINDOW, currentTime)) {
+        // oldest timepoint is earlier than 24 hours ago
+        uint88 cumulativeVolatilityAtStart;
+        if (timeAtLastTimepoint) {
+          // interpolate cumulative volatility to avoid search. Since the last timepoint has _just_ been written, we know for sure
+          // that the start of the window is between windowStartIndex and windowStartIndex + 1
+          (oldestTimestamp, cumulativeVolatilityAtStart) = (self[windowStartIndex].blockTimestamp, self[windowStartIndex].volatilityCumulative);
+
+          uint32 timeDeltaBetweenPoints = self[windowStartIndex + 1].blockTimestamp - oldestTimestamp;
+
+          cumulativeVolatilityAtStart +=
+            ((self[windowStartIndex + 1].volatilityCumulative - cumulativeVolatilityAtStart) * (currentTime - WINDOW - oldestTimestamp)) /
+            timeDeltaBetweenPoints;
+        } else {
+          cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
         }
 
-        uint88 cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, time, WINDOW, tick, lastIndex, oldestIndex); // TODO interpolate?
-
         return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
-      } else if (time != oldestTimestamp) {
+      } else if (currentTime != oldestTimestamp) {
         // recorded timepoints are not enough, so we will extrapolate
         uint88 _oldestVolatilityCumulative = self[oldestIndex].volatilityCumulative;
-        uint32 unbiasedDenominator = time - oldestTimestamp;
+        uint32 unbiasedDenominator = currentTime - oldestTimestamp;
         if (unbiasedDenominator > 1) unbiasedDenominator--; // Bessel's correction for "small" sample
         return ((lastCumulativeVolatility - _oldestVolatilityCumulative) / unbiasedDenominator);
       }
