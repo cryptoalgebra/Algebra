@@ -2,15 +2,15 @@
 pragma solidity =0.8.20;
 pragma abicoder v2;
 
-import '../libraries/DataStorage.sol';
+import '../libraries/VolatilityOracle.sol';
 
-contract DataStorageTest {
+contract VolatilityOracleTest {
   uint256 private constant UINT16_MODULO = 65536;
-  using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
+  using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   uint32 initTime;
 
-  DataStorage.Timepoint[UINT16_MODULO] public timepoints;
+  VolatilityOracle.Timepoint[UINT16_MODULO] public timepoints;
 
   uint32 public time;
   int24 public tick;
@@ -86,7 +86,7 @@ contract DataStorageTest {
     uint32 _initTime = initTime;
     uint256 _index = (_time - _initTime) / STEP;
 
-    DataStorage.Timepoint memory last = timepoints[_index];
+    VolatilityOracle.Timepoint memory last = timepoints[_index];
 
     unchecked {
       for (uint256 i; i < length; ++i) {
@@ -106,7 +106,7 @@ contract DataStorageTest {
           avgTick = -int24(uint24((STEP * (nextIndex + 1) * nextIndex) / (2 * uint256(timeDelta))));
         }
 
-        last = DataStorage._createNewTimepoint(last, _time, _tick, avgTick, windowStartIndex);
+        last = VolatilityOracle._createNewTimepoint(last, _time, _tick, avgTick, windowStartIndex);
 
         if ((_index + 1) - uint256(_index - (uint256(24 hours) / STEP) + 1) > type(uint16).max) windowStartIndex = uint16(_index + 2);
         timepoints[nextIndex] = last;
@@ -159,7 +159,7 @@ contract DataStorageTest {
   }
 
   function volatilityOnRange(uint32 dt, int24 tick0, int24 tick1, int24 avgTick0, int24 avgTick1) external pure returns (uint256) {
-    return DataStorage._volatilityOnRange(int256(uint256(dt)), tick0, tick1, avgTick0, avgTick1);
+    return VolatilityOracle._volatilityOnRange(int256(uint256(dt)), tick0, tick1, avgTick0, avgTick1);
   }
 
   function getAverageVolatility() external view returns (uint88) {
@@ -194,6 +194,6 @@ contract DataStorageTest {
   }
 
   function window() external pure returns (uint256) {
-    return DataStorage.WINDOW;
+    return VolatilityOracle.WINDOW;
   }
 }

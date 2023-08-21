@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { MockFactory, MockPool, MockTimeDataStorageOperator, MockTimeDSFactory, DataStorageFactory } from '../../typechain';
+import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory } from '../../typechain';
 
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {
@@ -15,7 +15,7 @@ async function mockFactoryFixture(): Promise<MockFactoryFixture> {
 }
 
 interface PluginFixture extends MockFactoryFixture {
-  plugin: MockTimeDataStorageOperator;
+  plugin: MockTimeAlgebraBasePluginV1;
   mockPluginFactory: MockTimeDSFactory;
   mockPool: MockPool;
 }
@@ -37,8 +37,8 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
   await mockPluginFactory.createPlugin(mockPool);
   const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
 
-  const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
-  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
+  const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV1');
+  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeAlgebraBasePluginV1;
 
   return {
     plugin,
@@ -49,14 +49,14 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
 };
 
 interface PluginFactoryFixture extends MockFactoryFixture {
-  pluginFactory: DataStorageFactory;
+  pluginFactory: BasePluginV1Factory;
 }
 
 export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async function (): Promise<PluginFactoryFixture> {
   const { mockFactory } = await mockFactoryFixture();
 
-  const pluginFactoryFactory = await ethers.getContractFactory('DataStorageFactory');
-  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as DataStorageFactory;
+  const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as BasePluginV1Factory;
 
   return {
     pluginFactory,

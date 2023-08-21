@@ -9,19 +9,19 @@ import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
-import './interfaces/IDataStorageOperator.sol';
-import './interfaces/IDataStorageFactory.sol';
+import './interfaces/IAlgebraBasePluginV1.sol';
+import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
 
-import './libraries/DataStorage.sol';
+import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin {
+contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
   uint256 internal constant UINT16_MODULO = 65536;
 
-  using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
+  using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
@@ -36,7 +36,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   address private immutable pluginFactory;
 
   /// @inheritdoc IVolatilityOracle
-  DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
+  VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
 
   /// @inheritdoc IVolatilityOracle
   uint16 public override timepointIndex;
@@ -63,7 +63,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
   }
 
-  /// @inheritdoc IDataStorageOperator
+  /// @inheritdoc IAlgebraBasePluginV1
   function initialize() external override {
     require(!timepoints[0].initialized, 'Already initialized');
     require(IAlgebraPool(pool).plugin() == address(this), 'Plugin not attached');
@@ -84,7 +84,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     (, int24 tick, , ) = _getPoolState();
     uint16 lastTimepointIndex = timepointIndex;
     uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
-    DataStorage.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
+    VolatilityOracle.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
     (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
@@ -149,7 +149,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   function setIncentive(address newIncentive) external override {
-    require(msg.sender == IDataStorageFactory(pluginFactory).farmingAddress());
+    require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
 
     bool turnOn = newIncentive != address(0);
     address currentIncentive = incentive;

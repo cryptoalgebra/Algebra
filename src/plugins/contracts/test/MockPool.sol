@@ -116,7 +116,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     bytes calldata data
   ) external override returns (uint256, uint256, uint128) {
     if (globalState.pluginConfig & Plugins.BEFORE_POSITION_MODIFY_FLAG != 0) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, recipient, bottomTick, topTick, int128(liquidityDesired), data); // TODO REENTRANCY
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, recipient, bottomTick, topTick, int128(liquidityDesired), data);
     }
 
     if (globalState.pluginConfig & Plugins.AFTER_POSITION_MODIFY_FLAG != 0) {

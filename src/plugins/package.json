@@ -17,7 +17,7 @@
     "@cryptoalgebra/core": "3.1.0"
   },
   "scripts": {
-    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",
     "compile": "npm --prefix ../core run compile && hardhat compile",
     "solhint": "solhint ./contracts/**/*.sol",
     "test": "hardhat test --parallel",

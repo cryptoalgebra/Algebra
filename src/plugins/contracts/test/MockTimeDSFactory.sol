@@ -4,14 +4,14 @@ pragma solidity =0.8.20;
 import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 
-import './MockTimeDataStorageOperator.sol';
+import './MockTimeAlgebraBasePluginV1.sol';
 
-import '../interfaces/IDataStorageFactory.sol';
+import '../interfaces/IBasePluginV1Factory.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
-contract MockTimeDSFactory is IDataStorageFactory {
-  /// @inheritdoc IDataStorageFactory
+contract MockTimeDSFactory is IBasePluginV1Factory {
+  /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
 
   address public immutable override algebraFactory;
@@ -19,10 +19,10 @@ contract MockTimeDSFactory is IDataStorageFactory {
   /// @dev values of constants for sigmoids in fee calculation formula
   AlgebraFeeConfiguration public override defaultFeeConfiguration;
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   mapping(address => address) public override pluginByPool;
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
   constructor(address _algebraFactory) {
@@ -46,20 +46,20 @@ contract MockTimeDSFactory is IDataStorageFactory {
   }
 
   function _createPlugin(address pool) internal returns (address) {
-    MockTimeDataStorageOperator dataStorage = new MockTimeDataStorageOperator(pool, algebraFactory, address(this));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
-    pluginByPool[pool] = address(dataStorage);
-    return address(dataStorage);
+    MockTimeAlgebraBasePluginV1 volatilityOracle = new MockTimeAlgebraBasePluginV1(pool, algebraFactory, address(this));
+    volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
+    pluginByPool[pool] = address(volatilityOracle);
+    return address(volatilityOracle);
   }
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   function setFarmingAddress(address newFarmingAddress) external override {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;

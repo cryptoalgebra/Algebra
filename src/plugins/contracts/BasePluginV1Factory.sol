@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './interfaces/IDataStorageFactory.sol';
+import './interfaces/IBasePluginV1Factory.sol';
 import './libraries/AdaptiveFee.sol';
-import './DataStorageOperator.sol';
+import './AlgebraBasePluginV1.sol';
 
 /// @title Algebra default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
-contract DataStorageFactory is IDataStorageFactory {
-  /// @inheritdoc IDataStorageFactory
+contract BasePluginV1Factory is IBasePluginV1Factory {
+  /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   address public immutable override algebraFactory;
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   mapping(address => address) public override pluginByPool;
 
   modifier onlyAdministrator() {
@@ -40,7 +40,7 @@ contract DataStorageFactory is IDataStorageFactory {
     return _createPlugin(pool);
   }
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
@@ -52,20 +52,20 @@ contract DataStorageFactory is IDataStorageFactory {
   }
 
   function _createPlugin(address pool) internal returns (address) {
-    IDataStorageOperator dataStorage = new DataStorageOperator(pool, algebraFactory, address(this));
-    dataStorage.changeFeeConfiguration(defaultFeeConfiguration);
-    pluginByPool[pool] = address(dataStorage);
-    return address(dataStorage);
+    IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
+    volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
+    pluginByPool[pool] = address(volatilityOracle);
+    return address(volatilityOracle);
   }
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
-  /// @inheritdoc IDataStorageFactory
+  /// @inheritdoc IBasePluginV1Factory
   function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;

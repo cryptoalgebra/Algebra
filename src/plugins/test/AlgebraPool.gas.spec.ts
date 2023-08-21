@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture, reset as resetNetwork } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeAlgebraPool } from '../../core/typechain';
-import { MockTimeDataStorageOperator, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
+import { MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
 import { expect } from './shared/expect';
 
 import { algebraPoolDeployerMockFixture } from './shared/externalFixtures';
@@ -47,8 +47,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     await mockPluginFactory.createPlugin(pool);
     const pluginAddress = await mockPluginFactory.pluginByPool(pool);
 
-    const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
-    const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
+    const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV1');
+    const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeAlgebraBasePluginV1;
 
     await pool.setPlugin(plugin);
 
@@ -96,7 +96,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let swapExact1For0: SwapFunction;
   let swapToHigherPrice: SwapToPriceFunction;
   let pool: MockTimeAlgebraPool;
-  let plugin: MockTimeDataStorageOperator;
+  let plugin: MockTimeAlgebraBasePluginV1;
   let virtualPoolMock: MockTimeVirtualPool;
   let mockPluginFactory: MockTimeDSFactory;
   let mint: MintFunction;
@@ -428,7 +428,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     });
   })
 
-  describe('Filled DataStorage', function () {
+  describe('Filled VolatilityOracle', function () {
     this.timeout(600_000);
 
     const filledStorageFixture = async () => {
@@ -478,17 +478,17 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             })
           })
 
-          it('small swap with filled dataStorage', async () => {
+          it('small swap with filled volatilityOracle', async () => {
             await advanceTime(15);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
       
-          it('small swap with filled dataStorage after 4h', async () => {
+          it('small swap with filled volatilityOracle after 4h', async () => {
             await advanceTime(4 * 60 * 60);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
       
-          it('small swap with filled dataStorage after 8h', async () => {
+          it('small swap with filled volatilityOracle after 8h', async () => {
             await advanceTime(8 * 60 * 60);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });

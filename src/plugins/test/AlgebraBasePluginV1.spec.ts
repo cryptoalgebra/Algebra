@@ -6,12 +6,12 @@ import { expect } from './shared/expect';
 import { TEST_POOL_START_TIME, pluginFixture } from './shared/fixtures';
 import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTick } from './shared/utilities';
 
-import { MockPool, MockTimeDataStorageOperator, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
+import { MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
 
-describe('DataStorageOperator', () => {
+describe('AlgebraBasePluginV1', () => {
   let wallet: Wallet, other: Wallet;
 
-  let plugin: MockTimeDataStorageOperator; // modified plugin
+  let plugin: MockTimeAlgebraBasePluginV1; // modified plugin
   let mockPool: MockPool; // mock of AlgebraPool
   let mockPluginFactory: MockTimeDSFactory; // modified plugin factory
 
@@ -26,7 +26,7 @@ describe('DataStorageOperator', () => {
     [wallet, other] = await (ethers as any).getSigners();
   });
 
-  beforeEach('deploy test dataStorage', async () => {
+  beforeEach('deploy test AlgebraBasePluginV1', async () => {
     ({ plugin, mockPool, mockPluginFactory } = await loadFixture(pluginFixture));
   });
 
@@ -94,7 +94,7 @@ describe('DataStorageOperator', () => {
     });
   });
 
-  describe('#VolatilityOracle', () => {
+  describe('#VolatilityVolatilityOracle', () => {
     beforeEach('connect plugin to pool', async () => {
       await mockPool.setPlugin(plugin);
     });
@@ -678,7 +678,7 @@ describe('DataStorageOperator', () => {
     });
   });
 
-  describe('DataStorageOperator external methods', () => {
+  describe('AlgebraBasePluginV1 external methods', () => {
     describe('#changeFeeConfiguration', () => {
       const configuration = {
         alpha1: 3002,

@@ -6,10 +6,10 @@ import './plugins/IVolatilityOracle.sol';
 import './plugins/IDynamicFeeManager.sol';
 import './plugins/IFarmingPlugin.sol';
 
-/// @title The interface for the DataStorageOperator
+/// @title The interface for the AlgebraBasePluginV1
 /// @notice This contract combines the standard implementations of the volatility oracle and the dynamic fee manager
 /// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
-interface IDataStorageOperator is IVolatilityOracle, IDynamicFeeManager, IFarmingPlugin {
+interface IAlgebraBasePluginV1 is IVolatilityOracle, IDynamicFeeManager, IFarmingPlugin {
   /// @notice Initialize the plugin externally TODO
   function initialize() external;
 }
