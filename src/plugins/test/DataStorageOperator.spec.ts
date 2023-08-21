@@ -1,20 +1,18 @@
-import { BigNumberish, Wallet, ZeroAddress } from 'ethers'
+import { Wallet, ZeroAddress } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME, pluginFixture } from './shared/fixtures'
 import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTick } from './shared/utilities';
-import snapshotGasCost from './shared/snapshotGasCost'
 
-import { MockFactory, MockPool, MockTimeDataStorageOperator, TestERC20, MockTimeDSFactory, MockTimeVirtualPool, MockTimeVirtualPool__factory } from "../typechain";
+import { MockPool, MockTimeDataStorageOperator, MockTimeDSFactory, MockTimeVirtualPool } from "../typechain";
 
 describe('DataStorageOperator', () => {
   let wallet: Wallet, other: Wallet
 
   let plugin: MockTimeDataStorageOperator; // modified plugin
   let mockPool: MockPool; // mock of AlgebraPool
-  let mockFactory: MockFactory; // mock of AlgebraFactory
   let mockPluginFactory: MockTimeDSFactory; // modified plugin factory
 
   let minTick = getMinTick(60);
@@ -31,8 +29,7 @@ describe('DataStorageOperator', () => {
   beforeEach('deploy test dataStorage', async () => {
     ;({ 
       plugin, 
-      mockPool, 
-      mockFactory, 
+      mockPool,
       mockPluginFactory
     } = await loadFixture(pluginFixture));
   })
@@ -69,14 +66,15 @@ describe('DataStorageOperator', () => {
   describe('#Hooks', () => {
 
     it('only pool can call hooks', async () => {
-      expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith('only pool can call this');
-      expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith('only pool can call this');
-      expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
-      expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
-      expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith('only pool can call this');
-      expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
-      expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
-      expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith('only pool can call this');
+      const errorMessage = 'only pool can call this';
+      expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
+      expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
+      expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith(errorMessage);
+      expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
     })
 
     describe('not implemented hooks', async () => {

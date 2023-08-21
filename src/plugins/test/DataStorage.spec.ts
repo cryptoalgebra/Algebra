@@ -1,7 +1,7 @@
 import { BigNumberish, Wallet } from 'ethers'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { DataStorageTest, DataStorageOperator } from '../typechain'
+import { DataStorageTest } from '../typechain'
 import checkTimepointEquals from './shared/checkTimepointEquals'
 import { expect } from './shared/expect'
 import { TEST_POOL_START_TIME } from './shared/fixtures'

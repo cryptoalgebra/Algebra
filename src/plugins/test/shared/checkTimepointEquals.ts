@@ -1,4 +1,3 @@
-import { BigNumberish } from 'ethers'
 import { expect } from './expect'
 
 // helper function because we cannot do a simple deep equals with the
