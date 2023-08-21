@@ -16,12 +16,10 @@ interface IDataStorageFactory is IAlgebraPluginFactory {
 
   /// @notice Emitted when the farming address is changed
   /// @param newFarmingAddress The farming address after the address was changed
-  // TODO why indexed?
-  event FarmingAddress(address indexed newFarmingAddress);
+  event FarmingAddress(address newFarmingAddress);
 
-  /// @dev Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract
-  /// @return The tokenomics contract address
-  // TODO better name?
+  /// @dev Is retrieved from the pools to restrict calling certain functions not by a farming contract
+  /// @return The farming contract address
   function farmingAddress() external view returns (address);
 
   /// @notice Returns address of plugin created for given AlgebraPool

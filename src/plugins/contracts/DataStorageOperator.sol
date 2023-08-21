@@ -24,7 +24,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   using DataStorage for DataStorage.Timepoint[UINT16_MODULO];
 
   DataStorage.Timepoint[UINT16_MODULO] public override timepoints;
-  // TODO
+  // @inheritdoc IVolatilityOracle
   uint16 public override timepointIndex;
   uint32 public lastTimepointTimestamp;
 

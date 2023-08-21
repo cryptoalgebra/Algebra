@@ -29,7 +29,8 @@ interface IVolatilityOracle {
       uint16 windowStartIndex
     );
 
-  // TODO
+  // @notice Returns the index of the last time stamp that was written.
+  // @return index of the last timestamp written
   function timepointIndex() external view returns (uint16);
 
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
