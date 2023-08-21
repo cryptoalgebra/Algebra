@@ -456,7 +456,7 @@ library DataStorage {
     if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
 
     unchecked {
-      if (currentTime - target <= WINDOW) {
+      if (lastTimepointTimestamp - target <= WINDOW) {
         // we can limit the scope of the search
         if (windowStartIndex != oldestIndex) {
           (oldestIndex, oldestTimestamp) = (windowStartIndex, self[windowStartIndex].blockTimestamp);
