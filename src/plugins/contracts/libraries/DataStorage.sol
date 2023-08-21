@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import 'hardhat/console.sol';
-
 /// @title DataStorage
-/// @notice Provides price, liquidity, volatility data useful for a wide variety of system designs
+/// @notice Provides price and volatility data useful for a wide variety of system designs
 /// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
 /// Timepoints are overwritten when the full length of the dataStorage array is populated.
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint()
@@ -132,7 +130,7 @@ library DataStorage {
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param self The stored dataStorage array
-  /// @param time The current block.timestamp
+  /// @param currentTime The current block.timestamp
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @param tick The current tick
   /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
@@ -140,7 +138,7 @@ library DataStorage {
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
   function getTimepoints(
     Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
+    uint32 currentTime,
     uint32[] memory secondsAgos,
     int24 tick,
     uint16 lastIndex
@@ -153,7 +151,7 @@ library DataStorage {
     Timepoint memory current;
     unchecked {
       for (uint256 i; i < secondsLength; ++i) {
-        current = getSingleTimepoint(self, time, secondsAgos[i], tick, lastIndex, oldestIndex);
+        current = getSingleTimepoint(self, currentTime, secondsAgos[i], tick, lastIndex, oldestIndex);
         (tickCumulatives[i], volatilityCumulatives[i]) = (current.tickCumulative, current.volatilityCumulative);
       }
     }
@@ -308,7 +306,7 @@ library DataStorage {
   /// @return windowStartIndex The index of closest timepoint <= WINDOW seconds ago
   function _getAverageTick(
     Timepoint[UINT16_MODULO] storage self,
-    uint32 time,
+    uint32 currentTime,
     int24 tick,
     uint16 lastIndex,
     uint16 oldestIndex,
@@ -317,7 +315,7 @@ library DataStorage {
   ) internal view returns (int256 avgTick, uint256 windowStartIndex) {
     (uint32 oldestTimestamp, int56 oldestTickCumulative) = (self[oldestIndex].blockTimestamp, self[oldestIndex].tickCumulative);
     unchecked {
-      if (!_lteConsideringOverflow(oldestTimestamp, time - WINDOW, time)) {
+      if (!_lteConsideringOverflow(oldestTimestamp, currentTime - WINDOW, currentTime)) {
         // if oldest is newer than WINDOW ago
         return (
           (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / int56(uint56(lastTimestamp - oldestTimestamp)),
@@ -325,23 +323,24 @@ library DataStorage {
         );
       }
 
-      if (_lteConsideringOverflow(lastTimestamp, time - WINDOW, time)) {
+      if (_lteConsideringOverflow(lastTimestamp, currentTime - WINDOW, currentTime)) {
+        // if last timepoint is older than WINDOW ago
         Timepoint storage _start = self[lastIndex - 1]; // considering underflow
         (bool initialized, uint32 startTimestamp, int56 startTickCumulative) = (_start.initialized, _start.blockTimestamp, _start.tickCumulative);
         avgTick = initialized ? (lastTickCumulative - startTickCumulative) / int56(uint56(lastTimestamp - startTimestamp)) : tick;
-        windowStartIndex = lastIndex; // TODO check
+        windowStartIndex = lastIndex;
       } else {
-        if (time == lastTimestamp) {
-          oldestIndex = self[lastIndex].windowStartIndex;
+        oldestIndex = self[lastIndex].windowStartIndex;
+        if (currentTime == lastTimestamp) {
           lastIndex = oldestIndex + 1;
         }
         int56 tickCumulativeAtStart;
-        (tickCumulativeAtStart, windowStartIndex) = _getTickCumulativeAt(self, time, WINDOW, tick, lastIndex, oldestIndex);
+        (tickCumulativeAtStart, windowStartIndex) = _getTickCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
 
         //    current-WINDOW  last   current
         // _________*____________*_______*_
         //           ||||||||||||
-        avgTick = (lastTickCumulative - tickCumulativeAtStart) / int56(uint56(lastTimestamp - time + WINDOW));
+        avgTick = (lastTickCumulative - tickCumulativeAtStart) / int56(uint56(lastTimestamp - currentTime + WINDOW));
       }
     }
   }
@@ -457,7 +456,7 @@ library DataStorage {
     if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
 
     unchecked {
-      if (lastTimepointTimestamp - target <= WINDOW) {
+      if (currentTime - target <= WINDOW) {
         // we can limit the scope of the search
         if (windowStartIndex != oldestIndex) {
           (oldestIndex, oldestTimestamp) = (windowStartIndex, self[windowStartIndex].blockTimestamp);
