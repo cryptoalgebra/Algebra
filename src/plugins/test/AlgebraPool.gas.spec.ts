@@ -192,6 +192,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             expect((await pool.globalState()).tick).to.eq(startingTick);
+            await advanceTime(15);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
           });
@@ -201,17 +202,17 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             expect((await pool.globalState()).tick).to.eq(startingTick);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60);
+            await advanceTime(60);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60 * 60);
+            await advanceTime(60 * 60);
             await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60 * 60);
+            await advanceTime(60 * 60);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(5 * 60 * 60);
+            await advanceTime(5 * 60 * 60);
             await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(19 * 60 * 60);
+            await advanceTime(19 * 60 * 60);
             await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60);
+            await advanceTime(60);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing); // we crossed the last tick
           });
@@ -221,23 +222,24 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             expect((await pool.globalState()).tick).to.eq(startingTick);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60);
+            await advanceTime(60);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60 * 60);
+            await advanceTime(60 * 60);
             await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60 * 60);
+            await advanceTime(60 * 60);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(5 * 60 * 60);
+            await advanceTime(5 * 60 * 60);
             await swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(19 * 60 * 60);
+            await advanceTime(19 * 60 * 60);
             await swapExact0For1(expandTo18Decimals(1) / 10000n, wallet.address);
-            await pool.advanceTime(60);
+            await advanceTime(60);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(0);
           });
 
           it('first swap in block, large swap crossing a single initialized tick', async () => {
             await mint(wallet.address, minTick, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+            await advanceTime(15);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(startingTick - 2 * tickSpacing); // we crossed the last tick
           });
@@ -262,7 +264,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             await swapExact0For1(2, wallet.address);
-            await pool.advanceTime(1);
+            await advanceTime(1);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
           });
@@ -272,7 +274,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             await swapExact0For1(expandTo18Decimals(1), wallet.address);
             await swapToHigherPrice(startingPrice, wallet.address);
-            await pool.advanceTime(1);
+            await advanceTime(1);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(tickSpacing * -4);
           });
@@ -328,15 +330,17 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             });
             it('add to position existing', async () => {
               await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+              await advanceTime(1);
               await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
             });
             it('second position in same range', async () => {
               await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+              await advanceTime(1);
               await snapshotGasCost(mint(other.address, bottomTick, topTick, expandTo18Decimals(1)));
             });
             it('add to position after some time passes', async () => {
               await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-              await pool.advanceTime(1);
+              await advanceTime(1);
               await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
             });
           });
@@ -365,6 +369,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             const liquidityAmount = expandTo18Decimals(1);
             beforeEach('mint a position', async () => {
               await mint(wallet.address, bottomTick, topTick, liquidityAmount);
+              await advanceTime(1);
             });
 
             it('burn when only position using ticks', async () => {
@@ -375,10 +380,11 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             });
             it('entire position burn but other positions are using the ticks', async () => {
               await mint(other.address, bottomTick, topTick, expandTo18Decimals(1));
+              await advanceTime(1);
               await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
             });
             it('burn entire position after some time passes', async () => {
-              await pool.advanceTime(1);
+              await advanceTime(1);
               await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
             });
           });
