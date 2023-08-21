@@ -377,6 +377,24 @@ describe('DataStorage', () => {
         expect(tickCumulative).to.eq(6);
       });
 
+      it('single timepoint in past exactly at the start of window', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await dataStorage.update({ advanceTimeBy: 24 * 60 * 60, tick: 1, liquidity: 2 });
+        const { tickCumulative } = await getSingleTimepoint(24 * 60 * 60);
+        expect(tickCumulative).to.eq(8);
+      });
+
+      it('single timepoint in past exactly at the start of window after some time', async () => {
+        await dataStorage.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await dataStorage.update({ advanceTimeBy: 24 * 60 * 60, tick: 1, liquidity: 2 });
+        await dataStorage.advanceTime(3);
+        const { tickCumulative } = await getSingleTimepoint(24 * 60 * 60 + 3);
+        expect(tickCumulative).to.eq(8);
+      });
+
+
       it('two timepoints in chronological order 0 seconds ago exact', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 });
         await dataStorage.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
