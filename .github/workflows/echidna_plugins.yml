@@ -15,7 +15,7 @@ jobs:
       matrix:
         testName:
           - AdaptiveFeeEchidnaTest
-          - DataStorageEchidnaTest
+          - VolatilityOracleEchidnaTest
 
     runs-on: ubuntu-latest
 
