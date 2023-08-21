@@ -31,83 +31,89 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     [wallet, other] = await (ethers as any).getSigners();
   });
 
+  const startingPrice = encodePriceSqrt(100001, 100000);
+  const startingTick = 0;
+  const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+  const minTick = getMinTick(tickSpacing);
+  const maxTick = getMaxTick(tickSpacing);
+
+  async function gasTestFixture() {
+    const fix = await algebraPoolDeployerMockFixture();
+    const pool = await fix.createPool();
+
+    const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
+    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory)) as any as MockTimeDSFactory;
+
+    await mockPluginFactory.createPlugin(pool);
+    const pluginAddress = await mockPluginFactory.pluginByPool(pool);
+
+    const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
+    const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
+
+    await pool.setPlugin(plugin);
+
+    const advanceTime = async (secs: any) => {
+      await pool.advanceTime(secs);
+      await plugin.advanceTime(secs);
+    };
+
+    const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice } = createPoolFunctions({
+      swapTarget: fix.swapTargetCallee,
+      token0: fix.token0,
+      token1: fix.token1,
+      pool,
+    });
+
+    const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
+    const virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
+
+    await pool.initialize(encodePriceSqrt(1, 1));
+
+    await advanceTime(1);
+    await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
+    await swapExact0For1(expandTo18Decimals(1), wallet.address);
+    await advanceTime(1);
+    await swapToHigherPrice(startingPrice, wallet.address);
+    await advanceTime(1);
+    expect((await pool.globalState()).tick).to.eq(startingTick);
+    expect((await pool.globalState()).price).to.eq(startingPrice);
+
+    return {
+      advanceTime,
+      pool,
+      plugin,
+      virtualPoolMock,
+      mockPluginFactory,
+      swapExact0For1,
+      swapExact1For0,
+      mint,
+      swapToHigherPrice,
+      swapToLowerPrice,
+    };
+  }
+
+  let swapExact0For1: SwapFunction;
+  let swapExact1For0: SwapFunction;
+  let swapToHigherPrice: SwapToPriceFunction;
+  let pool: MockTimeAlgebraPool;
+  let plugin: MockTimeDataStorageOperator;
+  let virtualPoolMock: MockTimeVirtualPool;
+  let mockPluginFactory: MockTimeDSFactory;
+  let mint: MintFunction;
+  let advanceTime: any;
+
   for (const communityFee of [0, 60]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
-      const startingPrice = encodePriceSqrt(100001, 100000);
-      const startingTick = 0;
-      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
-      const minTick = getMinTick(tickSpacing);
-      const maxTick = getMaxTick(tickSpacing);
 
-      async function gasTestFixture() {
-        const fix = await algebraPoolDeployerMockFixture();
-        const pool = await fix.createPool();
-
-        const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-        const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory)) as any as MockTimeDSFactory;
-
-        await mockPluginFactory.createPlugin(pool);
-        const pluginAddress = await mockPluginFactory.pluginByPool(pool);
-
-        const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeDataStorageOperator');
-        const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeDataStorageOperator;
-
-        await pool.setPlugin(plugin);
-
-        const advanceTime = async (secs: any) => {
-          await pool.advanceTime(secs);
-          await plugin.advanceTime(secs);
-        };
-
-        const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice } = createPoolFunctions({
-          swapTarget: fix.swapTargetCallee,
-          token0: fix.token0,
-          token1: fix.token1,
-          pool,
-        });
-
-        const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
-        const virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
-
-        await pool.initialize(encodePriceSqrt(1, 1));
-        if (communityFee != 0) await pool.setCommunityFee(communityFee);
-
-        await advanceTime(1);
-        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
-        await swapExact0For1(expandTo18Decimals(1), wallet.address);
-        await advanceTime(1);
-        await swapToHigherPrice(startingPrice, wallet.address);
-        await advanceTime(1);
-        expect((await pool.globalState()).tick).to.eq(startingTick);
-        expect((await pool.globalState()).price).to.eq(startingPrice);
-
-        return {
-          advanceTime,
-          pool,
-          plugin,
-          virtualPoolMock,
-          mockPluginFactory,
-          swapExact0For1,
-          swapExact1For0,
-          mint,
-          swapToHigherPrice,
-          swapToLowerPrice,
-        };
+      const gasTestCommunityFeeFixture = async () => {
+        const fix = await gasTestFixture();
+        if (communityFee > 0) await fix.pool.setCommunityFee(communityFee);
+        return fix;
       }
-
-      let swapExact0For1: SwapFunction;
-      let swapExact1For0: SwapFunction;
-      let swapToHigherPrice: SwapToPriceFunction;
-      let pool: MockTimeAlgebraPool;
-      let plugin: MockTimeDataStorageOperator;
-      let virtualPoolMock: MockTimeVirtualPool;
-      let mockPluginFactory: MockTimeDSFactory;
-      let mint: MintFunction;
-      let advanceTime: any;
 
       beforeEach('load the fixture', async () => {
         ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
-          await loadFixture(gasTestFixture));
+          await loadFixture(gasTestCommunityFeeFixture));
       });
 
       describe('#swap', async () => {
@@ -133,6 +139,21 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         describe('#swapExact0For1', () => {
           it('first swap in block with no tick movement', async () => {
+            await snapshotGasCost(swapExact0For1(2000, wallet.address));
+            expect((await pool.globalState()).price).to.not.eq(startingPrice);
+            expect((await pool.globalState()).tick).to.eq(startingTick);
+          });
+
+          it('first swap in block with no tick movement, static fee', async () => {
+            await plugin.changeFeeConfiguration({
+              alpha1: 0,
+              alpha2: 0,
+              beta1: 0,
+              beta2: 0,
+              gamma1: 1,
+              gamma2: 1,
+              baseFee: 100
+            })
             await snapshotGasCost(swapExact0For1(2000, wallet.address));
             expect((await pool.globalState()).price).to.not.eq(startingPrice);
             expect((await pool.globalState()).tick).to.eq(startingTick);
@@ -249,60 +270,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await pool.advanceTime(1);
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(tickSpacing * -4);
-          });
-
-          describe('Filled DataStorage', function () {
-            this.timeout(600_000);
-
-            const filledStorageFixture = async () => {
-              await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-              await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
-              expect((await pool.globalState()).tick).to.eq(startingTick);
-
-              const BATCH_SIZE = 300;
-              let summaryTimeDelta = 0;
-              for (let i = 0; i < 1500; i += BATCH_SIZE) {
-                const batch = [];
-                for (let j = 0; j < BATCH_SIZE; j++) {
-                  const timeDelta = (i + j) % 2 == 0 ? 60 : 90;
-                  summaryTimeDelta += timeDelta;
-                  batch.push({
-                    advanceTimeBy: timeDelta,
-                    tick: startingTick + i - j,
-                  });
-                }
-                await plugin.batchUpdate(batch);
-              }
-              await pool.advanceTime(summaryTimeDelta);
-            };
-
-            beforeEach('load inner fixture', async () => {
-              await loadFixture(filledStorageFixture);
-            });
-
-            it('small swap with filled dataStorage', async () => {
-              await advanceTime(15);
-              await snapshotGasCost(swapExact0For1(1000, wallet.address));
-            });
-
-            it('small swap with filled dataStorage after 4h', async () => {
-              await advanceTime(4 * 60 * 60);
-              await snapshotGasCost(swapExact0For1(1000, wallet.address));
-            });
-
-            it('small swap with filled dataStorage after 8h', async () => {
-              await advanceTime(8 * 60 * 60);
-              await snapshotGasCost(swapExact0For1(1000, wallet.address));
-            });
-
-            it('large swap crossing several initialized ticks', async () => {
-              await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
-              await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
-              await swapExact0For1(2, wallet.address);
-              await advanceTime(15);
-              await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
-              expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
-            });
           });
         });
 
@@ -447,4 +414,82 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       });
     });
   }
+
+  describe('Filled DataStorage', function () {
+    this.timeout(600_000);
+
+    const filledStorageFixture = async () => {
+      const fix = await gasTestFixture();
+
+      await fix.mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+      await fix.mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+      expect((await fix.pool.globalState()).tick).to.eq(startingTick);
+
+      const BATCH_SIZE = 300;
+      let summaryTimeDelta = 0;
+      for (let i = 0; i < 1500; i += BATCH_SIZE) {
+        const batch = [];
+        for (let j = 0; j < BATCH_SIZE; j++) {
+          const timeDelta = (i + j) % 2 == 0 ? 60 : 90;
+          summaryTimeDelta += timeDelta;
+          batch.push({
+            advanceTimeBy: timeDelta,
+            tick: startingTick + i - j,
+          });
+        }
+        await fix.plugin.batchUpdate(batch);
+      }
+      await fix.pool.advanceTime(summaryTimeDelta);
+
+      return fix;
+    };
+
+    beforeEach('load inner fixture', async () => {
+      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
+        await loadFixture(filledStorageFixture));
+    });
+
+    describe('swaps', async () => {
+      for (const isDynamicFee of [true, false]) {
+        describe(isDynamicFee ? 'dynamic fee' : 'static fee', async () => {
+
+          beforeEach(async () => {
+            if (!isDynamicFee) await plugin.changeFeeConfiguration({
+              alpha1: 0,
+              alpha2: 0,
+              beta1: 0,
+              beta2: 0,
+              gamma1: 1,
+              gamma2: 1,
+              baseFee: 100
+            })
+          })
+
+          it('small swap with filled dataStorage', async () => {
+            await advanceTime(15);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address));
+          });
+      
+          it('small swap with filled dataStorage after 4h', async () => {
+            await advanceTime(4 * 60 * 60);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address));
+          });
+      
+          it('small swap with filled dataStorage after 8h', async () => {
+            await advanceTime(8 * 60 * 60);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address));
+          });
+      
+          it('large swap crossing several initialized ticks', async () => {
+            await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
+            await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+            await swapExact0For1(2, wallet.address);
+            await advanceTime(15);
+            await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
+            expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
+          });
+        })
+      }
+    })
+  });
 });
