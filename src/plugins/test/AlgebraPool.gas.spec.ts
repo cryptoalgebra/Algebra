@@ -107,7 +107,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
       const gasTestCommunityFeeFixture = async () => {
         const fix = await gasTestFixture();
-        if (communityFee > 0) await fix.pool.setCommunityFee(communityFee);
+        if (communityFee > 0) {
+          await fix.pool.setCommunityFee(communityFee);
+          await fix.swapExact0For1(expandTo18Decimals(1), wallet.address);
+          await fix.swapToHigherPrice(startingPrice, wallet.address);
+          await fix.advanceTime(1);
+        }
         return fix;
       }
 
