@@ -29,7 +29,7 @@ library DataStorage {
   /// @param tick Initial tick
   function initialize(Timepoint[UINT16_MODULO] storage self, uint32 time, int24 tick) internal {
     Timepoint storage _zero = self[0];
-    require(!_zero.initialized);
+    require(!_zero.initialized, 'dataStorage already initialized');
     (_zero.initialized, _zero.blockTimestamp, _zero.tick, _zero.averageTick) = (true, time, tick, tick);
   }
 
@@ -268,11 +268,11 @@ library DataStorage {
     // sum(t^2) for t from 1 to dt = dt*(dt+1)*(2dt + 1)/6 = sumOfSquares
     // so result will be: (k-p)^2 * sumOfSquares + 2(k-p)(b-q)*sumOfSequence + dt*(b-q)^2
     unchecked {
-      int256 K = (tick1 - tick0) - (avgTick1 - avgTick0); // (k - p)*dt
-      int256 B = (tick0 - avgTick0) * dt; // (b - q)*dt
+      int256 k = (tick1 - tick0) - (avgTick1 - avgTick0); // (k - p)*dt
+      int256 b = (tick0 - avgTick0) * dt; // (b - q)*dt
       int256 sumOfSequence = dt * (dt + 1); // sumOfSequence * 2
       int256 sumOfSquares = sumOfSequence * (2 * dt + 1); // sumOfSquares * 6
-      volatility = uint256((K ** 2 * sumOfSquares + 6 * B * K * sumOfSequence + 6 * dt * B ** 2) / (6 * dt ** 2));
+      volatility = uint256((k ** 2 * sumOfSquares + 6 * b * k * sumOfSequence + 6 * dt * b ** 2) / (6 * dt ** 2));
     }
   }
 
