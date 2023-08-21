@@ -316,7 +316,7 @@ describe('DataStorageOperator', () => {
         return [now.volatilityCumulatives[0] - then.volatilityCumulatives[0] / BigInt(DAY), time];
       }
 
-      it('doesnt change at 0 volume', async () => {
+      it('does not change at 0 volume', async () => {
         await plugin.advanceTime(1);
         await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x');
         let fee2 = (await mockPool.globalState()).fee;
@@ -326,7 +326,7 @@ describe('DataStorageOperator', () => {
         expect(fee3).to.be.equal(fee2);
       });
 
-      it('doesnt change fee after first swap in block', async () => {
+      it('does not change fee after first swap in block', async () => {
         await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x');
         await plugin.advanceTime(DAY + 600);
         await mockPool.swapToTick(100);
@@ -337,7 +337,7 @@ describe('DataStorageOperator', () => {
         expect(feeAfter).to.be.equal(feeInit);
       });
 
-      it('doesnt change if alphas are zeroes', async () => {
+      it('does not change if alphas are zeroes', async () => {
         await plugin.changeFeeConfiguration({
           alpha1: 0,
           alpha2: 0,

@@ -4,7 +4,7 @@ exports[`DataStorage #getTimepoints before initialization gas for getTimepoints 
 
 exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6347`;
 
-exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ] 1`] = `8094`;
+exports[`DataStorage #getTimepoints before initialization gas for single timepoint at current time after some time  [ @skip-on-coverage ] 1`] = `8094`;
 
 exports[`DataStorage #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
 Object {

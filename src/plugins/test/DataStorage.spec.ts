@@ -212,23 +212,23 @@ describe('DataStorage', () => {
     it('potential overflow scenario', async () => {
       const window = 24 * 60 * 60;
       await dataStorage.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      let avrgTick = await dataStorage.getAverageTick();
-      expect(avrgTick).to.be.lt(7300);
-      expect(avrgTick).to.be.gt(7100);
+      let averageTick = await dataStorage.getAverageTick();
+      expect(averageTick).to.be.lt(7300);
+      expect(averageTick).to.be.gt(7100);
       await dataStorage.update({ advanceTimeBy: 60 * 60, tick: 7300, liquidity: 6 });
-      avrgTick = await dataStorage.getAverageTick();
-      expect(avrgTick).to.be.lt(7300);
-      expect(avrgTick).to.be.gt(7199);
+      averageTick = await dataStorage.getAverageTick();
+      expect(averageTick).to.be.lt(7300);
+      expect(averageTick).to.be.gt(7199);
 
       await dataStorage.update({ advanceTimeBy: window - 2, tick: 7400, liquidity: 8 });
-      avrgTick = await dataStorage.getAverageTick();
-      expect(avrgTick).to.be.lt(7400);
-      expect(avrgTick).to.be.gt(7200);
+      averageTick = await dataStorage.getAverageTick();
+      expect(averageTick).to.be.lt(7400);
+      expect(averageTick).to.be.gt(7200);
 
       await dataStorage.update({ advanceTimeBy: 2, tick: 7600, liquidity: 8 });
-      avrgTick = await dataStorage.getAverageTick();
-      expect(avrgTick).to.be.lt(7400);
-      expect(avrgTick).to.be.gt(7200);
+      averageTick = await dataStorage.getAverageTick();
+      expect(averageTick).to.be.lt(7400);
+      expect(averageTick).to.be.gt(7200);
     });
   });
 
@@ -469,7 +469,7 @@ describe('DataStorage', () => {
         await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]));
       });
 
-      it('gas for single timepoint at current time counterfactually computed  [ @skip-on-coverage ]', async () => {
+      it('gas for single timepoint at current time after some time  [ @skip-on-coverage ]', async () => {
         await dataStorage.initialize({ liquidity: 5, tick: -5, time: 5 });
         await dataStorage.advanceTime(5);
         await snapshotGasCost(dataStorage.getGasCostOfGetPoints([0]));
@@ -629,7 +629,7 @@ describe('DataStorage', () => {
       });
     });
 
-    it('can getTimepoints into the ordered portion with unexact seconds ago', async () => {
+    it('can getTimepoints into the ordered portion with inexact seconds ago', async () => {
       await checkGetPoints(100 * step + 5, {
         tickCumulative: '-27970232823',
       });
