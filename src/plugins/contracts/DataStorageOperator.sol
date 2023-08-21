@@ -89,7 +89,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   /// @inheritdoc IVolatilityOracle
-  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external {
+  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external override {
     require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
     require(amount > 0 && type(uint16).max - startIndex >= amount);
 
@@ -161,7 +161,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
   }
 
   /// @inheritdoc IFarmingPlugin
-  function isIncentiveActive(address targetIncentive) external view returns (bool) {
+  function isIncentiveActive(address targetIncentive) external view override returns (bool) {
     if (incentive != targetIncentive) return false;
     if (IAlgebraPool(pool).plugin() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
@@ -180,7 +180,7 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
-  function afterInitialize(address, uint160, int24 tick) external onlyPool returns (bytes4) {
+  function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
     lastTimepointTimestamp = _blockTimestamp();
     timepoints.initialize(_blockTimestamp(), tick);
 
@@ -188,31 +188,31 @@ contract DataStorageOperator is IDataStorageOperator, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external view onlyPool returns (bytes4) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external view override onlyPool returns (bytes4) {
     revert('Not implemented');
   }
 
-  function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external onlyPool returns (bytes4) {
+  function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
     _writeTimepointAndUpdateFee();
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external onlyPool returns (bytes4) {
+  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
     _writeTimepointAndUpdateFee();
     return IAlgebraPlugin.beforeSwap.selector;
   }
 
-  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external onlyPool returns (bytes4) {
+  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
     (, int24 tick, , ) = _getPoolState();
     IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
     return IAlgebraPlugin.afterSwap.selector;
   }
 
-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external view onlyPool returns (bytes4) {
+  function beforeFlash(address, address, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
     revert('Not implemented');
   }
 
-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view onlyPool returns (bytes4) {
+  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
     revert('Not implemented');
   }
 

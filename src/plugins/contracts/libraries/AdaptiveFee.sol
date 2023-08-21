@@ -7,7 +7,7 @@ import '../base/AlgebraFeeConfiguration.sol';
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
 library AdaptiveFee {
-  uint16 constant INITIAL_MIN_FEE = 0.0001e6;
+  uint16 internal constant INITIAL_MIN_FEE = 0.0001e6;
 
   /// @notice Returns default initial fee configuration
   function initialFeeConfiguration() internal pure returns (AlgebraFeeConfiguration memory) {
