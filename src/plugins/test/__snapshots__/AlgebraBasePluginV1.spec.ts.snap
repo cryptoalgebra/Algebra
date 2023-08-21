@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DataStorageOperator #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
+exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
 Array [
   "Fee: 3000 ",
   "Fee: 3000 ",
@@ -30,7 +30,7 @@ Array [
 ]
 `;
 
-exports[`DataStorageOperator #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
+exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
 Array [
   "Fee: 15000 ",
   "Fee: 15000 ",
@@ -60,7 +60,7 @@ Array [
 ]
 `;
 
-exports[`DataStorageOperator #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
+exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
 Array [
   "Fee: 3000 ",
   "Fee: 15000 ",
@@ -90,7 +90,7 @@ Array [
 ]
 `;
 
-exports[`DataStorageOperator #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
+exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
 Array [
   "Fee: 15000 ",
   "Fee: 15000 ",

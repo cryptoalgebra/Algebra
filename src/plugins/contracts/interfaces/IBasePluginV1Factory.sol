@@ -6,9 +6,9 @@ import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.so
 
 import '../base/AlgebraFeeConfiguration.sol';
 
-/// @title The interface for the DataStorageFactory
+/// @title The interface for the BasePluginV1Factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
-interface IDataStorageFactory is IAlgebraPluginFactory {
+interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @notice Emitted when the default fee configuration is changed
   /// @param newConfig The structure with dynamic fee parameters
   /// @dev See the AdaptiveFee library for more details
@@ -19,7 +19,7 @@ interface IDataStorageFactory is IAlgebraPluginFactory {
   event FarmingAddress(address newFarmingAddress);
 
   /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_ADMINISTRATOR' used as role
-  /// @dev allows to change settings of DataStorageFactory
+  /// @dev allows to change settings of BasePluginV1Factory
   function ALGEBRA_BASE_PLUGIN_ADMINISTRATOR() external pure returns (bytes32);
 
   /// @notice Returns the address of AlgebraFactory

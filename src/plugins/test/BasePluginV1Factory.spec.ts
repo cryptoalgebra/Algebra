@@ -4,19 +4,19 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 import { ZERO_ADDRESS, pluginFactoryFixture } from './shared/fixtures';
 
-import { DataStorageFactory, DataStorageOperator, MockFactory } from '../typechain';
+import { BasePluginV1Factory, AlgebraBasePluginV1, MockFactory } from '../typechain';
 
-describe('DataStorageFactory', () => {
+describe('BasePluginV1Factory', () => {
   let wallet: Wallet, other: Wallet;
 
-  let pluginFactory: DataStorageFactory;
+  let pluginFactory: BasePluginV1Factory;
   let mockAlgebraFactory: MockFactory;
 
   before('prepare signers', async () => {
     [wallet, other] = await (ethers as any).getSigners();
   });
 
-  beforeEach('deploy test dataStorage', async () => {
+  beforeEach('deploy test volatilityOracle', async () => {
     ({ pluginFactory, mockFactory: mockAlgebraFactory } = await loadFixture(pluginFactoryFixture));
   });
 
@@ -26,13 +26,13 @@ describe('DataStorageFactory', () => {
     });
 
     it('factory can create plugin', async () => {
-      const pluginFactoryFactory = await ethers.getContractFactory('DataStorageFactory');
-      const pluginFactoryMock = (await pluginFactoryFactory.deploy(wallet.address)) as any as DataStorageFactory;
+      const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
+      const pluginFactoryMock = (await pluginFactoryFactory.deploy(wallet.address)) as any as BasePluginV1Factory;
 
       const pluginAddress = await pluginFactoryMock.createPlugin.staticCall(wallet.address);
       await pluginFactoryMock.createPlugin(wallet.address);
 
-      const pluginMock = (await ethers.getContractFactory('DataStorageOperator')).attach(pluginAddress) as any as DataStorageOperator;
+      const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
       const feeConfig = await pluginMock.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
     });
@@ -53,7 +53,7 @@ describe('DataStorageFactory', () => {
       await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
       const pluginAddress = await pluginFactory.pluginByPool(other.address);
       expect(pluginAddress).to.not.be.eq(ZERO_ADDRESS);
-      const pluginMock = (await ethers.getContractFactory('DataStorageOperator')).attach(pluginAddress) as any as DataStorageOperator;
+      const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
       const feeConfig = await pluginMock.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
     });

@@ -1,20 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps dynamic fee large swap crossing several initialized ticks 1`] = `231481`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee large swap crossing several initialized ticks 1`] = `231481`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps dynamic fee small swap with filled dataStorage 1`] = `180941`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle 1`] = `180941`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps dynamic fee small swap with filled dataStorage after 4h 1`] = `186910`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 4h 1`] = `186910`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps dynamic fee small swap with filled dataStorage after 8h 1`] = `191868`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 8h 1`] = `191868`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps static fee large swap crossing several initialized ticks 1`] = `228606`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee large swap crossing several initialized ticks 1`] = `228606`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps static fee small swap with filled dataStorage 1`] = `178108`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle 1`] = `178108`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps static fee small swap with filled dataStorage after 4h 1`] = `184077`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 4h 1`] = `184077`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled DataStorage swaps static fee small swap with filled dataStorage after 8h 1`] = `189035`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 8h 1`] = `189035`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price burn when only position using ticks 1`] = `156518`;
 

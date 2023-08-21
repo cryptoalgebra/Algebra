@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-/// @title DataStorage
+/// @title VolatilityOracle
 /// @notice Provides price and volatility data useful for a wide variety of system designs
-/// @dev Instances of stored dataStorage data, "timepoints", are collected in the dataStorage array
+/// @dev Instances of stored oracle data, "timepoints", are collected in the oracle array
 /// Timepoints are overwritten when the full length of the timepoints array is populated.
-/// The most recent timepoint is available by passing 0 to getSingleTimepoint()
-library DataStorage {
+/// The most recent timepoint is available by passing 0 to getSingleTimepoint().
+/// Version for AlgebraBasePluginV1
+library VolatilityOracle {
   /// @notice `target` timestamp is older than oldest timepoint
   error targetIsTooOld();
 
@@ -25,11 +26,11 @@ library DataStorage {
 
   /// @notice Initialize the timepoints array by writing the first slot. Called once for the lifecycle of the timepoints array
   /// @param self The stored timepoints array
-  /// @param time The time of the dataStorage initialization, via block.timestamp truncated to uint32
+  /// @param time The time of the oracle initialization, via block.timestamp truncated to uint32
   /// @param tick Initial tick
   function initialize(Timepoint[UINT16_MODULO] storage self, uint32 time, int24 tick) internal {
     Timepoint storage _zero = self[0];
-    require(!_zero.initialized, 'dataStorage already initialized');
+    require(!_zero.initialized, 'oracle already initialized');
     (_zero.initialized, _zero.blockTimestamp, _zero.tick, _zero.averageTick) = (true, time, tick, tick);
   }
 
