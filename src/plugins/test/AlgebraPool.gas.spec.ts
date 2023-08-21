@@ -305,126 +305,128 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           });
         });
       });
-
-      describe('#mint', () => {
-        for (const { description, bottomTick, topTick } of [
-          {
-            description: 'around current price',
-            bottomTick: startingTick - tickSpacing,
-            topTick: startingTick + tickSpacing,
-          },
-          {
-            description: 'below current price',
-            bottomTick: startingTick - 2 * tickSpacing,
-            topTick: startingTick - tickSpacing,
-          },
-          {
-            description: 'above current price',
-            bottomTick: startingTick + tickSpacing,
-            topTick: startingTick + 2 * tickSpacing,
-          },
-        ]) {
-          describe(description, () => {
-            it('new position mint first in range', async () => {
-              await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
-            });
-            it('add to position existing', async () => {
-              await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-              await advanceTime(1);
-              await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
-            });
-            it('second position in same range', async () => {
-              await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-              await advanceTime(1);
-              await snapshotGasCost(mint(other.address, bottomTick, topTick, expandTo18Decimals(1)));
-            });
-            it('add to position after some time passes', async () => {
-              await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-              await advanceTime(1);
-              await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
-            });
-          });
-        }
-      });
-
-      describe('#burn', () => {
-        for (const { description, bottomTick, topTick } of [
-          {
-            description: 'around current price',
-            bottomTick: startingTick - tickSpacing,
-            topTick: startingTick + tickSpacing,
-          },
-          {
-            description: 'below current price',
-            bottomTick: startingTick - 2 * tickSpacing,
-            topTick: startingTick - tickSpacing,
-          },
-          {
-            description: 'above current price',
-            bottomTick: startingTick + tickSpacing,
-            topTick: startingTick + 2 * tickSpacing,
-          },
-        ]) {
-          describe(description, () => {
-            const liquidityAmount = expandTo18Decimals(1);
-            beforeEach('mint a position', async () => {
-              await mint(wallet.address, bottomTick, topTick, liquidityAmount);
-              await advanceTime(1);
-            });
-
-            it('burn when only position using ticks', async () => {
-              await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
-            });
-            it('partial position burn', async () => {
-              await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1) / 2n, '0x'));
-            });
-            it('entire position burn but other positions are using the ticks', async () => {
-              await mint(other.address, bottomTick, topTick, expandTo18Decimals(1));
-              await advanceTime(1);
-              await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
-            });
-            it('burn entire position after some time passes', async () => {
-              await advanceTime(1);
-              await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
-            });
-          });
-        }
-      });
-
-      describe('#poke', () => {
-        const bottomTick = startingTick - tickSpacing;
-        const topTick = startingTick + tickSpacing;
-
-        it('best case', async () => {
-          await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-          await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
-          await pool.burn(bottomTick, topTick, 0, '0x');
-          await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
-          await snapshotGasCost(pool.burn(bottomTick, topTick, 0, '0x'));
-        });
-      });
-
-      describe('#collect', () => {
-        const bottomTick = startingTick - tickSpacing;
-        const topTick = startingTick + tickSpacing;
-
-        it('close to worst case', async () => {
-          await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-          await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
-          await pool.burn(bottomTick, topTick, 0, '0x'); // poke to accumulate fees
-          await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128));
-        });
-
-        it('close to worst case, two tokens', async () => {
-          await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
-          await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
-          await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
-          await pool.burn(bottomTick, topTick, 0, '0x'); // poke to accumulate fees
-          await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128));
-        });
-      });
     });
   }
+
+  describe('Positions', function () {
+    beforeEach('load inner fixture', async () => {
+      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
+        await loadFixture(gasTestFixture));
+    });
+
+    describe('#mint', () => {
+      for (const { description, bottomTick, topTick } of [
+        {
+          description: 'around current price',
+          bottomTick: startingTick - tickSpacing,
+          topTick: startingTick + tickSpacing,
+        },
+        {
+          description: 'below current price',
+          bottomTick: startingTick - 2 * tickSpacing,
+          topTick: startingTick - tickSpacing,
+        },
+        {
+          description: 'above current price',
+          bottomTick: startingTick + tickSpacing,
+          topTick: startingTick + 2 * tickSpacing,
+        },
+      ]) {
+        describe(description, () => {
+          it('new position mint first in range', async () => {
+            await advanceTime(15);
+            await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
+          });
+          it('add to position existing', async () => {
+            await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+            await advanceTime(15);
+            await snapshotGasCost(mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1)));
+          });
+          it('second position in same range', async () => {
+            await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+            await advanceTime(15);
+            await snapshotGasCost(mint(other.address, bottomTick, topTick, expandTo18Decimals(1)));
+          });
+        });
+      }
+    });
+
+    describe('#burn', () => {
+      for (const { description, bottomTick, topTick } of [
+        {
+          description: 'around current price',
+          bottomTick: startingTick - tickSpacing,
+          topTick: startingTick + tickSpacing,
+        },
+        {
+          description: 'below current price',
+          bottomTick: startingTick - 2 * tickSpacing,
+          topTick: startingTick - tickSpacing,
+        },
+        {
+          description: 'above current price',
+          bottomTick: startingTick + tickSpacing,
+          topTick: startingTick + 2 * tickSpacing,
+        },
+      ]) {
+        describe(description, () => {
+          const liquidityAmount = expandTo18Decimals(1);
+          beforeEach('mint a position', async () => {
+            await mint(wallet.address, bottomTick, topTick, liquidityAmount);
+            await advanceTime(15);
+          });
+
+          it('burn when only position using ticks', async () => {
+            await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
+          });
+          it('partial position burn', async () => {
+            await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1) / 2n, '0x'));
+          });
+          it('entire position burn but other positions are using the ticks', async () => {
+            await mint(other.address, bottomTick, topTick, expandTo18Decimals(1));
+            await advanceTime(15);
+            await snapshotGasCost(pool.burn(bottomTick, topTick, expandTo18Decimals(1), '0x'));
+          });
+        });
+      }
+    });
+
+    describe('#poke', () => {
+      const bottomTick = startingTick - tickSpacing;
+      const topTick = startingTick + tickSpacing;
+
+      it('best case', async () => {
+        await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+        await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
+        await pool.burn(bottomTick, topTick, 0, '0x');
+        await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
+        await advanceTime(15);
+        await snapshotGasCost(pool.burn(bottomTick, topTick, 0, '0x'));
+      });
+    });
+
+    describe('#collect', () => {
+      const bottomTick = startingTick - tickSpacing;
+      const topTick = startingTick + tickSpacing;
+
+      it('close to worst case', async () => {
+        await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+        await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
+        await pool.burn(bottomTick, topTick, 0, '0x'); // poke to accumulate fees
+        await advanceTime(15);
+        await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128));
+      });
+
+      it('close to worst case, two tokens', async () => {
+        await mint(wallet.address, bottomTick, topTick, expandTo18Decimals(1));
+        await swapExact0For1(expandTo18Decimals(1) / 100n, wallet.address);
+        await swapExact1For0(expandTo18Decimals(1) / 100n, wallet.address);
+        await pool.burn(bottomTick, topTick, 0, '0x'); // poke to accumulate fees
+        await advanceTime(15);
+        await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128));
+      });
+    });
+  })
 
   describe('Filled DataStorage', function () {
     this.timeout(600_000);
