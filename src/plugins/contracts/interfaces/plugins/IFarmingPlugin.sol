@@ -8,7 +8,7 @@ interface IFarmingPlugin {
   /// @param newIncentive The address of the new incentive
   event Incentive(address newIncentive);
 
-  /// @notice Returns the address of the pool the plugin is connected to.
+  /// @notice Returns the address of the pool the plugin is created for
   /// @return address of the pool
   function pool() external returns (address);
 
@@ -23,7 +23,7 @@ interface IFarmingPlugin {
   /// @return Indicates whether the target incentive is active
   function isIncentiveActive(address targetIncentive) external view returns (bool);
 
-  /// @notice Returns the information about active incentive
+  /// @notice Returns the address of active incentive
   /// @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)
   /// @return  The address associated with the current active incentive
   function incentive() external view returns (address);

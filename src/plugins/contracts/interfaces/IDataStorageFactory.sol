@@ -18,7 +18,7 @@ interface IDataStorageFactory is IAlgebraPluginFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
 
-  /// @dev Is retrieved from the pools to restrict calling certain functions not by a farming contract
+  /// @notice Returns current farming address
   /// @return The farming contract address
   function farmingAddress() external view returns (address);
 
