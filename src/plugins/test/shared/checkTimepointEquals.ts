@@ -1,4 +1,4 @@
-import { expect } from './expect'
+import { expect } from './expect';
 
 // helper function because we cannot do a simple deep equals with the
 // timepoint result object returned from ethers because it extends array
@@ -8,14 +8,14 @@ export default function checkTimepointEquals(
     tickCumulative,
     blockTimestamp,
   }: {
-    initialized: boolean
-    tickCumulative: bigint
-    blockTimestamp: bigint
+    initialized: boolean;
+    tickCumulative: bigint;
+    blockTimestamp: bigint;
   },
   expected: {
-    initialized: boolean
-    tickCumulative: bigint
-    blockTimestamp: bigint
+    initialized: boolean;
+    tickCumulative: bigint;
+    blockTimestamp: bigint;
   }
 ) {
   expect(
@@ -28,5 +28,5 @@ export default function checkTimepointEquals(
   ).to.deep.eq({
     ...expected,
     tickCumulative: expected.tickCumulative.toString(),
-  })
+  });
 }
