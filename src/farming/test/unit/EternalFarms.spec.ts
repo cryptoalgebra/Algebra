@@ -1052,6 +1052,17 @@ describe('unit/EternalFarms', () => {
       .to.emit(context.bonusRewardToken, 'Transfer').withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, bonusReward)
       .to.emit(context.eternalFarming, 'RewardAmountsDecreased')
     })
+
+    it('max uint128', async () => {
+      await expect(context.eternalFarming.connect(factoryOwner).decreaseRewardsAmount(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
+      .to.emit(context.rewardToken, 'Transfer').withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, totalReward - 1n)
+      .to.emit(context.bonusRewardToken, 'Transfer').withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, bonusReward)
+      .to.emit(context.eternalFarming, 'RewardAmountsDecreased')
+    })
+
+    it('decrease with 0 amount', async () => {
+      await expect(context.eternalFarming.connect(factoryOwner).decreaseRewardsAmount(incentiveKey, 0, 0))
+    })
   })
 
   describe('#deactivate incentive', () => {
@@ -2117,6 +2128,23 @@ describe('unit/EternalFarms', () => {
         expect(incentiveAfter.totalReward).to.eq(incentiveBefore.totalReward + 1n)
         expect(incentiveAfter.bonusReward).to.eq(incentiveBefore.bonusReward + 1n)
       })
+
+      it('can add rewards with uint128 amounts', async () => {
+        let incentiveBefore = await context.eternalFarming.connect(lpUser0).incentives(incentiveId)
+  
+        await erc20Helper.ensureBalancesAndApprovals(
+          lpUser0,
+          [context.rewardToken, context.bonusRewardToken],
+          2n ** 128n,
+          await context.eternalFarming.getAddress()
+        )
+
+        let factoryOwner = actors.wallets[0];
+  
+        await context.eternalFarming.connect(factoryOwner).decreaseRewardsAmount(incentiveKey, 10000n, 10000n)
+        await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey,2n ** 128n - 1n, 2n ** 128n - 1n)).to.be.reverted
+  
+      })
   
       it('cannot add rewards to non-existent incentive', async () => {
         incentiveKey = {
@@ -2252,7 +2280,11 @@ describe('unit/EternalFarms', () => {
         await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
         await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
       })
-  
+
+      it('set max rates', async () => {
+        await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n, 2n ** 128n);
+
+      })
   
       it('cannot set nonzero to indirectly deactivated incentive', async () => {
         await detachIncentiveIndirectly(localNonce);
