@@ -49,8 +49,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint256 innerRewardGrowth1;
   }
 
-  bytes32 public constant INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
-  bytes32 public constant FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
+  /// @inheritdoc IAlgebraEternalFarming
+  bytes32 public constant override INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
+  /// @inheritdoc IAlgebraEternalFarming
+  bytes32 public constant override FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
   /// @inheritdoc IAlgebraEternalFarming
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -58,7 +60,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   IAlgebraPoolDeployer private immutable deployer;
   IAlgebraFactory private immutable factory;
 
-  IFarmingCenter public farmingCenter;
+  /// @inheritdoc IAlgebraEternalFarming
+  address public override farmingCenter;
   /// @inheritdoc IAlgebraEternalFarming
   bool public override isEmergencyWithdrawActivated;
   // reentrancy lock
@@ -107,7 +110,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _checkIsFarmingCenter() internal view {
-    require(msg.sender == address(farmingCenter));
+    require(msg.sender == farmingCenter);
   }
 
   function _checkHasRole(bytes32 role) internal view {
@@ -201,8 +204,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   /// @inheritdoc IAlgebraEternalFarming
   function setFarmingCenterAddress(address _farmingCenter) external override onlyAdministrator {
-    require(_farmingCenter != address(farmingCenter));
-    farmingCenter = IFarmingCenter(_farmingCenter);
+    require(_farmingCenter != farmingCenter);
+    farmingCenter = _farmingCenter;
     emit FarmingCenter(_farmingCenter);
   }
 
@@ -392,7 +395,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) private {
-    farmingCenter.connectVirtualPoolToPlugin(plugin, virtualPool);
+    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(plugin, virtualPool);
   }
 
   function _getCurrentVirtualPoolInPlugin(IFarmingPlugin plugin) internal view returns (address virtualPool) {

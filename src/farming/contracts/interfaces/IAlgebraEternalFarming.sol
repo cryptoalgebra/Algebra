@@ -38,6 +38,12 @@ interface IAlgebraEternalFarming {
 
   error reentrancyLock();
 
+  /// @notice Returns hash of 'INCENTIVE_MAKER_ROLE', used as role for incentive creation
+  function INCENTIVE_MAKER_ROLE() external view returns (bytes32);
+
+  /// @notice Returns hash of 'FARMINGS_ADMINISTRATOR_ROLE', used as role for permissioned actions in farming
+  function FARMINGS_ADMINISTRATOR_ROLE() external view returns (bytes32);
+
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
@@ -62,6 +68,9 @@ interface IAlgebraEternalFarming {
   /// @param incentiveId The ID of the incentive computed from its parameters
   /// @return res True if incentive is active
   function isIncentiveActive(bytes32 incentiveId) external view returns (bool res);
+
+  /// @notice Returns address of current farmingCenter
+  function farmingCenter() external view returns (address);
 
   /// @notice Users can withdraw liquidity without any checks if active.
   function isEmergencyWithdrawActivated() external view returns (bool);
