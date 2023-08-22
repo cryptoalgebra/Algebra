@@ -149,6 +149,10 @@ contract VolatilityOracleTest {
     return timepoints.getTimepoints(time, secondsAgos, tick, index);
   }
 
+  function getOldestIndex() external view returns (uint16 oldestIndex) {
+    return timepoints.getOldestIndex(index);
+  }
+
   function getGasCostOfGetPoints(uint32[] calldata secondsAgos) external view returns (uint256) {
     (uint32 _time, int24 _tick, uint16 _index) = (time, tick, index);
     unchecked {

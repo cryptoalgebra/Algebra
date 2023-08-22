@@ -352,7 +352,7 @@ library VolatilityOracle {
   /// @param b From which to determine the relative position of `currentTime`
   /// @param currentTime A timestamp truncated to 32 bits
   /// @return res Whether `a` is chronologically <= `b`
-  function _lteConsideringOverflow(uint32 a, uint32 b, uint32 currentTime) private pure returns (bool res) {
+  function _lteConsideringOverflow(uint32 a, uint32 b, uint32 currentTime) internal pure returns (bool res) {
     res = a > currentTime;
     if (res == b > currentTime) res = a <= b; // if both are on the same side
   }

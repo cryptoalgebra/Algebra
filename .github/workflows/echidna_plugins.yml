@@ -16,6 +16,7 @@ jobs:
         testName:
           - AdaptiveFeeEchidnaTest
           - VolatilityOracleEchidnaTest
+          - VolatilityOracleMathEchidnaTest
 
     runs-on: ubuntu-latest
 
