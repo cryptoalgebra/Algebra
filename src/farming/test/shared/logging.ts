@@ -1,5 +1,5 @@
-import createLogger, { LogLevelNames } from 'console-log-level'
+import createLogger, { LogLevelNames } from 'console-log-level';
 
-const level: LogLevelNames = 'info'
+const level: LogLevelNames = 'info';
 
-export const log = createLogger({ level })
+export const log = createLogger({ level });

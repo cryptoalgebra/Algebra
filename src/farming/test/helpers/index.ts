@@ -1,33 +1,15 @@
-import { Wallet, MaxUint256, ZeroAddress, Interface } from 'ethers'
-import {
-  blockTimestamp,
-  BNe18,
-  FeeAmount,
-  getCurrentTick,
-  maxGas,
-  encodePath,
-  arrayWrap,
-  getMinTick,
-  getMaxTick,
-  BN,
-} from '../shared/index'
-import _ from 'lodash'
-import {
-  TestERC20,
-  INonfungiblePositionManager,
-  AlgebraEternalFarming,
-  IAlgebraPool,
-  TestIncentiveId,
-  FarmingCenter,
-} from '../../typechain'
-import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json'
-import { HelperTypes } from './types'
-import { ActorFixture } from '../shared/actors'
-import { mintPosition } from '../shared/fixtures'
-import { ISwapRouter } from '@cryptoalgebra/periphery/typechain'
-import { ethers } from 'hardhat'
-import { ContractParams } from '../../types/contractParams'
-import { TestContext } from '../types'
+import { Wallet, MaxUint256, ZeroAddress, Interface } from 'ethers';
+import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick, BN } from '../shared/index';
+import _ from 'lodash';
+import { TestERC20, INonfungiblePositionManager, AlgebraEternalFarming, IAlgebraPool, TestIncentiveId, FarmingCenter } from '../../typechain';
+import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json';
+import { HelperTypes } from './types';
+import { ActorFixture } from '../shared/actors';
+import { mintPosition } from '../shared/fixtures';
+import { ISwapRouter } from '@cryptoalgebra/periphery/typechain';
+import { ethers } from 'hardhat';
+import { ContractParams } from '../../types/contractParams';
+import { TestContext } from '../types';
 
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
@@ -36,19 +18,19 @@ import { TestContext } from '../types'
  * Each helper function should be a `HelperTypes.CommandFunction`
  */
 export class HelperCommands {
-  actors: ActorFixture
-  provider: any
-  eternalFarming: AlgebraEternalFarming
-  nft: INonfungiblePositionManager
-  router: ISwapRouter
-  pool: IAlgebraPool
-  testIncentiveId: TestIncentiveId
-  farmingCenter: FarmingCenter
+  actors: ActorFixture;
+  provider: any;
+  eternalFarming: AlgebraEternalFarming;
+  nft: INonfungiblePositionManager;
+  router: ISwapRouter;
+  pool: IAlgebraPool;
+  testIncentiveId: TestIncentiveId;
+  farmingCenter: FarmingCenter;
 
-  DEFAULT_INCENTIVE_DURATION = 2_000
-  DEFAULT_CLAIM_DURATION = 1_000
-  DEFAULT_LP_AMOUNT = BNe18(10)
-  DEFAULT_FEE_AMOUNT = FeeAmount.MEDIUM
+  DEFAULT_INCENTIVE_DURATION = 2_000;
+  DEFAULT_CLAIM_DURATION = 1_000;
+  DEFAULT_LP_AMOUNT = BNe18(10);
+  DEFAULT_FEE_AMOUNT = FeeAmount.MEDIUM;
 
   constructor({
     provider,
@@ -60,23 +42,23 @@ export class HelperCommands {
     testIncentiveId,
     farmingCenter,
   }: {
-    provider: any
-    eternalFarming: AlgebraEternalFarming
-    farmingCenter: FarmingCenter
-    nft: INonfungiblePositionManager
-    router: ISwapRouter
-    pool: IAlgebraPool
-    actors: ActorFixture
-    testIncentiveId: TestIncentiveId
+    provider: any;
+    eternalFarming: AlgebraEternalFarming;
+    farmingCenter: FarmingCenter;
+    nft: INonfungiblePositionManager;
+    router: ISwapRouter;
+    pool: IAlgebraPool;
+    actors: ActorFixture;
+    testIncentiveId: TestIncentiveId;
   }) {
-    this.actors = actors
-    this.provider = provider
-    this.eternalFarming = eternalFarming
-    this.nft = nft
-    this.router = router
-    this.pool = pool
-    this.testIncentiveId = testIncentiveId
-    this.farmingCenter = farmingCenter
+    this.actors = actors;
+    this.provider = provider;
+    this.eternalFarming = eternalFarming;
+    this.nft = nft;
+    this.router = router;
+    this.pool = pool;
+    this.testIncentiveId = testIncentiveId;
+    this.farmingCenter = farmingCenter;
   }
 
   static fromTestContext = (context: TestContext, actors: ActorFixture, provider: any): HelperCommands => {
@@ -89,8 +71,8 @@ export class HelperCommands {
       pool: context.poolObj,
       testIncentiveId: context.testIncentiveId,
       farmingCenter: context.farmingCenter,
-    })
-  }
+    });
+  };
 
   /***
    * Creates a staking incentive owned by `incentiveCreator` for `totalReward` of `rewardToken`
@@ -99,26 +81,26 @@ export class HelperCommands {
    *  Transfers `rewardToken` to `incentiveCreator` if they do not have sufficient balance.
    */
   createIncentiveFlow: HelperTypes.CreateIncentive.Command = async (params) => {
-    const { nonce } = params
+    const { nonce } = params;
 
-    const incentiveCreator = this.actors.incentiveCreator()
+    const incentiveCreator = this.actors.incentiveCreator();
 
-    const bal = await params.rewardToken.balanceOf(incentiveCreator.address)
-    const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address)
+    const bal = await params.rewardToken.balanceOf(incentiveCreator.address);
+    const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address);
 
     if (bal < params.totalReward) {
-      await params.rewardToken.transfer(incentiveCreator.address, params.totalReward)
+      await params.rewardToken.transfer(incentiveCreator.address, params.totalReward);
     }
 
     if (bonusBal < params.bonusReward) {
-      await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward)
+      await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward);
     }
 
-    let txResult
-    let virtualPoolAddress
+    let txResult;
+    let virtualPoolAddress;
 
-    await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.totalReward)
-    await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.bonusReward)
+    await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.totalReward);
+    await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.bonusReward);
 
     txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
       {
@@ -134,17 +116,17 @@ export class HelperCommands {
         bonusRewardRate: params.bonusRewardRate || 10,
         minimalPositionWidth: params.minimalPositionWidth || 0,
       }
-    )
+    );
     // @ts-ignore
-    virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool']
+    virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool'];
 
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       nonce,
 
       virtualPool: new ethers.Contract(virtualPoolAddress, new Interface(abi.abi), this.actors.lpUser0()),
-    }
-  }
+    };
+  };
 
   /***
    * params.lp mints an NFT backed by a certain amount of `params.tokensToFarm`.
@@ -155,21 +137,21 @@ export class HelperCommands {
    */
   mintDepositFarmFlow: HelperTypes.MintDepositFarm.Command = async (params) => {
     // Make sure LP has enough balance
-    const bal0 = await params.tokensToFarm[0].balanceOf(params.lp.address)
+    const bal0 = await params.tokensToFarm[0].balanceOf(params.lp.address);
     if (bal0 < params.amountsToFarm[0])
       await params.tokensToFarm[0]
         // .connect(tokensOwner)
-        .transfer(params.lp.address, params.amountsToFarm[0] * 2n)
+        .transfer(params.lp.address, params.amountsToFarm[0] * 2n);
 
-    const bal1 = await params.tokensToFarm[1].balanceOf(params.lp.address)
+    const bal1 = await params.tokensToFarm[1].balanceOf(params.lp.address);
     if (bal1 < params.amountsToFarm[1])
       await params.tokensToFarm[1]
         // .connect(tokensOwner)
-        .transfer(params.lp.address, params.amountsToFarm[1])
+        .transfer(params.lp.address, params.amountsToFarm[1]);
 
     // Make sure LP has authorized NFT to withdraw
-    await params.tokensToFarm[0].connect(params.lp).approve(this.nft, params.amountsToFarm[0])
-    await params.tokensToFarm[1].connect(params.lp).approve(this.nft, params.amountsToFarm[1])
+    await params.tokensToFarm[0].connect(params.lp).approve(this.nft, params.amountsToFarm[0]);
+    await params.tokensToFarm[1].connect(params.lp).approve(this.nft, params.amountsToFarm[1]);
 
     // The LP mints their NFT
     const tokenId = await mintPosition(this.nft.connect(params.lp), {
@@ -184,39 +166,37 @@ export class HelperCommands {
       amount0Min: 0,
       amount1Min: 0,
       deadline: (await blockTimestamp()) + 1000,
-    })
+    });
 
     // The LP approves and farms their NFT
-    await this.nft.connect(params.lp).approveForFarming(tokenId, true)
+    await this.nft.connect(params.lp).approveForFarming(tokenId, true);
 
-    await this.farmingCenter
-      .connect(params.lp)
-      .enterFarming(await incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId)
+    await this.farmingCenter.connect(params.lp).enterFarming(await incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId);
 
-    const farmdAt = await blockTimestamp()
+    const farmdAt = await blockTimestamp();
 
     return {
       tokenId,
       farmdAt,
       lp: params.lp,
-    }
-  }
+    };
+  };
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true)
-  }
+    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true);
+  };
 
   mintFlow: HelperTypes.Mint.Command = async (params) => {
-    const fee = params.fee || FeeAmount.MEDIUM
-    const e20h = new ERC20Helper()
+    const fee = params.fee || FeeAmount.MEDIUM;
+    const e20h = new ERC20Helper();
 
-    const amount0Desired = params.amounts ? params.amounts[0] : this.DEFAULT_LP_AMOUNT
+    const amount0Desired = params.amounts ? params.amounts[0] : this.DEFAULT_LP_AMOUNT;
 
-    await e20h.ensureBalancesAndApprovals(params.lp, params.tokens[0], amount0Desired, await this.nft.getAddress())
+    await e20h.ensureBalancesAndApprovals(params.lp, params.tokens[0], amount0Desired, await this.nft.getAddress());
 
-    const amount1Desired = params.amounts ? params.amounts[1] : this.DEFAULT_LP_AMOUNT
+    const amount1Desired = params.amounts ? params.amounts[1] : this.DEFAULT_LP_AMOUNT;
 
-    await e20h.ensureBalancesAndApprovals(params.lp, params.tokens[1], amount1Desired, await this.nft.getAddress())
+    await e20h.ensureBalancesAndApprovals(params.lp, params.tokens[1], amount1Desired, await this.nft.getAddress());
 
     const tokenId = await mintPosition(this.nft.connect(params.lp), {
       token0: await params.tokens[0].getAddress(),
@@ -230,23 +210,21 @@ export class HelperCommands {
       amount0Min: 0,
       amount1Min: 0,
       deadline: (await blockTimestamp()) + 1000,
-    })
+    });
 
-    return { tokenId, lp: params.lp }
-  }
+    return { tokenId, lp: params.lp };
+  };
 
   exitFarmingCollectBurnFlow: HelperTypes.exitFarmingCollectBurn.Command = async (params) => {
-    await this.farmingCenter
-      .connect(params.lp)
-      .exitFarming(await incentiveResultToFarmAdapter(params.createIncentiveResult), params.tokenId, maxGas)
+    await this.farmingCenter.connect(params.lp).exitFarming(await incentiveResultToFarmAdapter(params.createIncentiveResult), params.tokenId, maxGas);
 
-    const exitFarmingdAt = await blockTimestamp()
+    const exitFarmingdAt = await blockTimestamp();
 
-    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken, params.lp.address, 0)
+    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken, params.lp.address, 0);
 
-    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken, params.lp.address, 0)
+    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken, params.lp.address, 0);
 
-    const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId)
+    const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId);
 
     await this.nft.connect(params.lp).decreaseLiquidity(
       {
@@ -257,9 +235,9 @@ export class HelperCommands {
         deadline: (await blockTimestamp()) + 1000,
       },
       maxGas
-    )
+    );
 
-    const { tokensOwed0, tokensOwed1 } = await this.nft.connect(params.lp).positions(params.tokenId)
+    const { tokensOwed0, tokensOwed1 } = await this.nft.connect(params.lp).positions(params.tokenId);
 
     await this.nft.connect(params.lp).collect(
       {
@@ -269,19 +247,19 @@ export class HelperCommands {
         amount1Max: tokensOwed1,
       },
       maxGas
-    )
+    );
 
-    await this.nft.connect(params.lp).burn(params.tokenId, maxGas)
+    await this.nft.connect(params.lp).burn(params.tokenId, maxGas);
 
-    const balance = await params.createIncentiveResult.rewardToken.connect(params.lp).balanceOf(params.lp.address)
-    const bonusBalance = await params.createIncentiveResult.bonusRewardToken.connect(params.lp).balanceOf(params.lp.address)
+    const balance = await params.createIncentiveResult.rewardToken.connect(params.lp).balanceOf(params.lp.address);
+    const bonusBalance = await params.createIncentiveResult.bonusRewardToken.connect(params.lp).balanceOf(params.lp.address);
 
     return {
       balance,
       bonusBalance,
       exitFarmingdAt,
-    }
-  }
+    };
+  };
 
   // endIncentiveFlow: HelperTypes.EndIncentive.Command = async (params) => {
   //   const incentiveCreator = this.actors.incentiveCreator()
@@ -318,9 +296,9 @@ export class HelperCommands {
       rewardToken: params.rewardToken,
       bonusRewardToken: params.bonusRewardToken,
       pool: params.poolAddress,
-      nonce: params.nonce
-    })
-  }
+      nonce: params.nonce,
+    });
+  };
 
   makeTickGoFlow: HelperTypes.MakeTickGo.Command = async (params) => {
     // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
@@ -328,36 +306,36 @@ export class HelperCommands {
     //   .connect(trader0)
     //   .approve(router.address, BNe18(2).mul(params.numberOfTrades))
 
-    const MAKE_TICK_GO_UP = params.direction === 'up'
-    const actor = params.trader || this.actors.traderUser0()
+    const MAKE_TICK_GO_UP = params.direction === 'up';
+    const actor = params.trader || this.actors.traderUser0();
 
     const isDone = (tick: number | undefined) => {
       if (!params.desiredValue) {
-        return true
+        return true;
       } else if (!tick) {
-        return false
+        return false;
       } else if (MAKE_TICK_GO_UP) {
-        return tick > params.desiredValue
+        return tick > params.desiredValue;
       } else {
-        return tick < params.desiredValue
+        return tick < params.desiredValue;
       }
-    }
+    };
 
-    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
-    const erc20 = await ethers.getContractFactory('TestERC20')
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()]);
+    const erc20 = await ethers.getContractFactory('TestERC20');
 
-    const tok0 = erc20.attach(tok0Address) as any as TestERC20
-    const tok1 = erc20.attach(tok1Address) as any as TestERC20
+    const tok0 = erc20.attach(tok0Address) as any as TestERC20;
+    const tok1 = erc20.attach(tok1Address) as any as TestERC20;
     const doTrade = async () => {
       /** If we want to push price down, we need to increase tok0.
          If we want to push price up, we need to increase tok1 */
 
-      const amountIn = BNe18(1)
+      const amountIn = BNe18(1);
 
-      const erc20Helper = new ERC20Helper()
-      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress())
+      const erc20Helper = new ERC20Helper();
+      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
-      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
+      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
 
       await this.router.connect(actor).exactInput(
         {
@@ -368,19 +346,19 @@ export class HelperCommands {
           amountOutMinimum: 0,
         },
         maxGas
-      )
-      let currTick = await getCurrentTick(this.pool.connect(actor))
-      return currTick
-    }
+      );
+      let currTick = await getCurrentTick(this.pool.connect(actor));
+      return currTick;
+    };
 
-    let currentTick = await doTrade()
+    let currentTick = await doTrade();
 
     while (!isDone(currentTick)) {
-      currentTick = await doTrade()
+      currentTick = await doTrade();
     }
 
-    return { currentTick }
-  }
+    return { currentTick };
+  };
 
   makeTickGoFlowWithSmallSteps: HelperTypes.MakeTickGo.Command = async (params) => {
     // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
@@ -388,37 +366,37 @@ export class HelperCommands {
     //   .connect(trader0)
     //   .approve(router.address, BNe18(2).mul(params.numberOfTrades))
 
-    const MAKE_TICK_GO_UP = params.direction === 'up'
-    const actor = params.trader || this.actors.traderUser0()
+    const MAKE_TICK_GO_UP = params.direction === 'up';
+    const actor = params.trader || this.actors.traderUser0();
 
     const isDone = (tick: number | undefined) => {
       if (!params.desiredValue) {
-        return true
+        return true;
       } else if (!tick) {
-        return false
+        return false;
       } else if (MAKE_TICK_GO_UP) {
-        return tick > params.desiredValue
+        return tick > params.desiredValue;
       } else {
-        return tick < params.desiredValue
+        return tick < params.desiredValue;
       }
-    }
+    };
 
-    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
-    const erc20 = await ethers.getContractFactory('TestERC20')
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()]);
+    const erc20 = await ethers.getContractFactory('TestERC20');
 
-    const tok0 = erc20.attach(tok0Address) as any as TestERC20
-    const tok1 = erc20.attach(tok1Address) as any as TestERC20
+    const tok0 = erc20.attach(tok0Address) as any as TestERC20;
+    const tok1 = erc20.attach(tok1Address) as any as TestERC20;
 
     const doTrade = async () => {
       /** If we want to push price down, we need to increase tok0.
          If we want to push price up, we need to increase tok1 */
 
-      const amountIn = 5n * 10n ** 16n
+      const amountIn = 5n * 10n ** 16n;
 
-      const erc20Helper = new ERC20Helper()
-      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress())
+      const erc20Helper = new ERC20Helper();
+      await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
-      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
+      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
 
       await this.router.connect(actor).exactInput(
         {
@@ -429,19 +407,19 @@ export class HelperCommands {
           amountOutMinimum: 0,
         },
         maxGas
-      )
-      let currTick = await getCurrentTick(this.pool.connect(actor))
-      return currTick
-    }
+      );
+      let currTick = await getCurrentTick(this.pool.connect(actor));
+      return currTick;
+    };
 
-    let currentTick = await doTrade()
+    let currentTick = await doTrade();
 
     while (!isDone(currentTick)) {
-      currentTick = await doTrade()
+      currentTick = await doTrade();
     }
 
-    return { currentTick }
-  }
+    return { currentTick };
+  };
 
   makeSwapGasCHeckFlow: HelperTypes.MakeSwapGasCheck.Command = async (params) => {
     // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
@@ -449,36 +427,36 @@ export class HelperCommands {
     //   .connect(trader0)
     //   .approve(router.address, BNe18(2).mul(params.numberOfTrades))
 
-    const MAKE_TICK_GO_UP = params.direction === 'up'
-    const actor = params.trader || this.actors.traderUser0()
+    const MAKE_TICK_GO_UP = params.direction === 'up';
+    const actor = params.trader || this.actors.traderUser0();
 
     const isDone = (tick: number | undefined) => {
       if (!params.desiredValue) {
-        return true
+        return true;
       } else if (!tick) {
-        return false
+        return false;
       } else if (MAKE_TICK_GO_UP) {
-        return tick > params.desiredValue
+        return tick > params.desiredValue;
       } else {
-        return tick < params.desiredValue
+        return tick < params.desiredValue;
       }
-    }
+    };
 
-    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()])
-    const erc20 = await ethers.getContractFactory('TestERC20')
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()]);
+    const erc20 = await ethers.getContractFactory('TestERC20');
 
-    const tok0 = erc20.attach(tok0Address) as any as TestERC20
-    const tok1 = erc20.attach(tok1Address) as any as TestERC20
+    const tok0 = erc20.attach(tok0Address) as any as TestERC20;
+    const tok1 = erc20.attach(tok1Address) as any as TestERC20;
 
     /** If we want to push price down, we need to increase tok0.
     If we want to push price up, we need to increase tok1 */
 
-    const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1)
+    const amountIn = params.amountIn ? BNe18(params.amountIn) : BNe18(1);
 
-    const erc20Helper = new ERC20Helper()
-    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress())
+    const erc20Helper = new ERC20Helper();
+    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
-    const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address])
+    const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
 
     return this.router.connect(actor).exactInput(
       {
@@ -489,48 +467,48 @@ export class HelperCommands {
         amountOutMinimum: 0,
       },
       maxGas
-    )
-  }
+    );
+  };
 }
 
 export class ERC20Helper {
   ensureBalancesAndApprovals = async (actor: Wallet, tokens: TestERC20 | Array<TestERC20>, balance: bigint, spender?: string) => {
     for (let token of arrayWrap(tokens)) {
-      await this.ensureBalance(actor, token, balance)
+      await this.ensureBalance(actor, token, balance);
       if (spender) {
-        await this.ensureApproval(actor, token, balance, spender)
+        await this.ensureApproval(actor, token, balance, spender);
       }
     }
-  }
+  };
 
   ensureBalance = async (actor: Wallet, token: TestERC20, balance: bigint) => {
-    const currentBalance = await token.balanceOf(actor.address)
+    const currentBalance = await token.balanceOf(actor.address);
     if (currentBalance < balance) {
       await token
         // .connect(this.actors.tokensOwner())
-        .transfer(actor.address, balance - currentBalance)
+        .transfer(actor.address, balance - currentBalance);
     }
 
     // if (spender) {
     //   await this.ensureApproval(actor, token, balance, spender)
     // }
 
-    return await token.balanceOf(actor.address)
-  }
+    return await token.balanceOf(actor.address);
+  };
 
   ensureApproval = async (actor: Wallet, token: TestERC20, balance: bigint, spender: string) => {
-    const currentAllowance = await token.allowance(actor.address, spender)
+    const currentAllowance = await token.allowance(actor.address, spender);
     if (currentAllowance < balance) {
-      await token.connect(actor).approve(spender, balance)
+      await token.connect(actor).approve(spender, balance);
     }
-  }
+  };
 }
 
-type IncentiveAdapterFunc = (params: HelperTypes.CreateIncentive.Result) => Promise<ContractParams.IncentiveKey>
+type IncentiveAdapterFunc = (params: HelperTypes.CreateIncentive.Result) => Promise<ContractParams.IncentiveKey>;
 
 export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = async (params: any) => ({
   rewardToken: await params.rewardToken.getAddress(),
   bonusRewardToken: await params.bonusRewardToken.getAddress(),
   pool: params.poolAddress,
-  nonce: params.nonce
-})
+  nonce: params.nonce,
+});

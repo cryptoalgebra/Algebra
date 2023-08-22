@@ -1,3 +1,3 @@
-import { ethers } from 'hardhat'
+import { ethers } from 'hardhat';
 
-export const provider = ethers.provider
+export const provider = ethers.provider;

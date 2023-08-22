@@ -1,5 +1,5 @@
-import { AlgebraFixtureType } from './shared/fixtures'
+import { AlgebraFixtureType } from './shared/fixtures';
 
 export type TestContext = AlgebraFixtureType & {
-  subject?: Function
-}
+  subject?: Function;
+};
