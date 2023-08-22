@@ -575,7 +575,7 @@ describe('unit/EternalFarms', () => {
         expect(farmAfter.liquidity).to.eq(liquidity)
       })
 
-      xit('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, lpUser0)))
+      it('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(tokenId, lpUser0)))
     })
 
     describe('fails when', () => {
@@ -702,191 +702,6 @@ describe('unit/EternalFarms', () => {
           )
         ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'incentiveNotExist')
       })
-    })
-  })
-
-  describe.skip('swap gas [ @skip-on-coverage ]', async () => {
-    it('3 swaps', async () => {
-      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
-
-      const mintResult = await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-      })
-      tokenId = mintResult.tokenId
-
-      let farmIncentiveKey = {
-        rewardToken: await context.rewardToken.getAddress(),
-        bonusRewardToken: await context.bonusRewardToken.getAddress(),
-        pool: context.pool01,
-        nonce,
-      }
-
-      let incentiveId = await helpers.getIncentiveId(
-        await helpers.createIncentiveFlow({
-          rewardToken: context.rewardToken,
-          bonusRewardToken: context.bonusRewardToken,
-          totalReward,
-          bonusReward,
-          poolAddress: await context.poolObj.getAddress(),
-          nonce,
-          rewardRate: 10n,
-          bonusRewardRate: 50n,
-        })
-      )
-
-      // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
-      await context.eternalFarming.farms(tokenId, incentiveId)
-
-      const pool = context.poolObj.connect(actors.lpUser0())
-
-      Time.set(timestamps.startTime + 10)
-      //await provider.send('evm_mine', [timestamps.startTime + 100])
-      const trader = actors.traderUser0()
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 200,
-        })
-      )
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 200,
-        })
-      )
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          desiredValue: 200,
-        })
-      )
-    })
-
-    it('swap with cross', async () => {
-      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
-
-      const mintResult = await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-        tickLower: -60,
-        tickUpper: 60,
-      })
-      tokenId = mintResult.tokenId
-
-      await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-      })
-
-      let farmIncentiveKey = {
-        rewardToken: await context.rewardToken.getAddress(),
-        bonusRewardToken: await context.bonusRewardToken.getAddress(),
-        pool: context.pool01,
-        nonce,
-      }
-
-      let incentiveId = await helpers.getIncentiveId(
-        await helpers.createIncentiveFlow({
-          rewardToken: context.rewardToken,
-          bonusRewardToken: context.bonusRewardToken,
-          totalReward,
-          bonusReward,
-          poolAddress: await context.poolObj.getAddress(),
-          nonce,
-          rewardRate: 10n,
-          bonusRewardRate: 50n,
-        })
-      )
-
-      // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
-      await context.eternalFarming.farms(tokenId, incentiveId)
-
-      const pool = context.poolObj.connect(actors.lpUser0())
-
-      Time.set(timestamps.startTime + 10)
-      //await provider.send('evm_mine', [timestamps.startTime + 100])
-      const trader = actors.traderUser0()
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'up',
-          amountIn: 150,
-        })
-      )
-    })
-
-    it('swap with second cross', async () => {
-      let totalReward = BigInt('9000000000000')
-      let bonusReward = BigInt('9000000000000')
-
-      timestamps = makeTimestamps((await blockTimestamp()) + 1_000)
-
-      const mintResult = await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-        tickLower: -60,
-        tickUpper: 60,
-      })
-      tokenId = mintResult.tokenId
-
-      const mintResult2 = await helpers.mintFlow({
-        lp: lpUser0,
-        tokens: [context.token0, context.token1],
-      })
-
-      let farmIncentiveKey = {
-        rewardToken: await context.rewardToken.getAddress(),
-        bonusRewardToken: await context.bonusRewardToken.getAddress(),
-        pool: context.pool01,
-        nonce,
-      }
-
-      let incentiveId = await helpers.getIncentiveId(
-        await helpers.createIncentiveFlow({
-          rewardToken: context.rewardToken,
-          bonusRewardToken: context.bonusRewardToken,
-          totalReward,
-          bonusReward,
-          poolAddress: await context.poolObj.getAddress(),
-          nonce,
-          rewardRate: 10n,
-          bonusRewardRate: 50n,
-        })
-      )
-
-      // await Time.set(timestamps.startTime)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, tokenId)
-      await context.farmingCenter.connect(lpUser0).enterFarming(farmIncentiveKey, mintResult2.tokenId)
-
-      await context.eternalFarming.farms(tokenId, incentiveId)
-
-      const pool = context.poolObj.connect(actors.lpUser0())
-
-      Time.set(timestamps.startTime + 10)
-      const trader = actors.traderUser0()
-      await helpers.makeSwapGasCHeckFlow({
-        trader,
-        direction: 'up',
-        amountIn: 150,
-      })
-
-      Time.set(timestamps.startTime + 180)
-
-      await snapshotGasCost(
-        helpers.makeSwapGasCHeckFlow({
-          trader,
-          direction: 'down',
-          amountIn: 150,
-        })
-      )
-
-      console.log((await pool.globalState()).tick)
     })
   })
 
@@ -1527,7 +1342,7 @@ describe('unit/EternalFarms', () => {
         expect(await context.eternalFarming.rewards(lpUser0.address, rewardToken)).to.equal(0)
       })
 
-      xit('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(await context.rewardToken.getAddress(), lpUser0.address, BN('0'))))
+      it('has gas cost [ @skip-on-coverage ]', async () => await snapshotGasCost(subject(await context.rewardToken.getAddress(), lpUser0.address, BN('0'))))
 
       it('returns their claimable amount', async () => {
         const { rewardToken, eternalFarming } = context
@@ -1841,7 +1656,7 @@ describe('unit/EternalFarms', () => {
             .withArgs(tokenId, incentiveId, await context.rewardToken.getAddress(), await context.bonusRewardToken.getAddress(), lpUser0.address, 9999n, 199n)
         })
 
-        xit('has gas cost [ @skip-on-coverage ]', async () => {
+        it('has gas cost [ @skip-on-coverage ]', async () => {
           await snapshotGasCost(subject(lpUser0))
         })
 
