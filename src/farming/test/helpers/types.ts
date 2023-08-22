@@ -1,4 +1,4 @@
-import { Wallet, Contract, ContractTransaction } from 'ethers'
+import { Wallet, Contract, ContractTransactionResponse } from 'ethers'
 import { TestERC20 } from '../../typechain'
 import { FeeAmount } from '../shared'
 
@@ -122,7 +122,7 @@ export module HelperTypes {
       amountIn?: number
     }
 
-    type Result = ContractTransaction
+    type Result = ContractTransactionResponse
 
     export type Command = CommandFunction<Args, Result>
   }

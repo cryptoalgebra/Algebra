@@ -1152,6 +1152,77 @@ describe('unit/EternalFarms', () => {
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
     })
 
+    it('can deactivate manually after indirect deactivation and exit', async () => {
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress())
+
+      const tokenIdNarrow = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: 120,
+        tickUpper: 180,
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      })
+      
+      await helpers.depositFlow({
+        lp: lpUser0,
+        tokenId: tokenIdNarrow,
+      })
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce
+        },
+        tokenIdNarrow,
+      )
+
+      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+      const virtualPoolFactory = await ethers.getContractFactory('EternalVirtualPool');
+      const virtualPool = virtualPoolFactory.attach(incentiveAddress) as any as EternalVirtualPool;
+
+      expect(await virtualPool.deactivated()).to.be.false;
+      const incentiveId = await helpers.getIncentiveId({
+        poolAddress: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        virtualPool: virtualPool as any as Contract,
+        nonce: localNonce,
+        bonusReward: 0n,
+        totalReward: 0n
+      })
+      expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.false;
+
+      await detachIncentiveIndirectly(localNonce);
+
+      await context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce
+        },
+        tokenIdNarrow,        
+      )
+
+      expect(await virtualPool.deactivated()).to.be.true;
+      expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.false;
+      
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+
+      expect(await virtualPool.deactivated()).to.be.true;
+      expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.true;
+    })
+
     it('can deactivate manually if farming detached manually from plugin', async () => {
       await context.pluginFactory.setFarmingAddress(incentiveCreator.address);
       await context.pluginObj.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
