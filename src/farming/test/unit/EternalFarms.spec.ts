@@ -2282,7 +2282,8 @@ describe('unit/EternalFarms', () => {
       })
 
       it('set max rates', async () => {
-        await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n, 2n ** 128n);
+        expect( await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
+        .to.emit(context.eternalFarming, 'RewardsRatesChanged').withArgs(2n ** 128n - 1n, 2n ** 128n - 1n, incentiveId)
 
       })
   
