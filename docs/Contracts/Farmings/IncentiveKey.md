@@ -2,13 +2,6 @@
 
 
 
-
-
-
-
-
-
-
 ```solidity
 struct IncentiveKey {
   contract IERC20Minimal rewardToken;

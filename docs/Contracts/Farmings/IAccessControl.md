@@ -13,8 +13,10 @@
 ## Events
 ### RoleAdminChanged
 
+```solidity
+event RoleAdminChanged(bytes32 role, bytes32 previousAdminRole, bytes32 newAdminRole)
+```
 
-`event RoleAdminChanged(bytes32 role, bytes32 previousAdminRole, bytes32 newAdminRole)`  
 
 
 *Developer note: Emitted when &#x60;newAdminRole&#x60; is set as &#x60;&#x60;role&#x60;&#x60;&#x27;s admin role, replacing &#x60;previousAdminRole&#x60;
@@ -24,19 +26,18 @@
 
 _Available since v3.1._*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
 | previousAdminRole | bytes32 |  |
 | newAdminRole | bytes32 |  |
 
-
 ### RoleGranted
 
+```solidity
+event RoleGranted(bytes32 role, address account, address sender)
+```
 
-`event RoleGranted(bytes32 role, address account, address sender)`  
 
 
 *Developer note: Emitted when &#x60;account&#x60; is granted &#x60;role&#x60;.
@@ -44,19 +45,18 @@ _Available since v3.1._*
 &#x60;sender&#x60; is the account that originated the contract call, an admin role
 bearer except when using {AccessControl-_setupRole}.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
 | account | address |  |
 | sender | address |  |
 
-
 ### RoleRevoked
 
+```solidity
+event RoleRevoked(bytes32 role, address account, address sender)
+```
 
-`event RoleRevoked(bytes32 role, address account, address sender)`  
 
 
 *Developer note: Emitted when &#x60;account&#x60; is revoked &#x60;role&#x60;.
@@ -65,8 +65,6 @@ bearer except when using {AccessControl-_setupRole}.*
   - if using &#x60;revokeRole&#x60;, it is the admin role bearer
   - if using &#x60;renounceRole&#x60;, it is the role bearer (i.e. &#x60;account&#x60;)*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
@@ -74,18 +72,16 @@ bearer except when using {AccessControl-_setupRole}.*
 | sender | address |  |
 
 
-
-
 ## Functions
 ### hasRole
 
+```solidity
+function hasRole(bytes32 role, address account) external view returns (bool)
+```
 
-`function hasRole(bytes32 role, address account) external view returns (bool)` view external
 
 
 *Developer note: Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60;.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -100,16 +96,16 @@ bearer except when using {AccessControl-_setupRole}.*
 
 ### getRoleAdmin
 
+```solidity
+function getRoleAdmin(bytes32 role) external view returns (bytes32)
+```
 
-`function getRoleAdmin(bytes32 role) external view returns (bytes32)` view external
 
 
 *Developer note: Returns the admin role that controls &#x60;role&#x60;. See {grantRole} and
 {revokeRole}.
 
 To change a role&#x27;s admin, use {AccessControl-_setRoleAdmin}.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -123,8 +119,10 @@ To change a role&#x27;s admin, use {AccessControl-_setRoleAdmin}.*
 
 ### grantRole
 
+```solidity
+function grantRole(bytes32 role, address account) external
+```
 
-`function grantRole(bytes32 role, address account) external`  external
 
 
 *Developer note: Grants &#x60;role&#x60; to &#x60;account&#x60;.
@@ -136,18 +134,17 @@ Requirements:
 
 - the caller must have &#x60;&#x60;role&#x60;&#x60;&#x27;s admin role.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
 | account | address |  |
 
-
 ### revokeRole
 
+```solidity
+function revokeRole(bytes32 role, address account) external
+```
 
-`function revokeRole(bytes32 role, address account) external`  external
 
 
 *Developer note: Revokes &#x60;role&#x60; from &#x60;account&#x60;.
@@ -158,18 +155,17 @@ Requirements:
 
 - the caller must have &#x60;&#x60;role&#x60;&#x60;&#x27;s admin role.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
 | account | address |  |
 
-
 ### renounceRole
 
+```solidity
+function renounceRole(bytes32 role, address account) external
+```
 
-`function renounceRole(bytes32 role, address account) external`  external
 
 
 *Developer note: Revokes &#x60;role&#x60; from the calling account.
@@ -185,14 +181,8 @@ Requirements:
 
 - the caller must be &#x60;account&#x60;.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | role | bytes32 |  |
 | account | address |  |
-
-
-
-
 

@@ -1,11 +1,11 @@
 
 
-# IDataStorageFactory
+# IBasePluginV1Factory
 
 
-The interface for the DataStorageFactory
+The interface for the BasePluginV1Factory
 
-TODO
+This contract creates Algebra default plugins for Algebra liquidity pools
 
 
 ## Events
@@ -37,21 +37,72 @@ Emitted when the farming address is changed
 
 
 ## Functions
+### ALGEBRA_BASE_PLUGIN_ADMINISTRATOR
+
+```solidity
+function ALGEBRA_BASE_PLUGIN_ADMINISTRATOR() external pure returns (bytes32)
+```
+
+The hash of &#x27;ALGEBRA_BASE_PLUGIN_ADMINISTRATOR&#x27; used as role
+
+*Developer note: allows to change settings of BasePluginV1Factory*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 |  |
+
+### algebraFactory
+
+```solidity
+function algebraFactory() external view returns (address)
+```
+
+Returns the address of AlgebraFactory
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The AlgebraFactory contract address |
+
+### defaultFeeConfiguration
+
+```solidity
+function defaultFeeConfiguration() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+```
+
+Current default dynamic fee configuration
+
+*Developer note: See the AdaptiveFee struct for more details about params.
+This value is set by default in new plugins*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| alpha1 | uint16 |  |
+| alpha2 | uint16 |  |
+| beta1 | uint32 |  |
+| beta2 | uint32 |  |
+| gamma1 | uint16 |  |
+| gamma2 | uint16 |  |
+| baseFee | uint16 |  |
+
 ### farmingAddress
 
 ```solidity
 function farmingAddress() external view returns (address)
 ```
 
-
-
-*Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
+Returns current farming address
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | address | The tokenomics contract address |
+| [0] | address | The farming contract address |
 
 ### pluginByPool
 

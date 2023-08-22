@@ -1,6 +1,8 @@
 # AlgebraFeeConfiguration
 
+coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
 
+*Developer note: alpha1 + alpha2 + baseFee must be &lt;&#x3D; type(uint16).max*
 
 ```solidity
 struct AlgebraFeeConfiguration {

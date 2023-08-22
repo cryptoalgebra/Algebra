@@ -1,6 +1,6 @@
 
 
-# DataStorageFactory
+# BasePluginV1Factory
 
 
 Algebra default plugin factory
@@ -8,32 +8,38 @@ Algebra default plugin factory
 This contract creates Algebra default plugins for Algebra liquidity pools
 
 ## Modifiers
-### onlyOwner
+### onlyAdministrator
 
 ```solidity
-modifier onlyOwner()
+modifier onlyAdministrator()
 ```
 
 
 
 
 ## Variables
+### bytes32 ALGEBRA_BASE_PLUGIN_ADMINISTRATOR constant
+
+The hash of &#x27;ALGEBRA_BASE_PLUGIN_ADMINISTRATOR&#x27; used as role
+
+*Developer note: allows to change settings of BasePluginV1Factory*
+
 ### address algebraFactory immutable
 
-
+Returns the address of AlgebraFactory
 
 
 ### struct AlgebraFeeConfiguration defaultFeeConfiguration 
 
+Current default dynamic fee configuration
 
-
-*Developer note: values of constants for sigmoids in fee calculation formula*
+*Developer note: See the AdaptiveFee struct for more details about params.
+This value is set by default in new plugins*
 
 ### address farmingAddress 
 
+Returns current farming address
 
-
-*Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
 
 ### mapping(address &#x3D;&gt; address) pluginByPool 
 

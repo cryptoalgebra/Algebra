@@ -27,6 +27,28 @@ Emitted when the fee configuration is changed
 
 
 ## Functions
+### feeConfig
+
+```solidity
+function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+```
+
+Current dynamic fee configuration
+
+*Developer note: See the AdaptiveFee struct for more details*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| alpha1 | uint16 |  |
+| alpha2 | uint16 |  |
+| beta1 | uint32 |  |
+| beta2 | uint32 |  |
+| gamma1 | uint16 |  |
+| gamma2 | uint16 |  |
+| baseFee | uint16 |  |
+
 ### changeFeeConfiguration
 
 ```solidity

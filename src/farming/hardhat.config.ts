@@ -38,7 +38,7 @@ const config: HardhatUserConfig = {
     runOnCompile: false,
   },
   docgen: {
-    outputDir: '../../docs/Contracts/Tokenomics',
+    outputDir: '../../docs/Contracts/Farmings',
     pages: (x: any) => x.name.toString() + '.md',
     templates: '../../docs/doc_templates/public',
     collapseNewlines: true

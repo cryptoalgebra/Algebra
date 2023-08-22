@@ -1,6 +1,6 @@
 
 
-# DataStorageOperator
+# AlgebraBasePluginV1
 
 
 Algebra default plugin
@@ -18,7 +18,23 @@ modifier onlyPool()
 
 
 ## Variables
-### struct DataStorage.Timepoint[65536] timepoints 
+### bytes32 FEE_CONFIG_MANAGER constant
+
+
+
+*Developer note: The role can be granted in AlgebraFactory*
+
+### uint8 defaultPluginConfig constant
+
+Returns plugin config
+
+
+### address pool immutable
+
+Returns the address of the pool the plugin is created for
+
+
+### struct VolatilityOracle.Timepoint[65536] timepoints 
 
 Returns data belonging to a certain timepoint
 
@@ -26,34 +42,25 @@ Returns data belonging to a certain timepoint
 
 ### uint16 timepointIndex 
 
-
+Returns the index of the last timepoint that was written.
 
 
 ### uint32 lastTimepointTimestamp 
 
+Returns the timestamp of the last timepoint that was written.
 
-
-
-### struct AlgebraFeeConfiguration feeConfig 
-
-
-
-
-### bytes32 FEE_CONFIG_MANAGER constant
-
-
-
-*Developer note: The role can be granted in AlgebraFactory*
 
 ### address incentive 
 
+Returns the address of active incentive
 
+*Developer note: if there is no active incentive at the moment, incentiveAddress would be equal to address(0)*
 
+### struct AlgebraFeeConfiguration feeConfig 
 
-### uint8 defaultPluginConfig constant
+Current dynamic fee configuration
 
-Returns plugin config
-
+*Developer note: See the AdaptiveFee struct for more details*
 
 
 ## Functions
@@ -77,7 +84,9 @@ constructor(address _pool, address _factory, address _pluginFactory) public
 function initialize() external
 ```
 
-Initialize the plugin externally TODO
+Initialize the plugin externally
+
+*Developer note: This function allows to initialize the plugin if it was created after the pool was created*
 
 ### getSingleTimepoint
 
@@ -171,11 +180,11 @@ Returns fee from plugin
 function setIncentive(address newIncentive) external
 ```
 
-
+Sets an active incentive. Only farming
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newIncentive | address |  |
+| newIncentive | address | The address associated with the incentive |
 
 ### isIncentiveActive
 
@@ -183,17 +192,20 @@ function setIncentive(address newIncentive) external
 function isIncentiveActive(address targetIncentive) external view returns (bool)
 ```
 
+Checks if the incentive is active
 
+*Developer note: Returns false if the plugin has a different incentive set, the plugin is not connected to the pool,
+or the plugin configuration is incorrect.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| targetIncentive | address |  |
+| targetIncentive | address | The address of the incentive to be checked |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | Indicates whether the target incentive is active |
 
 ### beforeInitialize
 

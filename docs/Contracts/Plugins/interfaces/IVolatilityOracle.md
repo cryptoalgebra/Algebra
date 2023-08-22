@@ -43,13 +43,27 @@ Returns data belonging to a certain timepoint
 function timepointIndex() external view returns (uint16)
 ```
 
-
+Returns the index of the last timepoint that was written.
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | uint16 |  |
+| [0] | uint16 | index of the last timepoint written |
+
+### lastTimepointTimestamp
+
+```solidity
+function lastTimepointTimestamp() external view returns (uint32)
+```
+
+Returns the timestamp of the last timepoint that was written.
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32 | timestamp of the last timepoint |
 
 ### getSingleTimepoint
 
