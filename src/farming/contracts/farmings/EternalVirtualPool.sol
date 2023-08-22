@@ -130,16 +130,18 @@ contract EternalVirtualPool is VirtualTickStructure {
     int24 nextTick = globalNextInitializedTick;
 
     if (_deactivated) return false;
-    else if (targetTick > _globalTick == zeroToOne) {
-      deactivated = true; // deactivate if invalid input params (possibly desynchronization)
-      return false;
-    }
+    bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
     // early return if without any crosses
-    if (zeroToOne) {
+    if (virtualZtO) {
       if (targetTick >= previousTick) return true;
     } else {
       if (targetTick < nextTick) return true;
+    }
+
+    if (virtualZtO != zeroToOne) {
+      deactivated = true; // deactivate if invalid input params (possibly desynchronization)
+      return false;
     }
 
     _distributeRewards(_prevTimestamp, _currentLiquidity);

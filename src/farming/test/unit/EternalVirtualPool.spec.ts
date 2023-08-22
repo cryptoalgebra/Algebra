@@ -565,7 +565,7 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).addRewards(1, 1);
 
         expect(await virtualPool.deactivated()).to.be.false;
-        await poolMock.crossTo(-1, false);
+        await poolMock.crossTo(-101, false);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1);
         expect(await virtualPool.deactivated()).to.be.true;
@@ -724,9 +724,11 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).setRates(1, 1);
         await virtualPool.connect(pseudoFarming).addRewards(1, 1);
-
+        
+        await poolMock.crossTo(99, true);
         expect(await virtualPool.deactivated()).to.be.false;
-        await poolMock.crossTo(2, true);
+
+        await poolMock.crossTo(100, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1);
         expect(await virtualPool.deactivated()).to.be.true;

@@ -10,6 +10,7 @@ import { ISwapRouter } from '@cryptoalgebra/periphery/typechain';
 import { ethers } from 'hardhat';
 import { ContractParams } from '../../types/contractParams';
 import { TestContext } from '../types';
+import Decimal from 'decimal.js'
 
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
@@ -358,6 +359,55 @@ export class HelperCommands {
     }
 
     return { currentTick };
+  };
+
+  moveTickTo: HelperTypes.MakeTickGo.Command = async (params) => {
+    Decimal.set({ toExpPos: 9_999_999, toExpNeg: -9_999_999, precision: 100 })
+
+    const actor = params.trader || this.actors.traderUser0();
+
+    const [tok0Address, tok1Address] = await Promise.all([this.pool.connect(actor).token0(), this.pool.connect(actor).token1()]);
+    const erc20 = await ethers.getContractFactory('TestERC20');
+
+    const tok0 = erc20.attach(tok0Address) as any as TestERC20;
+    const tok1 = erc20.attach(tok1Address) as any as TestERC20;
+
+    let currentTick = await getCurrentTick(this.pool.connect(actor));
+
+    const targetTick = params.desiredValue;
+
+    if (targetTick === undefined) throw new Error('No desired value');
+
+    if (targetTick == currentTick) return { currentTick };
+
+    const zto = targetTick < currentTick;
+
+    const Q96 = (new Decimal(2)).pow(96);
+
+    const priceAtTarget = BigInt((new Decimal(1.0001)).pow(new Decimal(Number(targetTick)).div(2)).mul(Q96).round().toString()) + 100n;
+
+    const erc20Helper = new ERC20Helper();
+    const amountIn = (2n ** 128n - 1n) / 2n - 100n;
+    await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
+
+    await this.router.connect(actor).exactInputSingle(
+      {
+        recipient: actor.address,
+        deadline: MaxUint256,
+        tokenIn: zto ? tok0Address : tok1Address,
+        tokenOut: zto ? tok1Address : tok0Address,
+        amountIn: 2n ** 128n - 1n,
+        amountOutMinimum: 0,
+        limitSqrtPrice: priceAtTarget
+      },
+      maxGas
+    );
+
+    currentTick = await getCurrentTick(this.pool.connect(actor));
+
+    return {
+      currentTick
+    }
   };
 
   makeTickGoFlowWithSmallSteps: HelperTypes.MakeTickGo.Command = async (params) => {

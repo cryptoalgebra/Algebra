@@ -49,8 +49,8 @@ describe('unit/EternalFarms', () => {
       token0: await context.token0.getAddress(),
       token1: await context.token1.getAddress(),
       fee: FeeAmount.MEDIUM,
-      tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-      tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      tickLower: -120,
+      tickUpper: 120,
       recipient: lpUser0.address,
       amount0Desired: amountDesired,
       amount1Desired: amountDesired,
@@ -58,6 +58,12 @@ describe('unit/EternalFarms', () => {
       amount1Min: 0,
       deadline: (await blockTimestamp()) + 1000,
     });
+
+    await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
+    await helpers.mintFlow({
+      lp: lpUser0,
+      tokens: [context.token0, context.token1],
+    })
 
     await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
     await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -74,11 +80,11 @@ describe('unit/EternalFarms', () => {
 
     const tick = (await context.poolObj.connect(actors.algebraRootUser()).globalState()).tick;
 
-    await helpers.makeTickGoFlow({ direction: 'down', desiredValue: Number(tick) - 200, trader: actors.farmingDeployer() });
+    await helpers.moveTickTo({ direction: 'down', desiredValue: Number(tick) - 130, trader: actors.farmingDeployer() });
 
     await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
-    await helpers.makeTickGoFlow({ direction: 'up', desiredValue: Number(tick) - 100, trader: actors.farmingDeployer() });
+    await helpers.moveTickTo({ direction: 'up', desiredValue: Number(tick) - 125, trader: actors.farmingDeployer() });
 
     await context.pluginFactory.setFarmingAddress(context.farmingCenter);
 
@@ -945,7 +951,6 @@ describe('unit/EternalFarms', () => {
 
     it('can deactivate manually after indirect deactivation', async () => {
       await detachIncentiveIndirectly(localNonce);
-
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
     });
 
@@ -1104,20 +1109,19 @@ describe('unit/EternalFarms', () => {
         tokenIdNarrow
       );
 
-      await helpers.makeTickGoFlow({ direction: 'up', desiredValue: 30, trader: actors.farmingDeployer() });
-      await helpers.makeTickGoFlow({ direction: 'up', desiredValue: 150, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'up', desiredValue: 150, trader: actors.farmingDeployer() });
 
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
 
-      await helpers.makeTickGoFlow({ direction: 'down', desiredValue: -200, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'down', desiredValue: -200, trader: actors.farmingDeployer() });
 
       await context.farmingCenter.connect(lpUser0).collectRewards(incentiveKey, tokenIdNarrow);
       let rewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusRewards = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
       let vpTick = await virtualPool.globalTick();
-      expect(rewards).to.eq(1595250);
-      expect(bonusRewards).to.eq(7976251);
-      expect(vpTick).to.eq(120);
+      expect(rewards).to.eq(9970);
+      expect(bonusRewards).to.eq(49851);
+      expect(vpTick).to.eq(150);
     });
 
     it('cross upper after deactivate', async () => {
@@ -1199,20 +1203,19 @@ describe('unit/EternalFarms', () => {
         tokenIdNarrow
       );
 
-      await helpers.makeTickGoFlow({ direction: 'down', desiredValue: -30, trader: actors.farmingDeployer() });
-      await helpers.makeTickGoFlow({ direction: 'down', desiredValue: -150, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'down', desiredValue: -150, trader: actors.farmingDeployer() });
 
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
 
-      await helpers.makeTickGoFlow({ direction: 'up', desiredValue: 200, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'up', desiredValue: 200, trader: actors.farmingDeployer() });
 
       await context.farmingCenter.connect(lpUser0).collectRewards(incentiveKey, tokenIdNarrow);
       let rewards = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusRewards = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
       let vpTick = await virtualPool.globalTick();
-      expect(rewards).to.eq(1535428);
-      expect(bonusRewards).to.eq(7677141);
-      expect(vpTick).to.eq(-121);
+      expect(rewards).to.eq(9970);
+      expect(bonusRewards).to.eq(49851);
+      expect(vpTick).to.eq(-150);
     });
   });
 

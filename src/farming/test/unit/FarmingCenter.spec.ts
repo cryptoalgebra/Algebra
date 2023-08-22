@@ -141,13 +141,13 @@ describe('unit/FarmingCenter', () => {
       const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
-
+      
       const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
         token0: await context.token0.getAddress(),
         token1: await context.token1.getAddress(),
         fee: FeeAmount.MEDIUM,
-        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickLower: -120,
+        tickUpper: 120,
         recipient: lpUser0.address,
         amount0Desired: amountDesired,
         amount1Desired: amountDesired,
@@ -169,15 +169,12 @@ describe('unit/FarmingCenter', () => {
 
       await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
 
-      const tick = (await context.poolObj.connect(actors.algebraRootUser()).globalState()).tick;
-
-      await helpers.makeTickGoFlow({ direction: 'down', desiredValue: Number(tick) - 200, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'down', desiredValue: -160, trader: actors.farmingDeployer() });
 
       await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
-      await helpers.makeTickGoFlow({ direction: 'up', desiredValue: Number(tick) - 100, trader: actors.farmingDeployer() });
+      await helpers.moveTickTo({ direction: 'up', desiredValue: -140, trader: actors.farmingDeployer() });
 
-      // TODO
       await expect(
         context.nft.connect(lpUser0).decreaseLiquidity({
           tokenId: tokenIdEternal,
