@@ -27,13 +27,13 @@ Event emitted when a liquidity mining incentive has been stopped from the outsid
 event FarmEntered(uint256 tokenId, bytes32 incentiveId, uint128 liquidity)
 ```
 
-Event emitted when a Algebra LP token has been farmd
+Event emitted when a Algebra LP token has been farmed
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The unique identifier of an Algebra LP token |
 | incentiveId | bytes32 | The incentive in which the token is farming |
-| liquidity | uint128 | The amount of liquidity farmd |
+| liquidity | uint128 | The amount of liquidity farmed |
 
 ### FarmEnded
 
@@ -41,7 +41,7 @@ Event emitted when a Algebra LP token has been farmd
 event FarmEnded(uint256 tokenId, bytes32 incentiveId, address rewardAddress, address bonusRewardToken, address owner, uint256 reward, uint256 bonusReward)
 ```
 
-Event emitted when a Algebra LP token has been exitFarmingd
+Event emitted when a Algebra LP token exited from farming
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -50,20 +50,8 @@ Event emitted when a Algebra LP token has been exitFarmingd
 | rewardAddress | address | The token being distributed as a reward |
 | bonusRewardToken | address | The token being distributed as a bonus reward |
 | owner | address | The address where claimed rewards were sent to |
-| reward | uint256 | The amount of reward tokens to be distributed |
-| bonusReward | uint256 | The amount of bonus reward tokens to be distributed |
-
-### IncentiveMaker
-
-```solidity
-event IncentiveMaker(address incentiveMaker)
-```
-
-Emitted when the incentive maker is changed
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| incentiveMaker | address | The incentive maker after the address was changed |
+| reward | uint256 | The amount of reward tokens to be claimed |
+| bonusReward | uint256 | The amount of bonus reward tokens to be claimed |
 
 ### FarmingCenter
 
@@ -94,16 +82,16 @@ Event emitted when rewards were added
 ### RewardAmountsDecreased
 
 ```solidity
-event RewardAmountsDecreased(uint256 reward, uint256 bonusReward, bytes32 incentiveId)
+event RewardAmountsDecreased(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId)
 ```
 
-
+Event emitted when rewards were decreased
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
-| bonusReward | uint256 |  |
-| incentiveId | bytes32 |  |
+| rewardAmount | uint256 | The withdrawn amount of main token |
+| bonusRewardAmount | uint256 | The withdrawn amount of bonus token |
+| incentiveId | bytes32 | The ID of the incentive for which rewards were decreased |
 
 ### RewardClaimed
 
@@ -118,7 +106,7 @@ Event emitted when a reward token has been claimed
 | to | address | The address where claimed rewards were sent to |
 | reward | uint256 | The amount of reward tokens claimed |
 | rewardAddress | address | The token reward address |
-| owner | address | The address where claimed rewards were sent to |
+| owner | address | The address where claimed rewards were claimed from |
 
 ### RewardsRatesChanged
 
@@ -130,8 +118,8 @@ Event emitted when reward rates were changed
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| rewardRate | uint128 | The new rate of main token distribution per sec |
-| bonusRewardRate | uint128 | The new rate of bonus token distribution per sec |
+| rewardRate | uint128 | The new rate of main token (token0) distribution per sec |
+| bonusRewardRate | uint128 | The new rate of bonus token (token1) distribution per sec |
 | incentiveId | bytes32 | The ID of the incentive for which rates were changed |
 
 ### RewardsCollected
@@ -184,7 +172,7 @@ Emitted when status of &#x60;isEmergencyWithdrawActivated&#x60; changes
 ## Structs
 ### IncentiveParams
 
-
+Details of the incentive to create
 
 ```solidity
 struct IncentiveParams {
@@ -198,6 +186,34 @@ struct IncentiveParams {
 
 
 ## Functions
+### INCENTIVE_MAKER_ROLE
+
+```solidity
+function INCENTIVE_MAKER_ROLE() external view returns (bytes32)
+```
+
+Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive creation
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 |  |
+
+### FARMINGS_ADMINISTRATOR_ROLE
+
+```solidity
+function FARMINGS_ADMINISTRATOR_ROLE() external view returns (bytes32)
+```
+
+Returns hash of &#x27;FARMINGS_ADMINISTRATOR_ROLE&#x27;, used as role for permissioned actions in farming
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 |  |
+
 ### nonfungiblePositionManager
 
 ```solidity
@@ -255,6 +271,20 @@ Check if incentive is active
 | ---- | ---- | ----------- |
 | res | bool | True if incentive is active |
 
+### farmingCenter
+
+```solidity
+function farmingCenter() external view returns (address)
+```
+
+Returns address of current farmingCenter
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address |  |
+
 ### isEmergencyWithdrawActivated
 
 ```solidity
@@ -287,13 +317,13 @@ Detach incentive from the pool and deactivate it
 function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
 
-
+Add rewards for incentive
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardAmount | uint128 |  |
-| bonusRewardAmount | uint128 |  |
+| key | struct IncentiveKey | The key of the incentive |
+| rewardAmount | uint128 | The amount of token0 |
+| bonusRewardAmount | uint128 | The amount of token1 |
 
 ### decreaseRewardsAmount
 
@@ -301,13 +331,13 @@ function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonus
 function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
 
-
+Decrease rewards for incentive and withdraw
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardAmount | uint128 |  |
-| bonusRewardAmount | uint128 |  |
+| key | struct IncentiveKey | The key of the incentive |
+| rewardAmount | uint128 | The amount of token0 |
+| bonusRewardAmount | uint128 | The amount of token1 |
 
 ### setEmergencyWithdrawStatus
 
@@ -324,6 +354,20 @@ _Must_ only be used in emergency situations. Farmings may be unusable after acti
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newStatus | bool | The new status of `isEmergencyWithdrawActivated`. |
+
+### numOfIncentives
+
+```solidity
+function numOfIncentives() external view returns (uint256)
+```
+
+Returns amount of created incentives
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 |  |
 
 ### rewards
 
@@ -366,8 +410,8 @@ enter farming for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The key of the incentive for which to enterFarming the NFT |
-| tokenId | uint256 | The ID of the token to exitFarming |
+| key | struct IncentiveKey | The key of the incentive for which to enter farming |
+| tokenId | uint256 | The ID of the token to enter farming |
 
 ### exitFarming
 
@@ -379,8 +423,8 @@ exitFarmings for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The key of the incentive for which to exitFarming the NFT |
-| tokenId | uint256 | The ID of the token to exitFarming |
+| key | struct IncentiveKey | The key of the incentive for which to exit farming |
+| tokenId | uint256 | The ID of the token to exit farming |
 | _owner | address | Owner of the token |
 
 ### claimReward
@@ -389,7 +433,7 @@ exitFarmings for Algebra LP token
 function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
 
-Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -409,7 +453,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
 
-Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
 
 | Name | Type | Description |
@@ -451,22 +495,22 @@ Calculates the reward amount that will be received for the given farm
 function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1)
 ```
 
-Returns information about a farmd liquidity NFT
+Returns information about a farmed liquidity NFT
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | The ID of the farmd token |
-| incentiveId | bytes32 | The ID of the incentive for which the token is farmd |
+| tokenId | uint256 | The ID of the farmed token |
+| incentiveId | bytes32 | The ID of the incentive for which the token is farmed |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, tickLower The lower tick of position, tickUpper The upper tick of position, innerRewardGrowth0 The last saved reward0 growth inside position, innerRewardGrowth1 The last saved reward1 growth inside position |
-| tickLower | int24 |  |
-| tickUpper | int24 |  |
-| innerRewardGrowth0 | uint256 |  |
-| innerRewardGrowth1 | uint256 |  |
+| liquidity | uint128 | The amount of liquidity in the NFT as of the last time the rewards were computed, |
+| tickLower | int24 | The lower tick of position, |
+| tickUpper | int24 | The upper tick of position, |
+| innerRewardGrowth0 | uint256 | The last saved reward0 growth inside position, |
+| innerRewardGrowth1 | uint256 | The last saved reward1 growth inside position |
 
 ### createEternalFarming
 
@@ -474,7 +518,7 @@ Returns information about a farmd liquidity NFT
 function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
 ```
 
-Creates a new liquidity mining incentive program
+Creates a new liquidity farming incentive program
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -485,7 +529,7 @@ Creates a new liquidity mining incentive program
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| virtualPool | address | The virtual pool |
+| virtualPool | address | The created virtual pool |
 
 ### setRates
 
@@ -493,13 +537,13 @@ Creates a new liquidity mining incentive program
 function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external
 ```
 
-
+Change reward rates for incentive
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardRate | uint128 |  |
-| bonusRewardRate | uint128 |  |
+| key | struct IncentiveKey | The key of incentive |
+| rewardRate | uint128 | The new rate of main token (token0) distribution per sec |
+| bonusRewardRate | uint128 | The new rate of bonus token (token1) distribution per sec |
 
 ### collectRewards
 
@@ -507,19 +551,21 @@ function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewa
 function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)
 ```
 
+Collect rewards for tokenId
 
+*Developer note: only FarmingCenter*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| tokenId | uint256 |  |
-| _owner | address |  |
+| key | struct IncentiveKey | The key of incentive |
+| tokenId | uint256 | The ID of the token to exit farming |
+| _owner | address | Owner of the token |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of main token (token0) collected |
 | bonusReward | uint256 |  |
 
 

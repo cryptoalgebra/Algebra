@@ -5,7 +5,7 @@
 
 Algebra eternal (v2-like) farming
 
-
+Manages rewards and virtual pools
 
 ## Modifiers
 ### onlyIncentiveMaker
@@ -65,14 +65,24 @@ struct Farm {
 
 
 ## Variables
+### bytes32 INCENTIVE_MAKER_ROLE constant
+
+Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive creation
+
+
+### bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
+
+Returns hash of &#x27;FARMINGS_ADMINISTRATOR_ROLE&#x27;, used as role for permissioned actions in farming
+
+
 ### contract INonfungiblePositionManager nonfungiblePositionManager immutable
 
 The nonfungible position manager with which this farming contract is compatible
 
 
-### contract IFarmingCenter farmingCenter 
+### address farmingCenter 
 
-
+Returns address of current farmingCenter
 
 
 ### bool isEmergencyWithdrawActivated 
@@ -84,27 +94,17 @@ Users can withdraw liquidity without any checks if active.
 
 Represents a farming incentive
 
-*Developer note: bytes32 refers to the return value of IncentiveId.compute*
+*Developer note: bytes32 incentiveId refers to the return value of IncentiveId.compute*
 
 ### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
 
-Returns information about a farmd liquidity NFT
+Returns information about a farmed liquidity NFT
 
 *Developer note: farms[tokenId][incentiveHash] &#x3D;&gt; Farm*
 
 ### uint256 numOfIncentives 
 
-
-
-
-### bytes32 INCENTIVE_MAKER_ROLE constant
-
-
-
-
-### bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
-
-
+Returns amount of created incentives
 
 
 ### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
@@ -154,7 +154,7 @@ Check if incentive is active
 function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
 ```
 
-Creates a new liquidity mining incentive program
+Creates a new liquidity farming incentive program
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -165,7 +165,7 @@ Creates a new liquidity mining incentive program
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| virtualPool | address | The virtual pool |
+| virtualPool | address | The created virtual pool |
 
 ### deactivateIncentive
 
@@ -185,13 +185,13 @@ Detach incentive from the pool and deactivate it
 function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
 
-
+Decrease rewards for incentive and withdraw
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardAmount | uint128 |  |
-| bonusRewardAmount | uint128 |  |
+| key | struct IncentiveKey | The key of the incentive |
+| rewardAmount | uint128 | The amount of token0 |
+| bonusRewardAmount | uint128 | The amount of token1 |
 
 ### setFarmingCenterAddress
 
@@ -227,13 +227,13 @@ _Must_ only be used in emergency situations. Farmings may be unusable after acti
 function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
 
-
+Add rewards for incentive
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardAmount | uint128 |  |
-| bonusRewardAmount | uint128 |  |
+| key | struct IncentiveKey | The key of the incentive |
+| rewardAmount | uint128 | The amount of token0 |
+| bonusRewardAmount | uint128 | The amount of token1 |
 
 ### setRates
 
@@ -241,13 +241,13 @@ function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonus
 function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external
 ```
 
-
+Change reward rates for incentive
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| rewardRate | uint128 |  |
-| bonusRewardRate | uint128 |  |
+| key | struct IncentiveKey | The key of incentive |
+| rewardRate | uint128 | The new rate of main token (token0) distribution per sec |
+| bonusRewardRate | uint128 | The new rate of bonus token (token1) distribution per sec |
 
 ### enterFarming
 
@@ -259,8 +259,8 @@ enter farming for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The key of the incentive for which to enterFarming the NFT |
-| tokenId | uint256 | The ID of the token to exitFarming |
+| key | struct IncentiveKey | The key of the incentive for which to enter farming |
+| tokenId | uint256 | The ID of the token to enter farming |
 
 ### exitFarming
 
@@ -272,8 +272,8 @@ exitFarmings for Algebra LP token
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The key of the incentive for which to exitFarming the NFT |
-| tokenId | uint256 | The ID of the token to exitFarming |
+| key | struct IncentiveKey | The key of the incentive for which to exit farming |
+| tokenId | uint256 | The ID of the token to exit farming |
 | _owner | address | Owner of the token |
 
 ### claimReward
@@ -282,7 +282,7 @@ exitFarmings for Algebra LP token
 function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
 
-Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -302,7 +302,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards
 function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
 
-Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; rewards from the contract to the recipient &#x60;to&#x60;
+Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
 
 | Name | Type | Description |
@@ -346,16 +346,18 @@ function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner
 
 reward amounts should be updated before calling this method
 
+*Developer note: only FarmingCenter*
+
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey |  |
-| tokenId | uint256 |  |
-| _owner | address |  |
+| key | struct IncentiveKey | The key of incentive |
+| tokenId | uint256 | The ID of the token to exit farming |
+| _owner | address | Owner of the token |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 |  |
+| reward | uint256 | The amount of main token (token0) collected |
 | bonusReward | uint256 |  |
 

@@ -3,7 +3,7 @@
 # VirtualTickStructure
 
 
-Algebra tick structure abstract contract
+Algebra virtual tick structure abstract contract
 
 Encapsulates the logic of interaction with the data structure with ticks
 
@@ -13,6 +13,6 @@ Encapsulates the logic of interaction with the data structure with ticks
 ## Variables
 ### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
 
-
+Returns data associated with a tick
 
 

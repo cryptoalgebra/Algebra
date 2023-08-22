@@ -41,19 +41,17 @@ The Algebra poolDeployer contract
 
 ### mapping(address &#x3D;&gt; address) virtualPoolAddresses 
 
+Returns current virtual pool address for Algebra pool
 
-
-*Developer note: saves addresses of virtual pools for pool*
 
 ### mapping(uint256 &#x3D;&gt; bytes32) deposits 
 
+Returns information about a deposited NFT
 
-
-*Developer note: deposits[tokenId] &#x3D;&gt; incentiveId*
 
 ### mapping(bytes32 &#x3D;&gt; struct IncentiveKey) incentiveKeys 
 
-
+Returns incentive key for specific incentiveId
 
 
 
@@ -77,13 +75,13 @@ constructor(contract IAlgebraEternalFarming _eternalFarming, contract INonfungib
 function enterFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
 
-Enters in incentive (time-limited or eternal farming) with NFT-position token
+Enters in incentive (eternal farming) with NFT-position token
 
-*Developer note: token must be deposited in FarmingCenter*
+*Developer note: msg.sender must be the owner of NFT*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive key |
 | tokenId | uint256 | The id of position NFT |
 
 ### exitFarming
@@ -92,17 +90,19 @@ Enters in incentive (time-limited or eternal farming) with NFT-position token
 function exitFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
 
-Exits from incentive (time-limited or eternal farming) with NFT-position token
+Exits from incentive (eternal farming) with NFT-position token
+
+*Developer note: msg.sender must be the owner of NFT*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive key |
 | tokenId | uint256 | The id of position NFT |
 
 ### applyLiquidityDelta
 
 ```solidity
-function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external
+function applyLiquidityDelta(uint256 tokenId, int256) external
 ```
 
 Report a change of liquidity in position
@@ -110,7 +110,7 @@ Report a change of liquidity in position
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token for which liquidity is being added |
-| liquidityDelta | int256 | The amount of added liquidity |
+|  | int256 |  |
 
 ### collectRewards
 
@@ -122,7 +122,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| key | struct IncentiveKey | The incentive event key |
+| key | struct IncentiveKey | The incentive key |
 | tokenId | uint256 | The id of position NFT |
 
 **Returns:**
