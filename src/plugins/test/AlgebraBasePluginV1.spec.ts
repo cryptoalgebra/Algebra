@@ -276,6 +276,7 @@ describe('AlgebraBasePluginV1', () => {
         it('cannot overflow index', async () => {
           await plugin.prepayTimepointsStorageSlots(0, 10);
           expect(plugin.prepayTimepointsStorageSlots(11, 2n ** 16n - 5n)).to.be.revertedWithoutReason;
+          expect(plugin.prepayTimepointsStorageSlots(11, 2n ** 16n)).to.be.revertedWithoutReason;
         });
       });
     });
