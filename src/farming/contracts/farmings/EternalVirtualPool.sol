@@ -17,6 +17,11 @@ contract EternalVirtualPool is VirtualTickStructure {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   /// @inheritdoc IAlgebraEternalVirtualPool
+  address public immutable override farmingAddress;
+  /// @inheritdoc IAlgebraEternalVirtualPool
+  address public immutable override plugin;
+
+  /// @inheritdoc IAlgebraEternalVirtualPool
   uint128 public override currentLiquidity;
   /// @inheritdoc IAlgebraEternalVirtualPool
   int24 public override globalTick;
@@ -24,9 +29,6 @@ contract EternalVirtualPool is VirtualTickStructure {
   uint32 public override prevTimestamp;
   /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
-
-  address public immutable farmingAddress;
-  address public immutable plugin;
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;

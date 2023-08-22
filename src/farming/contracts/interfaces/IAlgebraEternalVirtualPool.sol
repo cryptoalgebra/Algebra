@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.20;
+pragma solidity >=0.8.4;
 
 import '@cryptoalgebra/plugins/contracts/interfaces/IAlgebraVirtualPool.sol';
 
+/// @title Algebra eternal virtual pool interface
+/// @notice Used to track active liquidity in farming and distribute rewards
 interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   error onlyPlugin();
   error onlyFarming();
 
-  // returns data associated with a tick
+  /// @notice Returns address of the AlgebraEternalFarming
+  function farmingAddress() external view returns (address);
+
+  /// @notice Returns address of the plugin for which this virtual pool was created
+  function plugin() external view returns (address);
+
+  /// @notice Returns data associated with a tick
   function ticks(
     int24 tickId
   )
@@ -22,28 +30,27 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
       uint256 outerFeeGrowth1Token
     );
 
-  // returns the current liquidity in virtual pool
+  /// @notice Returns the current liquidity in virtual pool
   function currentLiquidity() external view returns (uint128);
 
-  // returns the current tick in virtual pool
+  /// @notice Returns the current tick in virtual pool
   function globalTick() external view returns (int24);
 
-  // returns the timestamp after previous swap (like the last timepoint in a default pool)
+  /// @notice Returns the timestamp after previous virtual pool update
   function prevTimestamp() external view returns (uint32);
 
-  // returns true if virtual pool is deactivated
+  /// @notice Returns true if virtual pool is deactivated
   function deactivated() external view returns (bool);
 
-  /// @dev This function is called when anyone farms their liquidity. The position in a virtual pool
-  /// should be changed accordingly
+  /// @dev This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly
   /// @param bottomTick The bottom tick of a position
   /// @param topTick The top tick of a position
   /// @param liquidityDelta The amount of liquidity in a position
   /// @param currentTick The current tick in the main pool
   function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external;
 
-  /// @dev This function is called from the main pool before every swap To increase rewards per liquidity
-  /// cumulative considering previous liquidity. The liquidity is stored in a virtual pool
+  /// @dev This function is called by farming to increase rewards per liquidity accumulator.
+  /// Can only be called by farming
   function distributeRewards() external;
 
   /// @notice Change reward rates
@@ -52,6 +59,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function setRates(uint128 rate0, uint128 rate1) external;
 
   /// @notice This function is used to deactivate virtual pool
+  /// @dev Can only be called by farming
   function deactivate() external;
 
   /// @notice Top up rewards reserves
@@ -64,6 +72,12 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @param token1Amount The amount of token1
   function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external;
 
+  /// @notice Retrieves rewards growth data inside specified range
+  /// @dev Should only be used for relative comparison of the same range over time
+  /// @param bottomTick The lower tick boundary of the range
+  /// @param topTick The upper tick boundary of the range
+  /// @return rewardGrowthInside0 The all-time reward growth in token0, per unit of liquidity, inside the range's tick boundaries
+  /// @return rewardGrowthInside1 The all-time reward growth in token1, per unit of liquidity, inside the range's tick boundaries
   function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1);
 
   /// @notice Get reserves of rewards in one call
@@ -77,7 +91,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function rewardRates() external view returns (uint128 rate0, uint128 rate1);
 
   /// @notice Get reward growth accumulators
-  /// @return rewardGrowth0 The reward growth for reward0, has only relative meaning
-  /// @return rewardGrowth1 The reward growth for reward1, has only relative meaning
+  /// @return rewardGrowth0 The reward growth for reward0, per unit of liquidity, has only relative meaning
+  /// @return rewardGrowth1 The reward growth for reward1, per unit of liquidity, has only relative meaning
   function totalRewardGrowth() external view returns (uint256 rewardGrowth0, uint256 rewardGrowth1);
 }

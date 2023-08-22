@@ -16,16 +16,21 @@ import './libraries/IncentiveId.sol';
 /// @title Algebra main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
+  /// @inheritdoc IFarmingCenter
   IAlgebraEternalFarming public immutable override eternalFarming;
+  /// @inheritdoc IFarmingCenter
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
+  /// @inheritdoc IFarmingCenter
   address public immutable override algebraPoolDeployer;
 
-  /// @dev saves addresses of virtual pools for pool
-  mapping(address => address) public override virtualPoolAddresses;
+  /// @inheritdoc IFarmingCenter
+  mapping(address poolAddress => address virtualPoolAddress) public override virtualPoolAddresses;
 
-  /// @dev deposits[tokenId] => incentiveId
-  mapping(uint256 => bytes32) public override deposits;
-  mapping(bytes32 => IncentiveKey) public incentiveKeys;
+  /// @inheritdoc IFarmingCenter
+  mapping(uint256 tokenId => bytes32 incentiveId) public override deposits;
+
+  /// @inheritdoc IFarmingCenter
+  mapping(bytes32 incentiveId => IncentiveKey incentiveKey) public override incentiveKeys;
 
   constructor(IAlgebraEternalFarming _eternalFarming, INonfungiblePositionManager _nonfungiblePositionManager) {
     eternalFarming = _eternalFarming;
@@ -64,8 +69,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IPositionFollower
-  function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external override {
-    liquidityDelta; // reserved for future versions
+  function applyLiquidityDelta(uint256 tokenId, int256) external override {
     _updatePosition(tokenId);
   }
 

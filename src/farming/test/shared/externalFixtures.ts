@@ -9,7 +9,7 @@ import { abi as SWAPROUTER_ABI, bytecode as SWAPROUTER_BYTECODE } from '@cryptoa
 import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageFactory.sol/DataStorageFactory.json'
+} from '@cryptoalgebra/plugins/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json'
 import {
   abi as WNATIVE_ABI,
   bytecode as WNATIWE_BYTECODE,

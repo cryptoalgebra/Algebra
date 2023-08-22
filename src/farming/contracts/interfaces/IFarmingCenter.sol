@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.7.6;
 pragma abicoder v2;
 
@@ -12,8 +12,11 @@ import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
 import '../base/IncentiveKey.sol';
 import '../interfaces/IAlgebraEternalFarming.sol';
 
+/// @title Algebra main farming contract interface
+/// @dev Manages users deposits and performs entry, exit and other actions.
 interface IFarmingCenter is IMulticall {
-  function virtualPoolAddresses(address) external view returns (address);
+  /// @notice Returns current virtual pool address for Algebra pool
+  function virtualPoolAddresses(address poolAddress) external view returns (address virtualPoolAddresses);
 
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
@@ -29,25 +32,32 @@ interface IFarmingCenter is IMulticall {
   /// @return eternalIncentiveId The id of eternal incentive that is active for this NFT
   function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId);
 
+  /// @notice Returns incentive key for specific incentiveId
+  /// @param incentiveId The hash of incentive key
+  function incentiveKeys(
+    bytes32 incentiveId
+  ) external view returns (IERC20Minimal rewardToken, IERC20Minimal bonusRewardToken, IAlgebraPool pool, uint256 nonce);
+
   /// @notice Updates incentive in AlgebraPool plugin
   /// @dev only farming can do it
   /// @param plugin The Algebra farming plugin
   /// @param virtualPool The virtual pool to be connected
   function connectVirtualPoolToPlugin(IFarmingPlugin plugin, address virtualPool) external;
 
-  /// @notice Enters in incentive (time-limited or eternal farming) with NFT-position token
-  /// @dev token must be deposited in FarmingCenter
-  /// @param key The incentive event key
+  /// @notice Enters in incentive (eternal farming) with NFT-position token
+  /// @dev msg.sender must be the owner of NFT
+  /// @param key The incentive key
   /// @param tokenId The id of position NFT
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external;
 
-  /// @notice Exits from incentive (time-limited or eternal farming) with NFT-position token
-  /// @param key The incentive event key
+  /// @notice Exits from incentive (eternal farming) with NFT-position token
+  /// @dev msg.sender must be the owner of NFT
+  /// @param key The incentive key
   /// @param tokenId The id of position NFT
   function exitFarming(IncentiveKey memory key, uint256 tokenId) external;
 
   /// @notice Used to collect reward from eternal farming. Then reward can be claimed.
-  /// @param key The incentive event key
+  /// @param key The incentive key
   /// @param tokenId The id of position NFT
   /// @return reward The amount of collected reward
   /// @return bonusReward The amount of collected  bonus reward

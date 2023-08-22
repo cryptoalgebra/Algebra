@@ -6,7 +6,7 @@ import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
 
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
 
-/// @title Algebra tick structure abstract contract
+/// @title Algebra virtual tick structure abstract contract
 /// @notice Encapsulates the logic of interaction with the data structure with ticks
 /// @dev Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list
 abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {

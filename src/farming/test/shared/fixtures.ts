@@ -14,12 +14,12 @@ import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/periph
 import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageFactory.sol/DataStorageFactory.json'
+} from '@cryptoalgebra/plugins/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json'
 
 import {
   abi as PLUGIN_ABI,
   bytecode as PLUGIN_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/DataStorageOperator.sol/DataStorageOperator.json'
+} from '@cryptoalgebra/plugins/artifacts/contracts/AlgebraBasePluginV1.sol/AlgebraBasePluginV1.json'
 import {
   AlgebraEternalFarming,
   TestERC20,
@@ -33,7 +33,7 @@ import {
 } from '../../typechain'
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared'
 import { ActorFixture } from './actors'
-import { IDataStorageFactory, IDataStorageOperator } from '@cryptoalgebra/plugins/typechain'
+import { IBasePluginV1Factory, IAlgebraBasePluginV1 } from '@cryptoalgebra/plugins/typechain'
 
 type WNativeTokenFixture = { wnative: IWNativeToken }
 
@@ -48,7 +48,7 @@ export const wnativeFixture: () => Promise<WNativeTokenFixture> = async () => {
   return { wnative }
 }
 
-const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, IDataStorageFactory, Signer]> = async () => {
+const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer, IBasePluginV1Factory, Signer]> = async () => {
   const [deployer] = await ethers.getSigners()
   // precompute
   const poolDeployerAddress = getCreateAddress({
@@ -63,7 +63,7 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const _deployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as any as IAlgebraPoolDeployer
 
   const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI,  PLUGIN_FACTORY_BYTECODE);
-  const pluginFactory = await pluginContractFactory.deploy(_factory) as any as IDataStorageFactory;
+  const pluginFactory = await pluginContractFactory.deploy(_factory) as any as IBasePluginV1Factory;
 
   await _factory.setDefaultPluginFactory(pluginFactory)
 
@@ -76,7 +76,7 @@ export const v3RouterFixture: () => Promise<{
   factory: IAlgebraFactory
   deployer: IAlgebraPoolDeployer
   router: ISwapRouter
-  pluginFactory: IDataStorageFactory
+  pluginFactory: IBasePluginV1Factory
   ownerSigner: Signer
 }> = async () => {
   const { wnative } = await wnativeFixture()
@@ -99,7 +99,7 @@ type AlgebraFactoryFixture = {
   router: ISwapRouter
   nft: INonfungiblePositionManager
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20]
-  pluginFactory: IDataStorageFactory
+  pluginFactory: IBasePluginV1Factory
   ownerSigner: Signer
 }
 
@@ -227,8 +227,8 @@ export type AlgebraFixtureType = {
   pool12: string
   factory: IAlgebraFactory
   poolObj: IAlgebraPool
-  pluginObj: IDataStorageOperator,
-  pluginFactory: IDataStorageFactory,
+  pluginObj: IAlgebraBasePluginV1,
+  pluginFactory: IBasePluginV1Factory,
   router: ISwapRouter
   eternalFarming: AlgebraEternalFarming
   farmingCenter: FarmingCenter
@@ -288,7 +288,7 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const pluginContractFactory = new ethers.ContractFactory(PLUGIN_ABI, PLUGIN_BYTECODE, signer);
 
-  const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as IDataStorageOperator;
+  const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as IAlgebraBasePluginV1;
 
   return {
     nft,

@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import './EternalVirtualPool.sol';
-import '../libraries/IncentiveId.sol';
-import '../libraries/NFTPositionInfo.sol';
-import '../interfaces/IAlgebraEternalFarming.sol';
-import '../interfaces/IAlgebraEternalVirtualPool.sol';
-import '../interfaces/IFarmingCenter.sol';
-
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
@@ -22,7 +15,16 @@ import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
 
 import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
+import '../interfaces/IAlgebraEternalFarming.sol';
+import '../interfaces/IAlgebraEternalVirtualPool.sol';
+import '../interfaces/IFarmingCenter.sol';
+import '../libraries/IncentiveId.sol';
+import '../libraries/NFTPositionInfo.sol';
+
+import './EternalVirtualPool.sol';
+
 /// @title Algebra eternal (v2-like) farming
+/// @notice Manages rewards and virtual pools
 contract AlgebraEternalFarming is IAlgebraEternalFarming {
   using SafeCast for int256;
   using LowGasSafeMath for uint256;
@@ -47,6 +49,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint256 innerRewardGrowth1;
   }
 
+  bytes32 public constant INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
+  bytes32 public constant FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
+
   /// @inheritdoc IAlgebraEternalFarming
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
@@ -59,22 +64,20 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   // reentrancy lock
   bool private unlocked = true;
 
-  /// @dev bytes32 refers to the return value of IncentiveId.compute
+  /// @dev bytes32 incentiveId refers to the return value of IncentiveId.compute
   /// @inheritdoc IAlgebraEternalFarming
-  mapping(bytes32 => Incentive) public override incentives;
+  mapping(bytes32 incentiveId => Incentive incentive) public override incentives;
 
   /// @dev farms[tokenId][incentiveHash] => Farm
   /// @inheritdoc IAlgebraEternalFarming
-  mapping(uint256 => mapping(bytes32 => Farm)) public override farms;
+  mapping(uint256 tokenId => mapping(bytes32 incentiveId => Farm farm)) public override farms;
 
+  /// @inheritdoc IAlgebraEternalFarming
   uint256 public numOfIncentives;
-
-  bytes32 public constant INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
-  bytes32 public constant FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
   /// @dev rewards[owner][rewardToken] => uint256
   /// @inheritdoc IAlgebraEternalFarming
-  mapping(address => mapping(IERC20Minimal => uint256)) public override rewards;
+  mapping(address owner => mapping(IERC20Minimal rewardToken => uint256 rewardAmount)) public override rewards;
 
   modifier onlyIncentiveMaker() {
     _checkHasRole(INCENTIVE_MAKER_ROLE);
