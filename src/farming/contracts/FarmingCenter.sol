@@ -88,7 +88,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       } else {
         if (!IAlgebraEternalFarming(eternalFarming).isIncentiveActive(IncentiveId.compute(key))) {
           // exit if incentive stopped
-          _exitFarming(key, tokenId, tokenOwner); // TODO
+          _exitFarming(key, tokenId, tokenOwner);
         } else {
           // reenter with new liquidity value
           IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);

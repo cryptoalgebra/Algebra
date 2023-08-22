@@ -82,6 +82,10 @@ describe('unit/EternalFarms', () => {
     await helpers.makeTickGoFlow({direction: 'up', desiredValue: Number(tick) - 100, trader: actors.farmingDeployer()});
 
     await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+
+    const virtualPoolFactory = await ethers.getContractFactory('EternalVirtualPool');
+    const deactivated = await (virtualPoolFactory.attach(incentiveAddress) as any as EternalVirtualPool).deactivated();
+    expect(deactivated).to.be.true;
   }
 
   before(async () => {

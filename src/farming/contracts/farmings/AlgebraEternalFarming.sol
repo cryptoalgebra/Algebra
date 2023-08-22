@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
@@ -159,6 +159,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
     (bytes32 incentiveId, Incentive storage incentive) = _getIncentiveByKey(key);
+    // if the virtual pool is deactivated automatically, it is still possible to correctly deactivate it manually
     if (incentive.deactivated) revert incentiveStopped();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
@@ -291,15 +292,17 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Incentive storage incentive = incentives[incentiveId];
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(incentive.pluginAddress)) != address(virtualPool)) incentive.deactivated = true; // pool can "detach" by itself
-    int24 tick = incentive.deactivated ? virtualPool.globalTick() : _getTickInPool(key.pool);
+    // pool can "detach" by itself or manually
+    int24 tick = _isIncentiveActive(incentive) ? _getTickInPool(key.pool) : virtualPool.globalTick();
 
     // update rewards, as ticks may be cleared when liquidity decreases
     _distributeRewards(virtualPool);
 
     (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm);
 
-    // liquidityDelta will be nonzero
+    // liquidityDelta will be nonzero.
+    // If a desynchronization occurs and the current tick in the pool is incorrect from the point of view of the virtual pool,
+    // the virtual pool will be deactivated automatically
     _updatePositionInVirtualPool(address(virtualPool), farm.tickLower, farm.tickUpper, liquidityDelta, tick);
 
     mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
@@ -351,11 +354,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   function _isIncentiveActive(Incentive storage incentive) private view returns (bool) {
     address virtualPoolAddress = incentive.virtualPoolAddress;
-    bool _deactivated = incentive.deactivated;
+    bool _deactivated = incentive.deactivated; // if incentive was deactivated directly
     if (!_deactivated) {
-      IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(virtualPoolAddress);
-      // TODO
-      _deactivated = virtualPool.deactivated();
+      _deactivated = IAlgebraEternalVirtualPool(virtualPoolAddress).deactivated(); // if incentive was deactivated automatically
     }
     return !_deactivated;
   }
