@@ -1,30 +1,26 @@
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { algebraFixture, mintPosition, AlgebraFixtureType } from '../shared/fixtures'
+import { algebraFixture, AlgebraFixtureType } from '../shared/fixtures'
 import { Wallet } from 'ethers'
 import {
-  getMaxTick,
-  getMinTick,
-  FeeAmount,
-  TICK_SPACINGS,
-  blockTimestamp,
-  BN,
   BNe18,
-  snapshotGasCost,
   ActorFixture,
-  makeTimestamps,
   maxGas,
-  defaultTicksArray,
   expect,
 } from '../shared'
 import { provider } from '../shared/provider'
-import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers'
+import { HelperCommands, ERC20Helper } from '../helpers'
 import { createTimeMachine } from '../shared/time'
-import { HelperTypes } from '../helpers/types'
+
+type FarmIncentiveKey = {
+  rewardToken: string,
+  bonusRewardToken: string,
+  pool: string,
+  nonce: number,
+};
 
 describe('unit/Multicall', () => {
   let actors: ActorFixture
-  let lpUser0: Wallet
   let incentiveCreator: Wallet
   let multicaller: Wallet
   const amountDesired = BNe18(10)
@@ -32,108 +28,114 @@ describe('unit/Multicall', () => {
   const bonusReward = BNe18(100)
   const erc20Helper = new ERC20Helper()
   const Time = createTimeMachine()
-  let helpers: HelperCommands
   let context: AlgebraFixtureType
+  let farmIncentiveKey: FarmIncentiveKey;
+  let tokenId: string;
 
-  /*
+  let multicallFixture: () => Promise<{
+    context: AlgebraFixtureType, 
+    helpers: HelperCommands, 
+    tokenId: string,
+    farmIncentiveKey: FarmIncentiveKey
+  }>;
+
   before( async () => {
     const wallets = (await ethers.getSigners() as any) as Wallet[];
     actors = new ActorFixture(wallets, provider);
-    lpUser0 = actors.lpUser0();
     incentiveCreator = actors.incentiveCreator();
     multicaller = actors.traderUser2();
-  })
 
-  beforeEach('create fixture loader', async () => {
-    context = await loadFixture(algebraFixture)
-    helpers = HelperCommands.fromTestContext(context, actors, provider)
-  })
+    multicallFixture = async () => {
+      const context = await algebraFixture();
+      const helpers = HelperCommands.fromTestContext(context, actors, provider)
 
-  it.skip('is implemented', async () => {
-    const currentTime = await blockTimestamp()
-
-    await erc20Helper.ensureBalancesAndApprovals(
-      multicaller,
-      [context.token0, context.token1],
-      amountDesired,
-      context.nft.address
-    )
-
-    await mintPosition(context.nft.connect(multicaller), {
-      token0: context.token0.address,
-      token1: context.token1.address,
-      fee: FeeAmount.MEDIUM,
-      tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-      tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-      recipient: multicaller.address,
-      amount0Desired: amountDesired,
-      amount1Desired: amountDesired,
-      amount0Min: 0,
-      amount1Min: 0,
-      deadline: currentTime + 10_000,
-    })
-
-    await erc20Helper.ensureBalancesAndApprovals(multicaller, context.rewardToken, totalReward, context.farming.address)
-    await erc20Helper.ensureBalancesAndApprovals(multicaller, context.bonusRewardToken, totalReward, context.farming.address)
-
-    const createIncentiveTx = context.farming.interface.encodeFunctionData('createIncentive', [
-      {
+      await erc20Helper.ensureBalancesAndApprovals(
+        multicaller,
+        [context.token0, context.token1],
+        amountDesired,
+        await context.nft.getAddress()
+      )
+  
+      const mintResult = await helpers.mintFlow({
+        lp: multicaller,
+        tokens: [context.token0, context.token1],
+      })
+      const tokenId = mintResult.tokenId
+  
+      const farmIncentiveKey = {
+        rewardToken: await context.rewardToken.getAddress(),
+        bonusRewardToken: await context.bonusRewardToken.getAddress(),
         pool: context.pool01,
-        rewardToken: context.rewardToken.address,
-        bonusRewardToken: context.bonusRewardToken.address,
-        
-        ...makeTimestamps(currentTime + 100),
-      },
-      {
-        reward: totalReward,
-        bonusReward: bonusReward,
-        enterStartTime: 0,
+        nonce: 0,
       }
-    ])
-    await context.farming.setIncentiveMaker(multicaller.address)
-    await context.farming.connect(multicaller).multicall([createIncentiveTx], maxGas)
+  
+      await erc20Helper.ensureBalancesAndApprovals(incentiveCreator, context.rewardToken, totalReward, await context.eternalFarming.getAddress())
+      await erc20Helper.ensureBalancesAndApprovals(incentiveCreator, context.bonusRewardToken, totalReward, await context.eternalFarming.getAddress())
+  
+      await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: 0n,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+      })
 
-     // expect((await context.tokenomics.deposits(tokenId)).owner).to.eq(
-     //   multicaller.address
-     // )
+      await context.nft.connect(multicaller).approveForFarming(tokenId, true)
+      await context.farmingCenter.connect(multicaller).enterFarming(farmIncentiveKey, tokenId)
+
+      return({context, helpers, farmIncentiveKey, tokenId})
+    }
   })
 
-  // it('can be used to exit multiple tokens from one incentive', async () => {
-  //   const timestamp = await blockTimestamp()
-  //
-  //   const incentive = await helpers.createIncentiveFlow({
-  //     rewardToken: context.rewardToken,
-  //     poolAddress: context.poolObj.address,
-  //     totalReward,
-  //     ...makeTimestamps(timestamp + 100),
-  //   })
-  //
-  //   const params: HelperTypes.MintDepositFarm.Args = {
-  //     lp: multicaller,
-  //     tokensToFarm: [context.token0, context.token1],
-  //     amountsToFarm: [amountDesired, amountDesired],
-  //     ticks: defaultTicksArray(),
-  //     createIncentiveResult: incentive,
-  //   }
-  //
-  //   await Time.setAndMine(incentive.startTime + 1)
-  //
-  //   const { tokenId: tokenId0 } = await helpers.mintDepositFarmFlow(params)
-  //   const { tokenId: tokenId1 } = await helpers.mintDepositFarmFlow(params)
-  //   const { tokenId: tokenId2 } = await helpers.mintDepositFarmFlow(params)
-  //
-  //   const exitFarming = (tokenId) =>
-  //     context.tokenomics.interface.encodeFunctionData('exitFarming', [incentiveResultToFarmAdapter(incentive), tokenId])
-  //
-  //   await context.tokenomics.connect(multicaller).multicall([exitFarming(tokenId0), exitFarming(tokenId1), exitFarming(tokenId2)])
-  //
-  //   const { numberOfFarms: n0 } = await context.tokenomics.deposits(tokenId0)
-  //   expect(n0).to.eq(BN('0'))
-  //   const { numberOfFarms: n1 } = await context.tokenomics.deposits(tokenId1)
-  //   expect(n1).to.eq(BN('0'))
-  //   const { numberOfFarms: n2 } = await context.tokenomics.deposits(tokenId2)
-  //   expect(n2).to.eq(BN('0'))
-  // })
+  beforeEach('loadFixture', async () => {
+    ;({context, farmIncentiveKey, tokenId} = await loadFixture(multicallFixture));
+  })
 
-  */
+  it('is implemented', async () => {
+    await Time.step(1000);
+
+    const collectRewardsTx = context.farmingCenter.interface.encodeFunctionData('collectRewards', [
+      farmIncentiveKey,
+      tokenId
+    ]);
+    
+    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
+
+    await context.farmingCenter.connect(multicaller).multicall([collectRewardsTx], maxGas)
+
+    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.gt(0);
+  })
+
+  it('can be used to claim multiple tokens from one incentive', async () => {
+    await Time.step(1000);
+
+    const collectRewardsTx = context.farmingCenter.interface.encodeFunctionData('collectRewards', [
+      farmIncentiveKey,
+      tokenId
+    ]);
+
+    const claimRewardsTx0 = context.farmingCenter.interface.encodeFunctionData('claimReward', [
+      await context.rewardToken.getAddress(),
+      multicaller.address,
+      2n**128n - 1n
+    ]);
+
+    const claimRewardsTx1 = context.farmingCenter.interface.encodeFunctionData('claimReward', [
+      await context.bonusRewardToken.getAddress(),
+      multicaller.address,
+      2n**128n - 1n
+    ]);
+
+    
+    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
+    expect(await context.eternalFarming.rewards(multicaller.address, context.bonusRewardToken)).to.be.eq(0);
+
+    await context.farmingCenter.connect(multicaller).multicall([collectRewardsTx, claimRewardsTx0, claimRewardsTx1], maxGas);
+
+    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
+    expect(await context.eternalFarming.rewards(multicaller.address, context.bonusRewardToken)).to.be.eq(0);
+  })
 })
