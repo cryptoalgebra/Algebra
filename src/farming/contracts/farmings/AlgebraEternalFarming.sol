@@ -124,7 +124,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address connectedPlugin = key.pool.plugin();
     if (connectedPlugin == address(0)) revert pluginNotConnected();
-    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert farmingAlreadyExists(); // TODO
+    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert anotherFarmingIsActive();
 
     virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
     _connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));

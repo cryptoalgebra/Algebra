@@ -16,7 +16,6 @@ interface IAlgebraEternalFarming {
     uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
   }
 
-  error farmingAlreadyExists();
   error farmDoesNotExist();
   error tokenAlreadyFarmed();
   error incentiveNotExist();

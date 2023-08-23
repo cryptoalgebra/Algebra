@@ -517,8 +517,8 @@ describe('unit/FarmingCenter', () => {
 
     it('when requesting zero amount', async () => {
       await Time.set(timestamps.endTime + 10000);
-      let balanceBeforeFirstCollect = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      let bonusBalanceBeforeFirstCollect = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      let balanceBeforeFirstCollect: bigint = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
+      let bonusBalanceBeforeFirstCollect: bigint = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {
@@ -530,8 +530,8 @@ describe('unit/FarmingCenter', () => {
         tokenIdEternal
       );
 
-      let balanceBeforeSecondCollect = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      let bonusBalanceBeforeSecondCollect = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      let balanceBeforeSecondCollect: bigint = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
+      let bonusBalanceBeforeSecondCollect: bigint = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
 
       await context.farmingCenter.connect(lpUser0).collectRewards(
         {

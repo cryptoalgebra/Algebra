@@ -454,7 +454,7 @@ describe('unit/EternalFarms', () => {
 
       await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(
         context.eternalFarming as AlgebraEternalFarming,
-        'farmingAlreadyExists'
+        'anotherFarmingIsActive'
       );
     });
   });
