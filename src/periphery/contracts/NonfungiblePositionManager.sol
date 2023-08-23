@@ -454,6 +454,7 @@ contract NonfungiblePositionManager is
     function setFarmingCenter(address newFarmingCenter) external override {
         require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
         farmingCenter = newFarmingCenter;
+        emit FarmingCenter(newFarmingCenter);
     }
 
     /// @inheritdoc IERC721
