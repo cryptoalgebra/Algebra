@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
-pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
@@ -51,34 +50,35 @@ contract NonfungiblePositionManager is
         uint128 tokensOwed1;
     }
 
+    /// @dev The role which has the right to change the farming center address
+    bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
+        keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
+
+    /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
+    address private immutable _tokenDescriptor;
+
     /// @dev IDs of pools assigned by this contract
-    mapping(address => uint80) private _poolIds;
+    mapping(address poolAddress => uint80 poolId) private _poolIds;
 
     /// @dev Pool keys by pool ID, to save on SSTOREs for position data
-    mapping(uint80 => PoolAddress.PoolKey) private _poolIdToPoolKey;
+    mapping(uint80 poolId => PoolAddress.PoolKey poolKey) private _poolIdToPoolKey;
 
     /// @dev The token ID position data
-    mapping(uint256 => Position) private _positions;
+    mapping(uint256 tokenId => Position position) private _positions;
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint176 private _nextId = 1;
     /// @dev The ID of the next pool that is used for the first time. Skips 0
     uint80 private _nextPoolId = 1;
 
-    /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
-    address private immutable _tokenDescriptor;
-
     /// @dev The address of the farming center contract, which handles farmings logic
     address public farmingCenter;
 
     /// @dev mapping tokenId => farmingCenter
-    mapping(uint256 => address) public farmingApprovals;
+    mapping(uint256 tokenId => address farmingCenterAddress) public farmingApprovals;
 
     /// @dev mapping tokenId => farmingCenter
-    mapping(uint256 => address) public tokenFarmedIn;
-
-    bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
-        keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
+    mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
     constructor(
         address _factory,
@@ -113,17 +113,22 @@ contract NonfungiblePositionManager is
             uint128 tokensOwed1
         )
     {
-        Position memory position = _positions[tokenId];
-        require(position.poolId != 0, 'Invalid token ID');
-        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
+        Position storage position = _positions[tokenId];
+        // single SLOAD
+        uint80 poolId = position.poolId;
+        tickLower = position.tickLower;
+        tickUpper = position.tickUpper;
+        liquidity = position.liquidity;
+        require(poolId != 0, 'Invalid token ID');
+        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[poolId];
         return (
             position.nonce,
             position.operator,
             poolKey.token0,
             poolKey.token1,
-            position.tickLower,
-            position.tickUpper,
-            position.liquidity,
+            tickLower,
+            tickUpper,
+            liquidity,
             position.feeGrowthInside0LastX128,
             position.feeGrowthInside1LastX128,
             position.tokensOwed0,
@@ -153,11 +158,11 @@ contract NonfungiblePositionManager is
         payable
         override
         checkDeadline(params.deadline)
-        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
+        returns (uint256 tokenId, uint128 actualLiquidity, uint256 amount0, uint256 amount1)
     {
         IAlgebraPool pool;
-        uint256 actualLiquidity;
-        (liquidity, actualLiquidity, amount0, amount1, pool) = addLiquidity(
+        uint128 liquidityDesired;
+        (liquidityDesired, actualLiquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
                 token0: params.token0,
                 token1: params.token1,
@@ -192,14 +197,14 @@ contract NonfungiblePositionManager is
             poolId: poolId,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
-            liquidity: uint128(actualLiquidity),
+            liquidity: actualLiquidity,
             feeGrowthInside0LastX128: feeGrowthInside0LastX128,
             feeGrowthInside1LastX128: feeGrowthInside1LastX128,
             tokensOwed0: 0,
             tokensOwed1: 0
         });
 
-        emit IncreaseLiquidity(tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
+        emit IncreaseLiquidity(tokenId, liquidityDesired, actualLiquidity, amount0, amount1, address(pool));
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -261,20 +266,23 @@ contract NonfungiblePositionManager is
         payable
         override
         checkDeadline(params.deadline)
-        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
+        returns (uint128 actualLiquidity, uint256 amount0, uint256 amount1)
     {
         Position storage position = _positions[params.tokenId];
 
-        PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
+        PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
+        int24 tickLower = position.tickLower;
+        int24 tickUpper = position.tickUpper;
+        uint128 positionLiquidity = position.liquidity;
 
         IAlgebraPool pool;
-        uint256 actualLiquidity;
-        (liquidity, actualLiquidity, amount0, amount1, pool) = addLiquidity(
+        uint128 liquidityDesired;
+        (liquidityDesired, actualLiquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
                 token0: poolKey.token0,
                 token1: poolKey.token1,
-                tickLower: position.tickLower,
-                tickUpper: position.tickUpper,
+                tickLower: tickLower,
+                tickUpper: tickUpper,
                 amount0Desired: params.amount0Desired,
                 amount1Desired: params.amount1Desired,
                 amount0Min: params.amount0Min,
@@ -284,25 +292,26 @@ contract NonfungiblePositionManager is
         );
 
         // this is now updated to the current transaction
-        uint128 positionLiquidity = position.liquidity;
         (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
             position,
             pool,
             address(this),
-            position.tickLower,
-            position.tickUpper,
+            tickLower,
+            tickUpper,
             positionLiquidity
         );
 
         unchecked {
-            position.tokensOwed0 += tokensOwed0;
-            position.tokensOwed1 += tokensOwed1;
-            position.liquidity = positionLiquidity + uint128(actualLiquidity);
+            if (tokensOwed0 | tokensOwed1 != 0) {
+                position.tokensOwed0 += tokensOwed0;
+                position.tokensOwed1 += tokensOwed1;
+            }
+            position.liquidity = positionLiquidity + actualLiquidity;
         }
 
-        _applyLiquidityDeltaInFarming(params.tokenId, int256(actualLiquidity));
+        _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(actualLiquidity)));
 
-        emit IncreaseLiquidity(params.tokenId, liquidity, uint128(actualLiquidity), amount0, amount1, address(pool));
+        emit IncreaseLiquidity(params.tokenId, liquidityDesired, actualLiquidity, amount0, amount1, address(pool));
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -455,10 +464,13 @@ contract NonfungiblePositionManager is
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
+        address _tokenFarmedIn = tokenFarmedIn[tokenId];
+        if (_tokenFarmedIn == address(0)) return;
+
         address _farmingCenter = farmingCenter;
         if (_farmingCenter == address(0)) return;
 
-        if (tokenFarmedIn[tokenId] == _farmingCenter) {
+        if (_tokenFarmedIn == _farmingCenter) {
             // errors without message will be propagated
             try IPositionFollower(_farmingCenter).applyLiquidityDelta(tokenId, liquidityDelta) {
                 // do nothing

@@ -1,5 +1,6 @@
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-output-validator';
+import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
