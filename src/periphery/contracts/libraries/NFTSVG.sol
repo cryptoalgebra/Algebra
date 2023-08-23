@@ -13,14 +13,14 @@ import 'base64-sol/base64.sol';
 library NFTSVG {
     using Strings for uint256;
 
-    string constant curve1 = 'M1 1C41 41 105 105 145 145';
-    string constant curve2 = 'M1 1C33 49 97 113 145 145';
-    string constant curve3 = 'M1 1C33 57 89 113 145 145';
-    string constant curve4 = 'M1 1C25 65 81 121 145 145';
-    string constant curve5 = 'M1 1C17 73 73 129 145 145';
-    string constant curve6 = 'M1 1C9 81 65 137 145 145';
-    string constant curve7 = 'M1 1C1 89 57.5 145 145 145';
-    string constant curve8 = 'M1 1C1 97 49 145 145 145';
+    string private constant curve1 = 'M1 1C41 41 105 105 145 145';
+    string private constant curve2 = 'M1 1C33 49 97 113 145 145';
+    string private constant curve3 = 'M1 1C33 57 89 113 145 145';
+    string private constant curve4 = 'M1 1C25 65 81 121 145 145';
+    string private constant curve5 = 'M1 1C17 73 73 129 145 145';
+    string private constant curve6 = 'M1 1C9 81 65 137 145 145';
+    string private constant curve7 = 'M1 1C1 89 57.5 145 145 145';
+    string private constant curve8 = 'M1 1C1 97 49 145 145 145';
 
     struct SVGBodyParams {
         string quoteToken;
@@ -198,11 +198,10 @@ library NFTSVG {
         );
     }
 
-    function generateSVGCardMantle(string memory quoteTokenSymbol, string memory baseTokenSymbol)
-        private
-        pure
-        returns (string memory svg)
-    {
+    function generateSVGCardMantle(
+        string memory quoteTokenSymbol,
+        string memory baseTokenSymbol
+    ) private pure returns (string memory svg) {
         svg = string(
             abi.encodePacked(
                 '<g mask="url(#fade-symbol)"><rect fill="none" x="0px" y="0px" width="290px" height="200px" /> <text y="70px" x="32px" fill="white" font-family="\'Courier New\', monospace" font-weight="200" font-size="36px">',
@@ -246,11 +245,7 @@ library NFTSVG {
         );
     }
 
-    function getCurve(
-        int24 tickLower,
-        int24 tickUpper,
-        int24 tickSpacing
-    ) internal pure returns (string memory curve) {
+    function getCurve(int24 tickLower, int24 tickUpper, int24 tickSpacing) internal pure returns (string memory curve) {
         int24 tickRange = (tickUpper - tickLower) / tickSpacing;
         if (tickRange <= 4) {
             curve = curve1;

@@ -222,7 +222,7 @@ contract NonfungiblePositionManager is
     }
 
     // save bytecode by removing implementation of unused method
-    function baseURI() public pure returns (string memory) {}
+    function _baseURI() internal pure override returns (string memory) {}
 
     function _updateUncollectedFees(
         Position storage position,
