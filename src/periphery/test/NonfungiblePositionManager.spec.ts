@@ -926,7 +926,7 @@ describe('NonfungiblePositionManager', () => {
 
   describe('#getApproved', async () => {
     it('cannot get approved for nonexistent  token', async () => {
-      await expect(nft.getApproved(1)).to.be.revertedWith('ERC721: approved query for nonexistent token');
+      await expect(nft.getApproved(1)).to.be.revertedWith('ERC721: invalid token ID');
     })
   })
 
@@ -955,7 +955,7 @@ describe('NonfungiblePositionManager', () => {
 
     it('can only be called by authorized or owner', async () => {
       await expect(nft.transferFrom(other.getAddress(), wallet.address, tokenId)).to.be.revertedWith(
-        'ERC721: transfer caller is not owner nor approved'
+        'ERC721: caller is not token owner or approved'
       )
     })
 
