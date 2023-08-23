@@ -442,11 +442,11 @@ contract NonfungiblePositionManager is
         address _farmingCenter = farmingCenter;
         bool accessAllowed = msg.sender == _farmingCenter;
         if (toFarming) {
-            require(farmingApprovals[tokenId] == _farmingCenter, 'not approved for farming');
+            require(farmingApprovals[tokenId] == _farmingCenter, 'Not approved for farming');
         } else {
             accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
         }
-        require(accessAllowed, 'only FarmingCenter');
+        require(accessAllowed, 'Only FarmingCenter');
         tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
     }
 
