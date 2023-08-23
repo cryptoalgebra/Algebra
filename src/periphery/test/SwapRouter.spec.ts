@@ -144,11 +144,35 @@ describe('SwapRouter', function () {
   })
 
   describe('swaps', () => {
+    it('cannot swap entirely within 0-liquidity region', async() => {
+      const liquidity = (await nft.positions(1)).liquidity
+      await nft.decreaseLiquidity({
+        tokenId: 1,
+        amount0Min: 0,
+        amount1Min: 0,
+        liquidity: liquidity,
+        deadline: 2
+      })
+
+      expect(
+        router.exactInputSingle({
+          tokenIn: tokens[0].address,
+          tokenOut: tokens[1].address,
+          limitSqrtPrice: 0,
+          amountOutMinimum: 0,
+          deadline: 1,
+          amountIn: 100,
+          recipient: wallet.address
+        })
+      ).to.be.revertedWithoutReason;
+    })
+
     describe('#exactInput', () => {
       async function exactInput(
         tokens: string[],
         amountIn: number = 3,
-        amountOutMinimum: number = 1
+        amountOutMinimum: number = 1,
+        setTime: number = 1
       ): Promise<ContractTransactionResponse> {
         const inputIsWNativeToken = await wnative.getAddress() === tokens[0]
         const outputIsWNativeToken = tokens[tokens.length - 1] === await wnative.getAddress()
@@ -172,11 +196,16 @@ describe('SwapRouter', function () {
         await expect(router.connect(trader).exactInput(params, { value })).to.be.revertedWith('Too little received')
         params.amountOutMinimum -= 1
 
+        if (setTime != 1) await router.setTime(setTime);
         // optimized for the gas test
         return data.length === 1
           ? router.connect(trader).exactInput(params, { value })
           : router.connect(trader).multicall(data, { value })
       }
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactInput(tokens.slice(0, 2).map((token) => token.address), 3, 1, 2)).to.be.revertedWith('Transaction too old');
+      })
 
       describe('single-pool', () => {
         it('0 -> 1', async () => {
@@ -375,7 +404,8 @@ describe('SwapRouter', function () {
         tokenOut: string,
         amountIn: number = 3,
         amountOutMinimum: number = 1,
-        limitSqrtPrice?: bigint
+        limitSqrtPrice?: bigint,
+        setTime: number = 1
       ): Promise<ContractTransactionResponse> {
         const inputIsWNativeToken = await wnative.getAddress() === tokenIn
         const outputIsWNativeToken = tokenOut === await wnative.getAddress()
@@ -406,12 +436,17 @@ describe('SwapRouter', function () {
           'Too little received'
         )
         params.amountOutMinimum -= 1
-
+        
+        if (setTime != 1) await router.setTime(setTime);
         // optimized for the gas test
         return data.length === 1
           ? router.connect(trader).exactInputSingle(params, { value })
           : router.connect(trader).multicall(data, { value })
       }
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactInputSingle(tokens[0].address, tokens[1].address, 3, 1, undefined, 2)).to.be.revertedWith('Transaction too old');
+      })
 
       it('0 -> 1', async () => {
         const pool = await factory.poolByPair(tokens[0].address, tokens[1].address)
@@ -509,11 +544,135 @@ describe('SwapRouter', function () {
       })
     })
 
+    describe('#exactInputSingleSupportingFeeOnTransferTokens', () => {
+      async function exactInputSingleSupportingFeeOnTransferTokens(
+        tokenIn: string,
+        tokenOut: string,
+        amountIn: number = 300000,
+        amountOutMinimum: number = 100000,
+        limitSqrtPrice?: bigint,
+        setTime: number = 1
+      ): Promise<ContractTransactionResponse> {
+        const inputIsWNativeToken = await wnative.getAddress() === tokenIn
+        const outputIsWNativeToken = tokenOut === await wnative.getAddress()
+
+        const value = inputIsWNativeToken ? amountIn : 0
+
+        const params = {
+          tokenIn,
+          tokenOut,
+          limitSqrtPrice:
+            limitSqrtPrice ?? tokenIn.toLowerCase() < tokenOut.toLowerCase()
+              ? BigInt('4295128740')
+              : BigInt('1461446703485210103287273052203988822378723970341'),
+          recipient: outputIsWNativeToken ? ZeroAddress : trader.address,
+          deadline: 1,
+          amountIn,
+          amountOutMinimum,
+        }
+
+        const data = [router.interface.encodeFunctionData('exactInputSingleSupportingFeeOnTransferTokens', [params])]
+        if (outputIsWNativeToken)
+          data.push(router.interface.encodeFunctionData('unwrapWNativeToken', [amountOutMinimum, trader.address]))
+
+        // ensure that the swap fails if the limit is tighter
+        params.amountOutMinimum *= 5
+        await expect(router.connect(trader).exactInputSingleSupportingFeeOnTransferTokens(params)).to.be.revertedWith(
+          'Too little received'
+        )
+        params.amountOutMinimum /= 5
+
+        if (setTime != 1) await router.setTime(setTime);
+
+        // optimized for the gas test
+        return data.length === 1
+          ? router.connect(trader).exactInputSingleSupportingFeeOnTransferTokens(params)
+          : router.connect(trader).multicall(data, { value })
+      }
+
+      beforeEach('turn on fee', async() => {
+        await tokens[0].setFee(50);
+        await tokens[1].setFee(50);
+      })
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address, 3, 1, undefined, 2)).to.be.revertedWith('Transaction too old');
+      })
+
+      it('0 -> 1', async () => {
+        const pool = await factory.poolByPair(tokens[0].address, tokens[1].address)
+
+        // get balances before
+        const poolBefore = await getBalances(pool)
+        const traderBefore = await getBalances(trader.address)
+
+        await exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address)
+
+        // get balances after
+        const poolAfter = await getBalances(pool)
+        const traderAfter = await getBalances(trader.address)
+
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 300000n)
+        expect(traderAfter.token1).to.be.eq(traderBefore.token1 + 210684n)
+        expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 285000n)
+        expect(poolAfter.token1).to.be.eq(poolBefore.token1 - 221772n)
+      })
+
+      it('1 -> 0', async () => {
+        const pool = await factory.poolByPair(tokens[1].address, tokens[0].address)
+
+        // get balances before
+        const poolBefore = await getBalances(pool)
+        const traderBefore = await getBalances(trader.address)
+
+        await exactInputSingleSupportingFeeOnTransferTokens(tokens[1].address, tokens[0].address)
+
+        // get balances after
+        const poolAfter = await getBalances(pool)
+        const traderAfter = await getBalances(trader.address)
+
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 + 210684n)
+        expect(traderAfter.token1).to.be.eq(traderBefore.token1 - 300000n)
+        expect(poolAfter.token0).to.be.eq(poolBefore.token0 - 221772n)
+        expect(poolAfter.token1).to.be.eq(poolBefore.token1 + 285000n)
+      })
+
+      describe('Native output', () => {
+        describe('WNativeToken', () => {
+          beforeEach(async () => {
+            await createPoolWNativeToken(tokens[0].address)
+            await createPoolWNativeToken(tokens[1].address)
+          })
+
+          it('0 -> WNativeToken', async () => {
+            const pool = await factory.poolByPair(tokens[0].address, await wnative.getAddress())
+
+            // get balances before
+            const poolBefore = await getBalances(pool)
+            const traderBefore = await getBalances(trader.address)
+
+            await expect(exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, await wnative.getAddress()))
+              .to.emit(wnative, 'Withdrawal')
+              .withArgs(await router.getAddress(), 219213)
+
+            // get balances after
+            const poolAfter = await getBalances(pool)
+            const traderAfter = await getBalances(trader.address)
+
+            expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 300000n)
+            expect(poolAfter.wnative).to.be.eq(poolBefore.wnative - 219213n)
+            expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 285000n)
+          })
+        })
+      })
+    })
+
     describe('#exactOutput', () => {
       async function exactOutput(
         tokens: string[],
         amountOut: number = 1,
-        amountInMaximum: number = 3
+        amountInMaximum: number = 3,
+        setTime: number = 1
       ): Promise<ContractTransactionResponse> {
         const inputIsWNativeToken = tokens[0] === await wnative.getAddress()
         const outputIsWNativeToken = tokens[tokens.length - 1] === await wnative.getAddress()
@@ -537,8 +696,13 @@ describe('SwapRouter', function () {
         await expect(router.connect(trader).exactOutput(params, { value })).to.be.revertedWith('Too much requested')
         params.amountInMaximum += 1
 
+        if (setTime != 1) await router.setTime(setTime);
         return router.connect(trader).multicall(data, { value })
       }
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactOutput(tokens.slice(0, 2).map((token) => token.address), 1, 3, 2)).to.be.revertedWith('Transaction too old');
+      })
 
       describe('single-pool', () => {
         it('0 -> 1', async () => {
@@ -731,7 +895,8 @@ describe('SwapRouter', function () {
         tokenOut: string,
         amountOut: number = 1,
         amountInMaximum: number = 3,
-        limitSqrtPrice?: bigint
+        limitSqrtPrice?: bigint,
+        setTime: number = 1
       ): Promise<ContractTransactionResponse> {
         const inputIsWNativeToken = tokenIn === await wnative.getAddress()
         const outputIsWNativeToken = tokenOut === await wnative.getAddress()
@@ -763,8 +928,14 @@ describe('SwapRouter', function () {
         )
         params.amountInMaximum += 1
 
+        if (setTime != 1) await router.setTime(setTime);
+
         return router.connect(trader).multicall(data, { value })
       }
+
+      it('reverts if deadline passed', async () => {
+        await expect(exactOutputSingle(tokens[0].address, tokens[1].address, 1, 3, undefined, 2)).to.be.revertedWith('Transaction too old');
+      })
 
       it('0 -> 1', async () => {
         const pool = await factory.poolByPair(tokens[0].address, tokens[1].address)
