@@ -90,7 +90,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
           _exitFarming(key, tokenId, tokenOwner);
         } else {
           // reenter with new liquidity value
-          IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+          IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner); // TODO
           IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
         }
       }
@@ -110,7 +110,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function connectVirtualPoolToPlugin(IFarmingPlugin plugin, address newVirtualPool) external override {
+  function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin) external override {
     require(msg.sender == address(eternalFarming), 'only farming can call this');
     IAlgebraPool pool = IAlgebraPool(plugin.pool());
     PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());

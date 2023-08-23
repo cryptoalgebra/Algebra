@@ -124,7 +124,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address connectedPlugin = key.pool.plugin();
     if (connectedPlugin == address(0)) revert pluginNotConnected();
-    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert farmingAlreadyExists();
+    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert farmingAlreadyExists(); // TODO
 
     virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
     _connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
@@ -166,6 +166,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (incentive.deactivated) revert incentiveStopped();
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+    IFarmingPlugin plugin = IFarmingPlugin(incentive.pluginAddress);
 
     incentive.deactivated = true;
     virtualPool.deactivate();
@@ -173,7 +174,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
     if (rewardRate0 | rewardRate1 != 0) _setRewardRates(virtualPool, 0, 0, incentiveId);
 
-    IFarmingPlugin plugin = IFarmingPlugin(incentive.pluginAddress); // TODO optimize
     if (address(virtualPool) == _getCurrentVirtualPoolInPlugin(plugin)) {
       _connectVirtualPoolToPlugin(address(0), IFarmingPlugin(plugin));
     }
@@ -395,7 +395,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) private {
-    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(plugin, virtualPool);
+    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, plugin);
   }
 
   function _getCurrentVirtualPoolInPlugin(IFarmingPlugin plugin) internal view returns (address virtualPool) {

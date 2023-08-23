@@ -40,9 +40,9 @@ interface IFarmingCenter is IMulticall {
 
   /// @notice Updates incentive in AlgebraPool plugin
   /// @dev only farming can do it
-  /// @param plugin The Algebra farming plugin
   /// @param virtualPool The virtual pool to be connected
-  function connectVirtualPoolToPlugin(IFarmingPlugin plugin, address virtualPool) external;
+  /// @param plugin The Algebra farming plugin
+  function connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) external;
 
   /// @notice Enters in incentive (eternal farming) with NFT-position token
   /// @dev msg.sender must be the owner of NFT

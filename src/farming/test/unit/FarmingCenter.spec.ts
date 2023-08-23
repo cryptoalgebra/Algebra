@@ -59,7 +59,7 @@ describe('unit/FarmingCenter', () => {
     await setBalance(eternalFarmingAddress, 10 ** 18);
     const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
     await expect(
-      context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(newContext.pluginObj, context.pool01, { from: eternalFarmingAddress })
+      context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, newContext.pluginObj, { from: eternalFarmingAddress })
     ).to.be.revertedWith('invalid pool');
     await setBalance(eternalFarmingAddress, 0);
     await stopImpersonatingAccount(eternalFarmingAddress);
