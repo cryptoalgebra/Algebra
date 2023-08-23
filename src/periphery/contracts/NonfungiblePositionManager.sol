@@ -309,9 +309,9 @@ contract NonfungiblePositionManager is
             position.liquidity = positionLiquidity + liquidity;
         }
 
-        _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(liquidity)));
-
         emit IncreaseLiquidity(params.tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
+
+        _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(liquidity)));
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -362,9 +362,9 @@ contract NonfungiblePositionManager is
             }
         }
 
-        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
-
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
+
+        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
     }
 
     /// @inheritdoc INonfungiblePositionManager
