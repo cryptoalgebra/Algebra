@@ -76,11 +76,6 @@ describe('NonfungiblePositionManager', () => {
     expect(((await wallet.provider.getCode(nft)).length - 2) / 2).to.matchSnapshot()
   })
 
-  it('baseUri returns nothing', async () => {
-    const baseUri = await nft.baseURI();
-    expect(baseUri).to.be.eq('');
-  })
-
   describe('#createAndInitializePoolIfNecessary', () => {
     it('creates the pool at the expected address', async () => {
       if (!wallet.provider) throw new Error('No provider');

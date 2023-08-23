@@ -221,9 +221,6 @@ contract NonfungiblePositionManager is
         return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
     }
 
-    // save bytecode by removing implementation of unused method
-    function _baseURI() internal pure override returns (string memory) {}
-
     function _updateUncollectedFees(
         Position storage position,
         IAlgebraPool pool,
