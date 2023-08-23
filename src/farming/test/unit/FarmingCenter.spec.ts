@@ -135,7 +135,7 @@ describe('unit/FarmingCenter', () => {
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
-    it('works if liquidity decreased and incentive detached indirectly', async () => {
+    it('works if liquidity decreased and incentive deactivated automatically', async () => {
       await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
 
       const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
@@ -174,6 +174,57 @@ describe('unit/FarmingCenter', () => {
       await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
       await helpers.moveTickTo({ direction: 'up', desiredValue: -140, trader: actors.farmingDeployer() });
+
+      await expect(
+        context.nft.connect(lpUser0).decreaseLiquidity({
+          tokenId: tokenIdEternal,
+          liquidity: 5,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+      ).to.emit(context.eternalFarming, 'FarmEnded');
+
+      expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+    });
+
+    it.only('works if liquidity decreased and incentive detached indirectly', async () => {
+      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+
+      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
+      
+      const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: -120,
+        tickUpper: 120,
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      });
+
+      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: nonce,
+        },
+        _tokenId
+      );
+
+      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+
+      await helpers.moveTickTo({ direction: 'down', desiredValue: -160, trader: actors.farmingDeployer() });
+
+      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
       await expect(
         context.nft.connect(lpUser0).decreaseLiquidity({
