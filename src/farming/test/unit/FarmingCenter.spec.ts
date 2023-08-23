@@ -188,7 +188,7 @@ describe('unit/FarmingCenter', () => {
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
-    it.only('works if liquidity decreased and incentive detached indirectly', async () => {
+    it('works if liquidity decreased and incentive detached indirectly', async () => {
       await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
 
       const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
