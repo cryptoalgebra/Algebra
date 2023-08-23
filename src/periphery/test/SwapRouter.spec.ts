@@ -18,6 +18,49 @@ describe('SwapRouter', function () {
   let wallet: Wallet
   let trader: Wallet
 
+  let factory: Contract
+  let wnative: IWNativeToken
+  let router: MockTimeSwapRouter
+  let nft: MockTimeNonfungiblePositionManager
+  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
+  let getBalances: (
+    who: string | MockTimeSwapRouter
+  ) => Promise<{
+    wnative: bigint
+    token0: bigint
+    token1: bigint
+    token2: bigint
+  }>
+
+  const liquidity = 1000000
+
+  async function createPool(nft: MockTimeNonfungiblePositionManager, wallet: Wallet , tokenAddressA: string, tokenAddressB: string) {
+    if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
+      [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA]
+
+    await nft.createAndInitializePoolIfNecessary(
+      tokenAddressA,
+      tokenAddressB,
+      encodePriceSqrt(1, 1)
+    )
+
+    const liquidityParams = {
+      token0: tokenAddressA,
+      token1: tokenAddressB,
+      fee: FeeAmount.MEDIUM,
+      tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      recipient: wallet.address,
+      amount0Desired: 1000000,
+      amount1Desired: 1000000,
+      amount0Min: 0,
+      amount1Min: 0,
+      deadline: 1,
+    }
+
+    return nft.mint(liquidityParams)
+  }
+
   const swapRouterFixture: () => Promise<{
     wnative: IWNativeToken
     factory: Contract
@@ -36,6 +79,11 @@ describe('SwapRouter', function () {
       token.address = await token.getAddress();
     }
 
+
+
+    await createPool(nft, wallet, _tokens[0].address, _tokens[1].address)
+    await createPool(nft, wallet, _tokens[1].address, _tokens[2].address)
+
     return {
       wnative,
       factory: factory as any as Contract,
@@ -45,19 +93,12 @@ describe('SwapRouter', function () {
     }
   }
 
-  let factory: Contract
-  let wnative: IWNativeToken
-  let router: MockTimeSwapRouter
-  let nft: MockTimeNonfungiblePositionManager
-  let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress]
-  let getBalances: (
-    who: string | MockTimeSwapRouter
-  ) => Promise<{
-    wnative: bigint
-    token0: bigint
-    token1: bigint
-    token2: bigint
-  }>
+  async function createPoolWNativeToken(tokenAddress: string) {
+    await wnative.deposit({ value: liquidity })
+    await wnative.approve(nft, MaxUint256)
+    return createPool(nft, wallet, await wnative.getAddress(), tokenAddress)
+  }
+
 
 
   before('create fixture loader', async () => {
@@ -90,7 +131,7 @@ describe('SwapRouter', function () {
   })
 
   // ensure the swap router never ends up with a balance
-  afterEach('load fixture', async () => {
+  afterEach('check balances', async () => {
     const balances = await getBalances(router)
     expect(Object.values(balances).every((b) => b == 0n)).to.be.eq(true)
     const balance = await ethers.provider.getBalance(router)
@@ -103,45 +144,6 @@ describe('SwapRouter', function () {
   })
 
   describe('swaps', () => {
-    const liquidity = 1000000
-    async function createPool(tokenAddressA: string, tokenAddressB: string) {
-      if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
-        [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA]
-
-      await nft.createAndInitializePoolIfNecessary(
-        tokenAddressA,
-        tokenAddressB,
-        encodePriceSqrt(1, 1)
-      )
-
-      const liquidityParams = {
-        token0: tokenAddressA,
-        token1: tokenAddressB,
-        fee: FeeAmount.MEDIUM,
-        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        recipient: wallet.address,
-        amount0Desired: 1000000,
-        amount1Desired: 1000000,
-        amount0Min: 0,
-        amount1Min: 0,
-        deadline: 1,
-      }
-
-      return nft.mint(liquidityParams)
-    }
-
-    async function createPoolWNativeToken(tokenAddress: string) {
-      await wnative.deposit({ value: liquidity })
-      await wnative.approve(nft, MaxUint256)
-      return createPool(await wnative.getAddress(), tokenAddress)
-    }
-
-    beforeEach('create 0-1 and 1-2 pools', async () => {
-      await createPool(tokens[0].address, tokens[1].address)
-      await createPool(tokens[1].address, tokens[2].address)
-    })
-
     describe('#exactInput', () => {
       async function exactInput(
         tokens: string[],
