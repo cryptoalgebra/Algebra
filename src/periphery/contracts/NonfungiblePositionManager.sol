@@ -438,16 +438,17 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function switchFarmingStatus(uint256 tokenId, bool toFarming) external override {
+    function switchFarmingStatus(uint256 tokenId, bool toActive) external override {
         address _farmingCenter = farmingCenter;
         bool accessAllowed = msg.sender == _farmingCenter;
-        if (toFarming) {
+        if (toActive) {
             require(farmingApprovals[tokenId] == _farmingCenter, 'Not approved for farming');
         } else {
+            // can be switched off by current farming center or by the farming center in which nft is farmed
             accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
         }
         require(accessAllowed, 'Only FarmingCenter');
-        tokenFarmedIn[tokenId] = toFarming ? _farmingCenter : address(0);
+        tokenFarmedIn[tokenId] = toActive ? _farmingCenter : address(0);
     }
 
     /// @inheritdoc INonfungiblePositionManager

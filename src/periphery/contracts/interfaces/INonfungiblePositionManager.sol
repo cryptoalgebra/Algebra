@@ -194,9 +194,9 @@ interface INonfungiblePositionManager is
 
     /// @notice Changes farming status of token to 'farmed' or 'not farmed'
     /// @dev can be called only by farmingCenter
-    /// @param tokenId tokenId The ID of the token
-    /// @param tokenId isFarmed The new status
-    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
+    /// @param tokenId The ID of the token
+    /// @param toActive The new status
+    function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE

@@ -1401,10 +1401,10 @@ describe('NonfungiblePositionManager', () => {
         await expect(nft.switchFarmingStatus(tokenId, true)).to.be.revertedWith('Not approved for farming');
       })
 
-      it('can not switch off if not approved', async() => {
+      it('can switch off if not approved', async() => {
         await nft.setFarmingCenter(wallet.address);
   
-        await expect(nft.switchFarmingStatus(tokenId, false)).to.be.revertedWith('Only FarmingCenter');
+        await expect(nft.switchFarmingStatus(tokenId, false)).to.be.not.reverted;
       })
 
       it('can not switch on if not farming center', async() => {
