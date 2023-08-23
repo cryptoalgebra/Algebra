@@ -27,14 +27,14 @@ interface INonfungiblePositionManager is
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
     /// @param tokenId The ID of the token for which liquidity was increased
-    /// @param liquidity The amount by which liquidity for the NFT position was increased
+    /// @param liquidityDesired The amount by which liquidity for the NFT position was increased
     /// @param actualLiquidity the actual liquidity that was added into a pool. Could differ from
     /// _liquidity_ when using FeeOnTransfer tokens
     /// @param amount0 The amount of token0 that was paid for the increase in liquidity
     /// @param amount1 The amount of token1 that was paid for the increase in liquidity
     event IncreaseLiquidity(
         uint256 indexed tokenId,
-        uint128 liquidity,
+        uint128 liquidityDesired,
         uint128 actualLiquidity,
         uint256 amount0,
         uint256 amount1,
@@ -112,12 +112,12 @@ interface INonfungiblePositionManager is
     /// a method does not exist, i.e. the pool is assumed to be initialized.
     /// @param params The params necessary to mint a position, encoded as `MintParams` in calldata
     /// @return tokenId The ID of the token that represents the minted position
-    /// @return actualLiquidity The amount of liquidity for this position
+    /// @return liquidity The liquidity delta amount as a result of the increase
     /// @return amount0 The amount of token0
     /// @return amount1 The amount of token1
     function mint(
         MintParams calldata params
-    ) external payable returns (uint256 tokenId, uint128 actualLiquidity, uint256 amount0, uint256 amount1);
+    ) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 
     struct IncreaseLiquidityParams {
         uint256 tokenId;
@@ -135,12 +135,12 @@ interface INonfungiblePositionManager is
     /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
     /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
     /// deadline The time by which the transaction must be included to effect the change
-    /// @return actualLiquidity The liquidity delta amount as a result of the increase
+    /// @return liquidity The liquidity delta amount as a result of the increase
     /// @return amount0 The amount of token0 to achieve resulting liquidity
     /// @return amount1 The amount of token1 to achieve resulting liquidity
     function increaseLiquidity(
         IncreaseLiquidityParams calldata params
-    ) external payable returns (uint128 actualLiquidity, uint256 amount0, uint256 amount1);
+    ) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1);
 
     struct DecreaseLiquidityParams {
         uint256 tokenId;

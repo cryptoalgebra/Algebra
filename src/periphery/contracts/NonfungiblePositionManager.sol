@@ -158,11 +158,11 @@ contract NonfungiblePositionManager is
         payable
         override
         checkDeadline(params.deadline)
-        returns (uint256 tokenId, uint128 actualLiquidity, uint256 amount0, uint256 amount1)
+        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         IAlgebraPool pool;
         uint128 liquidityDesired;
-        (liquidityDesired, actualLiquidity, amount0, amount1, pool) = addLiquidity(
+        (liquidityDesired, liquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
                 token0: params.token0,
                 token1: params.token1,
@@ -197,14 +197,14 @@ contract NonfungiblePositionManager is
             poolId: poolId,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
-            liquidity: actualLiquidity,
+            liquidity: liquidity,
             feeGrowthInside0LastX128: feeGrowthInside0LastX128,
             feeGrowthInside1LastX128: feeGrowthInside1LastX128,
             tokensOwed0: 0,
             tokensOwed1: 0
         });
 
-        emit IncreaseLiquidity(tokenId, liquidityDesired, actualLiquidity, amount0, amount1, address(pool));
+        emit IncreaseLiquidity(tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -266,7 +266,7 @@ contract NonfungiblePositionManager is
         payable
         override
         checkDeadline(params.deadline)
-        returns (uint128 actualLiquidity, uint256 amount0, uint256 amount1)
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         Position storage position = _positions[params.tokenId];
 
@@ -277,7 +277,7 @@ contract NonfungiblePositionManager is
 
         IAlgebraPool pool;
         uint128 liquidityDesired;
-        (liquidityDesired, actualLiquidity, amount0, amount1, pool) = addLiquidity(
+        (liquidityDesired, liquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
                 token0: poolKey.token0,
                 token1: poolKey.token1,
@@ -306,12 +306,12 @@ contract NonfungiblePositionManager is
                 position.tokensOwed0 += tokensOwed0;
                 position.tokensOwed1 += tokensOwed1;
             }
-            position.liquidity = positionLiquidity + actualLiquidity;
+            position.liquidity = positionLiquidity + liquidity;
         }
 
-        _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(actualLiquidity)));
+        _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(liquidity)));
 
-        emit IncreaseLiquidity(params.tokenId, liquidityDesired, actualLiquidity, amount0, amount1, address(pool));
+        emit IncreaseLiquidity(params.tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
     }
 
     /// @inheritdoc INonfungiblePositionManager
