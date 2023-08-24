@@ -61,18 +61,16 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   /// @inheritdoc IDynamicFeeManager
-  function feeConfig() external view override returns (uint16, uint16, uint32, uint32, uint16, uint16, uint16) {
-    AlgebraFeeConfigurationPacked _feeConfigPacked = feeConfigPacked;
-
-    return (
-      _feeConfigPacked.alpha1(),
-      _feeConfigPacked.alpha2(),
-      _feeConfigPacked.beta1(),
-      _feeConfigPacked.beta2(),
-      _feeConfigPacked.gamma1(),
-      _feeConfigPacked.gamma2(),
-      _feeConfigPacked.baseFee()
-    );
+  function feeConfig()
+    external
+    view
+    override
+    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+  {
+    (alpha1, alpha2) = (feeConfigPacked.alpha1(), feeConfigPacked.alpha2());
+    (beta1, beta2) = (feeConfigPacked.beta1(), feeConfigPacked.beta2());
+    (gamma1, gamma2) = (feeConfigPacked.gamma1(), feeConfigPacked.gamma2());
+    baseFee = feeConfigPacked.baseFee();
   }
 
   function _checkIfFromPool() internal view {
