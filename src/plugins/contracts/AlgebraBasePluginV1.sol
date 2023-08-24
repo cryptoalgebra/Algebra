@@ -51,7 +51,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   AlgebraFeeConfiguration public feeConfig;
 
   modifier onlyPool() {
-    require(msg.sender == pool, 'only pool can call this');
+    _checkIfFromPool();
     _;
   }
 
@@ -59,14 +59,22 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 
+  function _checkIfFromPool() internal view {
+    require(msg.sender == pool, 'only pool can call this');
+  }
+
   function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
     (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+  }
+
+  function _getPluginInPool() internal view returns (address plugin) {
+    return IAlgebraPool(pool).plugin();
   }
 
   /// @inheritdoc IAlgebraBasePluginV1
   function initialize() external override {
     require(!timepoints[0].initialized, 'Already initialized');
-    require(IAlgebraPool(pool).plugin() == address(this), 'Plugin not attached');
+    require(_getPluginInPool() == address(this), 'Plugin not attached');
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
 
@@ -171,7 +179,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IFarmingPlugin
   function isIncentiveActive(address targetIncentive) external view override returns (bool) {
     if (incentive != targetIncentive) return false;
-    if (IAlgebraPool(pool).plugin() != address(this)) return false;
+    if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
     if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
 
