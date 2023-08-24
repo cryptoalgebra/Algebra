@@ -15,13 +15,14 @@ contract AdaptiveFeeTest {
   }
 
   function getFee(uint88 volatility) external view returns (uint256 fee) {
-    return AdaptiveFee.getFee(volatility, feeConfig);
+    return AdaptiveFee.getFee(volatility, AlgebraFeeConfigurationLibrary.pack(feeConfig));
   }
 
   function getGasCostOfGetFee(uint88 volatility) external view returns (uint256) {
+    AlgebraFeeConfigurationPacked _packed = AlgebraFeeConfigurationLibrary.pack(feeConfig);
     unchecked {
       uint256 gasBefore = gasleft();
-      AdaptiveFee.getFee(volatility, feeConfig);
+      AdaptiveFee.getFee(volatility, _packed);
       return gasBefore - gasleft();
     }
   }

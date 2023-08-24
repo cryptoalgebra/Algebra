@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '../base/AlgebraFeeConfiguration.sol';
+import './AlgebraFeeConfigurationLibrary.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
@@ -35,13 +36,13 @@ library AdaptiveFee {
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
   /// maximum value capped by baseFee + alpha1 + alpha2
-  function getFee(uint88 volatility, AlgebraFeeConfiguration memory config) internal pure returns (uint16 fee) {
+  function getFee(uint88 volatility, AlgebraFeeConfigurationPacked config) internal pure returns (uint16 fee) {
     unchecked {
       volatility /= 15; // normalize for 15 sec interval
-      uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
-        sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
+      uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1(), config.alpha1(), config.beta1()) +
+        sigmoid(volatility, config.gamma2(), config.alpha2(), config.beta2());
 
-      uint256 result = uint256(config.baseFee) + sumOfSigmoids;
+      uint256 result = uint256(config.baseFee()) + sumOfSigmoids;
       assert(result <= type(uint16).max); // should always be true
 
       return uint16(result); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max

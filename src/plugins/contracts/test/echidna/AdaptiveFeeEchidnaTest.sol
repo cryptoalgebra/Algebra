@@ -36,7 +36,7 @@ contract AdaptiveFeeEchidnaTest {
       AlgebraFeeConfiguration memory feeConfig = AlgebraFeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
       AdaptiveFee.validateFeeConfiguration(feeConfig);
 
-      fee = AdaptiveFee.getFee(volatility, feeConfig);
+      fee = AdaptiveFee.getFee(volatility, AlgebraFeeConfigurationLibrary.pack(feeConfig));
       assert(fee <= type(uint16).max);
       assert(fee >= baseFee);
       assert(fee <= baseFee + alpha1 + alpha2);
