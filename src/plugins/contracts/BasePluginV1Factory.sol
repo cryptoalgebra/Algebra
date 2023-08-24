@@ -21,7 +21,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   address public override farmingAddress;
 
   /// @inheritdoc IBasePluginV1Factory
-  mapping(address => address) public override pluginByPool;
+  mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
   modifier onlyAdministrator() {
     require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_ADMINISTRATOR, msg.sender), 'only administrator');
