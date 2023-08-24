@@ -21,7 +21,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
     bytes32 private immutable versionHash;
 
     /// @inheritdoc IERC721Permit
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 public immutable override DOMAIN_SEPARATOR;
 
     /// @notice Computes the nameHash and versionHash
     constructor(string memory name_, string memory symbol_, string memory version_) ERC721(name_, symbol_) {
