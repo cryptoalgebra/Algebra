@@ -16,6 +16,27 @@ describe('AdaptiveFee', () => {
     adaptiveFee = await loadFixture(adaptiveFeeFixture);
   });
 
+  it('check pack and unpack of config', async () => {
+    const config = {
+      alpha1: 2900,
+      alpha2: 15000 - 3000,
+      beta1: 360,
+      beta2: 60000,
+      gamma1: 59,
+      gamma2: 8500,
+      baseFee: 100,
+    };
+
+    const result = await adaptiveFee.packAndUnpackFeeConfig(config);
+    expect(result.alpha1).to.be.eq(config.alpha1);
+    expect(result.alpha2).to.be.eq(config.alpha2);
+    expect(result.beta1).to.be.eq(config.beta1);
+    expect(result.beta2).to.be.eq(config.beta2);
+    expect(result.gamma1).to.be.eq(config.gamma1);
+    expect(result.gamma2).to.be.eq(config.gamma2);
+    expect(result.baseFee).to.be.eq(config.baseFee);
+  });
+
   describe('#getFee', () => {
     it('fee: 0 volatility 0 volume', async () => {
       expect(await adaptiveFee.getFee(0)).to.be.eq(100);
