@@ -27,7 +27,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
     }
 
     /// @inheritdoc IERC721Permit
-    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+    function DOMAIN_SEPARATOR() public view override returns (bytes32) {
         return
             keccak256(
                 abi.encode(
