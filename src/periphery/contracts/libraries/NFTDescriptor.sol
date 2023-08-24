@@ -279,8 +279,8 @@ library NFTDescriptor {
         return uint256(x >= 0 ? x : -x);
     }
 
-    // @notice Returns string that includes first 5 significant figures of a decimal number
-    // @param sqrtRatioX96 a sqrt price
+    /// @notice Returns string that includes first 5 significant figures of a decimal number
+    /// @param sqrtRatioX96 a sqrt price
     function fixedPointToDecimalString(
         uint160 sqrtRatioX96,
         uint8 baseTokenDecimals,
@@ -346,8 +346,8 @@ library NFTDescriptor {
         uint256 digits;
     }
 
-    // @notice Returns string as decimal percentage of fee amount.
-    // @param fee fee amount
+    /// @notice Returns string as decimal percentage of fee amount.
+    /// @param fee fee amount
     function feeToPercentString(uint24 fee) internal pure returns (string memory) {
         if (fee == 0) {
             return '0%';
