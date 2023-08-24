@@ -231,12 +231,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (_lastTimepointTimestamp == currentTimestamp) return;
 
     (, int24 tick, uint16 fee, ) = _getPoolState();
-    (uint16 newLastIndex, uint16 oldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
+    (uint16 newLastIndex, uint16 newOldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;
 
-    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, oldestIndex, tick);
+    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
