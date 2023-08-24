@@ -20,8 +20,9 @@ import './libraries/AlgebraFeeConfigurationLibrary.sol';
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
-  uint256 internal constant UINT16_MODULO = 65536;
+  using Plugins for uint8;
 
+  uint256 internal constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   /// @dev The role can be granted in AlgebraFactory
@@ -144,18 +145,15 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
+    uint16 lastIndex = timepointIndex;
     AlgebraFeeConfigurationPacked _feeConfigPacked = feeConfigPacked;
-    if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) {
-      return _feeConfigPacked.baseFee();
-    } else {
-      uint16 lastIndex = timepointIndex;
-      uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-      (, int24 tick, , ) = _getPoolState();
+    if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) return _feeConfigPacked.baseFee();
 
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+    (, int24 tick, , ) = _getPoolState();
 
-      return AdaptiveFee.getFee(volatilityAverage, _feeConfigPacked);
-    }
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    return AdaptiveFee.getFee(volatilityAverage, _feeConfigPacked);
   }
 
   function _getFeeAtLastTimepoint(
@@ -164,12 +162,10 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     int24 currentTick,
     AlgebraFeeConfigurationPacked _feeConfigPacked
   ) internal view returns (uint16 fee) {
-    if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) {
-      return _feeConfigPacked.baseFee();
-    } else {
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
-      return AdaptiveFee.getFee(volatilityAverage, _feeConfigPacked);
-    }
+    if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) return _feeConfigPacked.baseFee();
+
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
+    return AdaptiveFee.getFee(volatilityAverage, _feeConfigPacked);
   }
 
   // ###### Farming plugin ######
@@ -178,18 +174,17 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   function setIncentive(address newIncentive) external override {
     require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
 
-    bool turnOn = newIncentive != address(0);
     address currentIncentive = incentive;
-
     require(currentIncentive != newIncentive, 'already active');
+
+    bool turnOn = newIncentive != address(0);
     if (currentIncentive != address(0)) require(!turnOn, 'has active incentive');
 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
     (, , , uint8 pluginConfig) = _getPoolState();
-    bool isHookActive = pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) != 0;
-    if (turnOn != isHookActive) {
+    if (turnOn != pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
       IAlgebraPool(pool).setPluginConfig(pluginConfig);
     }
@@ -200,7 +195,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (incentive != targetIncentive) return false;
     if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
-    if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
+    if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
 
     return true;
   }
