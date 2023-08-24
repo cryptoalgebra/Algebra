@@ -469,7 +469,8 @@ contract NonfungiblePositionManager is
         if (_farmingCenter == address(0)) return;
 
         if (_tokenFarmedIn == _farmingCenter) {
-            // errors without message will be propagated
+            // errors without message (i.e. out of gas) will be propagated
+            // custom errors will be propagated
             try IPositionFollower(_farmingCenter).applyLiquidityDelta(tokenId, liquidityDelta) {
                 // do nothing
             } catch Panic(uint256) {
@@ -486,10 +487,13 @@ contract NonfungiblePositionManager is
         }
     }
 
+    /// @dev Overrides to clear operator and farming approval before any transfer (including burn, but not including mint)
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batch) internal override {
+        // transfer from address(0) is mint
         if (from != address(0)) {
+            // clear approvals
             _positions[tokenId].operator = address(0);
-            delete farmingApprovals[tokenId]; // clear farming approval
+            delete farmingApprovals[tokenId];
         }
         super._beforeTokenTransfer(from, to, tokenId, batch);
     }
