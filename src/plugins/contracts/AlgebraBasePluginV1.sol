@@ -36,9 +36,6 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   address private immutable factory;
   address private immutable pluginFactory;
 
-  /// @inheritdoc IDynamicFeeManager
-  AlgebraFeeConfiguration public feeConfig;
-
   /// @inheritdoc IVolatilityOracle
   VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
 
@@ -48,7 +45,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
 
-  AlgebraFeeConfigurationPacked private _feeConfig;
+  AlgebraFeeConfigurationPacked private feeConfigPacked;
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
@@ -60,6 +57,21 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   constructor(address _pool, address _factory, address _pluginFactory) {
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
+  }
+
+  /// @inheritdoc IDynamicFeeManager
+  function feeConfig() external view override returns (uint16, uint16, uint32, uint32, uint16, uint16, uint16) {
+    AlgebraFeeConfigurationPacked _feeConfigPacked = feeConfigPacked;
+
+    return (
+      _feeConfigPacked.alpha1(),
+      _feeConfigPacked.alpha2(),
+      _feeConfigPacked.beta1(),
+      _feeConfigPacked.beta2(),
+      _feeConfigPacked.gamma1(),
+      _feeConfigPacked.gamma2(),
+      _feeConfigPacked.baseFee()
+    );
   }
 
   function _checkIfFromPool() internal view {
@@ -126,13 +138,13 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
-    _feeConfig = AlgebraFeeConfigurationLibrary.pack(_config);
+    feeConfigPacked = AlgebraFeeConfigurationLibrary.pack(_config);
     emit FeeConfiguration(_config);
   }
 
   /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
-    AlgebraFeeConfigurationPacked _feeConfigPacked = _feeConfig;
+    AlgebraFeeConfigurationPacked _feeConfigPacked = feeConfigPacked;
     if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) {
       return _feeConfigPacked.baseFee();
     } else {
@@ -146,8 +158,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     }
   }
 
-  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex, uint16 oldestTimepointIndex, int24 currentTick) internal view returns (uint16 fee) {
-    AlgebraFeeConfigurationPacked _feeConfigPacked = _feeConfig;
+  function _getFeeAtLastTimepoint(
+    uint16 lastTimepointIndex,
+    uint16 oldestTimepointIndex,
+    int24 currentTick,
+    AlgebraFeeConfigurationPacked _feeConfigPacked
+  ) internal view returns (uint16 fee) {
     if (_feeConfigPacked.alpha1() | _feeConfigPacked.alpha2() == 0) {
       return _feeConfigPacked.baseFee();
     } else {
@@ -203,7 +219,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = _blockTimestamp();
     timepoints.initialize(_blockTimestamp(), tick);
 
-    IAlgebraPool(pool).setFee(feeConfig.baseFee);
+    IAlgebraPool(pool).setFee(feeConfigPacked.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
@@ -236,7 +252,11 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function _writeTimepointAndUpdateFee() internal {
-    (uint16 _lastIndex, uint32 _lastTimepointTimestamp) = (timepointIndex, lastTimepointTimestamp);
+    // single SLOAD
+    uint16 _lastIndex = timepointIndex;
+    uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+    AlgebraFeeConfigurationPacked _feeConfigPacked = feeConfigPacked;
+
     uint32 currentTimestamp = _blockTimestamp();
 
     if (_lastTimepointTimestamp == currentTimestamp) return;
@@ -247,7 +267,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;
 
-    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick);
+    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, _feeConfigPacked);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
