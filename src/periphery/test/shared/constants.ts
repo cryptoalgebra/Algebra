@@ -1,4 +1,4 @@
-import { MaxUint256 } from 'ethers'
+import { MaxUint256 } from 'ethers';
 
 export const MaxUint128 = 2n ** 128n - 1n;
 
@@ -14,4 +14,4 @@ export const TICK_SPACINGS: { [amount in FeeAmount]: number } = {
   [FeeAmount.LOW]: 60,
   [FeeAmount.MEDIUM]: 60,
   [FeeAmount.HIGH]: 60,
-}
+};

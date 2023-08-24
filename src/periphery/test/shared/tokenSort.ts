@@ -1,9 +1,9 @@
 type ContractWithAddress = {
-  address: string
-}
+  address: string;
+};
 
 export function compareToken(a: ContractWithAddress, b: ContractWithAddress): -1 | 1 {
-  return a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1
+  return a.address.toLowerCase() < b.address.toLowerCase() ? -1 : 1;
 }
 
 export async function sortedTokens(
@@ -14,5 +14,5 @@ export async function sortedTokens(
   const b_: ContractWithAddress = b as any as ContractWithAddress;
   a_.address = await a.getAddress();
   b_.address = await b.getAddress();
-  return compareToken(a_, b_) < 0 ? [a, b] : [b, a]
+  return compareToken(a_, b_) < 0 ? [a, b] : [b, a];
 }

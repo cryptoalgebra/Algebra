@@ -1,47 +1,47 @@
-import { getAddress } from 'ethers'
-import { FeeAmount } from './constants'
+import { getAddress } from 'ethers';
+import { FeeAmount } from './constants';
 
-const ADDR_SIZE = 20
-const FEE_SIZE = 3
-const OFFSET = ADDR_SIZE
-const DATA_SIZE = OFFSET + ADDR_SIZE
+const ADDR_SIZE = 20;
+const FEE_SIZE = 3;
+const OFFSET = ADDR_SIZE;
+const DATA_SIZE = OFFSET + ADDR_SIZE;
 
 export function encodePath(path: string[]): string {
-  let encoded = '0x'
+  let encoded = '0x';
   for (let i = 0; i < path.length; i++) {
     // 20 byte encoding of the address
-    encoded += path[i].slice(2)
+    encoded += path[i].slice(2);
   }
 
-  return encoded.toLowerCase()
+  return encoded.toLowerCase();
 }
 
 function decodeOne(tokenFeeToken: Buffer): [[string, string]] {
   // reads the first 20 bytes for the token address
-  const tokenABuf = tokenFeeToken.slice(0, ADDR_SIZE)
-  const tokenA = getAddress('0x' + tokenABuf.toString('hex'))
+  const tokenABuf = tokenFeeToken.slice(0, ADDR_SIZE);
+  const tokenA = getAddress('0x' + tokenABuf.toString('hex'));
 
   // reads the next 20 bytes for the token address
-  const tokenBBuf = tokenFeeToken.slice(OFFSET, DATA_SIZE)
-  const tokenB = getAddress('0x' + tokenBBuf.toString('hex'))
+  const tokenBBuf = tokenFeeToken.slice(OFFSET, DATA_SIZE);
+  const tokenB = getAddress('0x' + tokenBBuf.toString('hex'));
 
-  return [[tokenA, tokenB]]
+  return [[tokenA, tokenB]];
 }
 
 export function decodePath(path: string): [string[]] {
-  let data = Buffer.from(path.slice(2), 'hex')
+  let data = Buffer.from(path.slice(2), 'hex');
 
-  let tokens: string[] = []
-  let i = 0
-  let finalToken: string = ''
+  let tokens: string[] = [];
+  let i = 0;
+  let finalToken: string = '';
   while (data.length >= DATA_SIZE) {
-    const [[tokenA, tokenB]] = decodeOne(data)
-    finalToken = tokenB
-    tokens = [...tokens, tokenA]
-    data = data.slice((i + 1) * OFFSET)
-    i += 1
+    const [[tokenA, tokenB]] = decodeOne(data);
+    finalToken = tokenB;
+    tokens = [...tokens, tokenA];
+    data = data.slice((i + 1) * OFFSET);
+    i += 1;
   }
-  tokens = [...tokens, finalToken]
+  tokens = [...tokens, finalToken];
 
-  return [tokens]
+  return [tokens];
 }

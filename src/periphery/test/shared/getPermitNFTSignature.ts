@@ -1,5 +1,5 @@
-import { BigNumberish, Signature, Wallet, MaxUint256 } from 'ethers'
-import { NonfungiblePositionManager } from '../../typechain'
+import { BigNumberish, Signature, Wallet, MaxUint256 } from 'ethers';
+import { NonfungiblePositionManager } from '../../typechain';
 
 export default async function getPermitNFTSignature(
   wallet: Wallet,
@@ -15,7 +15,7 @@ export default async function getPermitNFTSignature(
     permitConfig?.name ?? positionManager.name(),
     permitConfig?.version ?? '2',
     permitConfig?.chainId ?? (await wallet.provider.getNetwork()).chainId,
-  ])
+  ]);
 
   return Signature.from(
     await wallet.signTypedData(
@@ -53,5 +53,5 @@ export default async function getPermitNFTSignature(
         deadline,
       }
     )
-  )
+  );
 }

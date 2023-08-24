@@ -1,5 +1,5 @@
-import { BigNumberish, Signature, Wallet, MaxUint256 } from 'ethers'
-import { TestERC20, TestERC20PermitAllowed } from '../../typechain'
+import { BigNumberish, Signature, Wallet, MaxUint256 } from 'ethers';
+import { TestERC20, TestERC20PermitAllowed } from '../../typechain';
 
 export async function getPermitSignature(
   wallet: Wallet,
@@ -14,8 +14,8 @@ export async function getPermitSignature(
     permitConfig?.nonce ?? token.nonces(wallet.address),
     permitConfig?.name ?? token.name(),
     permitConfig?.version ?? '1',
-    permitConfig?.chainId ??  (await wallet.provider.getNetwork()).chainId,
-  ])
+    permitConfig?.chainId ?? (await wallet.provider.getNetwork()).chainId,
+  ]);
 
   return Signature.from(
     await wallet.signTypedData(
@@ -57,5 +57,5 @@ export async function getPermitSignature(
         deadline,
       }
     )
-  )
+  );
 }
