@@ -424,7 +424,6 @@ contract NonfungiblePositionManager is
         require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
 
         delete _positions[tokenId];
-        delete farmingApprovals[tokenId];
         delete tokenFarmedIn[tokenId];
         _burn(tokenId);
     }
@@ -457,7 +456,7 @@ contract NonfungiblePositionManager is
 
     /// @inheritdoc IERC721
     function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+        require(_exists(tokenId), 'ERC721: invalid token ID');
 
         return _positions[tokenId].operator;
     }
@@ -470,7 +469,8 @@ contract NonfungiblePositionManager is
         if (_farmingCenter == address(0)) return;
 
         if (_tokenFarmedIn == _farmingCenter) {
-            // errors without message will be propagated
+            // errors without message (i.e. out of gas) will be propagated
+            // custom errors will be propagated
             try IPositionFollower(_farmingCenter).applyLiquidityDelta(tokenId, liquidityDelta) {
                 // do nothing
             } catch Panic(uint256) {
@@ -487,10 +487,15 @@ contract NonfungiblePositionManager is
         }
     }
 
-    /// @dev Overrides _transfer to clear farming approval
-    function _transfer(address from, address to, uint256 tokenId) internal override {
-        delete farmingApprovals[tokenId];
-        super._transfer(from, to, tokenId);
+    /// @dev Overrides to clear operator and farming approval before any transfer (including burn, but not including mint)
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batch) internal override {
+        // transfer from address(0) is mint
+        if (from != address(0)) {
+            // clear approvals
+            _positions[tokenId].operator = address(0);
+            delete farmingApprovals[tokenId];
+        }
+        super._beforeTokenTransfer(from, to, tokenId, batch);
     }
 
     /// @dev Overrides _approve to use the operator in the position, which is packed with the position permit nonce

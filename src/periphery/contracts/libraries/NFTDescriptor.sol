@@ -6,7 +6,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
-import 'base64-sol/base64.sol';
 import './HexStrings.sol';
 import './NFTSVG.sol';
 

@@ -3,8 +3,8 @@ pragma solidity >=0.7.6;
 pragma abicoder v2;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
+import '@openzeppelin/contracts/utils/Base64.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
-import 'base64-sol/base64.sol';
 
 /// @title NFTSVG
 /// @notice Provides a function for generating an SVG associated with a Algebra NFT

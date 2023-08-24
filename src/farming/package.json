@@ -20,7 +20,7 @@
     "!artifacts/contracts/base/**/*"
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "4.6.0",
+    "@openzeppelin/contracts": "4.9.3",
     "@cryptoalgebra/core": "3.1.0",
     "@cryptoalgebra/periphery": "2.0.1",
     "@cryptoalgebra/plugins": "1.0.0"
