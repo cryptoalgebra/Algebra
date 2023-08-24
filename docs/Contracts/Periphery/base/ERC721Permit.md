@@ -9,6 +9,11 @@ Nonfungible tokens that support an approve via signature, i.e. permit
 
 
 ## Variables
+### bytes32 DOMAIN_SEPARATOR immutable
+
+The domain separator used in the permit signature
+
+
 ### bytes32 PERMIT_TYPEHASH constant
 
 The permit typehash used in the permit signature
@@ -17,20 +22,6 @@ The permit typehash used in the permit signature
 
 
 ## Functions
-### DOMAIN_SEPARATOR
-
-```solidity
-function DOMAIN_SEPARATOR() public view returns (bytes32)
-```
-
-The domain separator used in the permit signature
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | bytes32 | The domain separator used in encoding of permit signature |
-
 ### permit
 
 ```solidity

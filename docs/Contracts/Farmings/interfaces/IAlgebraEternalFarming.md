@@ -570,14 +570,6 @@ Collect rewards for tokenId
 
 
 ## Errors
-## farmingAlreadyExists
-
-```solidity
-error farmingAlreadyExists()
-```
-
-
-
 ## farmDoesNotExist
 
 ```solidity

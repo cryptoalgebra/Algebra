@@ -113,7 +113,7 @@ Returns incentive key for specific incentiveId
 ### connectVirtualPoolToPlugin
 
 ```solidity
-function connectVirtualPoolToPlugin(contract IFarmingPlugin plugin, address virtualPool) external
+function connectVirtualPoolToPlugin(address virtualPool, contract IFarmingPlugin plugin) external
 ```
 
 Updates incentive in AlgebraPool plugin
@@ -122,8 +122,8 @@ Updates incentive in AlgebraPool plugin
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| plugin | contract IFarmingPlugin | The Algebra farming plugin |
 | virtualPool | address | The virtual pool to be connected |
+| plugin | contract IFarmingPlugin | The Algebra farming plugin |
 
 ### enterFarming
 

@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 import '../interfaces/IPositionFollower.sol';
 import '../interfaces/INonfungiblePositionManager.sol';
 
-contract DummyContract {
+contract MockDummyContract {
     uint256 junk;
 
     function write(uint256 value) external {
@@ -29,10 +29,10 @@ contract MockPositionFollower is IPositionFollower {
 
     bool public wasCalled;
 
-    DummyContract _dummy;
+    MockDummyContract _dummy;
 
     constructor() {
-        _dummy = new DummyContract();
+        _dummy = new MockDummyContract();
     }
 
     function setFailForToken(uint256 tokenId, Failure value) external {

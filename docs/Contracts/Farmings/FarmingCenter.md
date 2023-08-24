@@ -157,7 +157,7 @@ Used to claim and send rewards from farming(s)
 ### connectVirtualPoolToPlugin
 
 ```solidity
-function connectVirtualPoolToPlugin(contract IFarmingPlugin plugin, address newVirtualPool) external
+function connectVirtualPoolToPlugin(address newVirtualPool, contract IFarmingPlugin plugin) external
 ```
 
 Updates incentive in AlgebraPool plugin
@@ -166,6 +166,6 @@ Updates incentive in AlgebraPool plugin
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| plugin | contract IFarmingPlugin | The Algebra farming plugin |
 | newVirtualPool | address |  |
+| plugin | contract IFarmingPlugin | The Algebra farming plugin |
 

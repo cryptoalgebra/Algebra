@@ -16,7 +16,7 @@ https://github.com/Uniswap/v3-periphery*
 ### IncreaseLiquidity
 
 ```solidity
-event IncreaseLiquidity(uint256 tokenId, uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, address pool)
+event IncreaseLiquidity(uint256 tokenId, uint128 liquidityDesired, uint128 actualLiquidity, uint256 amount0, uint256 amount1, address pool)
 ```
 
 Emitted when liquidity is increased for a position NFT
@@ -26,7 +26,7 @@ Emitted when liquidity is increased for a position NFT
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token for which liquidity was increased |
-| liquidity | uint128 | The amount by which liquidity for the NFT position was increased |
+| liquidityDesired | uint128 | The amount by which liquidity for the NFT position was increased |
 | actualLiquidity | uint128 | the actual liquidity that was added into a pool. Could differ from _liquidity_ when using FeeOnTransfer tokens |
 | amount0 | uint256 | The amount of token0 that was paid for the increase in liquidity |
 | amount1 | uint256 | The amount of token1 that was paid for the increase in liquidity |
@@ -77,6 +77,18 @@ Emitted if farming failed in call from NonfungiblePositionManager.
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of corresponding token |
+
+### FarmingCenter
+
+```solidity
+event FarmingCenter(address farmingCenterAddress)
+```
+
+Emitted after farming center address change
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| farmingCenterAddress | address | The new address of connected farming center |
 
 
 ## Structs
@@ -193,7 +205,7 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that represents the minted position |
-| liquidity | uint128 | The amount of liquidity for this position |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 |
 | amount1 | uint256 | The amount of token1 |
 
@@ -213,7 +225,7 @@ Increases the amount of liquidity in a position, with tokens paid by the &#x60;m
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The new liquidity amount as a result of the increase |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 to achieve resulting liquidity |
 | amount1 | uint256 | The amount of token1 to achieve resulting liquidity |
 
@@ -284,7 +296,7 @@ Changes approval of token ID for farming.
 ### switchFarmingStatus
 
 ```solidity
-function switchFarmingStatus(uint256 tokenId, bool isFarmed) external
+function switchFarmingStatus(uint256 tokenId, bool toActive) external
 ```
 
 Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
@@ -293,8 +305,8 @@ Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | tokenId The ID of the token |
-| isFarmed | bool |  |
+| tokenId | uint256 | The ID of the token |
+| toActive | bool | The new status |
 
 ### setFarmingCenter
 

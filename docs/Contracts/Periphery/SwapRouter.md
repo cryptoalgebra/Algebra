@@ -96,7 +96,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 ### exactInputSingleSupportingFeeOnTransferTokens
 
 ```solidity
-function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external returns (uint256 amountOut)
+function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along the specified path
@@ -105,7 +105,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct ISwapRouter.ExactInputSingleParams | The parameters necessary for the multi-hop swap, encoded as `ExactInputParams` in calldata |
+| params | struct ISwapRouter.ExactInputSingleParams | The parameters necessary for the swap, encoded as `ExactInputSingleParams` in calldata |
 
 **Returns:**
 

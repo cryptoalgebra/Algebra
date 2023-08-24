@@ -46,6 +46,12 @@ struct Position {
 
 
 ## Variables
+### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
+
+
+
+*Developer note: The role which has the right to change the farming center address*
+
 ### address farmingCenter 
 
 
@@ -63,11 +69,6 @@ struct Position {
 
 
 *Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
-
-### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
-
-
-
 
 
 ## Functions
@@ -136,7 +137,7 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that represents the minted position |
-| liquidity | uint128 | The amount of liquidity for this position |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 |
 | amount1 | uint256 | The amount of token1 |
 
@@ -151,20 +152,6 @@ function tokenURI(uint256 tokenId) public view returns (string)
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
-
-### baseURI
-
-```solidity
-function baseURI() public pure returns (string)
-```
-
-
 
 **Returns:**
 
@@ -188,7 +175,7 @@ Increases the amount of liquidity in a position, with tokens paid by the &#x60;m
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The new liquidity amount as a result of the increase |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 to achieve resulting liquidity |
 | amount1 | uint256 | The amount of token1 to achieve resulting liquidity |
 
@@ -259,7 +246,7 @@ Changes approval of token ID for farming.
 ### switchFarmingStatus
 
 ```solidity
-function switchFarmingStatus(uint256 tokenId, bool toFarming) external
+function switchFarmingStatus(uint256 tokenId, bool toActive) external
 ```
 
 Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
@@ -268,8 +255,8 @@ Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | tokenId The ID of the token |
-| toFarming | bool |  |
+| tokenId | uint256 | The ID of the token |
+| toActive | bool | The new status |
 
 ### setFarmingCenter
 
