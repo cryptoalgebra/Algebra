@@ -7,6 +7,9 @@ type AlgebraFeeConfigurationPacked is uint144;
 
 using AlgebraFeeConfigurationLibrary for AlgebraFeeConfigurationPacked global;
 
+/// @title AdaptiveFee packed configuration library
+/// @notice Used to interact with uint144-packed fee config
+/// @dev Structs are not packed in storage with neighboring values, but uint144 can be packed
 library AlgebraFeeConfigurationLibrary {
   uint256 constant UINT16_MASK = 0xFFFF;
   uint256 constant UINT32_MASK = 0xFFFFFFFF;
