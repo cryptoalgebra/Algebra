@@ -18,9 +18,9 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
 
-  /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_ADMINISTRATOR' used as role
+  /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR' used as role
   /// @dev allows to change settings of BasePluginV1Factory
-  function ALGEBRA_BASE_PLUGIN_ADMINISTRATOR() external pure returns (bytes32);
+  function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32);
 
   /// @notice Returns the address of AlgebraFactory
   /// @return The AlgebraFactory contract address

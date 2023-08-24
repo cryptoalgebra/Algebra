@@ -9,7 +9,7 @@ import './AlgebraBasePluginV1.sol';
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
-  bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
+  bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
   /// @inheritdoc IBasePluginV1Factory
   address public immutable override algebraFactory;
@@ -24,7 +24,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
   modifier onlyAdministrator() {
-    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_ADMINISTRATOR, msg.sender), 'only administrator');
+    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'only administrator');
     _;
   }
 

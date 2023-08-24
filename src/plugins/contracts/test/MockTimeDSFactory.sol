@@ -12,7 +12,7 @@ import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.so
 
 contract MockTimeDSFactory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
-  bytes32 public constant override ALGEBRA_BASE_PLUGIN_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_ADMINISTRATOR');
+  bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
   address public immutable override algebraFactory;
 

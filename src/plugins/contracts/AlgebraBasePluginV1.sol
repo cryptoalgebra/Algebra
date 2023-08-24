@@ -24,7 +24,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   /// @dev The role can be granted in AlgebraFactory
-  bytes32 public constant FEE_CONFIG_MANAGER = keccak256('FEE_CONFIG_MANAGER');
+  bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
   /// @inheritdoc IAlgebraPlugin
   uint8 public constant override defaultPluginConfig =
@@ -120,7 +120,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IDynamicFeeManager
   function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
-    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(FEE_CONFIG_MANAGER, msg.sender));
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
     feeConfig = _config;
