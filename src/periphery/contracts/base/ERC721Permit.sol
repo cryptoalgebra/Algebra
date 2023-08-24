@@ -20,24 +20,25 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
     /// @dev The hash of the version string used in the permit signature verification
     bytes32 private immutable versionHash;
 
-    /// @inheritdoc IERC721Permit
-    bytes32 public immutable override DOMAIN_SEPARATOR;
-
     /// @notice Computes the nameHash and versionHash
     constructor(string memory name_, string memory symbol_, string memory version_) ERC721(name_, symbol_) {
         nameHash = keccak256(bytes(name_));
         versionHash = keccak256(bytes(version_));
+    }
 
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                // keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')
-                0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f,
-                nameHash,
-                versionHash,
-                block.chainid,
-                address(this)
-            )
-        );
+    /// @inheritdoc IERC721Permit
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    // keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')
+                    0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f,
+                    nameHash,
+                    versionHash,
+                    block.chainid,
+                    address(this)
+                )
+            );
     }
 
     /// @inheritdoc IERC721Permit
@@ -59,7 +60,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
         bytes32 digest = keccak256(
             abi.encodePacked(
                 '\x19\x01',
-                DOMAIN_SEPARATOR,
+                DOMAIN_SEPARATOR(),
                 keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, _getAndIncrementNonce(tokenId), deadline))
             )
         );
@@ -67,13 +68,17 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
         require(spender != owner, 'ERC721Permit: approval to current owner');
 
         if (Address.isContract(owner)) {
-            require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, 'Unauthorized');
+            _checkAuthorization(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);
         } else {
             address recoveredAddress = ecrecover(digest, v, r, s);
             require(recoveredAddress != address(0), 'Invalid signature');
-            require(recoveredAddress == owner, 'Unauthorized');
+            _checkAuthorization(recoveredAddress == owner);
         }
 
         _approve(spender, tokenId);
+    }
+
+    function _checkAuthorization(bool isAuthorized) private pure {
+        require(isAuthorized, 'Unauthorized');
     }
 }
