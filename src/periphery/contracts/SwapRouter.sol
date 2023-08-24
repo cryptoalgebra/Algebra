@@ -154,7 +154,7 @@ contract SwapRouter is
     /// @inheritdoc ISwapRouter
     function exactInputSingleSupportingFeeOnTransferTokens(
         ExactInputSingleParams calldata params
-    ) external override checkDeadline(params.deadline) returns (uint256 amountOut) {
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         SwapCallbackData memory data = SwapCallbackData({
             path: abi.encodePacked(params.tokenIn, params.tokenOut),
             payer: msg.sender
