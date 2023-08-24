@@ -4,7 +4,6 @@ pragma solidity =0.8.20;
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 
-import '../libraries/ChainId.sol';
 import '../interfaces/external/IERC1271.sol';
 import '../interfaces/IERC721Permit.sol';
 import './BlockTimestamp.sol';
@@ -35,7 +34,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
                 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f,
                 nameHash,
                 versionHash,
-                ChainId.get(),
+                block.chainid,
                 address(this)
             )
         );
