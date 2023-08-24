@@ -8,6 +8,7 @@ import {
   IWNativeToken,
   IAlgebraFactory,
   SwapRouter,
+  MockPositionFollower,
 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { computePoolAddress } from './shared/computePoolAddress'
@@ -201,6 +202,29 @@ describe('NonfungiblePositionManager', () => {
           deadline: 1,
         })
       ).to.be.revertedWith('STF')
+    })
+
+    it('fails if deadline passed', async () => {
+      await nft.createAndInitializePoolIfNecessary(
+        tokens[0].getAddress(),
+        tokens[1].getAddress(),
+        encodePriceSqrt(1, 1)
+      )
+      await nft.setTime(2);
+      await expect(
+        nft.mint({
+          token0: tokens[0].getAddress(),
+          token1: tokens[1].getAddress(),
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          recipient: wallet.address,
+          deadline: 1,
+        })
+      ).to.be.revertedWith('Transaction too old');
     })
 
     it('creates a token', async () => {
@@ -484,7 +508,40 @@ describe('NonfungiblePositionManager', () => {
       expect(liquidity).to.eq(1100)
     })
 
+    it('updates fees if needed', async () => {
+      const pool = await factory.poolByPair(tokens[0], tokens[1]);
+
+      await tokens[0].transfer(pool, 1000);
+      await tokens[1].transfer(pool, 1000);
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      })
+      const { tokensOwed0, tokensOwed1 } = await nft.positions(tokenId)
+      expect(tokensOwed0).to.eq(1000)
+      expect(tokensOwed1).to.eq(1000)
+    })
+
     it('emits an event')
+
+    it('fails if deadline passed', async () => {
+      await nft.setTime(2);
+      await expect(
+        nft.increaseLiquidity({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+      ).to.be.revertedWith('Transaction too old');
+    })
 
     it('can be paid with Native', async () => {
       const [token0, token1] = await sortedTokens(tokens[0], wnative)
@@ -573,11 +630,30 @@ describe('NonfungiblePositionManager', () => {
       ).to.be.revertedWith('Transaction too old')
     })
 
+    it('fails if slippage too high', async () => {
+      await expect(
+        nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 100000, amount1Min: 0, deadline: 1 })
+      ).to.be.revertedWith('Price slippage check')
+      await expect(
+        nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 0, amount1Min: 100000, deadline: 1 })
+      ).to.be.revertedWith('Price slippage check')
+      await expect(
+        nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 100000, amount1Min: 100000, deadline: 1 })
+      ).to.be.revertedWith('Price slippage check')
+    })
+
     it('cannot be called by other addresses', async () => {
       await expect(
         nft.decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 0, amount1Min: 0, deadline: 1 })
       ).to.be.revertedWith('Not approved')
     })
+
+    it('cannot use 0 as liquidityDelta', async () => {
+      expect(
+        nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 0, amount0Min: 0, amount1Min: 0, deadline: 1 })
+      ).to.be.revertedWithoutReason;
+    })
+
 
     it('decreases position liquidity', async () => {
       await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 25, amount0Min: 0, amount1Min: 0, deadline: 1 })
@@ -686,6 +762,17 @@ describe('NonfungiblePositionManager', () => {
       ).to.be.reverted
     })
 
+    it('can be called with token1 only', async () => {
+      await expect(
+        nft.connect(other).collect({
+          tokenId,
+          recipient: wallet.address,
+          amount0Max: 0,
+          amount1Max: 100,
+        })
+      ).to.be.not.reverted;
+    })
+
     it('no op if no tokens are owed', async () => {
       await expect(
         nft.connect(other).collect({
@@ -714,6 +801,23 @@ describe('NonfungiblePositionManager', () => {
         .withArgs(poolAddress, wallet.address, 49)
         .to.emit(tokens[1], 'Transfer')
         .withArgs(poolAddress, wallet.address, 49)
+    })
+
+    it('transfers tokens owed from burn to nft if recipient is 0', async () => {
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 0, amount1Min: 0, deadline: 1 })
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [await tokens[0].getAddress(), await tokens[1].getAddress()])
+      await expect(
+        nft.connect(other).collect({
+          tokenId,
+          recipient: ZeroAddress,
+          amount0Max: MaxUint128,
+          amount1Max: MaxUint128,
+        })
+      )
+        .to.emit(tokens[0], 'Transfer')
+        .withArgs(poolAddress, await nft.getAddress(), 49)
+        .to.emit(tokens[1], 'Transfer')
+        .withArgs(poolAddress, await nft.getAddress(), 49)
     })
 
     it('gas transfers both [ @skip-on-coverage ]', async () => {
@@ -817,6 +921,12 @@ describe('NonfungiblePositionManager', () => {
         amount1Max: MaxUint128,
       })
       await snapshotGasCost(nft.connect(other).burn(tokenId))
+    })
+  })
+
+  describe('#getApproved', async () => {
+    it('cannot get approved for nonexistent  token', async () => {
+      await expect(nft.getApproved(1)).to.be.revertedWith('ERC721: approved query for nonexistent token');
     })
   })
 
@@ -1217,6 +1327,316 @@ describe('NonfungiblePositionManager', () => {
           .to.emit(tokens[0], 'Transfer')
           .withArgs(poolAddress, wallet.address, 250)
           .to.not.emit(tokens[1], 'Transfer')
+      })
+    })
+  })
+
+  describe('#farming methods', () => {
+    const tokenId = 1
+    beforeEach('create a position', async () => {
+      await nft.createAndInitializePoolIfNecessary(
+        tokens[0].getAddress(),
+        tokens[1].getAddress(),
+        encodePriceSqrt(1, 1)
+      )
+
+      await nft.mint({
+        token0: tokens[0].getAddress(),
+        token1: tokens[1].getAddress(),
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: other.getAddress(),
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      })
+    })
+
+    describe('set farming center', async () => {
+      it('cannot set fc without role', async () => {
+        expect(nft.connect(other).setFarmingCenter(wallet.address)).to.be.revertedWithoutReason;
+      })
+
+      it('can set fc', async () => {
+        await nft.setFarmingCenter(wallet.address);
+        const farmingCenterAddress = await nft.farmingCenter();
+        expect(farmingCenterAddress).to.be.eq(wallet.address);
+      })
+    })
+
+    describe('approve for farming', async () => {
+      it('can not approve for farming if not authorized', async() => {
+        await nft.setFarmingCenter(wallet.address);
+  
+        await expect(nft.approveForFarming(tokenId, true)).to.be.revertedWith('Not approved');
+      })
+  
+      it('can approve for farming', async() => {
+        await nft.setFarmingCenter(wallet.address);
+  
+        await nft.connect(other).approveForFarming(tokenId, true);
+        expect(await nft.farmingApprovals(tokenId)).to.be.eq(wallet.address);
+      })
+  
+      it('can revoke approval for farming', async() => {
+        await nft.setFarmingCenter(wallet.address);
+  
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, false);
+        expect(await nft.farmingApprovals(tokenId)).to.be.eq(ZeroAddress);
+      })
+    })
+    
+    describe('switch farming status', async () => {
+      it('can not switch on if not approved', async() => {
+        await nft.setFarmingCenter(wallet.address);
+  
+        await expect(nft.switchFarmingStatus(tokenId, true)).to.be.revertedWith('Not approved for farming');
+      })
+
+      it('can switch off if not approved', async() => {
+        await nft.setFarmingCenter(wallet.address);
+  
+        await expect(nft.switchFarmingStatus(tokenId, false)).to.be.not.reverted;
+      })
+
+      it('can not switch on if not farming center', async() => {
+        await nft.setFarmingCenter(wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, true);
+  
+        await expect(nft.connect(other).switchFarmingStatus(tokenId, true)).to.be.revertedWith('Only FarmingCenter');
+      })
+
+      it('can not switch off if not farming center', async() => {
+        await nft.setFarmingCenter(wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, true);
+  
+        await expect(nft.connect(other).switchFarmingStatus(tokenId, false)).to.be.revertedWith('Only FarmingCenter');
+      })
+
+      it('can switch on', async() => {
+        await nft.setFarmingCenter(wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, true);
+
+        await nft.switchFarmingStatus(tokenId, true)
+        const farmedIn = await nft.tokenFarmedIn(tokenId);
+        expect(farmedIn).to.be.eq(wallet.address);
+      })
+
+      it('can switch off', async() => {
+        await nft.setFarmingCenter(wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, true);
+
+        await nft.switchFarmingStatus(tokenId, true)
+        await nft.switchFarmingStatus(tokenId, false)
+        const farmedIn = await nft.tokenFarmedIn(tokenId);
+        expect(farmedIn).to.be.eq(ZeroAddress);
+      })
+
+      it('can switch off without approval', async() => {
+        await nft.setFarmingCenter(wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, true);
+
+        await nft.switchFarmingStatus(tokenId, true)
+
+        await nft.connect(other).approveForFarming(tokenId, false);
+        await nft.switchFarmingStatus(tokenId, false)
+        const farmedIn = await nft.tokenFarmedIn(tokenId);
+        expect(farmedIn).to.be.eq(ZeroAddress);
+      })
+    })
+
+    describe('applyLiquidityDeltaInFarming', async () => {
+      let mockFollower: MockPositionFollower;
+
+      beforeEach('deploy mockFollower', async() => {
+        const followerFactory = await ethers.getContractFactory('MockPositionFollower');
+        mockFollower = (await followerFactory.deploy()) as any as MockPositionFollower;
+
+        await nft.setFarmingCenter(mockFollower);
+      })
+
+      it('works', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+
+        expect(await mockFollower.wasCalled()).to.be.false;
+
+        await nft.connect(other).increaseLiquidity({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+
+        expect(await mockFollower.wasCalled()).to.be.true;
+      })
+
+      it('does nothing if fc zero', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        await nft.setFarmingCenter(ZeroAddress);
+        expect(await mockFollower.wasCalled()).to.be.false;
+
+        await nft.connect(other).increaseLiquidity({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      it('does nothing if fc changed', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        await nft.setFarmingCenter(other.address);
+        expect(await mockFollower.wasCalled()).to.be.false;
+
+        await nft.connect(other).increaseLiquidity({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      it('catches panic', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        expect(await mockFollower.wasCalled()).to.be.false;
+        
+        await mockFollower.setFailForToken(tokenId, 1)
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          })
+        ).to.emit(nft, 'FarmingFailed').withArgs(tokenId);
+
+        expect(await mockFollower.wasCalled()).to.be.false;
+
+        await mockFollower.setFailForToken(tokenId, 2)
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          })
+        ).to.emit(nft, 'FarmingFailed').withArgs(tokenId);
+
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      it('catches error with message', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        expect(await mockFollower.wasCalled()).to.be.false;
+        
+        await mockFollower.setFailForToken(tokenId, 3)
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          })
+        ).to.emit(nft, 'FarmingFailed').withArgs(tokenId);
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      it('reverts if error without message', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        expect(await mockFollower.wasCalled()).to.be.false;
+        
+        await mockFollower.setFailForToken(tokenId, 4)
+        expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          })
+        ).to.be.revertedWithoutReason;
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      it('reverts if custom error', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        expect(await mockFollower.wasCalled()).to.be.false;
+        
+        await mockFollower.setFailForToken(tokenId, 5)
+        await expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          })
+        ).to.be.revertedWithCustomError(mockFollower, 'someCustomError');
+        expect(await mockFollower.wasCalled()).to.be.false;
+      })
+
+      
+      it('reverts if out of gas', async() => {
+        await nft.connect(other).approveForFarming(tokenId, true);
+        await mockFollower.enterToFarming(nft, tokenId);
+        
+        expect(await mockFollower.wasCalled()).to.be.false;
+
+        const gasLimit = await nft.connect(other).increaseLiquidity.estimateGas({
+          tokenId: tokenId,
+          amount0Desired: 100,
+          amount1Desired: 100,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 1,
+        })
+        
+        await mockFollower.setFailForToken(tokenId, 6)
+        expect(
+          nft.connect(other).increaseLiquidity({
+            tokenId: tokenId,
+            amount0Desired: 100,
+            amount1Desired: 100,
+            amount0Min: 0,
+            amount1Min: 0,
+            deadline: 1,
+          }, {gasLimit: gasLimit + 10000n})
+        ).to.be.revertedWithoutReason;
+        expect(await mockFollower.wasCalled()).to.be.false;
       })
     })
   })

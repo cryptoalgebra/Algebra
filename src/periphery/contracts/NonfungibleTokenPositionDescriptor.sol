@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
-pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 
 import './libraries/SafeERC20Namer.sol';
-import './libraries/ChainId.sol';
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IERC20Metadata.sol';
@@ -47,7 +45,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             )
         );
 
-        bool _flipRatio = flipRatio(token0, token1, ChainId.get());
+        bool _flipRatio = flipRatio(token0, token1, block.chainid);
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
         address baseTokenAddress = !_flipRatio ? token0 : token1;
         (, int24 tick, , , , ) = pool.globalState();
