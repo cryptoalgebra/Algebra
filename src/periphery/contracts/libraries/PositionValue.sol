@@ -7,7 +7,6 @@ import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '../interfaces/INonfungiblePositionManager.sol';
 import './LiquidityAmounts.sol';
 import './PoolAddress.sol';
-import './PositionKey.sol';
 
 /// @title Returns information about the token value held in a Algebra Integral NFT
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:

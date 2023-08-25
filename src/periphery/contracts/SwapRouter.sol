@@ -14,7 +14,6 @@ import './base/SelfPermit.sol';
 import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
-import './interfaces/external/IWNativeToken.sol';
 
 /// @title Algebra Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
