@@ -19,8 +19,9 @@ import './libraries/AdaptiveFee.sol';
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
-  uint256 internal constant UINT16_MODULO = 65536;
+  using Plugins for uint8;
 
+  uint256 internal constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   /// @dev The role can be granted in AlgebraFactory
@@ -169,8 +170,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     emit Incentive(newIncentive);
 
     (, , , uint8 pluginConfig) = _getPoolState();
-    bool isHookActive = pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) != 0;
-    if (turnOn != isHookActive) {
+    if (turnOn != pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
       IAlgebraPool(pool).setPluginConfig(pluginConfig);
     }
@@ -181,7 +181,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (incentive != targetIncentive) return false;
     if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
-    if (pluginConfig & uint8(Plugins.AFTER_SWAP_FLAG) == 0) return false;
+    if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
 
     return true;
   }
