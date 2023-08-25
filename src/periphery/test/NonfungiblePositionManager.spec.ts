@@ -85,22 +85,13 @@ describe('NonfungiblePositionManager', () => {
       ]);
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(1, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
       const codeAfter = await wallet.provider.getCode(expectedAddress);
       expect(codeAfter).to.not.eq('0x');
     });
 
     it('is payable', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(1, 1),
-        { value: 1 }
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1), { value: 1 });
     });
 
     it('works if pool is created but not initialized', async () => {
@@ -113,11 +104,7 @@ describe('NonfungiblePositionManager', () => {
       await factory.createPool(tokens[0], tokens[1]);
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(2, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(2, 1));
     });
 
     it('works if pool is created and initialized', async () => {
@@ -133,11 +120,7 @@ describe('NonfungiblePositionManager', () => {
       if (!wallet.provider) throw new Error('No provider');
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(4, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(4, 1));
     });
 
     it('could theoretically use eth via multicall', async () => {
@@ -152,13 +135,7 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
-      await snapshotGasCost(
-        nft.createAndInitializePoolIfNecessary(
-          tokens[0],
-          tokens[1],
-          encodePriceSqrt(1, 1)
-        )
-      );
+      await snapshotGasCost(nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1)));
     });
   });
 
@@ -181,11 +158,7 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('fails if cannot transfer', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(1, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
       await tokens[0].approve(nft, 0);
       await expect(
         nft.mint({
@@ -204,11 +177,7 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('fails if deadline passed', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0],
-        tokens[1],
-        encodePriceSqrt(1, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
       await nft.setTime(2);
       await expect(
         nft.mint({

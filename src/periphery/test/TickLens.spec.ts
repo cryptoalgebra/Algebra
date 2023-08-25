@@ -74,7 +74,7 @@ describe('TickLens', () => {
       let [tokenAddressA, tokenAddressB] = [tokens[0].address, tokens[1].address];
 
       if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
-      [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
+        [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
       await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
 
@@ -97,13 +97,17 @@ describe('TickLens', () => {
       const lensFactory = await ethers.getContractFactory('TickLensTest');
       const tickLens = (await lensFactory.deploy()) as any as TickLensTest;
 
-      return({
-        factory, nft, tokens, poolAddress, tickLens
-      })
+      return {
+        factory,
+        nft,
+        tokens,
+        poolAddress,
+        tickLens,
+      };
     }
 
     beforeEach('load fixture', async () => {
-      ;({nft, tokens, poolAddress, tickLens} = await loadFixture(subFixture));
+      ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
     });
 
     function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {

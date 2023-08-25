@@ -10,7 +10,6 @@ import { getMaxTick, getMinTick } from './shared/ticks';
 import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
 
-
 type TestERC20WithAddress = TestERC20 & { address: string | undefined };
 
 describe('NonfungibleTokenPositionDescriptor', () => {
