@@ -86,8 +86,8 @@ describe('NonfungiblePositionManager', () => {
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.eq('0x');
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(1, 1)
       );
       const codeAfter = await wallet.provider.getCode(expectedAddress);
@@ -96,8 +96,8 @@ describe('NonfungiblePositionManager', () => {
 
     it('is payable', async () => {
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(1, 1),
         { value: 1 }
       );
@@ -110,12 +110,12 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0].getAddress(), tokens[1].getAddress());
+      await factory.createPool(tokens[0], tokens[1]);
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(2, 1)
       );
     });
@@ -125,7 +125,7 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0].getAddress(), tokens[1].getAddress());
+      await factory.createPool(tokens[0], tokens[1]);
       const pool = new ethers.Contract(expectedAddress, IAlgebraPoolABI, wallet);
 
       await pool.initialize(encodePriceSqrt(3, 1));
@@ -134,8 +134,8 @@ describe('NonfungiblePositionManager', () => {
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(4, 1)
       );
     });
@@ -154,8 +154,8 @@ describe('NonfungiblePositionManager', () => {
     it('gas [ @skip-on-coverage ]', async () => {
       await snapshotGasCost(
         nft.createAndInitializePoolIfNecessary(
-          await tokens[0].getAddress(),
-          await tokens[1].getAddress(),
+          tokens[0],
+          tokens[1],
           encodePriceSqrt(1, 1)
         )
       );
@@ -166,8 +166,8 @@ describe('NonfungiblePositionManager', () => {
     it('fails if pool does not exist', async () => {
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
@@ -182,15 +182,15 @@ describe('NonfungiblePositionManager', () => {
 
     it('fails if cannot transfer', async () => {
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(1, 1)
       );
-      await tokens[0].approve(nft.getAddress(), 0);
+      await tokens[0].approve(nft, 0);
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
@@ -205,15 +205,15 @@ describe('NonfungiblePositionManager', () => {
 
     it('fails if deadline passed', async () => {
       await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
+        tokens[0],
+        tokens[1],
         encodePriceSqrt(1, 1)
       );
       await nft.setTime(2);
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
