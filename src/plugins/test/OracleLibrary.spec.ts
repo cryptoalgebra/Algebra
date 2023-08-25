@@ -7,7 +7,7 @@ import { expandTo18Decimals } from './shared/utilities';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { tokensFixture } from './shared/externalFixtures';
 
-describe.only('OracleLibrary', () => {
+describe('OracleLibrary', () => {
   let tokens: TestERC20[];
   let oracleLibraryTest: OracleLibraryTest;
 
