@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/Base64.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
+import '@openzeppelin/contracts/utils/math/Math.sol';
 
 /// @title NFTSVG
 /// @notice Provides a function for generating an SVG associated with a Algebra NFT
@@ -401,6 +401,6 @@ library NFTSVG {
 
     function isRare(uint256 tokenId, address poolAddress) internal pure returns (bool) {
         bytes32 h = keccak256(abi.encodePacked(tokenId, poolAddress));
-        return uint256(h) < type(uint256).max / (1 + TickTree.getSingleSignificantBit(tokenId) * 2);
+        return uint256(h) < type(uint256).max / (1 + Math.log2(tokenId) * 2);
     }
 }
