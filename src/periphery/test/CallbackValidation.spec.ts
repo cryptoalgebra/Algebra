@@ -21,7 +21,7 @@ describe('CallbackValidation', () => {
   before('create fixture loader', async () => {
     [nonpairAddr, ...wallets] = await (ethers as any).getSigners();
     callbackValidationFixture = async () => {
-      const { factory } = await completeFixture();
+      const { factory } = await loadFixture(completeFixture);
       const tokenFactory = await ethers.getContractFactory('TestERC20');
       const callbackValidationFactory = await ethers.getContractFactory('TestCallbackValidation');
       const tokens: [TestERC20, TestERC20] = [

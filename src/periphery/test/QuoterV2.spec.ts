@@ -23,7 +23,7 @@ describe('QuoterV2', function () {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     quoter: QuoterV2;
   }> = async () => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture();
+    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
     for (const token of _tokens) {

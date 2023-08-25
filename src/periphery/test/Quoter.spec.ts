@@ -24,7 +24,7 @@ describe('Quoter', () => {
     wnative: IWNativeToken;
   }> = async () => {
     let _tokens;
-    const { wnative, factory, router, tokens, nft } = await completeFixture();
+    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
     _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     // approve & fund wallets

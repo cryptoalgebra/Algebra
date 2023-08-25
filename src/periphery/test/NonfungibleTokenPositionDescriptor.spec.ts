@@ -21,7 +21,7 @@ describe('NonfungibleTokenPositionDescriptor', () => {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     nft: MockTimeNonfungiblePositionManager;
   }> = async () => {
-    const { factory, nft, router, nftDescriptor } = await completeFixture();
+    const { factory, nft, router, nftDescriptor } = await loadFixture(completeFixture);
     const tokenFactory = await ethers.getContractFactory('TestERC20');
     const tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress] = [
       (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20WithAddress, // do not use maxu256 to avoid overflowing

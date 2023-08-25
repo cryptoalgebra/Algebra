@@ -67,7 +67,7 @@ describe('SwapRouter', function () {
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
   }> = async () => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture();
+    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
     for (const token of _tokens) {
