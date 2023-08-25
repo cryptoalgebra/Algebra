@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat';
 import { v3RouterFixture } from './externalFixtures';
-import { MaxUint256, Wallet } from 'ethers';
+import { MaxUint256 } from 'ethers';
+import { tokenAddresses, tokenRatioSortOrder } from './constants';
 import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
@@ -11,6 +12,34 @@ import {
 } from '../../typechain';
 
 type TestERC20WithAddress = TestERC20 & { address_: string | undefined };
+
+type TokenRatioSortData = {
+  tokenAddress: string | TestERC20;
+  tokenRatioSortOrder: bigint;
+}
+
+const DEFAULT_TOKENS_RATIONS_DATA: TokenRatioSortData[] = [
+  {
+    tokenAddress: tokenAddresses.USDC,
+    tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR_MOST
+  },
+  {
+    tokenAddress: tokenAddresses.USDT,
+    tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR_MORE
+  },
+  {
+    tokenAddress: tokenAddresses.DAI,
+    tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR
+  },
+  {
+    tokenAddress: tokenAddresses.WETH,
+    tokenRatioSortOrder:  tokenRatioSortOrder.DENOMINATOR_MORE
+  },
+  {
+    tokenAddress: tokenAddresses.WBTC,
+    tokenRatioSortOrder:  tokenRatioSortOrder.DENOMINATOR_MOST
+  },
+]
 
 const completeFixture: () => Promise<{
   wnative: IWNativeToken;
@@ -48,9 +77,10 @@ const completeFixture: () => Promise<{
   const ProxyFactory = await ethers.getContractFactory('TransparentUpgradeableProxy');
 
   const nftDescriptor = (await positionDescriptorFactory.deploy(
-    tokens[0]
+    tokens[0], 'MATIC', DEFAULT_TOKENS_RATIONS_DATA
   )) as any as NonfungibleTokenPositionDescriptor;
   const proxy = await ProxyFactory.deploy(nftDescriptor, '0xDeaD1F5aF792afc125812E875A891b038f888258', '0x');
+
   const nftDescriptorProxied = positionDescriptorFactory.attach(proxy) as any as NonfungibleTokenPositionDescriptor;
   const positionManagerFactory = await ethers.getContractFactory('MockTimeNonfungiblePositionManager');
   const nft = (await positionManagerFactory.deploy(

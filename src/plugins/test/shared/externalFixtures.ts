@@ -22,7 +22,7 @@ interface TokensFixture {
   token1: TestERC20;
 }
 
-async function tokensFixture(): Promise<TokensFixture> {
+export async function tokensFixture(): Promise<TokensFixture> {
   const tokenFactory = await ethers.getContractFactory('TestERC20');
   const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address: string };
   const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address: string };

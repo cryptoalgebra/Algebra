@@ -9,7 +9,6 @@ import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IPositionFollower.sol';
-import './libraries/PositionKey.sol';
 import './libraries/PoolInteraction.sol';
 import './libraries/PoolAddress.sol';
 import './base/LiquidityManagement.sol';
