@@ -7,36 +7,34 @@ async function main() {
   const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory('AlgebraEternalFarming')
-  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager)
+  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager, { gasLimit: "0x1000000" })
 
-  await AlgebraEternalFarming.deployed()
-  console.log('AlgebraEternalFarming deployed to:', AlgebraEternalFarming.address)
+  console.log('AlgebraEternalFarming deployed to:', AlgebraEternalFarming.target)
 
   const FarmingCenterFactory = await hre.ethers.getContractFactory('FarmingCenter')
-  const FarmingCenter = await FarmingCenterFactory.deploy(AlgebraEternalFarming.address, deploysData.nonfungiblePositionManager)
+  const FarmingCenter = await FarmingCenterFactory.deploy(AlgebraEternalFarming.target, deploysData.nonfungiblePositionManager,{ gasLimit: "0x1000000" })
 
-  await FarmingCenter.deployed()
-  console.log('FarmingCenter deployed to:', FarmingCenter.address)
+  console.log('FarmingCenter deployed to:', FarmingCenter.target)
 
-  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.address)
+  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target, { gasLimit: "0x1000000" })
   console.log('Updated farming center address in eternal(incentive) farming')
 
-  const pluginFactory = await hre.ethers.getContractAt('DataStorageFactory', deploysData.dataStorageFactory)
+  const pluginFactory = await hre.ethers.getContractAt('BasePluginV1Factory', deploysData.BasePluginV1Factory)
 
-  await pluginFactory.setFarmingAddress(FarmingCenter.address)
+  await pluginFactory.setFarmingAddress(FarmingCenter.target, { gasLimit: "0x1000000" })
   console.log('Updated farming center address in plugin factory')
 
   const posManager = await hre.ethers.getContractAt(
     'INonfungiblePositionManager',
     deploysData.nonfungiblePositionManager
   )
-  await posManager.setFarmingCenter(FarmingCenter.address)
+  await posManager.setFarmingCenter(FarmingCenter.target, { gasLimit: "0x1000000" })
   // await hre.run("verify:verify", {
-  //   address: AlgebraFarming.address,
+  //   address: AlgebraFarming.target,
   //   constructorArguments: [
   //     deploysData.poolDeployer,
   //     deploysData.nonfungiblePositionManager,
-  //     VirtualPoolDeployer.address,
+  //     VirtualPoolDeployer.target,
   //     maxIncentiveStartLeadTime,
   //     maxIncentiveDuration,
   //   ],

@@ -15,7 +15,7 @@ export default {
     hardhat: {
       allowUnlimitedContractSize: true,
       loggingEnabled: false,
-      evm: 'paris'
+      evm: 'london'
     },
     hhnode: {
       url: `http://127.0.0.1:8545`,
@@ -56,6 +56,11 @@ export default {
     maticTestnet: {
       url: `https://rpc-mumbai.maticvigil.com`,
       chainId: 80001,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    mantleTestnet: {
+      url: `https://rpc.testnet.mantle.xyz`,
+      chainId: 5001,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     maticMainnet: {
