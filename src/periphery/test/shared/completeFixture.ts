@@ -93,7 +93,7 @@ const completeFixture: () => Promise<{
   const ProxyFactory = await ethers.getContractFactory('TransparentUpgradeableProxy');
 
   const nftDescriptor = (await positionDescriptorFactory.deploy(
-    tokens[0], DEFAULT_TOKENS_RATIONS_DATA
+    tokens[0], 'MATIC', DEFAULT_TOKENS_RATIONS_DATA
   )) as any as NonfungibleTokenPositionDescriptor;
   const proxy = await ProxyFactory.deploy(nftDescriptor, '0xDeaD1F5aF792afc125812E875A891b038f888258', '0x');
 

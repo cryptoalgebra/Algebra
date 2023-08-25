@@ -19,6 +19,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     address public immutable WNativeToken;
     address public immutable cachedThis;
 
+    string private _nativeCurrencySymbol;
     mapping(address token => int256 ratioOrder) private _tokenRatioPriority;
 
     struct TokenRatioSortData {
@@ -26,10 +27,11 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         int256 tokenRatioSortOrder;
     }
 
-    constructor(address _WNativeToken, TokenRatioSortData[] memory tokenDatas) {
+    constructor(address _WNativeToken, string memory _nativeCurrencySymbol_, TokenRatioSortData[] memory tokenDatas) {
         WNativeToken = _WNativeToken;
         cachedThis = address(this);
 
+        _nativeCurrencySymbol = _nativeCurrencySymbol_;
         _tokenRatioPriority[_WNativeToken] = TokenRatioSortOrder.DENOMINATOR;
 
         uint256 _length = tokenDatas.length;
@@ -47,6 +49,14 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             return _tokenRatioPriority[token];
         } else {
             return NonfungibleTokenPositionDescriptor(cachedThis).tokenRatioPriority(token);
+        }
+    }
+
+    function nativeCurrencySymbol() public view returns (string memory) {
+        if (address(this) == cachedThis) {
+            return _nativeCurrencySymbol;
+        } else {
+            return NonfungibleTokenPositionDescriptor(cachedThis).nativeCurrencySymbol();
         }
     }
 
@@ -78,10 +88,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                     quoteTokenAddress: quoteTokenAddress,
                     baseTokenAddress: baseTokenAddress,
                     quoteTokenSymbol: quoteTokenAddress == WNativeToken
-                        ? 'ETH'
+                        ? nativeCurrencySymbol()
                         : SafeERC20Namer.tokenSymbol(quoteTokenAddress),
                     baseTokenSymbol: baseTokenAddress == WNativeToken
-                        ? 'ETH'
+                        ? nativeCurrencySymbol()
                         : SafeERC20Namer.tokenSymbol(baseTokenAddress),
                     quoteTokenDecimals: IERC20Metadata(quoteTokenAddress).decimals(),
                     baseTokenDecimals: IERC20Metadata(baseTokenAddress).decimals(),
