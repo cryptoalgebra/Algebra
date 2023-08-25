@@ -13,7 +13,7 @@ import baseConfig from '../../hardhat.base.config'
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
   settings: {
-    evmVersion: 'london',
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 99999999,
