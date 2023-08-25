@@ -69,9 +69,12 @@ library VolatilityOracle {
       last.blockTimestamp,
       last.tickCumulative
     );
-    if (windowStartIndex == indexUpdated) windowStartIndex++;
-    self[indexUpdated] = _createNewTimepoint(last, blockTimestamp, tick, avgTick, windowStartIndex);
-    if (oldestIndex == indexUpdated) oldestIndex++; // previous oldest index has been overwritten
+    unchecked {
+      // overflow of indexes is desired
+      if (windowStartIndex == indexUpdated) windowStartIndex++;
+      self[indexUpdated] = _createNewTimepoint(last, blockTimestamp, tick, avgTick, windowStartIndex);
+      if (oldestIndex == indexUpdated) oldestIndex++; // previous oldest index has been overwritten
+    }
   }
 
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
