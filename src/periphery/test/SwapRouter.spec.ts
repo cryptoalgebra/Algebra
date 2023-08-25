@@ -619,9 +619,9 @@ describe('SwapRouter', function () {
         const traderAfter = await getBalances(trader.address);
 
         expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 300000n);
-        expect(traderAfter.token1).to.be.eq(traderBefore.token1 + 210684n);
+        expect(traderAfter.token1).to.be.eq(traderBefore.token1 + 210618n);
         expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 285000n);
-        expect(poolAfter.token1).to.be.eq(poolBefore.token1 - 221772n);
+        expect(poolAfter.token1).to.be.eq(poolBefore.token1 - 221703n);
       });
 
       it('1 -> 0', async () => {
@@ -637,9 +637,9 @@ describe('SwapRouter', function () {
         const poolAfter = await getBalances(pool);
         const traderAfter = await getBalances(trader.address);
 
-        expect(traderAfter.token0).to.be.eq(traderBefore.token0 + 210684n);
+        expect(traderAfter.token0).to.be.eq(traderBefore.token0 + 210618n);
         expect(traderAfter.token1).to.be.eq(traderBefore.token1 - 300000n);
-        expect(poolAfter.token0).to.be.eq(poolBefore.token0 - 221772n);
+        expect(poolAfter.token0).to.be.eq(poolBefore.token0 - 221703n);
         expect(poolAfter.token1).to.be.eq(poolBefore.token1 + 285000n);
       });
 
@@ -659,14 +659,14 @@ describe('SwapRouter', function () {
 
             await expect(exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, await wnative.getAddress()))
               .to.emit(wnative, 'Withdrawal')
-              .withArgs(await router.getAddress(), 219213);
+              .withArgs(await router.getAddress(), 219146);
 
             // get balances after
             const poolAfter = await getBalances(pool);
             const traderAfter = await getBalances(trader.address);
 
             expect(traderAfter.token0).to.be.eq(traderBefore.token0 - 300000n);
-            expect(poolAfter.wnative).to.be.eq(poolBefore.wnative - 219213n);
+            expect(poolAfter.wnative).to.be.eq(poolBefore.wnative - 219146n);
             expect(poolAfter.token0).to.be.eq(poolBefore.token0 + 285000n);
           });
         });

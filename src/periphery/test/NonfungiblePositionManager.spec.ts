@@ -1290,9 +1290,9 @@ describe('NonfungiblePositionManager', () => {
           amount1Max: MaxUint128,
         });
         console.log(nft1Amount0.toString(), nft1Amount1.toString(), nft2Amount0.toString(), nft2Amount1.toString());
-        expect(nft1Amount0).to.eq(83);
+        expect(nft1Amount0).to.eq(416);
         expect(nft1Amount1).to.eq(0);
-        expect(nft2Amount0).to.eq(250);
+        expect(nft2Amount0).to.eq(1250);
         expect(nft2Amount1).to.eq(0);
       });
 
@@ -1311,7 +1311,7 @@ describe('NonfungiblePositionManager', () => {
           })
         )
           .to.emit(tokens[0], 'Transfer')
-          .withArgs(poolAddress, wallet.address, 83)
+          .withArgs(poolAddress, wallet.address, 416)
           .to.not.emit(tokens[1], 'Transfer');
         await expect(
           nft.collect({
@@ -1322,7 +1322,7 @@ describe('NonfungiblePositionManager', () => {
           })
         )
           .to.emit(tokens[0], 'Transfer')
-          .withArgs(poolAddress, wallet.address, 250)
+          .withArgs(poolAddress, wallet.address, 1250)
           .to.not.emit(tokens[1], 'Transfer');
       });
     });

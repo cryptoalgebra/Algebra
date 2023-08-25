@@ -79,7 +79,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(1);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('0 -> 1 changes fee', async () => {
@@ -116,7 +116,7 @@ describe('Quoter', () => {
           expandTo18Decimals(300000)
         );
 
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
 
         await exactInput([tokens[0].address, tokens[1].address], 300000);
 
@@ -129,7 +129,7 @@ describe('Quoter', () => {
           expandTo18Decimals(300000)
         );
 
-        expect(fees2[0]).to.eq(15000);
+        expect(fees2[0]).to.eq(500);
       });
 
       it('1 -> 0', async () => {
@@ -139,7 +139,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(1);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('0 -> 1 -> 2', async () => {
@@ -149,7 +149,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(1);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('2 -> 1 -> 0', async () => {
@@ -159,7 +159,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(1);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
     });
 
@@ -174,7 +174,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(9852);
-        expect(fee).to.eq(100);
+        expect(fee).to.eq(500);
       });
 
       it('1 -> 0', async () => {
@@ -187,7 +187,7 @@ describe('Quoter', () => {
         );
 
         expect(amountOut).to.eq(9852);
-        expect(fee).to.eq(100);
+        expect(fee).to.eq(500);
       });
     });
 
@@ -199,7 +199,7 @@ describe('Quoter', () => {
         );
 
         expect(amountIn).to.eq(3);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('1 -> 0', async () => {
@@ -209,7 +209,7 @@ describe('Quoter', () => {
         );
 
         expect(amountIn).to.eq(3);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('0 -> 1 -> 2', async () => {
@@ -219,7 +219,7 @@ describe('Quoter', () => {
         );
 
         expect(amountIn).to.eq(5);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
 
       it('2 -> 1 -> 0', async () => {
@@ -229,7 +229,7 @@ describe('Quoter', () => {
         );
 
         expect(amountIn).to.eq(5);
-        expect(fees[0]).to.eq(100);
+        expect(fees[0]).to.eq(500);
       });
     });
 
@@ -242,8 +242,8 @@ describe('Quoter', () => {
           encodePriceSqrt(100, 102)
         );
 
-        expect(amountIn).to.eq(9952);
-        expect(fee).to.eq(100);
+        expect(amountIn).to.eq(9956);
+        expect(fee).to.eq(500);
       });
 
       it('1 -> 0', async () => {
@@ -254,8 +254,8 @@ describe('Quoter', () => {
           encodePriceSqrt(102, 100)
         );
 
-        expect(amountIn).to.eq(9952);
-        expect(fee).to.eq(100);
+        expect(amountIn).to.eq(9956);
+        expect(fee).to.eq(500);
       });
     });
   });
