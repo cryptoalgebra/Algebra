@@ -589,6 +589,83 @@ describe('VolatilityOracle', () => {
     }
   });
 
+  describe('index overflow tests', async () => {
+    let volatilityOracle: VolatilityOracleTest;
+    const startingTime = 100n;
+    const MAX_UINT16 = 2n**16n - 1n;
+    const DAY = 24n * 60n * 60n;
+    beforeEach('deploy test volatilityOracle', async () => {
+      volatilityOracle = await loadFixture(volatilityOracleFixture);
+    });
+
+    it('can overflow in first time', async () => {
+      await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: startingTime });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+
+      await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
+        initialized: true,
+        blockTimestamp: startingTime + 2n * DAY,
+        tickCumulative: -5n * 2n * DAY,
+        volatilityCumulative: 10n * 2n * DAY,
+        tick: -5,
+        averageTick: -5,
+        windowStartIndex: MAX_UINT16 - 2n
+      })
+      await volatilityOracle.setState(startingTime + 2n * DAY, MAX_UINT16 - 1n);
+      await volatilityOracle.advanceTime(DAY + 1n);
+
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      expect(await volatilityOracle.index()).to.be.eq(MAX_UINT16);
+      expect(await volatilityOracle.getOldestIndex()).to.be.eq(0);
+
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      expect(await volatilityOracle.index()).to.be.eq(0);
+      expect(await volatilityOracle.getOldestIndex()).to.be.eq(1);
+    })
+
+    it('can overflow twice', async () => {
+      await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: startingTime });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+
+      // first
+      await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
+        initialized: true,
+        blockTimestamp: startingTime + 2n * DAY,
+        tickCumulative: -5n * 2n * DAY,
+        volatilityCumulative: 10n * 2n * DAY,
+        tick: -5,
+        averageTick: -5,
+        windowStartIndex: MAX_UINT16 - 2n
+      })
+      await volatilityOracle.setState(startingTime + 2n * DAY, MAX_UINT16 - 1n);
+      await volatilityOracle.advanceTime(DAY + 1n);
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+
+
+      // second
+      await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
+        initialized: true,
+        blockTimestamp: startingTime + 4n * DAY,
+        tickCumulative: 1n * 4n * DAY,
+        volatilityCumulative: 10n * 4n * DAY,
+        tick: 1,
+        averageTick: 1,
+        windowStartIndex: MAX_UINT16 - 2n
+      })
+      await volatilityOracle.setState(startingTime + 4n * DAY, MAX_UINT16 - 1n);
+      await volatilityOracle.advanceTime(DAY + 1n);
+
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      expect(await volatilityOracle.index()).to.be.eq(MAX_UINT16);
+      expect(await volatilityOracle.getOldestIndex()).to.be.eq(0);
+
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      expect(await volatilityOracle.index()).to.be.eq(0);
+      expect(await volatilityOracle.getOldestIndex()).to.be.eq(1);
+    })
+  })
+
   describe('full volatilityOracle', function () {
     this.timeout(10_200_000);
 
@@ -757,6 +834,21 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.advanceTime(15 * 60);
       await snapshotGasCost(volatilityOracle.getGasCostOfGetPoints([24 * 60 * 60]));
     });
+
+    it.skip('second index wrap', async() => {
+      let i = Number(await volatilityOracle.index());
+      for (; i < 65536; i += BATCH_SIZE) {
+        if (i + BATCH_SIZE > 65536) {
+          BATCH_SIZE = Math.ceil(65536 / 300) * 300 - i;
+          console.log('batch update starting at', i);
+          await volatilityOracle.batchUpdateFixedTimedelta(BATCH_SIZE);
+        } else {
+          console.log('batch update starting at', i);
+          await volatilityOracle.batchUpdateFast(BATCH_SIZE);
+        }
+      }
+      expect(await volatilityOracle.index()).to.eq(163);
+    })
   });
 
   describe('full volatilityOracle, maximal density', function () {

@@ -5,28 +5,26 @@ const path = require('path');
 async function main() {
     const [deployer] = await hre.ethers.getSigners();
     // precompute
-    const poolDeployerAddress = hre.ethers.utils.getContractAddress({
+    const poolDeployerAddress = hre.ethers.getCreateAddress({
       from: deployer.address, 
-      nonce: (await deployer.getTransactionCount()) + 1
+      nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1
     })
 
     const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-    const factory = await AlgebraFactory.deploy(poolDeployerAddress);
-    await factory.deployed();
-
+    const factory = await AlgebraFactory.deploy(poolDeployerAddress, { gasLimit: "0x1000000" });
+    
     const vaultAddress = await factory.communityVault();
 
     const PoolDeployerFactory = await hre.ethers.getContractFactory("AlgebraPoolDeployer");
-    const poolDeployer  = await PoolDeployerFactory.deploy(factory.address, vaultAddress);
-    await poolDeployer.deployed();
+    const poolDeployer  = await PoolDeployerFactory.deploy(factory.target, vaultAddress, { gasLimit: "0x1000000" });
 
-    console.log("AlgebraPoolDeployer to:", poolDeployer.address);
-    console.log("AlgebraFactory deployed to:", factory.address);
+    console.log("AlgebraPoolDeployer to:", poolDeployer.target);
+    console.log("AlgebraFactory deployed to:", factory.target);
     
     const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
     let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
-    deploysData.poolDeployer = poolDeployer.address;
-    deploysData.factory = factory.address;
+    deploysData.poolDeployer = poolDeployer.target;
+    deploysData.factory = factory.target;
     fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 
 }
