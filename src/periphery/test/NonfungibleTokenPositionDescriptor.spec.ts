@@ -16,7 +16,6 @@ const USDT = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
 const WETH = '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619';
 const WBTC = '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6';
 
-const MATIC_CHAIN_ID = 137;
 type TestERC20WithAddress = TestERC20 & { address: string | undefined };
 
 describe('NonfungibleTokenPositionDescriptor', () => {
@@ -68,53 +67,53 @@ describe('NonfungibleTokenPositionDescriptor', () => {
 
   describe('#tokenRatioPriority', () => {
     it('returns -100 for WNativeToken', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(wnative, MATIC_CHAIN_ID)).to.eq(-100);
+      expect(await nftPositionDescriptor.tokenRatioPriority(wnative)).to.eq(-100);
     });
 
     it('returns 200 for USDC', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(USDC, MATIC_CHAIN_ID)).to.eq(300);
+      expect(await nftPositionDescriptor.tokenRatioPriority(USDC)).to.eq(300);
     });
 
     it('returns 100 for DAI', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(DAI, MATIC_CHAIN_ID)).to.eq(100);
+      expect(await nftPositionDescriptor.tokenRatioPriority(DAI)).to.eq(100);
     });
 
     it('returns  150 for USDT', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(USDT, MATIC_CHAIN_ID)).to.eq(200);
+      expect(await nftPositionDescriptor.tokenRatioPriority(USDT)).to.eq(200);
     });
 
     it('returns -200 for WETH', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(WETH, MATIC_CHAIN_ID)).to.eq(-200);
+      expect(await nftPositionDescriptor.tokenRatioPriority(WETH)).to.eq(-200);
     });
 
     it('returns -250 for WBTC', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(WBTC, MATIC_CHAIN_ID)).to.eq(-300);
+      expect(await nftPositionDescriptor.tokenRatioPriority(WBTC)).to.eq(-300);
     });
 
     it('returns 0 for any non-ratioPriority token', async () => {
-      expect(await nftPositionDescriptor.tokenRatioPriority(tokens[0], MATIC_CHAIN_ID)).to.eq(0);
+      expect(await nftPositionDescriptor.tokenRatioPriority(tokens[0])).to.eq(0);
     });
   });
 
   describe('#flipRatio', () => {
     it('returns false if neither token has priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(tokens[0], tokens[2], MATIC_CHAIN_ID)).to.eq(false);
+      expect(await nftPositionDescriptor.flipRatio(tokens[0], tokens[2])).to.eq(false);
     });
 
     it('returns true if both tokens are numerators but token0 has a higher priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(USDC, DAI, MATIC_CHAIN_ID)).to.eq(true);
+      expect(await nftPositionDescriptor.flipRatio(USDC, DAI)).to.eq(true);
     });
 
     it('returns true if both tokens are denominators but token1 has lower priority ordering', async () => {
-      expect(await nftPositionDescriptor.flipRatio(await wnative.getAddress(), WBTC, MATIC_CHAIN_ID)).to.eq(true);
+      expect(await nftPositionDescriptor.flipRatio(await wnative.getAddress(), WBTC)).to.eq(true);
     });
 
     it('returns true if token0 is a numerator and token1 is a denominator', async () => {
-      expect(await nftPositionDescriptor.flipRatio(DAI, WBTC, MATIC_CHAIN_ID)).to.eq(true);
+      expect(await nftPositionDescriptor.flipRatio(DAI, WBTC)).to.eq(true);
     });
 
     it('returns false if token1 is a numerator and token0 is a denominator', async () => {
-      expect(await nftPositionDescriptor.flipRatio(WBTC, DAI, MATIC_CHAIN_ID)).to.eq(false);
+      expect(await nftPositionDescriptor.flipRatio(WBTC, DAI)).to.eq(false);
     });
   });
 

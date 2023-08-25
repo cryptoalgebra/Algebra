@@ -16,17 +16,38 @@ import './libraries/TokenRatioSortOrder.sol';
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
-    // Polygon addresses
-    address private constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
-    address private constant USDC = 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174;
-    address private constant USDT = 0xc2132D05D31c914a87C6611C10748AEb04B58e8F;
-    address private constant WETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619;
-    address private constant WBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6;
-
     address public immutable WNativeToken;
+    address public immutable cachedThis;
 
-    constructor(address _WNativeToken) {
+    mapping(address token => int256 ratioOrder) private _tokenRatioPriority;
+
+    struct TokenRatioSortData {
+        address tokenAddress;
+        int256 tokenRatioSortOrder;
+    }
+
+    constructor(address _WNativeToken, TokenRatioSortData[] memory tokenDatas) {
         WNativeToken = _WNativeToken;
+        cachedThis = address(this);
+
+        _tokenRatioPriority[_WNativeToken] = TokenRatioSortOrder.DENOMINATOR;
+
+        uint256 _length = tokenDatas.length;
+        if (_length > 0) {
+            unchecked {
+                for (uint256 i = 0; i < _length; i++) {
+                    _tokenRatioPriority[tokenDatas[i].tokenAddress] = tokenDatas[i].tokenRatioSortOrder;
+                }
+            }
+        }
+    }
+
+    function tokenRatioPriority(address token) public view returns (int256) {
+        if (address(this) == cachedThis) {
+            return _tokenRatioPriority[token];
+        } else {
+            return NonfungibleTokenPositionDescriptor(cachedThis).tokenRatioPriority(token);
+        }
     }
 
     /// @inheritdoc INonfungibleTokenPositionDescriptor
@@ -45,7 +66,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             )
         );
 
-        bool _flipRatio = flipRatio(token0, token1, block.chainid);
+        bool _flipRatio = flipRatio(token0, token1);
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
         address baseTokenAddress = !_flipRatio ? token0 : token1;
         (, int24 tick, , , , ) = pool.globalState();
@@ -74,29 +95,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
             );
     }
 
-    function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool) {
-        return tokenRatioPriority(token0, chainId) > tokenRatioPriority(token1, chainId);
-    }
-
-    function tokenRatioPriority(address token, uint256 chainId) public view returns (int256) {
-        if (token == WNativeToken) {
-            return TokenRatioSortOrder.DENOMINATOR;
-        }
-        if (chainId == 137) {
-            if (token == USDC) {
-                return TokenRatioSortOrder.NUMERATOR_MOST;
-            } else if (token == USDT) {
-                return TokenRatioSortOrder.NUMERATOR_MORE;
-            } else if (token == DAI) {
-                return TokenRatioSortOrder.NUMERATOR;
-            } else if (token == WETH) {
-                return TokenRatioSortOrder.DENOMINATOR_MORE;
-            } else if (token == WBTC) {
-                return TokenRatioSortOrder.DENOMINATOR_MOST;
-            } else {
-                return 0;
-            }
-        }
-        return 0;
+    function flipRatio(address token0, address token1) public view returns (bool) {
+        return tokenRatioPriority(token0) > tokenRatioPriority(token1);
     }
 }
