@@ -8,10 +8,9 @@ contract VolatilityOracleTest {
   uint256 private constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
-  uint32 initTime;
-
   VolatilityOracle.Timepoint[UINT16_MODULO] public timepoints;
 
+  uint32 initTime;
   uint32 public time;
   int24 public tick;
   uint16 public index;
@@ -28,6 +27,15 @@ contract VolatilityOracleTest {
     time = params.time;
     tick = params.tick;
     timepoints.initialize(params.time, tick);
+  }
+
+  function setState(uint32 _time, uint16 _index) external {
+    time = _time;
+    index = _index;
+  }
+
+  function writeTimepointDirectly(uint16 _index, VolatilityOracle.Timepoint memory timepoint) external {
+    timepoints[_index] = timepoint;
   }
 
   function setStep(uint32 newStep) external {
@@ -86,7 +94,7 @@ contract VolatilityOracleTest {
     uint32 _initTime = initTime;
     uint256 _index = (_time - _initTime) / STEP;
 
-    VolatilityOracle.Timepoint memory last = timepoints[_index];
+    VolatilityOracle.Timepoint memory last = timepoints[uint16(_index)];
 
     unchecked {
       for (uint256 i; i < length; ++i) {
@@ -109,7 +117,7 @@ contract VolatilityOracleTest {
         last = VolatilityOracle._createNewTimepoint(last, _time, _tick, avgTick, windowStartIndex);
 
         if ((_index + 1) - uint256(_index - (uint256(24 hours) / STEP) + 1) > type(uint16).max) windowStartIndex = uint16(_index + 2);
-        timepoints[nextIndex] = last;
+        timepoints[uint16(nextIndex)] = last;
 
         _tick--;
 
