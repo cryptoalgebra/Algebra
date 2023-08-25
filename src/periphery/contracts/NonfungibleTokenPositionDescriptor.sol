@@ -9,13 +9,14 @@ import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/NFTDescriptor.sol';
-import './libraries/TokenRatioSortOrder.sol';
 
 /// @title Describes NFT token positions
 /// @notice Produces a string containing the data URI for a JSON metadata string
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
+    int256 internal constant DENOMINATOR_SORT_ORDER = -100;
+
     address public immutable WNativeToken;
     address public immutable cachedThis;
 
@@ -32,7 +33,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         cachedThis = address(this);
 
         _nativeCurrencySymbol = _nativeCurrencySymbol_;
-        _tokenRatioPriority[_WNativeToken] = TokenRatioSortOrder.DENOMINATOR;
+        _tokenRatioPriority[_WNativeToken] = DENOMINATOR_SORT_ORDER;
 
         uint256 _length = tokenDatas.length;
         if (_length > 0) {
