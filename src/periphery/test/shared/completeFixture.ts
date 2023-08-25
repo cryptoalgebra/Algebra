@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat';
 import { v3RouterFixture } from './externalFixtures';
-import { MaxUint256, Wallet } from 'ethers';
+import { MaxUint256 } from 'ethers';
+import { tokenAddresses, tokenRatioSortOrder } from './constants';
 import {
   IWNativeToken,
   MockTimeNonfungiblePositionManager,
@@ -17,42 +18,25 @@ type TokenRatioSortData = {
   tokenRatioSortOrder: bigint;
 }
 
-const polygonTokenAddresses = {
-  'DAI': '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-  'USDC': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-  'USDT': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-  'WETH': '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-  'WBTC': '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6'
-}
-
-const tokenRatioSortOrder = {
-  'NUMERATOR_MOST': 300n,
-  'NUMERATOR_MORE': 200n,
-  'NUMERATOR': 100n,
-  'DENOMINATOR_MOST': -300n,
-  'DENOMINATOR_MORE': -200n,
-  'DENOMINATOR': -100n
-}
-
 const DEFAULT_TOKENS_RATIONS_DATA: TokenRatioSortData[] = [
   {
-    tokenAddress: polygonTokenAddresses.USDC,
+    tokenAddress: tokenAddresses.USDC,
     tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR_MOST
   },
   {
-    tokenAddress: polygonTokenAddresses.USDT,
+    tokenAddress: tokenAddresses.USDT,
     tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR_MORE
   },
   {
-    tokenAddress: polygonTokenAddresses.DAI,
+    tokenAddress: tokenAddresses.DAI,
     tokenRatioSortOrder:  tokenRatioSortOrder.NUMERATOR
   },
   {
-    tokenAddress: polygonTokenAddresses.WETH,
+    tokenAddress: tokenAddresses.WETH,
     tokenRatioSortOrder:  tokenRatioSortOrder.DENOMINATOR_MORE
   },
   {
-    tokenAddress: polygonTokenAddresses.WBTC,
+    tokenAddress: tokenAddresses.WBTC,
     tokenRatioSortOrder:  tokenRatioSortOrder.DENOMINATOR_MOST
   },
 ]
