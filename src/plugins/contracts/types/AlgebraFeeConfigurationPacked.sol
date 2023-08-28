@@ -4,7 +4,6 @@ pragma solidity =0.8.20;
 import '../base/AlgebraFeeConfiguration.sol';
 
 type AlgebraFeeConfigurationPacked is uint144;
-
 using AlgebraFeeConfigurationLibrary for AlgebraFeeConfigurationPacked global;
 
 /// @title AdaptiveFee packed configuration library
@@ -15,21 +14,23 @@ library AlgebraFeeConfigurationLibrary {
   uint256 constant UINT32_MASK = 0xFFFFFFFF;
 
   // alpha1 offset is 0
-  uint144 constant ALPHA2_OFFSET = 16;
-  uint144 constant BETA1_OFFSET = 32;
-  uint144 constant BETA2_OFFSET = 64;
-  uint144 constant GAMMA1_OFFSET = 96;
-  uint144 constant GAMMA2_OFFSET = 112;
-  uint144 constant BASE_FEE_OFFSET = 128;
+  uint256 constant ALPHA2_OFFSET = 16;
+  uint256 constant BETA1_OFFSET = 32;
+  uint256 constant BETA2_OFFSET = 64;
+  uint256 constant GAMMA1_OFFSET = 96;
+  uint256 constant GAMMA2_OFFSET = 112;
+  uint256 constant BASE_FEE_OFFSET = 128;
 
   function pack(AlgebraFeeConfiguration memory config) internal pure returns (AlgebraFeeConfigurationPacked) {
-    uint144 _config = (uint144(config.baseFee) << BASE_FEE_OFFSET) |
-      (uint144(config.gamma2) << GAMMA2_OFFSET) |
-      (uint144(config.gamma1) << GAMMA1_OFFSET) |
-      (uint144(config.beta2) << BETA2_OFFSET) |
-      (uint144(config.beta1) << BETA1_OFFSET) |
-      (uint144(config.alpha2) << ALPHA2_OFFSET) |
-      uint144(config.alpha1);
+    uint144 _config = uint144(
+      (uint256(config.baseFee) << BASE_FEE_OFFSET) |
+        (uint256(config.gamma2) << GAMMA2_OFFSET) |
+        (uint256(config.gamma1) << GAMMA1_OFFSET) |
+        (uint256(config.beta2) << BETA2_OFFSET) |
+        (uint256(config.beta1) << BETA1_OFFSET) |
+        (uint256(config.alpha2) << ALPHA2_OFFSET) |
+        uint256(config.alpha1)
+    );
 
     return AlgebraFeeConfigurationPacked.wrap(_config);
   }
@@ -42,7 +43,7 @@ library AlgebraFeeConfigurationLibrary {
 
   function alpha2(AlgebraFeeConfigurationPacked config) internal pure returns (uint16 _alpha2) {
     assembly {
-      _alpha2 := and(UINT16_MASK, shr(16, config))
+      _alpha2 := and(UINT16_MASK, shr(ALPHA2_OFFSET, config))
     }
   }
 

@@ -3,7 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '../base/AlgebraFeeConfiguration.sol';
-import './AlgebraFeeConfigurationLibrary.sol';
+import '../types/AlgebraFeeConfigurationPacked.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
