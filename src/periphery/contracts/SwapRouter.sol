@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
-pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
@@ -15,7 +14,6 @@ import './base/SelfPermit.sol';
 import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
-import './interfaces/external/IWNativeToken.sol';
 
 /// @title Algebra Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
@@ -155,7 +153,7 @@ contract SwapRouter is
     /// @inheritdoc ISwapRouter
     function exactInputSingleSupportingFeeOnTransferTokens(
         ExactInputSingleParams calldata params
-    ) external override checkDeadline(params.deadline) returns (uint256 amountOut) {
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         SwapCallbackData memory data = SwapCallbackData({
             path: abi.encodePacked(params.tokenIn, params.tokenOut),
             payer: msg.sender

@@ -78,7 +78,7 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the plugin address changes
   /// @param newPluginAddress New plugin address
-  event Plugin(address indexed newPluginAddress);
+  event Plugin(address newPluginAddress);
 
   /// @notice Emitted when the plugin config changes
   /// @param newPluginConfig New plugin config

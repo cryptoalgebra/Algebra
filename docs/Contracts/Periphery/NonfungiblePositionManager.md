@@ -13,10 +13,9 @@ https://github.com/Uniswap/v3-periphery*
 ## Modifiers
 ### isAuthorizedForToken
 
-
-`modifier isAuthorizedForToken(uint256 tokenId)`  internal
-
-
+```solidity
+modifier isAuthorizedForToken(uint256 tokenId)
+```
 
 
 
@@ -25,36 +24,59 @@ https://github.com/Uniswap/v3-periphery*
 | tokenId | uint256 |  |
 
 
+## Structs
+### Position
+
+
+
+```solidity
+struct Position {
+  uint88 nonce;
+  address operator;
+  uint80 poolId;
+  int24 tickLower;
+  int24 tickUpper;
+  uint128 liquidity;
+  uint256 feeGrowthInside0LastX128;
+  uint256 feeGrowthInside1LastX128;
+  uint128 tokensOwed0;
+  uint128 tokensOwed1;
+}
+```
 
 
 ## Variables
+### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
+
+
+
+*Developer note: The role which has the right to change the farming center address*
+
 ### address farmingCenter 
 
 
 
 *Developer note: The address of the farming center contract, which handles farmings logic*
+
 ### mapping(uint256 &#x3D;&gt; address) farmingApprovals 
 
 
 
 *Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
+
 ### mapping(uint256 &#x3D;&gt; address) tokenFarmedIn 
 
 
 
 *Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
-### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
-
-
 
 
 ## Functions
 ### constructor
 
-
-`constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, address _poolDeployer) public`  public
-
-
+```solidity
+constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, address _poolDeployer) public
+```
 
 
 
@@ -65,16 +87,15 @@ https://github.com/Uniswap/v3-periphery*
 | _tokenDescriptor_ | address |  |
 | _poolDeployer | address |  |
 
-
 ### positions
 
-
-`function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)` view external
+```solidity
+function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
+```
 
 Returns the position information associated with a given token ID.
+
 *Developer note: Throws if the token ID is not valid.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -98,34 +119,33 @@ Returns the position information associated with a given token ID.
 
 ### mint
 
-
-`function mint(struct INonfungiblePositionManager.MintParams params) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)` payable external
+```solidity
+function mint(struct INonfungiblePositionManager.MintParams params) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
+```
 
 Creates a new position wrapped in a NFT
+
 *Developer note: Call this when the pool does exist and is initialized. Note that if the pool is created but not initialized
 a method does not exist, i.e. the pool is assumed to be initialized.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| params | struct INonfungiblePositionManager.MintParams | The params necessary to mint a position, encoded as &#x60;MintParams&#x60; in calldata |
+| params | struct INonfungiblePositionManager.MintParams | The params necessary to mint a position, encoded as `MintParams` in calldata |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that represents the minted position |
-| liquidity | uint128 | The amount of liquidity for this position |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 |
 | amount1 | uint256 | The amount of token1 |
 
 ### tokenURI
 
-
-`function tokenURI(uint256 tokenId) public view returns (string)` view public
-
-
+```solidity
+function tokenURI(uint256 tokenId) public view returns (string)
+```
 
 
 
@@ -139,30 +159,13 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 | ---- | ---- | ----------- |
 | [0] | string |  |
 
-### baseURI
-
-
-`function baseURI() public pure returns (string)` pure public
-
-
-
-
-
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
-
 ### increaseLiquidity
 
-
-`function increaseLiquidity(struct INonfungiblePositionManager.IncreaseLiquidityParams params) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1)` payable external
+```solidity
+function increaseLiquidity(struct INonfungiblePositionManager.IncreaseLiquidityParams params) external payable returns (uint128 liquidity, uint256 amount0, uint256 amount1)
+```
 
 Increases the amount of liquidity in a position, with tokens paid by the &#x60;msg.sender&#x60;
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -172,18 +175,17 @@ Increases the amount of liquidity in a position, with tokens paid by the &#x60;m
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| liquidity | uint128 | The new liquidity amount as a result of the increase |
+| liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 to achieve resulting liquidity |
 | amount1 | uint256 | The amount of token1 to achieve resulting liquidity |
 
 ### decreaseLiquidity
 
-
-`function decreaseLiquidity(struct INonfungiblePositionManager.DecreaseLiquidityParams params) external payable returns (uint256 amount0, uint256 amount1)` payable external
+```solidity
+function decreaseLiquidity(struct INonfungiblePositionManager.DecreaseLiquidityParams params) external payable returns (uint256 amount0, uint256 amount1)
+```
 
 Decreases the amount of liquidity in a position and accounts it to the position
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -193,17 +195,16 @@ Decreases the amount of liquidity in a position and accounts it to the position
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amount0 | uint256 | The amount of token0 accounted to the position&#x27;s tokens owed |
-| amount1 | uint256 | The amount of token1 accounted to the position&#x27;s tokens owed |
+| amount0 | uint256 | The amount of token0 accounted to the position's tokens owed |
+| amount1 | uint256 | The amount of token1 accounted to the position's tokens owed |
 
 ### collect
 
-
-`function collect(struct INonfungiblePositionManager.CollectParams params) external payable returns (uint256 amount0, uint256 amount1)` payable external
+```solidity
+function collect(struct INonfungiblePositionManager.CollectParams params) external payable returns (uint256 amount0, uint256 amount1)
+```
 
 Collects up to a maximum amount of fees owed to a specific position to the recipient
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -218,69 +219,65 @@ Collects up to a maximum amount of fees owed to a specific position to the recip
 
 ### burn
 
-
-`function burn(uint256 tokenId) external payable` payable external
+```solidity
+function burn(uint256 tokenId) external payable
+```
 
 Burns a token ID, which deletes it from the NFT contract. The token must have 0 liquidity and all tokens
 must be collected first.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that is being burned |
 
-
 ### approveForFarming
 
-
-`function approveForFarming(uint256 tokenId, bool approve) external payable` payable external
+```solidity
+function approveForFarming(uint256 tokenId, bool approve) external payable
+```
 
 Changes approval of token ID for farming.
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that is being approved / unapproved |
 | approve | bool | New status of approval |
 
-
 ### switchFarmingStatus
 
-
-`function switchFarmingStatus(uint256 tokenId, bool toFarming) external`  external
+```solidity
+function switchFarmingStatus(uint256 tokenId, bool toActive) external
+```
 
 Changes farming status of token to &#x27;farmed&#x27; or &#x27;not farmed&#x27;
+
 *Developer note: can be called only by farmingCenter*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| tokenId | uint256 | tokenId The ID of the token |
-| toFarming | bool |  |
-
+| tokenId | uint256 | The ID of the token |
+| toActive | bool | The new status |
 
 ### setFarmingCenter
 
-
-`function setFarmingCenter(address newFarmingCenter) external`  external
+```solidity
+function setFarmingCenter(address newFarmingCenter) external
+```
 
 Changes address of farmingCenter
+
 *Developer note: can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newFarmingCenter | address | The new address of farmingCenter |
 
-
 ### getApproved
 
+```solidity
+function getApproved(uint256 tokenId) public view returns (address)
+```
 
-`function getApproved(uint256 tokenId) public view returns (address)` view public
 
 
 *Developer note: Returns the account approved for &#x60;tokenId&#x60; token.
@@ -288,8 +285,6 @@ Changes address of farmingCenter
 Requirements:
 
 - &#x60;tokenId&#x60; must exist.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -300,7 +295,4 @@ Requirements:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address |  |
-
-
-
 

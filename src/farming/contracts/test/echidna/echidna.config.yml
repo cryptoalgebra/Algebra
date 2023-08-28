@@ -1,0 +1,4 @@
+format: 'text'
+testMode: "assertion"
+coverage: false
+cryticArgs: ['--hardhat-ignore-compile']

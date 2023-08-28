@@ -46,10 +46,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
+  /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 private constant POOL_INIT_CODE_HASH = 0x010015e1d6c8cd8cd29ea70c7dbfa43d0a25c1b3641ea054567ab0be51154fe9;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x010015f5000024e719230e570f14735e78b9358328193187f5241ca7b18e5c41;
 
-  bytes32 private constant EMPTY_HASH = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+  bytes32 public constant EMPTY_HASH = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -73,7 +74,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
+  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
     return (defaultCommunityFee, defaultTickspacing, defaultFee);
   }
 
@@ -97,7 +98,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
       defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
     }
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(address(defaultPlugin), token0, token1);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
 
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
@@ -167,6 +168,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   function _transferOwnership(address newOwner) internal override {
     _revokeRole(DEFAULT_ADMIN_ROLE, owner());
     super._transferOwnership(newOwner);
-    _grantRole(DEFAULT_ADMIN_ROLE, owner());
+    if (owner() != address(0)) {
+      _grantRole(DEFAULT_ADMIN_ROLE, owner());
+    }
   }
 }

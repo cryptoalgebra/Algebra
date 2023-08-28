@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '../interfaces/IAlgebraPoolErrors.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 
 import './TickMath.sol';
 import './LiquidityMath.sol';
@@ -25,7 +25,7 @@ library TickManagement {
 
   function checkTickRangeValidity(int24 bottomTick, int24 topTick) internal pure {
     if (topTick > TickMath.MAX_TICK) revert IAlgebraPoolErrors.topTickAboveMAX();
-    if (!(topTick > bottomTick)) revert IAlgebraPoolErrors.topTickLowerOrEqBottomTick();
+    if (topTick <= bottomTick) revert IAlgebraPoolErrors.topTickLowerOrEqBottomTick();
     if (bottomTick < TickMath.MIN_TICK) revert IAlgebraPoolErrors.bottomTickLowerThanMIN();
   }
 

@@ -1,21 +1,7 @@
-This directory contains the main Algebra protocol contracts:
+## AlgebraBasePluginV1
 
-## AlgebraPool
+The main plugin contract. Such a contract is created for each liquidity pool and connected to it. The plugin interacts with the pool using hooks (special functions).
 
-Concentrated liquidity pool contract where swaps occur and liquidity positions are placed. Only one pool can exist for each pair of tokens.
+## BasePluginV1Factory
 
-Parts of the internal logic of the pool are placed in separate abstract contracts in the base directory.
-
-## DataStorageOperator
-
-A separate DataStorageOperator contract is also created for each pool. This contract contains the logic needed to record the history of the pool in a series of timepoints. It also calculates statistical values ​​and adaptive fee.
-
-## AlgebraFactory
-
-The contract used to create new liquidity pools. The factory creates a DataStorageOperator contract for each pool and deploys the pool contract using a separate AlgebraPoolDeployer.
-
-In addition, the factory contract is used to control access to various sensitive protocol functions. Such as changing community fee value, enabling/disabling farmings and so on.
-
-## AlgebraCommunityVault
-
-Community fee accumulates on this contract if it is enabled in pools.
+The contract used to create new `AlgebraBasePluginV1` instances. 

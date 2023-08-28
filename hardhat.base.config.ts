@@ -72,6 +72,21 @@ export default {
       chainId: 80001,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    mantleTestnet: {
+      url: `https://rpc.testnet.mantle.xyz`,
+      chainId: 5001,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    mantle: {
+      url: `https://rpc.mantle.xyz`,
+      chainId: 5000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    telosTestnet: {
+      url: `https://testnet.telos.net/evm`,
+      chainId: 41,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
     maticMainnet: {
       url: `https://rpc-mainnet.matic.quiknode.pro`,
       chainId: 137,

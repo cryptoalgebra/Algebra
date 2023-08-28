@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './AlgebraPool.sol';
-
 import './interfaces/IAlgebraPoolDeployer.sol';
+
+import './AlgebraPool.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools

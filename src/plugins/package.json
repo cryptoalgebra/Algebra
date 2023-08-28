@@ -14,11 +14,13 @@
     "url": "https://github.com/cryptoalgebra/Algebra/"
   },
   "dependencies": {
-    "@cryptoalgebra/core": "3.1.0"
+    "@cryptoalgebra/core": "3.1.0",
+    "@cryptoalgebra/periphery": "2.0.1"
   },
   "scripts": {
-    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
-    "compile": "hardhat compile",
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",
+    "compile": "npm --prefix ../core run compile && npm --prefix ../periphery run compile && hardhat compile",
+    "solhint": "solhint ./contracts/**/*.sol",
     "test": "hardhat test --parallel",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
   },

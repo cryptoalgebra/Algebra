@@ -4,24 +4,24 @@ pragma solidity =0.8.20;
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/callback/IAlgebraMintCallback.sol';
 import '../interfaces/callback/IAlgebraFlashCallback.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
-import '../interfaces/IAlgebraPoolErrors.sol';
 import '../interfaces/IERC20Minimal.sol';
-import '../interfaces/plugin/IAlgebraPlugin.sol';
-import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 
 import '../libraries/TickManagement.sol';
 import '../libraries/SafeTransfer.sol';
 import '../libraries/Constants.sol';
 import '../libraries/Plugins.sol';
+
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
 /// @dev Decoupling into a separate abstract contract simplifies testing
-abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
+abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   struct GlobalState {
@@ -93,6 +93,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
     if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
 
+  /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManagement.checkTickRangeValidity(bottomTick, topTick);
     _;

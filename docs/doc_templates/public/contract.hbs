@@ -19,6 +19,7 @@
 {{#hsection}}
 {{#each modifiers}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
@@ -28,6 +29,17 @@
 {{#hsection}}
 {{#each events}}
 {{>item}}
+
+{{/each}}
+{{/hsection}}
+{{/if}}
+{{#if structures}}
+
+## Structs
+{{#hsection}}
+{{#each structures}}
+{{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
@@ -37,6 +49,7 @@
 {{#hsection}}
 {{#each publicVariables}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
@@ -46,6 +59,7 @@
 {{#hsection}}
 {{#each publicExternalFunctions}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
@@ -57,6 +71,7 @@
 {{#hsection}}
 {{#each errors}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}

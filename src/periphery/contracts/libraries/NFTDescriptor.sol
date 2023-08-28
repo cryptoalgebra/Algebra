@@ -6,7 +6,6 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
-import 'base64-sol/base64.sol';
 import './HexStrings.sol';
 import './NFTSVG.sol';
 
@@ -17,7 +16,7 @@ library NFTDescriptor {
     using Strings for uint256;
     using HexStrings for uint256;
 
-    uint256 constant sqrt10X128 = 1076067327063303206878105757264492625226;
+    uint256 private constant sqrt10X128 = 1076067327063303206878105757264492625226;
 
     struct ConstructTokenURIParams {
         uint256 tokenId;
@@ -173,7 +172,7 @@ library NFTDescriptor {
         uint256 sigfigs;
         // length of decimal string
         uint8 bufferLength;
-        // ending index for significant figures (funtion works backwards when copying sigfigs)
+        // ending index for significant figures (function works backwards when copying sigfigs)
         uint8 sigfigIndex;
         // index of decimal place (0 if no decimal)
         uint8 decimalIndex;
@@ -238,7 +237,7 @@ library NFTDescriptor {
     function sigfigsRounded(uint256 value, uint8 digits) private pure returns (uint256, bool) {
         bool extraDigit;
         if (digits > 5) {
-            value = value / ((10**(digits - 5)));
+            value = value / ((10 ** (digits - 5)));
         }
         bool roundUp = value % 10 > 4;
         value = value / 10;
@@ -261,12 +260,12 @@ library NFTDescriptor {
         uint256 difference = abs(int256(uint256(baseTokenDecimals)) - int256(uint256(quoteTokenDecimals)));
         if (difference > 0 && difference <= 18) {
             if (baseTokenDecimals > quoteTokenDecimals) {
-                adjustedSqrtRatioX96 = sqrtRatioX96 * (10**(difference / 2));
+                adjustedSqrtRatioX96 = sqrtRatioX96 * (10 ** (difference / 2));
                 if (difference % 2 == 1) {
                     adjustedSqrtRatioX96 = FullMath.mulDiv(adjustedSqrtRatioX96, sqrt10X128, 1 << 128);
                 }
             } else {
-                adjustedSqrtRatioX96 = sqrtRatioX96 / (10**(difference / 2));
+                adjustedSqrtRatioX96 = sqrtRatioX96 / (10 ** (difference / 2));
                 if (difference % 2 == 1) {
                     adjustedSqrtRatioX96 = FullMath.mulDiv(adjustedSqrtRatioX96, 1 << 128, sqrt10X128);
                 }
@@ -280,8 +279,8 @@ library NFTDescriptor {
         return uint256(x >= 0 ? x : -x);
     }
 
-    // @notice Returns string that includes first 5 significant figures of a decimal number
-    // @param sqrtRatioX96 a sqrt price
+    /// @notice Returns string that includes first 5 significant figures of a decimal number
+    /// @param sqrtRatioX96 a sqrt price
     function fixedPointToDecimalString(
         uint160 sqrtRatioX96,
         uint8 baseTokenDecimals,
@@ -290,13 +289,13 @@ library NFTDescriptor {
         uint256 adjustedSqrtRatioX96 = adjustForDecimalPrecision(sqrtRatioX96, baseTokenDecimals, quoteTokenDecimals);
         uint256 value = FullMath.mulDiv(adjustedSqrtRatioX96, adjustedSqrtRatioX96, 1 << 64);
 
-        bool priceBelow1 = adjustedSqrtRatioX96 < 2**96;
+        bool priceBelow1 = adjustedSqrtRatioX96 < 2 ** 96;
         if (priceBelow1) {
-            // 10 ** 43 is precision needed to retreive 5 sigfigs of smallest possible price + 1 for rounding
-            value = FullMath.mulDiv(value, 10**44, 1 << 128);
+            // 10 ** 43 is precision needed to retrieve 5 sigfigs of smallest possible price + 1 for rounding
+            value = FullMath.mulDiv(value, 10 ** 44, 1 << 128);
         } else {
             // leave precision for 4 decimal places + 1 place for rounding
-            value = FullMath.mulDiv(value, 10**5, 1 << 128);
+            value = FullMath.mulDiv(value, 10 ** 5, 1 << 128);
         }
 
         // get digit count
@@ -347,8 +346,8 @@ library NFTDescriptor {
         uint256 digits;
     }
 
-    // @notice Returns string as decimal percentage of fee amount.
-    // @param fee fee amount
+    /// @notice Returns string as decimal percentage of fee amount.
+    /// @param fee fee amount
     function feeToPercentString(uint24 fee) internal pure returns (string memory) {
         if (fee == 0) {
             return '0%';
@@ -387,7 +386,7 @@ library NFTDescriptor {
             params.sigfigIndex = uint8((params.bufferLength) - 2);
             params.isLessThanOne = true;
         }
-        params.sigfigs = uint256(fee) / (10**(feeDigits.digits - feeDigits.numSigfigs));
+        params.sigfigs = uint256(fee) / (10 ** (feeDigits.digits - feeDigits.numSigfigs));
         params.isPercent = true;
         params.decimalIndex = feeDigits.digits > 4 ? uint8(feeDigits.digits - 4) : 0;
 
@@ -468,11 +467,7 @@ library NFTDescriptor {
         return NFTSVG.generateSVG(defs, body);
     }
 
-    function overRange(
-        int24 tickLower,
-        int24 tickUpper,
-        int24 tickCurrent
-    ) private pure returns (int8) {
+    function overRange(int24 tickLower, int24 tickUpper, int24 tickCurrent) private pure returns (int8) {
         if (tickCurrent < tickLower) {
             return -1;
         } else if (tickCurrent > tickUpper) {
@@ -496,11 +491,7 @@ library NFTDescriptor {
         return string((token >> offset).toHexStringNoPrefix(3));
     }
 
-    function getCircleCoord(
-        uint256 tokenAddress,
-        uint256 offset,
-        uint256 tokenId
-    ) internal pure returns (uint256) {
+    function getCircleCoord(uint256 tokenAddress, uint256 offset, uint256 tokenId) internal pure returns (uint256) {
         return (sliceTokenHex(tokenAddress, offset) * tokenId) % 255;
     }
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
-pragma abicoder v2;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
@@ -52,7 +51,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         AddLiquidityParams memory params
     )
         internal
-        returns (uint128 liquidity, uint256 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
+        returns (uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
 

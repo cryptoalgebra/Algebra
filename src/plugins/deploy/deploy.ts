@@ -15,13 +15,13 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     const wallet = new Wallet(hre.network.config.accounts[0]);
     const deployer = new Deployer(hre, wallet);
 
-    const artifact = await deployer.loadArtifact("DataStorageFactory");
+    const artifact = await deployer.loadArtifact("BasePluginV1Factory");
     const dsFactory = await deployer.deploy(artifact, [deploysData.factory]);
     await dsFactory.deployed();
 
     const verificationId = await hre.run("verify:verify", {
         address: dsFactory.address,
-        contract: "contracts/DataStorageFactory.sol:DataStorageFactory",
+        contract: "contracts/BasePluginV1Factory.sol:BasePluginV1Factory",
         constructorArguments: [deploysData.factory],
       });
 

@@ -11,29 +11,23 @@ Tick Lens contract
 https://github.com/Uniswap/v3-periphery*
 
 
-
-
 ## Functions
 ### getPopulatedTicksInWord
 
-
-`function getPopulatedTicksInWord(address pool, int16 tickTableIndex) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)` view public
+```solidity
+function getPopulatedTicksInWord(address pool, int16 tickTableIndex) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)
+```
 
 Get all the tick data for the populated ticks from a word of the tick bitmap of a pool
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | pool | address | The address of the pool for which to fetch populated tick data |
-| tickTableIndex | int16 | The index of the word in the tick bitmap for which to parse the bitmap and fetch all the populated ticks |
+| tickTableIndex | int16 | The index of the word in the tick bitmap for which to parse the bitmap and fetch all the populated ticks |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | populatedTicks | struct ITickLens.PopulatedTick[] | An array of tick data for the given word in the tick bitmap |
-
-
-
 

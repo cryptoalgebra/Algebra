@@ -21,6 +21,17 @@ interface IAlgebraCommunityVault {
   /// @param newAlgebraFeeReceiver New Algebra fee receiver address
   event AlgebraFeeReceiver(address newAlgebraFeeReceiver);
 
+  /// @notice Emitted when a AlgebraFeeManager address change proposed
+  /// @param pendingAlgebraFeeManager New pending Algebra fee manager address
+  event PendingAlgebraFeeManager(address pendingAlgebraFeeManager);
+
+  /// @notice Emitted when a new Algebra fee value proposed
+  /// @param proposedNewAlgebraFee The new proposed Algebra fee value
+  event AlgebraFeeProposal(uint16 proposedNewAlgebraFee);
+
+  /// @notice Emitted when a Algebra fee proposal canceled
+  event CancelAlgebraFeeProposal();
+
   /// @notice Emitted when a AlgebraFeeManager address changed
   /// @param newAlgebraFeeManager New Algebra fee manager address
   event AlgebraFeeManager(address newAlgebraFeeManager);
@@ -52,7 +63,8 @@ interface IAlgebraCommunityVault {
   // ### algebra factory owner permissioned actions ###
 
   /// @notice Accepts the proposed new Algebra fee
-  /// @dev Can only be called by the factory owner
+  /// @dev Can only be called by the factory owner.
+  /// The new value will also be used for previously accumulated tokens that have not yet been withdrawn
   /// @param newAlgebraFee New Algebra fee value
   function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external;
 
@@ -71,6 +83,7 @@ interface IAlgebraCommunityVault {
   function acceptAlgebraFeeManagerRole() external;
 
   /// @notice Proposes new Algebra fee value for protocol
+  /// @dev the new value will also be used for previously accumulated tokens that have not yet been withdrawn
   /// @param newAlgebraFee new Algebra fee value
   function proposeAlgebraFeeChange(uint16 newAlgebraFee) external;
 

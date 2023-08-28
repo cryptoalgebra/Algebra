@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.4 <0.9.0;
 
-import '../interfaces/IAlgebraPoolErrors.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 
 /// @title Math library for computing sqrt prices from ticks and vice versa
 /// @notice Computes sqrt price for ticks of size 1.0001, i.e. sqrt(1.0001^tick) as fixed point Q64.96 numbers. Supports
@@ -27,8 +27,8 @@ library TickMath {
   function getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 price) {
     unchecked {
       // get abs value
-      int24 leftmostBit = tick >> (24 - 1);
-      uint256 absTick = uint24((tick ^ leftmostBit) - leftmostBit);
+      int24 absTickMask = tick >> (24 - 1);
+      uint256 absTick = uint24((tick + absTickMask) ^ absTickMask);
       if (absTick > uint24(MAX_TICK)) revert IAlgebraPoolErrors.tickOutOfRange();
 
       uint256 ratio = 0x100000000000000000000000000000000;

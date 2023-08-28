@@ -14,6 +14,8 @@ import './interfaces/IAlgebraCommunityVault.sol';
 contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @dev The role can be granted in AlgebraFactory
   bytes32 public constant COMMUNITY_FEE_WITHDRAWER_ROLE = keccak256('COMMUNITY_FEE_WITHDRAWER');
+  /// @dev The role can be granted in AlgebraFactory
+  bytes32 public constant COMMUNITY_FEE_VAULT_ADMINISTRATOR = keccak256('COMMUNITY_FEE_VAULT_ADMINISTRATOR');
   address private immutable factory;
 
   /// @notice Address to which community fees are sent from vault
@@ -31,20 +33,20 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   address public algebraFeeManager;
   address private _pendingAlgebraFeeManager;
 
-  uint16 constant ALGEBRA_FEE_DENOMINATOR = 1000;
+  uint16 private constant ALGEBRA_FEE_DENOMINATOR = 1000;
 
-  modifier onlyFactoryOwner() {
-    require(msg.sender == IAlgebraFactory(factory).owner());
+  modifier onlyAdministrator() {
+    require(IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_VAULT_ADMINISTRATOR, msg.sender), 'only administrator');
     _;
   }
 
   modifier onlyWithdrawer() {
-    require(msg.sender == algebraFeeManager || IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender));
+    require(msg.sender == algebraFeeManager || IAlgebraFactory(factory).hasRoleOrOwner(COMMUNITY_FEE_WITHDRAWER_ROLE, msg.sender), 'only withdrawer');
     _;
   }
 
   modifier onlyAlgebraFeeManager() {
-    require(msg.sender == algebraFeeManager);
+    require(msg.sender == algebraFeeManager, 'only algebra fee manager');
     _;
   }
 
@@ -69,8 +71,9 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   }
 
   function _readAndVerifyWithdrawSettings() private view returns (uint16 _algebraFee, address _algebraFeeReceiver, address _communityFeeReceiver) {
-    if ((_algebraFee = algebraFee) != 0) require((_algebraFeeReceiver = algebraFeeReceiver) != address(0), 'invalid algebra fee receiver');
-    require((_communityFeeReceiver = communityFeeReceiver) != address(0), 'invalid receiver');
+    (_algebraFee, _algebraFeeReceiver, _communityFeeReceiver) = (algebraFee, algebraFeeReceiver, communityFeeReceiver);
+    if (_algebraFee != 0) require(_algebraFeeReceiver != address(0), 'invalid algebra fee receiver');
+    require(_communityFeeReceiver != address(0), 'invalid receiver');
   }
 
   function _withdraw(address token, address to, uint256 amount, uint16 _algebraFee, address _algebraFeeReceiver) private {
@@ -89,18 +92,20 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   // ### algebra factory owner permissioned actions ###
 
   /// @inheritdoc IAlgebraCommunityVault
-  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external override onlyFactoryOwner {
+  function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external override onlyAdministrator {
     require(hasNewAlgebraFeeProposal, 'not proposed');
     require(newAlgebraFee == proposedNewAlgebraFee, 'invalid new fee');
 
+    // note that the new value will be used for previously accumulated tokens that have not yet been withdrawn
     algebraFee = newAlgebraFee;
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (0, false);
     emit AlgebraFee(newAlgebraFee);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
-  function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external override onlyFactoryOwner {
+  function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external override onlyAdministrator {
     require(newCommunityFeeReceiver != address(0));
+    require(newCommunityFeeReceiver != communityFeeReceiver);
     communityFeeReceiver = newCommunityFeeReceiver;
     emit CommunityFeeReceiver(newCommunityFeeReceiver);
   }
@@ -110,6 +115,7 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external override onlyAlgebraFeeManager {
     _pendingAlgebraFeeManager = _newAlgebraFeeManager;
+    emit PendingAlgebraFeeManager(_newAlgebraFeeManager);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
@@ -122,17 +128,21 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
   /// @inheritdoc IAlgebraCommunityVault
   function proposeAlgebraFeeChange(uint16 newAlgebraFee) external override onlyAlgebraFeeManager {
     require(newAlgebraFee <= ALGEBRA_FEE_DENOMINATOR);
+    require(newAlgebraFee != proposedNewAlgebraFee && newAlgebraFee != algebraFee);
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (newAlgebraFee, true);
+    emit AlgebraFeeProposal(newAlgebraFee);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
   function cancelAlgebraFeeChangeProposal() external override onlyAlgebraFeeManager {
     (proposedNewAlgebraFee, hasNewAlgebraFeeProposal) = (0, false);
+    emit CancelAlgebraFeeProposal();
   }
 
   /// @inheritdoc IAlgebraCommunityVault
   function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external override onlyAlgebraFeeManager {
     require(newAlgebraFeeReceiver != address(0));
+    require(newAlgebraFeeReceiver != algebraFeeReceiver);
     algebraFeeReceiver = newAlgebraFeeReceiver;
     emit AlgebraFeeReceiver(newAlgebraFeeReceiver);
   }

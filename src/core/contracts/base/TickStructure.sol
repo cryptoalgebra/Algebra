@@ -7,13 +7,13 @@ import './AlgebraPoolBase.sol';
 
 /// @title Algebra tick structure abstract contract
 /// @notice Encapsulates the logic of interaction with the data structure with ticks
-/// @dev Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list
+/// @dev Ticks are stored as a doubly linked list. A three-level bitmap tree is used to search through the list
 abstract contract TickStructure is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using TickTree for mapping(int16 => uint256);
 
-  uint32 internal tickTreeRoot; // The root of bitmap search tree
-  mapping(int16 => uint256) internal tickSecondLayer; // The second layer bitmap search tree
+  uint32 internal tickTreeRoot; // The root bitmap of search tree
+  mapping(int16 => uint256) internal tickSecondLayer; // The second layer of search tree
 
   // the leaves of the tree are stored in `tickTable`
 
@@ -31,7 +31,7 @@ abstract contract TickStructure is AlgebraPoolBase {
   /// @return New previous active tick before `currentTick` if changed
   /// @return New next active tick after `currentTick` if changed
   /// @return New tick tree root if changed
-  function _insertOrRemoveTick(
+  function _addOrRemoveTick(
     int24 tick,
     int24 currentTick,
     uint32 oldTickTreeRoot,
@@ -72,10 +72,10 @@ abstract contract TickStructure is AlgebraPoolBase {
     (int24 prevInitializedTick, int24 nextInitializedTick, uint32 oldTickTreeRoot) = (prevTickGlobal, nextTickGlobal, tickTreeRoot);
     (int24 newPrevTick, int24 newNextTick, uint32 newTreeRoot) = (prevInitializedTick, nextInitializedTick, oldTickTreeRoot);
     if (toggleBottom) {
-      (newPrevTick, newNextTick, newTreeRoot) = _insertOrRemoveTick(bottomTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
+      (newPrevTick, newNextTick, newTreeRoot) = _addOrRemoveTick(bottomTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
     }
     if (toggleTop) {
-      (newPrevTick, newNextTick, newTreeRoot) = _insertOrRemoveTick(topTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
+      (newPrevTick, newNextTick, newTreeRoot) = _addOrRemoveTick(topTick, currentTick, newTreeRoot, newPrevTick, newNextTick, remove);
     }
     if (prevInitializedTick != newPrevTick || nextInitializedTick != newNextTick || newTreeRoot != oldTickTreeRoot) {
       (prevTickGlobal, nextTickGlobal, tickTreeRoot) = (newPrevTick, newNextTick, newTreeRoot);

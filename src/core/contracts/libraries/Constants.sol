@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.20;
+pragma solidity >=0.5.0 <0.9.0;
 
 /// @title Contains common constants for Algebra contracts
 /// @dev Constants moved to the library, not the base contract, to further emphasize their constant nature
@@ -9,9 +9,9 @@ library Constants {
   uint256 internal constant Q128 = 1 << 128;
 
   uint24 internal constant FEE_DENOMINATOR = 1e6;
-  uint16 internal constant FLASH_FEE = 0.0001e6; // fee for flash loan in hundredths of a bip (0.01%)
-  uint16 internal constant INIT_DEFAULT_FEE = 0.0005e6; // init default fee value in hundredths of a bip (0.05%)
-  uint16 internal constant MAX_DEFAULT_FEE = 0.05e6;
+  uint16 internal constant FLASH_FEE = 0.01e4; // fee for flash loan in hundredths of a bip (0.01%)
+  uint16 internal constant INIT_DEFAULT_FEE = 0.05e4; // init default fee value in hundredths of a bip (0.05%)
+  uint16 internal constant MAX_DEFAULT_FEE = 5e4; // max default fee value in hundredths of a bip (5%)
 
   int24 internal constant INIT_DEFAULT_TICK_SPACING = 60;
   int24 internal constant MAX_TICK_SPACING = 500;
@@ -25,6 +25,6 @@ library Constants {
 
   uint16 internal constant MAX_COMMUNITY_FEE = 1e3; // 100%
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;
-  // role that can change communityFee and tickspacing in pools
+  // role that can change settings in pools
   bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
 }

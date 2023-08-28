@@ -81,7 +81,7 @@ function swapCaseToDescription(testCase: SwapTestCase): string {
     } else {
       let title = '';
       if (testCase.comissionOnTransaction) {
-        title = 'Token with comission ';
+        title = 'Token with commission ';
       }
       if (testCase.zeroToOne) {
         return `${title}swap exactly ${formatTokenAmount(testCase.amount0)} token0 for token1${priceClause}`;

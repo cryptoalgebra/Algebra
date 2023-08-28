@@ -62,7 +62,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // const NonfungibleTokenPositionDescriptorArtifact = await deployer.loadArtifact("NonfungibleTokenPositionDescriptor");
 
-  // const NonfungibleTokenPositionDescriptor = await  deployer.deploy(NonfungibleTokenPositionDescriptorArtifact, [weth]);
+  // const NonfungibleTokenPositionDescriptor = await  deployer.deploy(NonfungibleTokenPositionDescriptorArtifact, [weth, "ETH", []]);
   // await NonfungibleTokenPositionDescriptor.deployed()
 
   // console.log(`${NonfungibleTokenPositionDescriptorArtifact.contractName} was deployed to ${NonfungibleTokenPositionDescriptor.address}`);

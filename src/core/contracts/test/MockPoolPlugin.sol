@@ -47,8 +47,8 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int256 amount1,
     bytes data
   );
-  event BeforeFlash(address sender, address recepient, uint256 amount0, uint256 amount1, bytes data);
-  event AfterFlash(address sender, address recepient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
+  event BeforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data);
+  event AfterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
 
   function defaultPluginConfig() external view override returns (uint8) {}
 
@@ -137,7 +137,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   /// @return bytes4 The function selector for the hook
   function afterSwap(
     address sender,
-    address recepient,
+    address recipient,
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice,
@@ -145,7 +145,7 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int256 amount1,
     bytes calldata data
   ) external override returns (bytes4) {
-    emit AfterSwap(sender, recepient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_SWAP_FLAG)) return IAlgebraPlugin.afterSwap.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }

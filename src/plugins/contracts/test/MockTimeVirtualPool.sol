@@ -6,26 +6,19 @@ import '../interfaces/IAlgebraVirtualPool.sol';
 
 contract MockTimeVirtualPool is IAlgebraVirtualPool {
   uint32 public timestamp;
-
-  bool private isExist = true;
-  bool private isStarted = true;
-
   int24 public currentTick;
+  bool private earlyReturn;
 
-  function setIsExist(bool _isExist) external {
-    isExist = _isExist;
+  function setEarlyReturn() external {
+    earlyReturn = true;
   }
 
-  function setIsStarted(bool _isStarted) external {
-    isStarted = _isStarted;
-  }
+  function crossTo(int24 nextTick, bool) external override returns (bool) {
+    if (earlyReturn) return true;
 
-  function crossTo(int24 nextTick, bool zeroToOne) external override returns (bool) {
-    if (!isExist) return false;
     currentTick = nextTick;
-    unchecked {
-      if (isStarted) timestamp = uint32(block.timestamp);
-    }
+    timestamp = uint32(block.timestamp);
+
     return true;
   }
 }

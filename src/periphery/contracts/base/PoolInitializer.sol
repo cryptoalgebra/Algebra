@@ -20,7 +20,7 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         address token1,
         uint160 sqrtPriceX96
     ) external payable override returns (address pool) {
-        require(token0 < token1);
+        require(token0 < token1, 'Invalid order of tokens');
 
         pool = IAlgebraFactory(factory).poolByPair(token0, token1);
 

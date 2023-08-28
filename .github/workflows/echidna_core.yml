@@ -87,6 +87,7 @@ jobs:
         testName:
           - BitMathEchidnaTest
           - FullMathEchidnaTest
+          - LiquidityMathEchidnaTest
           - LowGasSafeMathEchidnaTest
           - PriceMovementMathEchidnaTest
           - TickMathEchidnaTest

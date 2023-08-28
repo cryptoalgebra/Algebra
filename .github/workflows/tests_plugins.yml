@@ -1,0 +1,30 @@
+name: Autotests Plugins
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  Autotests:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./src/plugins
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm run bootstrap
+        working-directory: ./
+      - run: npm run compile
+      - run: npm run test

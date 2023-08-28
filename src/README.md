@@ -12,6 +12,6 @@ A separate module with plugins for the Core module. With the help of replaceable
 
 This module contains smart contracts that can be used by users to easily interact with the protocol. Such as swap router, position manager and so on.
 
-## Tokenomics
+## Farming
 
 A separate module with onchain farming for Algebra protocol concentrated liquidity positions.

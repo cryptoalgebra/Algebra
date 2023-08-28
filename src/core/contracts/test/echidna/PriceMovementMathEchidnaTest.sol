@@ -5,7 +5,7 @@ import '../../libraries/PriceMovementMath.sol';
 import '../../libraries/TickMath.sol';
 
 contract PriceMovementMathEchidnaTest {
-  function checkmovePriceTowardsTargetInvariants(
+  function checkMovePriceTowardsTargetInvariants(
     uint160 sqrtPriceRaw,
     uint160 sqrtPriceTargetRaw,
     uint128 liquidity,
@@ -14,8 +14,7 @@ contract PriceMovementMathEchidnaTest {
   ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);
-    require(feePips > 0);
-    require(feePips < 1e6);
+    require(feePips <= 1e6);
 
     (uint160 sqrtQ, uint256 amountIn, uint256 amountOut, uint256 feeAmount) = PriceMovementMath.movePriceTowardsTarget(
       sqrtPriceTargetRaw <= sqrtPriceRaw,
@@ -31,6 +30,8 @@ contract PriceMovementMathEchidnaTest {
 
       if (amountRemaining < 0) {
         assert(amountOut <= uint256(-amountRemaining));
+        assert(amountIn >= feeAmount);
+        assert(feeAmount <= FullMath.mulDivRoundingUp(amountIn, feePips, 1000000 - feePips));
       } else {
         assert(amountIn + feeAmount <= uint256(amountRemaining));
       }
@@ -44,8 +45,10 @@ contract PriceMovementMathEchidnaTest {
 
       // didn't reach price target, entire amount must be consumed
       if (sqrtQ != sqrtPriceTargetRaw) {
-        if (amountRemaining < 0) assert(amountOut == uint256(-amountRemaining));
-        else assert(amountIn + feeAmount == uint256(amountRemaining));
+        if (amountRemaining < 0) {
+          assert(amountOut == uint256(-amountRemaining));
+          assert(feeAmount <= FullMath.mulDivRoundingUp(amountIn, feePips, 1000000 - feePips));
+        } else assert(amountIn + feeAmount == uint256(amountRemaining));
       }
 
       // next price is between price and price target
@@ -57,5 +60,17 @@ contract PriceMovementMathEchidnaTest {
         assert(sqrtQ <= sqrtPriceTargetRaw);
       }
     }
+  }
+
+  function checkGetNewPriceAfterInputInvariantZtO(uint160 price, uint128 liquidity, uint256 amount) external pure {
+    uint160 newPrice = PriceMovementMath.getNewPriceAfterInput(price, liquidity, amount, true);
+    uint256 requiredTokenAmount = PriceMovementMath.getInputTokenDelta01(newPrice, price, liquidity);
+    assert(requiredTokenAmount <= amount);
+  }
+
+  function checkGetNewPriceAfterInputInvariantOtZ(uint160 price, uint128 liquidity, uint256 amount) external pure {
+    uint160 newPrice = PriceMovementMath.getNewPriceAfterInput(price, liquidity, amount, false);
+    uint256 requiredTokenAmount = PriceMovementMath.getInputTokenDelta10(newPrice, price, liquidity);
+    assert(requiredTokenAmount <= amount);
   }
 }

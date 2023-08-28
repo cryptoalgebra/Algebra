@@ -10,7 +10,7 @@ import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolPermissionedActions.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolErrors.sol';
+import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
@@ -63,6 +63,8 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
 
+  address owner;
+
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external pure override returns (uint128, uint128) {
     revert('not implemented');
@@ -75,6 +77,8 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
+    globalState.unlocked = true;
+    owner = msg.sender;
   }
 
   /// @inheritdoc IAlgebraPoolState
@@ -95,7 +99,6 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     uint8 pluginConfig = globalState.pluginConfig;
 
     globalState.price = initialPrice;
-    globalState.unlocked = true;
     globalState.tick = tick;
 
     if (pluginConfig & Plugins.AFTER_INIT_FLAG != 0) {
@@ -113,7 +116,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     bytes calldata data
   ) external override returns (uint256, uint256, uint128) {
     if (globalState.pluginConfig & Plugins.BEFORE_POSITION_MODIFY_FLAG != 0) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, recipient, bottomTick, topTick, int128(liquidityDesired), data); // TODO REENTRANCY
+      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, recipient, bottomTick, topTick, int128(liquidityDesired), data);
     }
 
     if (globalState.pluginConfig & Plugins.AFTER_POSITION_MODIFY_FLAG != 0) {
@@ -145,17 +148,16 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   function swapToTick(int24 targetTick) external {
+    IAlgebraPlugin _plugin = IAlgebraPlugin(plugin);
     if (globalState.pluginConfig & Plugins.BEFORE_SWAP_FLAG != 0) {
-      // TODO optimize
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, msg.sender, true, 0, 0, false, '');
+      _plugin.beforeSwap(msg.sender, msg.sender, true, 0, 0, false, '');
     }
 
     globalState.price = TickMath.getSqrtRatioAtTick(targetTick);
     globalState.tick = targetTick;
 
     if (globalState.pluginConfig & Plugins.AFTER_SWAP_FLAG != 0) {
-      // TODO optimize
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, msg.sender, true, 0, 0, 0, 0, '');
+      _plugin.afterSwap(msg.sender, msg.sender, true, 0, 0, 0, 0, '');
     }
   }
 
@@ -192,16 +194,27 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override {
+    require(msg.sender == owner);
     plugin = newPluginAddress;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override {
+    require(msg.sender == owner || msg.sender == plugin);
     globalState.pluginConfig = newConfig;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
+    require(msg.sender == owner || msg.sender == plugin);
+    bool isDynamicFeeEnabled = globalState.pluginConfig & uint8(Plugins.DYNAMIC_FEE) != 0;
+
+    if (msg.sender == plugin) {
+      require(isDynamicFeeEnabled);
+    } else {
+      require(!isDynamicFeeEnabled && msg.sender == owner);
+    }
+
     globalState.fee = newFee;
   }
 }

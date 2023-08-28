@@ -6,21 +6,22 @@ import '../base/AlgebraFeeConfiguration.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
+/// @dev Version for AlgebraBasePluginV1
 library AdaptiveFee {
-  uint16 constant INITIAL_MIN_FEE = 0.0001e6;
+  uint16 internal constant INITIAL_MIN_FEE = 0.01e4; // 0.01%
 
   /// @notice Returns default initial fee configuration
   function initialFeeConfiguration() internal pure returns (AlgebraFeeConfiguration memory) {
     return
-      AlgebraFeeConfiguration(
-        3000 - INITIAL_MIN_FEE, // alpha1, max value of the first sigmoid in hundredths of a bip, i.e. 1e-6
-        15000 - 3000, // alpha2, max value of the second sigmoid in hundredths of a bip, i.e. 1e-6
-        360, // beta1, shift along the x-axis (volatility) for the first sigmoid
-        60000, // beta2, shift along the x-axis (volatility) for the second sigmoid
-        59, // gamma1, horizontal stretch factor for the first sigmoid
-        8500, // gamma2, horizontal stretch factor for the second sigmoid
-        INITIAL_MIN_FEE // baseFee in hundredths of a bip, i.e. 1e-6
-      );
+      AlgebraFeeConfiguration({
+        alpha1: 3000 - INITIAL_MIN_FEE, // max value of the first sigmoid in hundredths of a bip, i.e. 1e-6
+        alpha2: 15000 - 3000, // max value of the second sigmoid in hundredths of a bip, i.e. 1e-6
+        beta1: 360, // shift along the x-axis (volatility) for the first sigmoid
+        beta2: 60000, // shift along the x-axis (volatility) for the second sigmoid
+        gamma1: 59, // horizontal stretch factor for the first sigmoid
+        gamma2: 8500, // horizontal stretch factor for the second sigmoid
+        baseFee: INITIAL_MIN_FEE // in hundredths of a bip, i.e. 1e-6
+      });
   }
 
   /// @notice Validates fee configuration.
@@ -40,9 +41,10 @@ library AdaptiveFee {
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1, config.alpha1, config.beta1) +
         sigmoid(volatility, config.gamma2, config.alpha2, config.beta2);
 
-      if (sumOfSigmoids > type(uint16).max) sumOfSigmoids = type(uint16).max; // should be impossible, just in case
+      uint256 result = uint256(config.baseFee) + sumOfSigmoids;
+      assert(result <= type(uint16).max); // should always be true
 
-      return uint16(config.baseFee + sumOfSigmoids); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
+      return uint16(result); // safe since alpha1 + alpha2 + baseFee _must_ be <= type(uint16).max
     }
   }
 

@@ -1,3 +1,4 @@
 {
-    "filter_paths": "node_modules|test"
+    "filter_paths": "node_modules|test",
+    "solc_remaps": "@=node_modules/@"
 }

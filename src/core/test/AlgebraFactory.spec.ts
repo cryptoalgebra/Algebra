@@ -1,4 +1,4 @@
-import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
+import { Wallet, getCreateAddress, ZeroAddress, keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { AlgebraFactory, AlgebraPoolDeployer, MockDefaultPluginFactory } from '../typechain';
@@ -60,6 +60,14 @@ describe('AlgebraFactory', () => {
     expect(await factory.owner()).to.eq(wallet.address);
   });
 
+  it('has POOL_INIT_CODE_HASH', async () => {
+    expect(await factory.POOL_INIT_CODE_HASH()).to.be.not.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+  });
+
+  it('has correct POOL_INIT_CODE_HASH [ @skip-on-coverage ]', async () => {
+    expect(await factory.POOL_INIT_CODE_HASH()).to.be.eq(keccak256(poolBytecode));
+  });
+
   it('cannot deploy factory with incorrect poolDeployer', async () => {
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
     expect(factoryFactory.deploy(ZeroAddress)).to.be.revertedWithoutReason;
@@ -112,12 +120,27 @@ describe('AlgebraFactory', () => {
       expect(addressCalculatedByFactory).to.be.eq(poolAddress);
     });
 
-    it('succeeds if defaultPluginFactory setted', async () => {
+    it('succeeds if defaultPluginFactory set [ @skip-on-coverage ]', async () => {
       await factory.setDefaultPluginFactory(defaultPluginFactory);
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
       let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
       let pluginAddress = await defaultPluginFactory.pluginsForPools(poolAddress);
+
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+      expect(await pool.plugin()).to.be.eq(pluginAddress);
+    });
+
+    it('creates plugin in defaultPluginFactory', async () => {
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      // in coverage mode bytecode hash can be different from specified in factory
+      let pluginAddress = await defaultPluginFactory.pluginsForPools(
+        await factory.computePoolAddress(TEST_ADDRESSES[0], TEST_ADDRESSES[1])
+      );
 
       const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
       let pool = poolContractFactory.attach(poolAddress);
@@ -191,6 +214,11 @@ describe('AlgebraFactory', () => {
     it('renounceOwner cannot be used before delay', async () => {
       await factory.startRenounceOwnership();
       await expect(factory.renounceOwnership()).to.be.reverted;
+    });
+
+    it('startRenounceOwner cannot be used twice in a row', async () => {
+      await factory.startRenounceOwnership();
+      await expect(factory.startRenounceOwnership()).to.be.reverted;
     });
 
     it('stopRenounceOwnership works correct', async () => {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './AlgebraPoolBase.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickManagement.sol';
+import './AlgebraPoolBase.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
@@ -94,17 +94,16 @@ abstract contract Positions is AlgebraPoolBase {
 
     unchecked {
       // update the position
-      uint256 _innerFeeGrowth0Token;
+      (uint256 lastInnerFeeGrowth0Token, uint256 lastInnerFeeGrowth1Token) = (position.innerFeeGrowth0Token, position.innerFeeGrowth1Token);
       uint128 fees0;
-      if ((_innerFeeGrowth0Token = position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
+      if (lastInnerFeeGrowth0Token != innerFeeGrowth0Token) {
         position.innerFeeGrowth0Token = innerFeeGrowth0Token;
-        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, liquidityBefore, Constants.Q128));
+        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - lastInnerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
-      uint256 _innerFeeGrowth1Token;
       uint128 fees1;
-      if ((_innerFeeGrowth1Token = position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
+      if (lastInnerFeeGrowth1Token != innerFeeGrowth1Token) {
         position.innerFeeGrowth1Token = innerFeeGrowth1Token;
-        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, liquidityBefore, Constants.Q128));
+        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - lastInnerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
 
       // To avoid overflow owner has to collect fee before it

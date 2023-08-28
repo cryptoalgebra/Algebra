@@ -1,0 +1,52 @@
+{
+  "name": "@cryptoalgebra/farmings",
+  "description": "Liquidity mining contracts for Algebra protocol",
+  "license": "GPL-3.0-or-later",
+  "version": "3.0.1",
+  "keywords": [
+    "algebra",
+    "liquidity mining"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptoalgebra/Algebra"
+  },
+  "files": [
+    "contracts",
+    "!contracts/test",
+    "artifacts/contracts/**/*.json",
+    "!artifacts/contracts/**/*.dbg.json",
+    "!artifacts/contracts/test/**/*",
+    "!artifacts/contracts/base/**/*"
+  ],
+  "dependencies": {
+    "@openzeppelin/contracts": "4.9.3",
+    "@cryptoalgebra/core": "3.1.0",
+    "@cryptoalgebra/periphery": "2.0.1",
+    "@cryptoalgebra/plugins": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.170",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.28.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-unused-imports": "^1.1.1",
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "compile": "npm --prefix ../periphery run compile && hardhat compile",
+    "lint": "eslint . --ext .ts",
+    "prettier:check": "prettier-check contracts/**/*.sol test/**/*.ts types/*.ts",
+    "size-contracts": "hardhat compile && hardhat size-contracts",
+    "solhint": "solhint ./contracts/**/*.sol",
+    "test": "hardhat test --parallel",
+    "clear-cache": "rm -rf artifacts/ cache/ typechain/",
+    "coverage": "npm --prefix ../periphery run compile && hardhat coverage",
+    "precommit": "pretty-quick --staged --pattern **/*.sol"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
+  }
+}

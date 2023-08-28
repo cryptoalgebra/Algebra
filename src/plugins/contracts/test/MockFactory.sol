@@ -9,6 +9,8 @@ contract MockFactory {
 
   mapping(address => mapping(bytes32 => bool)) public hasRole;
 
+  mapping(address => mapping(address => address)) public poolByPair;
+
   constructor() {
     owner = msg.sender;
   }
@@ -23,5 +25,10 @@ contract MockFactory {
 
   function revokeRole(bytes32 role, address account) external {
     hasRole[account][role] = false;
+  }
+
+  function stubPool(address token0, address token1, address pool) public {
+    poolByPair[token0][token1] = pool;
+    poolByPair[token1][token0] = pool;
   }
 }
