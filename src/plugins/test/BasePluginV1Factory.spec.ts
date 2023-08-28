@@ -57,6 +57,14 @@ describe('BasePluginV1Factory', () => {
       const feeConfig = await pluginMock.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
     });
+
+    it('cannot create twice for existing pool', async () => {
+      await mockAlgebraFactory.stubPool(wallet.address, other.address, other.address);
+
+      await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
+
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('already created');
+    });
   });
 
   describe('#Default fee configuration', () => {
