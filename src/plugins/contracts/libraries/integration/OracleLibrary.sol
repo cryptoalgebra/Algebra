@@ -79,6 +79,12 @@ library OracleLibrary {
     return (0, timestamp);
   }
 
+  /// @notice Gets information about whether the oracle has been initialized
+  function isInitialized(address oracleAddress) internal view returns (bool result) {
+    (result, ) = timepointMetadata(oracleAddress, 0);
+    return result;
+  }
+
   /// @notice Fetches the index of last available record (most recent) in oracle
   function latestIndex(address oracle) internal view returns (uint16) {
     return (IVolatilityOracle(oracle).timepointIndex());

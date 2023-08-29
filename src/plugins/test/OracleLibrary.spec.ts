@@ -130,6 +130,18 @@ describe('OracleLibrary', () => {
     });
   });
 
+  describe('#isInitialized', () => {
+    it('returns correct value', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
+
+      const result = await oracleLibraryTest.isInitialized(mockVolatilityOracle);
+      expect(result).to.be.eq(true)
+    });
+  });
+
   describe('#getQuoteAtTick', () => {
     // sanity check
     it('token0: returns correct value when tick = 0', async () => {

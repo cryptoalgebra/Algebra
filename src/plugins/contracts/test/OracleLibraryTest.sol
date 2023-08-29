@@ -20,6 +20,10 @@ contract OracleLibraryTest {
     return OracleLibrary.oldestTimepointMetadata(oracleAddress);
   }
 
+  function isInitialized(address oracleAddress) external view returns (bool) {
+    return OracleLibrary.isInitialized(oracleAddress);
+  }
+
   // For gas snapshot test
   function getGasCostOfConsult(address oracleAddress, uint32 period) public view returns (uint256) {
     uint256 gasBefore = gasleft();
