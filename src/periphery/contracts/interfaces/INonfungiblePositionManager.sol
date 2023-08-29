@@ -201,4 +201,8 @@ interface INonfungiblePositionManager is
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
     /// @param newFarmingCenter The new address of farmingCenter
     function setFarmingCenter(address newFarmingCenter) external;
+
+    /// @notice Returns whether `spender` is allowed to manage `tokenId`
+    /// @dev Requirement: `tokenId` must exist
+    function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool);
 }

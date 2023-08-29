@@ -20,7 +20,7 @@ import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
 /// @title NFT positions
-/// @notice Wraps Algebra  positions in the ERC721 non-fungible token interface
+/// @notice Wraps Algebra positions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 contract NonfungiblePositionManager is
@@ -446,18 +446,19 @@ contract NonfungiblePositionManager is
 
     /// @inheritdoc IERC721Metadata
     function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
-        require(_exists(tokenId));
+        _requireMinted(tokenId);
         return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
     }
 
     /// @inheritdoc IERC721
     function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: invalid token ID');
-
+        _requireMinted(tokenId);
         return _positions[tokenId].operator;
     }
 
-    function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool) {
+    /// @inheritdoc INonfungiblePositionManager
+    function isApprovedOrOwner(address spender, uint256 tokenId) external view override returns (bool) {
+        _requireMinted(tokenId);
         return _isApprovedOrOwner(spender, tokenId);
     }
 
@@ -485,6 +486,7 @@ contract NonfungiblePositionManager is
         }
     }
 
+    /// @dev Gets the current nonce for a token ID and then increments it, returning the original value
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
         unchecked {
             return uint256(_positions[tokenId].nonce++);
