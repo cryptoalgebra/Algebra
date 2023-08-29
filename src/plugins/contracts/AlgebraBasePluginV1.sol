@@ -45,6 +45,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
 
+  /// @inheritdoc IVolatilityOracle
+  bool public override isInitialized;
+
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
@@ -74,14 +77,15 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IAlgebraBasePluginV1
   function initialize() external override {
-    require(!timepoints[0].initialized, 'Already initialized');
+    require(!isInitialized, 'Already initialized');
     require(_getPluginInPool() == address(this), 'Plugin not attached');
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
 
     uint32 time = _blockTimestamp();
-    lastTimepointTimestamp = time;
     timepoints.initialize(time, tick);
+    lastTimepointTimestamp = time;
+    isInitialized = true;
 
     IAlgebraPool(pool).setPluginConfig(defaultPluginConfig);
   }
@@ -197,8 +201,11 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
-    lastTimepointTimestamp = _blockTimestamp();
-    timepoints.initialize(_blockTimestamp(), tick);
+    uint32 _timestamp = _blockTimestamp();
+    timepoints.initialize(_timestamp, tick);
+
+    lastTimepointTimestamp = _timestamp;
+    isInitialized = true;
 
     IAlgebraPool(pool).setFee(feeConfig.baseFee);
     return IAlgebraPlugin.afterInitialize.selector;
@@ -233,7 +240,10 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function _writeTimepointAndUpdateFee() internal {
-    (uint16 _lastIndex, uint32 _lastTimepointTimestamp) = (timepointIndex, lastTimepointTimestamp);
+    uint16 _lastIndex = timepointIndex;
+    uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+    bool _isInitialized = isInitialized;
+    require(_isInitialized, 'Not initialized');
     uint32 currentTimestamp = _blockTimestamp();
 
     if (_lastTimepointTimestamp == currentTimestamp) return;

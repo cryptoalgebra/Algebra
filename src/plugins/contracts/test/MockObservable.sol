@@ -7,6 +7,8 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
 contract MockVolatilityOracle is IVolatilityOracle {
   VolatilityOracle.Timepoint[2] public override timepoints;
 
+  bool public isInitialized;
+
   constructor(uint32[] memory secondsAgos, int56[] memory tickCumulatives) {
     require(secondsAgos.length == 2 && tickCumulatives.length == 2, 'Invalid test case size');
 
@@ -15,6 +17,8 @@ contract MockVolatilityOracle is IVolatilityOracle {
 
     timepoints[1].blockTimestamp = secondsAgos[1];
     timepoints[1].tickCumulative = tickCumulatives[1];
+
+    isInitialized = true;
   }
 
   function getTimepoints(
