@@ -20,7 +20,7 @@ import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
 /// @title NFT positions
-/// @notice Wraps Algebra  positions in the ERC721 non-fungible token interface
+/// @notice Wraps Algebra positions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 contract NonfungiblePositionManager is
@@ -79,6 +79,11 @@ contract NonfungiblePositionManager is
     /// @dev mapping tokenId => farmingCenter
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
+    modifier isAuthorizedForToken(uint256 tokenId) {
+        _checkAuthorizationForToken(tokenId);
+        _;
+    }
+
     constructor(
         address _factory,
         address _WNativeToken,
@@ -135,20 +140,6 @@ contract NonfungiblePositionManager is
         );
     }
 
-    /// @dev Caches a pool key
-    function cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
-        if ((poolId = _poolIds[pool]) == 0) {
-            unchecked {
-                _poolIds[pool] = (poolId = _nextPoolId++);
-            }
-            _poolIdToPoolKey[poolId] = poolKey;
-        }
-    }
-
-    function getPoolById(uint80 poolId) private view returns (address) {
-        return PoolAddress.computeAddress(poolDeployer, _poolIdToPoolKey[poolId]);
-    }
-
     /// @inheritdoc INonfungiblePositionManager
     function mint(
         MintParams calldata params
@@ -185,7 +176,7 @@ contract NonfungiblePositionManager is
         );
 
         // idempotent set
-        uint80 poolId = cachePoolKey(
+        uint80 poolId = _cachePoolKey(
             address(pool),
             PoolAddress.PoolKey({token0: params.token0, token1: params.token1})
         );
@@ -206,18 +197,18 @@ contract NonfungiblePositionManager is
         emit IncreaseLiquidity(tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
     }
 
-    modifier isAuthorizedForToken(uint256 tokenId) {
-        _checkAuthorizationForToken(tokenId);
-        _;
+    /// @dev Caches a pool key
+    function _cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
+        if ((poolId = _poolIds[pool]) == 0) {
+            unchecked {
+                _poolIds[pool] = (poolId = _nextPoolId++);
+            }
+            _poolIdToPoolKey[poolId] = poolKey;
+        }
     }
 
-    function _checkAuthorizationForToken(uint256 tokenId) private view {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
-    }
-
-    function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
-        require(_exists(tokenId));
-        return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+    function _getPoolById(uint80 poolId) private view returns (address) {
+        return PoolAddress.computeAddress(poolDeployer, _poolIdToPoolKey[poolId]);
     }
 
     function _updateUncollectedFees(
@@ -332,7 +323,7 @@ contract NonfungiblePositionManager is
         );
         require(positionLiquidity >= params.liquidity);
 
-        IAlgebraPool pool = IAlgebraPool(getPoolById(poolId));
+        IAlgebraPool pool = IAlgebraPool(_getPoolById(poolId));
         (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
@@ -372,7 +363,7 @@ contract NonfungiblePositionManager is
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;
 
         Position storage position = _positions[params.tokenId];
-        IAlgebraPool pool = IAlgebraPool(getPoolById(position.poolId));
+        IAlgebraPool pool = IAlgebraPool(_getPoolById(position.poolId));
 
         (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
 
@@ -453,11 +444,26 @@ contract NonfungiblePositionManager is
         emit FarmingCenter(newFarmingCenter);
     }
 
+    /// @inheritdoc IERC721Metadata
+    function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
+        _requireMinted(tokenId);
+        return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+    }
+
     /// @inheritdoc IERC721
     function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: invalid token ID');
-
+        _requireMinted(tokenId);
         return _positions[tokenId].operator;
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function isApprovedOrOwner(address spender, uint256 tokenId) external view override returns (bool) {
+        _requireMinted(tokenId);
+        return _isApprovedOrOwner(spender, tokenId);
+    }
+
+    function _checkAuthorizationForToken(uint256 tokenId) private view {
+        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
@@ -480,6 +486,7 @@ contract NonfungiblePositionManager is
         }
     }
 
+    /// @dev Gets the current nonce for a token ID and then increments it, returning the original value
     function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
         unchecked {
             return uint256(_positions[tokenId].nonce++);
