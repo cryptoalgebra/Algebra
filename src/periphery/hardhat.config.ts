@@ -16,7 +16,13 @@ module.exports = {
     settings: {
       metadata: {
         bytecodeHash: 'none',
+      },  
+      libraries: {
+        "contracts/libraries/NFTDescriptor.sol": {
+          NFTDescriptor: "0x4cbb1e686D3E9308934a6a45517E442790aE4336",
+        },
       },
     }
   },
+
 };
