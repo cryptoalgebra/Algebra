@@ -56,6 +56,14 @@ describe('AlgebraBasePluginV1', () => {
       const timepoint = await plugin.timepoints(0);
       expect(timepoint.initialized).to.be.true;
     });
+
+    it('can not write to uninitialized oracle', async () => {
+      await initializeAtZeroTick(mockPool);
+      await mockPool.setPlugin(plugin);
+      await mockPool.setPluginConfig(1); // BEFORE_SWAP_FLAG
+
+      await expect(mockPool.swapToTick(5)).to.be.revertedWith('Not initialized');
+    });
   });
 
   // plain tests for hooks functionality

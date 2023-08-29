@@ -37,6 +37,10 @@ interface IVolatilityOracle {
   /// @return timestamp of the last timepoint
   function lastTimepointTimestamp() external view returns (uint32);
 
+  /// @notice Returns information about whether oracle is initialized
+  /// @return true if oracle is initialized, otherwise false
+  function isInitialized() external view returns (bool);
+
   /// @dev Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
