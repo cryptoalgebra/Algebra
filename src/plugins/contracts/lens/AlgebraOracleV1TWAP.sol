@@ -37,40 +37,18 @@ contract AlgebraOracleV1TWAP is IAlgebraOracleV1TWAP {
   /// @inheritdoc IAlgebraOracleV1TWAP
   function oldestTimestamp(address pool) external view returns (uint32 _oldestTimestamp) {
     address oracle = _getPluginForPool(pool);
-    uint16 _lastIndex = _latestIndex(oracle);
-    unchecked {
-      // overflows are desired
-      bool hasOverflowInPast;
-      (hasOverflowInPast, _oldestTimestamp) = _timepoint(oracle, _lastIndex + 1);
-      if (hasOverflowInPast) return _oldestTimestamp;
-    }
-    (, _oldestTimestamp) = _timepoint(oracle, 0);
-    return _oldestTimestamp;
+    (, _oldestTimestamp) = OracleLibrary.oldestTimepointMetadata(oracle);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
   function latestIndex(address pool) external view returns (uint16) {
-    return _latestIndex(_getPluginForPool(pool));
+    return OracleLibrary.latestIndex(_getPluginForPool(pool));
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function oldestIndex(address pool) external view returns (uint16) {
+  function oldestIndex(address pool) external view returns (uint16 _oldestIndex) {
     address oracle = _getPluginForPool(pool);
-    uint16 _lastIndex = _latestIndex(oracle);
-    unchecked {
-      // overflows are desired
-      (bool hasOverflowInPast, ) = _timepoint(oracle, _lastIndex + 1);
-      if (hasOverflowInPast) return _lastIndex + 1;
-    }
-    return 0;
-  }
-
-  function _latestIndex(address oracle) internal view returns (uint16) {
-    return (IVolatilityOracle(oracle).timepointIndex());
-  }
-
-  function _timepoint(address oracle, uint16 index) internal view returns (bool initialized, uint32 timestamp) {
-    (initialized, timestamp, , , , , ) = IVolatilityOracle(oracle).timepoints(index);
+    (_oldestIndex, ) = OracleLibrary.oldestTimepointMetadata(oracle);
   }
 
   function _getPluginForPool(address pool) internal view returns (address) {

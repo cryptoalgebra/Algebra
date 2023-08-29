@@ -51,4 +51,45 @@ library OracleLibrary {
       quoteAmount = baseToken < quoteToken ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128) : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
     }
   }
+
+  /// @notice Fetches metadata of last available record (most recent) in oracle
+  /// @param oracleAddress The address of oracle
+  /// @return index The index of last available record (most recent) in oracle
+  /// @return timestamp The timestamp of last available record (most recent) in oracle, truncated to uint32
+  function lastTimepointMetadata(address oracleAddress) internal view returns (uint16 index, uint32 timestamp) {
+    index = latestIndex(oracleAddress);
+    timestamp = IVolatilityOracle(oracleAddress).lastTimepointTimestamp();
+  }
+
+  /// @notice Fetches metadata of oldest available record in oracle
+  /// @param oracleAddress The address of oracle
+  /// @return index The index of oldest available record in oracle
+  /// @return timestamp The timestamp of oldest available record in oracle, truncated to uint32
+  function oldestTimepointMetadata(address oracleAddress) internal view returns (uint16 index, uint32 timestamp) {
+    uint16 lastIndex = latestIndex(oracleAddress);
+    bool initialized;
+    unchecked {
+      // overflow is desired
+      index = lastIndex + 1;
+      (initialized, timestamp) = timepointMetadata(oracleAddress, index);
+    }
+    if (initialized) return (index, timestamp);
+
+    (, timestamp) = timepointMetadata(oracleAddress, 0);
+    return (0, timestamp);
+  }
+
+  /// @notice Fetches the index of last available record (most recent) in oracle
+  function latestIndex(address oracle) internal view returns (uint16) {
+    return (IVolatilityOracle(oracle).timepointIndex());
+  }
+
+  /// @notice Fetches the metadata of record in oracle
+  /// @param oracleAddress The address of oracle
+  /// @param index The index of record in oracle
+  /// @return initialized Whether or not the timepoint is initialized
+  /// @return timestamp The timestamp of timepoint
+  function timepointMetadata(address oracleAddress, uint16 index) internal view returns (bool initialized, uint32 timestamp) {
+    (initialized, timestamp, , , , , ) = IVolatilityOracle(oracleAddress).timepoints(index);
+  }
 }

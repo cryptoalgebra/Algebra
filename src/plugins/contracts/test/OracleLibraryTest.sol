@@ -12,6 +12,14 @@ contract OracleLibraryTest {
     quoteAmount = OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken);
   }
 
+  function lastTimepointMetadata(address oracleAddress) external view returns (uint16 index, uint32 timestamp) {
+    return OracleLibrary.lastTimepointMetadata(oracleAddress);
+  }
+
+  function oldestTimepointMetadata(address oracleAddress) external view returns (uint16 index, uint32 timestamp) {
+    return OracleLibrary.oldestTimepointMetadata(oracleAddress);
+  }
+
   // For gas snapshot test
   function getGasCostOfConsult(address oracleAddress, uint32 period) public view returns (uint256) {
     uint256 gasBefore = gasleft();

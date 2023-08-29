@@ -92,6 +92,44 @@ describe('OracleLibrary', () => {
     });
   });
 
+  describe('#oldestTimepointMetadata', () => {
+    it('returns correct value without overflow', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
+
+      const oldestTimepointMetadata = await oracleLibraryTest.oldestTimepointMetadata(mockVolatilityOracle);
+      expect(oldestTimepointMetadata.index).to.be.eq(0)
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(period)
+    });
+
+    it('returns correct value with overflow', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 2], tickCumulatives);
+      await mockVolatilityOracle.setTimepoint(2, true, 1000, 10, 20);
+
+      const oldestTimepointMetadata = await oracleLibraryTest.oldestTimepointMetadata(mockVolatilityOracle);
+      expect(oldestTimepointMetadata.index).to.be.eq(2)
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(1000)
+    });
+  });
+
+  describe('#latestTimepointMetadata', () => {
+    it('returns correct value', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
+
+      const oldestTimepointMetadata = await oracleLibraryTest.lastTimepointMetadata(mockVolatilityOracle);
+      expect(oldestTimepointMetadata.index).to.be.eq(1)
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(101)
+    });
+  });
+
   describe('#getQuoteAtTick', () => {
     // sanity check
     it('token0: returns correct value when tick = 0', async () => {
