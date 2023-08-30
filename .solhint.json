@@ -1,6 +1,6 @@
 {
   "extends": "solhint:recommended",
-  "plugins": [],
+  "plugins": ["prettier", "algebra"],
   "rules": {
     "max-line-length": "off",
     "no-global-import": "off",
@@ -8,8 +8,12 @@
     "custom-errors": "off",
     "func-visibility": ["warn", {"ignoreConstructors":true}],
     "no-inline-assembly": "off",
+    "no-empty-blocks": "off",
+    "immutable-vars-naming": "off",
     "compiler-version": "off",
     "comprehensive-interface": "warn",
-    "modifier-name-mixedcase": "error"
+    "modifier-name-mixedcase": "error",
+    "algebra/interface-names": "error",
+    "algebra/leading-underscore": "warn"
   }
 }
