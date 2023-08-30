@@ -7,6 +7,8 @@ import '../libraries/AdaptiveFee.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
+  using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
+
   AlgebraFeeConfiguration public feeConfig;
 
   constructor() {
@@ -14,11 +16,11 @@ contract AdaptiveFeeTest {
   }
 
   function getFee(uint88 volatility) external view returns (uint256 fee) {
-    return AdaptiveFee.getFee(volatility, AlgebraFeeConfigurationLibrary.pack(feeConfig));
+    return AdaptiveFee.getFee(volatility, feeConfig.pack());
   }
 
   function getGasCostOfGetFee(uint88 volatility) external view returns (uint256) {
-    AlgebraFeeConfigurationPacked _packed = AlgebraFeeConfigurationLibrary.pack(feeConfig);
+    AlgebraFeeConfigurationU144 _packed = feeConfig.pack();
     unchecked {
       uint256 gasBefore = gasleft();
       AdaptiveFee.getFee(volatility, _packed);
@@ -27,7 +29,7 @@ contract AdaptiveFeeTest {
   }
 
   function packAndUnpackFeeConfig(AlgebraFeeConfiguration calldata config) external pure returns (AlgebraFeeConfiguration memory unpacked) {
-    AlgebraFeeConfigurationPacked _packed = AlgebraFeeConfigurationLibrary.pack(config);
+    AlgebraFeeConfigurationU144 _packed = AlgebraFeeConfigurationU144Lib.pack(config);
     unpacked.alpha1 = _packed.alpha1();
     unpacked.alpha2 = _packed.alpha2();
     unpacked.beta1 = _packed.beta1();
