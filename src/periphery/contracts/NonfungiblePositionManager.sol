@@ -53,6 +53,15 @@ contract NonfungiblePositionManager is
     bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
         keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
 
+    /// @inheritdoc INonfungiblePositionManager
+    address public override farmingCenter;
+
+    /// @inheritdoc INonfungiblePositionManager
+    mapping(uint256 tokenId => address farmingCenterAddress) public override farmingApprovals;
+
+    /// @inheritdoc INonfungiblePositionManager
+    mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
+
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
 
@@ -69,15 +78,6 @@ contract NonfungiblePositionManager is
     uint176 private _nextId = 1;
     /// @dev The ID of the next pool that is used for the first time. Skips 0
     uint80 private _nextPoolId = 1;
-
-    /// @dev The address of the farming center contract, which handles farmings logic
-    address public farmingCenter;
-
-    /// @dev mapping tokenId => farmingCenter
-    mapping(uint256 tokenId => address farmingCenterAddress) public farmingApprovals;
-
-    /// @dev mapping tokenId => farmingCenter
-    mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
     modifier isAuthorizedForToken(uint256 tokenId) {
         _checkAuthorizationForToken(tokenId);
