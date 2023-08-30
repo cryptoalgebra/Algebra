@@ -27,15 +27,10 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.170",
-    "@typescript-eslint/eslint-plugin": "^4.26.0",
-    "@typescript-eslint/parser": "^4.26.0",
-    "eslint": "^7.28.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-unused-imports": "^1.1.1",
     "lodash": "^4.17.21"
   },
   "scripts": {
-    "compile": "npm --prefix ../periphery run compile && hardhat compile",
+    "compile": "npm --prefix ../periphery run compile && npm --prefix ../plugins run compile && hardhat compile",
     "lint": "eslint . --ext .ts",
     "prettier:check": "prettier-check contracts/**/*.sol test/**/*.ts types/*.ts",
     "size-contracts": "hardhat compile && hardhat size-contracts",

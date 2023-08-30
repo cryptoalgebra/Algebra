@@ -11,5 +11,11 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 1,
     'unused-imports/no-unused-imports-ts': 1,
     'no-shadow': 1,
+    'no-dupe-else-if': 1,
+    'no-dupe-keys': 1,
+    'no-duplicate-imports': 1,
+    'no-self-compare': 1,
+    'no-self-assign': 1,
+    'no-unreachable': 1,
   },
-}
+};
