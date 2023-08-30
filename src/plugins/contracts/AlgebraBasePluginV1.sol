@@ -55,6 +55,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
+  /// @dev the address which connected the last incentive. Needed so that he can disconnect it
   address private _lastIncentiveOwner;
 
   modifier onlyPool() {
