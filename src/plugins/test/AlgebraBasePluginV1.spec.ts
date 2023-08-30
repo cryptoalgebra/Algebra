@@ -550,6 +550,35 @@ describe('AlgebraBasePluginV1', () => {
         expect(await plugin.incentive()).to.be.eq(ZeroAddress);
       });
 
+      it('can detach incentive even if no more has rights to connect plugins', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await plugin.setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
+      it('cannot attach incentive even if no more has rights to connect plugins', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await expect(plugin.setIncentive(other)).to.be.revertedWith('not allowed to set incentive');
+      });
+
+      it('new farming can detach old incentive', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await plugin.connect(other).setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
+      it('cannot detach incentive if nothing connected', async () => {
+        await mockPool.setPlugin(plugin);
+        await expect(plugin.setIncentive(ZeroAddress)).to.be.revertedWith('already active');
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
       it('cannot set same incentive twice', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
@@ -584,11 +613,11 @@ describe('AlgebraBasePluginV1', () => {
 
       it('set incentive works only for PluginFactory.farmingAddress', async () => {
         await mockPluginFactory.setFarmingAddress(ZeroAddress);
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('not allowed to set incentive');
       });
 
       it('incentive can not be attached if plugin is not attached', async () => {
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('Plugin not attached');
       });
 
       it('incentive attached before initialization', async () => {

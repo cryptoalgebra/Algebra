@@ -116,11 +116,24 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @inheritdoc IFarmingCenter
   function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin) external override {
-    require(msg.sender == address(eternalFarming), 'only farming can call this');
-    IAlgebraPool pool = IAlgebraPool(plugin.pool());
-    PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
-    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
-    plugin.setIncentive(newVirtualPool); // TODO
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(newVirtualPool, plugin);
+    require(plugin.incentive() == address(0), 'another incentive is connected');
+    plugin.setIncentive(newVirtualPool); // revert is possible if the plugin does not allow
     virtualPoolAddresses[address(pool)] = newVirtualPool;
+  }
+
+  /// @inheritdoc IFarmingCenter
+  function disconnectVirtualPoolFromPlugin(address virtualPool, IFarmingPlugin plugin) external override {
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(virtualPool, plugin);
+    if (plugin.incentive() == virtualPool) plugin.setIncentive(address(0)); // plugin _should_ allow to disconnect incentive
+    virtualPoolAddresses[address(pool)] = address(0);
+  }
+
+  /// @dev checks input params and fetches corresponding Algebra Integral pool
+  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal returns (IAlgebraPool pool) {
+    require(msg.sender == address(eternalFarming), 'only farming can call this');
+    require(virtualPool != address(0), 'zero address as virtual pool');
+    pool = IAlgebraPool(plugin.pool());
+    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'invalid pool');
   }
 }
