@@ -210,8 +210,10 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
   function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
@@ -225,17 +227,27 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
-    (, int24 tick, , ) = _getPoolState();
-    IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
+    address _incentive = incentive;
+    if (_incentive != address(0)) {
+      (, int24 tick, , ) = _getPoolState();
+      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+    } else {
+      _updatePluginConfigInPool(); // should not be called, reset config
+    }
+
     return IAlgebraPlugin.afterSwap.selector;
   }
 
-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeFlash(address, address, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeFlash.selector;
   }
 
-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.afterFlash.selector;
   }
 
   function _updatePluginConfigInPool() internal {
