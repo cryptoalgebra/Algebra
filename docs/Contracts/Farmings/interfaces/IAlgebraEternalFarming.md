@@ -251,15 +251,15 @@ Represents a farming incentive
 | deactivated | bool |  |
 | pluginAddress | address |  |
 
-### isIncentiveActive
+### isIncentiveDeactivated
 
 ```solidity
-function isIncentiveActive(bytes32 incentiveId) external view returns (bool res)
+function isIncentiveDeactivated(bytes32 incentiveId) external view returns (bool)
 ```
 
-Check if incentive is active
+Check if incentive is deactivated (manually or automatically)
 
-*Developer note: Does not check that the incentive is indeed currently connected to the Algebra pool*
+*Developer note: Does not check if the incentive is indeed currently connected to the Algebra pool or not*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -269,7 +269,7 @@ Check if incentive is active
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| res | bool | True if incentive is active |
+| [0] | bool | True if incentive is deactivated (manually or automatically) |
 
 ### farmingCenter
 

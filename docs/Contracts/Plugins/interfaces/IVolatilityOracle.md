@@ -65,6 +65,20 @@ Returns the timestamp of the last timepoint that was written.
 | ---- | ---- | ----------- |
 | [0] | uint32 | timestamp of the last timepoint |
 
+### isInitialized
+
+```solidity
+function isInitialized() external view returns (bool)
+```
+
+Returns information about whether oracle is initialized
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | true if oracle is initialized, otherwise false |
+
 ### getSingleTimepoint
 
 ```solidity

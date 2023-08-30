@@ -11,8 +11,26 @@ Produces a string containing the data URI for a JSON metadata string
 https://github.com/Uniswap/v3-periphery*
 
 
+## Structs
+### TokenRatioSortData
+
+
+
+```solidity
+struct TokenRatioSortData {
+  address tokenAddress;
+  int256 tokenRatioSortOrder;
+}
+```
+
+
 ## Variables
 ### address WNativeToken immutable
+
+
+
+
+### address cachedThis immutable
 
 
 
@@ -22,7 +40,7 @@ https://github.com/Uniswap/v3-periphery*
 ### constructor
 
 ```solidity
-constructor(address _WNativeToken) public
+constructor(address _WNativeToken, string _nativeCurrencySymbol_, struct NonfungibleTokenPositionDescriptor.TokenRatioSortData[] tokenDatas) public
 ```
 
 
@@ -30,6 +48,40 @@ constructor(address _WNativeToken) public
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _WNativeToken | address |  |
+| _nativeCurrencySymbol_ | string |  |
+| tokenDatas | struct NonfungibleTokenPositionDescriptor.TokenRatioSortData[] |  |
+
+### tokenRatioPriority
+
+```solidity
+function tokenRatioPriority(address token) public view returns (int256)
+```
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token | address |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | int256 |  |
+
+### nativeCurrencySymbol
+
+```solidity
+function nativeCurrencySymbol() public view returns (string)
+```
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string |  |
 
 ### tokenURI
 
@@ -55,7 +107,7 @@ Produces the URI describing a particular token ID for a position manager
 ### flipRatio
 
 ```solidity
-function flipRatio(address token0, address token1, uint256 chainId) public view returns (bool)
+function flipRatio(address token0, address token1) public view returns (bool)
 ```
 
 
@@ -64,30 +116,10 @@ function flipRatio(address token0, address token1, uint256 chainId) public view 
 | ---- | ---- | ----------- |
 | token0 | address |  |
 | token1 | address |  |
-| chainId | uint256 |  |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | bool |  |
-
-### tokenRatioPriority
-
-```solidity
-function tokenRatioPriority(address token, uint256 chainId) public view returns (int256)
-```
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| token | address |  |
-| chainId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | int256 |  |
 

@@ -322,3 +322,74 @@ Changes address of farmingCenter
 | ---- | ---- | ----------- |
 | newFarmingCenter | address | The new address of farmingCenter |
 
+### isApprovedOrOwner
+
+```solidity
+function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool)
+```
+
+Returns whether &#x60;spender&#x60; is allowed to manage &#x60;tokenId&#x60;
+
+*Developer note: Requirement: &#x60;tokenId&#x60; must exist*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| spender | address |  |
+| tokenId | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
+
+### farmingCenter
+
+```solidity
+function farmingCenter() external view returns (address)
+```
+
+Returns the address of currently connected farming, if any
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address of the farming center contract, which handles farmings logic |
+
+### farmingApprovals
+
+```solidity
+function farmingApprovals(uint256 tokenId) external view returns (address)
+```
+
+Returns the address of farming that is approved for this token, if any
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address |  |
+
+### tokenFarmedIn
+
+```solidity
+function tokenFarmedIn(uint256 tokenId) external view returns (address)
+```
+
+Returns the address of farming in which this token is farmed, if any
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address |  |
+

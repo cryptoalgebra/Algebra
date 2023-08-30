@@ -10,10 +10,10 @@ Algebra main farming contract
 *Developer note: Manages farmings and performs entry, exit and other actions.*
 
 ## Modifiers
-### isOwner
+### isApprovedOrOwner
 
 ```solidity
-modifier isOwner(uint256 tokenId)
+modifier isApprovedOrOwner(uint256 tokenId)
 ```
 
 
@@ -160,12 +160,29 @@ Used to claim and send rewards from farming(s)
 function connectVirtualPoolToPlugin(address newVirtualPool, contract IFarmingPlugin plugin) external
 ```
 
-Updates incentive in AlgebraPool plugin
+Used to connect incentive to compatible AlgebraPool plugin
 
-*Developer note: only farming can do it*
+*Developer note: only farming can do it
+Will revert if something is already connected to the plugin*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newVirtualPool | address |  |
+| plugin | contract IFarmingPlugin | The Algebra farming plugin |
+
+### disconnectVirtualPoolFromPlugin
+
+```solidity
+function disconnectVirtualPoolFromPlugin(address virtualPool, contract IFarmingPlugin plugin) external
+```
+
+Used to disconnect incentive from compatible AlgebraPool plugin
+
+*Developer note: only farming can do it.
+If the specified virtual pool is not connected to the plugin, nothing will happen*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| virtualPool | address | The virtual pool to be disconnected, must not be zero address |
 | plugin | contract IFarmingPlugin | The Algebra farming plugin |
 

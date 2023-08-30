@@ -5,7 +5,7 @@
 
 NFT positions
 
-Wraps Algebra  positions in the ERC721 non-fungible token interface
+Wraps Algebra positions in the ERC721 non-fungible token interface
 
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
@@ -54,21 +54,18 @@ struct Position {
 
 ### address farmingCenter 
 
+Returns the address of currently connected farming, if any
 
-
-*Developer note: The address of the farming center contract, which handles farmings logic*
 
 ### mapping(uint256 &#x3D;&gt; address) farmingApprovals 
 
+Returns the address of farming that is approved for this token, if any
 
-
-*Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
 
 ### mapping(uint256 &#x3D;&gt; address) tokenFarmedIn 
 
+Returns the address of farming in which this token is farmed, if any
 
-
-*Developer note: mapping tokenId &#x3D;&gt; farmingCenter*
 
 
 ## Functions
@@ -140,24 +137,6 @@ a method does not exist, i.e. the pool is assumed to be initialized.*
 | liquidity | uint128 | The liquidity delta amount as a result of the increase |
 | amount0 | uint256 | The amount of token0 |
 | amount1 | uint256 | The amount of token1 |
-
-### tokenURI
-
-```solidity
-function tokenURI(uint256 tokenId) public view returns (string)
-```
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| tokenId | uint256 |  |
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | string |  |
 
 ### increaseLiquidity
 
@@ -272,6 +251,26 @@ Changes address of farmingCenter
 | ---- | ---- | ----------- |
 | newFarmingCenter | address | The new address of farmingCenter |
 
+### tokenURI
+
+```solidity
+function tokenURI(uint256 tokenId) public view returns (string)
+```
+
+
+
+*Developer note: Returns the Uniform Resource Identifier (URI) for &#x60;tokenId&#x60; token.*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tokenId | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string |  |
+
 ### getApproved
 
 ```solidity
@@ -295,4 +294,25 @@ Requirements:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address |  |
+
+### isApprovedOrOwner
+
+```solidity
+function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool)
+```
+
+Returns whether &#x60;spender&#x60; is allowed to manage &#x60;tokenId&#x60;
+
+*Developer note: Requirement: &#x60;tokenId&#x60; must exist*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| spender | address |  |
+| tokenId | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool |  |
 

@@ -18,9 +18,9 @@ modifier onlyAdministrator()
 
 
 ## Variables
-### bytes32 ALGEBRA_BASE_PLUGIN_ADMINISTRATOR constant
+### bytes32 ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR constant
 
-The hash of &#x27;ALGEBRA_BASE_PLUGIN_ADMINISTRATOR&#x27; used as role
+The hash of &#x27;ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR&#x27; used as role
 
 *Developer note: allows to change settings of BasePluginV1Factory*
 

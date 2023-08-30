@@ -37,13 +37,13 @@ Emitted when the farming address is changed
 
 
 ## Functions
-### ALGEBRA_BASE_PLUGIN_ADMINISTRATOR
+### ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR
 
 ```solidity
-function ALGEBRA_BASE_PLUGIN_ADMINISTRATOR() external pure returns (bytes32)
+function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32)
 ```
 
-The hash of &#x27;ALGEBRA_BASE_PLUGIN_ADMINISTRATOR&#x27; used as role
+The hash of &#x27;ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR&#x27; used as role
 
 *Developer note: allows to change settings of BasePluginV1Factory*
 

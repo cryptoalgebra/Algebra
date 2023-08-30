@@ -128,15 +128,15 @@ constructor(contract IAlgebraPoolDeployer _deployer, contract INonfungiblePositi
 | _deployer | contract IAlgebraPoolDeployer | pool deployer contract address |
 | _nonfungiblePositionManager | contract INonfungiblePositionManager | the NFT position manager contract address |
 
-### isIncentiveActive
+### isIncentiveDeactivated
 
 ```solidity
-function isIncentiveActive(bytes32 incentiveId) external view returns (bool res)
+function isIncentiveDeactivated(bytes32 incentiveId) external view returns (bool res)
 ```
 
-Check if incentive is active
+Check if incentive is deactivated (manually or automatically)
 
-*Developer note: Does not check that the incentive is indeed currently connected to the Algebra pool*
+*Developer note: Does not check if the incentive is indeed currently connected to the Algebra pool or not*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -146,7 +146,7 @@ Check if incentive is active
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| res | bool | True if incentive is active |
+| res | bool | True if incentive is deactivated (manually or automatically) |
 
 ### createEternalFarming
 
