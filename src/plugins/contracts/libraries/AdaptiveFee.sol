@@ -33,7 +33,7 @@ library AdaptiveFee {
   }
 
   /// @notice Calculates fee based on formula:
-  /// baseFee + sigmoidVolume(sigmoid1(volatility, volumePerLiquidity) + sigmoid2(volatility, volumePerLiquidity))
+  /// baseFee + sigmoid1(volatility) + sigmoid2(volatility)
   /// maximum value capped by baseFee + alpha1 + alpha2
   function getFee(uint88 volatility, AlgebraFeeConfiguration memory config) internal pure returns (uint16 fee) {
     unchecked {
