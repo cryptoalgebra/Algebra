@@ -87,7 +87,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = time;
     isInitialized = true;
 
-    IAlgebraPool(pool).setPluginConfig(defaultPluginConfig);
+    _updatePluginConfigInPool();
   }
 
   // ###### Volatility and TWAP oracle ######
@@ -173,11 +173,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
-    (, , , uint8 pluginConfig) = _getPoolState();
-    if (turnOn != pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
-      IAlgebraPool(pool).setPluginConfig(pluginConfig);
-    }
+    _updatePluginConfigInPool();
   }
 
   /// @inheritdoc IFarmingPlugin
@@ -193,10 +189,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
-    uint8 newPluginConfig = defaultPluginConfig;
-    if (incentive != address(0)) newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
-
-    IAlgebraPool(msg.sender).setPluginConfig(newPluginConfig);
+    _updatePluginConfigInPool();
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
@@ -237,6 +230,18 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
     revert('Not implemented');
+  }
+
+  function _updatePluginConfigInPool() internal {
+    uint8 newPluginConfig = defaultPluginConfig;
+    if (incentive != address(0)) {
+      newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
+    }
+
+    (, , , uint8 currentPluginConfig) = _getPoolState();
+    if (currentPluginConfig != newPluginConfig) {
+      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+    }
   }
 
   function _writeTimepointAndUpdateFee() internal {
