@@ -8,6 +8,8 @@ import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTi
 
 import { MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
 
+import snapshotGasCost from './shared/snapshotGasCost';
+
 describe('AlgebraBasePluginV1', () => {
   let wallet: Wallet, other: Wallet;
 
@@ -774,6 +776,11 @@ describe('AlgebraBasePluginV1', () => {
         expect(newConfig.gamma1).to.eq(configuration.gamma1);
         expect(newConfig.gamma2).to.eq(configuration.gamma2);
         expect(newConfig.baseFee).to.eq(configuration.baseFee);
+      });
+
+      it('feeConfig getter gas cost', async () => {
+        await plugin.changeFeeConfiguration(configuration);
+        await snapshotGasCost(plugin.feeConfig.estimateGas())
       });
 
       it('emits event', async () => {

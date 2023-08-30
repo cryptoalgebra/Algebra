@@ -119,3 +119,5 @@ Array [
   "Fee: 15000 ",
 ]
 `;
+
+exports[`AlgebraBasePluginV1 AlgebraBasePluginV1 external methods #changeFeeConfiguration feeConfig getter gas cost 1`] = `23713`;

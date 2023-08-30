@@ -15,11 +15,13 @@ import './interfaces/IAlgebraVirtualPool.sol';
 
 import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
+import './types/AlgebraFeeConfigurationPacked.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
   using Plugins for uint8;
+  using AlgebraFeeConfigurationLibrary for AlgebraFeeConfiguration;
 
   uint256 internal constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
@@ -48,11 +50,10 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   bool public override isInitialized;
 
+  AlgebraFeeConfigurationPacked private _feeConfig;
+
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
-
-  /// @inheritdoc IDynamicFeeManager
-  AlgebraFeeConfiguration public feeConfig;
 
   address private _lastIncentiveOwner;
 
@@ -63,6 +64,19 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   constructor(address _pool, address _factory, address _pluginFactory) {
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
+  }
+
+  /// @inheritdoc IDynamicFeeManager
+  function feeConfig()
+    external
+    view
+    override
+    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+  {
+    (alpha1, alpha2) = (_feeConfig.alpha1(), _feeConfig.alpha2());
+    (beta1, beta2) = (_feeConfig.beta1(), _feeConfig.beta2());
+    (gamma1, gamma2) = (_feeConfig.gamma1(), _feeConfig.gamma2());
+    baseFee = _feeConfig.baseFee();
   }
 
   function _checkIfFromPool() internal view {
@@ -130,34 +144,33 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
-    feeConfig = _config;
+    _feeConfig = _config.pack(); // pack struct to uint144 and write in storage
     emit FeeConfiguration(_config);
   }
 
   /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
-    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
-    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
-      return _feeConfig.baseFee;
-    } else {
-      uint16 lastIndex = timepointIndex;
-      uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-      (, int24 tick, , ) = _getPoolState();
+    uint16 lastIndex = timepointIndex;
+    AlgebraFeeConfigurationPacked feeConfig_ = _feeConfig;
+    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
 
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+    (, int24 tick, , ) = _getPoolState();
 
-      return AdaptiveFee.getFee(volatilityAverage, feeConfig);
-    }
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
   }
 
-  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex, uint16 oldestTimepointIndex, int24 currentTick) internal view returns (uint16 fee) {
-    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
-    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
-      return _feeConfig.baseFee;
-    } else {
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
-      return AdaptiveFee.getFee(volatilityAverage, _feeConfig);
-    }
+  function _getFeeAtLastTimepoint(
+    uint16 lastTimepointIndex,
+    uint16 oldestTimepointIndex,
+    int24 currentTick,
+    AlgebraFeeConfigurationPacked feeConfig_
+  ) internal view returns (uint16 fee) {
+    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
+
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
   }
 
   // ###### Farming plugin ######
@@ -221,7 +234,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = _timestamp;
     isInitialized = true;
 
-    IAlgebraPool(pool).setFee(feeConfig.baseFee);
+    IAlgebraPool(pool).setFee(_feeConfig.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
@@ -278,10 +291,13 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function _writeTimepointAndUpdateFee() internal {
+    // single SLOAD
     uint16 _lastIndex = timepointIndex;
     uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+    AlgebraFeeConfigurationPacked feeConfig_ = _feeConfig; // struct packed in uint144
     bool _isInitialized = isInitialized;
     require(_isInitialized, 'Not initialized');
+
     uint32 currentTimestamp = _blockTimestamp();
 
     if (_lastTimepointTimestamp == currentTimestamp) return;
@@ -292,7 +308,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;
 
-    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick);
+    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
