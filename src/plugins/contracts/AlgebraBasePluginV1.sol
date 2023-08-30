@@ -15,13 +15,13 @@ import './interfaces/IAlgebraVirtualPool.sol';
 
 import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
-import './types/AlgebraFeeConfigurationPacked.sol';
+import './types/AlgebraFeeConfigurationU144.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
   using Plugins for uint8;
-  using AlgebraFeeConfigurationLibrary for AlgebraFeeConfiguration;
+  using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
 
   uint256 internal constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
@@ -50,7 +50,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   bool public override isInitialized;
 
-  AlgebraFeeConfigurationPacked private _feeConfig;
+  /// @dev AlgebraFeeConfiguration struct packed in uint144
+  AlgebraFeeConfigurationU144 private _feeConfig;
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
@@ -151,7 +152,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
     uint16 lastIndex = timepointIndex;
-    AlgebraFeeConfigurationPacked feeConfig_ = _feeConfig;
+    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig;
     if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
 
     uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
@@ -165,7 +166,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     uint16 lastTimepointIndex,
     uint16 oldestTimepointIndex,
     int24 currentTick,
-    AlgebraFeeConfigurationPacked feeConfig_
+    AlgebraFeeConfigurationU144 feeConfig_
   ) internal view returns (uint16 fee) {
     if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
 
@@ -294,7 +295,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     // single SLOAD
     uint16 _lastIndex = timepointIndex;
     uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
-    AlgebraFeeConfigurationPacked feeConfig_ = _feeConfig; // struct packed in uint144
+    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig; // struct packed in uint144
     bool _isInitialized = isInitialized;
     require(_isInitialized, 'Not initialized');
 

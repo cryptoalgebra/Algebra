@@ -5,6 +5,8 @@ import '../../base/AlgebraFeeConfiguration.sol';
 import '../../libraries/AdaptiveFee.sol';
 
 contract AdaptiveFeeEchidnaTest {
+  using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
+
   function checkExpInvariants(uint256 x, uint16 gamma) external pure {
     unchecked {
       require(gamma != 0);
@@ -36,7 +38,7 @@ contract AdaptiveFeeEchidnaTest {
       AlgebraFeeConfiguration memory feeConfig = AlgebraFeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee);
       AdaptiveFee.validateFeeConfiguration(feeConfig);
 
-      fee = AdaptiveFee.getFee(volatility, AlgebraFeeConfigurationLibrary.pack(feeConfig));
+      fee = AdaptiveFee.getFee(volatility, feeConfig.pack());
       assert(fee <= type(uint16).max);
       assert(fee >= baseFee);
       assert(fee <= baseFee + alpha1 + alpha2);
@@ -52,9 +54,7 @@ contract AdaptiveFeeEchidnaTest {
     uint16 gamma2,
     uint16 baseFee
   ) external pure {
-    AlgebraFeeConfigurationPacked feeConfig = AlgebraFeeConfigurationLibrary.pack(
-      AlgebraFeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee)
-    );
+    AlgebraFeeConfigurationU144 feeConfig = AlgebraFeeConfiguration(alpha1, alpha2, beta1, beta2, gamma1, gamma2, baseFee).pack();
 
     assert(feeConfig.alpha1() == alpha1);
     assert(feeConfig.alpha2() == alpha2);

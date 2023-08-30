@@ -3,7 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '../base/AlgebraFeeConfiguration.sol';
-import '../types/AlgebraFeeConfigurationPacked.sol';
+import '../types/AlgebraFeeConfigurationU144.sol';
 
 /// @title AdaptiveFee
 /// @notice Calculates fee based on combination of sigmoids
@@ -36,7 +36,7 @@ library AdaptiveFee {
   /// @notice Calculates fee based on formula:
   /// baseFee + sigmoid1(volatility) + sigmoid2(volatility)
   /// maximum value capped by baseFee + alpha1 + alpha2
-  function getFee(uint88 volatility, AlgebraFeeConfigurationPacked config) internal pure returns (uint16 fee) {
+  function getFee(uint88 volatility, AlgebraFeeConfigurationU144 config) internal pure returns (uint16 fee) {
     unchecked {
       volatility /= 15; // normalize for 15 sec interval
       uint256 sumOfSigmoids = sigmoid(volatility, config.gamma1(), config.alpha1(), config.beta1()) +
