@@ -544,6 +544,17 @@ describe('AlgebraBasePluginV1', () => {
         await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('has active incentive');
       });
 
+      it('can detach incentive if not connected to pool', async () => {
+        const defaultConfig = await plugin.defaultPluginConfig();
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPluginConfig(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
+        await plugin.setIncentive(virtualPoolMock);
+        expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
+        await mockPool.setPlugin(ZeroAddress);
+        await plugin.setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
       it('can set incentive if afterSwap hook is active', async () => {
         const defaultConfig = await plugin.defaultPluginConfig();
         await mockPool.setPlugin(plugin);
