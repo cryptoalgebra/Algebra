@@ -181,7 +181,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   /// @inheritdoc IFarmingPlugin
-  function isIncentiveActive(address targetIncentive) external view override returns (bool) {
+  function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
     if (incentive != targetIncentive) return false;
     if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
