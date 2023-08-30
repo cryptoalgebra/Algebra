@@ -3,8 +3,6 @@ pragma solidity >=0.8.4;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
 
 import '../../interfaces/plugins/IVolatilityOracle.sol';
