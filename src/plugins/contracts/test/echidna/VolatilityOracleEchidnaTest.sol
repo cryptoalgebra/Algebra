@@ -60,10 +60,10 @@ contract VolatilityOracleEchidnaTest {
         secondsAgos[0] = secondsAgo0;
         secondsAgos[1] = secondsAgo1;
 
-        (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) = volatilityOracle.getTimepoints(secondsAgos);
+        (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) = volatilityOracle.getTimepoints(secondsAgos);
 
         int56 timeWeightedTick = (tickCumulatives[1] - tickCumulatives[0]) / int56(uint56(timeElapsed));
-        uint112 averageVolatility = (volatilityCumulatives[1] - volatilityCumulatives[0]) / uint112(timeElapsed);
+        uint112 averageVolatility = (uint112(volatilityCumulatives[1]) - uint112(volatilityCumulatives[0])) / uint112(timeElapsed);
 
         assert(timeWeightedTick <= type(int24).max);
         assert(timeWeightedTick >= type(int24).min);
@@ -97,7 +97,7 @@ contract VolatilityOracleEchidnaTest {
     uint32[] memory secondsAgos = new uint32[](2);
     secondsAgos[0] = secondsAgo;
     secondsAgos[1] = 0;
-    (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) = volatilityOracle.getTimepoints(secondsAgos);
+    (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) = volatilityOracle.getTimepoints(secondsAgos);
 
     // compute the time weighted tick, rounded towards negative infinity
     unchecked {
@@ -107,7 +107,7 @@ contract VolatilityOracleEchidnaTest {
         timeWeightedTick--;
       }
 
-      uint112 volatility = (volatilityCumulatives[1] - volatilityCumulatives[0]) / uint112(secondsAgo);
+      uint112 volatility = (uint112(volatilityCumulatives[1]) - uint112(volatilityCumulatives[0])) / uint112(secondsAgo);
 
       // the time weighted averages fit in their respective accumulated types
       assert(timeWeightedTick <= type(int24).max && timeWeightedTick >= type(int24).min);

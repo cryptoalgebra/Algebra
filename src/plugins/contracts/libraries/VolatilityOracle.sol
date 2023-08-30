@@ -149,10 +149,10 @@ library VolatilityOracle {
     uint32[] memory secondsAgos,
     int24 tick,
     uint16 lastIndex
-  ) internal view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+  ) internal view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
     uint256 secondsLength = secondsAgos.length;
     tickCumulatives = new int56[](secondsLength);
-    volatilityCumulatives = new uint112[](secondsLength);
+    volatilityCumulatives = new uint88[](secondsLength);
 
     uint16 oldestIndex = getOldestIndex(self, lastIndex);
     Timepoint memory current;

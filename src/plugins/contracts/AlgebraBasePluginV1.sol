@@ -111,7 +111,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   // ###### Volatility and TWAP oracle ######
 
   /// @inheritdoc IVolatilityOracle
-  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
+  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {
     (, int24 tick, , ) = _getPoolState();
     uint16 lastTimepointIndex = timepointIndex;
     uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
@@ -122,7 +122,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   function getTimepoints(
     uint32[] memory secondsAgos
-  ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+  ) external view override returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
     (, int24 tick, , ) = _getPoolState();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
   }

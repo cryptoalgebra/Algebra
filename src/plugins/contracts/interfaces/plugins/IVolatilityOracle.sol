@@ -48,14 +48,14 @@ interface IVolatilityOracle {
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
   /// @return tickCumulative The cumulative tick since the pool was first initialized, as of `secondsAgo`
   /// @return volatilityCumulative The cumulative volatility value since the pool was first initialized, as of `secondsAgo`
-  function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative);
+  function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint88 volatilityCumulative);
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
   /// @return tickCumulatives The cumulative tick since the pool was first initialized, as of each `secondsAgo`
   /// @return volatilityCumulatives The cumulative volatility values since the pool was first initialized, as of each `secondsAgo`
-  function getTimepoints(uint32[] memory secondsAgos) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives);
+  function getTimepoints(uint32[] memory secondsAgos) external view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives);
 
   /// @notice Fills uninitialized timepoints with nonzero value
   /// @dev Can be used to reduce the gas cost of future swaps
