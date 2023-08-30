@@ -124,10 +124,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address connectedPlugin = key.pool.plugin();
     if (connectedPlugin == address(0)) revert pluginNotConnected();
-    if (_getCurrentVirtualPoolInPlugin(IFarmingPlugin(connectedPlugin)) != address(0)) revert anotherFarmingIsActive();
+    if (IFarmingPlugin(connectedPlugin).incentive() != address(0)) revert anotherFarmingIsActive();
 
     virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
-    _connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
+    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
 
     key.nonce = numOfIncentives++;
     bytes32 incentiveId = IncentiveId.compute(key);
@@ -174,9 +174,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
     if (rewardRate0 | rewardRate1 != 0) _setRewardRates(virtualPool, 0, 0, incentiveId);
 
-    if (address(virtualPool) == _getCurrentVirtualPoolInPlugin(plugin)) {
-      _connectVirtualPoolToPlugin(address(0), IFarmingPlugin(plugin));
-    }
+    IFarmingCenter(farmingCenter).disconnectVirtualPoolFromPlugin(address(virtualPool), plugin);
+
     emit IncentiveDeactivated(incentiveId);
   }
 
@@ -393,14 +392,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function _setRewardRates(IAlgebraEternalVirtualPool virtualPool, uint128 rate0, uint128 rate1, bytes32 incentiveId) private {
     virtualPool.setRates(rate0, rate1);
     emit RewardsRatesChanged(rate0, rate1, incentiveId);
-  }
-
-  function _connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) private {
-    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, plugin);
-  }
-
-  function _getCurrentVirtualPoolInPlugin(IFarmingPlugin plugin) internal view returns (address virtualPool) {
-    return plugin.incentive();
   }
 
   function _getFarm(uint256 tokenId, bytes32 incentiveId) private view returns (Farm memory result) {

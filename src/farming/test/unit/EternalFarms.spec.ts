@@ -63,7 +63,7 @@ describe('unit/EternalFarms', () => {
     await helpers.mintFlow({
       lp: lpUser0,
       tokens: [context.token0, context.token1],
-    })
+    });
 
     await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
     await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -711,7 +711,7 @@ describe('unit/EternalFarms', () => {
     it('returns correct rewardAmount and secondsInsideX128 for the position', async () => {
       const pool = context.poolObj.connect(actors.lpUser0());
 
-      Time.set(timestamps.startTime + 10);
+      await Time.set(timestamps.startTime + 10);
       //await provider.send('evm_mine', [timestamps.startTime + 100])
       const trader = actors.traderUser0();
       await helpers.makeTickGoFlow({
@@ -720,7 +720,7 @@ describe('unit/EternalFarms', () => {
         desiredValue: 10,
       });
 
-      Time.set(timestamps.endTime - 10);
+      await Time.set(timestamps.endTime - 10);
 
       await helpers.makeTickGoFlow({
         trader,
@@ -728,7 +728,7 @@ describe('unit/EternalFarms', () => {
         desiredValue: 100,
       });
 
-      Time.set(timestamps.endTime + 10);
+      await Time.set(timestamps.endTime + 10);
 
       const rewardInfo = await context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId);
 
@@ -2022,7 +2022,7 @@ describe('unit/EternalFarms', () => {
 
         await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
-        context.farmingCenter.connect(lpUser0).enterFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             pool: context.pool01,
             rewardToken: await context.rewardToken.getAddress(),
@@ -2066,7 +2066,7 @@ describe('unit/EternalFarms', () => {
       });
 
       it('set max rates', async () => {
-        expect(await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
+        await expect(context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
           .to.emit(context.eternalFarming, 'RewardsRatesChanged')
           .withArgs(2n ** 128n - 1n, 2n ** 128n - 1n, incentiveId);
       });

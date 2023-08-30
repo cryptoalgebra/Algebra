@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { ContractTransactionReceipt, EventLog, Wallet, MaxUint256, ZeroAddress } from 'ethers';
+import { ContractTransactionReceipt, Wallet, MaxUint256, ZeroAddress } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 

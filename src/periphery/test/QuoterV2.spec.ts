@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { FeeAmount, MaxUint128 } from './shared/constants';
+import { MaxUint128 } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';

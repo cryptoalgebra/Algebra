@@ -54,6 +54,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IDynamicFeeManager
   AlgebraFeeConfiguration public feeConfig;
 
+  address private _lastIncentiveOwner;
+
   modifier onlyPool() {
     _checkIfFromPool();
     _;
@@ -162,20 +164,33 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   function setIncentive(address newIncentive) external override {
-    require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
+    bool toConnect = newIncentive != address(0);
+    bool accessAllowed;
+    if (toConnect) {
+      accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    } else {
+      // we allow the one who connected the incentive to disconnect it,
+      // even if he no longer has the rights to connect incentives
+      if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
+      if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    }
+    require(accessAllowed, 'not allowed to set incentive');
 
     bool isPluginConnected = _getPluginInPool() == address(this);
-    bool turnOn = newIncentive != address(0);
-    if (turnOn) {
-      require(isPluginConnected, 'Plugin not attached');
-    }
-    address currentIncentive = incentive;
+    if (toConnect) require(isPluginConnected, 'Plugin not attached');
 
+    address currentIncentive = incentive;
     require(currentIncentive != newIncentive, 'already active');
-    if (currentIncentive != address(0)) require(!turnOn, 'has active incentive');
+    if (toConnect) require(currentIncentive == address(0), 'has active incentive');
 
     incentive = newIncentive;
     emit Incentive(newIncentive);
+
+    if (toConnect) {
+      _lastIncentiveOwner = msg.sender; // write creator of this incentive
+    } else {
+      _lastIncentiveOwner = address(0);
+    }
 
     if (isPluginConnected) {
       _updatePluginConfigInPool();

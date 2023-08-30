@@ -38,11 +38,19 @@ interface IFarmingCenter is IMulticall {
     bytes32 incentiveId
   ) external view returns (IERC20Minimal rewardToken, IERC20Minimal bonusRewardToken, IAlgebraPool pool, uint256 nonce);
 
-  /// @notice Updates incentive in AlgebraPool plugin
+  /// @notice Used to connect incentive to compatible AlgebraPool plugin
   /// @dev only farming can do it
-  /// @param virtualPool The virtual pool to be connected
+  /// Will revert if something is already connected to the plugin
+  /// @param virtualPool The virtual pool to be connected, must not be zero address
   /// @param plugin The Algebra farming plugin
   function connectVirtualPoolToPlugin(address virtualPool, IFarmingPlugin plugin) external;
+
+  /// @notice Used to disconnect incentive from compatible AlgebraPool plugin
+  /// @dev only farming can do it.
+  /// If the specified virtual pool is not connected to the plugin, nothing will happen
+  /// @param virtualPool The virtual pool to be disconnected, must not be zero address
+  /// @param plugin The Algebra farming plugin
+  function disconnectVirtualPoolFromPlugin(address virtualPool, IFarmingPlugin plugin) external;
 
   /// @notice Enters in incentive (eternal farming) with NFT-position token
   /// @dev msg.sender must be the owner of NFT
