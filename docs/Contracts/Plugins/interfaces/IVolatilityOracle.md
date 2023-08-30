@@ -82,7 +82,7 @@ Returns information about whether oracle is initialized
 ### getSingleTimepoint
 
 ```solidity
-function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative)
+function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint88 volatilityCumulative)
 ```
 
 
@@ -101,12 +101,12 @@ at exactly the timestamp between the two timepoints.*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tickCumulative | int56 | The cumulative tick since the pool was first initialized, as of `secondsAgo` |
-| volatilityCumulative | uint112 | The cumulative volatility value since the pool was first initialized, as of `secondsAgo` |
+| volatilityCumulative | uint88 | The cumulative volatility value since the pool was first initialized, as of `secondsAgo` |
 
 ### getTimepoints
 
 ```solidity
-function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)
+function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint88[] volatilityCumulatives)
 ```
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
@@ -122,7 +122,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tickCumulatives | int56[] | The cumulative tick since the pool was first initialized, as of each `secondsAgo` |
-| volatilityCumulatives | uint112[] | The cumulative volatility values since the pool was first initialized, as of each `secondsAgo` |
+| volatilityCumulatives | uint88[] | The cumulative volatility values since the pool was first initialized, as of each `secondsAgo` |
 
 ### prepayTimepointsStorageSlots
 
