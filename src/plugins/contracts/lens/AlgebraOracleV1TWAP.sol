@@ -20,33 +20,38 @@ contract AlgebraOracleV1TWAP is IAlgebraOracleV1TWAP {
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken) external pure returns (uint256 quoteAmount) {
+  function getQuoteAtTick(
+    int24 tick,
+    uint128 baseAmount,
+    address baseToken,
+    address quoteToken
+  ) external pure override returns (uint256 quoteAmount) {
     return OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick) {
+  function getAverageTick(address pool, uint32 period) external view override returns (int24 timeWeightedAverageTick) {
     return OracleLibrary.consult(_getPluginForPool(pool), period);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function latestTimestamp(address pool) external view returns (uint32) {
+  function latestTimestamp(address pool) external view override returns (uint32) {
     return IVolatilityOracle(_getPluginForPool(pool)).lastTimepointTimestamp();
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function oldestTimestamp(address pool) external view returns (uint32 _oldestTimestamp) {
+  function oldestTimestamp(address pool) external view override returns (uint32 _oldestTimestamp) {
     address oracle = _getPluginForPool(pool);
     (, _oldestTimestamp) = OracleLibrary.oldestTimepointMetadata(oracle);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function latestIndex(address pool) external view returns (uint16) {
+  function latestIndex(address pool) external view override returns (uint16) {
     return OracleLibrary.latestIndex(_getPluginForPool(pool));
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function oldestIndex(address pool) external view returns (uint16 _oldestIndex) {
+  function oldestIndex(address pool) external view override returns (uint16 _oldestIndex) {
     address oracle = _getPluginForPool(pool);
     (_oldestIndex, ) = OracleLibrary.oldestTimepointMetadata(oracle);
   }
