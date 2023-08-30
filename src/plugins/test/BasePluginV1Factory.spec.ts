@@ -44,7 +44,7 @@ describe('BasePluginV1Factory', () => {
     });
 
     it('cannot create for nonexistent pool', async () => {
-      expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
     });
 
     it('can create for existing pool', async () => {
@@ -56,6 +56,14 @@ describe('BasePluginV1Factory', () => {
       const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
       const feeConfig = await pluginMock.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
+    });
+
+    it('cannot create twice for existing pool', async () => {
+      await mockAlgebraFactory.stubPool(wallet.address, other.address, other.address);
+
+      await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
+
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('already created');
     });
   });
 

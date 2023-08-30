@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { BigNumberish, Wallet, MaxUint256 } from 'ethers';
+import { Wallet, MaxUint256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeAlgebraPool, TickMathTest, AlgebraPoolSwapTest } from '../typechain';

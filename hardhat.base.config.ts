@@ -15,7 +15,7 @@ export default {
     hardhat: {
       allowUnlimitedContractSize: true,
       loggingEnabled: false,
-      evm: 'london'
+      evm: 'paris'
     },
     hhnode: {
       url: `http://127.0.0.1:8545`,
@@ -63,16 +63,49 @@ export default {
       chainId: 5001,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    mantle: {
+      url: `https://rpc.mantle.xyz`,
+      chainId: 5000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    telosTestnet: {
+      url: `https://testnet.telos.net/evm`,
+      chainId: 41,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
     maticMainnet: {
       url: `https://rpc-mainnet.matic.quiknode.pro`,
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 50_000_000_000
+    },
+    artheraTestnet: {
+      url: `https://rpc-test.arthera.net`,
+      chainId: 10243,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
     }
   },
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
     apiKey: `${POLYGONSCAN_API_KEY}`,
+    customChains: [
+      {
+        network: "mantleTestnet",
+        chainId: 5001,
+        urls: {
+          apiURL: "https://explorer.testnet.mantle.xyz/api",
+          browserURL: "https://explorer.testnet.mantle.xyz/"
+        }
+      },
+      {
+        network: "mantle",
+        chainId: 5000,
+        urls: {
+          apiURL: "https://explorer.mantle.xyz/api",
+          browserURL: "https://explorer.mantle.xyz/"
+        }
+      }
+    ]
   },
 }

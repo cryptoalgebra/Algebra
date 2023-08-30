@@ -12,16 +12,18 @@ interface IFarmingPlugin {
   /// @return address of the pool
   function pool() external returns (address);
 
-  /// @notice Sets an active incentive. Only farming
-  /// @param newIncentive The address associated with the incentive
+  /// @notice Connects or disconnects an incentive.
+  /// @dev Only farming can connect incentives.
+  /// The one who connected it and the current farming has the right to disconnect the incentive.
+  /// @param newIncentive The address associated with the incentive or zero address
   function setIncentive(address newIncentive) external;
 
-  /// @notice Checks if the incentive is active
+  /// @notice Checks if the incentive is connected to pool
   /// @dev Returns false if the plugin has a different incentive set, the plugin is not connected to the pool,
   /// or the plugin configuration is incorrect.
   /// @param targetIncentive The address of the incentive to be checked
   /// @return Indicates whether the target incentive is active
-  function isIncentiveActive(address targetIncentive) external view returns (bool);
+  function isIncentiveConnected(address targetIncentive) external view returns (bool);
 
   /// @notice Returns the address of active incentive
   /// @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)

@@ -1,4 +1,4 @@
-import { BigNumberish, Contract, ContractTransactionResponse, Wallet, MaxUint256 } from 'ethers';
+import { BigNumberish, Contract, Wallet, MaxUint256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeNonfungiblePositionManager, TestERC20, TickLensTest } from '../typechain';
@@ -20,7 +20,7 @@ describe('TickLens', () => {
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
   }> = async () => {
-    const { factory, tokens, nft } = await completeFixture();
+    const { factory, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     for (const token of _tokens) {
@@ -35,7 +35,6 @@ describe('TickLens', () => {
     };
   };
 
-  let factory: Contract;
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
   let poolAddress: string;
@@ -45,34 +44,8 @@ describe('TickLens', () => {
     wallets = await (ethers as any).getSigners();
   });
 
-  beforeEach('load fixture', async () => {
-    ({ factory, tokens, nft } = await loadFixture(nftFixture));
-  });
-
   describe('#getPopulatedTicksInWord', () => {
     const fullRangeLiquidity = 1000000;
-    async function createPool(tokenAddressA: string, tokenAddressB: string) {
-      if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
-        [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
-
-      await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
-
-      const liquidityParams = {
-        token0: tokenAddressA,
-        token1: tokenAddressB,
-        fee: FeeAmount.MEDIUM,
-        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        recipient: wallets[0].address,
-        amount0Desired: 1000000,
-        amount1Desired: 1000000,
-        amount0Min: 0,
-        amount1Min: 0,
-        deadline: 1,
-      };
-
-      return nft.mint(liquidityParams);
-    }
 
     async function mint(tickLower: number, tickUpper: number, amountBothDesired: BigNumberish): Promise<number> {
       const mintParams = {
@@ -95,14 +68,46 @@ describe('TickLens', () => {
       return Number(liquidity);
     }
 
-    beforeEach(async () => {
-      await createPool(tokens[0].address, tokens[1].address);
-      poolAddress = computePoolAddress(await factory.poolDeployer(), [tokens[0].address, tokens[1].address]);
-    });
+    async function subFixture() {
+      const { factory, tokens, nft } = await nftFixture();
 
-    beforeEach(async () => {
+      let [tokenAddressA, tokenAddressB] = [tokens[0].address, tokens[1].address];
+
+      if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
+        [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
+
+      await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+
+      const liquidityParams = {
+        token0: tokenAddressA,
+        token1: tokenAddressB,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: wallets[0].address,
+        amount0Desired: 1000000,
+        amount1Desired: 1000000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      };
+
+      await nft.mint(liquidityParams);
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [tokens[0].address, tokens[1].address]);
       const lensFactory = await ethers.getContractFactory('TickLensTest');
-      tickLens = (await lensFactory.deploy()) as any as TickLensTest;
+      const tickLens = (await lensFactory.deploy()) as any as TickLensTest;
+
+      return {
+        factory,
+        nft,
+        tokens,
+        poolAddress,
+        tickLens,
+      };
+    }
+
+    beforeEach('load fixture', async () => {
+      ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
     });
 
     function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {

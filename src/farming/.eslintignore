@@ -1,6 +1,1 @@
-node_modules
-dist
-coverage
-contracts
-typechain
 test/shared/external/v3-periphery/

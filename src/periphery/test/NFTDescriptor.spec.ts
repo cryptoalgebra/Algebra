@@ -1,4 +1,4 @@
-import { Wallet, MaxUint256 } from 'ethers';
+import { MaxUint256 } from 'ethers';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';

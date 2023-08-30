@@ -11,89 +11,76 @@ contract TickTreeEchidnaTest {
   mapping(int16 => uint256) private tickSecondLayerBitmap;
   mapping(int16 => uint256) private tickBitmap;
 
-  int24[] initedTicks;
-  mapping(int24 => uint256) initedTicksIndexes;
-
-  int24 private constant TICK_SPACING = 60;
-
-  // returns whether the given tick is initialized
-  function _isInitialized(int24 tick) private view returns (bool) {
-    int16 rowNumber;
-    uint8 bitNumber;
-
+  function _getPositionInBitmap(int24 tick) private pure returns (int16 wordIndex, uint8 bitIndex) {
     assembly {
-      bitNumber := and(tick, 0xFF)
+      wordIndex := and(tick, 0xFF)
+      bitIndex := sar(8, tick)
+    }
+  }
+
+  function _getWord(int24 tick) private view returns (uint256) {
+    int16 rowNumber;
+    assembly {
       rowNumber := sar(8, tick)
     }
-    uint256 word0 = tickBitmap[rowNumber];
-    unchecked {
-      return (word0 & (1 << bitNumber)) > 0;
-    }
+
+    return tickBitmap[rowNumber];
   }
 
-  function toggleTick(int24 tick) external {
-    unchecked {
-      tick = (tick / TICK_SPACING) * TICK_SPACING;
-      if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
-      if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
-      tick = (tick / TICK_SPACING) * TICK_SPACING;
+  function _getSecondLayerWord(int24 bit) private view returns (uint256) {
+    int16 rowNumber;
+    assembly {
+      rowNumber := sar(8, bit)
+    }
+    rowNumber += TickTree.SECOND_LAYER_OFFSET;
+    assembly {
+      rowNumber := sar(8, rowNumber)
+    }
 
-      assert(tick >= TickMath.MIN_TICK);
-      assert(tick <= TickMath.MAX_TICK);
-      bool before = _isInitialized(tick);
-      tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tickTreeRoot, tick);
-      assert(_isInitialized(tick) == !before);
+    return tickSecondLayerBitmap[rowNumber];
+  }
 
-      if (!before) {
-        initedTicks.push(tick);
-        initedTicksIndexes[tick] = initedTicks.length - 1;
-      } else {
-        uint256 index = initedTicksIndexes[tick];
-        if (index != initedTicks.length - 1) {
-          int24 last = initedTicks[initedTicks.length - 1];
-          initedTicks[index] = last;
-          initedTicksIndexes[last] = index;
-        }
-        initedTicks.pop();
+  function _boundTick(int24 tick) private pure returns (int24) {
+    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+    return tick;
+  }
+
+  function checkToggleUntoggleTick(int24 tick) external {
+    tick = _boundTick(tick);
+
+    uint256 wordBefore = _getWord(tick);
+    uint256 secondLayerWordBefore = _getSecondLayerWord(tick);
+    uint32 tickTreeRootBefore = tickTreeRoot;
+
+    tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tickTreeRootBefore, tick);
+    assert(_getWord(tick) != wordBefore);
+    if (wordBefore == 0) assert(_getSecondLayerWord(tick) != secondLayerWordBefore);
+    if (secondLayerWordBefore == 0) assert(tickTreeRoot != tickTreeRootBefore);
+
+    tickTreeRoot = tickBitmap.toggleTick(tickSecondLayerBitmap, tickTreeRoot, tick);
+    assert(_getWord(tick) == wordBefore);
+    assert(_getSecondLayerWord(tick) == secondLayerWordBefore);
+    assert(tickTreeRoot == tickTreeRootBefore);
+  }
+
+  function checkTicksForCollisions(int24 tick0, int24 tick1) external pure {
+    (tick0, tick1) = (_boundTick(tick0), _boundTick(tick1));
+    if (tick0 == tick1) return;
+
+    (int16 wordIndex0, uint8 bitIndex0) = _getPositionInBitmap(tick0);
+    (int16 wordIndex1, uint8 bitIndex1) = _getPositionInBitmap(tick1);
+
+    if (wordIndex0 == wordIndex1) {
+      assert(bitIndex0 != bitIndex1);
+    } else {
+      // second layer indexes
+      (int16 slWordIndex0, uint8 slBitIndex0) = _getPositionInBitmap(wordIndex0 + TickTree.SECOND_LAYER_OFFSET);
+      (int16 slWordIndex1, uint8 slBitIndex1) = _getPositionInBitmap(wordIndex1 + TickTree.SECOND_LAYER_OFFSET);
+
+      if (slWordIndex0 == slWordIndex1) {
+        assert(slBitIndex0 != slBitIndex1);
       }
-    }
-  }
-
-  function _findNextTickInArray(int24 start) private view returns (int24 num, bool found) {
-    uint256 length = initedTicks.length;
-    if (length == 0) return (TickMath.MAX_TICK, false);
-    num = TickMath.MAX_TICK;
-    unchecked {
-      for (uint256 i; i < length; ++i) {
-        int24 tick = initedTicks[i];
-        if (tick > start) {
-          if (tick <= num) {
-            num = tick;
-            found = true;
-          }
-        }
-      }
-    }
-  }
-
-  function checkNextInitializedTickInvariants(int24 tick) external view {
-    unchecked {
-      tick = (tick / TICK_SPACING) * TICK_SPACING;
-      if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
-      if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
-      tick = (tick / TICK_SPACING) * TICK_SPACING;
-
-      int24 next = tickBitmap.getNextTick(tickSecondLayerBitmap, tickTreeRoot, tick);
-
-      assert(next > tick);
-      assert((next - tick) <= 2 * TickMath.MAX_TICK);
-      assert(next >= TickMath.MIN_TICK);
-      assert(next <= TickMath.MAX_TICK);
-      if (next != TickMath.MAX_TICK) assert(_isInitialized(next));
-      // all the ticks between the input tick and the next tick should be uninitialized
-      (int24 nextInited, bool found) = _findNextTickInArray(tick);
-      assert(nextInited == next);
-      assert(_isInitialized(next) == found);
     }
   }
 }

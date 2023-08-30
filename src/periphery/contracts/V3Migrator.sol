@@ -2,18 +2,18 @@
 pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 
+import './interfaces/external/IUniswapV2Pair.sol';
+import './interfaces/external/IWNativeToken.sol';
 import './interfaces/INonfungiblePositionManager.sol';
-
-import './libraries/TransferHelper.sol';
-
 import './interfaces/IV3Migrator.sol';
+
 import './base/PeripheryImmutableState.sol';
 import './base/Multicall.sol';
 import './base/SelfPermit.sol';
-import './interfaces/external/IWNativeToken.sol';
 import './base/PoolInitializer.sol';
+
+import './libraries/TransferHelper.sol';
 
 /// @title Algebra Migrator
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:

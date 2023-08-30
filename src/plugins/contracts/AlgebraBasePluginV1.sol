@@ -47,10 +47,15 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
 
+  /// @inheritdoc IVolatilityOracle
+  bool public override isInitialized;
+
   AlgebraFeeConfigurationPacked private _feeConfig;
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
+
+  address private _lastIncentiveOwner;
 
   modifier onlyPool() {
     _checkIfFromPool();
@@ -88,16 +93,17 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IAlgebraBasePluginV1
   function initialize() external override {
-    require(!timepoints[0].initialized, 'Already initialized');
+    require(!isInitialized, 'Already initialized');
     require(_getPluginInPool() == address(this), 'Plugin not attached');
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
 
     uint32 time = _blockTimestamp();
-    lastTimepointTimestamp = time;
     timepoints.initialize(time, tick);
+    lastTimepointTimestamp = time;
+    isInitialized = true;
 
-    IAlgebraPool(pool).setPluginConfig(defaultPluginConfig);
+    _updatePluginConfigInPool();
   }
 
   // ###### Volatility and TWAP oracle ######
@@ -171,26 +177,41 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   function setIncentive(address newIncentive) external override {
-    require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
+    bool toConnect = newIncentive != address(0);
+    bool accessAllowed;
+    if (toConnect) {
+      accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    } else {
+      // we allow the one who connected the incentive to disconnect it,
+      // even if he no longer has the rights to connect incentives
+      if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
+      if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    }
+    require(accessAllowed, 'not allowed to set incentive');
+
+    bool isPluginConnected = _getPluginInPool() == address(this);
+    if (toConnect) require(isPluginConnected, 'Plugin not attached');
 
     address currentIncentive = incentive;
     require(currentIncentive != newIncentive, 'already active');
-
-    bool turnOn = newIncentive != address(0);
-    if (currentIncentive != address(0)) require(!turnOn, 'has active incentive');
+    if (toConnect) require(currentIncentive == address(0), 'has active incentive');
 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
-    (, , , uint8 pluginConfig) = _getPoolState();
-    if (turnOn != pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
-      IAlgebraPool(pool).setPluginConfig(pluginConfig);
+    if (toConnect) {
+      _lastIncentiveOwner = msg.sender; // write creator of this incentive
+    } else {
+      _lastIncentiveOwner = address(0);
+    }
+
+    if (isPluginConnected) {
+      _updatePluginConfigInPool();
     }
   }
 
   /// @inheritdoc IFarmingPlugin
-  function isIncentiveActive(address targetIncentive) external view override returns (bool) {
+  function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
     if (incentive != targetIncentive) return false;
     if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
@@ -202,23 +223,25 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
-    uint8 newPluginConfig = defaultPluginConfig;
-    if (incentive != address(0)) newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
-
-    IAlgebraPool(msg.sender).setPluginConfig(newPluginConfig);
+    _updatePluginConfigInPool();
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
   function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
-    lastTimepointTimestamp = _blockTimestamp();
-    timepoints.initialize(_blockTimestamp(), tick);
+    uint32 _timestamp = _blockTimestamp();
+    timepoints.initialize(_timestamp, tick);
+
+    lastTimepointTimestamp = _timestamp;
+    isInitialized = true;
 
     IAlgebraPool(pool).setFee(_feeConfig.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
   function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
@@ -232,17 +255,39 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
-    (, int24 tick, , ) = _getPoolState();
-    IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
+    address _incentive = incentive;
+    if (_incentive != address(0)) {
+      (, int24 tick, , ) = _getPoolState();
+      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+    } else {
+      _updatePluginConfigInPool(); // should not be called, reset config
+    }
+
     return IAlgebraPlugin.afterSwap.selector;
   }
 
-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeFlash(address, address, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeFlash.selector;
   }
 
-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.afterFlash.selector;
+  }
+
+  function _updatePluginConfigInPool() internal {
+    uint8 newPluginConfig = defaultPluginConfig;
+    if (incentive != address(0)) {
+      newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
+    }
+
+    (, , , uint8 currentPluginConfig) = _getPoolState();
+    if (currentPluginConfig != newPluginConfig) {
+      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+    }
   }
 
   function _writeTimepointAndUpdateFee() internal {
@@ -250,6 +295,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     uint16 _lastIndex = timepointIndex;
     uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
     AlgebraFeeConfigurationPacked feeConfig_ = _feeConfig; // struct packed in uint144
+    bool _isInitialized = isInitialized;
+    require(_isInitialized, 'Not initialized');
 
     uint32 currentTimestamp = _blockTimestamp();
 

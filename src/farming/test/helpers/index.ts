@@ -1,5 +1,5 @@
-import { Wallet, MaxUint256, ZeroAddress, Interface } from 'ethers';
-import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick, BN } from '../shared/index';
+import { Wallet, MaxUint256, Interface } from 'ethers';
+import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick } from '../shared/index';
 import _ from 'lodash';
 import { TestERC20, INonfungiblePositionManager, AlgebraEternalFarming, IAlgebraPool, TestIncentiveId, FarmingCenter } from '../../typechain';
 import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json';

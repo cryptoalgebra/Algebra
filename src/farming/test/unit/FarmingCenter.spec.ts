@@ -33,7 +33,6 @@ describe('unit/FarmingCenter', () => {
   let helpers: HelperCommands;
   let context: AlgebraFixtureType;
   let timestamps: ContractParams.Timestamps;
-  let tokenId: string;
   let nonce = 0n;
 
   before(async () => {
@@ -48,21 +47,126 @@ describe('unit/FarmingCenter', () => {
     helpers = HelperCommands.fromTestContext(context, actors, provider);
   });
 
-  it('cannot call connectVirtualPool directly', async () => {
-    await expect(context.farmingCenter.connectVirtualPoolToPlugin(context.pool01, context.pool01)).to.be.revertedWith('only farming can call this');
+  describe('#connectVirtualPoolToPlugin', async () => {
+    it('cannot call connectVirtualPool directly', async () => {
+      await expect(context.farmingCenter.connectVirtualPoolToPlugin(context.pool01, context.pool01)).to.be.revertedWith('only farming can call this');
+    });
+
+    it('cannot connect zero address to pool', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await expect(
+        context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(ZERO_ADDRESS, context.pluginObj, { from: eternalFarmingAddress })
+      ).to.be.revertedWith('zero address as virtual pool');
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+    });
+
+    it('cannot connect virtual pool to invalid pool', async () => {
+      const newContext = await algebraFixture();
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await expect(
+        context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, newContext.pluginObj, { from: eternalFarmingAddress })
+      ).to.be.revertedWith('invalid pool');
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+    });
+
+    it('can connect virtual pool', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+      expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.not.be.eq(ZERO_ADDRESS);
+    });
+
+    it('cannot connect virtual pool if something already connected', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await context.pluginFactory.setFarmingAddress(incentiveCreator);
+      await context.pluginObj.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
+      await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+      await expect(
+        context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress })
+      ).to.be.revertedWith('another incentive is connected');
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+    });
   });
 
-  it('cannot connect virtual pool to invalid pool', async () => {
-    const newContext = await algebraFixture();
-    const eternalFarmingAddress = await context.eternalFarming.getAddress();
-    await impersonateAccount(eternalFarmingAddress);
-    await setBalance(eternalFarmingAddress, 10 ** 18);
-    const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
-    await expect(
-      context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, newContext.pluginObj, { from: eternalFarmingAddress })
-    ).to.be.revertedWith('invalid pool');
-    await setBalance(eternalFarmingAddress, 0);
-    await stopImpersonatingAccount(eternalFarmingAddress);
+  describe('#disconnectVirtualPoolFromPlugin', async () => {
+    it('cannot call disconnectVirtualPoolFromPlugin directly', async () => {
+      await expect(context.farmingCenter.disconnectVirtualPoolFromPlugin(context.pool01, context.pool01)).to.be.revertedWith(
+        'only farming can call this'
+      );
+    });
+
+    it('cannot disconnect zero address from pool', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await expect(
+        context.farmingCenter.connect(fakeSigner).disconnectVirtualPoolFromPlugin(ZERO_ADDRESS, context.pluginObj, { from: eternalFarmingAddress })
+      ).to.be.revertedWith('zero address as virtual pool');
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+    });
+
+    it('cannot disconnect virtual pool from invalid pool', async () => {
+      const newContext = await algebraFixture();
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await expect(
+        context.farmingCenter
+          .connect(fakeSigner)
+          .disconnectVirtualPoolFromPlugin(context.pool01, newContext.pluginObj, { from: eternalFarmingAddress })
+      ).to.be.revertedWith('invalid pool');
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+    });
+
+    it('can disconnect virtual pool', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      await context.farmingCenter
+        .connect(fakeSigner)
+        .disconnectVirtualPoolFromPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+      expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.be.eq(ZERO_ADDRESS);
+    });
+
+    it('can disconnect virtual pool if something another connected', async () => {
+      const eternalFarmingAddress = await context.eternalFarming.getAddress();
+      await impersonateAccount(eternalFarmingAddress);
+      await setBalance(eternalFarmingAddress, 10 ** 18);
+      const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
+      await context.pluginFactory.setFarmingAddress(incentiveCreator);
+      await context.pluginObj.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
+      await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+      await context.farmingCenter
+        .connect(fakeSigner)
+        .disconnectVirtualPoolFromPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      await setBalance(eternalFarmingAddress, 0);
+      await stopImpersonatingAccount(eternalFarmingAddress);
+      expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.be.eq(ZERO_ADDRESS);
+    });
   });
 
   describe('#applyLiquidityDelta', () => {
@@ -141,7 +245,7 @@ describe('unit/FarmingCenter', () => {
       const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
-      
+
       const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
         token0: await context.token0.getAddress(),
         token1: await context.token1.getAddress(),
@@ -194,7 +298,7 @@ describe('unit/FarmingCenter', () => {
       const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
-      
+
       const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
         token0: await context.token0.getAddress(),
         token1: await context.token1.getAddress(),
@@ -240,8 +344,8 @@ describe('unit/FarmingCenter', () => {
     });
 
     it('works if liquidity increased', async () => {
-      const erc20Helper = new ERC20Helper();
-      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.tokens[0], context.tokens[1]], 100n, await context.nft.getAddress());
+      const _erc20Helper = new ERC20Helper();
+      await _erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.tokens[0], context.tokens[1]], 100n, await context.nft.getAddress());
 
       await expect(
         context.nft.connect(lpUser0).increaseLiquidity({
@@ -296,8 +400,6 @@ describe('unit/FarmingCenter', () => {
 
   describe('#collectRewards', () => {
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
-    // The amount the user should be able to claim
-    let claimableEternal: bigint;
 
     let tokenIdEternal: string;
 
@@ -506,7 +608,7 @@ describe('unit/FarmingCenter', () => {
           },
           tokenIdEternal
         )
-      ).to.be.revertedWith('not owner of token');
+      ).to.be.revertedWith('not approved for token');
 
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);

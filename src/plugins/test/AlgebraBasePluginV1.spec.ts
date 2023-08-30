@@ -37,17 +37,17 @@ describe('AlgebraBasePluginV1', () => {
       await mockPool.setPlugin(plugin);
       await initializeAtZeroTick(mockPool);
 
-      expect(plugin.initialize()).to.be.revertedWith('Already initialized');
+      await expect(plugin.initialize()).to.be.revertedWith('Already initialized');
     });
 
     it('cannot initialize detached plugin', async () => {
       await initializeAtZeroTick(mockPool);
-      expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
+      await expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
     });
 
     it('cannot initialize if pool not initialized', async () => {
       await mockPool.setPlugin(plugin);
-      expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
+      await expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
     });
 
     it('can initialize for existing pool', async () => {
@@ -58,40 +58,66 @@ describe('AlgebraBasePluginV1', () => {
       const timepoint = await plugin.timepoints(0);
       expect(timepoint.initialized).to.be.true;
     });
+
+    it('can not write to uninitialized oracle', async () => {
+      await initializeAtZeroTick(mockPool);
+      await mockPool.setPlugin(plugin);
+      await mockPool.setPluginConfig(1); // BEFORE_SWAP_FLAG
+
+      await expect(mockPool.swapToTick(5)).to.be.revertedWith('Not initialized');
+    });
   });
 
   // plain tests for hooks functionality
   describe('#Hooks', () => {
     it('only pool can call hooks', async () => {
       const errorMessage = 'only pool can call this';
-      expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
-      expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
     });
 
     describe('not implemented hooks', async () => {
+      let defaultConfig: bigint;
+
       beforeEach('connect plugin to pool', async () => {
+        defaultConfig = await plugin.defaultPluginConfig();
         await mockPool.setPlugin(plugin);
       });
 
-      it('beforeModifyPosition', async () => {
+      it('resets config after beforeModifyPosition', async () => {
+        await mockPool.initialize(encodePriceSqrt(1, 1));
         await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
-        expect(mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x')).to.be.revertedWith('Not implemented');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
+        await mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
 
-      it('beforeFlash', async () => {
+      it('resets config after afterSwap', async () => {
+        await mockPool.initialize(encodePriceSqrt(1, 1));
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        await mockPool.swapToTick(100);
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
+      });
+
+      it('resets config after beforeFlash', async () => {
         await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
-        expect(mockPool.flash(wallet.address, 100, 100, '0x')).to.be.revertedWith('Not implemented');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
+        await mockPool.flash(wallet.address, 100, 100, '0x');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
 
-      it('afterFlash', async () => {
+      it('resets config after afterFlash', async () => {
         await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_FLASH_FLAG);
-        expect(mockPool.flash(wallet.address, 100, 100, '0x')).to.be.revertedWith('Not implemented');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_FLASH_FLAG);
+        await mockPool.flash(wallet.address, 100, 100, '0x');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
     });
   });
@@ -264,15 +290,15 @@ describe('AlgebraBasePluginV1', () => {
       describe('failure cases', async () => {
         it('cannot rewrite initialized slot', async () => {
           await initializeAtZeroTick(mockPool);
-          expect(plugin.prepayTimepointsStorageSlots(0, 2)).to.be.revertedWithoutReason;
+          await expect(plugin.prepayTimepointsStorageSlots(0, 2)).to.be.reverted;
           await plugin.advanceTime(4);
           await mockPool.swapToTick(-1560);
-          expect(plugin.prepayTimepointsStorageSlots(1, 2)).to.be.revertedWithoutReason;
-          expect(plugin.prepayTimepointsStorageSlots(2, 2)).to.be.not.reverted;
+          await expect(plugin.prepayTimepointsStorageSlots(1, 2)).to.be.reverted;
+          await expect(plugin.prepayTimepointsStorageSlots(2, 2)).to.be.not.reverted;
         });
 
         it('cannot prepay 0 slots', async () => {
-          expect(plugin.prepayTimepointsStorageSlots(0, 0)).to.be.revertedWithoutReason;
+          await expect(plugin.prepayTimepointsStorageSlots(0, 0)).to.be.revertedWithoutReason;
         });
 
         it('cannot overflow index', async () => {
@@ -526,6 +552,35 @@ describe('AlgebraBasePluginV1', () => {
         expect(await plugin.incentive()).to.be.eq(ZeroAddress);
       });
 
+      it('can detach incentive even if no more has rights to connect plugins', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await plugin.setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
+      it('cannot attach incentive even if no more has rights to connect plugins', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await expect(plugin.setIncentive(other)).to.be.revertedWith('not allowed to set incentive');
+      });
+
+      it('new farming can detach old incentive', async () => {
+        await mockPool.setPlugin(plugin);
+        await plugin.setIncentive(virtualPoolMock);
+        await mockPluginFactory.setFarmingAddress(other);
+        await plugin.connect(other).setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
+      it('cannot detach incentive if nothing connected', async () => {
+        await mockPool.setPlugin(plugin);
+        await expect(plugin.setIncentive(ZeroAddress)).to.be.revertedWith('already active');
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
       it('cannot set same incentive twice', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
@@ -538,20 +593,33 @@ describe('AlgebraBasePluginV1', () => {
         await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('has active incentive');
       });
 
-      it('can set incentive if afterSwap hook is active', async () => {
-        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+      it('can detach incentive if not connected to pool', async () => {
+        const defaultConfig = await plugin.defaultPluginConfig();
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPluginConfig(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
         await plugin.setIncentive(virtualPoolMock);
         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        await mockPool.setPlugin(ZeroAddress);
+        await plugin.setIncentive(ZeroAddress);
+        expect(await plugin.incentive()).to.be.eq(ZeroAddress);
+      });
+
+      it('can set incentive if afterSwap hook is active', async () => {
+        const defaultConfig = await plugin.defaultPluginConfig();
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPluginConfig(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
+        await plugin.setIncentive(virtualPoolMock);
+        expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
       });
 
       it('set incentive works only for PluginFactory.farmingAddress', async () => {
         await mockPluginFactory.setFarmingAddress(ZeroAddress);
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('not allowed to set incentive');
       });
 
       it('incentive can not be attached if plugin is not attached', async () => {
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.reverted;
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('Plugin not attached');
       });
 
       it('incentive attached before initialization', async () => {
@@ -565,7 +633,7 @@ describe('AlgebraBasePluginV1', () => {
         await mockPool.swapToTick(-130);
 
         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
-        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
+        expect(await plugin.isIncentiveConnected(virtualPoolMock)).to.be.true;
 
         const tick = (await mockPool.globalState()).tick;
         expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
@@ -583,7 +651,7 @@ describe('AlgebraBasePluginV1', () => {
         await mockPool.swapToTick(-130);
 
         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
-        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
+        expect(await plugin.isIncentiveConnected(virtualPoolMock)).to.be.true;
 
         const tick = (await mockPool.globalState()).tick;
         expect(await virtualPoolMock.currentTick()).to.be.eq(tick);
@@ -625,7 +693,7 @@ describe('AlgebraBasePluginV1', () => {
       });
     });
 
-    describe('#isIncentiveActive', () => {
+    describe('#isIncentiveConnected', () => {
       let virtualPoolMock: MockTimeVirtualPool;
 
       beforeEach('deploy virtualPoolMock', async () => {
@@ -637,27 +705,27 @@ describe('AlgebraBasePluginV1', () => {
       it('true with active incentive', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
-        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.true;
+        expect(await plugin.isIncentiveConnected(virtualPoolMock)).to.be.true;
       });
 
       it('false with invalid address', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
-        expect(await plugin.isIncentiveActive(wallet.address)).to.be.false;
+        expect(await plugin.isIncentiveConnected(wallet.address)).to.be.false;
       });
 
       it('false if plugin detached', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPlugin(ZeroAddress);
-        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
+        expect(await plugin.isIncentiveConnected(virtualPoolMock)).to.be.false;
       });
 
       it('false if hook deactivated', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await mockPool.setPluginConfig(0);
-        expect(await plugin.isIncentiveActive(virtualPoolMock)).to.be.false;
+        expect(await plugin.isIncentiveConnected(virtualPoolMock)).to.be.false;
       });
     });
 

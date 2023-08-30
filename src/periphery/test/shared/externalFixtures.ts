@@ -6,17 +6,13 @@ import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
 } from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
-import {
-  abi as PLUGIN_FACTORY_ABI,
-  bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
+
 import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json';
 import { ethers } from 'hardhat';
 import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '../../typechain';
 
 import WNativeToken from '../contracts/WNativeToken.json';
-import { Contract } from '@ethersproject/contracts';
-import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
+import { getCreateAddress, ZeroAddress } from 'ethers';
 
 export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
 
@@ -48,10 +44,6 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
   const poolDeployer = await poolDeployerFactory.deploy(_factory, vaultAddress);
 
-  const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI, PLUGIN_FACTORY_BYTECODE);
-  const pluginFactory = await pluginContractFactory.deploy(_factory);
-
-  await _factory.setDefaultPluginFactory(await pluginFactory.getAddress());
   return _factory;
 };
 

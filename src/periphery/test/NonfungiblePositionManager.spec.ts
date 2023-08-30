@@ -85,22 +85,13 @@ describe('NonfungiblePositionManager', () => {
       ]);
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(1, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
       const codeAfter = await wallet.provider.getCode(expectedAddress);
       expect(codeAfter).to.not.eq('0x');
     });
 
     it('is payable', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(1, 1),
-        { value: 1 }
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1), { value: 1 });
     });
 
     it('works if pool is created but not initialized', async () => {
@@ -110,14 +101,10 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0].getAddress(), tokens[1].getAddress());
+      await factory.createPool(tokens[0], tokens[1]);
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(2, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(2, 1));
     });
 
     it('works if pool is created and initialized', async () => {
@@ -125,7 +112,7 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0].getAddress(), tokens[1].getAddress());
+      await factory.createPool(tokens[0], tokens[1]);
       const pool = new ethers.Contract(expectedAddress, IAlgebraPoolABI, wallet);
 
       await pool.initialize(encodePriceSqrt(3, 1));
@@ -133,11 +120,7 @@ describe('NonfungiblePositionManager', () => {
       if (!wallet.provider) throw new Error('No provider');
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(4, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(4, 1));
     });
 
     it('could theoretically use eth via multicall', async () => {
@@ -152,13 +135,7 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
-      await snapshotGasCost(
-        nft.createAndInitializePoolIfNecessary(
-          await tokens[0].getAddress(),
-          await tokens[1].getAddress(),
-          encodePriceSqrt(1, 1)
-        )
-      );
+      await snapshotGasCost(nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1)));
     });
   });
 
@@ -166,8 +143,8 @@ describe('NonfungiblePositionManager', () => {
     it('fails if pool does not exist', async () => {
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
@@ -181,16 +158,12 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('fails if cannot transfer', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(1, 1)
-      );
-      await tokens[0].approve(nft.getAddress(), 0);
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
+      await tokens[0].approve(nft, 0);
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
@@ -204,16 +177,12 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('fails if deadline passed', async () => {
-      await nft.createAndInitializePoolIfNecessary(
-        tokens[0].getAddress(),
-        tokens[1].getAddress(),
-        encodePriceSqrt(1, 1)
-      );
+      await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
       await nft.setTime(2);
       await expect(
         nft.mint({
-          token0: tokens[0].getAddress(),
-          token1: tokens[1].getAddress(),
+          token0: tokens[0],
+          token1: tokens[1],
           tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
           amount0Desired: 100,
@@ -1290,9 +1259,9 @@ describe('NonfungiblePositionManager', () => {
           amount1Max: MaxUint128,
         });
         console.log(nft1Amount0.toString(), nft1Amount1.toString(), nft2Amount0.toString(), nft2Amount1.toString());
-        expect(nft1Amount0).to.eq(83);
+        expect(nft1Amount0).to.eq(416);
         expect(nft1Amount1).to.eq(0);
-        expect(nft2Amount0).to.eq(250);
+        expect(nft2Amount0).to.eq(1250);
         expect(nft2Amount1).to.eq(0);
       });
 
@@ -1311,7 +1280,7 @@ describe('NonfungiblePositionManager', () => {
           })
         )
           .to.emit(tokens[0], 'Transfer')
-          .withArgs(poolAddress, wallet.address, 83)
+          .withArgs(poolAddress, wallet.address, 416)
           .to.not.emit(tokens[1], 'Transfer');
         await expect(
           nft.collect({
@@ -1322,7 +1291,7 @@ describe('NonfungiblePositionManager', () => {
           })
         )
           .to.emit(tokens[0], 'Transfer')
-          .withArgs(poolAddress, wallet.address, 250)
+          .withArgs(poolAddress, wallet.address, 1250)
           .to.not.emit(tokens[1], 'Transfer');
       });
     });

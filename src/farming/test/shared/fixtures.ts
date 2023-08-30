@@ -122,7 +122,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
           NFTDescriptor: [
             {
               length: 20,
-              start: 1499,
+              start: NonfungibleTokenPositionDescriptor.linkReferences['contracts/libraries/NFTDescriptor.sol'].NFTDescriptor[0].start,
             },
           ],
         },
@@ -135,7 +135,7 @@ export const algebraFactoryFixture: () => Promise<AlgebraFactoryFixture> = async
 
   const NFTDescriptorFactory = await ethers.getContractFactory(NonfungibleTokenPositionDescriptor.abi, linkedBytecode);
 
-  const positionDescriptor = await NFTDescriptorFactory.deploy(tokens[0]);
+  const positionDescriptor = await NFTDescriptorFactory.deploy(tokens[0], 'ETH', []);
 
   const nftFactory = await ethers.getContractFactory(NonfungiblePositionManagerJson.abi, NonfungiblePositionManagerJson.bytecode);
   const nft = (await nftFactory.deploy(factory, wnative, positionDescriptor, deployer)) as any as INonfungiblePositionManager;

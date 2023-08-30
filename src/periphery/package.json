@@ -26,14 +26,13 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.9.3",
     "@uniswap/v2-core": "1.0.1",
-    "@cryptoalgebra/core": "3.1.0",
-    "@cryptoalgebra/plugins": "1.0.0"
+    "@cryptoalgebra/core": "3.1.0"
   },
   "devDependencies": {
     "is-svg": "^4.3.1"
   },
   "scripts": {
-    "compile": "npm --prefix ../core run compile && npm --prefix ../plugins run compile  && hardhat compile",
+    "compile": "npm --prefix ../core run compile  && hardhat compile",
     "test": "hardhat test --parallel",
     "precommit": "pretty-quick --staged --pattern **/*.sol",
     "solhint": "solhint ./contracts/**/*.sol",

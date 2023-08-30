@@ -63,7 +63,7 @@ describe('unit/EternalFarms', () => {
     await helpers.mintFlow({
       lp: lpUser0,
       tokens: [context.token0, context.token1],
-    })
+    });
 
     await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
     await context.farmingCenter.connect(lpUser0).enterFarming(
@@ -297,7 +297,7 @@ describe('unit/EternalFarms', () => {
     });
   });
 
-  describe('#isIncentiveActive', async () => {
+  describe('#isIncentiveDeactivated', async () => {
     let localNonce = 0n;
     let incentiveArgs;
     let incentiveId: string;
@@ -338,24 +338,24 @@ describe('unit/EternalFarms', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs));
     });
 
-    it('true if incentive active', async () => {
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.true;
+    it('false if incentive active', async () => {
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.false;
     });
 
-    it('false if incentive deactivated', async () => {
+    it('true if incentive deactivated', async () => {
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
         pool: context.pool01,
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         nonce: localNonce,
       });
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
     });
 
-    it('false if incentive deactivated indirectly', async () => {
+    it('true if incentive deactivated indirectly', async () => {
       await detachIncentiveIndirectly(localNonce);
 
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
     });
   });
 
@@ -593,7 +593,7 @@ describe('unit/EternalFarms', () => {
 
       it('you are not the owner of the deposit', async () => {
         // lpUser2 calls, we're using lpUser0 elsewhere.
-        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('not owner of token');
+        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('not approved for token');
       });
 
       it('has 0 liquidity in the position', async () => {
@@ -711,7 +711,7 @@ describe('unit/EternalFarms', () => {
     it('returns correct rewardAmount and secondsInsideX128 for the position', async () => {
       const pool = context.poolObj.connect(actors.lpUser0());
 
-      Time.set(timestamps.startTime + 10);
+      await Time.set(timestamps.startTime + 10);
       //await provider.send('evm_mine', [timestamps.startTime + 100])
       const trader = actors.traderUser0();
       await helpers.makeTickGoFlow({
@@ -720,7 +720,7 @@ describe('unit/EternalFarms', () => {
         desiredValue: 10,
       });
 
-      Time.set(timestamps.endTime - 10);
+      await Time.set(timestamps.endTime - 10);
 
       await helpers.makeTickGoFlow({
         trader,
@@ -728,7 +728,7 @@ describe('unit/EternalFarms', () => {
         desiredValue: 100,
       });
 
-      Time.set(timestamps.endTime + 10);
+      await Time.set(timestamps.endTime + 10);
 
       const rewardInfo = await context.eternalFarming.connect(lpUser0).getRewardInfo(farmIncentiveKey, tokenId);
 
@@ -2022,7 +2022,7 @@ describe('unit/EternalFarms', () => {
 
         await context.nft.connect(lpUser0).approveForFarming(tokenId, true);
 
-        context.farmingCenter.connect(lpUser0).enterFarming(
+        await context.farmingCenter.connect(lpUser0).enterFarming(
           {
             pool: context.pool01,
             rewardToken: await context.rewardToken.getAddress(),
@@ -2066,7 +2066,7 @@ describe('unit/EternalFarms', () => {
       });
 
       it('set max rates', async () => {
-        expect(await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
+        await expect(context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 2n ** 128n - 1n, 2n ** 128n - 1n))
           .to.emit(context.eternalFarming, 'RewardsRatesChanged')
           .withArgs(2n ** 128n - 1n, 2n ** 128n - 1n, incentiveId);
       });

@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
-import { FeeAmount, MaxUint128 } from './shared/constants';
+import { MaxUint128 } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
@@ -23,7 +23,7 @@ describe('QuoterV2', function () {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     quoter: QuoterV2;
   }> = async () => {
-    const { wnative, factory, router, tokens, nft } = await completeFixture();
+    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
     for (const token of _tokens) {
@@ -77,16 +77,16 @@ describe('QuoterV2', function () {
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('78459593188549728720178728761');
+        expect(sqrtPriceX96AfterList[0]).to.eq('78459826284680823468887704103');
         expect(initializedTicksCrossedList[0]).to.eq(2);
-        expect(amountOut).to.eq(9899);
+        expect(amountOut).to.eq(9897);
       });
 
       it('0 -> 2 cross 2 tick where after is initialized', async () => {
         // The swap amount is set such that the active tick after the swap is -120.
         // -120 is an initialized tick for this pool. We check that we don't count it.
         const { amountOut, sqrtPriceX96AfterList, initializedTicksCrossedList, gasEstimate } =
-          await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, tokens[2].address]), 6198);
+          await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, tokens[2].address]), 6200);
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(1);
@@ -103,8 +103,8 @@ describe('QuoterV2', function () {
         ////await snapshotGasCost(gasEstimate)
         expect(initializedTicksCrossedList[0]).to.eq(1);
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('78925601745505355567663242450');
-        expect(amountOut).to.eq(3982);
+        expect(sqrtPriceX96AfterList[0]).to.eq('78925679077027744088480448931');
+        expect(amountOut).to.eq(3981);
       });
 
       it('0 -> 2 cross 0 tick, starting tick not initialized', async () => {
@@ -140,9 +140,9 @@ describe('QuoterV2', function () {
         ////await snapshotGasCost(gasEstimate)
         expect(initializedTicksCrossedList[0]).to.eq(2);
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('80004260540860811531331597290');
+        expect(sqrtPriceX96AfterList[0]).to.eq('80004022856373268738318816658');
         expect(initializedTicksCrossedList.length).to.eq(1);
-        expect(amountOut).to.eq(9899);
+        expect(amountOut).to.eq(9897);
       });
 
       it('2 -> 0 cross 2 where tick after is initialized', async () => {
@@ -156,9 +156,9 @@ describe('QuoterV2', function () {
         console.log(sqrtPriceX96AfterList[0].toString());
         expect(initializedTicksCrossedList[0]).to.eq(2);
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('79707154931432320265355807476');
+        expect(sqrtPriceX96AfterList[0]).to.eq('79706996475107291736680620388');
         expect(initializedTicksCrossedList.length).to.eq(1);
-        expect(amountOut).to.eq(6208);
+        expect(amountOut).to.eq(6206);
       });
 
       it('2 -> 0 cross 0 tick, starting tick initialized', async () => {
@@ -195,9 +195,9 @@ describe('QuoterV2', function () {
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('80020364911244466705141796295');
+        expect(sqrtPriceX96AfterList[0]).to.eq('80020047998594409647791422119');
         expect(initializedTicksCrossedList[0]).to.eq(0);
-        expect(amountOut).to.eq(9900);
+        expect(amountOut).to.eq(9896);
       });
 
       it('0 -> 2 -> 1', async () => {
@@ -209,11 +209,11 @@ describe('QuoterV2', function () {
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(2);
-        expect(sqrtPriceX96AfterList[0]).to.eq('78459593188549728720178728761');
-        expect(sqrtPriceX96AfterList[1]).to.eq('80012362866830526007044848356');
+        expect(sqrtPriceX96AfterList[0]).to.eq('78459826284680823468887704103');
+        expect(sqrtPriceX96AfterList[1]).to.eq('80011887497855440421019287092');
         expect(initializedTicksCrossedList[0]).to.eq(2);
         expect(initializedTicksCrossedList[1]).to.eq(0);
-        expect(amountOut).to.eq(9800);
+        expect(amountOut).to.eq(9795);
       });
     });
 
@@ -233,8 +233,8 @@ describe('QuoterV2', function () {
         });
 
         expect(initializedTicksCrossed).to.eq(2);
-        expect(quote).to.eq(9899);
-        expect(sqrtPriceX96After).to.eq('78459593188549728720178728761');
+        expect(quote).to.eq(9897);
+        expect(sqrtPriceX96After).to.eq('78459826284680823468887704103');
       });
 
       it('2 -> 0', async () => {
@@ -252,8 +252,8 @@ describe('QuoterV2', function () {
         });
 
         expect(initializedTicksCrossed).to.eq(2);
-        expect(quote).to.eq(9899);
-        expect(sqrtPriceX96After).to.eq('80004260540860811531331597290');
+        expect(quote).to.eq(9897);
+        expect(sqrtPriceX96After).to.eq('80004022856373268738318816658');
       });
 
       describe('gas [ @skip-on-coverage ]', () => {
@@ -300,7 +300,7 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1);
         expect(initializedTicksCrossedList[0]).to.eq(2);
-        expect(amountIn).to.eq(15228);
+        expect(amountIn).to.eq(15234);
 
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('78055527257643669242286029831');
@@ -316,7 +316,7 @@ describe('QuoterV2', function () {
         expect(sqrtPriceX96AfterList[0]).to.eq('78756056567076985409608047254');
         expect(initializedTicksCrossedList.length).to.eq(1);
         expect(initializedTicksCrossedList[0]).to.eq(1);
-        expect(amountIn).to.eq(6198);
+        expect(amountIn).to.eq(6200);
       });
 
       it('0 -> 2 cross 1 tick', async () => {
@@ -325,7 +325,7 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1);
         expect(initializedTicksCrossedList[0]).to.eq(1);
-        expect(amountIn).to.eq(4018);
+        expect(amountIn).to.eq(4019);
 
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('78924219757724709840818372098');
@@ -363,7 +363,7 @@ describe('QuoterV2', function () {
 
         expect(initializedTicksCrossedList.length).to.eq(1);
         expect(initializedTicksCrossedList[0]).to.eq(2);
-        expect(amountIn).to.eq(15228);
+        expect(amountIn).to.eq(15234);
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('80418414376567919517220409857');
       });
@@ -378,7 +378,7 @@ describe('QuoterV2', function () {
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('79708304437530892332449657932');
         expect(initializedTicksCrossedList.length).to.eq(1);
-        expect(amountIn).to.eq(6265);
+        expect(amountIn).to.eq(6267);
       });
 
       it('2 -> 0 cross 1 tick', async () => {
@@ -389,17 +389,17 @@ describe('QuoterV2', function () {
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('79690640184021170956740081887');
         expect(initializedTicksCrossedList.length).to.eq(1);
-        expect(amountIn).to.eq(6038);
+        expect(amountIn).to.eq(6040);
       });
 
       it('2 -> 1', async () => {
         const { amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList, gasEstimate } =
-          await quoter.quoteExactOutput.staticCall(encodePath([tokens[1].address, tokens[2].address]), 9899);
+          await quoter.quoteExactOutput.staticCall(encodePath([tokens[1].address, tokens[2].address]), 9897);
 
         expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('80020283298637550708002466755');
+        expect(sqrtPriceX96AfterList[0]).to.eq('80020121658316697953186638498');
         expect(initializedTicksCrossedList[0]).to.eq(0);
-        expect(amountIn).to.eq(9999);
+        expect(amountIn).to.eq(10002);
       });
 
       it('0 -> 2 -> 1', async () => {
@@ -411,10 +411,10 @@ describe('QuoterV2', function () {
 
         expect(sqrtPriceX96AfterList.length).to.eq(2);
         expect(sqrtPriceX96AfterList[0]).to.eq('80011878867774185742895612865');
-        expect(sqrtPriceX96AfterList[1]).to.eq('78460145483604017214376258786');
+        expect(sqrtPriceX96AfterList[1]).to.eq('78459828570953960157025884610');
         expect(initializedTicksCrossedList[0]).to.eq(0);
         expect(initializedTicksCrossedList[1]).to.eq(2);
-        expect(amountIn).to.eq(9993);
+        expect(amountIn).to.eq(10000);
       });
 
       describe('gas [ @skip-on-coverage ]', () => {
@@ -482,7 +482,7 @@ describe('QuoterV2', function () {
 
         it('2 -> 1', async () => {
           const { amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList, gasEstimate } =
-            await quoter.quoteExactOutput.staticCall(encodePath([tokens[1].address, tokens[2].address]), 9899);
+            await quoter.quoteExactOutput.staticCall(encodePath([tokens[1].address, tokens[2].address]), 9897);
 
           await snapshotGasCost(gasEstimate);
         });
@@ -509,7 +509,7 @@ describe('QuoterV2', function () {
             limitSqrtPrice: encodePriceSqrt(100, 102),
           });
 
-        expect(amountIn).to.eq(9952);
+        expect(amountIn).to.eq(9956);
         expect(initializedTicksCrossed).to.eq(0);
         expect(sqrtPriceX96After).to.eq('78447570448055484695608110440');
       });
@@ -523,7 +523,7 @@ describe('QuoterV2', function () {
             limitSqrtPrice: encodePriceSqrt(102, 100),
           });
 
-        expect(amountIn).to.eq(9952);
+        expect(amountIn).to.eq(9956);
         expect(initializedTicksCrossed).to.eq(0);
         expect(sqrtPriceX96After).to.eq('80016521857016594389520272648');
       });

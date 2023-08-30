@@ -2,7 +2,6 @@ import '@typechain/hardhat'
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-output-validator';
 import 'hardhat-contract-sizer'
-import 'hardhat-dependency-compiler';
 import 'solidity-docgen'
 
 import { HardhatUserConfig } from 'hardhat/config'
@@ -13,7 +12,7 @@ import baseConfig from '../../hardhat.base.config'
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
   settings: {
-    evmVersion: 'london',
+    evmVersion: 'paris',
     optimizer: {
       enabled: true,
       runs: 99999999,
@@ -37,11 +36,6 @@ const config: HardhatUserConfig = {
     alphaSort: false,
     disambiguatePaths: true,
     runOnCompile: false,
-  },
-  dependencyCompiler: {
-    paths: [
-      '@cryptoalgebra/plugins/contracts/BasePluginV1Factory.sol',
-    ],
   },
   docgen: {
     outputDir: '../../docs/Contracts/Farmings',
