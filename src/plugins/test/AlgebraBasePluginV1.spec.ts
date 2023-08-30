@@ -545,10 +545,12 @@ describe('AlgebraBasePluginV1', () => {
       });
 
       it('can set incentive if afterSwap hook is active', async () => {
-        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        const defaultConfig = await plugin.defaultPluginConfig();
+        await mockPool.setPlugin(plugin);
+        await mockPool.setPluginConfig(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
         await plugin.setIncentive(virtualPoolMock);
         expect(await plugin.incentive()).to.be.eq(await virtualPoolMock.getAddress());
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(BigInt(PLUGIN_FLAGS.AFTER_SWAP_FLAG) | defaultConfig);
       });
 
       it('set incentive works only for PluginFactory.farmingAddress', async () => {

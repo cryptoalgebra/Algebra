@@ -164,7 +164,11 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   function setIncentive(address newIncentive) external override {
     require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
 
+    bool isPluginConnected = _getPluginInPool() == address(this);
     bool turnOn = newIncentive != address(0);
+    if (turnOn) {
+      require(isPluginConnected, 'Plugin not attached');
+    }
     address currentIncentive = incentive;
 
     require(currentIncentive != newIncentive, 'already active');
@@ -173,7 +177,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
-    _updatePluginConfigInPool();
+    if (isPluginConnected) {
+      _updatePluginConfigInPool();
+    }
   }
 
   /// @inheritdoc IFarmingPlugin
