@@ -92,6 +92,7 @@ jobs:
           - PriceMovementMathEchidnaTest
           - TickMathEchidnaTest
           - TickOverflowSafetyEchidnaTest
+          - TickTreeSearchEchidnaTest
           - TickTreeEchidnaTest
           - TokenDeltaMathEchidnaTest
           - UnsafeMathEchidnaTest
