@@ -37,13 +37,13 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     algebraPoolDeployer = _nonfungiblePositionManager.poolDeployer();
   }
 
-  modifier isOwner(uint256 tokenId) {
-    require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner of token');
+  modifier isApprovedOrOwner(uint256 tokenId) {
+    require(nonfungiblePositionManager.isApprovedOrOwner(msg.sender, tokenId), 'not approved for token');
     _;
   }
 
   /// @inheritdoc IFarmingCenter
-  function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
+  function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isApprovedOrOwner(tokenId) {
     bytes32 incentiveId = IncentiveId.compute(key);
     if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
@@ -55,8 +55,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function exitFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
-    _exitFarming(key, tokenId, msg.sender);
+  function exitFarming(IncentiveKey memory key, uint256 tokenId) external override isApprovedOrOwner(tokenId) {
+    _exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   function _exitFarming(IncentiveKey memory key, uint256 tokenId, address tokenOwner) private {
@@ -100,8 +100,11 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function collectRewards(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
-    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
+  function collectRewards(
+    IncentiveKey memory key,
+    uint256 tokenId
+  ) external override isApprovedOrOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
+    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   /// @inheritdoc IFarmingCenter

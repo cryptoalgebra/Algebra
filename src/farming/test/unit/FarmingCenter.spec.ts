@@ -506,7 +506,7 @@ describe('unit/FarmingCenter', () => {
           },
           tokenIdEternal
         )
-      ).to.be.revertedWith('not owner of token');
+      ).to.be.revertedWith('not approved for token');
 
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
