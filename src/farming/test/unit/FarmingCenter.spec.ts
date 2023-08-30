@@ -398,6 +398,55 @@ describe('unit/FarmingCenter', () => {
     });
   });
 
+  describe('#exitFarming', async () => {
+    let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
+
+    let tokenIdEternal: string;
+
+    beforeEach('setup', async () => {
+      const tokensToFarm = [context.token0, context.token1] as [TestERC20, TestERC20];
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, tokensToFarm, amountDesired, await context.nft.getAddress());
+
+      createIncentiveResultEternal = await helpers.createIncentiveFlow({
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce,
+        rewardRate: 100n,
+        bonusRewardRate: 50n,
+      });
+
+      const mintResultEternal = await helpers.mintDepositFarmFlow({
+        lp: lpUser0,
+        tokensToFarm,
+        ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
+        amountsToFarm: [amountDesired, amountDesired],
+        createIncentiveResult: createIncentiveResultEternal,
+      });
+      tokenIdEternal = mintResultEternal.tokenId;
+    });
+
+    it('can exit if farmedIn changed forcefully', async () => {
+      await context.nft.setFarmingCenter(lpUser0);
+      await context.nft.connect(lpUser0).approveForFarming(tokenIdEternal, true);
+      await context.nft.connect(lpUser0).switchFarmingStatus(tokenIdEternal, true);
+      expect(await context.nft.tokenFarmedIn(tokenIdEternal)).to.be.eq(lpUser0.address);
+
+      await context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          pool: context.pool01,
+          nonce,
+        },
+        tokenIdEternal
+      );
+    });
+  });
+
   describe('#collectRewards', () => {
     let createIncentiveResultEternal: HelperTypes.CreateIncentive.Result;
 

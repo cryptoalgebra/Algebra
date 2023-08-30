@@ -61,10 +61,16 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   function _exitFarming(IncentiveKey memory key, uint256 tokenId, address tokenOwner) private {
     require(deposits[tokenId] == IncentiveId.compute(key), 'Invalid incentiveId');
-    deposits[tokenId] = bytes32(0);
-    nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+    _switchFarmingStatusOff(tokenId);
 
     IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+  }
+
+  function _switchFarmingStatusOff(uint256 tokenId) internal {
+    deposits[tokenId] = bytes32(0);
+    if (nonfungiblePositionManager.tokenFarmedIn(tokenId) == address(this)) {
+      nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+    }
   }
 
   /// @inheritdoc IPositionFollower
@@ -89,8 +95,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
         if (IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key))) {
           // exit completely if the incentive has stopped (manually or automatically)
-          deposits[tokenId] = bytes32(0);
-          nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+          _switchFarmingStatusOff(tokenId);
         } else {
           // reenter with new liquidity value
           IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
