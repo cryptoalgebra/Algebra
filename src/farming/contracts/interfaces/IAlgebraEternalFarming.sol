@@ -62,11 +62,11 @@ interface IAlgebraEternalFarming {
       address pluginAddress
     );
 
-  /// @notice Check if incentive is active
-  /// @dev Does not check that the incentive is indeed currently connected to the Algebra pool
+  /// @notice Check if incentive is deactivated (manually or automatically)
+  /// @dev Does not check if the incentive is indeed currently connected to the Algebra pool or not
   /// @param incentiveId The ID of the incentive computed from its parameters
-  /// @return res True if incentive is active
-  function isIncentiveActive(bytes32 incentiveId) external view returns (bool res);
+  /// @return True if incentive is deactivated (manually or automatically)
+  function isIncentiveDeactivated(bytes32 incentiveId) external view returns (bool);
 
   /// @notice Returns address of current farmingCenter
   function farmingCenter() external view returns (address);

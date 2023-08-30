@@ -297,7 +297,7 @@ describe('unit/EternalFarms', () => {
     });
   });
 
-  describe('#isIncentiveActive', async () => {
+  describe('#isIncentiveDeactivated', async () => {
     let localNonce = 0n;
     let incentiveArgs;
     let incentiveId: string;
@@ -338,24 +338,24 @@ describe('unit/EternalFarms', () => {
       incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs));
     });
 
-    it('true if incentive active', async () => {
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.true;
+    it('false if incentive active', async () => {
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.false;
     });
 
-    it('false if incentive deactivated', async () => {
+    it('true if incentive deactivated', async () => {
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
         pool: context.pool01,
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         nonce: localNonce,
       });
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
     });
 
-    it('false if incentive deactivated indirectly', async () => {
+    it('true if incentive deactivated indirectly', async () => {
       await detachIncentiveIndirectly(localNonce);
 
-      expect(await context.eternalFarming.isIncentiveActive(incentiveId)).to.be.false;
+      expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
     });
   });
 

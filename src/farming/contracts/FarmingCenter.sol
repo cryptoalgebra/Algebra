@@ -87,13 +87,13 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       } else {
         IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
 
-        if (IAlgebraEternalFarming(eternalFarming).isIncentiveActive(IncentiveId.compute(key))) {
-          // reenter with new liquidity value
-          IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
-        } else {
-          // exit completely if the incentive has stopped
+        if (IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key))) {
+          // exit completely if the incentive has stopped (manually or automatically)
           deposits[tokenId] = bytes32(0);
           nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+        } else {
+          // reenter with new liquidity value
+          IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
         }
       }
     }
