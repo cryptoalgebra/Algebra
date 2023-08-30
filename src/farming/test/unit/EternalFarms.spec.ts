@@ -555,7 +555,7 @@ describe('unit/EternalFarms', () => {
     describe('fails when', () => {
       it('deposit is already farmd in the incentive', async () => {
         await subject(tokenId, lpUser0);
-        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('token already farmed');
+        await expect(subject(tokenId, lpUser0)).to.be.revertedWith('Token already farmed');
       });
 
       it('trying to forcefully enter twice', async () => {
@@ -593,7 +593,7 @@ describe('unit/EternalFarms', () => {
 
       it('you are not the owner of the deposit', async () => {
         // lpUser2 calls, we're using lpUser0 elsewhere.
-        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('not approved for token');
+        await expect(subject(tokenId, actors.lpUser2())).to.be.revertedWith('Not approved for token');
       });
 
       it('has 0 liquidity in the position', async () => {
@@ -1679,7 +1679,7 @@ describe('unit/EternalFarms', () => {
             },
             tokenId
           )
-        ).to.be.revertedWith('invalid incentiveId');
+        ).to.be.revertedWith('Invalid incentiveId');
       });
 
       it('cannot exit from nonexistent farming', async () => {

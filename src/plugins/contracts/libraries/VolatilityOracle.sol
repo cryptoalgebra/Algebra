@@ -11,6 +11,9 @@ library VolatilityOracle {
   /// @notice `target` timestamp is older than oldest timepoint
   error targetIsTooOld();
 
+  /// @notice oracle is initialized already
+  error volatilityOracleAlreadyInitialized();
+
   uint32 internal constant WINDOW = 1 days;
   uint256 private constant UINT16_MODULO = 65536;
 
@@ -30,7 +33,7 @@ library VolatilityOracle {
   /// @param tick Initial tick
   function initialize(Timepoint[UINT16_MODULO] storage self, uint32 time, int24 tick) internal {
     Timepoint storage _zero = self[0];
-    require(!_zero.initialized, 'oracle already initialized');
+    if (_zero.initialized) revert volatilityOracleAlreadyInitialized();
     (_zero.initialized, _zero.blockTimestamp, _zero.tick, _zero.averageTick) = (true, time, tick, tick);
   }
 

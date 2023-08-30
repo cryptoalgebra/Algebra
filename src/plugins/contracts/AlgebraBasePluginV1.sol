@@ -56,6 +56,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
+  /// @dev the address which connected the last incentive. Needed so that he can disconnect it
   address private _lastIncentiveOwner;
 
   modifier onlyPool() {
@@ -81,7 +82,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function _checkIfFromPool() internal view {
-    require(msg.sender == pool, 'only pool can call this');
+    require(msg.sender == pool, 'Only pool can call this');
   }
 
   function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
@@ -188,14 +189,14 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
       if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
       if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
     }
-    require(accessAllowed, 'not allowed to set incentive');
+    require(accessAllowed, 'Not allowed to set incentive');
 
     bool isPluginConnected = _getPluginInPool() == address(this);
     if (toConnect) require(isPluginConnected, 'Plugin not attached');
 
     address currentIncentive = incentive;
-    require(currentIncentive != newIncentive, 'already active');
-    if (toConnect) require(currentIncentive == address(0), 'has active incentive');
+    require(currentIncentive != newIncentive, 'Already active');
+    if (toConnect) require(currentIncentive == address(0), 'Has active incentive');
 
     incentive = newIncentive;
     emit Incentive(newIncentive);

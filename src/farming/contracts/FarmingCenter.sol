@@ -38,7 +38,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   modifier isApprovedOrOwner(uint256 tokenId) {
-    require(nonfungiblePositionManager.isApprovedOrOwner(msg.sender, tokenId), 'not approved for token');
+    require(nonfungiblePositionManager.isApprovedOrOwner(msg.sender, tokenId), 'Not approved for token');
     _;
   }
 
@@ -47,7 +47,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     bytes32 incentiveId = IncentiveId.compute(key);
     if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
-    require(deposits[tokenId] == bytes32(0), 'token already farmed');
+    require(deposits[tokenId] == bytes32(0), 'Token already farmed');
     deposits[tokenId] = incentiveId;
     nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
@@ -60,7 +60,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   function _exitFarming(IncentiveKey memory key, uint256 tokenId, address tokenOwner) private {
-    require(deposits[tokenId] == IncentiveId.compute(key), 'invalid incentiveId');
+    require(deposits[tokenId] == IncentiveId.compute(key), 'Invalid incentiveId');
     deposits[tokenId] = bytes32(0);
     nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
 
@@ -73,7 +73,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   function _updatePosition(uint256 tokenId) private {
-    require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
+    require(msg.sender == address(nonfungiblePositionManager), 'Only nonfungiblePosManager');
 
     bytes32 _eternalIncentiveId = deposits[tokenId];
     if (_eternalIncentiveId != bytes32(0)) {
@@ -117,7 +117,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter
   function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin) external override {
     IAlgebraPool pool = _checkParamsForVirtualPoolToggle(newVirtualPool, plugin);
-    require(plugin.incentive() == address(0), 'another incentive is connected');
+    require(plugin.incentive() == address(0), 'Another incentive is connected');
     plugin.setIncentive(newVirtualPool); // revert is possible if the plugin does not allow
     virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
@@ -131,9 +131,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @dev checks input params and fetches corresponding Algebra Integral pool
   function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal returns (IAlgebraPool pool) {
-    require(msg.sender == address(eternalFarming), 'only farming can call this');
-    require(virtualPool != address(0), 'zero address as virtual pool');
+    require(msg.sender == address(eternalFarming), 'Only farming can call this');
+    require(virtualPool != address(0), 'Zero address as virtual pool');
     pool = IAlgebraPool(plugin.pool());
-    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'invalid pool');
+    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'Invalid pool');
   }
 }

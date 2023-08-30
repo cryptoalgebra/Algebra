@@ -24,7 +24,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
   modifier onlyAdministrator() {
-    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'only administrator');
+    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'Only administrator');
     _;
   }
 
@@ -46,13 +46,13 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
 
     address pool = factory.poolByPair(token0, token1);
-    require(pool != address(0), 'pool not exist');
+    require(pool != address(0), 'Pool not exist');
 
     return _createPlugin(pool);
   }
 
   function _createPlugin(address pool) internal returns (address) {
-    require(pluginByPool[pool] == address(0), 'already created');
+    require(pluginByPool[pool] == address(0), 'Already created');
     IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
     volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
     pluginByPool[pool] = address(volatilityOracle);
