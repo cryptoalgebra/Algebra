@@ -35,17 +35,17 @@ describe('AlgebraBasePluginV1', () => {
       await mockPool.setPlugin(plugin);
       await initializeAtZeroTick(mockPool);
 
-      expect(plugin.initialize()).to.be.revertedWith('Already initialized');
+      await expect(plugin.initialize()).to.be.revertedWith('Already initialized');
     });
 
     it('cannot initialize detached plugin', async () => {
       await initializeAtZeroTick(mockPool);
-      expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
+      await expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
     });
 
     it('cannot initialize if pool not initialized', async () => {
       await mockPool.setPlugin(plugin);
-      expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
+      await expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
     });
 
     it('can initialize for existing pool', async () => {
@@ -70,14 +70,14 @@ describe('AlgebraBasePluginV1', () => {
   describe('#Hooks', () => {
     it('only pool can call hooks', async () => {
       const errorMessage = 'only pool can call this';
-      expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
-      expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
-      expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterModifyPosition(wallet.address, wallet.address, 100, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeSwap(wallet.address, wallet.address, true, 100, 100, false, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterSwap(wallet.address, wallet.address, true, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
+      await expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
     });
 
     describe('not implemented hooks', async () => {
@@ -288,15 +288,15 @@ describe('AlgebraBasePluginV1', () => {
       describe('failure cases', async () => {
         it('cannot rewrite initialized slot', async () => {
           await initializeAtZeroTick(mockPool);
-          expect(plugin.prepayTimepointsStorageSlots(0, 2)).to.be.revertedWithoutReason;
+          await expect(plugin.prepayTimepointsStorageSlots(0, 2)).to.be.reverted;
           await plugin.advanceTime(4);
           await mockPool.swapToTick(-1560);
-          expect(plugin.prepayTimepointsStorageSlots(1, 2)).to.be.revertedWithoutReason;
-          expect(plugin.prepayTimepointsStorageSlots(2, 2)).to.be.not.reverted;
+          await expect(plugin.prepayTimepointsStorageSlots(1, 2)).to.be.reverted;
+          await expect(plugin.prepayTimepointsStorageSlots(2, 2)).to.be.not.reverted;
         });
 
         it('cannot prepay 0 slots', async () => {
-          expect(plugin.prepayTimepointsStorageSlots(0, 0)).to.be.revertedWithoutReason;
+          await expect(plugin.prepayTimepointsStorageSlots(0, 0)).to.be.revertedWithoutReason;
         });
 
         it('cannot overflow index', async () => {

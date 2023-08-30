@@ -1,4 +1,4 @@
-import { BigNumberish, Contract, ContractTransactionResponse, Wallet, MaxUint256 } from 'ethers';
+import { BigNumberish, Contract, Wallet, MaxUint256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { MockTimeNonfungiblePositionManager, TestERC20, TickLensTest } from '../typechain';

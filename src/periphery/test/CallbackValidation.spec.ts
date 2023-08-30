@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import completeFixture from './shared/completeFixture';
 import { expect } from './shared/expect';
-import { TestERC20, TestCallbackValidation, IAlgebraFactory } from '../typechain';
+import { TestERC20, TestCallbackValidation } from '../typechain';
 
 describe('CallbackValidation', () => {
   let nonpairAddr: Wallet, wallets: Wallet[];
@@ -43,7 +43,7 @@ describe('CallbackValidation', () => {
   });
 
   it('reverts when called from an address other than the associated AlgebraPool', async () => {
-    expect(
+    await expect(
       callbackValidation
         .connect(nonpairAddr)
         .verifyCallback(await factory.poolDeployer(), await tokens[0].getAddress(), await tokens[1].getAddress())

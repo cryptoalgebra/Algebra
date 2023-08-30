@@ -1,5 +1,4 @@
 import { getAddress } from 'ethers';
-import { FeeAmount } from './constants';
 
 const ADDR_SIZE = 20;
 const FEE_SIZE = 3;

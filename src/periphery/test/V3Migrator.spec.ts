@@ -14,7 +14,6 @@ import { v2FactoryFixture } from './shared/externalFixtures';
 
 import { abi as PAIR_V2_ABI } from '@uniswap/v2-core/build/UniswapV2Pair.json';
 import { expect } from 'chai';
-import { FeeAmount } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 import snapshotGasCost from './shared/snapshotGasCost';
 import { sortedTokens } from './shared/tokenSort';

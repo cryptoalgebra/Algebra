@@ -44,7 +44,7 @@ describe('BasePluginV1Factory', () => {
     });
 
     it('cannot create for nonexistent pool', async () => {
-      expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
     });
 
     it('can create for existing pool', async () => {

@@ -9,6 +9,13 @@ module.exports = {
   ],
   rules: {
     '@typescript-eslint/no-unused-vars': 1,
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      {
+        checksVoidReturn: false,
+      },
+    ],
     'unused-imports/no-unused-imports-ts': 1,
     'no-shadow': 1,
     'no-dupe-else-if': 1,
