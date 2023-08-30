@@ -71,7 +71,7 @@ describe('AlgebraBasePluginV1', () => {
   // plain tests for hooks functionality
   describe('#Hooks', () => {
     it('only pool can call hooks', async () => {
-      const errorMessage = 'only pool can call this';
+      const errorMessage = 'Only pool can call this';
       await expect(plugin.beforeInitialize(wallet.address, 100)).to.be.revertedWith(errorMessage);
       await expect(plugin.afterInitialize(wallet.address, 100, 100)).to.be.revertedWith(errorMessage);
       await expect(plugin.beforeModifyPosition(wallet.address, wallet.address, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
@@ -564,7 +564,7 @@ describe('AlgebraBasePluginV1', () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
         await mockPluginFactory.setFarmingAddress(other);
-        await expect(plugin.setIncentive(other)).to.be.revertedWith('not allowed to set incentive');
+        await expect(plugin.setIncentive(other)).to.be.revertedWith('Not allowed to set incentive');
       });
 
       it('new farming can detach old incentive', async () => {
@@ -577,20 +577,20 @@ describe('AlgebraBasePluginV1', () => {
 
       it('cannot detach incentive if nothing connected', async () => {
         await mockPool.setPlugin(plugin);
-        await expect(plugin.setIncentive(ZeroAddress)).to.be.revertedWith('already active');
+        await expect(plugin.setIncentive(ZeroAddress)).to.be.revertedWith('Already active');
         expect(await plugin.incentive()).to.be.eq(ZeroAddress);
       });
 
       it('cannot set same incentive twice', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('already active');
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('Already active');
       });
 
       it('cannot set incentive if has active', async () => {
         await mockPool.setPlugin(plugin);
         await plugin.setIncentive(virtualPoolMock);
-        await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('has active incentive');
+        await expect(plugin.setIncentive(wallet.address)).to.be.revertedWith('Has active incentive');
       });
 
       it('can detach incentive if not connected to pool', async () => {
@@ -615,7 +615,7 @@ describe('AlgebraBasePluginV1', () => {
 
       it('set incentive works only for PluginFactory.farmingAddress', async () => {
         await mockPluginFactory.setFarmingAddress(ZeroAddress);
-        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('not allowed to set incentive');
+        await expect(plugin.setIncentive(virtualPoolMock)).to.be.revertedWith('Not allowed to set incentive');
       });
 
       it('incentive can not be attached if plugin is not attached', async () => {

@@ -44,7 +44,7 @@ describe('BasePluginV1Factory', () => {
     });
 
     it('cannot create for nonexistent pool', async () => {
-      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('pool not exist');
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('Pool not exist');
     });
 
     it('can create for existing pool', async () => {
@@ -63,7 +63,7 @@ describe('BasePluginV1Factory', () => {
 
       await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
 
-      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('already created');
+      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('Already created');
     });
   });
 
@@ -79,7 +79,7 @@ describe('BasePluginV1Factory', () => {
         baseFee: 150,
       };
       it('fails if caller is not owner', async () => {
-        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.revertedWith('only administrator');
+        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.revertedWith('Only administrator');
       });
 
       it('updates defaultFeeConfiguration', async () => {
@@ -137,7 +137,7 @@ describe('BasePluginV1Factory', () => {
 
   describe('#setFarmingAddress', () => {
     it('fails if caller is not owner', async () => {
-      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.revertedWith('only administrator');
+      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.revertedWith('Only administrator');
     });
 
     it('updates farmingAddress', async () => {
