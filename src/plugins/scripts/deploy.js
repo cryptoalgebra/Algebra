@@ -8,13 +8,15 @@ async function main() {
     const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
     const BasePluginV1Factory = await hre.ethers.getContractFactory("BasePluginV1Factory");
-    const dsFactory = await BasePluginV1Factory.deploy(deploysData.factory, { gasLimit: "0x1000000" });
+    const dsFactory = await BasePluginV1Factory.deploy(deploysData.factory);
+
+    await dsFactory.waitForDeployment()
 
     console.log("PluginFactory to:", dsFactory.target);
 
     const factory = await hre.ethers.getContractAt('IAlgebraFactory', deploysData.factory)
 
-    await factory.setDefaultPluginFactory(dsFactory.target, { gasLimit: "0x1000000" })
+    await factory.setDefaultPluginFactory(dsFactory.target)
     console.log('Updated plugin factory address in factory')
 
     deploysData.BasePluginV1Factory = dsFactory.target;

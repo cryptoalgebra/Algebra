@@ -11,12 +11,16 @@ async function main() {
     })
 
     const AlgebraFactory = await hre.ethers.getContractFactory("AlgebraFactory");
-    const factory = await AlgebraFactory.deploy(poolDeployerAddress, { gasLimit: "0x1000000" });
+    const factory = await AlgebraFactory.deploy(poolDeployerAddress);
+
+    await factory.waitForDeployment()
     
     const vaultAddress = await factory.communityVault();
 
     const PoolDeployerFactory = await hre.ethers.getContractFactory("AlgebraPoolDeployer");
-    const poolDeployer  = await PoolDeployerFactory.deploy(factory.target, vaultAddress, { gasLimit: "0x1000000" });
+    const poolDeployer  = await PoolDeployerFactory.deploy(factory.target, vaultAddress);
+
+    await poolDeployer.waitForDeployment()
 
     console.log("AlgebraPoolDeployer to:", poolDeployer.target);
     console.log("AlgebraFactory deployed to:", factory.target);
