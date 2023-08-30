@@ -12,7 +12,6 @@ import {
   getMinTick,
   TICK_SPACINGS,
   algebraFixture,
-  log,
   days,
   bnSum,
   mintPosition,
@@ -335,7 +334,6 @@ describe('AlgebraFarming', () => {
         );
 
         const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance));
-        log.debug('Total rewards ', rewardsEarned.toString());
 
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
@@ -377,7 +375,6 @@ describe('AlgebraFarming', () => {
         );
 
         const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance));
-        log.debug('Total rewards ', rewardsEarned.toString());
 
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
