@@ -252,7 +252,7 @@ library VolatilityOracle {
       last.initialized = true;
       last.blockTimestamp = blockTimestamp;
       last.tickCumulative += int56(tick) * int56(uint56(delta));
-      last.volatilityCumulative += uint88(_volatilityOnRange(int256(uint256(delta)), last.tick, tick, last.averageTick, averageTick)); // always fits 88 bits
+      last.volatilityCumulative += uint88(_volatilityOnRange(int256(uint256(delta)), tick, tick, last.averageTick, averageTick)); // always fits 88 bits
       last.tick = tick;
       last.averageTick = averageTick;
       last.windowStartIndex = windowStartIndex;
