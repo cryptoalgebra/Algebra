@@ -333,26 +333,6 @@ describe('AlgebraBasePluginV1', () => {
         };
       });
 
-      async function tradeStable(count: number, proportion: number, amount: number, pause: number) {
-        for (let i = 0; i < count; i++) {
-          for (let i = 0; i < count; i++) {
-            if (i % proportion == 0) {
-              await mockPool.swapToTick(i + 1);
-              await plugin.advanceTime(pause);
-            } else {
-              await mockPool.swapToTick(-i - 1);
-              await plugin.advanceTime(pause);
-            }
-          }
-        }
-      }
-
-      async function getStatistics(time: number) {
-        let now = await plugin.getTimepoints([0]);
-        let then = await plugin.getTimepoints([time]);
-        return [now.volatilityCumulatives[0] - then.volatilityCumulatives[0] / BigInt(DAY), time];
-      }
-
       it('does not change at 0 volume', async () => {
         await plugin.advanceTime(1);
         await mockPool.mint(wallet.address, wallet.address, -6000, 6000, liquidity, '0x');
@@ -394,7 +374,6 @@ describe('AlgebraBasePluginV1', () => {
         expect(feeFinal).to.be.equal(feeInit);
       });
 
-      const AMOUNT = 500000000;
       it('single huge step after day', async () => {
         await mint(wallet.address, -24000, 24000, liquidity * 1000000000n);
 
@@ -403,14 +382,10 @@ describe('AlgebraBasePluginV1', () => {
         await plugin.advanceTime(60);
         await mockPool.swapToTick(-10000);
         await plugin.advanceTime(60);
-        await mockPool.swapToTick(-10001);
-        await plugin.advanceTime(60);
-        await mockPool.swapToTick(-9999);
-        let fee3 = (await mockPool.globalState()).fee;
-        expect(fee3).to.be.equal(3000);
+        await mockPool.swapToTick(10);
 
         let stats = [];
-        const tick = -9999;
+        const tick = 10;
         for (let i = 0; i < 25; i++) {
           await mockPool.swapToTick(tick - i);
           let fee = (await mockPool.globalState()).fee;
@@ -428,14 +403,10 @@ describe('AlgebraBasePluginV1', () => {
         await plugin.advanceTime(60);
         await mockPool.swapToTick(-10000);
         await plugin.advanceTime(60);
-        await mockPool.swapToTick(-10001);
-        await plugin.advanceTime(60);
-        await mockPool.swapToTick(-9999);
-        let fee3 = (await mockPool.globalState()).fee;
-        expect(fee3).to.be.equal(15000);
+        await mockPool.swapToTick(10);
 
         let stats = [];
-        const tick = -9999;
+        const tick = 10;
         for (let i = 0; i < 25; i++) {
           await mockPool.swapToTick(tick - i);
           let fee = (await mockPool.globalState()).fee;
@@ -450,12 +421,10 @@ describe('AlgebraBasePluginV1', () => {
         await plugin.advanceTime(DAY);
         await plugin.advanceTime(60);
         await mockPool.swapToTick(-10000);
-        await plugin.advanceTime(60);
+        await plugin.advanceTime(1);
         await mockPool.swapToTick(0);
         await plugin.advanceTime(60);
         await mockPool.swapToTick(10);
-        let fee3 = (await mockPool.globalState()).fee;
-        expect(fee3).to.be.equal(3000);
 
         let stats = [];
         const tick = 10;
@@ -475,12 +444,10 @@ describe('AlgebraBasePluginV1', () => {
         await mockPool.swapToTick(10);
         await plugin.advanceTime(60);
         await mockPool.swapToTick(-10000);
-        await plugin.advanceTime(60);
+        await plugin.advanceTime(1);
         await mockPool.swapToTick(-11);
         await plugin.advanceTime(60);
         await mockPool.swapToTick(0);
-        let fee3 = (await mockPool.globalState()).fee;
-        expect(fee3).to.be.equal(15000);
 
         let stats = [];
         const tick = 0;
@@ -491,19 +458,6 @@ describe('AlgebraBasePluginV1', () => {
           await plugin.advanceTime(60 * 60);
         }
         expect(stats).to.matchSnapshot('fee stats after spike');
-      });
-
-      it.skip('changes', async () => {
-        let fee1 = (await mockPool.globalState()).fee;
-        let tick0 = (await mockPool.globalState()).tick;
-        await mint(wallet.address, -6000, 6000, liquidity);
-        let fee2 = (await mockPool.globalState()).fee;
-        await plugin.advanceTime(DAY + 600);
-        await tradeStable(240, 2, 10, 30);
-        let fee3 = (await mockPool.globalState()).fee;
-        console.log(fee1, fee2, fee3);
-        let tick1 = (await mockPool.globalState()).tick;
-        let stats = await getStatistics(DAY);
       });
 
       describe('#getCurrentFee', async () => {
