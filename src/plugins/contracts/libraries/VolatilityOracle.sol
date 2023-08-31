@@ -214,8 +214,7 @@ library VolatilityOracle {
             ((self[windowStartIndex + 1].volatilityCumulative - cumulativeVolatilityAtStart) * (currentTime - WINDOW - oldestTimestamp)) /
             timeDeltaBetweenPoints;
         } else {
-          // use windowStartIndex as oldestIndex to simplify search
-          cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, windowStartIndex);
+          cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
         }
 
         return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
@@ -335,10 +334,6 @@ library VolatilityOracle {
         // if last timepoint is older or equal than WINDOW ago
         return (tick, lastIndex);
       } else {
-        oldestIndex = self[lastIndex].windowStartIndex;
-        if (currentTime == lastTimestamp) {
-          lastIndex = oldestIndex + 1; // simplify search in _getTickCumulativeAt
-        }
         int56 tickCumulativeAtStart;
         (tickCumulativeAtStart, windowStartIndex) = _getTickCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
 
@@ -482,20 +477,20 @@ library VolatilityOracle {
   /// @param self The stored timepoints array
   /// @param currentTime The current block.timestamp
   /// @param target The timestamp at which the timepoint should be
-  /// @param lastIndex The index of the timepoint that was most recently written to the timepoints array
-  /// @param oldestIndex The index of the oldest timepoint in the timepoints array
+  /// @param upperIndex The index of the upper border of search range
+  /// @param lowerIndex The index of the lower border of search range
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   function _binarySearch(
     Timepoint[UINT16_MODULO] storage self,
     uint32 currentTime,
     uint32 target,
-    uint16 lastIndex,
-    uint16 oldestIndex
+    uint16 upperIndex,
+    uint16 lowerIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
     unchecked {
-      uint256 left = oldestIndex; // oldest timepoint
-      uint256 right = lastIndex < oldestIndex ? lastIndex + UINT16_MODULO : lastIndex; // newest timepoint considering one index overflow
+      uint256 left = lowerIndex; // oldest timepoint
+      uint256 right = upperIndex < lowerIndex ? upperIndex + UINT16_MODULO : upperIndex; // newest timepoint considering one index overflow
       indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
       beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
       atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
