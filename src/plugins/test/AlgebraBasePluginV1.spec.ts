@@ -740,7 +740,7 @@ describe('AlgebraBasePluginV1', () => {
         expect(newConfig.baseFee).to.eq(configuration.baseFee);
       });
 
-      it('feeConfig getter gas cost', async () => {
+      it('feeConfig getter gas cost [ @skip-on-coverage ]', async () => {
         await plugin.changeFeeConfiguration(configuration);
         await snapshotGasCost(plugin.feeConfig.estimateGas());
       });
