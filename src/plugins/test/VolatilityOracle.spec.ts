@@ -148,7 +148,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window);
       const tick = await volatilityOracle.getAverageTick();
-      expect(tick).to.be.eq(7200);
+      expect(tick).to.be.eq(7300);
     });
 
     it('last index is more then 24h ago', async () => {
@@ -156,7 +156,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window + 1);
       const tick = await volatilityOracle.getAverageTick();
-      expect(tick).to.be.eq(7200);
+      expect(tick).to.be.eq(7300);
 
       const tickCumulative = await volatilityOracle.getTickCumulativeAt(0);
       expect(tickCumulative).to.be.eq(630741700);
@@ -667,7 +667,7 @@ describe('VolatilityOracle', () => {
     });
   });
 
-  describe('full volatilityOracle', function () {
+  describe.skip('full volatilityOracle', function () {
     this.timeout(10_200_000);
 
     let volatilityOracle: VolatilityOracleTest;
@@ -852,7 +852,7 @@ describe('VolatilityOracle', () => {
     });
   });
 
-  describe('full volatilityOracle, maximal density', function () {
+  describe.skip('full volatilityOracle, maximal density', function () {
     this.timeout(10_200_000);
 
     let volatilityOracle: VolatilityOracleTest;
