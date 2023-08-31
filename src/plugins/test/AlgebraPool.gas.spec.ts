@@ -112,6 +112,10 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await fix.swapToHigherPrice(startingPrice, wallet.address);
           await fix.advanceTime(1);
         }
+        await fix.advanceTime(1);
+        await fix.swapExact0For1(1, wallet.address);
+        await fix.advanceTime(1);
+        expect((await fix.pool.globalState()).tick).to.eq(startingTick);
         return fix;
       };
 
