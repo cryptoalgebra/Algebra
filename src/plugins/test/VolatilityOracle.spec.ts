@@ -253,7 +253,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.update({ advanceTimeBy: window, tick: 7500, liquidity: 6 });
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(10000);
+      expect(volatility).to.be.eq(3333);
     });
 
     it('last index is exactly 24h ago', async () => {
@@ -261,7 +261,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(10000);
+      expect(volatility).to.be.eq(3333);
     });
 
     it('last index is more then 24h ago', async () => {
@@ -269,7 +269,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window + 1);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(10000);
+      expect(volatility).to.be.eq(3333);
     });
 
     it('specific case for binary search (atOrAfter)', async () => {
@@ -279,7 +279,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 73100, liquidity: 6 });
       await volatilityOracle.advanceTime(window - 2 * 60 * 60);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(3968897263);
+      expect(volatility).to.be.eq(1442410782);
     });
 
     describe('oldest timepoint is more than WINDOW seconds ago', async () => {
@@ -291,13 +291,13 @@ describe('VolatilityOracle', () => {
 
       it('last timepoint is target', async () => {
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(5000);
+        expect(volatility).to.be.eq(2916);
       });
 
       it('target is after last timepoint', async () => {
         await volatilityOracle.advanceTime(10);
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(5001);
+        expect(volatility).to.be.eq(2917);
       });
     });
 
@@ -310,13 +310,13 @@ describe('VolatilityOracle', () => {
 
       it('last timepoint is target', async () => {
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(2499);
+        expect(volatility).to.be.eq(850);
       });
 
       it('target is after last timepoint', async () => {
         await volatilityOracle.advanceTime(10);
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(2499);
+        expect(volatility).to.be.eq(850);
       });
     });
   });
@@ -667,7 +667,7 @@ describe('VolatilityOracle', () => {
     });
   });
 
-  describe.skip('full volatilityOracle', function () {
+  describe('full volatilityOracle', function () {
     this.timeout(10_200_000);
 
     let volatilityOracle: VolatilityOracleTest;
@@ -786,13 +786,13 @@ describe('VolatilityOracle', () => {
 
         it('last timepoint is target', async () => {
           const volatility = await volatilityOracle.getAverageVolatility();
-          expect(volatility).to.be.eq(3686253);
+          expect(volatility).to.be.eq(3682928);
         });
 
         it('target is after last timepoint', async () => {
           await volatilityOracle.advanceTime(10);
           const volatility = await volatilityOracle.getAverageVolatility();
-          expect(volatility).to.be.eq(4301739);
+          expect(volatility).to.be.eq(4298339);
         });
       });
     });
@@ -852,7 +852,7 @@ describe('VolatilityOracle', () => {
     });
   });
 
-  describe.skip('full volatilityOracle, maximal density', function () {
+  describe('full volatilityOracle, maximal density', function () {
     this.timeout(10_200_000);
 
     let volatilityOracle: VolatilityOracleTest;
@@ -961,13 +961,13 @@ describe('VolatilityOracle', () => {
 
       it('last timepoint is target', async () => {
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(360563565);
+        expect(volatility).to.be.eq(360563298);
       });
 
       it('target is after last timepoint', async () => {
         await volatilityOracle.advanceTime(10);
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(360672378);
+        expect(volatility).to.be.eq(360672090);
       });
     });
 

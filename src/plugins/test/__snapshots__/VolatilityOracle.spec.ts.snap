@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VolatilityOracle #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8182`;
+exports[`VolatilityOracle #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8277`;
 
 exports[`VolatilityOracle #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6327`;
 
-exports[`VolatilityOracle #getTimepoints before initialization gas for single timepoint at current time after some time  [ @skip-on-coverage ] 1`] = `8048`;
+exports[`VolatilityOracle #getTimepoints before initialization gas for single timepoint at current time after some time  [ @skip-on-coverage ] 1`] = `8143`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
 Object {
@@ -20,13 +20,13 @@ Object {
 }
 `;
 
-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `96695`;
+exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `96899`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17608`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6327`;
 
-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10109`;
+exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10143`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17197`;
 
@@ -46,13 +46,13 @@ Object {
 }
 `;
 
-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `96347`;
+exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `96551`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17550`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6327`;
 
-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10138`;
+exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10172`;
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17168`;
 
@@ -62,7 +62,7 @@ exports[`VolatilityOracle #initialize gas  [ @skip-on-coverage ] 1`] = `50538`;
 
 exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6335`;
 
-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `42232`;
+exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `42221`;
 
 exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6469`;
 
@@ -84,7 +84,7 @@ exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(oldest
 
 exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6335`;
 
-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `8146`;
+exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `8180`;
 
 exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6469`;
 
