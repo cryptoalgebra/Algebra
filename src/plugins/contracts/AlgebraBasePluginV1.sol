@@ -30,8 +30,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig =
-    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
   /// @inheritdoc IFarmingPlugin
   address public immutable override pool;
@@ -246,8 +245,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
+  /// @dev unused
   function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
-    _writeTimepointAndUpdateFee();
+    _updatePluginConfigInPool(); // should not be called, reset config
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
