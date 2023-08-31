@@ -261,7 +261,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(3333);
+      expect(volatility).to.be.eq(10000);
     });
 
     it('last index is more then 24h ago', async () => {
@@ -269,7 +269,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
       await volatilityOracle.advanceTime(window + 1);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(3333);
+      expect(volatility).to.be.eq(10000);
     });
 
     it('specific case for binary search (atOrAfter)', async () => {
@@ -279,7 +279,7 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 73100, liquidity: 6 });
       await volatilityOracle.advanceTime(window - 2 * 60 * 60);
       const volatility = await volatilityOracle.getAverageVolatility();
-      expect(volatility).to.be.eq(1322990997);
+      expect(volatility).to.be.eq(3968897263);
     });
 
     describe('oldest timepoint is more than WINDOW seconds ago', async () => {
@@ -792,7 +792,7 @@ describe('VolatilityOracle', () => {
         it('target is after last timepoint', async () => {
           await volatilityOracle.advanceTime(10);
           const volatility = await volatilityOracle.getAverageVolatility();
-          expect(volatility).to.be.eq(3922953);
+          expect(volatility).to.be.eq(4301739);
         });
       });
     });
@@ -967,7 +967,7 @@ describe('VolatilityOracle', () => {
       it('target is after last timepoint', async () => {
         await volatilityOracle.advanceTime(10);
         const volatility = await volatilityOracle.getAverageVolatility();
-        expect(volatility).to.be.eq(360672374);
+        expect(volatility).to.be.eq(360672378);
       });
     });
 

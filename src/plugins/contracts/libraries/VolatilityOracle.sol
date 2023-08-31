@@ -262,7 +262,7 @@ library VolatilityOracle {
 
   /// @notice Calculates volatility between two sequential timepoints with resampling to 1 sec frequency
   /// @param dt Timedelta between timepoints, must be within uint32 range
-  /// @param tick0 The tick at the left timepoint, must be within int24 range
+  /// @param tick0 The tick after the left timepoint, must be within int24 range
   /// @param tick1 The tick at the right timepoint, must be within int24 range
   /// @param avgTick0 The average tick at the left timepoint, must be within int24 range
   /// @param avgTick1 The average tick at the right timepoint, must be within int24 range
@@ -382,7 +382,7 @@ library VolatilityOracle {
         (int24 avgTick, ) = _getAverageTickCasted(self, time, tick, lastIndex, oldestIndex, timestampBefore, beforeOrAt.tickCumulative);
 
         return (volatilityCumulativeBefore +
-          uint88(_volatilityOnRange(int256(uint256(target - timestampBefore)), beforeOrAt.tick, tick, beforeOrAt.averageTick, avgTick)));
+          uint88(_volatilityOnRange(int256(uint256(target - timestampBefore)), tick, tick, beforeOrAt.averageTick, avgTick)));
       }
 
       (uint32 timestampAfter, uint88 volatilityCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.volatilityCumulative);
