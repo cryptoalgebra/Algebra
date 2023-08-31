@@ -98,6 +98,14 @@ describe('AlgebraBasePluginV1', () => {
         expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
 
+      it('resets config after afterModifyPosition', async () => {
+        await mockPool.initialize(encodePriceSqrt(1, 1));
+        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_POSITION_MODIFY_FLAG);
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_POSITION_MODIFY_FLAG);
+        await mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x');
+        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
+      });
+
       it('resets config after afterSwap', async () => {
         await mockPool.initialize(encodePriceSqrt(1, 1));
         await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
@@ -190,7 +198,7 @@ describe('AlgebraBasePluginV1', () => {
         initialized: true,
       });
       await plugin.advanceTime(1);
-      await mockPool.mint(wallet.address, wallet.address, minTick, maxTick, 100, '0x');
+      await mockPool.swapToTick(10);
       checkTimepointEquals(await plugin.timepoints(1), {
         tickCumulative: 0n,
         blockTimestamp: BigInt(TEST_POOL_START_TIME + 1),
@@ -780,7 +788,7 @@ describe('AlgebraBasePluginV1', () => {
 
       it('feeConfig getter gas cost', async () => {
         await plugin.changeFeeConfiguration(configuration);
-        await snapshotGasCost(plugin.feeConfig.estimateGas())
+        await snapshotGasCost(plugin.feeConfig.estimateGas());
       });
 
       it('emits event', async () => {
