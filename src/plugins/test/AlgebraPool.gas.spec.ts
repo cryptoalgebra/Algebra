@@ -505,7 +505,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           it('small swap with filled volatilityOracle after 24h', async () => {
             await advanceTime(24 * 60 * 60 - 1);
             await swapExact0For1(1, wallet.address);
-            await advanceTime(24 * 60 * 60 - 1);
+            await advanceTime(5);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
 
