@@ -307,7 +307,7 @@ library VolatilityOracle {
     }
   }
 
-  /// @notice Calculates average tick for WINDOW seconds at the moment of `time`
+  /// @notice Calculates average tick for WINDOW seconds at the moment of `currentTime`
   /// @dev Guaranteed that the result is within the bounds of int24, but result is not casted
   /// @return avgTick int256 for fuzzy tests
   /// @return windowStartIndex The index of closest timepoint <= WINDOW seconds ago
@@ -321,33 +321,30 @@ library VolatilityOracle {
     int56 lastTickCumulative
   ) internal view returns (int256 avgTick, uint256 windowStartIndex) {
     (uint32 oldestTimestamp, int56 oldestTickCumulative) = (self[oldestIndex].blockTimestamp, self[oldestIndex].tickCumulative);
+
     unchecked {
+      int56 currentTickCumulative = lastTickCumulative + int56(tick) * int56(uint56(currentTime - lastTimestamp)); // update with new data
       if (!_lteConsideringOverflow(oldestTimestamp, currentTime - WINDOW, currentTime)) {
         // if oldest is newer than WINDOW ago
-        return (
-          (lastTimestamp == oldestTimestamp) ? tick : (lastTickCumulative - oldestTickCumulative) / int56(uint56(lastTimestamp - oldestTimestamp)),
-          oldestIndex
-        );
+        if (currentTime == oldestTimestamp) return (tick, oldestIndex);
+        return ((currentTickCumulative - oldestTickCumulative) / int56(uint56(currentTime - oldestTimestamp)), oldestIndex);
       }
 
       if (_lteConsideringOverflow(lastTimestamp, currentTime - WINDOW, currentTime)) {
-        // if last timepoint is older than WINDOW ago
-        Timepoint storage _start = self[lastIndex - 1]; // considering underflow
-        (bool initialized, uint32 startTimestamp, int56 startTickCumulative) = (_start.initialized, _start.blockTimestamp, _start.tickCumulative);
-        avgTick = initialized ? (lastTickCumulative - startTickCumulative) / int56(uint56(lastTimestamp - startTimestamp)) : tick;
-        windowStartIndex = lastIndex;
+        // if last timepoint is older or equal than WINDOW ago
+        return (tick, lastIndex);
       } else {
         oldestIndex = self[lastIndex].windowStartIndex;
         if (currentTime == lastTimestamp) {
-          lastIndex = oldestIndex + 1;
+          lastIndex = oldestIndex + 1; // simplify search in _getTickCumulativeAt
         }
         int56 tickCumulativeAtStart;
         (tickCumulativeAtStart, windowStartIndex) = _getTickCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
 
         //    current-WINDOW  last   current
         // _________*____________*_______*_
-        //           ||||||||||||
-        avgTick = (lastTickCumulative - tickCumulativeAtStart) / int56(uint56(lastTimestamp - currentTime + WINDOW));
+        //          ||||||||||||||||||||||
+        avgTick = (currentTickCumulative - tickCumulativeAtStart) / int56(uint56(WINDOW));
       }
     }
   }
