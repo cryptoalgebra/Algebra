@@ -24,7 +24,7 @@ library VolatilityOracle {
     uint88 volatilityCumulative; // the volatility accumulator; overflow after ~34800 years is desired :)
     int24 tick; // tick at this blockTimestamp
     int24 averageTick; // average tick at this blockTimestamp (for WINDOW seconds)
-    uint16 windowStartIndex; // index of closest timepoint >= WINDOW seconds ago (or oldest timepoint), used to speed up searches
+    uint16 windowStartIndex; // closest timepoint lte WINDOW seconds ago (or oldest timepoint), _should be used only from last timepoint_!
   }
 
   /// @notice Initialize the timepoints array by writing the first slot. Called once for the lifecycle of the timepoints array
@@ -74,7 +74,7 @@ library VolatilityOracle {
     );
     unchecked {
       // overflow of indexes is desired
-      if (windowStartIndex == indexUpdated) windowStartIndex++;
+      if (windowStartIndex == indexUpdated) windowStartIndex++; // important, since this value can be used to narrow the search
       self[indexUpdated] = _createNewTimepoint(last, blockTimestamp, tick, avgTick, windowStartIndex);
       if (oldestIndex == indexUpdated) oldestIndex++; // previous oldest index has been overwritten
     }
@@ -450,19 +450,17 @@ library VolatilityOracle {
       return (lastTimepoint, lastTimepoint, true, lastIndex);
     }
 
-    uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
-    if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
-
-    if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
-
     unchecked {
       if (lastTimepointTimestamp - target <= WINDOW) {
-        // we can limit the scope of the search
-        if (windowStartIndex != oldestIndex) {
-          (oldestIndex, oldestTimestamp) = (windowStartIndex, self[windowStartIndex].blockTimestamp);
-          if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
-        }
+        // We can limit the scope of the search. It is safe because when the array overflows,
+        // `windowsStartIndex` cannot point to the overwritten timepoint (check at `write(...)`)
+        oldestIndex = windowStartIndex;
       }
+      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+
+      if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
+      if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
+
       // no need to search if we already know the answer
       if (lastIndex == oldestIndex + 1) return (self[oldestIndex], lastTimepoint, false, oldestIndex);
     }
