@@ -452,8 +452,8 @@ library VolatilityOracle {
 
     unchecked {
       if (lastTimepointTimestamp - target <= WINDOW) {
-        // We can limit the scope of the search. It is safe because when the array of the last timepoint overflows,
-        // `windowsStartIndex` cannot point to the overwritten timepoint
+        // We can limit the scope of the search. It is safe because when the array overflows,
+        // `windowsStartIndex` cannot point to the overwritten timepoint (check at `write(...)`)
         oldestIndex = windowStartIndex;
       }
       uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
