@@ -214,7 +214,8 @@ library VolatilityOracle {
             ((self[windowStartIndex + 1].volatilityCumulative - cumulativeVolatilityAtStart) * (currentTime - WINDOW - oldestTimestamp)) /
             timeDeltaBetweenPoints;
         } else {
-          cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, oldestIndex);
+          // use windowStartIndex as oldestIndex to simplify search
+          cumulativeVolatilityAtStart = _getVolatilityCumulativeAt(self, currentTime, WINDOW, tick, lastIndex, windowStartIndex);
         }
 
         return ((lastCumulativeVolatility - cumulativeVolatilityAtStart) / WINDOW); // sample is big enough to ignore bias of variance
