@@ -450,19 +450,19 @@ library VolatilityOracle {
       return (lastTimepoint, lastTimepoint, true, lastIndex);
     }
 
-    uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
-    if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
-
-    if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
-
     unchecked {
       if (lastTimepointTimestamp - target <= WINDOW) {
+        // TODO
         // we can limit the scope of the search
         if (windowStartIndex != oldestIndex) {
-          (oldestIndex, oldestTimestamp) = (windowStartIndex, self[windowStartIndex].blockTimestamp);
-          if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
+          oldestIndex = windowStartIndex;
         }
       }
+      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+
+      if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
+      if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
+
       // no need to search if we already know the answer
       if (lastIndex == oldestIndex + 1) return (self[oldestIndex], lastTimepoint, false, oldestIndex);
     }
