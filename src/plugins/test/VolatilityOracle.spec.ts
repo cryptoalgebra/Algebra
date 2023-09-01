@@ -331,8 +331,9 @@ describe('VolatilityOracle', () => {
       const getSingleTimepoint = async (secondsAgo: number) => {
         const {
           tickCumulatives: [tickCumulative],
+          volatilityCumulatives: [volatilityCumulative],
         } = await volatilityOracle.getTimepoints([secondsAgo]);
-        return { tickCumulative };
+        return { tickCumulative, volatilityCumulative };
       };
 
       it('fails if an older timepoint does not exist', async () => {
@@ -351,6 +352,33 @@ describe('VolatilityOracle', () => {
         await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(0);
+      });
+
+      it('single timepoint at current time equal after write', async () => {
+        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10, liquidity: 2 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15, liquidity: 2 });
+        await volatilityOracle.advanceTime(10 * 60);
+        const { tickCumulative, volatilityCumulative } = await getSingleTimepoint(0);
+        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15, liquidity: 2 });
+        const { tickCumulative: tickCumulativeAfterWrite, volatilityCumulative: volatilityCumulativeAfterWrite } = await getSingleTimepoint(0);
+
+        expect(tickCumulativeAfterWrite).to.be.eq(tickCumulative);
+        expect(volatilityCumulativeAfterWrite).to.be.eq(volatilityCumulative);
+      });
+
+      it('single timepoint at current time not equal after write and time passed', async () => {
+        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10, liquidity: 2 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15, liquidity: 2 });
+        await volatilityOracle.advanceTime(10 * 60);
+        const { tickCumulative, volatilityCumulative } = await getSingleTimepoint(0);
+        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15, liquidity: 2 });
+        await volatilityOracle.advanceTime(10);
+        const { tickCumulative: tickCumulativeAfterWrite, volatilityCumulative: volatilityCumulativeAfterWrite } = await getSingleTimepoint(0);
+
+        expect(tickCumulativeAfterWrite).to.be.not.eq(tickCumulative);
+        expect(volatilityCumulativeAfterWrite).to.be.not.eq(volatilityCumulative);
       });
 
       it('single timepoint in past but not earlier than secondsAgo', async () => {

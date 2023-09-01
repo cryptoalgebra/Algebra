@@ -487,6 +487,21 @@ describe('AlgebraBasePluginV1', () => {
           const currentFee = await plugin.getCurrentFee();
           expect(currentFee).to.be.eq(100);
         });
+
+        it('works equal before and after timepoint write', async () => {
+          await plugin.advanceTime(60);
+          await mockPool.swapToTick(100);
+          await plugin.advanceTime(60 * 10);
+          await mockPool.swapToTick(1000);
+          await plugin.advanceTime(60 * 10);
+          const currentFee = await plugin.getCurrentFee();
+          await mockPool.swapToTick(-1000);
+          const currentFeeAfterSwap = await plugin.getCurrentFee();
+          expect(currentFeeAfterSwap).to.be.eq(currentFee);
+          await plugin.advanceTime(1);
+          const currentFee2 = await plugin.getCurrentFee();
+          expect(currentFeeAfterSwap).to.be.not.eq(currentFee2);
+        });
       });
     });
   });
