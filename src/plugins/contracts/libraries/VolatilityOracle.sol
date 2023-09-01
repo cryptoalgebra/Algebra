@@ -450,11 +450,13 @@ library VolatilityOracle {
       return (lastTimepoint, lastTimepoint, true, lastIndex);
     }
 
+    bool useHeuristic;
     unchecked {
       if (lastTimepointTimestamp - target <= WINDOW) {
         // We can limit the scope of the search. It is safe because when the array overflows,
         // `windowsStartIndex` cannot point to the overwritten timepoint (check at `write(...)`)
         oldestIndex = windowStartIndex;
+        useHeuristic = target == currentTime - WINDOW; // heuristic will optimize search for timepoints close to `currentTime - WINDOW`
       }
       uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
 
@@ -465,7 +467,7 @@ library VolatilityOracle {
       if (lastIndex == oldestIndex + 1) return (self[oldestIndex], lastTimepoint, false, oldestIndex);
     }
 
-    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex);
+    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex, useHeuristic);
     return (beforeOrAt, atOrAfter, false, indexBeforeOrAt);
   }
 
@@ -477,6 +479,7 @@ library VolatilityOracle {
   /// @param target The timestamp at which the timepoint should be
   /// @param upperIndex The index of the upper border of search range
   /// @param lowerIndex The index of the lower border of search range
+  /// @param withHeuristic Use heuristic for first guess or not (optimize for targets close to `lowerIndex`)
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   function _binarySearch(
@@ -484,43 +487,67 @@ library VolatilityOracle {
     uint32 currentTime,
     uint32 target,
     uint16 upperIndex,
-    uint16 lowerIndex
+    uint16 lowerIndex,
+    bool withHeuristic
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
     unchecked {
       uint256 left = lowerIndex; // oldest timepoint
       uint256 right = upperIndex < lowerIndex ? upperIndex + UINT16_MODULO : upperIndex; // newest timepoint considering one index overflow
+      (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearchInternal(self, currentTime, target, left, right, withHeuristic);
+    }
+  }
+
+  function _binarySearchInternal(
+    Timepoint[UINT16_MODULO] storage self,
+    uint32 currentTime,
+    uint32 target,
+    uint256 left,
+    uint256 right,
+    bool withHeuristic
+  ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
+    if (withHeuristic && right - left > 2) {
+      indexBeforeOrAt = left + 1; // heuristic for first guess
+    } else {
       indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
-      beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
-      atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
-      do {
-        (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
-        if (initializedBefore) {
-          if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
-            // is current point before or at `target`?
-            atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
-            (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
-            if (initializedAfter) {
-              if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
-                // is the "next" point after or at `target`?
-                return (beforeOrAt, atOrAfter, indexBeforeOrAt); // the only fully correct way to finish
-              }
-              left = indexBeforeOrAt + 1; // "next" point is before the `target`, so looking in the right half
-            } else {
-              // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
-              // should be impossible if initial boundaries and `target` are correct
-              return (beforeOrAt, beforeOrAt, indexBeforeOrAt);
+    }
+    beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
+    atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
+    bool firstIteration = true;
+    do {
+      (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
+      if (initializedBefore) {
+        if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
+          // is current point before or at `target`?
+          atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
+          (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
+          if (initializedAfter) {
+            if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
+              // is the "next" point after or at `target`?
+              return (beforeOrAt, atOrAfter, indexBeforeOrAt); // the only fully correct way to finish
             }
+            left = indexBeforeOrAt + 1; // "next" point is before the `target`, so looking in the right half
           } else {
-            right = indexBeforeOrAt - 1; // current point is after the `target`, so looking in the left half
+            // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
+            // should be impossible if initial boundaries and `target` are correct
+            return (beforeOrAt, beforeOrAt, indexBeforeOrAt);
           }
         } else {
-          // we've landed on an uninitialized timepoint, keep searching higher
-          // should be impossible if initial boundaries and `target` are correct
-          left = indexBeforeOrAt + 1;
+          right = indexBeforeOrAt - 1; // current point is after the `target`, so looking in the left half
         }
+      } else {
+        // we've landed on an uninitialized timepoint, keep searching higher
+        // should be impossible if initial boundaries and `target` are correct
+        left = indexBeforeOrAt + 1;
+      }
+      // use heuristic if looking in the right half after first iteration
+      bool useHeuristic = firstIteration && withHeuristic && left == indexBeforeOrAt + 1;
+      if (useHeuristic && right - left > 12) {
+        indexBeforeOrAt = left + 6;
+      } else {
         indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
-        beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
-      } while (true);
-    }
+      }
+      beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
+      firstIteration = false;
+    } while (true);
   }
 }
