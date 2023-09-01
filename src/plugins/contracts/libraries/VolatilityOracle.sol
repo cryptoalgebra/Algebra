@@ -505,49 +505,51 @@ library VolatilityOracle {
     uint256 right,
     bool withHeuristic
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
-    if (withHeuristic && right - left > 2) {
-      indexBeforeOrAt = left + 1; // heuristic for first guess
-    } else {
-      indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
-    }
-    beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
-    atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
-    bool firstIteration = true;
-    do {
-      (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
-      if (initializedBefore) {
-        if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
-          // is current point before or at `target`?
-          atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
-          (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
-          if (initializedAfter) {
-            if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
-              // is the "next" point after or at `target`?
-              return (beforeOrAt, atOrAfter, indexBeforeOrAt); // the only fully correct way to finish
+    unchecked {
+      if (withHeuristic && right - left > 2) {
+        indexBeforeOrAt = left + 1; // heuristic for first guess
+      } else {
+        indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
+      }
+      beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
+      atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
+      bool firstIteration = true;
+      do {
+        (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
+        if (initializedBefore) {
+          if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
+            // is current point before or at `target`?
+            atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
+            (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
+            if (initializedAfter) {
+              if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
+                // is the "next" point after or at `target`?
+                return (beforeOrAt, atOrAfter, indexBeforeOrAt); // the only fully correct way to finish
+              }
+              left = indexBeforeOrAt + 1; // "next" point is before the `target`, so looking in the right half
+            } else {
+              // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
+              // should be impossible if initial boundaries and `target` are correct
+              return (beforeOrAt, beforeOrAt, indexBeforeOrAt);
             }
-            left = indexBeforeOrAt + 1; // "next" point is before the `target`, so looking in the right half
           } else {
-            // beforeOrAt is initialized and <= target, and next timepoint is uninitialized
-            // should be impossible if initial boundaries and `target` are correct
-            return (beforeOrAt, beforeOrAt, indexBeforeOrAt);
+            right = indexBeforeOrAt - 1; // current point is after the `target`, so looking in the left half
           }
         } else {
-          right = indexBeforeOrAt - 1; // current point is after the `target`, so looking in the left half
+          // we've landed on an uninitialized timepoint, keep searching higher
+          // should be impossible if initial boundaries and `target` are correct
+          left = indexBeforeOrAt + 1;
         }
-      } else {
-        // we've landed on an uninitialized timepoint, keep searching higher
-        // should be impossible if initial boundaries and `target` are correct
-        left = indexBeforeOrAt + 1;
-      }
-      // use heuristic if looking in the right half after first iteration
-      bool useHeuristic = firstIteration && withHeuristic && left == indexBeforeOrAt + 1;
-      if (useHeuristic && right - left > 16) {
-        indexBeforeOrAt = left + 8;
-      } else {
-        indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
-      }
-      beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
-      firstIteration = false;
-    } while (true);
+        // use heuristic if looking in the right half after first iteration
+        bool useHeuristic = firstIteration && withHeuristic && left == indexBeforeOrAt + 1;
+        if (useHeuristic && right - left > 16) {
+          indexBeforeOrAt = left + 8;
+        } else {
+          indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
+        }
+        beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
+        firstIteration = false;
+      } while (true);
+    }
   }
 }
