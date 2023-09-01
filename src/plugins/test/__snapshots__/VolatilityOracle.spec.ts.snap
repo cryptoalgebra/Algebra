@@ -70,7 +70,7 @@ exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ag
 
 exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ] 1`] = `14793`;
 
-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `61559`;
+exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `56477`;
 
 exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(200 * 13 + 5)  [ @skip-on-coverage ] 1`] = `50716`;
 
@@ -88,7 +88,7 @@ exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of get
 
 exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6469`;
 
-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `79046`;
+exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `71888`;
 
 exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(200 * 1 + 5)  [ @skip-on-coverage ] 1`] = `74071`;
 
