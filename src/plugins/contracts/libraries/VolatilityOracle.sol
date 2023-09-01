@@ -541,8 +541,8 @@ library VolatilityOracle {
       }
       // use heuristic if looking in the right half after first iteration
       bool useHeuristic = firstIteration && withHeuristic && left == indexBeforeOrAt + 1;
-      if (useHeuristic && right - left > 12) {
-        indexBeforeOrAt = left + 6;
+      if (useHeuristic && right - left > 16) {
+        indexBeforeOrAt = left + 8;
       } else {
         indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
       }
