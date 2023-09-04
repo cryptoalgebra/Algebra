@@ -2,21 +2,7 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { TestContext } from './types';
 import { AlgebraEternalFarming, TestERC20 } from '../typechain';
 import { ethers } from 'hardhat';
-import {
-  blockTimestamp,
-  BN,
-  BNe18,
-  expect,
-  FeeAmount,
-  getMaxTick,
-  getMinTick,
-  TICK_SPACINGS,
-  algebraFixture,
-  log,
-  days,
-  bnSum,
-  mintPosition,
-} from './shared';
+import { blockTimestamp, BNe18, expect, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS, algebraFixture, days, bnSum, mintPosition } from './shared';
 import { createTimeMachine } from './shared/time';
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers';
 import { provider } from './shared/provider';
@@ -335,7 +321,6 @@ describe('AlgebraFarming', () => {
         );
 
         const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance));
-        log.debug('Total rewards ', rewardsEarned.toString());
 
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,
@@ -377,7 +362,6 @@ describe('AlgebraFarming', () => {
         );
 
         const rewardsEarned = bnSum(exitFarmings.map((o) => o.balance));
-        log.debug('Total rewards ', rewardsEarned.toString());
 
         // const { amountReturnedToCreator } = await helpers.endIncentiveFlow({
         // 	createIncentiveResult,

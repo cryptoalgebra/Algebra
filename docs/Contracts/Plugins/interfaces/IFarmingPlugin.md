@@ -45,19 +45,22 @@ Returns the address of the pool the plugin is created for
 function setIncentive(address newIncentive) external
 ```
 
-Sets an active incentive. Only farming
+Connects or disconnects an incentive.
+
+*Developer note: Only farming can connect incentives.
+The one who connected it and the current farming has the right to disconnect the incentive.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newIncentive | address | The address associated with the incentive |
+| newIncentive | address | The address associated with the incentive or zero address |
 
-### isIncentiveActive
+### isIncentiveConnected
 
 ```solidity
-function isIncentiveActive(address targetIncentive) external view returns (bool)
+function isIncentiveConnected(address targetIncentive) external view returns (bool)
 ```
 
-Checks if the incentive is active
+Checks if the incentive is connected to pool
 
 *Developer note: Returns false if the plugin has a different incentive set, the plugin is not connected to the pool,
 or the plugin configuration is incorrect.*

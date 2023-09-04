@@ -12,8 +12,7 @@ import { ethers } from 'hardhat';
 import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '../../typechain';
 
 import WNativeToken from '../contracts/WNativeToken.json';
-import { Contract } from '@ethersproject/contracts';
-import { Wallet, getCreateAddress, ZeroAddress } from 'ethers';
+import { getCreateAddress, ZeroAddress } from 'ethers';
 
 export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
 

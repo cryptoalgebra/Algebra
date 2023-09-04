@@ -201,4 +201,18 @@ interface INonfungiblePositionManager is
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
     /// @param newFarmingCenter The new address of farmingCenter
     function setFarmingCenter(address newFarmingCenter) external;
+
+    /// @notice Returns whether `spender` is allowed to manage `tokenId`
+    /// @dev Requirement: `tokenId` must exist
+    function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool);
+
+    /// @notice Returns the address of currently connected farming, if any
+    /// @return The address of the farming center contract, which handles farmings logic
+    function farmingCenter() external view returns (address);
+
+    /// @notice Returns the address of farming that is approved for this token, if any
+    function farmingApprovals(uint256 tokenId) external view returns (address);
+
+    /// @notice Returns the address of farming in which this token is farmed, if any
+    function tokenFarmedIn(uint256 tokenId) external view returns (address);
 }

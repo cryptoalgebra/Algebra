@@ -3,8 +3,6 @@ pragma solidity >=0.8.4;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
 
 import '../../interfaces/plugins/IVolatilityOracle.sol';
@@ -50,5 +48,52 @@ library OracleLibrary {
       uint256 ratioX128 = FullMath.mulDiv(sqrtRatioX96, sqrtRatioX96, 1 << 64);
       quoteAmount = baseToken < quoteToken ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128) : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
     }
+  }
+
+  /// @notice Fetches metadata of last available record (most recent) in oracle
+  /// @param oracleAddress The address of oracle
+  /// @return index The index of last available record (most recent) in oracle
+  /// @return timestamp The timestamp of last available record (most recent) in oracle, truncated to uint32
+  function lastTimepointMetadata(address oracleAddress) internal view returns (uint16 index, uint32 timestamp) {
+    index = latestIndex(oracleAddress);
+    timestamp = IVolatilityOracle(oracleAddress).lastTimepointTimestamp();
+  }
+
+  /// @notice Fetches metadata of oldest available record in oracle
+  /// @param oracleAddress The address of oracle
+  /// @return index The index of oldest available record in oracle
+  /// @return timestamp The timestamp of oldest available record in oracle, truncated to uint32
+  function oldestTimepointMetadata(address oracleAddress) internal view returns (uint16 index, uint32 timestamp) {
+    uint16 lastIndex = latestIndex(oracleAddress);
+    bool initialized;
+    unchecked {
+      // overflow is desired
+      index = lastIndex + 1;
+      (initialized, timestamp) = timepointMetadata(oracleAddress, index);
+    }
+    if (initialized) return (index, timestamp);
+
+    (, timestamp) = timepointMetadata(oracleAddress, 0);
+    return (0, timestamp);
+  }
+
+  /// @notice Gets information about whether the oracle has been initialized
+  function isInitialized(address oracleAddress) internal view returns (bool result) {
+    (result, ) = timepointMetadata(oracleAddress, 0);
+    return result;
+  }
+
+  /// @notice Fetches the index of last available record (most recent) in oracle
+  function latestIndex(address oracle) internal view returns (uint16) {
+    return (IVolatilityOracle(oracle).timepointIndex());
+  }
+
+  /// @notice Fetches the metadata of record in oracle
+  /// @param oracleAddress The address of oracle
+  /// @param index The index of record in oracle
+  /// @return initialized Whether or not the timepoint is initialized
+  /// @return timestamp The timestamp of timepoint
+  function timepointMetadata(address oracleAddress, uint16 index) internal view returns (bool initialized, uint32 timestamp) {
+    (initialized, timestamp, , , , , ) = IVolatilityOracle(oracleAddress).timepoints(index);
   }
 }

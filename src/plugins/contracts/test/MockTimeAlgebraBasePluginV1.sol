@@ -58,7 +58,7 @@ contract MockTimeAlgebraBasePluginV1 is AlgebraBasePluginV1 {
     uint32[] memory secondsAgos,
     int24 tick,
     uint16 lastIndex
-  ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+  ) external view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
     return timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
   }
 

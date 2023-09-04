@@ -104,7 +104,6 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
   for (const communityFee of [0, 60]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
-
       const gasTestCommunityFeeFixture = async () => {
         const fix = await gasTestFixture();
         if (communityFee > 0) {
@@ -113,8 +112,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await fix.swapToHigherPrice(startingPrice, wallet.address);
           await fix.advanceTime(1);
         }
+        await fix.advanceTime(1);
+        await fix.swapExact0For1(1, wallet.address);
+        await fix.advanceTime(1);
+        expect((await fix.pool.globalState()).tick).to.eq(startingTick);
         return fix;
-      }
+      };
 
       beforeEach('load the fixture', async () => {
         ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
@@ -157,8 +160,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
               beta2: 0,
               gamma1: 1,
               gamma2: 1,
-              baseFee: 100
-            })
+              baseFee: 100,
+            });
             await snapshotGasCost(swapExact0For1(2000, wallet.address));
             expect((await pool.globalState()).price).to.not.eq(startingPrice);
             expect((await pool.globalState()).tick).to.eq(startingTick);
@@ -310,8 +313,9 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
   describe('Positions', function () {
     beforeEach('load inner fixture', async () => {
-      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
-        await loadFixture(gasTestFixture));
+      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } = await loadFixture(
+        gasTestFixture
+      ));
     });
 
     describe('#mint', () => {
@@ -426,16 +430,17 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         await snapshotGasCost(pool.collect(wallet.address, bottomTick, topTick, MaxUint128, MaxUint128));
       });
     });
-  })
+  });
 
   describe('Filled VolatilityOracle', function () {
     this.timeout(600_000);
 
     const filledStorageFixture = async () => {
       const fix = await gasTestFixture();
-
+      await fix.advanceTime(15);
       await fix.mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
       await fix.mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
+      await fix.swapExact0For1(1, wallet.address);
       expect((await fix.pool.globalState()).tick).to.eq(startingTick);
 
       const BATCH_SIZE = 300;
@@ -458,42 +463,54 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     };
 
     beforeEach('load inner fixture', async () => {
-      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
-        await loadFixture(filledStorageFixture));
+      ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } = await loadFixture(
+        filledStorageFixture
+      ));
     });
 
     describe('swaps', async () => {
       for (const isDynamicFee of [true, false]) {
         describe(isDynamicFee ? 'dynamic fee' : 'static fee', async () => {
-
           beforeEach(async () => {
-            if (!isDynamicFee) await plugin.changeFeeConfiguration({
-              alpha1: 0,
-              alpha2: 0,
-              beta1: 0,
-              beta2: 0,
-              gamma1: 1,
-              gamma2: 1,
-              baseFee: 100
-            })
-          })
+            if (!isDynamicFee) {
+              await plugin.changeFeeConfiguration({
+                alpha1: 0,
+                alpha2: 0,
+                beta1: 0,
+                beta2: 0,
+                gamma1: 1,
+                gamma2: 1,
+                baseFee: 100,
+              });
+              await advanceTime(15);
+              await swapExact0For1(1000, wallet.address);
+            }
+          });
 
           it('small swap with filled volatilityOracle', async () => {
             await advanceTime(15);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
-      
+
           it('small swap with filled volatilityOracle after 4h', async () => {
             await advanceTime(4 * 60 * 60);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
-      
+
           it('small swap with filled volatilityOracle after 8h', async () => {
             await advanceTime(8 * 60 * 60);
             await snapshotGasCost(swapExact0For1(1000, wallet.address));
           });
-      
+
+          it('small swap with filled volatilityOracle after 24h', async () => {
+            await advanceTime(24 * 60 * 60 - 1);
+            await swapExact0For1(1, wallet.address);
+            await advanceTime(5);
+            await snapshotGasCost(swapExact0For1(1000, wallet.address));
+          });
+
           it('large swap crossing several initialized ticks', async () => {
+            await advanceTime(15);
             await mint(wallet.address, startingTick - 3 * tickSpacing, startingTick - tickSpacing, expandTo18Decimals(1));
             await mint(wallet.address, startingTick - 4 * tickSpacing, startingTick - 2 * tickSpacing, expandTo18Decimals(1));
             await swapExact0For1(2, wallet.address);
@@ -501,8 +518,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             await snapshotGasCost(swapExact0For1(expandTo18Decimals(1), wallet.address));
             expect((await pool.globalState()).tick).to.be.lt(startingTick - 4 * tickSpacing);
           });
-        })
+        });
       }
-    })
+    });
   });
 });

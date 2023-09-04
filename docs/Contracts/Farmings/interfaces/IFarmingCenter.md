@@ -116,13 +116,30 @@ Returns incentive key for specific incentiveId
 function connectVirtualPoolToPlugin(address virtualPool, contract IFarmingPlugin plugin) external
 ```
 
-Updates incentive in AlgebraPool plugin
+Used to connect incentive to compatible AlgebraPool plugin
 
-*Developer note: only farming can do it*
+*Developer note: only farming can do it
+Will revert if something is already connected to the plugin*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| virtualPool | address | The virtual pool to be connected |
+| virtualPool | address | The virtual pool to be connected, must not be zero address |
+| plugin | contract IFarmingPlugin | The Algebra farming plugin |
+
+### disconnectVirtualPoolFromPlugin
+
+```solidity
+function disconnectVirtualPoolFromPlugin(address virtualPool, contract IFarmingPlugin plugin) external
+```
+
+Used to disconnect incentive from compatible AlgebraPool plugin
+
+*Developer note: only farming can do it.
+If the specified virtual pool is not connected to the plugin, nothing will happen*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| virtualPool | address | The virtual pool to be disconnected, must not be zero address |
 | plugin | contract IFarmingPlugin | The Algebra farming plugin |
 
 ### enterFarming

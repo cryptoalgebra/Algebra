@@ -37,17 +37,17 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     algebraPoolDeployer = _nonfungiblePositionManager.poolDeployer();
   }
 
-  modifier isOwner(uint256 tokenId) {
-    require(nonfungiblePositionManager.ownerOf(tokenId) == msg.sender, 'not owner of token');
+  modifier isApprovedOrOwner(uint256 tokenId) {
+    require(nonfungiblePositionManager.isApprovedOrOwner(msg.sender, tokenId), 'Not approved for token');
     _;
   }
 
   /// @inheritdoc IFarmingCenter
-  function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
+  function enterFarming(IncentiveKey memory key, uint256 tokenId) external override isApprovedOrOwner(tokenId) {
     bytes32 incentiveId = IncentiveId.compute(key);
     if (address(incentiveKeys[incentiveId].pool) == address(0)) incentiveKeys[incentiveId] = key;
 
-    require(deposits[tokenId] == bytes32(0), 'token already farmed');
+    require(deposits[tokenId] == bytes32(0), 'Token already farmed');
     deposits[tokenId] = incentiveId;
     nonfungiblePositionManager.switchFarmingStatus(tokenId, true);
 
@@ -55,16 +55,22 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function exitFarming(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) {
-    _exitFarming(key, tokenId, msg.sender);
+  function exitFarming(IncentiveKey memory key, uint256 tokenId) external override isApprovedOrOwner(tokenId) {
+    _exitFarming(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   function _exitFarming(IncentiveKey memory key, uint256 tokenId, address tokenOwner) private {
-    require(deposits[tokenId] == IncentiveId.compute(key), 'invalid incentiveId');
-    deposits[tokenId] = bytes32(0);
-    nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+    require(deposits[tokenId] == IncentiveId.compute(key), 'Invalid incentiveId');
+    _switchFarmingStatusOff(tokenId);
 
     IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
+  }
+
+  function _switchFarmingStatusOff(uint256 tokenId) internal {
+    deposits[tokenId] = bytes32(0);
+    if (nonfungiblePositionManager.tokenFarmedIn(tokenId) == address(this)) {
+      nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
+    }
   }
 
   /// @inheritdoc IPositionFollower
@@ -73,7 +79,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   function _updatePosition(uint256 tokenId) private {
-    require(msg.sender == address(nonfungiblePositionManager), 'only nonfungiblePosManager');
+    require(msg.sender == address(nonfungiblePositionManager), 'Only nonfungiblePosManager');
 
     bytes32 _eternalIncentiveId = deposits[tokenId];
     if (_eternalIncentiveId != bytes32(0)) {
@@ -87,21 +93,23 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       } else {
         IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
 
-        if (IAlgebraEternalFarming(eternalFarming).isIncentiveActive(IncentiveId.compute(key))) {
+        if (IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key))) {
+          // exit completely if the incentive has stopped (manually or automatically)
+          _switchFarmingStatusOff(tokenId);
+        } else {
           // reenter with new liquidity value
           IAlgebraEternalFarming(eternalFarming).enterFarming(key, tokenId);
-        } else {
-          // exit completely if the incentive has stopped
-          deposits[tokenId] = bytes32(0);
-          nonfungiblePositionManager.switchFarmingStatus(tokenId, false);
         }
       }
     }
   }
 
   /// @inheritdoc IFarmingCenter
-  function collectRewards(IncentiveKey memory key, uint256 tokenId) external override isOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
-    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, msg.sender);
+  function collectRewards(
+    IncentiveKey memory key,
+    uint256 tokenId
+  ) external override isApprovedOrOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
+    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   /// @inheritdoc IFarmingCenter
@@ -113,11 +121,24 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
 
   /// @inheritdoc IFarmingCenter
   function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin) external override {
-    require(msg.sender == address(eternalFarming), 'only farming can call this');
-    IAlgebraPool pool = IAlgebraPool(plugin.pool());
-    PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(pool.token0(), pool.token1());
-    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, poolKey), 'invalid pool');
-    plugin.setIncentive(newVirtualPool); // TODO
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(newVirtualPool, plugin);
+    require(plugin.incentive() == address(0), 'Another incentive is connected');
+    plugin.setIncentive(newVirtualPool); // revert is possible if the plugin does not allow
     virtualPoolAddresses[address(pool)] = newVirtualPool;
+  }
+
+  /// @inheritdoc IFarmingCenter
+  function disconnectVirtualPoolFromPlugin(address virtualPool, IFarmingPlugin plugin) external override {
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(virtualPool, plugin);
+    if (plugin.incentive() == virtualPool) plugin.setIncentive(address(0)); // plugin _should_ allow to disconnect incentive
+    virtualPoolAddresses[address(pool)] = address(0);
+  }
+
+  /// @dev checks input params and fetches corresponding Algebra Integral pool
+  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal returns (IAlgebraPool pool) {
+    require(msg.sender == address(eternalFarming), 'Only farming can call this');
+    require(virtualPool != address(0), 'Zero address as virtual pool');
+    pool = IAlgebraPool(plugin.pool());
+    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'Invalid pool');
   }
 }

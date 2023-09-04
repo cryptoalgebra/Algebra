@@ -40,9 +40,13 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
 
     address pool = factory.poolByPair(token0, token1);
-    require(pool != address(0), 'pool not exist');
+    require(pool != address(0), 'Pool not exist');
 
     return _createPlugin(pool);
+  }
+
+  function setPluginForPool(address pool, address plugin) external {
+    pluginByPool[pool] = plugin;
   }
 
   function _createPlugin(address pool) internal returns (address) {

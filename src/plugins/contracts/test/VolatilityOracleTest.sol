@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.20;
-pragma abicoder v2;
 
 import '../libraries/VolatilityOracle.sol';
 
@@ -153,7 +152,7 @@ contract VolatilityOracleTest {
 
   function getTimepoints(
     uint32[] calldata secondsAgos
-  ) external view returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+  ) external view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
     return timepoints.getTimepoints(time, secondsAgos, tick, index);
   }
 

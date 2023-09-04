@@ -3,7 +3,6 @@ export * from './external/v3-periphery/ticks';
 export * from './external/v3-periphery/tokenSort';
 export * from './fixtures';
 export * from './actors';
-export * from './logging';
 export * from './ticks';
 
 import { provider } from './provider';

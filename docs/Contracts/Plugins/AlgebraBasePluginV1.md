@@ -18,7 +18,7 @@ modifier onlyPool()
 
 
 ## Variables
-### bytes32 FEE_CONFIG_MANAGER constant
+### bytes32 ALGEBRA_BASE_PLUGIN_MANAGER constant
 
 
 
@@ -50,17 +50,16 @@ Returns the index of the last timepoint that was written.
 Returns the timestamp of the last timepoint that was written.
 
 
+### bool isInitialized 
+
+Returns information about whether oracle is initialized
+
+
 ### address incentive 
 
 Returns the address of active incentive
 
 *Developer note: if there is no active incentive at the moment, incentiveAddress would be equal to address(0)*
-
-### struct AlgebraFeeConfiguration feeConfig 
-
-Current dynamic fee configuration
-
-*Developer note: See the AdaptiveFee struct for more details*
 
 
 ## Functions
@@ -78,6 +77,28 @@ constructor(address _pool, address _factory, address _pluginFactory) public
 | _factory | address |  |
 | _pluginFactory | address |  |
 
+### feeConfig
+
+```solidity
+function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+```
+
+Current dynamic fee configuration
+
+*Developer note: See the AdaptiveFee struct for more details*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| alpha1 | uint16 |  |
+| alpha2 | uint16 |  |
+| beta1 | uint32 |  |
+| beta2 | uint32 |  |
+| gamma1 | uint16 |  |
+| gamma2 | uint16 |  |
+| baseFee | uint16 |  |
+
 ### initialize
 
 ```solidity
@@ -91,7 +112,7 @@ Initialize the plugin externally
 ### getSingleTimepoint
 
 ```solidity
-function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint112 volatilityCumulative)
+function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint88 volatilityCumulative)
 ```
 
 
@@ -110,12 +131,12 @@ at exactly the timestamp between the two timepoints.*
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tickCumulative | int56 | The cumulative tick since the pool was first initialized, as of `secondsAgo` |
-| volatilityCumulative | uint112 | The cumulative volatility value since the pool was first initialized, as of `secondsAgo` |
+| volatilityCumulative | uint88 | The cumulative volatility value since the pool was first initialized, as of `secondsAgo` |
 
 ### getTimepoints
 
 ```solidity
-function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint112[] volatilityCumulatives)
+function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint88[] volatilityCumulatives)
 ```
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
@@ -131,7 +152,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | tickCumulatives | int56[] | The cumulative tick since the pool was first initialized, as of each `secondsAgo` |
-| volatilityCumulatives | uint112[] | The cumulative volatility values since the pool was first initialized, as of each `secondsAgo` |
+| volatilityCumulatives | uint88[] | The cumulative volatility values since the pool was first initialized, as of each `secondsAgo` |
 
 ### prepayTimepointsStorageSlots
 
@@ -180,19 +201,22 @@ Returns fee from plugin
 function setIncentive(address newIncentive) external
 ```
 
-Sets an active incentive. Only farming
+Connects or disconnects an incentive.
+
+*Developer note: Only farming can connect incentives.
+The one who connected it and the current farming has the right to disconnect the incentive.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newIncentive | address | The address associated with the incentive |
+| newIncentive | address | The address associated with the incentive or zero address |
 
-### isIncentiveActive
+### isIncentiveConnected
 
 ```solidity
-function isIncentiveActive(address targetIncentive) external view returns (bool)
+function isIncentiveConnected(address targetIncentive) external view returns (bool)
 ```
 
-Checks if the incentive is active
+Checks if the incentive is connected to pool
 
 *Developer note: Returns false if the plugin has a different incentive set, the plugin is not connected to the pool,
 or the plugin configuration is incorrect.*
@@ -249,10 +273,12 @@ function afterInitialize(address, uint160, int24 tick) external returns (bytes4)
 ### beforeModifyPosition
 
 ```solidity
-function beforeModifyPosition(address, address, int24, int24, int128, bytes) external view returns (bytes4)
+function beforeModifyPosition(address, address, int24, int24, int128, bytes) external returns (bytes4)
 ```
 
 
+
+*Developer note: unused*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -346,10 +372,12 @@ function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, in
 ### beforeFlash
 
 ```solidity
-function beforeFlash(address, address, uint256, uint256, bytes) external view returns (bytes4)
+function beforeFlash(address, address, uint256, uint256, bytes) external returns (bytes4)
 ```
 
 
+
+*Developer note: unused*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -368,10 +396,12 @@ function beforeFlash(address, address, uint256, uint256, bytes) external view re
 ### afterFlash
 
 ```solidity
-function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes) external view returns (bytes4)
+function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes) external returns (bytes4)
 ```
 
 
+
+*Developer note: unused*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

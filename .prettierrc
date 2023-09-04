@@ -1,5 +1,6 @@
 {
-  "semi": false,
+  "plugins": ["prettier-plugin-solidity"],
+  "semi": true,
   "singleQuote": true,
   "printWidth": 150,
   "tabWidth": 2

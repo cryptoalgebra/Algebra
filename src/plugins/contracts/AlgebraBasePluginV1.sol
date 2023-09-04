@@ -15,11 +15,13 @@ import './interfaces/IAlgebraVirtualPool.sol';
 
 import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
+import './types/AlgebraFeeConfigurationU144.sol';
 
 /// @title Algebra default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
   using Plugins for uint8;
+  using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
 
   uint256 internal constant UINT16_MODULO = 65536;
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
@@ -28,8 +30,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig =
-    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_POSITION_MODIFY_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
   /// @inheritdoc IFarmingPlugin
   address public immutable override pool;
@@ -45,11 +46,17 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
 
+  /// @inheritdoc IVolatilityOracle
+  bool public override isInitialized;
+
+  /// @dev AlgebraFeeConfiguration struct packed in uint144
+  AlgebraFeeConfigurationU144 private _feeConfig;
+
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
-  /// @inheritdoc IDynamicFeeManager
-  AlgebraFeeConfiguration public feeConfig;
+  /// @dev the address which connected the last incentive. Needed so that he can disconnect it
+  address private _lastIncentiveOwner;
 
   modifier onlyPool() {
     _checkIfFromPool();
@@ -60,8 +67,21 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 
+  /// @inheritdoc IDynamicFeeManager
+  function feeConfig()
+    external
+    view
+    override
+    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+  {
+    (alpha1, alpha2) = (_feeConfig.alpha1(), _feeConfig.alpha2());
+    (beta1, beta2) = (_feeConfig.beta1(), _feeConfig.beta2());
+    (gamma1, gamma2) = (_feeConfig.gamma1(), _feeConfig.gamma2());
+    baseFee = _feeConfig.baseFee();
+  }
+
   function _checkIfFromPool() internal view {
-    require(msg.sender == pool, 'only pool can call this');
+    require(msg.sender == pool, 'Only pool can call this');
   }
 
   function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
@@ -74,22 +94,23 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IAlgebraBasePluginV1
   function initialize() external override {
-    require(!timepoints[0].initialized, 'Already initialized');
+    require(!isInitialized, 'Already initialized');
     require(_getPluginInPool() == address(this), 'Plugin not attached');
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
 
     uint32 time = _blockTimestamp();
-    lastTimepointTimestamp = time;
     timepoints.initialize(time, tick);
+    lastTimepointTimestamp = time;
+    isInitialized = true;
 
-    IAlgebraPool(pool).setPluginConfig(defaultPluginConfig);
+    _updatePluginConfigInPool();
   }
 
   // ###### Volatility and TWAP oracle ######
 
   /// @inheritdoc IVolatilityOracle
-  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint112 volatilityCumulative) {
+  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {
     (, int24 tick, , ) = _getPoolState();
     uint16 lastTimepointIndex = timepointIndex;
     uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
@@ -100,7 +121,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   function getTimepoints(
     uint32[] memory secondsAgos
-  ) external view override returns (int56[] memory tickCumulatives, uint112[] memory volatilityCumulatives) {
+  ) external view override returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
     (, int24 tick, , ) = _getPoolState();
     return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
   }
@@ -124,60 +145,74 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
     AdaptiveFee.validateFeeConfiguration(_config);
 
-    feeConfig = _config;
+    _feeConfig = _config.pack(); // pack struct to uint144 and write in storage
     emit FeeConfiguration(_config);
   }
 
   /// @inheritdoc IAlgebraDynamicFeePlugin
   function getCurrentFee() external view override returns (uint16 fee) {
-    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
-    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
-      return _feeConfig.baseFee;
-    } else {
-      uint16 lastIndex = timepointIndex;
-      uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-      (, int24 tick, , ) = _getPoolState();
+    uint16 lastIndex = timepointIndex;
+    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig;
+    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
 
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+    (, int24 tick, , ) = _getPoolState();
 
-      return AdaptiveFee.getFee(volatilityAverage, feeConfig);
-    }
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
   }
 
-  function _getFeeAtLastTimepoint(uint16 lastTimepointIndex, uint16 oldestTimepointIndex, int24 currentTick) internal view returns (uint16 fee) {
-    AlgebraFeeConfiguration memory _feeConfig = feeConfig;
-    if (_feeConfig.alpha1 | _feeConfig.alpha2 == 0) {
-      return _feeConfig.baseFee;
-    } else {
-      uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
-      return AdaptiveFee.getFee(volatilityAverage, _feeConfig);
-    }
+  function _getFeeAtLastTimepoint(
+    uint16 lastTimepointIndex,
+    uint16 oldestTimepointIndex,
+    int24 currentTick,
+    AlgebraFeeConfigurationU144 feeConfig_
+  ) internal view returns (uint16 fee) {
+    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
+
+    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
+    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
   }
 
   // ###### Farming plugin ######
 
   /// @inheritdoc IFarmingPlugin
   function setIncentive(address newIncentive) external override {
-    require(msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress());
+    bool toConnect = newIncentive != address(0);
+    bool accessAllowed;
+    if (toConnect) {
+      accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    } else {
+      // we allow the one who connected the incentive to disconnect it,
+      // even if he no longer has the rights to connect incentives
+      if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
+      if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+    }
+    require(accessAllowed, 'Not allowed to set incentive');
 
-    bool turnOn = newIncentive != address(0);
+    bool isPluginConnected = _getPluginInPool() == address(this);
+    if (toConnect) require(isPluginConnected, 'Plugin not attached');
+
     address currentIncentive = incentive;
-
-    require(currentIncentive != newIncentive, 'already active');
-    if (currentIncentive != address(0)) require(!turnOn, 'has active incentive');
+    require(currentIncentive != newIncentive, 'Already active');
+    if (toConnect) require(currentIncentive == address(0), 'Has active incentive');
 
     incentive = newIncentive;
     emit Incentive(newIncentive);
 
-    (, , , uint8 pluginConfig) = _getPoolState();
-    if (turnOn != pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      pluginConfig = pluginConfig ^ uint8(Plugins.AFTER_SWAP_FLAG);
-      IAlgebraPool(pool).setPluginConfig(pluginConfig);
+    if (toConnect) {
+      _lastIncentiveOwner = msg.sender; // write creator of this incentive
+    } else {
+      _lastIncentiveOwner = address(0);
+    }
+
+    if (isPluginConnected) {
+      _updatePluginConfigInPool();
     }
   }
 
   /// @inheritdoc IFarmingPlugin
-  function isIncentiveActive(address targetIncentive) external view override returns (bool) {
+  function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
     if (incentive != targetIncentive) return false;
     if (_getPluginInPool() != address(this)) return false;
     (, , , uint8 pluginConfig) = _getPoolState();
@@ -189,27 +224,30 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
-    uint8 newPluginConfig = defaultPluginConfig;
-    if (incentive != address(0)) newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
-
-    IAlgebraPool(msg.sender).setPluginConfig(newPluginConfig);
+    _updatePluginConfigInPool();
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
   function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
-    lastTimepointTimestamp = _blockTimestamp();
-    timepoints.initialize(_blockTimestamp(), tick);
+    uint32 _timestamp = _blockTimestamp();
+    timepoints.initialize(_timestamp, tick);
 
-    IAlgebraPool(pool).setFee(feeConfig.baseFee);
+    lastTimepointTimestamp = _timestamp;
+    isInitialized = true;
+
+    IAlgebraPool(pool).setFee(_feeConfig.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
+  /// @dev unused
   function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
-    _writeTimepointAndUpdateFee();
+    _updatePluginConfigInPool(); // should not be called, reset config
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
@@ -219,21 +257,49 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
-    (, int24 tick, , ) = _getPoolState();
-    IAlgebraVirtualPool(incentive).crossTo(tick, zeroToOne);
+    address _incentive = incentive;
+    if (_incentive != address(0)) {
+      (, int24 tick, , ) = _getPoolState();
+      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+    } else {
+      _updatePluginConfigInPool(); // should not be called, reset config
+    }
+
     return IAlgebraPlugin.afterSwap.selector;
   }
 
-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function beforeFlash(address, address, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.beforeFlash.selector;
   }
 
-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external view override onlyPool returns (bytes4) {
-    revert('Not implemented');
+  /// @dev unused
+  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updatePluginConfigInPool(); // should not be called, reset config
+    return IAlgebraPlugin.afterFlash.selector;
+  }
+
+  function _updatePluginConfigInPool() internal {
+    uint8 newPluginConfig = defaultPluginConfig;
+    if (incentive != address(0)) {
+      newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
+    }
+
+    (, , , uint8 currentPluginConfig) = _getPoolState();
+    if (currentPluginConfig != newPluginConfig) {
+      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+    }
   }
 
   function _writeTimepointAndUpdateFee() internal {
-    (uint16 _lastIndex, uint32 _lastTimepointTimestamp) = (timepointIndex, lastTimepointTimestamp);
+    // single SLOAD
+    uint16 _lastIndex = timepointIndex;
+    uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig; // struct packed in uint144
+    bool _isInitialized = isInitialized;
+    require(_isInitialized, 'Not initialized');
+
     uint32 currentTimestamp = _blockTimestamp();
 
     if (_lastTimepointTimestamp == currentTimestamp) return;
@@ -244,7 +310,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;
 
-    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick);
+    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
