@@ -51,7 +51,7 @@ library VolatilityOracle {
     uint32 blockTimestamp,
     int24 tick
   ) internal returns (uint16 indexUpdated, uint16 oldestIndex) {
-    Timepoint memory last = self[lastIndex];
+    Timepoint memory last = _unsafeAccess(self, lastIndex);
     // early return if we've already written a timepoint this block
     if (last.blockTimestamp == blockTimestamp) return (lastIndex, 0);
 
@@ -61,7 +61,7 @@ library VolatilityOracle {
     }
 
     // check if we have overflow in the past
-    if (self[indexUpdated].initialized) oldestIndex = indexUpdated;
+    if (_unsafeAccess(self, indexUpdated).initialized) oldestIndex = indexUpdated;
 
     (int24 avgTick, uint16 windowStartIndex) = _getAverageTickCasted(
       self,
@@ -171,7 +171,7 @@ library VolatilityOracle {
   function getOldestIndex(Timepoint[UINT16_MODULO] storage self, uint16 lastIndex) internal view returns (uint16 oldestIndex) {
     unchecked {
       uint16 nextIndex = lastIndex + 1; // considering overflow
-      if (self[nextIndex].initialized) oldestIndex = nextIndex; // check if we have overflow in the past
+      if (_unsafeAccess(self, nextIndex).initialized) oldestIndex = nextIndex; // check if we have overflow in the past
     }
   }
 
@@ -190,7 +190,7 @@ library VolatilityOracle {
     uint16 oldestIndex
   ) internal view returns (uint88 volatilityAverage) {
     unchecked {
-      Timepoint storage lastTimepoint = self[lastIndex];
+      Timepoint storage lastTimepoint = _unsafeAccess(self, lastIndex);
       bool timeAtLastTimepoint = lastTimepoint.blockTimestamp == currentTime;
       uint88 lastCumulativeVolatility = lastTimepoint.volatilityCumulative;
       uint16 windowStartIndex = lastTimepoint.windowStartIndex; // index of timepoint before of at lastTimepoint.blockTimestamp - WINDOW
@@ -199,7 +199,7 @@ library VolatilityOracle {
         lastCumulativeVolatility = _getVolatilityCumulativeAt(self, currentTime, 0, tick, lastIndex, oldestIndex);
       }
 
-      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+      uint32 oldestTimestamp = _unsafeAccess(self, oldestIndex).blockTimestamp;
       if (_lteConsideringOverflow(oldestTimestamp, currentTime - WINDOW, currentTime)) {
         // oldest timepoint is earlier than 24 hours ago
         uint88 cumulativeVolatilityAtStart;
@@ -320,7 +320,8 @@ library VolatilityOracle {
     uint32 lastTimestamp,
     int56 lastTickCumulative
   ) internal view returns (int256 avgTick, uint256 windowStartIndex) {
-    (uint32 oldestTimestamp, int56 oldestTickCumulative) = (self[oldestIndex].blockTimestamp, self[oldestIndex].tickCumulative);
+    Timepoint storage oldestTimepoint = _unsafeAccess(self, oldestIndex);
+    (uint32 oldestTimestamp, int56 oldestTickCumulative) = (oldestTimepoint.blockTimestamp, oldestTimepoint.tickCumulative);
 
     unchecked {
       int56 currentTickCumulative = lastTickCumulative + int56(tick) * int56(uint56(currentTime - lastTimestamp)); // update with new data
@@ -441,7 +442,7 @@ library VolatilityOracle {
     uint16 lastIndex,
     uint16 oldestIndex
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, bool samePoint, uint256 indexBeforeOrAt) {
-    Timepoint storage lastTimepoint = self[lastIndex];
+    Timepoint storage lastTimepoint = _unsafeAccess(self, lastIndex);
     uint32 lastTimepointTimestamp = lastTimepoint.blockTimestamp;
     uint16 windowStartIndex = lastTimepoint.windowStartIndex;
 
@@ -458,7 +459,7 @@ library VolatilityOracle {
         oldestIndex = windowStartIndex;
         useHeuristic = target == currentTime - WINDOW; // heuristic will optimize search for timepoints close to `currentTime - WINDOW`
       }
-      uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
+      uint32 oldestTimestamp = _unsafeAccess(self, oldestIndex).blockTimestamp;
 
       if (!_lteConsideringOverflow(oldestTimestamp, target, currentTime)) revert targetIsTooOld();
       if (oldestTimestamp == target) return (self[oldestIndex], self[oldestIndex], true, oldestIndex);
@@ -511,7 +512,7 @@ library VolatilityOracle {
       } else {
         indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
       }
-      beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
+      beforeOrAt = _unsafeAccess(self, uint16(indexBeforeOrAt)); // checking the "middle" point between the boundaries
       atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
       bool firstIteration = true;
       do {
@@ -519,7 +520,7 @@ library VolatilityOracle {
         if (initializedBefore) {
           if (_lteConsideringOverflow(timestampBefore, target, currentTime)) {
             // is current point before or at `target`?
-            atOrAfter = self[uint16(indexBeforeOrAt + 1)]; // checking the next point after "middle"
+            atOrAfter = _unsafeAccess(self, uint16(indexBeforeOrAt + 1)); // checking the next point after "middle"
             (bool initializedAfter, uint32 timestampAfter) = (atOrAfter.initialized, atOrAfter.blockTimestamp);
             if (initializedAfter) {
               if (_lteConsideringOverflow(target, timestampAfter, currentTime)) {
@@ -547,9 +548,16 @@ library VolatilityOracle {
         } else {
           indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
         }
-        beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
+        beforeOrAt = _unsafeAccess(self, uint16(indexBeforeOrAt)); // update the "middle" point pointer
         firstIteration = false;
       } while (true);
+    }
+  }
+
+  /// @dev Access an element of the array with 2^16 elements without performing bounds check
+  function _unsafeAccess(Timepoint[UINT16_MODULO] storage self, uint16 pos) private pure returns (Timepoint storage result) {
+    assembly {
+      result.slot := add(self.slot, pos)
     }
   }
 }
