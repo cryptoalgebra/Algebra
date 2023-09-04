@@ -450,11 +450,13 @@ library VolatilityOracle {
       return (lastTimepoint, lastTimepoint, true, lastIndex);
     }
 
+    bool useHeuristic;
     unchecked {
       if (lastTimepointTimestamp - target <= WINDOW) {
         // We can limit the scope of the search. It is safe because when the array overflows,
         // `windowsStartIndex` cannot point to the overwritten timepoint (check at `write(...)`)
         oldestIndex = windowStartIndex;
+        useHeuristic = target == currentTime - WINDOW; // heuristic will optimize search for timepoints close to `currentTime - WINDOW`
       }
       uint32 oldestTimestamp = self[oldestIndex].blockTimestamp;
 
@@ -465,7 +467,7 @@ library VolatilityOracle {
       if (lastIndex == oldestIndex + 1) return (self[oldestIndex], lastTimepoint, false, oldestIndex);
     }
 
-    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex);
+    (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearch(self, currentTime, target, lastIndex, oldestIndex, useHeuristic);
     return (beforeOrAt, atOrAfter, false, indexBeforeOrAt);
   }
 
@@ -477,6 +479,7 @@ library VolatilityOracle {
   /// @param target The timestamp at which the timepoint should be
   /// @param upperIndex The index of the upper border of search range
   /// @param lowerIndex The index of the lower border of search range
+  /// @param withHeuristic Use heuristic for first guess or not (optimize for targets close to `lowerIndex`)
   /// @return beforeOrAt The timepoint recorded before, or at, the target
   /// @return atOrAfter The timepoint recorded at, or after, the target
   function _binarySearch(
@@ -484,14 +487,33 @@ library VolatilityOracle {
     uint32 currentTime,
     uint32 target,
     uint16 upperIndex,
-    uint16 lowerIndex
+    uint16 lowerIndex,
+    bool withHeuristic
   ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
     unchecked {
       uint256 left = lowerIndex; // oldest timepoint
       uint256 right = upperIndex < lowerIndex ? upperIndex + UINT16_MODULO : upperIndex; // newest timepoint considering one index overflow
-      indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
+      (beforeOrAt, atOrAfter, indexBeforeOrAt) = _binarySearchInternal(self, currentTime, target, left, right, withHeuristic);
+    }
+  }
+
+  function _binarySearchInternal(
+    Timepoint[UINT16_MODULO] storage self,
+    uint32 currentTime,
+    uint32 target,
+    uint256 left,
+    uint256 right,
+    bool withHeuristic
+  ) private view returns (Timepoint storage beforeOrAt, Timepoint storage atOrAfter, uint256 indexBeforeOrAt) {
+    unchecked {
+      if (withHeuristic && right - left > 2) {
+        indexBeforeOrAt = left + 1; // heuristic for first guess
+      } else {
+        indexBeforeOrAt = (left + right) >> 1; // "middle" point between the boundaries
+      }
       beforeOrAt = self[uint16(indexBeforeOrAt)]; // checking the "middle" point between the boundaries
       atOrAfter = beforeOrAt; // to suppress compiler warning; will be overridden
+      bool firstIteration = true;
       do {
         (bool initializedBefore, uint32 timestampBefore) = (beforeOrAt.initialized, beforeOrAt.blockTimestamp);
         if (initializedBefore) {
@@ -518,8 +540,15 @@ library VolatilityOracle {
           // should be impossible if initial boundaries and `target` are correct
           left = indexBeforeOrAt + 1;
         }
-        indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
+        // use heuristic if looking in the right half after first iteration
+        bool useHeuristic = firstIteration && withHeuristic && left == indexBeforeOrAt + 1;
+        if (useHeuristic && right - left > 16) {
+          indexBeforeOrAt = left + 8;
+        } else {
+          indexBeforeOrAt = (left + right) >> 1; // calculating the new "middle" point index after updating the bounds
+        }
         beforeOrAt = self[uint16(indexBeforeOrAt)]; // update the "middle" point pointer
+        firstIteration = false;
       } while (true);
     }
   }
