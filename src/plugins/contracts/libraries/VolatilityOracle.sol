@@ -109,14 +109,14 @@ library VolatilityOracle {
         // if target is newer than last timepoint
         (int24 avgTick, uint16 windowStartIndex) = _getAverageTickCasted(
           self,
-          time,
+          target,
           tick,
           lastIndex,
           oldestIndex,
           targetTimepoint.blockTimestamp,
           targetTimepoint.tickCumulative
         );
-        return _createNewTimepoint(targetTimepoint, time - secondsAgo, tick, avgTick, windowStartIndex);
+        return _createNewTimepoint(targetTimepoint, target, tick, avgTick, windowStartIndex);
       }
 
       (uint32 timestampAfter, int56 tickCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.tickCumulative);
@@ -375,7 +375,7 @@ library VolatilityOracle {
       if (target == timestampBefore) return volatilityCumulativeBefore; // we're at the left boundary
       if (samePoint) {
         // since target != beforeOrAt.blockTimestamp, `samePoint` means that target is newer than last timepoint
-        (int24 avgTick, ) = _getAverageTickCasted(self, time, tick, lastIndex, oldestIndex, timestampBefore, beforeOrAt.tickCumulative);
+        (int24 avgTick, ) = _getAverageTickCasted(self, target, tick, lastIndex, oldestIndex, timestampBefore, beforeOrAt.tickCumulative);
 
         return (volatilityCumulativeBefore +
           uint88(_volatilityOnRange(int256(uint256(target - timestampBefore)), tick, tick, beforeOrAt.averageTick, avgTick)));
