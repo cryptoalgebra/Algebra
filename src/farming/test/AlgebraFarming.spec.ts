@@ -78,7 +78,7 @@ describe('AlgebraFarming', () => {
         deadline: (await blockTimestamp()) + 10000,
       });
 
-      await context.nft.connect(lpUser3).approveForFarming(tokenId, true);
+      await context.nft.connect(lpUser3).approveForFarming(tokenId, true, context.farmingCenter);
 
       const epoch = await blockTimestamp();
       const startTime = epoch + 100;
@@ -186,8 +186,8 @@ describe('AlgebraFarming', () => {
         deadline: (await blockTimestamp()) + 10000,
       });
 
-      await context.nft.connect(lpUser3).approveForFarming(tokenId, true);
-      await context.nft.connect(lpUser3).approveForFarming(tokenIdCorrect, true);
+      await context.nft.connect(lpUser3).approveForFarming(tokenId, true, context.farmingCenter);
+      await context.nft.connect(lpUser3).approveForFarming(tokenIdCorrect, true, context.farmingCenter);
 
       const epoch = await blockTimestamp();
       const startTime = epoch + 100;

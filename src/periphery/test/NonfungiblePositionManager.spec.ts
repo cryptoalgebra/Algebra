@@ -1336,21 +1336,38 @@ describe('NonfungiblePositionManager', () => {
       it('can not approve for farming if not authorized', async () => {
         await nft.setFarmingCenter(wallet.address);
 
-        await expect(nft.approveForFarming(tokenId, true)).to.be.revertedWith('Not approved');
+        await expect(nft.approveForFarming(tokenId, true, wallet.address)).to.be.revertedWith('Not approved');
       });
 
       it('can approve for farming', async () => {
         await nft.setFarmingCenter(wallet.address);
 
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
         expect(await nft.farmingApprovals(tokenId)).to.be.eq(wallet.address);
+      });
+
+      it('can not approve for invalid farming', async () => {
+        await nft.setFarmingCenter(wallet.address);
+
+        await expect(nft.connect(other).approveForFarming(tokenId, true, nft)).to.be.revertedWith(
+          'Invalid farming address'
+        );
       });
 
       it('can revoke approval for farming', async () => {
         await nft.setFarmingCenter(wallet.address);
 
-        await nft.connect(other).approveForFarming(tokenId, true);
-        await nft.connect(other).approveForFarming(tokenId, false);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
+        await nft.connect(other).approveForFarming(tokenId, false, wallet.address);
+        expect(await nft.farmingApprovals(tokenId)).to.be.eq(ZeroAddress);
+      });
+
+      it('can revoke approval for farming if farming center changed', async () => {
+        await nft.setFarmingCenter(wallet.address);
+
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
+        await nft.setFarmingCenter(nft);
+        await nft.connect(other).approveForFarming(tokenId, false, wallet.address);
         expect(await nft.farmingApprovals(tokenId)).to.be.eq(ZeroAddress);
       });
     });
@@ -1370,21 +1387,21 @@ describe('NonfungiblePositionManager', () => {
 
       it('can not switch on if not farming center', async () => {
         await nft.setFarmingCenter(wallet.address);
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
 
         await expect(nft.connect(other).switchFarmingStatus(tokenId, true)).to.be.revertedWith('Only FarmingCenter');
       });
 
       it('can not switch off if not farming center', async () => {
         await nft.setFarmingCenter(wallet.address);
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
 
         await expect(nft.connect(other).switchFarmingStatus(tokenId, false)).to.be.revertedWith('Only FarmingCenter');
       });
 
       it('can switch on', async () => {
         await nft.setFarmingCenter(wallet.address);
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
 
         await nft.switchFarmingStatus(tokenId, true);
         const farmedIn = await nft.tokenFarmedIn(tokenId);
@@ -1393,7 +1410,7 @@ describe('NonfungiblePositionManager', () => {
 
       it('can switch off', async () => {
         await nft.setFarmingCenter(wallet.address);
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
 
         await nft.switchFarmingStatus(tokenId, true);
         await nft.switchFarmingStatus(tokenId, false);
@@ -1403,11 +1420,11 @@ describe('NonfungiblePositionManager', () => {
 
       it('can switch off without approval', async () => {
         await nft.setFarmingCenter(wallet.address);
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, wallet.address);
 
         await nft.switchFarmingStatus(tokenId, true);
 
-        await nft.connect(other).approveForFarming(tokenId, false);
+        await nft.connect(other).approveForFarming(tokenId, false, wallet.address);
         await nft.switchFarmingStatus(tokenId, false);
         const farmedIn = await nft.tokenFarmedIn(tokenId);
         expect(farmedIn).to.be.eq(ZeroAddress);
@@ -1425,7 +1442,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('works', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;
@@ -1443,7 +1460,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('does nothing if fc zero', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         await nft.setFarmingCenter(ZeroAddress);
@@ -1462,7 +1479,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('does nothing if fc changed', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         await nft.setFarmingCenter(other.address);
@@ -1481,7 +1498,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('catches panic', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;
@@ -1520,7 +1537,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('catches error with message', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;
@@ -1542,7 +1559,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('reverts if error without message', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;
@@ -1562,7 +1579,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('reverts if custom error', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;
@@ -1582,7 +1599,7 @@ describe('NonfungiblePositionManager', () => {
       });
 
       it('reverts if out of gas', async () => {
-        await nft.connect(other).approveForFarming(tokenId, true);
+        await nft.connect(other).approveForFarming(tokenId, true, mockFollower);
         await mockFollower.enterToFarming(nft, tokenId);
 
         expect(await mockFollower.wasCalled()).to.be.false;

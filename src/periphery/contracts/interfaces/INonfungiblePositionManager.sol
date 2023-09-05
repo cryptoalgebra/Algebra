@@ -189,7 +189,8 @@ interface INonfungiblePositionManager is
     /// @notice Changes approval of token ID for farming.
     /// @param tokenId The ID of the token that is being approved / unapproved
     /// @param approve New status of approval
-    function approveForFarming(uint256 tokenId, bool approve) external payable;
+    /// @param farmingAddress The address of farming: used to prevent tx frontrun
+    function approveForFarming(uint256 tokenId, bool approve, address farmingAddress) external payable;
 
     /// @notice Changes farming status of token to 'farmed' or 'not farmed'
     /// @dev can be called only by farmingCenter

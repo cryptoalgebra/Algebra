@@ -365,14 +365,12 @@ contract NonfungiblePositionManager is
         Position storage position = _positions[params.tokenId];
         IAlgebraPool pool = IAlgebraPool(_getPoolById(position.poolId));
 
-        (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
-
         // trigger an update of the position fees owed and fee growth snapshots if it has any liquidity
-        (int24 tickLower, int24 tickUpper, uint128 positionLiquidity) = (
-            position.tickLower,
-            position.tickUpper,
-            position.liquidity
-        );
+        int24 tickLower = position.tickLower;
+        int24 tickUpper = position.tickUpper;
+        uint128 positionLiquidity = position.liquidity;
+
+        (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
         if (positionLiquidity > 0) {
             pool._burnPositionInPool(tickLower, tickUpper, 0);
             (uint128 _tokensOwed0, uint128 _tokensOwed1) = _updateUncollectedFees(
@@ -419,22 +417,33 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function approveForFarming(uint256 tokenId, bool approve) external payable override isAuthorizedForToken(tokenId) {
-        farmingApprovals[tokenId] = approve ? farmingCenter : address(0);
+    function approveForFarming(
+        uint256 tokenId,
+        bool approve,
+        address farmingAddress
+    ) external payable override isAuthorizedForToken(tokenId) {
+        address newValue;
+        if (approve) {
+            require(farmingAddress == farmingCenter, 'Invalid farming address');
+            newValue = farmingAddress;
+        }
+        farmingApprovals[tokenId] = newValue;
     }
 
     /// @inheritdoc INonfungiblePositionManager
     function switchFarmingStatus(uint256 tokenId, bool toActive) external override {
         address _farmingCenter = farmingCenter;
         bool accessAllowed = msg.sender == _farmingCenter;
+        address newFarmForToken;
         if (toActive) {
             require(farmingApprovals[tokenId] == _farmingCenter, 'Not approved for farming');
+            newFarmForToken = _farmingCenter;
         } else {
             // can be switched off by current farming center or by the farming center in which nft is farmed
             accessAllowed = accessAllowed || msg.sender == tokenFarmedIn[tokenId];
         }
         require(accessAllowed, 'Only FarmingCenter');
-        tokenFarmedIn[tokenId] = toActive ? _farmingCenter : address(0);
+        tokenFarmedIn[tokenId] = newFarmForToken;
     }
 
     /// @inheritdoc INonfungiblePositionManager

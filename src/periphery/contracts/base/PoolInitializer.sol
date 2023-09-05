@@ -27,12 +27,16 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         if (pool == address(0)) {
             pool = IAlgebraFactory(factory).createPool(token0, token1);
 
-            IAlgebraPool(pool).initialize(sqrtPriceX96);
+            _initializePool(pool, sqrtPriceX96);
         } else {
             uint160 sqrtPriceX96Existing = IAlgebraPool(pool)._getSqrtPrice();
             if (sqrtPriceX96Existing == 0) {
-                IAlgebraPool(pool).initialize(sqrtPriceX96);
+                _initializePool(pool, sqrtPriceX96);
             }
         }
+    }
+
+    function _initializePool(address pool, uint160 initPrice) private {
+        IAlgebraPool(pool).initialize(initPrice);
     }
 }
