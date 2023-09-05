@@ -68,7 +68,13 @@ contract VolatilityOracleEchidnaTest {
         assert(timeWeightedTick <= type(int24).max);
         assert(timeWeightedTick >= type(int24).min);
 
-        assert(averageVolatility <= type(uint88).max);
+        uint32 currentTime = volatilityOracle.time();
+        (, uint32 lastTimestamp, , , , , ) = volatilityOracle.timepoints(volatilityOracle.index());
+
+        // we should not compare volatilityCumulative for timestamps after last timepoint
+        if (!(currentTime - secondsAgo0 >= lastTimestamp && currentTime - secondsAgo1 >= lastTimestamp)) {
+          assert(averageVolatility <= type(uint88).max);
+        }
       }
     }
   }
@@ -111,7 +117,14 @@ contract VolatilityOracleEchidnaTest {
 
       // the time weighted averages fit in their respective accumulated types
       assert(timeWeightedTick <= type(int24).max && timeWeightedTick >= type(int24).min);
-      assert(volatility <= type(uint88).max);
+
+      uint32 currentTime = volatilityOracle.time();
+      (, uint32 lastTimestamp, , , , , ) = volatilityOracle.timepoints(volatilityOracle.index());
+
+      // we should not compare volatilityCumulative for timestamps after last timepoint
+      if (!(currentTime >= lastTimestamp && currentTime - secondsAgo >= lastTimestamp)) {
+        assert(volatility <= type(uint88).max);
+      }
     }
   }
 }
