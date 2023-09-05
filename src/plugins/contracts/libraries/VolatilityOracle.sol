@@ -84,6 +84,7 @@ library VolatilityOracle {
   /// 0 may be passed as `secondsAgo' to return the current cumulative values.
   /// If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
   /// at exactly the timestamp between the two timepoints.
+  /// @dev `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared because they may differ due to interpolation errors
   /// @param self The stored timepoints array
   /// @param time The current block timestamp
   /// @param secondsAgo The amount of time to look back, in seconds, at which point to return a timepoint
@@ -136,6 +137,7 @@ library VolatilityOracle {
 
   /// @notice Returns the accumulator values as of each time seconds ago from the given time in the array of `secondsAgos`
   /// @dev Reverts if `secondsAgos` > oldest timepoint
+  /// @dev `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared because they may differ due to interpolation errors
   /// @param self The stored timepoints array
   /// @param currentTime The current block.timestamp
   /// @param secondsAgos Each amount of time to look back, in seconds, at which point to return a timepoint
