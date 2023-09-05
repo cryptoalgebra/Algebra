@@ -68,9 +68,14 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // console.log(`${NonfungibleTokenPositionDescriptorArtifact.contractName} was deployed to ${NonfungibleTokenPositionDescriptor.address}`);
   // deploysData.NonfungibleTokenPositionDescriptor = NonfungibleTokenPositionDescriptor.address;
 
+  const ProxyFactory = await deployer.loadArtifact("TransparentUpgradeableProxy")
+  const Proxy = await deployer.deploy(ProxyFactory, ["0x6aFbCDF398328aD3adcf96f6aD6916685EE5D67b",wallet.address , "0x"]) 
+  await Proxy.deployed()
+  console.log('Proxy deployed to:', Proxy.address)
+
   const NonfungiblePositionManagerArtifact = await deployer.loadArtifact("NonfungiblePositionManager");
   // `greeting` is an argument for contract constructor.
-  const NonfungiblePositionManager = await deployer.deploy(NonfungiblePositionManagerArtifact, [factory, weth, "0xf527b38E40fe87D33f3D0303967AE4afFdB5E7bf", poolDeployer]);
+  const NonfungiblePositionManager = await deployer.deploy(NonfungiblePositionManagerArtifact, [factory, weth, Proxy.address, poolDeployer]);
   await NonfungiblePositionManager.deployed()
   // Show the contract info.
   console.log(`${NonfungiblePositionManagerArtifact.contractName} was deployed to ${NonfungiblePositionManager.address}`);
@@ -79,7 +84,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   const verificationId2 = await hre.run("verify:verify", {
     address: NonfungiblePositionManager.address,
     contract: "contracts/NonfungiblePositionManager.sol:NonfungiblePositionManager",
-    constructorArguments: [factory, weth, "0xf527b38E40fe87D33f3D0303967AE4afFdB5E7bf", poolDeployer],
+    constructorArguments: [factory, weth, Proxy.address, poolDeployer],
   });
 
   const mcallArtifacts = await deployer.loadArtifact("AlgebraInterfaceMulticall");
