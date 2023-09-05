@@ -260,7 +260,7 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000,
       });
 
-      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
+      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true, context.farmingCenter);
       await context.farmingCenter.connect(lpUser0).enterFarming(
         {
           pool: context.pool01,
@@ -313,7 +313,7 @@ describe('unit/FarmingCenter', () => {
         deadline: (await blockTimestamp()) + 1000,
       });
 
-      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true);
+      await context.nft.connect(lpUser0).approveForFarming(_tokenId, true, context.farmingCenter);
       await context.farmingCenter.connect(lpUser0).enterFarming(
         {
           pool: context.pool01,
@@ -431,7 +431,7 @@ describe('unit/FarmingCenter', () => {
 
     it('can exit if farmedIn changed forcefully', async () => {
       await context.nft.setFarmingCenter(lpUser0);
-      await context.nft.connect(lpUser0).approveForFarming(tokenIdEternal, true);
+      await context.nft.connect(lpUser0).approveForFarming(tokenIdEternal, true, lpUser0.address);
       await context.nft.connect(lpUser0).switchFarmingStatus(tokenIdEternal, true);
       expect(await context.nft.tokenFarmedIn(tokenIdEternal)).to.be.eq(lpUser0.address);
 

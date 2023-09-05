@@ -78,7 +78,7 @@ describe('unit/Multicall', () => {
         bonusRewardRate: 50n,
       });
 
-      await context.nft.connect(multicaller).approveForFarming(tokenId, true);
+      await context.nft.connect(multicaller).approveForFarming(tokenId, true, context.farmingCenter);
       await context.farmingCenter.connect(multicaller).enterFarming(farmIncentiveKey, tokenId);
 
       return { context, helpers, farmIncentiveKey, tokenId };

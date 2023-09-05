@@ -10,7 +10,7 @@ import { ISwapRouter } from '@cryptoalgebra/periphery/typechain';
 import { ethers } from 'hardhat';
 import { ContractParams } from '../../types/contractParams';
 import { TestContext } from '../types';
-import Decimal from 'decimal.js'
+import Decimal from 'decimal.js';
 
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
@@ -170,7 +170,7 @@ export class HelperCommands {
     });
 
     // The LP approves and farms their NFT
-    await this.nft.connect(params.lp).approveForFarming(tokenId, true);
+    await this.nft.connect(params.lp).approveForFarming(tokenId, true, this.farmingCenter);
 
     await this.farmingCenter.connect(params.lp).enterFarming(await incentiveResultToFarmAdapter(params.createIncentiveResult), tokenId);
 
@@ -184,7 +184,7 @@ export class HelperCommands {
   };
 
   depositFlow: HelperTypes.Deposit.Command = async (params) => {
-    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true);
+    await this.nft.connect(params.lp).approveForFarming(params.tokenId, true, this.farmingCenter);
   };
 
   mintFlow: HelperTypes.Mint.Command = async (params) => {
@@ -362,7 +362,7 @@ export class HelperCommands {
   };
 
   moveTickTo: HelperTypes.MakeTickGo.Command = async (params) => {
-    Decimal.set({ toExpPos: 9_999_999, toExpNeg: -9_999_999, precision: 100 })
+    Decimal.set({ toExpPos: 9_999_999, toExpNeg: -9_999_999, precision: 100 });
 
     const actor = params.trader || this.actors.traderUser0();
 
@@ -382,9 +382,16 @@ export class HelperCommands {
 
     const zto = targetTick < currentTick;
 
-    const Q96 = (new Decimal(2)).pow(96);
+    const Q96 = new Decimal(2).pow(96);
 
-    const priceAtTarget = BigInt((new Decimal(1.0001)).pow(new Decimal(Number(targetTick)).div(2)).mul(Q96).round().toString()) + 100n;
+    const priceAtTarget =
+      BigInt(
+        new Decimal(1.0001)
+          .pow(new Decimal(Number(targetTick)).div(2))
+          .mul(Q96)
+          .round()
+          .toString()
+      ) + 100n;
 
     const erc20Helper = new ERC20Helper();
     const amountIn = (2n ** 128n - 1n) / 2n - 100n;
@@ -398,7 +405,7 @@ export class HelperCommands {
         tokenOut: zto ? tok1Address : tok0Address,
         amountIn: 2n ** 128n - 1n,
         amountOutMinimum: 0,
-        limitSqrtPrice: priceAtTarget
+        limitSqrtPrice: priceAtTarget,
       },
       maxGas
     );
@@ -406,8 +413,8 @@ export class HelperCommands {
     currentTick = await getCurrentTick(this.pool.connect(actor));
 
     return {
-      currentTick
-    }
+      currentTick,
+    };
   };
 
   makeTickGoFlowWithSmallSteps: HelperTypes.MakeTickGo.Command = async (params) => {
