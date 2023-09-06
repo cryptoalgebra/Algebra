@@ -58,7 +58,7 @@ exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with star
 
 exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `16972`;
 
-exports[`VolatilityOracle #initialize gas  [ @skip-on-coverage ] 1`] = `50538`;
+exports[`VolatilityOracle #initialize gas  [ @skip-on-coverage ] 1`] = `50443`;
 
 exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6335`;
 

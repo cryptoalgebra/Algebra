@@ -30,7 +30,7 @@ export async function tokensFixture(): Promise<TokensFixture> {
   tokenA.address = await tokenA.getAddress();
   tokenB.address = await tokenB.getAddress();
 
-  const [token0, token1] = [tokenA, tokenB].sort((tokenA, tokenB) => (tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1));
+  const [token0, token1] = [tokenA, tokenB].sort((_tokenA, _tokenB) => (_tokenA.address.toLowerCase() < _tokenB.address.toLowerCase() ? -1 : 1));
 
   return { token0, token1 };
 }

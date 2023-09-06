@@ -13,7 +13,7 @@ describe('OracleLibrary', () => {
 
   const oracleLibraryTestFixture = async () => {
     const tokensFixtureRes = await tokensFixture();
-    tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1]
+    tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1];
 
     const oracleLibraryFactory = await ethers.getContractFactory('OracleLibraryTest');
     const oracleLibrary = await oracleLibraryFactory.deploy();
@@ -100,8 +100,8 @@ describe('OracleLibrary', () => {
       const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
 
       const oldestTimepointMetadata = await oracleLibraryTest.oldestTimepointMetadata(mockVolatilityOracle);
-      expect(oldestTimepointMetadata.index).to.be.eq(0)
-      expect(oldestTimepointMetadata.timestamp).to.be.eq(period)
+      expect(oldestTimepointMetadata.index).to.be.eq(0);
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(period);
     });
 
     it('returns correct value with overflow', async () => {
@@ -112,8 +112,8 @@ describe('OracleLibrary', () => {
       await mockVolatilityOracle.setTimepoint(2, true, 1000, 10, 20);
 
       const oldestTimepointMetadata = await oracleLibraryTest.oldestTimepointMetadata(mockVolatilityOracle);
-      expect(oldestTimepointMetadata.index).to.be.eq(2)
-      expect(oldestTimepointMetadata.timestamp).to.be.eq(1000)
+      expect(oldestTimepointMetadata.index).to.be.eq(2);
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(1000);
     });
   });
 
@@ -125,8 +125,8 @@ describe('OracleLibrary', () => {
       const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
 
       const oldestTimepointMetadata = await oracleLibraryTest.lastTimepointMetadata(mockVolatilityOracle);
-      expect(oldestTimepointMetadata.index).to.be.eq(1)
-      expect(oldestTimepointMetadata.timestamp).to.be.eq(101)
+      expect(oldestTimepointMetadata.index).to.be.eq(1);
+      expect(oldestTimepointMetadata.timestamp).to.be.eq(101);
     });
   });
 
@@ -138,7 +138,7 @@ describe('OracleLibrary', () => {
       const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
 
       const result = await oracleLibraryTest.isInitialized(mockVolatilityOracle);
-      expect(result).to.be.eq(true)
+      expect(result).to.be.eq(true);
     });
   });
 

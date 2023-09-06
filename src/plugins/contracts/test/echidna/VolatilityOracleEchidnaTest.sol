@@ -15,11 +15,11 @@ contract VolatilityOracleEchidnaTest {
     volatilityOracle = new VolatilityOracleTest();
   }
 
-  function initialize(uint32 time, int24 tick, uint128 liquidity) external {
+  function initialize(uint32 time, int24 tick) external {
     require(!initialized);
     initialized = true;
     if (tick % 60 != 0) tick = (tick / 60) * 60;
-    volatilityOracle.initialize(VolatilityOracleTest.InitializeParams({time: time, tick: tick, liquidity: liquidity}));
+    volatilityOracle.initialize(VolatilityOracleTest.InitializeParams({time: time, tick: tick}));
   }
 
   function _limitTimePassed(uint32 by) private {
@@ -35,10 +35,10 @@ contract VolatilityOracleEchidnaTest {
   }
 
   // write a timepoint, then change tick and liquidity
-  function update(uint32 advanceTimeBy, int24 tick, uint128 liquidity) external {
+  function update(uint32 advanceTimeBy, int24 tick) external {
     require(initialized);
     _limitTimePassed(advanceTimeBy);
-    volatilityOracle.update(VolatilityOracleTest.UpdateParams({advanceTimeBy: advanceTimeBy, tick: tick, liquidity: liquidity}));
+    volatilityOracle.update(VolatilityOracleTest.UpdateParams({advanceTimeBy: advanceTimeBy, tick: tick}));
   }
 
   function checkAveragesNotOverflow() external view {

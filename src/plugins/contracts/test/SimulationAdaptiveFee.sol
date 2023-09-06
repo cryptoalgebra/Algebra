@@ -40,4 +40,9 @@ contract SimulationAdaptiveFee is VolatilityOracleTest {
     averageTick = timepoints[lastIndex].averageTick;
     return (AdaptiveFee.getFee(volatilityAverage, feeConfig_), volatilityAverage, averageTick);
   }
+
+  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external {
+    AdaptiveFee.validateFeeConfiguration(_config);
+    _feeConfig = _config.pack(); // pack struct to uint144 and write in storage
+  }
 }

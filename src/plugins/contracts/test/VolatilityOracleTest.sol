@@ -18,7 +18,6 @@ contract VolatilityOracleTest {
   struct InitializeParams {
     uint32 time;
     int24 tick;
-    uint128 liquidity;
   }
 
   function initialize(InitializeParams calldata params) external {
@@ -50,14 +49,23 @@ contract VolatilityOracleTest {
   struct UpdateParams {
     uint32 advanceTimeBy;
     int24 tick;
-    uint128 liquidity;
   }
 
   // write a timepoint, then change tick and liquidity
   function update(UpdateParams calldata params) external {
-    advanceTime(params.advanceTimeBy);
-    (index, ) = timepoints.write(index, time, tick);
-    tick = params.tick;
+    uint16 _index = index;
+    uint32 _time = time;
+    int24 _tick = tick;
+    unchecked {
+      _time += params.advanceTimeBy;
+    }
+
+    (_index, ) = timepoints.write(_index, _time, _tick);
+    _tick = params.tick;
+
+    tick = _tick;
+    index = _index;
+    time = _time;
   }
 
   function batchUpdate(UpdateParams[] calldata params) external {
@@ -81,7 +89,6 @@ contract VolatilityOracleTest {
 
   struct UpdateParamsFixedTimedelta {
     int24 tick;
-    uint128 liquidity;
   }
 
   function batchUpdateFast(uint256 length) external {

@@ -13,18 +13,18 @@ describe('AlgebraOracleV1TWAP', () => {
 
   const algebraOracleV1TWAPFixture = async () => {
     const tokensFixtureRes = await tokensFixture();
-    tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1]
+    tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1];
 
     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-    const mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS);
+    const _mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS);
 
     const algebraOracleV1TWAPFactory = await ethers.getContractFactory('AlgebraOracleV1TWAP');
-    const algebraOracleV1TWAP = await algebraOracleV1TWAPFactory.deploy(mockPluginFactory);
+    const _algebraOracleV1TWAP = await algebraOracleV1TWAPFactory.deploy(_mockPluginFactory);
 
     return {
       tokens: tokens as TestERC20[],
-      algebraOracleV1TWAP: algebraOracleV1TWAP as any as AlgebraOracleV1TWAP,
-      mockPluginFactory: mockPluginFactory as any as MockTimeDSFactory
+      algebraOracleV1TWAP: _algebraOracleV1TWAP as any as AlgebraOracleV1TWAP,
+      mockPluginFactory: _mockPluginFactory as any as MockTimeDSFactory,
     };
   };
 
@@ -35,9 +35,9 @@ describe('AlgebraOracleV1TWAP', () => {
     mockPluginFactory = fixtures.mockPluginFactory;
   });
 
-  it('has correct pluginFactory', async() => {
+  it('has correct pluginFactory', async () => {
     expect(await algebraOracleV1TWAP.pluginFactory()).to.be.eq(await mockPluginFactory.getAddress());
-  })
+  });
 
   describe('#getAverageTick', () => {
     let mockVolatilityOracleFactory: ContractFactory;
@@ -103,7 +103,7 @@ describe('AlgebraOracleV1TWAP', () => {
       await mockPluginFactory.setPluginForPool(mockVolatilityOracle, mockVolatilityOracle);
 
       const oldestTimestamp = await algebraOracleV1TWAP.oldestTimestamp(mockVolatilityOracle);
-      expect(oldestTimestamp).to.be.eq(period)
+      expect(oldestTimestamp).to.be.eq(period);
     });
 
     it('returns correct value with overflow', async () => {
@@ -115,7 +115,7 @@ describe('AlgebraOracleV1TWAP', () => {
 
       await mockVolatilityOracle.setTimepoint(2, true, 1000, 10, 20);
       const oldestTimestamp = await algebraOracleV1TWAP.oldestTimestamp(mockVolatilityOracle);
-      expect(oldestTimestamp).to.be.eq(1000)
+      expect(oldestTimestamp).to.be.eq(1000);
     });
   });
 
@@ -141,7 +141,7 @@ describe('AlgebraOracleV1TWAP', () => {
       await mockPluginFactory.setPluginForPool(mockVolatilityOracle, mockVolatilityOracle);
 
       const oldestIndex = await algebraOracleV1TWAP.oldestIndex(mockVolatilityOracle);
-      expect(oldestIndex).to.be.eq(0)
+      expect(oldestIndex).to.be.eq(0);
     });
 
     it('returns correct value with overflow', async () => {
@@ -153,7 +153,7 @@ describe('AlgebraOracleV1TWAP', () => {
 
       await mockVolatilityOracle.setTimepoint(2, true, 1, 10, 20);
       const oldestTimestamp = await algebraOracleV1TWAP.oldestIndex(mockVolatilityOracle);
-      expect(oldestTimestamp).to.be.eq(2)
+      expect(oldestTimestamp).to.be.eq(2);
     });
   });
 });

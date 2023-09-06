@@ -8,10 +8,10 @@ import { TEST_POOL_START_TIME } from './shared/fixtures';
 import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('VolatilityOracle', () => {
-  let wallet: Wallet, other: Wallet;
+  let wallet: Wallet;
 
   before('create fixture loader', async () => {
-    [wallet, other] = await (ethers as any).getSigners();
+    [wallet] = await (ethers as any).getSigners();
   });
 
   const volatilityOracleFixture = async () => {
@@ -24,7 +24,6 @@ describe('VolatilityOracle', () => {
     await volatilityOracle.initialize({
       time: 0,
       tick: 0,
-      liquidity: 0,
     });
     return volatilityOracle;
   };
@@ -35,18 +34,18 @@ describe('VolatilityOracle', () => {
       volatilityOracle = await loadFixture(volatilityOracleFixture);
     });
     it('cannot initialize twice', async () => {
-      await volatilityOracle.initialize({ liquidity: 1, tick: 1, time: 1 });
-      await expect(volatilityOracle.initialize({ liquidity: 2, tick: 1, time: 1 })).to.be.revertedWithCustomError(
+      await volatilityOracle.initialize({ tick: 1, time: 1 });
+      await expect(volatilityOracle.initialize({ tick: 1, time: 1 })).to.be.revertedWithCustomError(
         volatilityOracle,
         'volatilityOracleAlreadyInitialized'
       );
     });
     it('index is 0', async () => {
-      await volatilityOracle.initialize({ liquidity: 1, tick: 1, time: 1 });
+      await volatilityOracle.initialize({ tick: 1, time: 1 });
       expect(await volatilityOracle.index()).to.eq(0);
     });
     it('sets first slot timestamp only', async () => {
-      await volatilityOracle.initialize({ liquidity: 1, tick: 1, time: 1 });
+      await volatilityOracle.initialize({ tick: 1, time: 1 });
       checkTimepointEquals(await volatilityOracle.timepoints(0), {
         initialized: true,
         blockTimestamp: 1n,
@@ -54,14 +53,14 @@ describe('VolatilityOracle', () => {
       });
     });
     it('gas  [ @skip-on-coverage ]', async () => {
-      await snapshotGasCost(volatilityOracle.initialize({ liquidity: 1, tick: 1, time: 1 }));
+      await snapshotGasCost(volatilityOracle.initialize({ tick: 1, time: 1 }));
     });
     it('should return interpolated volatility with gap > window', async () => {
-      await volatilityOracle.initialize({ liquidity: 0, tick: 46054, time: 1 });
-      await volatilityOracle.update({ advanceTimeBy: 100, tick: 80054, liquidity: 1 });
-      await volatilityOracle.update({ advanceTimeBy: 1, tick: 46054, liquidity: 1 });
-      let res = await volatilityOracle.getTimepoints([0]);
-      res = await volatilityOracle.getTimepoints([1]);
+      await volatilityOracle.initialize({ tick: 46054, time: 1 });
+      await volatilityOracle.update({ advanceTimeBy: 100, tick: 80054 });
+      await volatilityOracle.update({ advanceTimeBy: 1, tick: 46054 });
+      await volatilityOracle.getTimepoints([0]);
+      await volatilityOracle.getTimepoints([1]);
     });
   });
 
@@ -73,16 +72,16 @@ describe('VolatilityOracle', () => {
     });
 
     it('does nothing if time has not changed', async () => {
-      await volatilityOracle.update({ advanceTimeBy: 1, tick: 3, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 1, tick: 3 });
       expect(await volatilityOracle.index()).to.eq(1);
-      await volatilityOracle.update({ advanceTimeBy: 0, tick: -5, liquidity: 9 });
+      await volatilityOracle.update({ advanceTimeBy: 0, tick: -5 });
       expect(await volatilityOracle.index()).to.eq(1);
     });
 
     it('writes an index if time has changed', async () => {
-      await volatilityOracle.update({ advanceTimeBy: 6, tick: 3, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 6, tick: 3 });
       expect(await volatilityOracle.index()).to.eq(1);
-      await volatilityOracle.update({ advanceTimeBy: 4, tick: -5, liquidity: 9 });
+      await volatilityOracle.update({ advanceTimeBy: 4, tick: -5 });
 
       expect(await volatilityOracle.index()).to.eq(2);
       checkTimepointEquals(await volatilityOracle.timepoints(1), {
@@ -93,9 +92,9 @@ describe('VolatilityOracle', () => {
     });
 
     it('accumulates liquidity', async () => {
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 3, liquidity: 2 });
-      await volatilityOracle.update({ advanceTimeBy: 4, tick: -7, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: 5, tick: -2, liquidity: 4 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 3 });
+      await volatilityOracle.update({ advanceTimeBy: 4, tick: -7 });
+      await volatilityOracle.update({ advanceTimeBy: 5, tick: -2 });
 
       expect(await volatilityOracle.index()).to.eq(3);
 
@@ -130,30 +129,30 @@ describe('VolatilityOracle', () => {
     });
 
     it('in the same block with init', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
       const tick = await volatilityOracle.getAverageTick();
       expect(tick).to.be.eq(7200);
     });
 
     it('in exactly 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: window, tick: 7400, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
+      await volatilityOracle.update({ advanceTimeBy: window, tick: 7400 });
       const tick = await volatilityOracle.getAverageTick();
       expect(tick).to.be.eq(7300);
     });
 
     it('last index is exactly 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
       await volatilityOracle.advanceTime(window);
       const tick = await volatilityOracle.getAverageTick();
       expect(tick).to.be.eq(7300);
     });
 
     it('last index is more then 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
       await volatilityOracle.advanceTime(window + 1);
       const tick = await volatilityOracle.getAverageTick();
       expect(tick).to.be.eq(7300);
@@ -163,9 +162,9 @@ describe('VolatilityOracle', () => {
     });
 
     it('find tick cumulative at the start of previous window', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: window, tick: 7350, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
+      await volatilityOracle.update({ advanceTimeBy: window, tick: 7350 });
       await volatilityOracle.advanceTime(1);
 
       const tickCumulative = await volatilityOracle.getTickCumulativeAt(window + 1);
@@ -176,9 +175,9 @@ describe('VolatilityOracle', () => {
 
     describe('oldest timepoint is more than WINDOW seconds ago', async () => {
       beforeEach('initialize', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7300, liquidity: 6 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2 + 1, tick: 7350, liquidity: 6 });
+        await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7300 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2 + 1, tick: 7350 });
       });
 
       it('last timepoint is target', async () => {
@@ -195,9 +194,9 @@ describe('VolatilityOracle', () => {
 
     describe('oldest timepoint is less than WINDOW seconds ago', async () => {
       beforeEach('initialize', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-        await volatilityOracle.update({ advanceTimeBy: 2, tick: 7250, liquidity: 6 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7230, liquidity: 6 });
+        await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+        await volatilityOracle.update({ advanceTimeBy: 2, tick: 7250 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7230 });
       });
 
       it('last timepoint is target', async () => {
@@ -213,22 +212,21 @@ describe('VolatilityOracle', () => {
     });
 
     it('potential overflow scenario', async () => {
-      const window = 24 * 60 * 60;
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
       let averageTick = await volatilityOracle.getAverageTick();
       expect(averageTick).to.be.lt(7300);
       expect(averageTick).to.be.gt(7100);
-      await volatilityOracle.update({ advanceTimeBy: 60 * 60, tick: 7300, liquidity: 6 });
+      await volatilityOracle.update({ advanceTimeBy: 60 * 60, tick: 7300 });
       averageTick = await volatilityOracle.getAverageTick();
       expect(averageTick).to.be.lt(7300);
       expect(averageTick).to.be.gt(7199);
 
-      await volatilityOracle.update({ advanceTimeBy: window - 2, tick: 7400, liquidity: 8 });
+      await volatilityOracle.update({ advanceTimeBy: window - 2, tick: 7400 });
       averageTick = await volatilityOracle.getAverageTick();
       expect(averageTick).to.be.lt(7400);
       expect(averageTick).to.be.gt(7200);
 
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7600, liquidity: 8 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7600 });
       averageTick = await volatilityOracle.getAverageTick();
       expect(averageTick).to.be.lt(7400);
       expect(averageTick).to.be.gt(7200);
@@ -243,40 +241,40 @@ describe('VolatilityOracle', () => {
     });
 
     it('in the same block with init', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
       const volatility = await volatilityOracle.getAverageVolatility();
       expect(volatility).to.be.eq(0);
     });
 
     it('in exactly 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: window, tick: 7500, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
+      await volatilityOracle.update({ advanceTimeBy: window, tick: 7500 });
       const volatility = await volatilityOracle.getAverageVolatility();
       expect(volatility).to.be.eq(3333);
     });
 
     it('last index is exactly 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
       await volatilityOracle.advanceTime(window);
       const volatility = await volatilityOracle.getAverageVolatility();
       expect(volatility).to.be.eq(3333);
     });
 
     it('last index is more then 24h ago', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
       await volatilityOracle.advanceTime(window + 1);
       const volatility = await volatilityOracle.getAverageVolatility();
       expect(volatility).to.be.eq(3333);
     });
 
     it('specific case for binary search (atOrAfter)', async () => {
-      await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 7300, liquidity: 6 });
-      await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 73100, liquidity: 6 });
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
+      await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 7300 });
+      await volatilityOracle.update({ advanceTimeBy: 2 * 60 * 60, tick: 73100 });
       await volatilityOracle.advanceTime(window - 2 * 60 * 60);
       const volatility = await volatilityOracle.getAverageVolatility();
       expect(volatility).to.be.eq(1442410782);
@@ -284,9 +282,9 @@ describe('VolatilityOracle', () => {
 
     describe('oldest timepoint is more than WINDOW seconds ago', async () => {
       beforeEach('initialize', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7300, liquidity: 6 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2 + 1, tick: 7350, liquidity: 6 });
+        await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7300 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2 + 1, tick: 7350 });
       });
 
       it('last timepoint is target', async () => {
@@ -303,9 +301,9 @@ describe('VolatilityOracle', () => {
 
     describe('oldest timepoint is less than WINDOW seconds ago', async () => {
       beforeEach('initialize', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 7200, time: 1000 });
-        await volatilityOracle.update({ advanceTimeBy: 2, tick: 7250, liquidity: 6 });
-        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7230, liquidity: 6 });
+        await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+        await volatilityOracle.update({ advanceTimeBy: 2, tick: 7250 });
+        await volatilityOracle.update({ advanceTimeBy: window / 2, tick: 7230 });
       });
 
       it('last timepoint is target', async () => {
@@ -337,30 +335,30 @@ describe('VolatilityOracle', () => {
       };
 
       it('fails if an older timepoint does not exist', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         await expect(getSingleTimepoint(1)).to.be.revertedWithCustomError(volatilityOracle, 'targetIsTooOld');
       });
 
       it('does not fail across overflow boundary', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 2 ** 32 - 1 });
+        await volatilityOracle.initialize({ tick: 2, time: 2 ** 32 - 1 });
         await volatilityOracle.advanceTime(2);
         const { tickCumulative } = await getSingleTimepoint(1);
         expect(tickCumulative).to.be.eq(2);
       });
 
       it('single timepoint at current time', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(0);
       });
 
       it('single timepoint at current time equal after write', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15 });
         await volatilityOracle.advanceTime(10 * 60);
         const { tickCumulative, volatilityCumulative } = await getSingleTimepoint(0);
-        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15, liquidity: 2 });
+        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15 });
         const { tickCumulative: tickCumulativeAfterWrite, volatilityCumulative: volatilityCumulativeAfterWrite } = await getSingleTimepoint(0);
 
         expect(tickCumulativeAfterWrite).to.be.eq(tickCumulative);
@@ -368,12 +366,12 @@ describe('VolatilityOracle', () => {
       });
 
       it('single timepoint at current time not equal after write and time passed', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 60 * 10, tick: 10 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 15 });
         await volatilityOracle.advanceTime(10 * 60);
         const { tickCumulative, volatilityCumulative } = await getSingleTimepoint(0);
-        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15, liquidity: 2 });
+        await volatilityOracle.update({ advanceTimeBy: 0, tick: 15 });
         await volatilityOracle.advanceTime(10);
         const { tickCumulative: tickCumulativeAfterWrite, volatilityCumulative: volatilityCumulativeAfterWrite } = await getSingleTimepoint(0);
 
@@ -382,118 +380,118 @@ describe('VolatilityOracle', () => {
       });
 
       it('single timepoint in past but not earlier than secondsAgo', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         await volatilityOracle.advanceTime(3);
         await expect(getSingleTimepoint(4)).to.be.revertedWithCustomError(volatilityOracle, 'targetIsTooOld');
       });
 
       it('single timepoint in past at exactly seconds ago', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         await volatilityOracle.advanceTime(3);
         const { tickCumulative } = await getSingleTimepoint(3);
         expect(tickCumulative).to.eq(0);
       });
 
       it('single timepoint in past counterfactual in past', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         await volatilityOracle.advanceTime(3);
         const { tickCumulative } = await getSingleTimepoint(1);
         expect(tickCumulative).to.eq(4);
       });
 
       it('single timepoint in past counterfactual now', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
         await volatilityOracle.advanceTime(3);
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(6);
       });
 
       it('single timepoint in past exactly at the start of window', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 24 * 60 * 60, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60 * 60, tick: 1 });
         const { tickCumulative } = await getSingleTimepoint(24 * 60 * 60);
         expect(tickCumulative).to.eq(8);
       });
 
       it('single timepoint in past exactly at the start of window after some time', async () => {
-        await volatilityOracle.initialize({ liquidity: 4, tick: 2, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 24 * 60 * 60, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60 * 60, tick: 1 });
         await volatilityOracle.advanceTime(3);
         const { tickCumulative } = await getSingleTimepoint(24 * 60 * 60 + 3);
         expect(tickCumulative).to.eq(8);
       });
 
       it('two timepoints in chronological order 0 seconds ago exact', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(-20);
       });
 
       it('two timepoints in chronological order 0 seconds ago counterfactual', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(-13);
       });
 
       it('two timepoints in chronological order seconds ago is exactly on first timepoint', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(11);
         expect(tickCumulative).to.eq(0);
       });
 
       it('two timepoints in chronological order seconds ago is between first and second', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(9);
         expect(tickCumulative).to.eq(-10);
       });
 
       it('two timepoints in reverse order 0 seconds ago exact', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5 });
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(-17);
       });
 
       it('two timepoints in reverse order 0 seconds ago counterfactual', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(-52);
       });
 
       it('two timepoints in reverse order seconds ago is exactly on first timepoint', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(10);
         expect(tickCumulative).to.eq(-20);
       });
 
       it('two timepoints in reverse order seconds ago is between first and second', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
-        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1, liquidity: 2 });
-        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5, liquidity: 4 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 4, tick: 1 });
+        await volatilityOracle.update({ advanceTimeBy: 3, tick: -5 });
         await volatilityOracle.advanceTime(7);
         const { tickCumulative } = await getSingleTimepoint(9);
         expect(tickCumulative).to.eq(-19);
       });
 
       it('can fetch multiple timepoints', async () => {
-        await volatilityOracle.initialize({ time: 5, tick: 2, liquidity: 2n ** 15n });
-        await volatilityOracle.update({ advanceTimeBy: 13, tick: 6, liquidity: 2n ** 12n });
+        await volatilityOracle.initialize({ time: 5, tick: 2 });
+        await volatilityOracle.update({ advanceTimeBy: 13, tick: 6 });
         await volatilityOracle.advanceTime(5);
 
         const { tickCumulatives } = await volatilityOracle.getTimepoints([0, 3, 8, 13, 15, 18]);
@@ -507,18 +505,18 @@ describe('VolatilityOracle', () => {
       });
 
       it('gas for getTimepoints since most recent  [ @skip-on-coverage ]', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
         await volatilityOracle.advanceTime(2);
         await snapshotGasCost(volatilityOracle.getGasCostOfGetPoints([1]));
       });
 
       it('gas for single timepoint at current time  [ @skip-on-coverage ]', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
         await snapshotGasCost(volatilityOracle.getGasCostOfGetPoints([0]));
       });
 
       it('gas for single timepoint at current time after some time  [ @skip-on-coverage ]', async () => {
-        await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: 5 });
+        await volatilityOracle.initialize({ tick: -5, time: 5 });
         await volatilityOracle.advanceTime(5);
         await snapshotGasCost(volatilityOracle.getGasCostOfGetPoints([0]));
       });
@@ -528,13 +526,13 @@ describe('VolatilityOracle', () => {
       describe(`initialized with 5 timepoints with starting time of ${startingTime}`, () => {
         const volatilityOracleFixture5Timepoints = async () => {
           const volatilityOracle = await volatilityOracleFixture();
-          await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: startingTime });
-          await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
-          await volatilityOracle.update({ advanceTimeBy: 2, tick: -6, liquidity: 4 });
-          await volatilityOracle.update({ advanceTimeBy: 4, tick: -2, liquidity: 4 });
-          await volatilityOracle.update({ advanceTimeBy: 1, tick: -2, liquidity: 9 });
-          await volatilityOracle.update({ advanceTimeBy: 3, tick: 4, liquidity: 2 });
-          await volatilityOracle.update({ advanceTimeBy: 6, tick: 6, liquidity: 7 });
+          await volatilityOracle.initialize({ tick: -5, time: startingTime });
+          await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
+          await volatilityOracle.update({ advanceTimeBy: 2, tick: -6 });
+          await volatilityOracle.update({ advanceTimeBy: 4, tick: -2 });
+          await volatilityOracle.update({ advanceTimeBy: 1, tick: -2 });
+          await volatilityOracle.update({ advanceTimeBy: 3, tick: 4 });
+          await volatilityOracle.update({ advanceTimeBy: 6, tick: 6 });
           return volatilityOracle;
         };
         let volatilityOracle: VolatilityOracleTest;
@@ -629,8 +627,8 @@ describe('VolatilityOracle', () => {
     });
 
     it('can overflow in first time', async () => {
-      await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: startingTime });
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.initialize({ tick: -5, time: startingTime });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
 
       await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
         initialized: true,
@@ -644,18 +642,18 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.setState(startingTime + 2n * DAY, MAX_UINT16 - 1n);
       await volatilityOracle.advanceTime(DAY + 1n);
 
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
       expect(await volatilityOracle.index()).to.be.eq(MAX_UINT16);
       expect(await volatilityOracle.getOldestIndex()).to.be.eq(0);
 
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
       expect(await volatilityOracle.index()).to.be.eq(0);
       expect(await volatilityOracle.getOldestIndex()).to.be.eq(1);
     });
 
     it('can overflow twice', async () => {
-      await volatilityOracle.initialize({ liquidity: 5, tick: -5, time: startingTime });
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.initialize({ tick: -5, time: startingTime });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
 
       // first
       await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
@@ -669,8 +667,8 @@ describe('VolatilityOracle', () => {
       });
       await volatilityOracle.setState(startingTime + 2n * DAY, MAX_UINT16 - 1n);
       await volatilityOracle.advanceTime(DAY + 1n);
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
 
       // second
       await volatilityOracle.writeTimepointDirectly(MAX_UINT16 - 1n, {
@@ -685,11 +683,11 @@ describe('VolatilityOracle', () => {
       await volatilityOracle.setState(startingTime + 4n * DAY, MAX_UINT16 - 1n);
       await volatilityOracle.advanceTime(DAY + 1n);
 
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
       expect(await volatilityOracle.index()).to.be.eq(MAX_UINT16);
       expect(await volatilityOracle.getOldestIndex()).to.be.eq(0);
 
-      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1, liquidity: 2 });
+      await volatilityOracle.update({ advanceTimeBy: 3, tick: 1 });
       expect(await volatilityOracle.index()).to.be.eq(0);
       expect(await volatilityOracle.getOldestIndex()).to.be.eq(1);
     });
@@ -707,22 +705,22 @@ describe('VolatilityOracle', () => {
 
     const maxedOutVolatilityOracleFixture = async () => {
       await ethers.provider.send('hardhat_setBalance', [wallet.address, '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000']);
-      const volatilityOracle = await volatilityOracleFixture();
-      await volatilityOracle.initialize({ liquidity: 0, tick: 0, time: STARTING_TIME });
+      const _volatilityOracle = await volatilityOracleFixture();
+      await _volatilityOracle.initialize({ tick: 0, time: STARTING_TIME });
 
       let i = 1;
       for (i = 1; i < 65536; i += BATCH_SIZE) {
         if (i + BATCH_SIZE > 65536) {
           BATCH_SIZE = Math.ceil(65536 / 300) * 300 - i;
           console.log('batch update starting at', i);
-          await volatilityOracle.batchUpdateFixedTimedelta(BATCH_SIZE);
+          await _volatilityOracle.batchUpdateFixedTimedelta(BATCH_SIZE);
         } else {
           console.log('batch update starting at', i);
-          await volatilityOracle.batchUpdateFast(BATCH_SIZE);
+          await _volatilityOracle.batchUpdateFast(BATCH_SIZE);
         }
       }
       console.log('Length:', i);
-      return volatilityOracle;
+      return _volatilityOracle;
     };
 
     beforeEach('create a full volatilityOracle', async () => {
@@ -809,7 +807,7 @@ describe('VolatilityOracle', () => {
 
       describe('oldest timepoint is more than WINDOW seconds ago', async () => {
         beforeEach('initialize', async () => {
-          await volatilityOracle.update({ advanceTimeBy: window + 1, tick: 7250, liquidity: 6 });
+          await volatilityOracle.update({ advanceTimeBy: window + 1, tick: 7250 });
         });
 
         it('last timepoint is target', async () => {
@@ -892,23 +890,23 @@ describe('VolatilityOracle', () => {
 
     const maxedOutVolatilityOracleFixture = async () => {
       await ethers.provider.send('hardhat_setBalance', [wallet.address, '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000']);
-      const volatilityOracle = await volatilityOracleFixture();
-      await volatilityOracle.initialize({ liquidity: 0, tick: 0, time: STARTING_TIME });
-      await volatilityOracle.setStep(step);
+      const _volatilityOracle = await volatilityOracleFixture();
+      await _volatilityOracle.initialize({ tick: 0, time: STARTING_TIME });
+      await _volatilityOracle.setStep(step);
 
       let i = 1;
       for (i = 1; i < 65536; i += BATCH_SIZE) {
         if (i + BATCH_SIZE > 65536) {
           BATCH_SIZE = Math.ceil(65536 / 300) * 300 - i;
           console.log('batch update starting at', i);
-          await volatilityOracle.batchUpdateFixedTimedelta(BATCH_SIZE);
+          await _volatilityOracle.batchUpdateFixedTimedelta(BATCH_SIZE);
         } else {
           console.log('batch update starting at', i);
-          await volatilityOracle.batchUpdateFast(BATCH_SIZE);
+          await _volatilityOracle.batchUpdateFast(BATCH_SIZE);
         }
       }
       console.log('Length:', i);
-      return volatilityOracle;
+      return _volatilityOracle;
     };
 
     beforeEach('create a full volatilityOracle', async () => {
@@ -985,8 +983,6 @@ describe('VolatilityOracle', () => {
     });
 
     describe('#getAverageVolatility', () => {
-      const window = 24 * 60 * 60;
-
       it('last timepoint is target', async () => {
         const volatility = await volatilityOracle.getAverageVolatility();
         expect(volatility).to.be.eq(360563298);
