@@ -134,6 +134,18 @@ describe('VolatilityOracle', () => {
       expect(tick).to.be.eq(7200);
     });
 
+    it('does not change after write', async () => {
+      await volatilityOracle.initialize({ tick: 7200, time: 1000 });
+      await volatilityOracle.update({ advanceTimeBy: 60 * 60, tick: 7500 });
+      await volatilityOracle.advanceTime(60 * 5);
+      const tickBeforeWrite = await volatilityOracle.getAverageTick();
+      await volatilityOracle.update({ advanceTimeBy: 0, tick: 100000 });
+      const tickAfterWrite = await volatilityOracle.getAverageTick();
+      expect(tickBeforeWrite).to.be.eq(tickAfterWrite);
+      await volatilityOracle.advanceTime(1);
+      expect(tickBeforeWrite).to.be.not.eq(await volatilityOracle.getAverageTick());
+    });
+
     it('in exactly 24h ago', async () => {
       await volatilityOracle.initialize({ tick: 7200, time: 1000 });
       await volatilityOracle.update({ advanceTimeBy: 2, tick: 7300 });
@@ -350,6 +362,18 @@ describe('VolatilityOracle', () => {
         await volatilityOracle.initialize({ tick: 2, time: 5 });
         const { tickCumulative } = await getSingleTimepoint(0);
         expect(tickCumulative).to.eq(0);
+      });
+
+      it('timepoint does not change after time', async () => {
+        await volatilityOracle.initialize({ tick: 2, time: 5 });
+        await volatilityOracle.update({ advanceTimeBy: 24 * 60, tick: 1500 });
+        await volatilityOracle.advanceTime(10 * 60);
+        const { tickCumulative: tickCumulativeBefore } = await getSingleTimepoint(0);
+        await volatilityOracle.advanceTime(5);
+        const { tickCumulative: tickCumulativeAfter } = await getSingleTimepoint(5);
+        expect(tickCumulativeBefore).to.be.eq(tickCumulativeAfter);
+        const { tickCumulative: tickCumulativeNew } = await getSingleTimepoint(0);
+        expect(tickCumulativeBefore).to.be.not.eq(tickCumulativeNew);
       });
 
       it('single timepoint at current time equal after write', async () => {
