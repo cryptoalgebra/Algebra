@@ -1,29 +1,19 @@
-const path = require("path");
-const config = require('dotenv').config({path: path.resolve(__dirname, '.env')});
-const {
-    ETHERSCAN_API_KEY,
-    BSCSCAN_API_KEY,
-    POLYGONSCAN_API_KEY,
-    MNEMONIC,
-    DEPLOY_GAS_LIMIT_MAX,
-    DEPLOY_GAS_PRICE,
-    INFURA_ID_PROJECT
-} = config.parsed || {};
+const path = require('path');
+const config = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
+  config.parsed || {};
 
 export default {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
       loggingEnabled: false,
-      evm: 'paris'
+      evm: 'paris',
     },
-    hhnode: {
+    localGeth: {
       url: `http://127.0.0.1:8545`,
-      accounts: [`0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`],
-      allowUnlimitedContractSize: true,
-      //gasPrice: 8,
+      chainId: 1337,
       gas: 10000000,
-      loggingEnabled: false
     },
     mainnet: {
       url: `https://mainnet.infura.io/v3/${INFURA_ID_PROJECT}`,
@@ -43,12 +33,12 @@ export default {
       url: `https://kovan.infura.io/v3/${INFURA_ID_PROJECT}`,
       chainId: 42,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
-      gasPrice: 8000000000
+      gasPrice: 8000000000,
     },
     bscTestnet: {
       url: `https://data-seed-prebsc-2-s3.binance.org:8545`,
       chainId: 97,
-      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     bsc: {
       url: `https://bsc-dataseed3.binance.org`,
@@ -77,13 +67,13 @@ export default {
       url: `https://rpc-mainnet.matic.quiknode.pro`,
       chainId: 137,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
-      gasPrice: 50_000_000_000
+      gasPrice: 50_000_000_000,
     },
     artheraTestnet: {
       url: `https://rpc-test.arthera.net`,
       chainId: 10243,
-      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
-    }
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
   },
   etherscan: {
     // Your API key for Etherscan
@@ -91,21 +81,21 @@ export default {
     apiKey: `${POLYGONSCAN_API_KEY}`,
     customChains: [
       {
-        network: "mantleTestnet",
+        network: 'mantleTestnet',
         chainId: 5001,
         urls: {
-          apiURL: "https://explorer.testnet.mantle.xyz/api",
-          browserURL: "https://explorer.testnet.mantle.xyz/"
-        }
+          apiURL: 'https://explorer.testnet.mantle.xyz/api',
+          browserURL: 'https://explorer.testnet.mantle.xyz/',
+        },
       },
       {
-        network: "mantle",
+        network: 'mantle',
         chainId: 5000,
         urls: {
-          apiURL: "https://explorer.mantle.xyz/api",
-          browserURL: "https://explorer.mantle.xyz/"
-        }
-      }
-    ]
+          apiURL: 'https://explorer.mantle.xyz/api',
+          browserURL: 'https://explorer.mantle.xyz/',
+        },
+      },
+    ],
   },
-}
+};
