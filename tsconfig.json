@@ -13,5 +13,5 @@
     "typeRoots": ["./node_modules/@types", "./node_modules/@nomicfoundation"],
     "types": ["hardhat-ethers", "hardhat-network-helpers", "hardhat-chai-matchers"]
   },
-  "include": ["./**/test/**/*.ts", "./**/scripts/**/*", "./hardhat.base.config.ts"]
+  "include": ["./**/test/**/*.ts", "./**/scripts/**/*", "./hardhat.base.config.ts", "./**/hardhat.config.ts"]
 }
