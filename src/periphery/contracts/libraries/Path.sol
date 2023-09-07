@@ -43,6 +43,15 @@ library Path {
         tokenB = path.toAddress(NEXT_OFFSET);
     }
 
+    /// @notice Decodes the last pool in path
+    /// @param path The bytes encoded swap path
+    /// @return tokenA The first token of the given pool
+    /// @return tokenB The second token of the given pool
+    function decodeLastPool(bytes memory path) internal pure returns (address tokenA, address tokenB) {
+        tokenA = path.toAddress(path.length - 2 * ADDR_SIZE);
+        tokenB = path.toAddress(path.length - ADDR_SIZE);
+    }
+
     /// @notice Gets the segment corresponding to the first pool in the path
     /// @param path The bytes encoded swap path
     /// @return The segment containing all data necessary to target the first pool in the path
