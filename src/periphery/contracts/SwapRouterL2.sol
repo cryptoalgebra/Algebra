@@ -125,16 +125,14 @@ contract SwapRouterL2 is IAlgebraSwapCallback {
     fallback() external payable {
         uint256 memPointer;
         uint256 callDataLength;
-        bytes32 word1;
         assembly {
             callDataLength := calldatasize()
             memPointer := mload(0x40)
             mstore(0x40, add(memPointer, callDataLength))
             calldatacopy(memPointer, 0, callDataLength)
-            word1 := calldataload(0)
         }
 
-        SwapConfiguration memory swapConfiguration = decodeCalldata(memPointer, callDataLength, word1);
+        SwapConfiguration memory swapConfiguration = decodeCalldata(memPointer, callDataLength);
         if (swapConfiguration.deadline != 0) {
             require(uint32(block.timestamp) <= swapConfiguration.deadline, 'Transaction too old'); // truncation is desired
         }
@@ -178,12 +176,16 @@ contract SwapRouterL2 is IAlgebraSwapCallback {
 
     function decodeCalldata(
         uint256 memPointer,
-        uint256 callDataLength,
-        bytes32 word1
+        uint256 callDataLength
     ) private view returns (SwapConfiguration memory swapConfiguration) {
         bytes1 config;
-        uint256 tokenAddressEncoding;
+        CompressedEncoding.AddressEncoding tokenAddressEncoding;
         uint128 pathLength;
+        bytes32 word1;
+
+        assembly {
+            word1 := mload(memPointer)
+        }
 
         {
             bool exactIn;
