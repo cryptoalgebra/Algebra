@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
@@ -14,6 +15,7 @@ import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
 
 import './libraries/VolatilityOracle.sol';
+import './libraries/TransferHelper.sol';
 import './libraries/AdaptiveFee.sol';
 import './types/AlgebraFeeConfigurationU144.sol';
 
@@ -223,6 +225,186 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return true;
   }
 
+  // ###### LIMIT ORDERS ######
+
+  using EpochLibrary for Epoch;
+
+  bytes internal constant ZERO_BYTES = bytes('');
+
+  Epoch private constant EPOCH_DEFAULT = Epoch.wrap(0);
+
+  int24 public tickLowerLasts;
+
+  Epoch public epochNext = Epoch.wrap(1);
+
+  struct EpochInfo {
+    bool filled;
+    address token0;
+    address token1;
+    uint256 token0Total;
+    uint256 token1Total;
+    uint128 liquidityTotal;
+    mapping(address => uint128) liquidity;
+  }
+
+  mapping(bytes32 => Epoch) public epochs;
+  mapping(Epoch => EpochInfo) public epochInfos;
+
+  function getEpoch(int24 tickLower, bool zeroForOne) public view returns (Epoch) {
+    return epochs[keccak256(abi.encode(tickLower, zeroForOne))];
+  }
+
+  function setEpoch(int24 tickLower, bool zeroForOne, Epoch epoch) private {
+    epochs[keccak256(abi.encode(tickLower, zeroForOne))] = epoch;
+  }
+
+  function getEpochLiquidity(Epoch epoch, address owner) external view returns (uint256) {
+    return epochInfos[epoch].liquidity[owner];
+  }
+
+  function getTickSpacing() private view returns (int24) {
+    return IAlgebraPool(pool).tickSpacing();
+  }
+
+  function getTickLower(int24 tick, int24 tickSpacing) private pure returns (int24) {
+    int24 compressed = tick / tickSpacing;
+    if (tick < 0 && tick % tickSpacing != 0) compressed--; // round towards negative infinity
+    return compressed * tickSpacing;
+  }
+
+  function _getCrossedTicks(int24 tick, int24 tickSpacing) internal view returns (int24 tickLower, int24 lower, int24 upper) {
+    tickLower = tick;
+    int24 _tickLowerLast = tickLowerLasts;
+
+    if (tickLower < _tickLowerLast) {
+      lower = tickLower + tickSpacing;
+      upper = _tickLowerLast;
+    } else {
+      lower = _tickLowerLast;
+      upper = tickLower - tickSpacing;
+    }
+  }
+
+  function _fillEpoch(int24 lower, bool zeroForOne) internal {
+    Epoch epoch = getEpoch(lower, zeroForOne);
+    if (!epoch.equals(EPOCH_DEFAULT)) {
+      EpochInfo storage epochInfo = epochInfos[epoch];
+
+      epochInfo.filled = true;
+
+      (uint256 amount0, uint256 amount1) = IAlgebraPool(pool).burn(lower, lower + getTickSpacing(), epochInfo.liquidityTotal, '');
+
+      unchecked {
+        epochInfo.token0Total += amount0;
+        epochInfo.token1Total += amount1;
+      }
+
+      setEpoch(lower, zeroForOne, EPOCH_DEFAULT);
+
+      emit Fill(epoch, lower, zeroForOne);
+    }
+  }
+
+  function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override onlyPool {
+    address payer = abi.decode(data, (address));
+    //TODO add native support
+    if (amount0Owed > 0) TransferHelper.safeTransferFrom(IAlgebraPool(pool).token0(), payer, msg.sender, amount0Owed);
+    if (amount1Owed > 0) TransferHelper.safeTransferFrom(IAlgebraPool(pool).token1(), payer, msg.sender, amount1Owed);
+  }
+
+  function place(int24 tickLower, bool zeroForOne, uint128 liquidity) external override {
+    if (liquidity == 0) revert ZeroLiquidity();
+
+    (uint256 amount0, uint256 amount1, uint128 liquidityActual) = IAlgebraPool(pool).mint(
+      msg.sender,
+      address(this),
+      tickLower,
+      tickLower + getTickSpacing(),
+      liquidity,
+      abi.encode(msg.sender)
+    );
+
+    // TODO Is an additional check on the amount of liquidity added necessary?
+    if (amount0 > 0) {
+      if (amount1 != 0) revert InRange();
+      if (!zeroForOne) revert CrossedRange();
+    } else {
+      if (amount0 != 0) revert InRange();
+      if (zeroForOne) revert CrossedRange();
+    }
+
+    EpochInfo storage epochInfo;
+    Epoch epoch = getEpoch(tickLower, zeroForOne);
+    if (epoch.equals(EPOCH_DEFAULT)) {
+      unchecked {
+        setEpoch(tickLower, zeroForOne, epoch = epochNext);
+        // since epoch was just assigned the current value of epochNext,
+        // this is equivalent to epochNext++, which is what's intended,
+        // and it saves an SLOAD
+        epochNext = epoch.unsafeIncrement();
+      }
+      epochInfo = epochInfos[epoch];
+      epochInfo.token0 = IAlgebraPool(pool).token0();
+      epochInfo.token1 = IAlgebraPool(pool).token1();
+    } else {
+      epochInfo = epochInfos[epoch];
+    }
+
+    unchecked {
+      epochInfo.liquidityTotal += liquidityActual;
+      epochInfo.liquidity[msg.sender] += liquidityActual;
+    }
+
+    emit Place(msg.sender, epoch, tickLower, zeroForOne, liquidityActual);
+  }
+
+  function kill(int24 tickLower, bool zeroForOne, address to) external override returns (uint256 amount0, uint256 amount1) {
+    Epoch epoch = getEpoch(tickLower, zeroForOne);
+    EpochInfo storage epochInfo = epochInfos[epoch];
+
+    if (epochInfo.filled) revert Filled();
+
+    uint128 liquidity = epochInfo.liquidity[msg.sender];
+    if (liquidity == 0) revert ZeroLiquidity();
+    delete epochInfo.liquidity[msg.sender];
+    uint128 liquidityTotal = epochInfo.liquidityTotal;
+    epochInfo.liquidityTotal = liquidityTotal - liquidity;
+
+    int24 tickUpper = tickLower + getTickSpacing();
+    // TODO fee distribution
+    (amount0, amount1) = IAlgebraPool(pool).burn(tickLower, tickUpper, liquidity, '');
+
+    IAlgebraPool(pool).collect(to, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+
+    emit Kill(msg.sender, epoch, tickLower, zeroForOne, liquidity);
+  }
+
+  function withdraw(int24 tickLower, bool zeroForOne, address to) external returns (uint256 amount0, uint256 amount1) {
+    Epoch epoch = getEpoch(tickLower, zeroForOne);
+    EpochInfo storage epochInfo = epochInfos[epoch];
+
+    if (!epochInfo.filled) revert NotFilled();
+
+    uint128 liquidity = epochInfo.liquidity[msg.sender];
+    if (liquidity == 0) revert ZeroLiquidity();
+    delete epochInfo.liquidity[msg.sender];
+
+    uint256 token0Total = epochInfo.token0Total;
+    uint256 token1Total = epochInfo.token1Total;
+    uint128 liquidityTotal = epochInfo.liquidityTotal;
+
+    amount0 = FullMath.mulDiv(token0Total, liquidity, liquidityTotal);
+    amount1 = FullMath.mulDiv(token1Total, liquidity, liquidityTotal);
+
+    epochInfo.token0Total = token0Total - amount0;
+    epochInfo.token1Total = token1Total - amount1;
+    epochInfo.liquidityTotal = liquidityTotal - liquidity;
+
+    IAlgebraPool(pool).collect(to, tickLower, tickLower + getTickSpacing(), uint128(amount0), uint128(amount1));
+
+    emit Withdraw(msg.sender, epoch, liquidity);
+  }
+
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
@@ -235,6 +417,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     timepoints.initialize(_timestamp, tick);
 
     lastTimepointTimestamp = _timestamp;
+    tickLowerLasts = getTickLower(tick, getTickSpacing());
     isInitialized = true;
 
     IAlgebraPool(pool).setFee(_feeConfig.baseFee());
@@ -260,12 +443,22 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
     address _incentive = incentive;
+    (, int24 tick, , ) = _getPoolState();
+
     if (_incentive != address(0)) {
-      (, int24 tick, , ) = _getPoolState();
       IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
-    } else {
-      _updatePluginConfigInPool(); // should not be called, reset config
     }
+    int24 tickSpacing = getTickSpacing();
+    (int24 tickLower, int24 lower, int24 upper) = _getCrossedTicks(tick, tickSpacing);
+    if (lower > upper) return IAlgebraPlugin.afterSwap.selector;
+
+    // note that a zeroForOne swap means that the pool is actually gaining token0, so limit
+    // order fills are the opposite of swap fills, hence the inversion below
+    for (; lower <= upper; lower += tickSpacing) {
+      _fillEpoch(lower, !zeroToOne);
+    }
+
+    tickLowerLasts = getTickLower(tickLower, tickSpacing);
 
     return IAlgebraPlugin.afterSwap.selector;
   }
