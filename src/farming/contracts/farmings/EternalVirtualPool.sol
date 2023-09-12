@@ -155,7 +155,8 @@ contract EternalVirtualPool is VirtualTickStructure {
         unchecked {
           int128 liquidityDelta;
           _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
-          (liquidityDelta, previousTick, nextTick) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
+          nextTick = previousTick;
+          (liquidityDelta, previousTick, ) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
           _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -liquidityDelta);
         }
       }
@@ -164,7 +165,8 @@ contract EternalVirtualPool is VirtualTickStructure {
         if (targetTick < nextTick) break;
         int128 liquidityDelta;
         _globalTick = nextTick;
-        (liquidityDelta, previousTick, nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
+        previousTick = nextTick;
+        (liquidityDelta, , nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
         _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
     }

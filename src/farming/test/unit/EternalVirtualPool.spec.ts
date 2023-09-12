@@ -1,8 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { expect, blockTimestamp, snapshotGasCost, ActorFixture } from '../shared';
-import { provider } from '../shared/provider';
+import { expect, blockTimestamp, snapshotGasCost } from '../shared';
 
 import { createTimeMachine } from '../shared/time';
 
@@ -12,7 +11,6 @@ const MIN_TICK = -887272;
 const MAX_TICK = 887272;
 
 describe('unit/EternalVirtualPool', () => {
-  let actors: ActorFixture;
   let pseudoFarming: Wallet;
 
   const Time = createTimeMachine();
@@ -24,7 +22,6 @@ describe('unit/EternalVirtualPool', () => {
 
   before(async () => {
     const wallets = (await ethers.getSigners()) as any as Wallet[];
-    actors = new ActorFixture(wallets, provider);
     pseudoFarming = wallets[1];
   });
 
@@ -447,10 +444,7 @@ describe('unit/EternalVirtualPool', () => {
     });
   });
 
-  describe.only('#crossTo', async () => {
-    const MIN_TICK = -887272;
-    const MAX_TICK = 887272;
-
+  describe('#crossTo', async () => {
     it('reverts if not from pool', async () => {
       await expect(virtualPool.crossTo(100, true)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     });
