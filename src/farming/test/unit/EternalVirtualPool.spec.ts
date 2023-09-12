@@ -1,12 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import {
-  expect,
-  blockTimestamp,
-  snapshotGasCost,
-  ActorFixture,
-} from '../shared';
+import { expect, blockTimestamp, snapshotGasCost, ActorFixture } from '../shared';
 import { provider } from '../shared/provider';
 
 import { createTimeMachine } from '../shared/time';
@@ -598,9 +593,43 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).addRewards(1, 1);
 
         await poolMock.crossTo(1, false);
-        
+
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1);
+        expect(await virtualPool.deactivated()).to.be.false;
+      });
+
+      it.only('crosses tick twice if zto after otz', async () => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, -1);
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, -1);
+
+        await virtualPool.connect(pseudoFarming).setRates(100, 100);
+        await virtualPool.connect(pseudoFarming).addRewards(100, 100);
+
+        const timestamp = await blockTimestamp();
+        await Time.setAndMine(timestamp + 1000);
+
+        await poolMock.crossTo(6, false);
+
+        expect(await virtualPool.globalTick()).to.be.eq(6);
+
+        const tickData = await virtualPool.ticks(0);
+
+        expect(tickData.outerFeeGrowth0Token).to.be.not.eq(1n);
+        expect(tickData.outerFeeGrowth1Token).to.be.not.eq(1n);
+
+        await poolMock.crossTo(-6, true);
+
+        expect(await virtualPool.globalTick()).to.be.eq(-6);
+
+        const tickDataAfter = await virtualPool.ticks(0);
+
+        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(0);
+        expect(tickDataAfter.outerFeeGrowth1Token).to.be.eq(0);
+
         expect(await virtualPool.deactivated()).to.be.false;
       });
     });
@@ -757,7 +786,7 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).setRates(1, 1);
         await virtualPool.connect(pseudoFarming).addRewards(1, 1);
-        
+
         await poolMock.crossTo(99, true);
         expect(await virtualPool.deactivated()).to.be.false;
 
@@ -778,7 +807,7 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).deactivate();
 
         await poolMock.crossTo(-101, true);
-        
+
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1);
         expect(await virtualPool.deactivated()).to.be.true;
@@ -794,9 +823,43 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).addRewards(1, 1);
 
         await poolMock.crossTo(1, true);
-        
+
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1);
+        expect(await virtualPool.deactivated()).to.be.false;
+      });
+
+      it.only('crosses tick twice if otz after zto', async () => {
+        await poolMock.setPlugin(poolMock);
+        await poolMock.setVirtualPool(virtualPool);
+
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 1);
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
+
+        await virtualPool.connect(pseudoFarming).setRates(100, 100);
+        await virtualPool.connect(pseudoFarming).addRewards(100, 100);
+
+        const timestamp = await blockTimestamp();
+        await Time.setAndMine(timestamp + 1000);
+
+        await poolMock.crossTo(-6, true);
+
+        expect(await virtualPool.globalTick()).to.be.eq(-6);
+
+        const tickData = await virtualPool.ticks(0);
+
+        expect(tickData.outerFeeGrowth0Token).to.be.not.eq(0n);
+        expect(tickData.outerFeeGrowth1Token).to.be.not.eq(0n);
+
+        await poolMock.crossTo(6, false);
+
+        expect(await virtualPool.globalTick()).to.be.eq(6);
+
+        const tickDataAfter = await virtualPool.ticks(0);
+
+        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(1); // initial value of totalRewardGrowth0
+        expect(tickDataAfter.outerFeeGrowth1Token).to.be.eq(1);
+
         expect(await virtualPool.deactivated()).to.be.false;
       });
     });
