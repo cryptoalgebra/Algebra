@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.20;
 
-import './../../farmings/EternalVirtualPool.sol';
+import './../TestVirtualPool.sol';
 
 /// @notice Test designed to verify that the virtual pool will not deactivate when working correctly
 contract EternalVirtualPoolEchidnaTest {
@@ -10,12 +10,12 @@ contract EternalVirtualPoolEchidnaTest {
   /// @dev The maximum tick that may be passed to #getSqrtRatioAtTick computed from log base 1.0001 of 2**128
   int24 internal constant MAX_TICK = -MIN_TICK;
 
-  EternalVirtualPool private virtualPool;
+  TestVirtualPool private virtualPool;
 
   int24 currentTick = 0;
 
   constructor() {
-    virtualPool = new EternalVirtualPool(address(this), address(this));
+    virtualPool = new TestVirtualPool(address(this), address(this));
   }
 
   function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) external {
@@ -29,6 +29,7 @@ contract EternalVirtualPoolEchidnaTest {
     virtualPool.applyLiquidityDeltaToPosition(bottomTick, topTick, liquidityDelta, currentTick);
 
     assert(!virtualPool.deactivated());
+    _checkNextAndPrevTicks();
   }
 
   function crossTo(int24 targetTick) external {
@@ -41,11 +42,23 @@ contract EternalVirtualPoolEchidnaTest {
     currentTick = targetTick;
 
     assert(!virtualPool.deactivated());
+    _checkNextAndPrevTicks();
   }
 
   function _boundTick(int24 tick) private pure returns (int24 boundedTick) {
     if (tick < MIN_TICK) return MIN_TICK;
     else if (tick > MAX_TICK) return MAX_TICK;
     return tick;
+  }
+
+  function _checkNextAndPrevTicks() private view {
+    int24 prevTick = virtualPool.prevTick();
+    int24 nextTick = virtualPool.nextTick();
+
+    (, , , int24 _nextTick, , ) = virtualPool.ticks(prevTick);
+    (, , int24 _prevTick, , , ) = virtualPool.ticks(nextTick);
+
+    assert(prevTick == _prevTick);
+    assert(nextTick == _nextTick);
   }
 }
