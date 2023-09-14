@@ -169,6 +169,14 @@ describe('AlgebraPool', () => {
     });
   });
 
+  it('safelyGetStateOfAMM', async () => {
+    await pool.initialize(encodePriceSqrt(1, 1));
+
+    const state = await pool.safelyGetStateOfAMM();
+    expect(state.sqrtPrice).to.eq(encodePriceSqrt(1, 1));
+    expect(state.tick).to.eq(0);
+  });
+
   describe('#mint', () => {
     it('fails if not initialized', async () => {
       await expect(mint(wallet.address, -tickSpacing, tickSpacing, 1)).to.be.revertedWithCustomError(
