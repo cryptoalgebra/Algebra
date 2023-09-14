@@ -76,7 +76,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   /// @inheritdoc IAlgebraPoolState
-  function getStateOfAMM() external pure override returns (uint160, int24, uint16, uint8, uint128, int24, int24) {
+  function safelyGetStateOfAMM() external pure override returns (uint160, int24, uint16, uint8, uint128, int24, int24) {
     revert('not implemented');
   }
 

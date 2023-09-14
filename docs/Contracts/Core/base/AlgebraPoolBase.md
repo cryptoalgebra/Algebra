@@ -143,10 +143,10 @@ This value is an int24 to avoid casting even though it is always positive.*
 
 
 ## Functions
-### getStateOfAMM
+### safelyGetStateOfAMM
 
 ```solidity
-function getStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
 ```
 
 Safely get most important state values of Algebra Integral AMM

@@ -101,7 +101,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   /// @inheritdoc IAlgebraPoolState
   /// @dev safe from read-only reentrancy getter function
-  function getStateOfAMM()
+  function safelyGetStateOfAMM()
     external
     view
     returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)

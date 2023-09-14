@@ -17,7 +17,7 @@ interface IAlgebraPoolState {
   /// @return activeLiquidity  The currently in-range liquidity available to the pool
   /// @return nextTick The next initialized tick after current global tick
   /// @return previousTick The previous initialized tick before (or at) current global tick
-  function getStateOfAMM()
+  function safelyGetStateOfAMM()
     external
     view
     returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
