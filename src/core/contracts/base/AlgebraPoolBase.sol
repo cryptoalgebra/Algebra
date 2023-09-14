@@ -26,9 +26,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @notice The struct with important state values of pool
   /// @dev fits into one storage slot
   /// @param price The square root of the current price in Q64.96 format
-  /// @param tick The current tick (price(tick) <= current price)
-  /// @param lastFee The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%)
-  /// @param pluginConfig The current plugin config as a bitmap
+  /// @param tick The current tick (price(tick) <= current price). May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
+  /// @param lastFee The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin
+  /// @param pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
   /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
   /// @param unlocked  // Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
   struct GlobalState {
@@ -97,6 +97,25 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  /// @dev safe from read-only reentrancy getter function
+  function getStateOfAMM()
+    external
+    view
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+  {
+    sqrtPrice = globalState.price;
+    tick = globalState.tick;
+    lastFee = globalState.lastFee;
+    pluginConfig = globalState.pluginConfig;
+    bool unlocked = globalState.unlocked;
+    if (!unlocked) revert IAlgebraPoolErrors.locked();
+
+    activeLiquidity = liquidity;
+    nextTick = nextTickGlobal;
+    previousTick = prevTickGlobal;
   }
 
   /// @inheritdoc IAlgebraPoolState

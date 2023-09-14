@@ -75,6 +75,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     revert('not implemented');
   }
 
+  /// @inheritdoc IAlgebraPoolState
+  function getStateOfAMM() external pure override returns (uint160, int24, uint16, uint8, uint128, int24, int24) {
+    revert('not implemented');
+  }
+
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
     globalState.unlocked = true;

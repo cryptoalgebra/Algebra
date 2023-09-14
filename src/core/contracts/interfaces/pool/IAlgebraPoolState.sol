@@ -7,17 +7,34 @@ pragma solidity >=0.5.0;
 /// This interface is based on the UniswapV3 interface, credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolState {
+  /// @notice Safely get most important state values of Algebra Integral AMM
+  /// @dev Several values exposed as a single method to save gas when accessed externally.
+  /// *Important security note: this method checks reentrancy lock and should be preferred in most cases*.
+  /// @return sqrtPrice The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
+  /// @return tick The current global tick of the pool. May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
+  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin
+  /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
+  /// @return activeLiquidity  The currently in-range liquidity available to the pool
+  /// @return nextTick The next initialized tick after current global tick
+  /// @return previousTick The previous initialized tick before (or at) current global tick
+  function getStateOfAMM()
+    external
+    view
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
+
+  // ! IMPORTANT security note: the pool state can be manipulated.
+  // ! The following methods do not check reentrancy lock themselves.
+
   /// @notice The globalState structure in the pool stores many values but requires only one slot
   /// and is exposed as a single method to save gas when accessed externally.
   /// @dev *important security note: caller should check `unlocked` flag to prevent read-only reentrancy*
   /// @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6
-  /// @return pluginConfig The current plugin config. Each bit of the config is responsible for enabling/disabling the hooks
-  /// The last bit indicates whether the plugin contains dynamic fees logic
-  /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
-  /// @return unlocked Whether the pool is currently locked to reentrancy
+  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin
+  /// @return pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
+  /// @return communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
   function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice Look up information about a specific tick in the pool
