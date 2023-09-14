@@ -88,13 +88,13 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
 
-*Developer note: *important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy***
 
 ### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
 
 Look up information about a specific tick in the pool
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 ### uint32 communityFeeLastTimestamp 
 
@@ -116,13 +116,13 @@ Returns 256 packed tick initialized boolean values. See TickTree for more inform
 
 The next initialized tick after current global tick
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 ### int24 prevTickGlobal 
 
 The previous initialized tick before (or at) current global tick
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 ### uint128 liquidity 
 
@@ -130,7 +130,7 @@ The currently in range liquidity available to the pool
 
 *Developer note: This value has no relationship to the total liquidity across all ticks.
 Returned value cannot exceed type(uint128).max
-*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 ### int24 tickSpacing 
 
@@ -165,6 +165,23 @@ Safely get most important state values of Algebra Integral AMM
 | nextTick | int24 | The next initialized tick after current global tick |
 | previousTick | int24 | The previous initialized tick before (or at) current global tick |
 
+### isUnlocked
+
+```solidity
+function isUnlocked() external view returns (bool unlocked)
+```
+
+Allows to easily get current reentrancy lock status
+
+*Developer note: can be used to prevent read-only reentrancy.
+This method just returns &#x60;globalState.unlocked&#x60; value*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| unlocked | bool | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
+
 ### getCommunityFeePending
 
 ```solidity
@@ -193,7 +210,7 @@ The current pool fee value
 *Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
 If the plugin implements complex fee logic, this method may return an incorrect value or revert.
 In this case, see the plugin implementation and related documentation.
-*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 **Returns:**
 

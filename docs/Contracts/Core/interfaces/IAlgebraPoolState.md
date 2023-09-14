@@ -23,7 +23,7 @@ function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 t
 Safely get most important state values of Algebra Integral AMM
 
 *Developer note: Several values exposed as a single method to save gas when accessed externally.
-*Important security note: this method checks reentrancy lock and should be preferred in most cases*.*
+**Important security note: this method checks reentrancy lock and should be preferred in most cases**.*
 
 **Returns:**
 
@@ -37,6 +37,23 @@ Safely get most important state values of Algebra Integral AMM
 | nextTick | int24 | The next initialized tick after current global tick |
 | previousTick | int24 | The previous initialized tick before (or at) current global tick |
 
+### isUnlocked
+
+```solidity
+function isUnlocked() external view returns (bool unlocked)
+```
+
+Allows to easily get current reentrancy lock status
+
+*Developer note: can be used to prevent read-only reentrancy.
+This method just returns &#x60;globalState.unlocked&#x60; value*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| unlocked | bool | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
+
 ### globalState
 
 ```solidity
@@ -46,7 +63,7 @@ function globalState() external view returns (uint160 price, int24 tick, uint16 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
 
-*Developer note: *important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy***
 
 **Returns:**
 
@@ -67,7 +84,7 @@ function ticks(int24 tick) external view returns (uint256 liquidityTotal, int128
 
 Look up information about a specific tick in the pool
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -192,7 +209,7 @@ The current pool fee value
 *Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
 If the plugin implements complex fee logic, this method may return an incorrect value or revert.
 In this case, see the plugin implementation and related documentation.
-*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 **Returns:**
 
@@ -226,7 +243,7 @@ function positions(bytes32 key) external view returns (uint256 liquidity, uint25
 
 Returns the information about a position by the position&#x27;s key
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -252,7 +269,7 @@ The currently in range liquidity available to the pool
 
 *Developer note: This value has no relationship to the total liquidity across all ticks.
 Returned value cannot exceed type(uint128).max
-*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 **Returns:**
 
@@ -287,7 +304,7 @@ function prevTickGlobal() external view returns (int24)
 
 The previous initialized tick before (or at) current global tick
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 **Returns:**
 
@@ -303,7 +320,7 @@ function nextTickGlobal() external view returns (int24)
 
 The next initialized tick after current global tick
 
-*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
 **Returns:**
 
