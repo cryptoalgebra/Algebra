@@ -50,7 +50,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
 
     // load from one storage slot too
-    (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.fee, globalState.communityFee);
+    (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
 
     if (zeroToOne) {

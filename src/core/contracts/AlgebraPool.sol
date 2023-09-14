@@ -16,6 +16,7 @@ import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 import './libraries/Plugins.sol';
 
+import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra concentrated liquidity pool
@@ -42,7 +43,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     uint8 pluginConfig = globalState.pluginConfig;
     globalState.tick = tick;
-    globalState.fee = _fee;
+    globalState.lastFee = _fee;
     globalState.communityFee = _communityFee;
 
     emit Initialize(initialPrice, tick);
@@ -435,7 +436,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (isDynamicFeeEnabled) revert dynamicFeeActive();
       _checkIfAdministrator();
     }
-    globalState.fee = newFee;
+    globalState.lastFee = newFee;
     emit Fee(newFee);
   }
 }

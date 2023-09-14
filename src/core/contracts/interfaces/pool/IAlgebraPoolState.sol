@@ -2,22 +2,26 @@
 pragma solidity >=0.5.0;
 
 /// @title Pool state that can change
-/// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
+/// @dev Important security note: when using this data by external contracts, it is necessary to take into account the possibility
+/// of manipulation (including read-only reentrancy).
+/// This interface is based on the UniswapV3 interface, credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolState {
   /// @notice The globalState structure in the pool stores many values but requires only one slot
   /// and is exposed as a single method to save gas when accessed externally.
+  /// @dev *important security note: caller should check `unlocked` flag to prevent read-only reentrancy*
   /// @return price The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value
   /// @return tick The current tick of the pool, i.e. according to the last tick transition that was run
   /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
-  /// @return fee The last known pool fee value in hundredths of a bip, i.e. 1e-6
+  /// @return lastFee The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6
   /// @return pluginConfig The current plugin config. Each bit of the config is responsible for enabling/disabling the hooks
   /// The last bit indicates whether the plugin contains dynamic fees logic
   /// @return communityFee The community fee percentage of the swap fee in thousandths (1e-3)
   /// @return unlocked Whether the pool is currently locked to reentrancy
-  function globalState() external view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
+  function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked);
 
   /// @notice Look up information about a specific tick in the pool
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @param tick The tick to look up
   /// @return liquidityTotal The total amount of position liquidity that uses the pool either as tick lower or tick upper
   /// @return liquidityDelta How much liquidity changes when the pool price crosses the tick
@@ -75,6 +79,7 @@ interface IAlgebraPoolState {
   /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
   /// If the plugin implements complex fee logic, this method may return an incorrect value or revert.
   /// In this case, see the plugin implementation and related documentation.
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @return currentFee The current pool fee value in hundredths of a bip, i.e. 1e-6
   function fee() external view returns (uint16 currentFee);
 
@@ -86,6 +91,7 @@ interface IAlgebraPoolState {
   function getReserves() external view returns (uint128 reserve0, uint128 reserve1);
 
   /// @notice Returns the information about a position by the position's key
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @param key The position's key is a packed concatenation of the owner address, bottomTick and topTick indexes
   /// @return liquidity The amount of liquidity in the position
   /// @return innerFeeGrowth0Token Fee growth of token0 inside the tick range as of the last mint/burn/poke
@@ -99,6 +105,7 @@ interface IAlgebraPoolState {
   /// @notice The currently in range liquidity available to the pool
   /// @dev This value has no relationship to the total liquidity across all ticks.
   /// Returned value cannot exceed type(uint128).max
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @return The current in range liquidity
   function liquidity() external view returns (uint128);
 
@@ -111,10 +118,12 @@ interface IAlgebraPoolState {
   function tickSpacing() external view returns (int24);
 
   /// @notice The previous initialized tick before (or at) current global tick
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @return The previous initialized tick
   function prevTickGlobal() external view returns (int24);
 
   /// @notice The next initialized tick after current global tick
+  /// @dev *important security note: caller should check reentrancy lock to prevent read-only reentrancy*
   /// @return The next initialized tick
   function nextTickGlobal() external view returns (int24);
 }

@@ -4,7 +4,6 @@ pragma solidity =0.8.20;
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
 import '../interfaces/callback/IAlgebraMintCallback.sol';
 import '../interfaces/callback/IAlgebraFlashCallback.sol';
-import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraFactory.sol';
@@ -24,15 +23,25 @@ import './common/Timestamp.sol';
 abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
+  /// @notice The struct with important state values of pool
+  /// @dev fits into one storage slot
+  /// @param price The square root of the current price in Q64.96 format
+  /// @param tick The current tick (price(tick) <= current price)
+  /// @param lastFee The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%)
+  /// @param pluginConfig The current plugin config as a bitmap
+  /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @param unlocked  // Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
   struct GlobalState {
-    uint160 price; // The square root of the current price in Q64.96 format
-    int24 tick; // The current tick
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint8 pluginConfig; // The current plugin config as a bitmap
-    uint16 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
-    bool unlocked; // True if the contract is unlocked, otherwise - false
+    uint160 price;
+    int24 tick;
+    uint16 lastFee;
+    uint8 pluginConfig;
+    uint16 communityFee;
+    bool unlocked;
   }
 
+  /// @inheritdoc IAlgebraPoolImmutables
+  uint128 public constant override maxLiquidityPerTick = Constants.MAX_LIQUIDITY_PER_TICK;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables
@@ -42,10 +51,14 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override communityVault;
 
+  // ! IMPORTANT security note: the pool state can be manipulated
+  // ! external contracts using this data must prevent read-only reentrancy
+
   /// @inheritdoc IAlgebraPoolState
   uint256 public override totalFeeGrowth0Token;
   /// @inheritdoc IAlgebraPoolState
   uint256 public override totalFeeGrowth1Token;
+
   /// @inheritdoc IAlgebraPoolState
   GlobalState public override globalState;
 
@@ -54,7 +67,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
-
   /// @dev The amounts of token0 and token1 that will be sent to the vault
   uint104 internal communityFeePending0;
   uint104 internal communityFeePending1;
@@ -69,29 +81,11 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   int24 public override nextTickGlobal;
   /// @inheritdoc IAlgebraPoolState
   int24 public override prevTickGlobal;
-
   /// @inheritdoc IAlgebraPoolState
   uint128 public override liquidity;
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
-
-  /// @inheritdoc IAlgebraPoolImmutables
-  function maxLiquidityPerTick() external pure override returns (uint128) {
-    return Constants.MAX_LIQUIDITY_PER_TICK;
-  }
-
-  /// @inheritdoc IAlgebraPoolState
-  function getCommunityFeePending() external view returns (uint128, uint128) {
-    return (communityFeePending0, communityFeePending1);
-  }
-
-  /// @inheritdoc IAlgebraPoolState
-  function fee() external view returns (uint16 currentFee) {
-    currentFee = globalState.fee;
-    uint8 pluginConfig = globalState.pluginConfig;
-
-    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
-  }
+  // shares one slot with TickStructure.tickTreeRoot
 
   /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
@@ -103,6 +97,19 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getCommunityFeePending() external view returns (uint128, uint128) {
+    return (communityFeePending0, communityFeePending1);
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function fee() external view returns (uint16 currentFee) {
+    currentFee = globalState.lastFee;
+    uint8 pluginConfig = globalState.pluginConfig;
+
+    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
   }
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
