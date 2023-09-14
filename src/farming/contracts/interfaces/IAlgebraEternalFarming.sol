@@ -36,6 +36,7 @@ interface IAlgebraEternalFarming {
   error emergencyActivated();
 
   error reentrancyLock();
+  error poolReentrancyLock();
 
   /// @notice Returns hash of 'INCENTIVE_MAKER_ROLE', used as role for incentive creation
   function INCENTIVE_MAKER_ROLE() external view returns (bytes32);
