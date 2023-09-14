@@ -22,6 +22,12 @@ interface IAlgebraPoolState {
     view
     returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick);
 
+  /// @notice Allows to easily get current reentrancy lock status
+  /// @dev can be used to prevent read-only reentrancy.
+  /// This method just returns `globalState.unlocked` value
+  /// @return unlocked Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
+  function isUnlocked() external view returns (bool unlocked);
+
   // ! IMPORTANT security note: the pool state can be manipulated.
   // ! The following methods do not check reentrancy lock themselves.
 

@@ -91,6 +91,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     revert('not implemented');
   }
 
+  /// @inheritdoc IAlgebraPoolState
+  function isUnlocked() external view override returns (bool unlocked) {
+    return globalState.unlocked;
+  }
+
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside

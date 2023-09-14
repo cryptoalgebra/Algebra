@@ -125,6 +125,10 @@ describe('AlgebraPool', () => {
     expect(await pool.checkBlockTimestamp()).to.be.eq(true);
   });
 
+  it('isUnlocked', async () => {
+    expect(await pool.isUnlocked()).to.be.true; // false checked inside of TestAlgebraReentrantCallee.sol
+  });
+
   describe('#initialize', () => {
     it('fails if already initialized', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
@@ -175,6 +179,8 @@ describe('AlgebraPool', () => {
     const state = await pool.safelyGetStateOfAMM();
     expect(state.sqrtPrice).to.eq(encodePriceSqrt(1, 1));
     expect(state.tick).to.eq(0);
+
+    // revert case checked inside of TestAlgebraReentrantCallee.sol
   });
 
   describe('#mint', () => {

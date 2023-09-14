@@ -104,6 +104,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   function safelyGetStateOfAMM()
     external
     view
+    override
     returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
   {
     sqrtPrice = globalState.price;
@@ -119,12 +120,17 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   /// @inheritdoc IAlgebraPoolState
-  function getCommunityFeePending() external view returns (uint128, uint128) {
+  function isUnlocked() external view override returns (bool unlocked) {
+    return globalState.unlocked;
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getCommunityFeePending() external view override returns (uint128, uint128) {
     return (communityFeePending0, communityFeePending1);
   }
 
   /// @inheritdoc IAlgebraPoolState
-  function fee() external view returns (uint16 currentFee) {
+  function fee() external view override returns (uint16 currentFee) {
     currentFee = globalState.lastFee;
     uint8 pluginConfig = globalState.pluginConfig;
 

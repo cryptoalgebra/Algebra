@@ -79,6 +79,8 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    require(IAlgebraPool(msg.sender).isUnlocked() == false);
+
     require(false, 'Unable to reenter');
   }
 }
