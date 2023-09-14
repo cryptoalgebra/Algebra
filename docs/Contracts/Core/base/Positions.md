@@ -31,4 +31,5 @@ struct Position {
 
 Returns the information about a position by the position&#x27;s key
 
+*Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 

@@ -75,6 +75,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     revert('not implemented');
   }
 
+  /// @inheritdoc IAlgebraPoolState
+  function safelyGetStateOfAMM() external pure override returns (uint160, int24, uint16, uint8, uint128, int24, int24) {
+    revert('not implemented');
+  }
+
   constructor() {
     globalState.fee = Constants.INIT_DEFAULT_FEE;
     globalState.unlocked = true;
@@ -84,6 +89,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolState
   function getReserves() external pure override returns (uint128, uint128) {
     revert('not implemented');
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function isUnlocked() external view override returns (bool unlocked) {
+    return globalState.unlocked;
   }
 
   /// @inheritdoc IAlgebraPoolActions
