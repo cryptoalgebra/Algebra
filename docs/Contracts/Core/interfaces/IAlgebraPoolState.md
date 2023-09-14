@@ -7,19 +7,46 @@ Pool state that can change
 
 
 
-*Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
+*Developer note: Important security note: when using this data by external contracts, it is necessary to take into account the possibility
+of manipulation (including read-only reentrancy).
+This interface is based on the UniswapV3 interface, credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 
 
 ## Functions
+### getStateOfAMM
+
+```solidity
+function getStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+```
+
+Safely get most important state values of Algebra Integral AMM
+
+*Developer note: Several values exposed as a single method to save gas when accessed externally.
+*Important security note: this method checks reentrancy lock and should be preferred in most cases*.*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sqrtPrice | uint160 | The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value |
+| tick | int24 | The current global tick of the pool. May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary |
+| lastFee | uint16 | The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin |
+| pluginConfig | uint8 | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
+| activeLiquidity | uint128 | The currently in-range liquidity available to the pool |
+| nextTick | int24 | The next initialized tick after current global tick |
+| previousTick | int24 | The previous initialized tick before (or at) current global tick |
+
 ### globalState
 
 ```solidity
-function globalState() external view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig, uint16 communityFee, bool unlocked)
+function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked)
 ```
 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
+
+*Developer note: *important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy**
 
 **Returns:**
 
@@ -27,10 +54,10 @@ and is exposed as a single method to save gas when accessed externally.
 | ---- | ---- | ----------- |
 | price | uint160 | The current price of the pool as a sqrt(dToken1/dToken0) Q64.96 value |
 | tick | int24 | The current tick of the pool, i.e. according to the last tick transition that was run This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary |
-| fee | uint16 | The last known pool fee value in hundredths of a bip, i.e. 1e-6 |
-| pluginConfig | uint8 | The current plugin config. Each bit of the config is responsible for enabling/disabling the hooks The last bit indicates whether the plugin contains dynamic fees logic |
-| communityFee | uint16 | The community fee percentage of the swap fee in thousandths (1e-3) |
-| unlocked | bool | Whether the pool is currently locked to reentrancy |
+| lastFee | uint16 | The current (last known) pool fee value in hundredths of a bip, i.e. 1e-6 (so '100' is '0.01%'). May be obsolete if using dynamic fee plugin |
+| pluginConfig | uint8 | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
+| communityFee | uint16 | The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%) |
+| unlocked | bool | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
 
 ### ticks
 
@@ -39,6 +66,8 @@ function ticks(int24 tick) external view returns (uint256 liquidityTotal, int128
 ```
 
 Look up information about a specific tick in the pool
+
+*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -162,7 +191,8 @@ The current pool fee value
 
 *Developer note: In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
 If the plugin implements complex fee logic, this method may return an incorrect value or revert.
-In this case, see the plugin implementation and related documentation.*
+In this case, see the plugin implementation and related documentation.
+*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
 
 **Returns:**
 
@@ -196,6 +226,8 @@ function positions(bytes32 key) external view returns (uint256 liquidity, uint25
 
 Returns the information about a position by the position&#x27;s key
 
+*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | key | bytes32 | The position's key is a packed concatenation of the owner address, bottomTick and topTick indexes |
@@ -219,7 +251,8 @@ function liquidity() external view returns (uint128)
 The currently in range liquidity available to the pool
 
 *Developer note: This value has no relationship to the total liquidity across all ticks.
-Returned value cannot exceed type(uint128).max*
+Returned value cannot exceed type(uint128).max
+*important security note: caller should check reentrancy lock to prevent read-only reentrancy**
 
 **Returns:**
 
@@ -254,6 +287,8 @@ function prevTickGlobal() external view returns (int24)
 
 The previous initialized tick before (or at) current global tick
 
+*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+
 **Returns:**
 
 | Name | Type | Description |
@@ -267,6 +302,8 @@ function nextTickGlobal() external view returns (int24)
 ```
 
 The next initialized tick after current global tick
+
+*Developer note: *important security note: caller should check reentrancy lock to prevent read-only reentrancy**
 
 **Returns:**
 
