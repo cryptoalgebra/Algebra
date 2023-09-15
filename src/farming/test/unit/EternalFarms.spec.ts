@@ -16,6 +16,7 @@ import {
   ActorFixture,
   makeTimestamps,
   ZERO_ADDRESS,
+  encodePriceSqrt,
 } from '../shared';
 import { provider } from '../shared/provider';
 import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../helpers';
@@ -1721,6 +1722,91 @@ describe('unit/EternalFarms', () => {
     describe('fails if', () => {
       it('farm has already been exitFarming', async () => {
         await expect(subject(lpUser0)).to.revertedWith('ERC721: invalid token ID');
+      });
+
+      it('if reentrancy lock in pool is locked', async () => {
+        const _factory = await ethers.getContractFactory('TestERC20Reentrant');
+        const tokenReentrant = (await _factory.deploy(MaxUint256 / 2n)) as any as TestERC20Reentrant;
+
+        const [token0, token1] =
+          (await tokenReentrant.getAddress()) < (await context.token1.getAddress())
+            ? [tokenReentrant, context.token1]
+            : [context.token1, tokenReentrant];
+
+        await erc20Helper.ensureBalancesAndApprovals(lpUser0, [token0, token1], amountDesired, await context.nft.getAddress());
+
+        await context.nft.createAndInitializePoolIfNecessary(token0, token1, encodePriceSqrt(1, 1));
+
+        const poolAddress = await context.factory.poolByPair(token0, token1);
+
+        const _tokenId = await mintPosition(context.nft.connect(lpUser0), {
+          token0: token0,
+          token1: token1,
+          fee: FeeAmount.MEDIUM,
+          tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+          recipient: lpUser0.address,
+          amount0Desired: amountDesired,
+          amount1Desired: amountDesired,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        });
+
+        const _nonce = await context.eternalFarming.numOfIncentives();
+
+        await helpers.createIncentiveFlow({
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          totalReward,
+          bonusReward,
+          poolAddress,
+          nonce: _nonce,
+          rewardRate: 10n,
+          bonusRewardRate: 50n,
+        });
+
+        await context.nft.connect(lpUser0).approveForFarming(_tokenId, true, context.farmingCenter);
+
+        await context.farmingCenter.connect(lpUser0).enterFarming(
+          {
+            rewardToken: await context.rewardToken.getAddress(),
+            bonusRewardToken: await context.bonusRewardToken.getAddress(),
+            pool: poolAddress,
+            nonce: _nonce,
+          },
+          _tokenId
+        );
+
+        //await tokenReentrant.prepareAttack(incentiveKey, 500, 500);
+
+        await context.nft.connect(lpUser0).approve(tokenReentrant, _tokenId);
+        const txData = await context.farmingCenter.exitFarming.populateTransaction(
+          {
+            pool: poolAddress,
+            rewardToken: context.rewardToken,
+            bonusRewardToken: context.bonusRewardToken,
+            nonce: _nonce,
+          },
+          _tokenId
+        );
+
+        await erc20Helper.ensureBalancesAndApprovals(lpUser0, [token0, token1], amountDesired, await context.router.getAddress());
+        const swapData = {
+          tokenIn: tokenReentrant,
+          tokenOut: context.token1,
+          amountIn: 10,
+          amountOutMinimum: 0,
+          recipient: lpUser0.address,
+          deadline: (await blockTimestamp()) + 10000,
+          limitSqrtPrice: 0,
+        };
+
+        await tokenReentrant.prepareComplexAttack(context.farmingCenter, txData.data);
+        await expect(context.router.connect(lpUser0).exactInputSingle(swapData)).to.be.revertedWith('STF');
+
+        await tokenReentrant.cancelComplexAttack();
+        await expect(context.router.connect(lpUser0).exactInputSingle(swapData)).to.be.not.reverted;
       });
     });
   });
