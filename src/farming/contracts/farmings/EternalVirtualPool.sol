@@ -2,6 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
+import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
@@ -13,7 +14,7 @@ import '../base/VirtualTickStructure.sol';
 
 /// @title Algebra eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
-contract EternalVirtualPool is VirtualTickStructure {
+contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -48,7 +49,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     farmingAddress = _farmingAddress;
     plugin = _plugin;
 
-    prevTimestamp = uint32(block.timestamp);
+    prevTimestamp = _blockTimestamp();
     globalPrevInitializedTick = TickMath.MIN_TICK;
     globalNextInitializedTick = TickMath.MAX_TICK;
   }
@@ -78,7 +79,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick || ticks[topTick].prevTick == ticks[topTick].nextTick)
         revert IAlgebraPoolErrors.tickIsNotInitialized();
 
-      uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
+      uint32 timeDelta = _blockTimestamp() - prevTimestamp;
       int24 _globalTick = globalTick;
 
       (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
@@ -214,7 +215,7 @@ contract EternalVirtualPool is VirtualTickStructure {
 
     globalTick = currentTick;
 
-    if (uint32(block.timestamp) > _prevTimestamp) {
+    if (_blockTimestamp() > _prevTimestamp) {
       _distributeRewards(_prevTimestamp, _currentLiquidity);
     }
 
@@ -270,7 +271,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   function _distributeRewards(uint32 _prevTimestamp, uint256 _currentLiquidity) internal {
     // currentLiquidity is uint128
     unchecked {
-      uint256 timeDelta = uint32(block.timestamp) - _prevTimestamp; // safe until timedelta > 136 years
+      uint256 timeDelta = _blockTimestamp() - _prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return; // only once per block
 
       if (_currentLiquidity > 0) {
@@ -292,7 +293,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       }
     }
 
-    prevTimestamp = uint32(block.timestamp);
+    prevTimestamp = _blockTimestamp();
     return;
   }
 
