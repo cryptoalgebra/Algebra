@@ -7,10 +7,14 @@ import './TestERC20.sol';
 
 contract TestERC20Reentrant is TestERC20 {
   bool public doReentrancy = false;
+  bool public doComplexReentrancy = false;
 
   IncentiveKey private keyForAttack;
   uint128 rewardAmountForAttack;
   uint128 bonusRewardAmountForAttack;
+
+  address addressForComplexAttack;
+  bytes calldataForComplexAttack;
 
   constructor(uint256 amountToMint) TestERC20(amountToMint) {
     //
@@ -23,9 +27,24 @@ contract TestERC20Reentrant is TestERC20 {
     bonusRewardAmountForAttack = bonusRewardAmount;
   }
 
+  function prepareComplexAttack(address target, bytes calldata data) external {
+    doComplexReentrancy = true;
+    addressForComplexAttack = target;
+    calldataForComplexAttack = data;
+  }
+
+  function cancelComplexAttack() external {
+    doComplexReentrancy = false;
+  }
+
   function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
     if (doReentrancy) {
       IAlgebraEternalFarming(msg.sender).addRewards(keyForAttack, rewardAmountForAttack, bonusRewardAmountForAttack);
+    }
+
+    if (doComplexReentrancy) {
+      (bool res, ) = addressForComplexAttack.call(calldataForComplexAttack);
+      require(res, 'Attack failed');
     }
 
     uint256 allowanceBefore = allowance[sender][msg.sender];

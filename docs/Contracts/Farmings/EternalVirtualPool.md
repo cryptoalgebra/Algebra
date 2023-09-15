@@ -174,8 +174,7 @@ function crossTo(int24 targetTick, bool zeroToOne) external returns (bool)
 
 
 
-*Developer note: This function is called by the main pool if an initialized ticks are crossed by swap.
-If any one of crossed ticks is also initialized in a virtual pool it should be crossed too*
+*Developer note: If the virtual pool is deactivated, does nothing*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -207,7 +206,8 @@ function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 l
 
 
 
-*Developer note: This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly*
+*Developer note: This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly.
+If the virtual pool is deactivated, does nothing.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
