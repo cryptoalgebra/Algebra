@@ -124,7 +124,8 @@ function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 l
 
 
 
-*Developer note: This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly*
+*Developer note: This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly.
+If the virtual pool is deactivated, does nothing.*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

@@ -119,6 +119,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraVirtualPool
+  /// @dev If the virtual pool is deactivated, does nothing
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != plugin) revert onlyPlugin();
 

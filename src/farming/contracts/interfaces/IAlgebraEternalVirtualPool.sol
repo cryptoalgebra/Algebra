@@ -42,7 +42,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @notice Returns true if virtual pool is deactivated
   function deactivated() external view returns (bool);
 
-  /// @dev This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly
+  /// @dev This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly.
+  /// If the virtual pool is deactivated, does nothing.
   /// @param bottomTick The bottom tick of a position
   /// @param topTick The top tick of a position
   /// @param liquidityDelta The amount of liquidity in a position
