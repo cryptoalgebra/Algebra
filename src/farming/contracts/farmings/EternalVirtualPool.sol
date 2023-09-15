@@ -129,7 +129,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
 
-    if (_deactivated) return false;
+    if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
     // early return if without any crosses
@@ -195,21 +195,24 @@ contract EternalVirtualPool is VirtualTickStructure {
     uint32 _prevTimestamp = prevTimestamp;
     bool _deactivated = deactivated;
     {
-      int24 _lastKnownTick = globalTick;
       int24 _nextActiveTick = globalNextInitializedTick;
       int24 _prevActiveTick = globalPrevInitializedTick;
 
-      if (
-        (currentTick < _nextActiveTick != _lastKnownTick < _nextActiveTick) || (currentTick >= _prevActiveTick != _lastKnownTick >= _prevActiveTick)
-      ) {
-        _deactivated = true;
-        deactivated = true;
+      if (!_deactivated) {
+        // checking if the current tick is within the allowed range: it should not be on the other side of the nearest active tick
+        // if the check is violated, the virtual pool deactivates
+        if (!_isTickInsideRange(currentTick, _prevActiveTick, _nextActiveTick)) {
+          deactivated = _deactivated = true;
+        }
       }
     }
 
-    if (!_deactivated) {
-      globalTick = currentTick;
+    if (_deactivated) {
+      // early return if virtual pool is deactivated
+      return;
     }
+
+    globalTick = currentTick;
 
     if (uint32(block.timestamp) > _prevTimestamp) {
       _distributeRewards(_prevTimestamp, _currentLiquidity);
@@ -221,7 +224,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       bool flippedBottom = _updateTick(bottomTick, currentTick, liquidityDelta, false);
       bool flippedTop = _updateTick(topTick, currentTick, liquidityDelta, true);
 
-      if (currentTick >= bottomTick && currentTick < topTick) {
+      if (_isTickInsideRange(currentTick, bottomTick, topTick)) {
         currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
 
@@ -239,6 +242,10 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   function _checkIsFromFarming() internal view {
     if (msg.sender != farmingAddress) revert onlyFarming();
+  }
+
+  function _isTickInsideRange(int24 tick, int24 bottomTick, int24 topTick) internal pure returns (bool) {
+    return tick >= bottomTick && tick < topTick;
   }
 
   function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
