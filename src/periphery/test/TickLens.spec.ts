@@ -44,77 +44,77 @@ describe('TickLens', () => {
     wallets = await (ethers as any).getSigners();
   });
 
+  async function mint(tickLower: number, tickUpper: number, amountBothDesired: BigNumberish): Promise<number> {
+    const mintParams = {
+      token0: tokens[0].address,
+      token1: tokens[1].address,
+      fee: FeeAmount.MEDIUM,
+      tickLower,
+      tickUpper,
+      amount0Desired: amountBothDesired,
+      amount1Desired: amountBothDesired,
+      amount0Min: 0,
+      amount1Min: 0,
+      recipient: wallets[0].address,
+      deadline: 1,
+    };
+
+    const { liquidity } = await nft.mint.staticCall(mintParams);
+
+    await nft.mint(mintParams);
+    return Number(liquidity);
+  }
+
+  async function subFixture() {
+    const { factory, tokens, nft } = await nftFixture();
+
+    let [tokenAddressA, tokenAddressB] = [tokens[0].address, tokens[1].address];
+
+    if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
+      [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
+
+    await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+
+    const liquidityParams = {
+      token0: tokenAddressA,
+      token1: tokenAddressB,
+      fee: FeeAmount.MEDIUM,
+      tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+      recipient: wallets[0].address,
+      amount0Desired: 1000000,
+      amount1Desired: 1000000,
+      amount0Min: 0,
+      amount1Min: 0,
+      deadline: 1,
+    };
+
+    await nft.mint(liquidityParams);
+    const poolAddress = computePoolAddress(await factory.poolDeployer(), [tokens[0].address, tokens[1].address]);
+    const lensFactory = await ethers.getContractFactory('TickLensTest');
+    const tickLens = (await lensFactory.deploy()) as any as TickLensTest;
+
+    return {
+      factory,
+      nft,
+      tokens,
+      poolAddress,
+      tickLens,
+    };
+  }
+
+  function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {
+    const intermediate = BigInt(tick);
+    // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
+    return intermediate >> 8n;
+  }
+
   describe('#getPopulatedTicksInWord', () => {
     const fullRangeLiquidity = 1000000;
-
-    async function mint(tickLower: number, tickUpper: number, amountBothDesired: BigNumberish): Promise<number> {
-      const mintParams = {
-        token0: tokens[0].address,
-        token1: tokens[1].address,
-        fee: FeeAmount.MEDIUM,
-        tickLower,
-        tickUpper,
-        amount0Desired: amountBothDesired,
-        amount1Desired: amountBothDesired,
-        amount0Min: 0,
-        amount1Min: 0,
-        recipient: wallets[0].address,
-        deadline: 1,
-      };
-
-      const { liquidity } = await nft.mint.staticCall(mintParams);
-
-      await nft.mint(mintParams);
-      return Number(liquidity);
-    }
-
-    async function subFixture() {
-      const { factory, tokens, nft } = await nftFixture();
-
-      let [tokenAddressA, tokenAddressB] = [tokens[0].address, tokens[1].address];
-
-      if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
-        [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
-
-      await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
-
-      const liquidityParams = {
-        token0: tokenAddressA,
-        token1: tokenAddressB,
-        fee: FeeAmount.MEDIUM,
-        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        recipient: wallets[0].address,
-        amount0Desired: 1000000,
-        amount1Desired: 1000000,
-        amount0Min: 0,
-        amount1Min: 0,
-        deadline: 1,
-      };
-
-      await nft.mint(liquidityParams);
-      const poolAddress = computePoolAddress(await factory.poolDeployer(), [tokens[0].address, tokens[1].address]);
-      const lensFactory = await ethers.getContractFactory('TickLensTest');
-      const tickLens = (await lensFactory.deploy()) as any as TickLensTest;
-
-      return {
-        factory,
-        nft,
-        tokens,
-        poolAddress,
-        tickLens,
-      };
-    }
 
     beforeEach('load fixture', async () => {
       ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
     });
-
-    function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {
-      const intermediate = BigInt(tick);
-      // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
-      return intermediate >> 8n;
-    }
 
     it('works for min/max', async () => {
       const res = await tickLens.getPopulatedTicksInWord(
@@ -201,13 +201,117 @@ describe('TickLens', () => {
         )
       );
     });
+  });
 
-    it('fully populated ticks [ @skip-on-coverage ]', async () => {
+  describe('#getNextActiveTicks', () => {
+    const fullRangeLiquidity = 1000000;
+
+    beforeEach('load fixture', async () => {
+      ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
+    });
+
+    it('works for min/max', async () => {
+      const res = await tickLens.getNextActiveTicks(poolAddress, getMinTick(1), 256, true);
+      const [min, first, second, max] = res;
+
+      expect(min.tick).to.be.eq(getMinTick(1));
+      expect(min.liquidityNet).to.be.eq(0);
+      expect(min.liquidityGross).to.be.eq(0);
+
+      expect(first.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(first.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(first.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(second.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(second.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(second.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(max.tick).to.be.eq(getMaxTick(1));
+      expect(max.liquidityNet).to.be.eq(0);
+      expect(max.liquidityGross).to.be.eq(0);
+    });
+
+    it('reverts on invalid tick', async () => {
+      await expect(tickLens.getNextActiveTicks(poolAddress, getMinTick(1) + 1, 256, true)).to.be.revertedWith(
+        'Invalid startingTick'
+      );
+    });
+
+    it('works for min/max and -2/-1/0/1', async () => {
+      const minus = -TICK_SPACINGS[FeeAmount.MEDIUM];
+      const plus = -minus;
+
+      const liquidity0 = await mint(minus * 2, minus, 2);
+      const liquidity1 = await mint(minus * 2, 0, 3);
+      const liquidity2 = await mint(minus * 2, plus, 5);
+      const liquidity3 = await mint(minus, 0, 7);
+      const liquidity4 = await mint(minus, plus, 11);
+      const liquidity5 = await mint(0, plus, 13);
+
+      const [gMin, min, negativeTwo, negativeOne, zero, one, max, gMax] = await tickLens.getNextActiveTicks(
+        poolAddress,
+        getMinTick(1),
+        256,
+        true
+      );
+
+      expect(gMin.tick).to.be.eq(getMinTick(1));
+      expect(gMin.liquidityNet).to.be.eq(0);
+      expect(gMin.liquidityGross).to.be.eq(0);
+
+      expect(min.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(min.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(min.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(negativeTwo.tick).to.be.eq(minus * 2);
+      expect(negativeTwo.liquidityNet).to.be.eq(liquidity0 + liquidity1 + liquidity2);
+      expect(negativeTwo.liquidityGross).to.be.eq(liquidity0 + liquidity1 + liquidity2);
+
+      expect(negativeOne.tick).to.be.eq(minus);
+      expect(negativeOne.liquidityNet).to.be.eq(liquidity3 + liquidity4 - liquidity0);
+      expect(negativeOne.liquidityGross).to.be.eq(liquidity3 + liquidity4 + liquidity0);
+
+      expect(zero.tick).to.be.eq(0);
+      expect(zero.liquidityNet).to.be.eq(liquidity5 - liquidity1 - liquidity3);
+      expect(zero.liquidityGross).to.be.eq(liquidity5 + liquidity1 + liquidity3);
+
+      expect(one.tick).to.be.eq(plus);
+      expect(one.liquidityNet).to.be.eq(-liquidity2 - liquidity4 - liquidity5);
+      expect(one.liquidityGross).to.be.eq(liquidity2 + liquidity4 + liquidity5);
+
+      expect(max.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(max.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(max.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(gMax.tick).to.be.eq(getMaxTick(1));
+      expect(gMax.liquidityNet).to.be.eq(0);
+      expect(gMax.liquidityGross).to.be.eq(0);
+    });
+
+    it('gas for single populated tick [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(
+        tickLens.getGasCostOfGetNextActiveTicks(poolAddress, getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]), 1, true)
+      );
+    });
+  });
+
+  describe('fully populated word', () => {
+    async function fullFixture() {
+      const res = await subFixture();
+
       // fully populate a word
       for (let i = 0; i < 128; i++) {
         await mint(i * TICK_SPACINGS[FeeAmount.MEDIUM], (255 - i) * TICK_SPACINGS[FeeAmount.MEDIUM], 100);
       }
 
+      return res;
+    }
+
+    beforeEach('load fixture', async () => {
+      ({ nft, tokens, poolAddress, tickLens } = await loadFixture(fullFixture));
+    });
+
+    it('getPopulatedTicksInWord [ @skip-on-coverage ]', async () => {
       const ticks = await tickLens.getPopulatedTicksInWord(
         poolAddress,
         getTickTableIndex(0, TICK_SPACINGS[FeeAmount.MEDIUM])
@@ -217,6 +321,13 @@ describe('TickLens', () => {
       await snapshotGasCost(
         tickLens.getGasCostOfGetPopulatedTicksInWord(poolAddress, getTickTableIndex(0, TICK_SPACINGS[FeeAmount.MEDIUM]))
       );
+    }).timeout(300_000);
+
+    it('getNextActiveTicks 255 ticks [ @skip-on-coverage ]', async () => {
+      const ticks = await tickLens.getNextActiveTicks(poolAddress, getMinTick(1), 255, true);
+      expect(ticks.length).to.be.eq(255);
+
+      await snapshotGasCost(tickLens.getGasCostOfGetNextActiveTicks(poolAddress, getMinTick(1), 255, true));
     }).timeout(300_000);
   });
 });

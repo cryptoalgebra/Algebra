@@ -38,4 +38,39 @@ contract TickLens is ITickLens {
             }
         }
     }
+
+    /// @inheritdoc ITickLens
+    function getNextActiveTicks(
+        address pool,
+        int24 startingTick,
+        uint256 amount,
+        bool upperDirection
+    ) public view override returns (PopulatedTick[] memory populatedTicks) {
+        int24 currentTick = startingTick;
+
+        populatedTicks = new PopulatedTick[](amount);
+
+        (uint256 liquidityGross, int128 liquidityNet, int24 previousTick, int24 nextTick, , ) = IAlgebraPool(pool)
+            .ticks(currentTick);
+        require(previousTick != nextTick, 'Invalid startingTick');
+
+        unchecked {
+            for (uint256 i = 0; i < amount; i++) {
+                populatedTicks[i] = PopulatedTick({
+                    tick: currentTick,
+                    liquidityNet: liquidityNet,
+                    liquidityGross: uint128(liquidityGross)
+                });
+
+                int24 newCurrentTick = upperDirection ? nextTick : previousTick;
+                if (newCurrentTick == currentTick) {
+                    // reached MAX or MIN tick
+                    break;
+                }
+                currentTick = newCurrentTick;
+
+                (liquidityGross, liquidityNet, previousTick, nextTick, , ) = IAlgebraPool(pool).ticks(currentTick);
+            }
+        }
+    }
 }
