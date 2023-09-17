@@ -295,6 +295,95 @@ describe('TickLens', () => {
     });
   });
 
+  describe.only('#getClosestActiveTicks', () => {
+    const fullRangeLiquidity = 1000000;
+
+    beforeEach('load fixture', async () => {
+      ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
+    });
+
+    it('works for min/max', async () => {
+      const [low0, top0] = await tickLens.getClosestActiveTicks(poolAddress, 0);
+
+      expect(low0.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top0.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top0.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(top0.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      const [low0_1, top0_1] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM])
+      );
+
+      expect(low0_1.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0_1.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0_1.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top0_1.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top0_1.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(top0_1.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      const [low0_2, top0_2] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - 1
+      );
+
+      expect(low0_2.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0_2.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0_2.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top0_2.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top0_2.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(top0_2.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      const [low0_3, top0_3] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]) + 1
+      );
+
+      expect(low0_3.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0_3.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0_3.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top0_3.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top0_3.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(top0_3.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      const [low1, top1] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])
+      );
+
+      expect(low1.tick).to.be.eq(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low1.liquidityNet).to.be.eq(fullRangeLiquidity * -1);
+      expect(low1.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top1.tick).to.be.eq(getMaxTick(1));
+      expect(top1.liquidityNet).to.be.eq(0);
+      expect(top1.liquidityGross).to.be.eq(0);
+
+      const [low2, top2] = await tickLens.getClosestActiveTicks(
+        poolAddress,
+        getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - 1
+      );
+
+      expect(low2.tick).to.be.eq(getMinTick(1));
+      expect(low2.liquidityNet).to.be.eq(0);
+      expect(low2.liquidityGross).to.be.eq(0);
+
+      expect(top2.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(top2.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(top2.liquidityGross).to.be.eq(fullRangeLiquidity);
+    });
+
+    it('gas for almost all tick space [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(tickLens.getGasCostOfGetClosestActiveTicks(poolAddress, 0));
+    });
+  });
+
   describe('fully populated word', () => {
     async function fullFixture() {
       const res = await subFixture();

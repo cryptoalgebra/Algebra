@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.5.0;
+pragma solidity =0.8.20;
 
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
 
 import '../interfaces/ITickLens.sol';
 
@@ -36,6 +37,88 @@ contract TickLens is ITickLens {
                     });
                 }
             }
+        }
+    }
+
+    function getClosestActiveTicks(
+        address pool,
+        int24 targetTick
+    ) public view returns (PopulatedTick[2] memory populatedTicks) {
+        uint32 tickTreeRoot = IAlgebraPool(pool).tickTreeRoot();
+
+        uint16 rootIndex = uint16(uint24((int24(targetTick >> 8) + TickTree.SECOND_LAYER_OFFSET) >> 8));
+
+        int24 activeTickIndex;
+        bool initialized;
+
+        if ((1 << rootIndex) & tickTreeRoot != 0) {
+            uint256 leafNode = _fetchBitmap(pool, int16(targetTick >> 8));
+
+            (activeTickIndex, initialized) = TickTree._nextActiveBitInWord(leafNode, targetTick);
+
+            if (!initialized) {
+                int16 secondLayerIndex = int16(targetTick >> 8) + TickTree.SECOND_LAYER_OFFSET + 1;
+                uint256 secondLayerNode = _fetchSecondLayerNode(pool, secondLayerIndex >> 8);
+                (int24 activeLeafIndex, bool initializedSecondLayer) = TickTree._nextActiveBitInWord(
+                    secondLayerNode,
+                    secondLayerIndex
+                );
+
+                if (initializedSecondLayer) {
+                    leafNode = _fetchBitmap(pool, int16(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET));
+                    (activeTickIndex, initialized) = TickTree._nextActiveBitInWord(leafNode, targetTick);
+                } else {
+                    rootIndex++;
+                }
+            }
+        }
+
+        if (!initialized) {
+            (int24 nextActiveSecondLayerNode, ) = TickTree._nextActiveBitInWord(tickTreeRoot, int16(rootIndex));
+            uint256 secondLayerNode = _fetchSecondLayerNode(pool, int16(nextActiveSecondLayerNode));
+
+            (int24 activeLeafIndex, ) = TickTree._nextActiveBitInWord(
+                secondLayerNode,
+                int24(nextActiveSecondLayerNode) << 8
+            );
+            uint256 leafNode = _fetchBitmap(pool, int16(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET));
+
+            (activeTickIndex, ) = TickTree._nextActiveBitInWord(
+                leafNode,
+                int24(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET) << 8
+            );
+        }
+
+        if (activeTickIndex == targetTick) {
+            (uint256 liquidityGross, int128 liquidityNet, , int24 nextTick) = _getTick(pool, targetTick);
+            populatedTicks[0] = PopulatedTick({
+                tick: targetTick,
+                liquidityNet: liquidityNet,
+                liquidityGross: uint128(liquidityGross)
+            });
+
+            (liquidityGross, liquidityNet, , ) = _getTick(pool, nextTick);
+
+            populatedTicks[1] = PopulatedTick({
+                tick: nextTick,
+                liquidityNet: liquidityNet,
+                liquidityGross: uint128(liquidityGross)
+            });
+        } else {
+            (uint256 liquidityGross, int128 liquidityNet, int24 previousTick, ) = _getTick(pool, activeTickIndex);
+            populatedTicks[1] = PopulatedTick({
+                tick: activeTickIndex,
+                liquidityNet: liquidityNet,
+                liquidityGross: uint128(liquidityGross)
+            });
+
+            (liquidityGross, liquidityNet, , ) = _getTick(pool, previousTick);
+
+            populatedTicks[0] = PopulatedTick({
+                tick: previousTick,
+                liquidityNet: liquidityNet,
+                liquidityGross: uint128(liquidityGross)
+            });
         }
     }
 
@@ -104,6 +187,15 @@ contract TickLens is ITickLens {
     function _fetchBitmap(address pool, int16 index) internal view virtual returns (uint256 word) {
         assembly {
             mstore(0x00, 0xc677e3e000000000000000000000000000000000000000000000000000000000) // "tickTable(int16)" selector
+            mstore(0x04, index)
+            let success := staticcall(gas(), pool, 0, 0x24, 0, 0x20)
+            word := mload(0)
+        }
+    }
+
+    function _fetchSecondLayerNode(address pool, int16 index) internal view virtual returns (uint256 word) {
+        assembly {
+            mstore(0x00, 0xd861903700000000000000000000000000000000000000000000000000000000) // "tickTreeSecondLayer(int16)" selector
             mstore(0x04, index)
             let success := staticcall(gas(), pool, 0, 0x24, 0, 0x20)
             word := mload(0)
