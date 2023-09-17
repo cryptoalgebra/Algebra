@@ -28,7 +28,7 @@ contract TickLens is ITickLens {
             for (uint256 i = 0; i < 256; i++) {
                 if (bitmap & (1 << i) > 0) {
                     int24 populatedTick = ((int24(tickTableIndex) << 8) + int24(uint24(i)));
-                    (uint256 liquidityGross, int128 liquidityNet, , , , ) = IAlgebraPool(pool).ticks(populatedTick);
+                    (uint256 liquidityGross, int128 liquidityNet, , ) = _getTick(pool, populatedTick);
                     populatedTicks[--numberOfPopulatedTicks] = PopulatedTick({
                         tick: populatedTick,
                         liquidityNet: liquidityNet,
@@ -79,7 +79,7 @@ contract TickLens is ITickLens {
     function _getTick(
         address pool,
         int24 index
-    ) private view returns (uint128 liquidityGross, int128 liquidityNet, int24 previousTick, int24 nextTick) {
+    ) internal view virtual returns (uint128 liquidityGross, int128 liquidityNet, int24 previousTick, int24 nextTick) {
         assembly {
             let freeMemoryPointer := mload(0x40) // we will need to restore memory further
             let slot1 := mload(0x60)
@@ -98,6 +98,15 @@ contract TickLens is ITickLens {
             mstore(0x60, slot1)
             mstore(0x80, slot2)
             mstore(0xA0, slot3)
+        }
+    }
+
+    function _fetchBitmap(address pool, int16 index) internal view virtual returns (uint256 word) {
+        assembly {
+            mstore(0x00, 0xc677e3e000000000000000000000000000000000000000000000000000000000) // "tickTable(int16)" selector
+            mstore(0x04, index)
+            let success := staticcall(gas(), pool, 0, 0x24, 0, 0x20)
+            word := mload(0)
         }
     }
 }

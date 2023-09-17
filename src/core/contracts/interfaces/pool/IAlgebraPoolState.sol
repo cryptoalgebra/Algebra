@@ -149,4 +149,8 @@ interface IAlgebraPoolState {
   /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
   /// @return The next initialized tick
   function nextTickGlobal() external view returns (int24);
+
+  function tickTreeRoot() external view returns (uint32);
+
+  function tickTreeSecondLayer(int16) external view returns (uint256);
 }
