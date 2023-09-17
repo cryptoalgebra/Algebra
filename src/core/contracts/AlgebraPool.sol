@@ -16,6 +16,7 @@ import './libraries/TickMath.sol';
 import './libraries/LiquidityMath.sol';
 import './libraries/Plugins.sol';
 
+import './interfaces/plugin/IAlgebraPlugin.sol';
 import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra concentrated liquidity pool
@@ -42,7 +43,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     uint8 pluginConfig = globalState.pluginConfig;
     globalState.tick = tick;
-    globalState.fee = _fee;
+    globalState.lastFee = _fee;
     globalState.communityFee = _communityFee;
 
     emit Initialize(initialPrice, tick);
@@ -178,7 +179,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int24 topTick,
     uint128 amount0Requested,
     uint128 amount1Requested
-  ) external override nonReentrant returns (uint128 amount0, uint128 amount1) {
+  ) external override returns (uint128 amount0, uint128 amount1) {
+    _lock();
     // we don't check tick range validity, because if ticks are incorrect, the position will be empty
     Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
     (uint128 positionFees0, uint128 positionFees1) = (position.fees0, position.fees1);
@@ -200,6 +202,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
       emit Collect(msg.sender, recipient, bottomTick, topTick, amount0, amount1);
     }
+    _unlock();
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -387,7 +390,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   // permissioned actions use reentrancy lock to prevent call from callback (to keep the correct order of events, etc.)
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setCommunityFee(uint16 newCommunityFee) external override nonReentrant {
+  function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
     _checkIfAdministrator();
     if (newCommunityFee > Constants.MAX_COMMUNITY_FEE || newCommunityFee == globalState.communityFee) revert invalidNewCommunityFee();
     globalState.communityFee = newCommunityFee;
@@ -395,7 +398,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setTickSpacing(int24 newTickSpacing) external override nonReentrant {
+  function setTickSpacing(int24 newTickSpacing) external override onlyUnlocked {
     _checkIfAdministrator();
     if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
     tickSpacing = newTickSpacing;
@@ -403,7 +406,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPlugin(address newPluginAddress) external override nonReentrant {
+  function setPlugin(address newPluginAddress) external override onlyUnlocked {
     _checkIfAdministrator();
     globalState.pluginConfig = 0;
     plugin = newPluginAddress;
@@ -412,7 +415,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override nonReentrant {
+  function setPluginConfig(uint8 newConfig) external override onlyUnlocked {
     address _plugin = plugin;
     if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
 
@@ -433,7 +436,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (isDynamicFeeEnabled) revert dynamicFeeActive();
       _checkIfAdministrator();
     }
-    globalState.fee = newFee;
+    globalState.lastFee = newFee;
     emit Fee(newFee);
   }
 }

@@ -74,6 +74,13 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    // try to get AMM state
+    try IAlgebraPool(msg.sender).safelyGetStateOfAMM() {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
+    require(IAlgebraPool(msg.sender).isUnlocked() == false);
+
     require(false, 'Unable to reenter');
   }
 }

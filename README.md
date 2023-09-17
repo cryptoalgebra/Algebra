@@ -28,9 +28,7 @@ Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
 
 ## Docs
 
-The current short documentation page is located at: <a href="https://docs.algebra.finance/">https://docs.algebra.finance/</a>
-
-We are currently in the process of creating a more complete and comprehensive version of the documentation. It will be published when ready.
+The documentation page is located at: <a href="https://cryptoalgebra.gitbook.io/algebra-integral/">https://cryptoalgebra.gitbook.io/algebra-integral/</a>
 
 ## Versions
 

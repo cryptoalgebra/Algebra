@@ -295,7 +295,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
     // pool can "detach" by itself or manually
-    int24 tick = _isIncentiveDeactivated(incentive) ? virtualPool.globalTick() : _getTickInPool(key.pool);
+    int24 tick = _isIncentiveDeactivated(incentive) ? virtualPool.globalTick() : _getTickInPoolAndCheckLock(key.pool);
 
     // update rewards, as ticks may be cleared when liquidity decreases
     _distributeRewards(virtualPool);
@@ -452,7 +452,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       if (int256(tickUpper) - int256(tickLower) < int256(uint256(minimalAllowedTickWidth))) revert positionIsTooNarrow();
     }
 
-    int24 tick = _getTickInPool(pool);
+    int24 tick = _getTickInPoolAndCheckLock(pool);
     _updatePositionInVirtualPool(virtualPool, tickLower, tickUpper, int256(uint256(liquidity)).toInt128(), tick);
   }
 
@@ -478,8 +478,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if (incentive.totalReward == 0) revert incentiveNotExist();
   }
 
-  function _getTickInPool(IAlgebraPool pool) internal view returns (int24 tick) {
-    (, tick, , , , ) = pool.globalState();
+  function _getTickInPoolAndCheckLock(IAlgebraPool pool) internal view returns (int24 tick) {
+    bool poolUnlocked;
+    (, tick, , , , poolUnlocked) = pool.globalState();
+    if (!poolUnlocked) revert poolReentrancyLock();
   }
 
   function _getBalanceOf(IERC20Minimal token) internal view returns (uint256) {

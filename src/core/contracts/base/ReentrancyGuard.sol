@@ -6,10 +6,15 @@ import './AlgebraPoolBase.sol';
 /// @title Algebra reentrancy protection
 /// @notice Provides a modifier that protects against reentrancy
 abstract contract ReentrancyGuard is AlgebraPoolBase {
-  modifier nonReentrant() {
-    _lock();
+  /// @notice checks that reentrancy lock is unlocked
+  modifier onlyUnlocked() {
+    _checkUnlocked();
     _;
-    _unlock();
+  }
+
+  /// @dev using private function to save bytecode
+  function _checkUnlocked() internal view {
+    if (!globalState.unlocked) revert IAlgebraPoolErrors.locked();
   }
 
   /// @dev using private function to save bytecode

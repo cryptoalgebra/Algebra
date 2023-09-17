@@ -690,3 +690,11 @@ error reentrancyLock()
 
 
 
+## poolReentrancyLock
+
+```solidity
+error poolReentrancyLock()
+```
+
+
+

@@ -2,6 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
+import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
@@ -13,7 +14,7 @@ import '../base/VirtualTickStructure.sol';
 
 /// @title Algebra eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
-contract EternalVirtualPool is VirtualTickStructure {
+contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -48,7 +49,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     farmingAddress = _farmingAddress;
     plugin = _plugin;
 
-    prevTimestamp = uint32(block.timestamp);
+    prevTimestamp = _blockTimestamp();
     globalPrevInitializedTick = TickMath.MIN_TICK;
     globalNextInitializedTick = TickMath.MAX_TICK;
   }
@@ -78,7 +79,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick || ticks[topTick].prevTick == ticks[topTick].nextTick)
         revert IAlgebraPoolErrors.tickIsNotInitialized();
 
-      uint32 timeDelta = uint32(block.timestamp) - prevTimestamp;
+      uint32 timeDelta = _blockTimestamp() - prevTimestamp;
       int24 _globalTick = globalTick;
 
       (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
@@ -118,6 +119,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraVirtualPool
+  /// @dev If the virtual pool is deactivated, does nothing
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != plugin) revert onlyPlugin();
 
@@ -129,7 +131,7 @@ contract EternalVirtualPool is VirtualTickStructure {
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
 
-    if (_deactivated) return false;
+    if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
     // early return if without any crosses
@@ -155,7 +157,8 @@ contract EternalVirtualPool is VirtualTickStructure {
         unchecked {
           int128 liquidityDelta;
           _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
-          (liquidityDelta, previousTick, nextTick) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
+          nextTick = previousTick;
+          (liquidityDelta, previousTick, ) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
           _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -liquidityDelta);
         }
       }
@@ -164,7 +167,8 @@ contract EternalVirtualPool is VirtualTickStructure {
         if (targetTick < nextTick) break;
         int128 liquidityDelta;
         _globalTick = nextTick;
-        (liquidityDelta, previousTick, nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
+        previousTick = nextTick;
+        (liquidityDelta, , nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
         _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
     }
@@ -193,23 +197,26 @@ contract EternalVirtualPool is VirtualTickStructure {
     uint32 _prevTimestamp = prevTimestamp;
     bool _deactivated = deactivated;
     {
-      int24 _lastKnownTick = globalTick;
       int24 _nextActiveTick = globalNextInitializedTick;
       int24 _prevActiveTick = globalPrevInitializedTick;
 
-      if (
-        (currentTick < _nextActiveTick != _lastKnownTick < _nextActiveTick) || (currentTick >= _prevActiveTick != _lastKnownTick >= _prevActiveTick)
-      ) {
-        _deactivated = true;
-        deactivated = true;
+      if (!_deactivated) {
+        // checking if the current tick is within the allowed range: it should not be on the other side of the nearest active tick
+        // if the check is violated, the virtual pool deactivates
+        if (!_isTickInsideRange(currentTick, _prevActiveTick, _nextActiveTick)) {
+          deactivated = _deactivated = true;
+        }
       }
     }
 
-    if (!_deactivated) {
-      globalTick = currentTick;
+    if (_deactivated) {
+      // early return if virtual pool is deactivated
+      return;
     }
 
-    if (uint32(block.timestamp) > _prevTimestamp) {
+    globalTick = currentTick;
+
+    if (_blockTimestamp() > _prevTimestamp) {
       _distributeRewards(_prevTimestamp, _currentLiquidity);
     }
 
@@ -219,7 +226,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       bool flippedBottom = _updateTick(bottomTick, currentTick, liquidityDelta, false);
       bool flippedTop = _updateTick(topTick, currentTick, liquidityDelta, true);
 
-      if (currentTick >= bottomTick && currentTick < topTick) {
+      if (_isTickInsideRange(currentTick, bottomTick, topTick)) {
         currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
 
@@ -237,6 +244,10 @@ contract EternalVirtualPool is VirtualTickStructure {
 
   function _checkIsFromFarming() internal view {
     if (msg.sender != farmingAddress) revert onlyFarming();
+  }
+
+  function _isTickInsideRange(int24 tick, int24 bottomTick, int24 topTick) internal pure returns (bool) {
+    return tick >= bottomTick && tick < topTick;
   }
 
   function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
@@ -261,7 +272,7 @@ contract EternalVirtualPool is VirtualTickStructure {
   function _distributeRewards(uint32 _prevTimestamp, uint256 _currentLiquidity) internal {
     // currentLiquidity is uint128
     unchecked {
-      uint256 timeDelta = uint32(block.timestamp) - _prevTimestamp; // safe until timedelta > 136 years
+      uint256 timeDelta = _blockTimestamp() - _prevTimestamp; // safe until timedelta > 136 years
       if (timeDelta == 0) return; // only once per block
 
       if (_currentLiquidity > 0) {
@@ -283,7 +294,7 @@ contract EternalVirtualPool is VirtualTickStructure {
       }
     }
 
-    prevTimestamp = uint32(block.timestamp);
+    prevTimestamp = _blockTimestamp();
     return;
   }
 
