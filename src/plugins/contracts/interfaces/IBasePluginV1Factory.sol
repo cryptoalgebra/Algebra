@@ -18,6 +18,8 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
 
+  event LimitOrderPlugin(address newLimitOrderPlugin);
+
   /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR' used as role
   /// @dev allows to change settings of BasePluginV1Factory
   function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32);
@@ -58,4 +60,6 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @dev updates farmings manager address on the factory
   /// @param newFarmingAddress The new tokenomics contract address
   function setFarmingAddress(address newFarmingAddress) external;
+
+  function setLimitOrderPlugin(address newLimitOrderPlugin) external;
 }

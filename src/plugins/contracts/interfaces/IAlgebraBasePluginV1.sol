@@ -13,4 +13,8 @@ interface IAlgebraBasePluginV1 is IVolatilityOracle, IDynamicFeeManager, IFarmin
   /// @notice Initialize the plugin externally
   /// @dev This function allows to initialize the plugin if it was created after the pool was created
   function initialize() external;
+
+  function setLimitOrderPlugin(address newPlugin) external;
+
+  event LimitOrderPlugin(address newPlugin);
 }

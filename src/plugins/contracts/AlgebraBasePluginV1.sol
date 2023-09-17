@@ -13,6 +13,7 @@ import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
 import './interfaces/IAlgebraBasePluginV1.sol';
 import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
+import './interfaces/plugins/ILimitOrderPlugin.sol';
 
 import './libraries/VolatilityOracle.sol';
 import './libraries/TransferHelper.sol';
@@ -38,6 +39,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   address public immutable override pool;
   address private immutable factory;
   address private immutable pluginFactory;
+
+  address private limitOrderPlugin;
 
   /// @inheritdoc IVolatilityOracle
   VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
@@ -178,6 +181,15 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
   }
 
+  // ###### Limit order plugin factory manager ######
+
+  function setLimitOrderPlugin(address plugin) external override {
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+
+    limitOrderPlugin = plugin;
+    emit LimitOrderPlugin(plugin);
+  }
+
   // ###### Farming plugin ######
 
   /// @inheritdoc IFarmingPlugin
@@ -239,6 +251,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = _timestamp;
     isInitialized = true;
 
+    ILimitOrderPlugin(limitOrderPlugin).afterInitialize(pool, tick);
+
     IAlgebraPool(pool).setFee(_feeConfig.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
@@ -266,9 +280,14 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (_incentive != address(0)) {
       (, int24 tick, , ) = _getPoolState();
       IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
-    } else {
-      _updatePluginConfigInPool(); // should not be called, reset config
     }
+
+    if (limitOrderPlugin != address(0)) {
+      (, int24 tick, , ) = _getPoolState();
+      // TODO change pool to msg.sender?
+      ILimitOrderPlugin(limitOrderPlugin).afterSwap(pool, zeroToOne, tick);
+    }
+    // TODO optimize & change config if all addresses is 0
 
     return IAlgebraPlugin.afterSwap.selector;
   }

@@ -169,7 +169,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
     address pool = PoolAddress.computeAddress(poolDeployer, poolKey);
 
     bytes memory data = abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}));
-
+    // TODO  set last tick if skip initialize?
     (uint256 amount0, uint256 amount1, uint128 liquidityActual) = IAlgebraPool(pool).mint(
       msg.sender,
       address(this),

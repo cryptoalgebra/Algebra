@@ -14,6 +14,8 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public immutable override algebraFactory;
 
+  address public limitOrderPlugin;
+
   /// @inheritdoc IBasePluginV1Factory
   AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
@@ -53,8 +55,10 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
+    // TODO rename plugin variable?
     IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
     volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
+    volatilityOracle.setLimitOrderPlugin(limitOrderPlugin);
     pluginByPool[pool] = address(volatilityOracle);
     return address(volatilityOracle);
   }
@@ -71,5 +75,11 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  function setLimitOrderPlugin(address newLimitOrderPlugin) external override onlyAdministrator {
+    require(limitOrderPlugin != newLimitOrderPlugin);
+    limitOrderPlugin = newLimitOrderPlugin;
+    emit LimitOrderPlugin(newLimitOrderPlugin);
   }
 }
