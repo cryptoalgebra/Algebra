@@ -15,11 +15,11 @@ type TestERC20WithAddress = TestERC20 & { address: string };
 describe('TickLens', () => {
   let wallets: Wallet[];
 
-  const nftFixture: () => Promise<{
+  async function nftFixture(): Promise<{
     factory: Contract;
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
-  }> = async () => {
+  }> {
     const { factory, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
@@ -28,12 +28,17 @@ describe('TickLens', () => {
       token.address = await token.getAddress();
     }
 
+    _tokens.sort((tokenA: TestERC20WithAddress, tokenB: TestERC20WithAddress) => {
+      if (!tokenA.address || !tokenB.address) return 0;
+      return tokenA.address.toLowerCase() < tokenB.address.toLowerCase() ? -1 : 1;
+    });
+
     return {
       factory: factory as any as Contract,
       nft,
       tokens: _tokens,
     };
-  };
+  }
 
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
@@ -48,7 +53,6 @@ describe('TickLens', () => {
     const mintParams = {
       token0: tokens[0].address,
       token1: tokens[1].address,
-      fee: FeeAmount.MEDIUM,
       tickLower,
       tickUpper,
       amount0Desired: amountBothDesired,
@@ -66,19 +70,18 @@ describe('TickLens', () => {
   }
 
   async function subFixture() {
-    const { factory, tokens, nft } = await nftFixture();
+    const { factory, tokens: _tokens, nft: _nft } = await nftFixture();
 
-    let [tokenAddressA, tokenAddressB] = [tokens[0].address, tokens[1].address];
+    let [tokenAddressA, tokenAddressB] = [_tokens[0].address, _tokens[1].address];
 
-    if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
-      [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
+    if (BigInt(tokenAddressA) > BigInt(tokenAddressB)) [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+    const tx = await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+    await tx.wait();
 
     const liquidityParams = {
       token0: tokenAddressA,
       token1: tokenAddressB,
-      fee: FeeAmount.MEDIUM,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       recipient: wallets[0].address,
@@ -89,21 +92,22 @@ describe('TickLens', () => {
       deadline: 1,
     };
 
-    await nft.mint(liquidityParams);
-    const poolAddress = computePoolAddress(await factory.poolDeployer(), [tokens[0].address, tokens[1].address]);
+    await _nft.mint(liquidityParams);
+
+    const _poolAddress = computePoolAddress(await factory.poolDeployer(), [tokenAddressA, tokenAddressB]);
     const lensFactory = await ethers.getContractFactory('TickLensTest');
-    const tickLens = (await lensFactory.deploy()) as any as TickLensTest;
+    const _tickLens = (await lensFactory.deploy()) as any as TickLensTest;
 
     return {
       factory,
-      nft,
-      tokens,
-      poolAddress,
-      tickLens,
+      nft: _nft,
+      tokens: _tokens,
+      poolAddress: _poolAddress,
+      tickLens: _tickLens,
     };
   }
 
-  function getTickTableIndex(tick: BigNumberish, tickSpacing: number): bigint {
+  function getTickTableIndex(tick: BigNumberish): bigint {
     const intermediate = BigInt(tick);
     // see https://docs.soliditylang.org/en/v0.7.6/types.html#shifts
     return intermediate >> 8n;
@@ -119,13 +123,13 @@ describe('TickLens', () => {
     it('works for min/max', async () => {
       const res = await tickLens.getPopulatedTicksInWord(
         poolAddress,
-        getTickTableIndex(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
+        getTickTableIndex(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]))
       );
       const [min] = res;
 
       const [max] = await tickLens.getPopulatedTicksInWord(
         poolAddress,
-        getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
+        getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]))
       );
 
       expect(min.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
@@ -150,22 +154,16 @@ describe('TickLens', () => {
 
       const [min] = await tickLens.getPopulatedTicksInWord(
         poolAddress,
-        getTickTableIndex(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
+        getTickTableIndex(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]))
       );
 
-      const [negativeOne, negativeTwo] = await tickLens.getPopulatedTicksInWord(
-        poolAddress,
-        getTickTableIndex(minus, TICK_SPACINGS[FeeAmount.MEDIUM])
-      );
+      const [negativeOne, negativeTwo] = await tickLens.getPopulatedTicksInWord(poolAddress, getTickTableIndex(minus));
 
-      const [one, zero] = await tickLens.getPopulatedTicksInWord(
-        poolAddress,
-        getTickTableIndex(plus, TICK_SPACINGS[FeeAmount.MEDIUM])
-      );
+      const [one, zero] = await tickLens.getPopulatedTicksInWord(poolAddress, getTickTableIndex(plus));
 
       const [max] = await tickLens.getPopulatedTicksInWord(
         poolAddress,
-        getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
+        getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]))
       );
 
       expect(min.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
@@ -197,7 +195,7 @@ describe('TickLens', () => {
       await snapshotGasCost(
         tickLens.getGasCostOfGetPopulatedTicksInWord(
           poolAddress,
-          getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]), TICK_SPACINGS[FeeAmount.MEDIUM])
+          getTickTableIndex(getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]))
         )
       );
     });
@@ -295,11 +293,39 @@ describe('TickLens', () => {
     });
   });
 
-  describe.only('#getClosestActiveTicks', () => {
+  describe('#getClosestActiveTicks', () => {
     const fullRangeLiquidity = 1000000;
 
     beforeEach('load fixture', async () => {
       ({ nft, tokens, poolAddress, tickLens } = await loadFixture(subFixture));
+    });
+
+    it('works for next leaf', async () => {
+      const liquidity = await mint(300, 360, 2);
+
+      const [low0, top0] = await tickLens.getClosestActiveTicks(poolAddress, 0);
+
+      expect(low0.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0.liquidityGross).to.be.eq(fullRangeLiquidity);
+
+      expect(top0.tick).to.be.eq(300);
+      expect(top0.liquidityNet).to.be.eq(liquidity);
+      expect(top0.liquidityGross).to.be.eq(liquidity);
+    });
+
+    it('works for high ticks', async () => {
+      const liquidity = await mint(32820, 32880, 2);
+
+      const [low0, top0] = await tickLens.getClosestActiveTicks(poolAddress, 30269);
+
+      expect(top0.tick).to.be.eq(32820);
+      expect(top0.liquidityNet).to.be.eq(liquidity);
+      expect(top0.liquidityGross).to.be.eq(liquidity);
+
+      expect(low0.tick).to.be.eq(getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]));
+      expect(low0.liquidityNet).to.be.eq(fullRangeLiquidity);
+      expect(low0.liquidityGross).to.be.eq(fullRangeLiquidity);
     });
 
     it('works for min/max', async () => {
@@ -401,15 +427,10 @@ describe('TickLens', () => {
     });
 
     it('getPopulatedTicksInWord [ @skip-on-coverage ]', async () => {
-      const ticks = await tickLens.getPopulatedTicksInWord(
-        poolAddress,
-        getTickTableIndex(0, TICK_SPACINGS[FeeAmount.MEDIUM])
-      );
+      const ticks = await tickLens.getPopulatedTicksInWord(poolAddress, getTickTableIndex(0));
       expect(ticks.length).to.be.eq(5);
 
-      await snapshotGasCost(
-        tickLens.getGasCostOfGetPopulatedTicksInWord(poolAddress, getTickTableIndex(0, TICK_SPACINGS[FeeAmount.MEDIUM]))
-      );
+      await snapshotGasCost(tickLens.getGasCostOfGetPopulatedTicksInWord(poolAddress, getTickTableIndex(0)));
     }).timeout(300_000);
 
     it('getNextActiveTicks 255 ticks [ @skip-on-coverage ]', async () => {

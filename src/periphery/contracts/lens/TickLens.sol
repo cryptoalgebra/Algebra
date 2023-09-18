@@ -57,7 +57,7 @@ contract TickLens is ITickLens {
             (activeTickIndex, initialized) = TickTree._nextActiveBitInWord(leafNode, targetTick);
 
             if (!initialized) {
-                int16 secondLayerIndex = int16(targetTick >> 8) + TickTree.SECOND_LAYER_OFFSET + 1;
+                int16 secondLayerIndex = int16((targetTick >> 8) + int24(TickTree.SECOND_LAYER_OFFSET) + 1);
                 uint256 secondLayerNode = _fetchSecondLayerNode(pool, secondLayerIndex >> 8);
                 (int24 activeLeafIndex, bool initializedSecondLayer) = TickTree._nextActiveBitInWord(
                     secondLayerNode,
@@ -65,8 +65,9 @@ contract TickLens is ITickLens {
                 );
 
                 if (initializedSecondLayer) {
+                    int24 nextTickIndex = int24(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET) << 8;
                     leafNode = _fetchBitmap(pool, int16(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET));
-                    (activeTickIndex, initialized) = TickTree._nextActiveBitInWord(leafNode, targetTick);
+                    (activeTickIndex, initialized) = TickTree._nextActiveBitInWord(leafNode, nextTickIndex);
                 } else {
                     rootIndex++;
                 }
