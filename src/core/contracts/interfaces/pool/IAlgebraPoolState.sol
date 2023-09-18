@@ -150,7 +150,15 @@ interface IAlgebraPoolState {
   /// @return The next initialized tick
   function nextTickGlobal() external view returns (int24);
 
+  /// @notice The root of tick search tree
+  /// @dev Each bit corresponds to one node in the second layer of tick tree: '1' if node has at least one active bit.
+  /// **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+  /// @return The root of tick search tree as bitmap
   function tickTreeRoot() external view returns (uint32);
 
+  /// @notice The second layer of tick search tree
+  /// @dev Each bit in node corresponds to one node in the leafs layer (`tickTable`) of tick tree: '1' if leaf has at least one active bit.
+  /// **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
+  /// @return The node of tick search tree second layer
   function tickTreeSecondLayer(int16) external view returns (uint256);
 }

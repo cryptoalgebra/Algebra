@@ -129,6 +129,10 @@ describe('AlgebraPool', () => {
     expect(await pool.isUnlocked()).to.be.true; // false checked inside of TestAlgebraReentrantCallee.sol
   });
 
+  it('tickTreeRoot is clear', async () => {
+    expect(await pool.tickTreeRoot()).to.be.eq(0);
+  });
+
   describe('#initialize', () => {
     it('fails if already initialized', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
