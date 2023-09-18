@@ -17,7 +17,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -32,7 +32,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const DEFAULT_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -46,7 +46,7 @@ const DEFAULT_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 export default {
   networks: baseConfig.networks,
@@ -63,7 +63,7 @@ export default {
     },
   },
   typechain: {
-    outDir: 'typechain'
+    outDir: 'typechain',
   },
   docgen: {
     outputDir: '../../docs/Contracts/Periphery',
@@ -73,15 +73,14 @@ export default {
       return x.name.toString() + '.md';
     },
     templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
+    collapseNewlines: true,
   },
   dependencyCompiler: {
-    paths: [
-      '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol',
-    ],
+    paths: ['@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol'],
+    keep: true,
   },
   outputValidator: {
     runOnCompile: false,
     exclude: ['contracts/test'],
   },
-}
+};
