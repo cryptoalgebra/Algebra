@@ -6,6 +6,6 @@ testMode: 'assertion'
 coverage: true
 # #solcArgs allows special args to solc
 # solcArgs: "--allow-paths node_modules/@cryptoalgebra/core/contracts/libraries/Constants.sol"
-#cryticArgs: ['--hardhat-ignore-compile']
+cryticArgs: ['--hardhat-ignore-compile']
 # #directory to save the corpus; by default is disabled
 # corpusDir: null
