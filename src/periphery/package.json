@@ -18,6 +18,7 @@
     "contracts/base",
     "contracts/interfaces",
     "contracts/libraries",
+    "!contracts/hardhat-dependency-compiler",
     "artifacts/contracts/**/*.json",
     "!artifacts/contracts/**/*.dbg.json",
     "!artifacts/contracts/test/**/*",
