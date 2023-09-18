@@ -1,5 +1,21 @@
 import { ethers } from 'hardhat';
-import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory } from '../../typechain';
+import { abi as FACTORY_ABI, bytecode as FACTORY_BYTECODE } from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
+import {
+  abi as TEST_CALLEE_ABI,
+  bytecode as TEST_CALLEE_BYTECODE,
+} from '@cryptoalgebra/core/artifacts/contracts/test/TestAlgebraCallee.sol/TestAlgebraCallee.json';
+import {
+  abi as POOL_DEPLOYER_ABI,
+  bytecode as POOL_DEPLOYER_BYTECODE,
+} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
+import {
+  abi as POOL_ABI,
+  bytecode as POOL_BYTECODE,
+} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
+import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory, LimitOrderPlugin } from '../../typechain';
+import {tokensFixture} from './externalFixtures';
+import { getCreateAddress } from 'ethers';
+import {AlgebraPool, AlgebraFactory, TestAlgebraCallee, AlgebraPoolDeployer, TestERC20 } from '@cryptoalgebra/core/typechain';
 
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {
@@ -61,5 +77,60 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
   return {
     pluginFactory,
     mockFactory,
+  };
+};
+
+interface LimitOrderPluginFixture{
+  pluginFactory: BasePluginV1Factory;
+  loPlugin: LimitOrderPlugin;
+  token0: TestERC20;
+  token1: TestERC20;
+  pool: AlgebraPool;
+  swapTarget: TestAlgebraCallee;
+ }
+
+
+export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async function (): Promise<LimitOrderPluginFixture> {
+
+  const { token0, token1 } = await tokensFixture();
+
+  const [deployer] = await ethers.getSigners();
+  // precompute
+  const poolDeployerAddress = getCreateAddress({
+    from: deployer.address,
+    nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
+  });
+
+  const factoryFactory = await ethers.getContractFactory(FACTORY_ABI, FACTORY_BYTECODE);
+  const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
+
+  const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
+  const poolDeployer = (await poolDeployerFactory.deploy(factory, factory)) as any as AlgebraPoolDeployer;
+
+  const calleeContractFactory = await ethers.getContractFactory(TEST_CALLEE_ABI, TEST_CALLEE_BYTECODE);
+  const swapTarget = (await calleeContractFactory.deploy()) as any as TestAlgebraCallee;
+
+  const poolFactory = await ethers.getContractFactory(POOL_ABI, POOL_BYTECODE);
+
+  const BasePluginV1FactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
+  const pluginFactory = (await BasePluginV1FactoryFactory.deploy(factory)) as any as BasePluginV1Factory;
+
+  const loPluginFactory = await ethers.getContractFactory('LimitOrderPlugin');
+  const loPlugin = (await loPluginFactory.deploy(ZERO_ADDRESS, poolDeployer, pluginFactory)) as any as LimitOrderPlugin
+
+  await pluginFactory.setLimitOrderPlugin(loPlugin);
+  await factory.setDefaultPluginFactory(pluginFactory)
+
+  await factory.createPool(token0, token1);
+  const poolAddress = await factory.poolByPair(token0, token1);
+  const pool = (poolFactory.attach(poolAddress)) as any as AlgebraPool;
+
+  return {
+    pluginFactory,
+    loPlugin,
+    token0,
+    token1,
+    pool,
+    swapTarget
   };
 };

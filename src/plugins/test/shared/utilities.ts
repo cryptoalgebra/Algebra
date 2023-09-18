@@ -1,5 +1,6 @@
 import bn from 'bignumber.js';
 import { BigNumberish, AbiCoder, keccak256, getAddress } from 'ethers';
+import {TestAlgebraCallee, TestERC20 } from '@cryptoalgebra/core/typechain';
 
 export const MaxUint128 = 2n ** 128n - 1n;
 

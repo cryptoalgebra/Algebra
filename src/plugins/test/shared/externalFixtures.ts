@@ -41,6 +41,7 @@ interface MockPoolDeployerFixture extends TokensFixture {
   factory: AlgebraFactory;
   createPool(firstToken?: TestERC20, secondToken?: TestERC20): Promise<MockTimeAlgebraPool>;
 }
+
 export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixture> = async () => {
   const { token0, token1 } = await tokensFixture();
 
