@@ -75,7 +75,7 @@ async function mintFullRangeLiquidity(deploysData) {
     deadline: 2n ** 32n - 1n,
   };
 
-  //const mintResult = await positionManager.mint.staticCall(mintParams);
+  const mintResult = await positionManager.mint.staticCall(mintParams);
   const tx2 = await positionManager.mint(mintParams);
   await tx2.wait();
 
@@ -84,7 +84,7 @@ async function mintFullRangeLiquidity(deploysData) {
 
   const poolAddress = await algebraFactory.poolByPair.staticCall(deploysData.testToken0, deploysData.testToken1);
   console.log(`Pool address: ${poolAddress}`);
-  console.log(`Liquidity minted`);
+  console.log(`Liquidity minted, tokenId: ${mintResult.tokenId}`);
 
   return poolAddress;
 }
