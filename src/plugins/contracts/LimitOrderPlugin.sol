@@ -38,6 +38,9 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
 
   struct EpochInfo {
     bool filled;
+    int24 tickLower;
+    address token0;
+    address token1;
     uint256 token0Total;
     uint256 token1Total;
     uint128 liquidityTotal;
@@ -99,6 +102,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
 
   function _fillEpoch(address pool, int24 lower, bool zeroForOne) internal {
     Epoch epoch = getEpoch(pool, lower, zeroForOne);
+
     if (!epoch.equals(EPOCH_DEFAULT)) {
       EpochInfo storage epochInfo = epochInfos[epoch];
 
@@ -170,6 +174,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
 
     bytes memory data = abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}));
     // TODO  set last tick if skip initialize?
+    // set tickSpacing of pool to 1
     (uint256 amount0, uint256 amount1, uint128 liquidityActual) = IAlgebraPool(pool).mint(
       msg.sender,
       address(this),
@@ -197,13 +202,19 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
         // and it saves an SLOAD
         epochNext = epoch.unsafeIncrement();
       }
+      epochInfo = epochInfos[epoch];
+      epochInfo.token0 = poolKey.token0;
+      epochInfo.token1 = poolKey.token1;
+    } else {
+      epochInfo = epochInfos[epoch];
     }
-    epochInfo = epochInfos[epoch];
 
     unchecked {
       epochInfo.liquidityTotal += liquidityActual;
       epochInfo.liquidity[msg.sender] += liquidityActual;
     }
+
+    epochInfo.tickLower = tickLower;
 
     emit Place(msg.sender, epoch, tickLower, zeroForOne, liquidityActual);
   }
@@ -246,16 +257,11 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
     emit Kill(msg.sender, epoch, tickLower, zeroForOne, liquidity);
   }
 
-  function withdraw(
-    PoolAddress.PoolKey memory poolKey,
-    int24 tickLower,
-    bool zeroForOne,
-    address to
-  ) external returns (uint256 amount0, uint256 amount1) {
-    address pool = PoolAddress.computeAddress(poolDeployer, poolKey);
-
-    Epoch epoch = getEpoch(pool, tickLower, zeroForOne);
+  function withdraw(Epoch epoch, address to) external returns (uint256 amount0, uint256 amount1) {
     EpochInfo storage epochInfo = epochInfos[epoch];
+
+    PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: epochInfo.token0, token1: epochInfo.token1});
+    address pool = PoolAddress.computeAddress(poolDeployer, poolKey);
 
     if (!epochInfo.filled) revert NotFilled();
 
@@ -274,9 +280,9 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
     epochInfo.token1Total = token1Total - amount1;
     epochInfo.liquidityTotal = liquidityTotal - liquidity;
 
-    int24 tickUpper = tickLower + getTickSpacing(pool);
+    int24 tickUpper = epochInfo.tickLower + getTickSpacing(pool);
 
-    IAlgebraPool(pool).collect(address(this), tickLower, tickUpper, uint128(amount0), uint128(amount1));
+    IAlgebraPool(pool).collect(address(this), epochInfo.tickLower, tickUpper, uint128(amount0), uint128(amount1));
 
     claimTo(poolKey, to);
 
@@ -290,6 +296,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin {
   function afterSwap(address pool, bool zeroToOne, int24 tick) external override onlyPlugin(pool) {
     int24 tickSpacing = getTickSpacing(pool);
     (int24 tickLower, int24 lower, int24 upper) = _getCrossedTicks(pool, tick, tickSpacing);
+
     if (lower > upper) return;
 
     // note that a zeroForOne swap means that the pool is actually gaining token0, so limit

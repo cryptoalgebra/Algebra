@@ -251,7 +251,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = _timestamp;
     isInitialized = true;
 
-    ILimitOrderPlugin(limitOrderPlugin).afterInitialize(pool, tick);
+    if (limitOrderPlugin != address(0)) {
+      ILimitOrderPlugin(limitOrderPlugin).afterInitialize(pool, tick);
+    }
 
     IAlgebraPool(pool).setFee(_feeConfig.baseFee());
     return IAlgebraPlugin.afterInitialize.selector;
@@ -306,7 +308,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   function _updatePluginConfigInPool() internal {
     uint8 newPluginConfig = defaultPluginConfig;
-    if (incentive != address(0)) {
+    if (incentive != address(0) || limitOrderPlugin != address(0)) {
       newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
     }
 

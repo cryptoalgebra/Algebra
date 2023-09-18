@@ -58,7 +58,9 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     // TODO rename plugin variable?
     IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
     volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
-    volatilityOracle.setLimitOrderPlugin(limitOrderPlugin);
+    if (limitOrderPlugin != address(0)) {
+      volatilityOracle.setLimitOrderPlugin(limitOrderPlugin);
+    }
     pluginByPool[pool] = address(volatilityOracle);
     return address(volatilityOracle);
   }
