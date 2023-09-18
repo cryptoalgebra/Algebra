@@ -328,3 +328,41 @@ The next initialized tick after current global tick
 | ---- | ---- | ----------- |
 | [0] | int24 | The next initialized tick |
 
+### tickTreeRoot
+
+```solidity
+function tickTreeRoot() external view returns (uint32)
+```
+
+The root of tick search tree
+
+*Developer note: Each bit corresponds to one node in the second layer of tick tree: &#x27;1&#x27; if node has at least one active bit.
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint32 | The root of tick search tree as bitmap |
+
+### tickTreeSecondLayer
+
+```solidity
+function tickTreeSecondLayer(int16) external view returns (uint256)
+```
+
+The second layer of tick search tree
+
+*Developer note: Each bit in node corresponds to one node in the leafs layer (&#x60;tickTable&#x60;) of tick tree: &#x27;1&#x27; if leaf has at least one active bit.
+**important security note: caller should check reentrancy lock to prevent read-only reentrancy***
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+|  | int16 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The node of tick search tree second layer |
+
