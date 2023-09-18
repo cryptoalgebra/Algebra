@@ -40,10 +40,11 @@ contract TickLens is ITickLens {
         }
     }
 
+    /// @inheritdoc ITickLens
     function getClosestActiveTicks(
         address pool,
         int24 targetTick
-    ) public view returns (PopulatedTick[2] memory populatedTicks) {
+    ) public view override returns (PopulatedTick[2] memory populatedTicks) {
         uint32 tickTreeRoot = IAlgebraPool(pool).tickTreeRoot();
 
         uint16 rootIndex = uint16(uint24((int24(targetTick >> 8) + TickTree.SECOND_LAYER_OFFSET) >> 8));

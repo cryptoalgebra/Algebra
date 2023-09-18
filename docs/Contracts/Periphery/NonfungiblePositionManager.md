@@ -212,7 +212,7 @@ must be collected first.
 ### approveForFarming
 
 ```solidity
-function approveForFarming(uint256 tokenId, bool approve) external payable
+function approveForFarming(uint256 tokenId, bool approve, address farmingAddress) external payable
 ```
 
 Changes approval of token ID for farming.
@@ -221,6 +221,7 @@ Changes approval of token ID for farming.
 | ---- | ---- | ----------- |
 | tokenId | uint256 | The ID of the token that is being approved / unapproved |
 | approve | bool | New status of approval |
+| farmingAddress | address | The address of farming: used to prevent tx frontrun |
 
 ### switchFarmingStatus
 
