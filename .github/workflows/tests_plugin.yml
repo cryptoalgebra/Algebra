@@ -1,4 +1,4 @@
-name: Autotests Plugins
+name: Autotests Plugin
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./src/plugins
+        working-directory: ./src/plugin
 
     steps:
       - uses: actions/checkout@v4

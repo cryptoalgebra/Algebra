@@ -120,7 +120,8 @@ function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tick
 *Developer note: Reverts if a timepoint at or before the desired timepoint timestamp does not exist.
 0 may be passed as &#x60;secondsAgo&#x27; to return the current cumulative values.
 If called with a timestamp falling between two timepoints, returns the counterfactual accumulator values
-at exactly the timestamp between the two timepoints.*
+at exactly the timestamp between the two timepoints.
+&#x60;volatilityCumulative&#x60; values for timestamps after the last timepoint _should not_ be compared because they may differ due to interpolation errors*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -141,7 +142,8 @@ function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tick
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
 
-*Developer note: Reverts if &#x60;secondsAgos&#x60; &gt; oldest timepoint*
+*Developer note: Reverts if &#x60;secondsAgos&#x60; &gt; oldest timepoint
+&#x60;volatilityCumulative&#x60; values for timestamps after the last timepoint _should not_ be compared because they may differ due to interpolation errors*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -302,6 +304,8 @@ function afterModifyPosition(address, address, int24, int24, int128, uint256, ui
 ```
 
 
+
+*Developer note: unused*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

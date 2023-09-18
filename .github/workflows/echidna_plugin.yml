@@ -1,4 +1,4 @@
-name: Echidna Plugins
+name: Echidna Plugin
 
 on:
   push:
@@ -35,14 +35,14 @@ jobs:
 
       - name: Compile contracts
         run: npm run compile
-        working-directory: ./src/plugins
+        working-directory: ./src/plugin
 
       - name: Run ${{ matrix.testName }}
         uses: crytic/echidna-action@v2
         with:
           solc-version: 0.8.20
-          files: ./src/plugins/
+          files: ./src/plugin/
           contract: ${{ matrix.testName }}
           crytic-args: --hardhat-ignore-compile
           solc-args: --evm-version paris
-          config: ./src/plugins/contracts/test/echidna/echidna.config.yml
+          config: ./src/plugin/contracts/test/echidna/echidna.config.yml
