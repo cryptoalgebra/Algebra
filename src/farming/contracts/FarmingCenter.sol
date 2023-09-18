@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import '@cryptoalgebra/periphery/contracts/interfaces/IPositionFollower.sol';
-import '@cryptoalgebra/periphery/contracts/interfaces/INonfungiblePositionManager.sol';
-import '@cryptoalgebra/periphery/contracts/base/Multicall.sol';
-import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
-import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/integral-periphery/contracts/interfaces/IPositionFollower.sol';
+import '@cryptoalgebra/integral-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
+import '@cryptoalgebra/integral-periphery/contracts/base/Multicall.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
+import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';

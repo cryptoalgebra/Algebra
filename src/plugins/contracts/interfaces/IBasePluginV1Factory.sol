@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import '../base/AlgebraFeeConfiguration.sol';
 

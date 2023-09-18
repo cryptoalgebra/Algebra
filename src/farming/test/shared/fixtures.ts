@@ -1,25 +1,25 @@
 import { Signer, Wallet, getCreateAddress, MaxUint256 } from 'ethers';
 import { ethers } from 'hardhat';
 
-import AlgebraPool from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
-import AlgebraFactoryJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
-import AlgebraPoolDeployerJson from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
-import NFTDescriptorJson from '@cryptoalgebra/periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json';
-import NonfungiblePositionManagerJson from '@cryptoalgebra/periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json';
-import NonfungibleTokenPositionDescriptor from '@cryptoalgebra/periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json';
-import SwapRouter from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json';
+import AlgebraPool from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
+import AlgebraFactoryJson from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
+import AlgebraPoolDeployerJson from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
+import NFTDescriptorJson from '@cryptoalgebra/integral-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json';
+import NonfungiblePositionManagerJson from '@cryptoalgebra/integral-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json';
+import NonfungibleTokenPositionDescriptor from '@cryptoalgebra/integral-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json';
+import SwapRouter from '@cryptoalgebra/integral-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json';
 import WNativeToken from './external/WNativeToken.json';
 import { linkLibraries } from './linkLibraries';
-import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/periphery/typechain';
+import { ISwapRouter, IWNativeToken, NFTDescriptor } from '@cryptoalgebra/integral-periphery/typechain';
 import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
+} from '@cryptoalgebra/integral-base-plugin/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
 
 import {
   abi as PLUGIN_ABI,
   bytecode as PLUGIN_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/AlgebraBasePluginV1.sol/AlgebraBasePluginV1.json';
+} from '@cryptoalgebra/integral-base-plugin/artifacts/contracts/AlgebraBasePluginV1.sol/AlgebraBasePluginV1.json';
 import {
   AlgebraEternalFarming,
   TestERC20,
@@ -33,7 +33,7 @@ import {
 } from '../../typechain';
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared';
 import { ActorFixture } from './actors';
-import { IBasePluginV1Factory, IAlgebraBasePluginV1 } from '@cryptoalgebra/plugins/typechain';
+import { IBasePluginV1Factory, IAlgebraBasePluginV1 } from '@cryptoalgebra/integral-base-plugin/typechain';
 
 type WNativeTokenFixture = { wnative: IWNativeToken };
 

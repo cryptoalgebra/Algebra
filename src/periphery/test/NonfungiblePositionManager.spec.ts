@@ -24,7 +24,7 @@ import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
 
-import { abi as IAlgebraPoolABI } from '@cryptoalgebra/core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
+import { abi as IAlgebraPoolABI } from '@cryptoalgebra/integral-core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
 
 describe('NonfungiblePositionManager', () => {
   let wallets: Wallet[];

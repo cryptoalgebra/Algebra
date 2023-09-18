@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.4;
 
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
 
 import '../../interfaces/plugins/IVolatilityOracle.sol';
 

@@ -2,16 +2,16 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
-import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
-import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
-import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
-import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
-import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolPermissionedActions.sol';
-import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
-import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolActions.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolPermissionedActions.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
 contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlgebraPoolState {

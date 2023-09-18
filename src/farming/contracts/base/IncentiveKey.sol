@@ -2,8 +2,8 @@
 pragma solidity >=0.7.6;
 pragma abicoder v2;
 
-import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 /// @param rewardToken The token being distributed as a reward (token0)
 /// @param bonusRewardToken The bonus token being distributed as a reward (token1)

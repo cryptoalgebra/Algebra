@@ -2,7 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '../interfaces/IAlgebraVirtualPool.sol';
 
 contract TestVirtualPool is IAlgebraVirtualPool {
