@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickTree.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 import '../../lens/TickLens.sol';
 
 contract TickLensEchidnaTest {

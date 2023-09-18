@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/TickTree.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickTree.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
 
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
 

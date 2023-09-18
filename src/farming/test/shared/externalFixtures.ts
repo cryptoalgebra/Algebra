@@ -1,19 +1,25 @@
-import { abi as FACTORY_ABI, bytecode as FACTORY_BYTECODE } from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
+import {
+  abi as FACTORY_ABI,
+  bytecode as FACTORY_BYTECODE,
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
 import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
 import { ethers } from 'hardhat';
-import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '@cryptoalgebra/periphery/typechain';
-import { abi as SWAPROUTER_ABI, bytecode as SWAPROUTER_BYTECODE } from '@cryptoalgebra/periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json';
+import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '@cryptoalgebra/integral-periphery/typechain';
+import {
+  abi as SWAPROUTER_ABI,
+  bytecode as SWAPROUTER_BYTECODE,
+} from '@cryptoalgebra/integral-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json';
 import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/plugins/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
+} from '@cryptoalgebra/integral-base-plugin/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
 import {
   abi as WNATIVE_ABI,
   bytecode as WNATIVE_BYTECODE,
-} from '@cryptoalgebra/periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json';
+} from '@cryptoalgebra/integral-periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json';
 
 //import WNativeToken from '../contracts/WNativeToken.json'
 import { getCreateAddress } from 'ethers';

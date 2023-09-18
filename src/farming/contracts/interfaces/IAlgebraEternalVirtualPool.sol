@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.8.4;
 
-import '@cryptoalgebra/plugins/contracts/interfaces/IAlgebraVirtualPool.sol';
+import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/IAlgebraVirtualPool.sol';
 
 /// @title Algebra eternal virtual pool interface
 /// @notice Used to track active liquidity in farming and distribute rewards

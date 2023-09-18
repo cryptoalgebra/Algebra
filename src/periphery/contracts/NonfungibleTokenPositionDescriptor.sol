@@ -2,7 +2,7 @@
 pragma solidity =0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './libraries/SafeERC20Namer.sol';
 import './interfaces/INonfungiblePositionManager.sol';

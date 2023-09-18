@@ -2,13 +2,13 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
-import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/LiquidityMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickManagement.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/LiquidityMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import '../base/VirtualTickStructure.sol';
 
