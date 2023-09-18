@@ -3,7 +3,7 @@ format: 'text'
 #checkAsserts checks assertions
 testMode: 'assertion'
 #coverage controls coverage guided testing
-coverage: true
+coverage: false
 # #solcArgs allows special args to solc
 # solcArgs: "--allow-paths node_modules/@cryptoalgebra/core/contracts/libraries/Constants.sol"
 cryticArgs: ['--hardhat-ignore-compile']

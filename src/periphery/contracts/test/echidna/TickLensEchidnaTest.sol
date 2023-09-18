@@ -9,7 +9,7 @@ import '../../lens/TickLens.sol';
 contract TickLensEchidnaTest {
     using TickManagement for mapping(int24 => TickManagement.Tick);
 
-    address private immutable tickLens;
+    address private tickLens;
 
     mapping(int24 => TickManagement.Tick) public ticks;
 

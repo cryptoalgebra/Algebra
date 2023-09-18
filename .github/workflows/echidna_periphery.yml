@@ -41,5 +41,6 @@ jobs:
           solc-version: 0.8.20
           files: ./src/periphery/
           contract: ${{ matrix.testName }}
+          crytic-args: --hardhat-ignore-compile
           solc-args: --evm-version paris
           config: ./src/periphery/contracts/test/echidna/echidna.config.yml

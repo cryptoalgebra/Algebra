@@ -77,16 +77,20 @@ contract TickLens is ITickLens {
             (int24 nextActiveSecondLayerNode, ) = TickTree._nextActiveBitInWord(tickTreeRoot, int16(rootIndex));
             uint256 secondLayerNode = _fetchSecondLayerNode(pool, int16(nextActiveSecondLayerNode));
 
-            (int24 activeLeafIndex, ) = TickTree._nextActiveBitInWord(
+            (int24 activeLeafIndex, bool initializedSecondLayer) = TickTree._nextActiveBitInWord(
                 secondLayerNode,
                 int24(nextActiveSecondLayerNode) << 8
             );
-            uint256 leafNode = _fetchBitmap(pool, int16(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET));
+            if (initializedSecondLayer) {
+                uint256 leafNode = _fetchBitmap(pool, int16(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET));
 
-            (activeTickIndex, ) = TickTree._nextActiveBitInWord(
-                leafNode,
-                int24(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET) << 8
-            );
+                (activeTickIndex, ) = TickTree._nextActiveBitInWord(
+                    leafNode,
+                    int24(activeLeafIndex - TickTree.SECOND_LAYER_OFFSET) << 8
+                );
+            } else {
+                activeTickIndex = TickMath.MAX_TICK;
+            }
         }
 
         if (activeTickIndex == targetTick) {
