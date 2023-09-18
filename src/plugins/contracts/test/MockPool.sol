@@ -44,6 +44,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   uint32 public override communityFeeLastTimestamp;
 
   /// @inheritdoc IAlgebraPoolState
+  uint32 public override tickTreeRoot; // The root bitmap of search tree
+  /// @inheritdoc IAlgebraPoolState
+  mapping(int16 => uint256) public override tickTreeSecondLayer; // The second layer of search tree
+
+  /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
