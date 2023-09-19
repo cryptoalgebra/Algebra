@@ -420,7 +420,7 @@ library VolatilityOracle {
       if (samePoint) return ((tickCumulativeBefore + int56(tick) * int56(uint56(target - timestampBefore))), _indexBeforeOrAt); // if target is newer than last timepoint
 
       (uint32 timestampAfter, int56 tickCumulativeAfter) = (atOrAfter.blockTimestamp, atOrAfter.tickCumulative);
-      if (target == timestampAfter) return (tickCumulativeAfter, _indexBeforeOrAt); // we're at the right boundary
+      if (target == timestampAfter) return (tickCumulativeAfter, uint16(_indexBeforeOrAt + 1)); // we're at the right boundary
 
       // we're in the middle
       (uint32 timepointTimeDelta, uint32 targetDelta) = (timestampAfter - timestampBefore, target - timestampBefore);
