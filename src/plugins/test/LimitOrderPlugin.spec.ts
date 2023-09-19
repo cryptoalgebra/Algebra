@@ -36,7 +36,6 @@ describe('LimitOrders', () => {
     poolKey = {token0: await token0.getAddress(), token1: await token1.getAddress()}
     
     await initializeAtZeroTick(pool);
-    await pool.setTickSpacing(1);
 
     await token0.approve(await loPlugin.getAddress(), 2n**255n);
     await token1.approve(await loPlugin.getAddress(), 2n**255n);
@@ -61,7 +60,7 @@ describe('LimitOrders', () => {
         let balanceBefore = await token0.balanceOf(other);
         await loPlugin.withdraw(1, other);
         let balanceAfter =  await token0.balanceOf(other);
-        await expect(balanceAfter - balanceBefore).to.be.eq(5014n)
+        await expect(balanceAfter - balanceBefore).to.be.eq(300435)
     });
   })
 

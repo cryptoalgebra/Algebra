@@ -279,17 +279,19 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
     address _incentive = incentive;
 
-    if (_incentive != address(0)) {
+    if (_incentive != address(0) || limitOrderPlugin != address(0)) {
       (, int24 tick, , ) = _getPoolState();
-      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
-    }
 
-    if (limitOrderPlugin != address(0)) {
-      (, int24 tick, , ) = _getPoolState();
-      // TODO change pool to msg.sender?
-      ILimitOrderPlugin(limitOrderPlugin).afterSwap(pool, zeroToOne, tick);
+      if (_incentive != address(0)) {
+        IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+      }
+
+      if (limitOrderPlugin != address(0)) {
+        ILimitOrderPlugin(limitOrderPlugin).afterSwap(pool, zeroToOne, tick);
+      }
+    } else {
+      _updatePluginConfigInPool(); // should not be called, reset config
     }
-    // TODO optimize & change config if all addresses is 0
 
     return IAlgebraPlugin.afterSwap.selector;
   }

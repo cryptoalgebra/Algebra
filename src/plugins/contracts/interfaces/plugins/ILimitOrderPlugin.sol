@@ -25,7 +25,13 @@ interface ILimitOrderPlugin is IAlgebraMintCallback {
 
   function place(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, uint128 liquidity) external;
 
-  function kill(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, address to) external returns (uint256 amount0, uint256 amount1);
+  function kill(
+    PoolAddress.PoolKey memory poolKey,
+    int24 tickLower,
+    int24 tickUpper,
+    bool zeroForOne,
+    address to
+  ) external returns (uint256 amount0, uint256 amount1);
 
   function withdraw(Epoch epoch, address to) external returns (uint256 amount0, uint256 amount1);
 
