@@ -34,11 +34,11 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     bool filled;
     int24 tickLower;
     int24 tickUpper;
+    uint128 liquidityTotal;
     address token0;
     address token1;
-    uint256 token0Total;
-    uint256 token1Total;
-    uint128 liquidityTotal;
+    uint128 token0Total;
+    uint128 token1Total;
     mapping(address => uint128) liquidity;
   }
 
@@ -106,8 +106,8 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
       (uint256 amount0, uint256 amount1) = IAlgebraPool(pool).burn(lower, upper, epochInfo.liquidityTotal, '');
 
       unchecked {
-        epochInfo.token0Total += amount0;
-        epochInfo.token1Total += amount1;
+        epochInfo.token0Total += uint128(amount0);
+        epochInfo.token1Total += uint128(amount1);
       }
 
       setEpoch(pool, lower, upper, zeroForOne, EPOCH_DEFAULT);
@@ -203,8 +203,8 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     if (liquidityTotal - liquidity == 0) {
       IAlgebraPool(pool).collect(pool, tickLower, tickUpper, uint128(amount0Fee), uint128(amount1Fee));
     } else {
-      epochInfo.token0Total += amount0Fee;
-      epochInfo.token1Total += amount1Fee;
+      epochInfo.token0Total += uint128(amount0Fee);
+      epochInfo.token1Total += uint128(amount1Fee);
     }
 
     (amount0, amount1) = IAlgebraPool(pool).burn(tickLower, tickUpper, liquidity, '');
@@ -234,8 +234,8 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     amount0 = FullMath.mulDiv(token0Total, liquidity, liquidityTotal);
     amount1 = FullMath.mulDiv(token1Total, liquidity, liquidityTotal);
 
-    epochInfo.token0Total = token0Total - amount0;
-    epochInfo.token1Total = token1Total - amount1;
+    epochInfo.token0Total = uint128(token0Total - amount0);
+    epochInfo.token1Total = uint128(token1Total - amount1);
     epochInfo.liquidityTotal = liquidityTotal - liquidity;
 
     IAlgebraPool(pool).collect(address(this), epochInfo.tickLower, epochInfo.tickUpper, uint128(amount0), uint128(amount1));
