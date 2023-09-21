@@ -17,7 +17,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
@@ -25,29 +25,27 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
     evmVersion: 'paris',
     optimizer: {
       enabled: true,
-      runs: 200,
+      runs: 800,
     },
     metadata: {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
-const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
+const HIGH_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
   settings: {
     evmVersion: 'paris',
     optimizer: {
       enabled: true,
-      runs: 0,
+      runs: 2200,
     },
     metadata: {
       bytecodeHash: 'none',
     },
   },
-}
-
-
+};
 
 if (process.env.RUN_COVERAGE == '1') {
   /**
@@ -55,13 +53,13 @@ if (process.env.RUN_COVERAGE == '1') {
    *
    * See https://github.com/sc-forks/solidity-coverage/issues/417#issuecomment-730526466
    */
-  console.info('Using coverage compiler settings')
+  console.info('Using coverage compiler settings');
   const details = {
     yul: true,
     yulDetails: {
       stackAllocation: true,
     },
-  }
+  };
 
   HIGHEST_OPTIMIZER_COMPILER_SETTINGS.settings.details = details;
   DEFAULT_COMPILER_SETTINGS.settings.details = details;
@@ -77,6 +75,8 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/AlgebraPoolDeployer.sol': HIGH_COMPILER_SETTINGS,
+      'contracts/AlgebraPool.sol': HIGH_COMPILER_SETTINGS,
     },
   },
   docgen: {
@@ -87,10 +87,10 @@ export default {
       return x.name.toString() + '.md';
     },
     templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
+    collapseNewlines: true,
   },
   outputValidator: {
     runOnCompile: false,
     exclude: ['contracts/test'],
   },
-}
+};
