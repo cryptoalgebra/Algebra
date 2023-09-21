@@ -106,7 +106,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
       (uint256 amount0, uint256 amount1) = IAlgebraPool(pool).burn(lower, upper, epochInfo.liquidityTotal, '');
 
       unchecked {
-        epochInfo.token0Total += uint128(amount0);
+        epochInfo.token0Total += uint128(amount0) - 1;
         epochInfo.token1Total += uint128(amount1);
       }
 
@@ -175,6 +175,10 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     epochInfo.tickLower = tickLower;
     epochInfo.tickUpper = tickUpper;
 
+    if (epochInfo.token0Total == 0 && epochInfo.token1Total == 0) {
+      epochInfo.token0Total = 1;
+    }
+
     emit Place(msg.sender, epoch, tickLower, zeroForOne, liquidityActual);
   }
 
@@ -201,7 +205,15 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     // when the all liquidity of the position is taken, fees is sent to the pool
     (uint256 amount0Fee, uint256 amount1Fee) = IAlgebraPool(pool).burn(tickLower, tickUpper, 0, '');
     if (liquidityTotal - liquidity == 0) {
-      IAlgebraPool(pool).collect(pool, tickLower, tickUpper, uint128(amount0Fee), uint128(amount1Fee));
+      IAlgebraPool(pool).collect(
+        pool,
+        tickLower,
+        tickUpper,
+        uint128(amount0Fee) + epochInfo.token0Total - 1,
+        uint128(amount1Fee) + epochInfo.token1Total
+      );
+      epochInfo.token0Total = 0;
+      epochInfo.token1Total = 0;
     } else {
       epochInfo.token0Total += uint128(amount0Fee);
       epochInfo.token1Total += uint128(amount1Fee);
