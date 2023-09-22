@@ -122,7 +122,10 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           // the price has changed but hasn't reached the target
           uint160 priceAtCurrentTick = TickMath.getSqrtRatioAtTick(currentTick);
           // check if tick should be recalculated
-          if (currentPrice < priceAtCurrentTick || currentPrice >= ((uint256(priceAtCurrentTick) * 100005) / 100000)) {
+          if (
+            currentPrice < priceAtCurrentTick ||
+            currentPrice >= ((uint256(priceAtCurrentTick) * Constants.TICK_SQRT) / Constants.TICK_SQRT_DENOMINATOR) // price at next tick
+          ) {
             currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
           }
           break; // since the price hasn't reached the target, amountRequired should be 0

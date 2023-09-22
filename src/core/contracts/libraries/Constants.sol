@@ -27,4 +27,8 @@ library Constants {
   uint256 internal constant COMMUNITY_FEE_DENOMINATOR = 1e3;
   // role that can change settings in pools
   bytes32 internal constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
+
+  // tick is equal to 'x1.0001', so 1 tick value for sqrt price is equal to 'x1.00005'
+  uint256 internal constant TICK_SQRT = 100005;
+  uint256 internal constant TICK_SQRT_DENOMINATOR = 100000;
 }

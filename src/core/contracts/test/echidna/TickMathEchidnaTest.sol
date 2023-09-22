@@ -2,6 +2,7 @@
 pragma solidity =0.8.20;
 
 import '../../libraries/TickMath.sol';
+import '../../libraries/Constants.sol';
 
 contract TickMathEchidnaTest {
   // uniqueness and increasing order
@@ -40,7 +41,7 @@ contract TickMathEchidnaTest {
 
       if (price == priceAtTick) tickChangeTest = false;
       else if (price > priceAtTick) {
-        tickChangeTest = price >= ((uint256(priceAtTick) * 100005) / 100000);
+        tickChangeTest = price >= ((uint256(priceAtTick) * Constants.TICK_SQRT) / Constants.TICK_SQRT_DENOMINATOR);
       } else {
         tickChangeTest = true;
       }
