@@ -151,11 +151,25 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   // The main external calls that are used by the pool. Can be overridden in tests
 
   function _balanceToken0() internal view virtual returns (uint256) {
-    return IERC20Minimal(token0).balanceOf(address(this));
+    return _balanceOf(token0);
   }
 
   function _balanceToken1() internal view virtual returns (uint256) {
-    return IERC20Minimal(token1).balanceOf(address(this));
+    return _balanceOf(token1);
+  }
+
+  function _balanceOf(address token) internal view virtual returns (uint256 res) {
+    bool success;
+    address _this = address(this);
+    assembly {
+      mstore(0x00, 0x70a0823100000000000000000000000000000000000000000000000000000000) // "balanceOf(address)" selector
+      mstore(0x04, _this)
+      success := staticcall(gas(), token, 0, 0xA4, 0, 0x20)
+      success := and(eq(returndatasize(), 32), success)
+      res := mload(0)
+    }
+
+    require(success);
   }
 
   function _transfer(address token, address to, uint256 amount) internal virtual {
