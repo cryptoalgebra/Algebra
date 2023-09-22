@@ -41,7 +41,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
     if (amountRequired == 0) revert zeroAmountRequired();
-    if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
+    // `amountRequired != type(int256).min` will be checked in movePriceTowardsTarget
 
     SwapCalculationCache memory cache;
     (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
@@ -53,12 +53,16 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
 
-    if (zeroToOne) {
-      if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
-      cache.totalFeeGrowthInput = totalFeeGrowth0Token;
-    } else {
-      if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
-      cache.totalFeeGrowthInput = totalFeeGrowth1Token;
+    {
+      bool _validLimitSqrtPrice;
+      if (zeroToOne) {
+        cache.totalFeeGrowthInput = totalFeeGrowth0Token;
+        _validLimitSqrtPrice = limitSqrtPrice < currentPrice && limitSqrtPrice > TickMath.MIN_SQRT_RATIO;
+      } else {
+        cache.totalFeeGrowthInput = totalFeeGrowth1Token;
+        _validLimitSqrtPrice = limitSqrtPrice > currentPrice && limitSqrtPrice < TickMath.MAX_SQRT_RATIO;
+      }
+      if (!_validLimitSqrtPrice) revert invalidLimitSqrtPrice();
     }
 
     PriceMovementCache memory step;
