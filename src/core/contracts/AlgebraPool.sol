@@ -213,11 +213,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    {
+      // scope to prevent "stack too deep"
+      (uint8 _pluginConfig, bool _unlocked) = (globalState.pluginConfig, globalState.unlocked); // single SLOAD
+      if (_pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
+        _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+        _unlocked = globalState.unlocked; // need to SLOAD again after external call
+      }
+      // lock will be done after _calculateSwap
+      if (!_unlocked) revert IAlgebraPoolErrors.locked();
     }
-    // lock will be done after _calculateSwap
-    _checkUnlocked();
+
     {
       // scope to prevent "stack too deep"
       uint160 currentPrice;
