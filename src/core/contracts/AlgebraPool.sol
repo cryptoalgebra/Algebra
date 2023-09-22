@@ -213,8 +213,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
+      _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    }
     // lock will be done after _calculateSwap
+    _checkUnlocked();
     {
       // scope to prevent "stack too deep"
       uint160 currentPrice;
@@ -285,7 +288,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
+      _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    }
     _lock();
 
     _updateReserves();
@@ -321,11 +326,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   function _beforeSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, bool payInAdvance, bytes calldata data) internal {
-    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data).shouldReturn(
-        IAlgebraPlugin.beforeSwap.selector
-      );
-    }
+    IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data).shouldReturn(
+      IAlgebraPlugin.beforeSwap.selector
+    );
   }
 
   function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {

@@ -27,8 +27,11 @@ library TickMath {
   function getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 price) {
     unchecked {
       // get abs value
-      int24 absTickMask = tick >> (24 - 1);
-      uint256 absTick = uint24((tick + absTickMask) ^ absTickMask);
+      uint256 absTick;
+      assembly {
+        let absTickMask := sar(23, tick)
+        absTick := xor(add(tick, absTickMask), absTickMask)
+      }
       if (absTick > uint24(MAX_TICK)) revert IAlgebraPoolErrors.tickOutOfRange();
 
       uint256 ratio = 0x100000000000000000000000000000000;
