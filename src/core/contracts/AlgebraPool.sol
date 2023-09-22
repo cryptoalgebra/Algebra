@@ -223,7 +223,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       uint128 currentLiquidity;
       uint256 communityFee;
       (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
+      (uint256 balance0Before, uint256 balance1Before) = _updateReserves(currentLiquidity);
       if (zeroToOne) {
         unchecked {
           if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
@@ -243,8 +243,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     }
 
-    _unlock();
-    _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    globalState.unlocked = true; // unlock here prevents redundant SLOAD
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
+      _afterSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolActions
@@ -310,8 +312,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
 
-    _unlock();
-    _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+    globalState.unlocked = true; // unlock here prevents redundant SLOAD
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
+      _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+    }
   }
 
   function _beforeSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, bool payInAdvance, bytes calldata data) internal {
@@ -323,11 +327,9 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
-    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
-      IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
-        IAlgebraPlugin.afterSwap.selector
-      );
-    }
+    IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
+      IAlgebraPlugin.afterSwap.selector
+    );
   }
 
   /// @inheritdoc IAlgebraPoolActions
