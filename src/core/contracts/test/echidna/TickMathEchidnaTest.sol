@@ -23,4 +23,35 @@ contract TickMathEchidnaTest {
       assert(tick < TickMath.MAX_TICK);
     }
   }
+
+  // the ratio is always between the returned tick and the returned tick+1
+  function checkTickChangeEstimation(int24 tick, int160 priceDelta) external pure {
+    tick = _boundTick(tick);
+
+    uint160 priceAtTick = TickMath.getSqrtRatioAtTick(tick);
+
+    uint160 price = priceDelta >= 0 ? (priceAtTick + uint160(priceDelta)) : (priceAtTick - uint160(-priceDelta));
+
+    require(price >= TickMath.MIN_SQRT_RATIO);
+    require(price <= TickMath.MAX_SQRT_RATIO);
+
+    unchecked {
+      bool tickChangeTest;
+
+      if (price == priceAtTick) tickChangeTest = false;
+      else if (price > priceAtTick) {
+        tickChangeTest = price >= ((uint256(priceAtTick) * 100005) / 100000);
+      } else {
+        tickChangeTest = true;
+      }
+
+      assert(tickChangeTest != (TickMath.getTickAtSqrtRatio(uint160(price)) == tick));
+    }
+  }
+
+  function _boundTick(int24 tick) private pure returns (int24) {
+    if (tick < TickMath.MIN_TICK) tick = TickMath.MIN_TICK;
+    if (tick > TickMath.MAX_TICK) tick = TickMath.MAX_TICK;
+    return tick;
+  }
 }

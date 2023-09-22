@@ -115,7 +115,12 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
-          currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
+          // the price has changed but hasn't reached the target
+          uint160 priceAtCurrentTick = TickMath.getSqrtRatioAtTick(currentTick);
+          // check if tick should be recalculated
+          if (currentPrice < priceAtCurrentTick || currentPrice >= ((uint256(priceAtCurrentTick) * 100005) / 100000)) {
+            currentTick = TickMath.getTickAtSqrtRatio(currentPrice);
+          }
           break; // since the price hasn't reached the target, amountRequired should be 0
         }
       } while (amountRequired != 0 && currentPrice != limitSqrtPrice); // check stop condition
