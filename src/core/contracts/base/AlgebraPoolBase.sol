@@ -150,26 +150,30 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   // The main external calls that are used by the pool. Can be overridden in tests
 
-  function _balanceToken0() internal view virtual returns (uint256) {
-    return _balanceOf(token0);
-  }
-
-  function _balanceToken1() internal view virtual returns (uint256) {
-    return _balanceOf(token1);
-  }
-
-  function _balanceOf(address token) internal view virtual returns (uint256 res) {
-    bool success;
-    address _this = address(this);
+  function _balanceToken0() internal view virtual returns (uint256 res) {
+    (address _this, address _token) = (address(this), token0);
     assembly {
       mstore(0x00, 0x70a0823100000000000000000000000000000000000000000000000000000000) // "balanceOf(address)" selector
       mstore(0x04, _this)
-      success := staticcall(gas(), token, 0, 0xA4, 0, 0x20)
-      success := and(eq(returndatasize(), 32), success)
+      let success := staticcall(gas(), _token, 0, 0xA4, 0, 0x20)
+      if iszero(and(eq(returndatasize(), 32), success)) {
+        revert(0, 0)
+      }
       res := mload(0)
     }
+  }
 
-    require(success);
+  function _balanceToken1() internal view virtual returns (uint256 res) {
+    (address _this, address _token) = (address(this), token1);
+    assembly {
+      mstore(0x00, 0x70a0823100000000000000000000000000000000000000000000000000000000) // "balanceOf(address)" selector
+      mstore(0x04, _this)
+      let success := staticcall(gas(), _token, 0, 0xA4, 0, 0x20)
+      if iszero(and(eq(returndatasize(), 32), success)) {
+        revert(0, 0)
+      }
+      res := mload(0)
+    }
   }
 
   function _transfer(address token, address to, uint256 amount) internal virtual {
