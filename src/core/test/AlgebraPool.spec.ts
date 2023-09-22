@@ -1249,7 +1249,7 @@ describe('AlgebraPool', () => {
               other.address,
               true,
               '-57896044618658097711785492504343953926634992332820282019728792003956564819968',
-              0,
+              encodePriceSqrt(1, 100),
               '0x'
             )
           ).to.be.revertedWithCustomError(pool, 'invalidAmountRequired');
