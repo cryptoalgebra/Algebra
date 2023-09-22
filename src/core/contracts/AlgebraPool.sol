@@ -214,8 +214,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
     _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
-    _lock();
-
+    // lock will be done after _calculateSwap
     {
       // scope to prevent "stack too deep"
       uint160 currentPrice;
@@ -223,6 +222,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       uint128 currentLiquidity;
       uint256 communityFee;
       (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+      (globalState.price, globalState.tick, globalState.unlocked) = (currentPrice, currentTick, false); // reentrancy lock here
+
       (uint256 balance0Before, uint256 balance1Before) = _updateReserves(currentLiquidity);
       if (zeroToOne) {
         unchecked {
@@ -294,6 +295,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint128 currentLiquidity;
     uint256 communityFee;
     (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountToSell, limitSqrtPrice);
+    (globalState.price, globalState.tick) = (currentPrice, currentTick);
 
     unchecked {
       // transfer to the recipient

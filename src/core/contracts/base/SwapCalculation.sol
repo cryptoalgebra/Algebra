@@ -129,8 +129,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       (amount0, amount1) = zeroToOne == cache.exactInput ? (amountSpent, cache.amountCalculated) : (cache.amountCalculated, amountSpent);
     }
 
-    (globalState.price, globalState.tick) = (currentPrice, currentTick);
-
     if (cache.crossedAnyTick) {
       (liquidity, prevTickGlobal, nextTickGlobal) = (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick);
     }
