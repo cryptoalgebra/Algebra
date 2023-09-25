@@ -8,7 +8,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
   // WNativeTokenAddress
-  const WNativeTokenAddress = '0xC7A183Ad373301d68f7E0Ee824c8c727C7D5B21d';
+  const WNativeTokenAddress = '0x6E2542aFC68a1697FeB2810437DF9409D3b93493';
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
@@ -25,9 +25,18 @@ async function main() {
   const QuoterFactory = await hre.ethers.getContractFactory('Quoter');
   const Quoter = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
 
-  await TickLens.waitForDeployment();
+  await Quoter.waitForDeployment();
 
   console.log('Quoter deployed to:', Quoter.target);
+
+  // arg1 factory address
+  // arg2 wnative address
+  const QuoterV2Factory = await hre.ethers.getContractFactory('QuoterV2');
+  const QuoterV2 = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+
+  await QuoterV2.waitForDeployment();
+
+  console.log('QuoterV2 deployed to:', QuoterV2.target);
 
   // arg1 factory address
   // arg2 wnative address
@@ -54,7 +63,7 @@ async function main() {
   );
   const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(
     WNativeTokenAddress,
-    'AA',
+    'WTLS',
     []
   );
 
