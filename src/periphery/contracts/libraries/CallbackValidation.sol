@@ -30,6 +30,6 @@ library CallbackValidation {
         PoolAddress.PoolKey memory poolKey
     ) internal view returns (IAlgebraPool pool) {
         pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
-        require(msg.sender == address(pool));
+        require(msg.sender == address(pool), 'Invalid caller of callback');
     }
 }

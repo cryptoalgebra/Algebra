@@ -207,7 +207,7 @@ contract SwapRouter is
             : (uint256(amount1Delta), uint256(-amount0Delta));
         // it's technically possible to not receive the full output amount,
         // so if no price limit has been specified, require this possibility away
-        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut);
+        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut, 'Not received full amountOut');
     }
 
     /// @inheritdoc ISwapRouter
