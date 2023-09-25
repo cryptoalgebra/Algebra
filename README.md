@@ -14,6 +14,7 @@ Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
 </p>
 <p align="center">
 <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml/badge.svg"></a>
 <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugin.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugin.yml/badge.svg"></a>
 <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_farming.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_farming.yml/badge.svg"></a>
 </p>
