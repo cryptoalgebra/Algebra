@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
 
 import '@cryptoalgebra/periphery/contracts/libraries/CallbackValidation.sol';
 
@@ -12,21 +13,25 @@ import './interfaces/plugins/ILimitOrderPlugin.sol';
 import './base/LimitOrderPayments.sol';
 
 contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
-  constructor(address _wNativeToken, address _poolDeployer, address _basePluginFactory) LimitOrderPayments(_wNativeToken) {
+  constructor(address _wNativeToken, address _poolDeployer, address _basePluginFactory, address _factory) LimitOrderPayments(_wNativeToken) {
     poolDeployer = _poolDeployer;
     basePluginFactory = _basePluginFactory;
+    factory = _factory;
   }
 
   using EpochLibrary for Epoch;
 
   address public immutable poolDeployer;
+  address public immutable factory;
   address public immutable basePluginFactory;
 
+  bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
   bytes internal constant ZERO_BYTES = bytes('');
 
   Epoch internal constant EPOCH_DEFAULT = Epoch.wrap(0);
 
   mapping(address => int24) public tickLowerLasts;
+  mapping(address => int24) public tickSpacings;
 
   Epoch public epochNext = Epoch.wrap(1);
 
@@ -68,8 +73,16 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     return epochInfos[epoch].liquidity[owner];
   }
 
-  function getTickSpacing(address pool) private view returns (int24) {
-    return IAlgebraPool(pool).tickSpacing();
+  function setTickSpacing(address pool, int24 tickSpacing) external override {
+    require(IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+    tickSpacings[pool] = tickSpacing;
+  }
+
+  function getTickSpacing(address pool) private view returns (int24 tickSpacing) {
+    tickSpacing = tickSpacings[pool];
+    if (tickSpacing == 0) {
+      return IAlgebraPool(pool).tickSpacing();
+    } else return tickSpacing;
   }
 
   function getTick(address pool) private view returns (int24 tick) {
@@ -267,7 +280,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
 
     if (lower > upper) return;
 
-    // note that a zeroForOne swap means that the pool is actually gaining token0, so limit
+    // note that a zeroToOne swap means that the pool is actually gaining token0, so limit
     // order fills are the opposite of swap fills, hence the inversion below
     for (; lower <= upper; lower += tickSpacing) {
       _fillEpoch(pool, lower, lower + tickSpacing, !zeroToOne);

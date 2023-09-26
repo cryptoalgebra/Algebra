@@ -38,4 +38,6 @@ interface ILimitOrderPlugin is IAlgebraMintCallback {
   function afterSwap(address pool, bool zeroToOne, int24 tick) external;
 
   function afterInitialize(address pool, int24 tick) external;
+
+  function setTickSpacing(address pool, int24 tickSpacing) external;
 }
