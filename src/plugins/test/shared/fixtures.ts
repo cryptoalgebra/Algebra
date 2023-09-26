@@ -116,7 +116,7 @@ export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async f
   const pluginFactory = (await BasePluginV1FactoryFactory.deploy(factory)) as any as BasePluginV1Factory;
 
   const loPluginFactory = await ethers.getContractFactory('LimitOrderPlugin');
-  const loPlugin = (await loPluginFactory.deploy(ZERO_ADDRESS, poolDeployer, pluginFactory)) as any as LimitOrderPlugin
+  const loPlugin = (await loPluginFactory.deploy(ZERO_ADDRESS, poolDeployer, pluginFactory, factory)) as any as LimitOrderPlugin
 
   await pluginFactory.setLimitOrderPlugin(loPlugin);
   await factory.setDefaultPluginFactory(pluginFactory)
