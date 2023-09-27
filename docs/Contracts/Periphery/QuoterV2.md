@@ -33,6 +33,7 @@ constructor(address _factory, address _WNativeToken, address _poolDeployer) publ
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes path) external view
 ```
+**Selector**: `0x2c8958f6`
 
 Called to &#x60;msg.sender&#x60; after executing a swap via IAlgebraPool#swap.
 
@@ -51,6 +52,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 ```solidity
 function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) public returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
+**Selector**: `0x5e5e6e0f`
 
 Returns the amount out received for a given exact input but for a swap of a single pool
 
@@ -74,6 +76,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 ```solidity
 function quoteExactInput(bytes path, uint256 amountInRequired) public returns (uint256 amountOut, uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
 ```
+**Selector**: `0xcdca1753`
 
 Returns the amount out received for a given exact input swap without executing the swap
 
@@ -98,6 +101,7 @@ Returns the amount out received for a given exact input swap without executing t
 ```solidity
 function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) public returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
+**Selector**: `0x5877c9b9`
 
 Returns the amount in required to receive the given exact output amount but for a swap of a single pool
 
@@ -121,6 +125,7 @@ Returns the amount in required to receive the given exact output amount but for 
 ```solidity
 function quoteExactOutput(bytes path, uint256 amountOutRequired) public returns (uint256 amountOut, uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
 ```
+**Selector**: `0x2f80bb1d`
 
 Returns the amount in required for a given exact output swap without executing the swap
 

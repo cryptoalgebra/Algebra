@@ -44,6 +44,7 @@ constructor(address _factory, address _WNativeToken, address _poolDeployer) publ
 ```solidity
 function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes _data) external
 ```
+**Selector**: `0x2c8958f6`
 
 Called to &#x60;msg.sender&#x60; after executing a swap via IAlgebraPool#swap.
 
@@ -62,6 +63,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 ```solidity
 function exactInputSingle(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xbc651188`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 
@@ -80,6 +82,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 ```solidity
 function exactInput(struct ISwapRouter.ExactInputParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xc04b8d59`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along the specified path
 
@@ -98,6 +101,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 ```solidity
 function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xb87d2524`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along the specified path
 
@@ -118,6 +122,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 ```solidity
 function exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params) external payable returns (uint256 amountIn)
 ```
+**Selector**: `0x61d4d5b3`
 
 Swaps as little as possible of one token for &#x60;amountOut&#x60; of another token
 
@@ -136,6 +141,7 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another to
 ```solidity
 function exactOutput(struct ISwapRouter.ExactOutputParams params) external payable returns (uint256 amountIn)
 ```
+**Selector**: `0xf28c0498`
 
 Swaps as little as possible of one token for &#x60;amountOut&#x60; of another along the specified path (reversed)
 

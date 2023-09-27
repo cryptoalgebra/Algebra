@@ -82,6 +82,7 @@ constructor(address _pool, address _factory, address _pluginFactory) public
 ```solidity
 function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
 ```
+**Selector**: `0x1e5eb1d0`
 
 Current dynamic fee configuration
 
@@ -104,6 +105,7 @@ Current dynamic fee configuration
 ```solidity
 function initialize() external
 ```
+**Selector**: `0x8129fc1c`
 
 Initialize the plugin externally
 
@@ -114,6 +116,7 @@ Initialize the plugin externally
 ```solidity
 function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint88 volatilityCumulative)
 ```
+**Selector**: `0x88f2e862`
 
 
 
@@ -139,6 +142,7 @@ at exactly the timestamp between the two timepoints.
 ```solidity
 function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint88[] volatilityCumulatives)
 ```
+**Selector**: `0x9d3a5241`
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
 
@@ -161,6 +165,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 ```solidity
 function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external
 ```
+**Selector**: `0xda705235`
 
 Fills uninitialized timepoints with nonzero value
 
@@ -176,6 +181,7 @@ Fills uninitialized timepoints with nonzero value
 ```solidity
 function changeFeeConfiguration(struct AlgebraFeeConfiguration _config) external
 ```
+**Selector**: `0x1d39215e`
 
 Changes fee configuration for the pool
 
@@ -188,6 +194,7 @@ Changes fee configuration for the pool
 ```solidity
 function getCurrentFee() external view returns (uint16 fee)
 ```
+**Selector**: `0xf70d9362`
 
 Returns fee from plugin
 
@@ -202,6 +209,7 @@ Returns fee from plugin
 ```solidity
 function setIncentive(address newIncentive) external
 ```
+**Selector**: `0x7c1fe0c8`
 
 Connects or disconnects an incentive.
 
@@ -217,6 +225,7 @@ The one who connected it and the current farming has the right to disconnect the
 ```solidity
 function isIncentiveConnected(address targetIncentive) external view returns (bool)
 ```
+**Selector**: `0xe63015f0`
 
 Checks if the incentive is connected to pool
 
@@ -238,6 +247,7 @@ or the plugin configuration is incorrect.*
 ```solidity
 function beforeInitialize(address, uint160) external returns (bytes4)
 ```
+**Selector**: `0x636fd804`
 
 
 
@@ -257,6 +267,7 @@ function beforeInitialize(address, uint160) external returns (bytes4)
 ```solidity
 function afterInitialize(address, uint160, int24 tick) external returns (bytes4)
 ```
+**Selector**: `0x82dd6522`
 
 
 
@@ -277,6 +288,7 @@ function afterInitialize(address, uint160, int24 tick) external returns (bytes4)
 ```solidity
 function beforeModifyPosition(address, address, int24, int24, int128, bytes) external returns (bytes4)
 ```
+**Selector**: `0x5e2411b2`
 
 
 
@@ -302,6 +314,7 @@ function beforeModifyPosition(address, address, int24, int24, int128, bytes) ext
 ```solidity
 function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes) external returns (bytes4)
 ```
+**Selector**: `0xd6852010`
 
 
 
@@ -329,6 +342,7 @@ function afterModifyPosition(address, address, int24, int24, int128, uint256, ui
 ```solidity
 function beforeSwap(address, address, bool, int256, uint160, bool, bytes) external returns (bytes4)
 ```
+**Selector**: `0x029c1cb7`
 
 
 
@@ -353,6 +367,7 @@ function beforeSwap(address, address, bool, int256, uint160, bool, bytes) extern
 ```solidity
 function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes) external returns (bytes4)
 ```
+**Selector**: `0x9cb5a963`
 
 
 
@@ -378,6 +393,7 @@ function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, in
 ```solidity
 function beforeFlash(address, address, uint256, uint256, bytes) external returns (bytes4)
 ```
+**Selector**: `0x8de0a8ee`
 
 
 
@@ -402,6 +418,7 @@ function beforeFlash(address, address, uint256, uint256, bytes) external returns
 ```solidity
 function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes) external returns (bytes4)
 ```
+**Selector**: `0x343d37ff`
 
 
 

@@ -6,6 +6,7 @@
 ```solidity
 error locked()
 ```
+**Selector**: `0xcf309012`
 
 Emitted by the reentrancy guard
 
@@ -14,6 +15,7 @@ Emitted by the reentrancy guard
 ```solidity
 error arithmeticError()
 ```
+**Selector**: `0x8995290f`
 
 Emitted if arithmetic error occurred
 
@@ -22,6 +24,7 @@ Emitted if arithmetic error occurred
 ```solidity
 error alreadyInitialized()
 ```
+**Selector**: `0x52669adc`
 
 Emitted if an attempt is made to initialize the pool twice
 
@@ -30,6 +33,7 @@ Emitted if an attempt is made to initialize the pool twice
 ```solidity
 error notInitialized()
 ```
+**Selector**: `0x812eb655`
 
 Emitted if an attempt is made to mint or swap in uninitialized pool
 
@@ -38,6 +42,7 @@ Emitted if an attempt is made to mint or swap in uninitialized pool
 ```solidity
 error zeroAmountRequired()
 ```
+**Selector**: `0x79db9840`
 
 Emitted if 0 is passed as amountRequired to swap function
 
@@ -46,6 +51,7 @@ Emitted if 0 is passed as amountRequired to swap function
 ```solidity
 error invalidAmountRequired()
 ```
+**Selector**: `0x69967402`
 
 Emitted if invalid amount is passed as amountRequired to swap function
 
@@ -54,6 +60,7 @@ Emitted if invalid amount is passed as amountRequired to swap function
 ```solidity
 error insufficientInputAmount()
 ```
+**Selector**: `0xfb5b5414`
 
 Emitted if the pool received fewer tokens than it should have
 
@@ -62,6 +69,7 @@ Emitted if the pool received fewer tokens than it should have
 ```solidity
 error zeroLiquidityDesired()
 ```
+**Selector**: `0xe6ace6df`
 
 Emitted if there was an attempt to mint zero liquidity
 
@@ -70,6 +78,7 @@ Emitted if there was an attempt to mint zero liquidity
 ```solidity
 error zeroLiquidityActual()
 ```
+**Selector**: `0xbeba2a6c`
 
 Emitted if actual amount of liquidity is zero (due to insufficient amount of tokens received)
 
@@ -78,6 +87,7 @@ Emitted if actual amount of liquidity is zero (due to insufficient amount of tok
 ```solidity
 error flashInsufficientPaid0()
 ```
+**Selector**: `0x6dbca1fe`
 
 Emitted if the pool received fewer tokens{0,1} after flash than it should have
 
@@ -86,6 +96,7 @@ Emitted if the pool received fewer tokens{0,1} after flash than it should have
 ```solidity
 error flashInsufficientPaid1()
 ```
+**Selector**: `0xc998149f`
 
 
 
@@ -94,6 +105,7 @@ error flashInsufficientPaid1()
 ```solidity
 error invalidLimitSqrtPrice()
 ```
+**Selector**: `0x16626723`
 
 Emitted if limitSqrtPrice param is incorrect
 
@@ -102,6 +114,7 @@ Emitted if limitSqrtPrice param is incorrect
 ```solidity
 error tickIsNotSpaced()
 ```
+**Selector**: `0x5f6e14f3`
 
 Tick must be divisible by tickspacing
 
@@ -110,6 +123,7 @@ Tick must be divisible by tickspacing
 ```solidity
 error notAllowed()
 ```
+**Selector**: `0x932984d2`
 
 Emitted if a method is called that is accessible only to the factory owner or dedicated role
 
@@ -118,6 +132,7 @@ Emitted if a method is called that is accessible only to the factory owner or de
 ```solidity
 error onlyFarming()
 ```
+**Selector**: `0xae74b178`
 
 Emitted if a method is called that is accessible only to the farming
 
@@ -126,6 +141,7 @@ Emitted if a method is called that is accessible only to the farming
 ```solidity
 error invalidNewTickSpacing()
 ```
+**Selector**: `0xafe09f44`
 
 
 
@@ -134,6 +150,7 @@ error invalidNewTickSpacing()
 ```solidity
 error invalidNewCommunityFee()
 ```
+**Selector**: `0xa709b9af`
 
 
 
@@ -142,6 +159,7 @@ error invalidNewCommunityFee()
 ```solidity
 error dynamicFeeActive()
 ```
+**Selector**: `0xd39b8e0e`
 
 
 
@@ -150,6 +168,7 @@ error dynamicFeeActive()
 ```solidity
 error dynamicFeeDisabled()
 ```
+**Selector**: `0x3a4528ef`
 
 
 
@@ -158,6 +177,7 @@ error dynamicFeeDisabled()
 ```solidity
 error pluginIsNotConnected()
 ```
+**Selector**: `0x9e727ce3`
 
 
 
@@ -166,6 +186,7 @@ error pluginIsNotConnected()
 ```solidity
 error invalidHookResponse(bytes4 selector)
 ```
+**Selector**: `0xd3f5153b`
 
 
 
@@ -178,6 +199,7 @@ error invalidHookResponse(bytes4 selector)
 ```solidity
 error liquiditySub()
 ```
+**Selector**: `0x1301f748`
 
 Emitted if liquidity underflows
 
@@ -186,6 +208,7 @@ Emitted if liquidity underflows
 ```solidity
 error liquidityAdd()
 ```
+**Selector**: `0x997402f2`
 
 Emitted if liquidity overflows
 
@@ -194,6 +217,7 @@ Emitted if liquidity overflows
 ```solidity
 error topTickLowerOrEqBottomTick()
 ```
+**Selector**: `0xd9a841a7`
 
 
 
@@ -202,6 +226,7 @@ error topTickLowerOrEqBottomTick()
 ```solidity
 error bottomTickLowerThanMIN()
 ```
+**Selector**: `0x746b1fc4`
 
 
 
@@ -210,6 +235,7 @@ error bottomTickLowerThanMIN()
 ```solidity
 error topTickAboveMAX()
 ```
+**Selector**: `0x1445443d`
 
 
 
@@ -218,6 +244,7 @@ error topTickAboveMAX()
 ```solidity
 error liquidityOverflow()
 ```
+**Selector**: `0x25b8364a`
 
 
 
@@ -226,6 +253,7 @@ error liquidityOverflow()
 ```solidity
 error tickIsNotInitialized()
 ```
+**Selector**: `0x0d6e0949`
 
 
 
@@ -234,6 +262,7 @@ error tickIsNotInitialized()
 ```solidity
 error tickInvalidLinks()
 ```
+**Selector**: `0xe45ac17d`
 
 
 
@@ -242,6 +271,7 @@ error tickInvalidLinks()
 ```solidity
 error transferFailed()
 ```
+**Selector**: `0xe465903e`
 
 
 
@@ -250,6 +280,7 @@ error transferFailed()
 ```solidity
 error tickOutOfRange()
 ```
+**Selector**: `0x3c10250f`
 
 
 
@@ -258,6 +289,7 @@ error tickOutOfRange()
 ```solidity
 error priceOutOfRange()
 ```
+**Selector**: `0x55cf1e23`
 
 
 

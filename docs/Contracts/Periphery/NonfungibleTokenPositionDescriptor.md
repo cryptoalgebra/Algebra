@@ -56,6 +56,7 @@ constructor(address _WNativeToken, string _nativeCurrencySymbol_, struct Nonfung
 ```solidity
 function tokenRatioPriority(address token) public view returns (int256)
 ```
+**Selector**: `0x7d4a8689`
 
 
 
@@ -74,6 +75,7 @@ function tokenRatioPriority(address token) public view returns (int256)
 ```solidity
 function nativeCurrencySymbol() public view returns (string)
 ```
+**Selector**: `0xe1e06b9f`
 
 
 
@@ -88,6 +90,7 @@ function nativeCurrencySymbol() public view returns (string)
 ```solidity
 function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
 ```
+**Selector**: `0xe9dc6375`
 
 Produces the URI describing a particular token ID for a position manager
 
@@ -109,6 +112,7 @@ Produces the URI describing a particular token ID for a position manager
 ```solidity
 function flipRatio(address token0, address token1) public view returns (bool)
 ```
+**Selector**: `0xdee91a2c`
 
 
 

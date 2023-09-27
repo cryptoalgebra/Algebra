@@ -47,6 +47,7 @@ Event emitted when the approval amount for the spender of a given owner&#x27;s t
 ```solidity
 function balanceOf(address account) external view returns (uint256)
 ```
+**Selector**: `0x70a08231`
 
 Returns the balance of a token
 
@@ -65,6 +66,7 @@ Returns the balance of a token
 ```solidity
 function transfer(address recipient, uint256 amount) external returns (bool)
 ```
+**Selector**: `0xa9059cbb`
 
 Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 
@@ -84,6 +86,7 @@ Transfers the amount of token from the &#x60;msg.sender&#x60; to the recipient
 ```solidity
 function allowance(address owner, address spender) external view returns (uint256)
 ```
+**Selector**: `0xdd62ed3e`
 
 Returns the current allowance given to a spender by an owner
 
@@ -103,6 +106,7 @@ Returns the current allowance given to a spender by an owner
 ```solidity
 function approve(address spender, uint256 amount) external returns (bool)
 ```
+**Selector**: `0x095ea7b3`
 
 Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x60;amount&#x60;
 
@@ -122,6 +126,7 @@ Sets the allowance of a spender from the &#x60;msg.sender&#x60; to the value &#x
 ```solidity
 function transferFrom(address sender, address recipient, uint256 amount) external returns (bool)
 ```
+**Selector**: `0x23b872dd`
 
 Transfers &#x60;amount&#x60; tokens from &#x60;sender&#x60; to &#x60;recipient&#x60; up to the allowance given to the &#x60;msg.sender&#x60;
 

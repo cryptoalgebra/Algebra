@@ -30,6 +30,7 @@ Emitted when new activeIncentive is set
 ```solidity
 function pool() external returns (address)
 ```
+**Selector**: `0x16f0115b`
 
 Returns the address of the pool the plugin is created for
 
@@ -44,6 +45,7 @@ Returns the address of the pool the plugin is created for
 ```solidity
 function setIncentive(address newIncentive) external
 ```
+**Selector**: `0x7c1fe0c8`
 
 Connects or disconnects an incentive.
 
@@ -59,6 +61,7 @@ The one who connected it and the current farming has the right to disconnect the
 ```solidity
 function isIncentiveConnected(address targetIncentive) external view returns (bool)
 ```
+**Selector**: `0xe63015f0`
 
 Checks if the incentive is connected to pool
 
@@ -80,6 +83,7 @@ or the plugin configuration is incorrect.*
 ```solidity
 function incentive() external view returns (address)
 ```
+**Selector**: `0x1d4632ac`
 
 Returns the address of active incentive
 

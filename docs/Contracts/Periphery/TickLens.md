@@ -17,6 +17,7 @@ https://github.com/Uniswap/v3-periphery*
 ```solidity
 function getPopulatedTicksInWord(address pool, int16 tickTableIndex) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)
 ```
+**Selector**: `0x351fb478`
 
 Get all the tick data for the populated ticks from a word of the tick bitmap of a pool
 
@@ -36,6 +37,7 @@ Get all the tick data for the populated ticks from a word of the tick bitmap of 
 ```solidity
 function getClosestActiveTicks(address pool, int24 targetTick) public view returns (struct ITickLens.PopulatedTick[2] populatedTicks)
 ```
+**Selector**: `0xec92d7fa`
 
 Get closest initialized ticks around &#x60;targetTick&#x60;
 
@@ -55,6 +57,7 @@ Get closest initialized ticks around &#x60;targetTick&#x60;
 ```solidity
 function getNextActiveTicks(address pool, int24 startingTick, uint256 amount, bool upperDirection) public view returns (struct ITickLens.PopulatedTick[] populatedTicks)
 ```
+**Selector**: `0xc5493f77`
 
 Get all the tick data for the &#x60;amount&#x60; of populated ticks after &#x60;startingTick&#x60; (including &#x60;startingTick&#x60; itself)
 

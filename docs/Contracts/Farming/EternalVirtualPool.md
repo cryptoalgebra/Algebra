@@ -68,6 +68,7 @@ constructor(address _farmingAddress, address _plugin) public
 ```solidity
 function rewardReserves() external view returns (uint128 reserve0, uint128 reserve1)
 ```
+**Selector**: `0xf0de8228`
 
 Get reserves of rewards in one call
 
@@ -83,6 +84,7 @@ Get reserves of rewards in one call
 ```solidity
 function rewardRates() external view returns (uint128 rate0, uint128 rate1)
 ```
+**Selector**: `0xa88a5c16`
 
 Get rates of rewards in one call
 
@@ -98,6 +100,7 @@ Get rates of rewards in one call
 ```solidity
 function totalRewardGrowth() external view returns (uint256 rewardGrowth0, uint256 rewardGrowth1)
 ```
+**Selector**: `0x5e075b53`
 
 Get reward growth accumulators
 
@@ -113,6 +116,7 @@ Get reward growth accumulators
 ```solidity
 function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1)
 ```
+**Selector**: `0x0bd6f200`
 
 Retrieves rewards growth data inside specified range
 
@@ -135,6 +139,7 @@ Retrieves rewards growth data inside specified range
 ```solidity
 function deactivate() external
 ```
+**Selector**: `0x51b42b00`
 
 This function is used to deactivate virtual pool
 
@@ -145,6 +150,7 @@ This function is used to deactivate virtual pool
 ```solidity
 function addRewards(uint128 token0Amount, uint128 token1Amount) external
 ```
+**Selector**: `0xfddf08e5`
 
 Top up rewards reserves
 
@@ -158,6 +164,7 @@ Top up rewards reserves
 ```solidity
 function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external
 ```
+**Selector**: `0xca16ca7e`
 
 Withdraw rewards from reserves directly
 
@@ -171,6 +178,7 @@ Withdraw rewards from reserves directly
 ```solidity
 function crossTo(int24 targetTick, bool zeroToOne) external returns (bool)
 ```
+**Selector**: `0x34d33590`
 
 
 
@@ -192,6 +200,7 @@ function crossTo(int24 targetTick, bool zeroToOne) external returns (bool)
 ```solidity
 function distributeRewards() external
 ```
+**Selector**: `0x6f4a2cd0`
 
 
 
@@ -203,6 +212,7 @@ Can only be called by farming*
 ```solidity
 function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta, int24 currentTick) external
 ```
+**Selector**: `0xd6b83ede`
 
 
 
@@ -221,6 +231,7 @@ If the virtual pool is deactivated, does nothing.*
 ```solidity
 function setRates(uint128 rate0, uint128 rate1) external
 ```
+**Selector**: `0x7f463bb8`
 
 Change reward rates
 

@@ -14,6 +14,7 @@ Interface used by DAI/CHAI for permit
 ```solidity
 function permit(address holder, address spender, uint256 nonce, uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external
 ```
+**Selector**: `0x8fcbaf0c`
 
 Approve the spender to spend some tokens via the holder signature
 

@@ -17,6 +17,7 @@ https://github.com/Uniswap/v3-periphery*
 ```solidity
 function createAndInitializePoolIfNecessary(address token0, address token1, uint160 sqrtPriceX96) external payable returns (address pool)
 ```
+**Selector**: `0x51246d6e`
 
 Creates a new pool if it does not exist, then initializes if not initialized
 

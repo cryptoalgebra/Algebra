@@ -65,6 +65,7 @@ constructor(address _algebraFactory) public
 ```solidity
 function createPlugin(address pool) external returns (address)
 ```
+**Selector**: `0x361c0f76`
 
 Deploys new plugin contract for pool
 
@@ -83,6 +84,7 @@ Deploys new plugin contract for pool
 ```solidity
 function createPluginForExistingPool(address token0, address token1) external returns (address)
 ```
+**Selector**: `0x27733026`
 
 Create plugin for already existing pool
 
@@ -102,6 +104,7 @@ Create plugin for already existing pool
 ```solidity
 function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external
 ```
+**Selector**: `0xf718949a`
 
 Changes initial fee configuration for new pools
 
@@ -117,6 +120,7 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 ```solidity
 function setFarmingAddress(address newFarmingAddress) external
 ```
+**Selector**: `0xb001f618`
 
 
 

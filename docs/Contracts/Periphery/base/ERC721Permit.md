@@ -21,6 +21,7 @@ The permit typehash used in the permit signature
 ```solidity
 function DOMAIN_SEPARATOR() public view returns (bytes32)
 ```
+**Selector**: `0x3644e515`
 
 The domain separator used in the permit signature
 
@@ -35,6 +36,7 @@ The domain separator used in the permit signature
 ```solidity
 function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external payable
 ```
+**Selector**: `0x7ac2ff7b`
 
 Approve of a specific token ID for spending by spender via signature
 

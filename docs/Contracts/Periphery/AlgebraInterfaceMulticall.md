@@ -43,6 +43,7 @@ struct Result {
 ```solidity
 function getCurrentBlockTimestamp() public view returns (uint256 timestamp)
 ```
+**Selector**: `0x0f28c97d`
 
 
 
@@ -57,6 +58,7 @@ function getCurrentBlockTimestamp() public view returns (uint256 timestamp)
 ```solidity
 function getEthBalance(address addr) public view returns (uint256 balance)
 ```
+**Selector**: `0x4d2301cc`
 
 
 
@@ -75,6 +77,7 @@ function getEthBalance(address addr) public view returns (uint256 balance)
 ```solidity
 function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData)
 ```
+**Selector**: `0x1749e1e3`
 
 
 

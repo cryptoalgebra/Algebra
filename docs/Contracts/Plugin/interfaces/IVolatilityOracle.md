@@ -16,6 +16,7 @@ The interface for the Algebra volatility oracle
 ```solidity
 function timepoints(uint256 index) external view returns (bool initialized, uint32 blockTimestamp, int56 tickCumulative, uint88 volatilityCumulative, int24 tick, int24 averageTick, uint16 windowStartIndex)
 ```
+**Selector**: `0x74eceae6`
 
 Returns data belonging to a certain timepoint
 
@@ -42,6 +43,7 @@ Returns data belonging to a certain timepoint
 ```solidity
 function timepointIndex() external view returns (uint16)
 ```
+**Selector**: `0x0786feb6`
 
 Returns the index of the last timepoint that was written.
 
@@ -56,6 +58,7 @@ Returns the index of the last timepoint that was written.
 ```solidity
 function lastTimepointTimestamp() external view returns (uint32)
 ```
+**Selector**: `0xf5985d35`
 
 Returns the timestamp of the last timepoint that was written.
 
@@ -70,6 +73,7 @@ Returns the timestamp of the last timepoint that was written.
 ```solidity
 function isInitialized() external view returns (bool)
 ```
+**Selector**: `0x392e53cd`
 
 Returns information about whether oracle is initialized
 
@@ -84,6 +88,7 @@ Returns information about whether oracle is initialized
 ```solidity
 function getSingleTimepoint(uint32 secondsAgo) external view returns (int56 tickCumulative, uint88 volatilityCumulative)
 ```
+**Selector**: `0x88f2e862`
 
 
 
@@ -109,6 +114,7 @@ at exactly the timestamp between the two timepoints.
 ```solidity
 function getTimepoints(uint32[] secondsAgos) external view returns (int56[] tickCumulatives, uint88[] volatilityCumulatives)
 ```
+**Selector**: `0x9d3a5241`
 
 Returns the accumulator values as of each time seconds ago from the given time in the array of &#x60;secondsAgos&#x60;
 
@@ -131,6 +137,7 @@ Returns the accumulator values as of each time seconds ago from the given time i
 ```solidity
 function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external
 ```
+**Selector**: `0xda705235`
 
 Fills uninitialized timepoints with nonzero value
 

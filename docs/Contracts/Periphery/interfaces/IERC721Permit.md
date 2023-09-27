@@ -14,6 +14,7 @@ Extension to ERC721 that includes a permit function for signature based approval
 ```solidity
 function PERMIT_TYPEHASH() external pure returns (bytes32)
 ```
+**Selector**: `0x30adf81f`
 
 The permit typehash used in the permit signature
 
@@ -28,6 +29,7 @@ The permit typehash used in the permit signature
 ```solidity
 function DOMAIN_SEPARATOR() external view returns (bytes32)
 ```
+**Selector**: `0x3644e515`
 
 The domain separator used in the permit signature
 
@@ -42,6 +44,7 @@ The domain separator used in the permit signature
 ```solidity
 function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external payable
 ```
+**Selector**: `0x7ac2ff7b`
 
 Approve of a specific token ID for spending by spender via signature
 

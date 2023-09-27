@@ -79,6 +79,7 @@ struct ExactOutputParams {
 ```solidity
 function exactInputSingle(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xbc651188`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 
@@ -97,6 +98,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another token
 ```solidity
 function exactInput(struct ISwapRouter.ExactInputParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xc04b8d59`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along the specified path
 
@@ -115,6 +117,7 @@ Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along
 ```solidity
 function exactOutputSingle(struct ISwapRouter.ExactOutputSingleParams params) external payable returns (uint256 amountIn)
 ```
+**Selector**: `0x61d4d5b3`
 
 Swaps as little as possible of one token for &#x60;amountOut&#x60; of another token
 
@@ -133,6 +136,7 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another to
 ```solidity
 function exactOutput(struct ISwapRouter.ExactOutputParams params) external payable returns (uint256 amountIn)
 ```
+**Selector**: `0xf28c0498`
 
 Swaps as little as possible of one token for &#x60;amountOut&#x60; of another along the specified path (reversed)
 
@@ -151,6 +155,7 @@ Swaps as little as possible of one token for &#x60;amountOut&#x60; of another al
 ```solidity
 function exactInputSingleSupportingFeeOnTransferTokens(struct ISwapRouter.ExactInputSingleParams params) external payable returns (uint256 amountOut)
 ```
+**Selector**: `0xb87d2524`
 
 Swaps &#x60;amountIn&#x60; of one token for as much as possible of another along the specified path
 

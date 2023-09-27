@@ -70,6 +70,7 @@ struct FeeDigits {
 ```solidity
 function constructTokenURI(struct NFTDescriptor.ConstructTokenURIParams params) public pure returns (string)
 ```
+**Selector**: `0xc49917d7`
 
 
 

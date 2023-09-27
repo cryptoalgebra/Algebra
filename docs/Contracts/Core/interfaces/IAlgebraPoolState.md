@@ -19,6 +19,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ```solidity
 function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
 ```
+**Selector**: `0x97ce1c51`
 
 Safely get most important state values of Algebra Integral AMM
 
@@ -42,6 +43,7 @@ Safely get most important state values of Algebra Integral AMM
 ```solidity
 function isUnlocked() external view returns (bool unlocked)
 ```
+**Selector**: `0x8380edb7`
 
 Allows to easily get current reentrancy lock status
 
@@ -59,6 +61,7 @@ This method just returns &#x60;globalState.unlocked&#x60; value*
 ```solidity
 function globalState() external view returns (uint160 price, int24 tick, uint16 lastFee, uint8 pluginConfig, uint16 communityFee, bool unlocked)
 ```
+**Selector**: `0xe76c01e4`
 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
@@ -81,6 +84,7 @@ and is exposed as a single method to save gas when accessed externally.
 ```solidity
 function ticks(int24 tick) external view returns (uint256 liquidityTotal, int128 liquidityDelta, int24 prevTick, int24 nextTick, uint256 outerFeeGrowth0Token, uint256 outerFeeGrowth1Token)
 ```
+**Selector**: `0xf30dba93`
 
 Look up information about a specific tick in the pool
 
@@ -106,6 +110,7 @@ Look up information about a specific tick in the pool
 ```solidity
 function communityFeeLastTimestamp() external view returns (uint32)
 ```
+**Selector**: `0x1131b110`
 
 The timestamp of the last sending of tokens to community vault
 
@@ -120,6 +125,7 @@ The timestamp of the last sending of tokens to community vault
 ```solidity
 function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1)
 ```
+**Selector**: `0x7bd78025`
 
 The amounts of token0 and token1 that will be sent to the vault
 
@@ -137,6 +143,7 @@ The amounts of token0 and token1 that will be sent to the vault
 ```solidity
 function plugin() external view returns (address pluginAddress)
 ```
+**Selector**: `0xef01df4f`
 
 Returns the address of currently used plugin
 
@@ -153,6 +160,7 @@ Returns the address of currently used plugin
 ```solidity
 function tickTable(int16 wordPosition) external view returns (uint256)
 ```
+**Selector**: `0xc677e3e0`
 
 Returns 256 packed tick initialized boolean values. See TickTree for more information
 
@@ -171,6 +179,7 @@ Returns 256 packed tick initialized boolean values. See TickTree for more inform
 ```solidity
 function totalFeeGrowth0Token() external view returns (uint256)
 ```
+**Selector**: `0x6378ae44`
 
 The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
 
@@ -187,6 +196,7 @@ The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for 
 ```solidity
 function totalFeeGrowth1Token() external view returns (uint256)
 ```
+**Selector**: `0xecdecf42`
 
 The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
 
@@ -203,6 +213,7 @@ The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for 
 ```solidity
 function fee() external view returns (uint16 currentFee)
 ```
+**Selector**: `0xddca3f43`
 
 The current pool fee value
 
@@ -222,6 +233,7 @@ In this case, see the plugin implementation and related documentation.
 ```solidity
 function getReserves() external view returns (uint128 reserve0, uint128 reserve1)
 ```
+**Selector**: `0x0902f1ac`
 
 The tracked token0 and token1 reserves of pool
 
@@ -240,6 +252,7 @@ If the balance exceeds uint128, the excess will be sent to the communityVault.*
 ```solidity
 function positions(bytes32 key) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1)
 ```
+**Selector**: `0x514ea4bf`
 
 Returns the information about a position by the position&#x27;s key
 
@@ -264,6 +277,7 @@ Returns the information about a position by the position&#x27;s key
 ```solidity
 function liquidity() external view returns (uint128)
 ```
+**Selector**: `0x1a686502`
 
 The currently in range liquidity available to the pool
 
@@ -282,6 +296,7 @@ Returned value cannot exceed type(uint128).max
 ```solidity
 function tickSpacing() external view returns (int24)
 ```
+**Selector**: `0xd0c93a7c`
 
 The current tick spacing
 
@@ -301,6 +316,7 @@ This value is an int24 to avoid casting even though it is always positive.*
 ```solidity
 function prevTickGlobal() external view returns (int24)
 ```
+**Selector**: `0x050a4d21`
 
 The previous initialized tick before (or at) current global tick
 
@@ -317,6 +333,7 @@ The previous initialized tick before (or at) current global tick
 ```solidity
 function nextTickGlobal() external view returns (int24)
 ```
+**Selector**: `0xd5c35a7e`
 
 The next initialized tick after current global tick
 
@@ -333,6 +350,7 @@ The next initialized tick after current global tick
 ```solidity
 function tickTreeRoot() external view returns (uint32)
 ```
+**Selector**: `0x578b9a36`
 
 The root of tick search tree
 
@@ -350,6 +368,7 @@ The root of tick search tree
 ```solidity
 function tickTreeSecondLayer(int16) external view returns (uint256)
 ```
+**Selector**: `0xd8619037`
 
 The second layer of tick search tree
 

@@ -103,6 +103,7 @@ event Sync(uint112 reserve0, uint112 reserve1)
 ```solidity
 function name() external pure returns (string)
 ```
+**Selector**: `0x06fdde03`
 
 
 
@@ -117,6 +118,7 @@ function name() external pure returns (string)
 ```solidity
 function symbol() external pure returns (string)
 ```
+**Selector**: `0x95d89b41`
 
 
 
@@ -131,6 +133,7 @@ function symbol() external pure returns (string)
 ```solidity
 function decimals() external pure returns (uint8)
 ```
+**Selector**: `0x313ce567`
 
 
 
@@ -145,6 +148,7 @@ function decimals() external pure returns (uint8)
 ```solidity
 function totalSupply() external view returns (uint256)
 ```
+**Selector**: `0x18160ddd`
 
 
 
@@ -159,6 +163,7 @@ function totalSupply() external view returns (uint256)
 ```solidity
 function balanceOf(address owner) external view returns (uint256)
 ```
+**Selector**: `0x70a08231`
 
 
 
@@ -177,6 +182,7 @@ function balanceOf(address owner) external view returns (uint256)
 ```solidity
 function allowance(address owner, address spender) external view returns (uint256)
 ```
+**Selector**: `0xdd62ed3e`
 
 
 
@@ -196,6 +202,7 @@ function allowance(address owner, address spender) external view returns (uint25
 ```solidity
 function approve(address spender, uint256 value) external returns (bool)
 ```
+**Selector**: `0x095ea7b3`
 
 
 
@@ -215,6 +222,7 @@ function approve(address spender, uint256 value) external returns (bool)
 ```solidity
 function transfer(address to, uint256 value) external returns (bool)
 ```
+**Selector**: `0xa9059cbb`
 
 
 
@@ -234,6 +242,7 @@ function transfer(address to, uint256 value) external returns (bool)
 ```solidity
 function transferFrom(address from, address to, uint256 value) external returns (bool)
 ```
+**Selector**: `0x23b872dd`
 
 
 
@@ -254,6 +263,7 @@ function transferFrom(address from, address to, uint256 value) external returns 
 ```solidity
 function DOMAIN_SEPARATOR() external view returns (bytes32)
 ```
+**Selector**: `0x3644e515`
 
 
 
@@ -268,6 +278,7 @@ function DOMAIN_SEPARATOR() external view returns (bytes32)
 ```solidity
 function PERMIT_TYPEHASH() external pure returns (bytes32)
 ```
+**Selector**: `0x30adf81f`
 
 
 
@@ -282,6 +293,7 @@ function PERMIT_TYPEHASH() external pure returns (bytes32)
 ```solidity
 function nonces(address owner) external view returns (uint256)
 ```
+**Selector**: `0x7ecebe00`
 
 
 
@@ -300,6 +312,7 @@ function nonces(address owner) external view returns (uint256)
 ```solidity
 function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external
 ```
+**Selector**: `0xd505accf`
 
 
 
@@ -318,6 +331,7 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 ```solidity
 function MINIMUM_LIQUIDITY() external pure returns (uint256)
 ```
+**Selector**: `0xba9a7a56`
 
 
 
@@ -332,6 +346,7 @@ function MINIMUM_LIQUIDITY() external pure returns (uint256)
 ```solidity
 function factory() external view returns (address)
 ```
+**Selector**: `0xc45a0155`
 
 
 
@@ -346,6 +361,7 @@ function factory() external view returns (address)
 ```solidity
 function token0() external view returns (address)
 ```
+**Selector**: `0x0dfe1681`
 
 
 
@@ -360,6 +376,7 @@ function token0() external view returns (address)
 ```solidity
 function token1() external view returns (address)
 ```
+**Selector**: `0xd21220a7`
 
 
 
@@ -374,6 +391,7 @@ function token1() external view returns (address)
 ```solidity
 function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)
 ```
+**Selector**: `0x0902f1ac`
 
 
 
@@ -390,6 +408,7 @@ function getReserves() external view returns (uint112 reserve0, uint112 reserve1
 ```solidity
 function price0CumulativeLast() external view returns (uint256)
 ```
+**Selector**: `0x5909c0d5`
 
 
 
@@ -404,6 +423,7 @@ function price0CumulativeLast() external view returns (uint256)
 ```solidity
 function price1CumulativeLast() external view returns (uint256)
 ```
+**Selector**: `0x5a3d5493`
 
 
 
@@ -418,6 +438,7 @@ function price1CumulativeLast() external view returns (uint256)
 ```solidity
 function kLast() external view returns (uint256)
 ```
+**Selector**: `0x7464fc3d`
 
 
 
@@ -432,6 +453,7 @@ function kLast() external view returns (uint256)
 ```solidity
 function mint(address to) external returns (uint256 liquidity)
 ```
+**Selector**: `0x6a627842`
 
 
 
@@ -450,6 +472,7 @@ function mint(address to) external returns (uint256 liquidity)
 ```solidity
 function burn(address to) external returns (uint256 amount0, uint256 amount1)
 ```
+**Selector**: `0x89afcb44`
 
 
 
@@ -469,6 +492,7 @@ function burn(address to) external returns (uint256 amount0, uint256 amount1)
 ```solidity
 function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes data) external
 ```
+**Selector**: `0x022c0d9f`
 
 
 
@@ -484,6 +508,7 @@ function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes data) ex
 ```solidity
 function skim(address to) external
 ```
+**Selector**: `0xbc25cf77`
 
 
 
@@ -496,6 +521,7 @@ function skim(address to) external
 ```solidity
 function sync() external
 ```
+**Selector**: `0xfff6cae9`
 
 
 
@@ -504,6 +530,7 @@ function sync() external
 ```solidity
 function initialize(address, address) external
 ```
+**Selector**: `0x485cc955`
 
 
 

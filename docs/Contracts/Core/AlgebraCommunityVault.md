@@ -99,6 +99,7 @@ constructor(address _algebraFeeManager) public
 ```solidity
 function withdraw(address token, uint256 amount) external
 ```
+**Selector**: `0xf3fef3a3`
 
 Withdraw protocol fees from vault
 
@@ -114,6 +115,7 @@ Withdraw protocol fees from vault
 ```solidity
 function withdrawTokens(struct IAlgebraCommunityVault.WithdrawTokensParams[] params) external
 ```
+**Selector**: `0xdfadc794`
 
 Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 
@@ -128,6 +130,7 @@ Withdraw protocol fees from vault. Used to claim fees for multiple tokens
 ```solidity
 function acceptAlgebraFeeChangeProposal(uint16 newAlgebraFee) external
 ```
+**Selector**: `0xff3c43e1`
 
 Accepts the proposed new Algebra fee
 
@@ -143,6 +146,7 @@ The new value will also be used for previously accumulated tokens that have not 
 ```solidity
 function changeCommunityFeeReceiver(address newCommunityFeeReceiver) external
 ```
+**Selector**: `0xb5f680ae`
 
 Change community fee receiver address
 
@@ -157,6 +161,7 @@ Change community fee receiver address
 ```solidity
 function transferAlgebraFeeManagerRole(address _newAlgebraFeeManager) external
 ```
+**Selector**: `0x50eea0c8`
 
 Transfers Algebra fee manager role
 
@@ -169,6 +174,7 @@ Transfers Algebra fee manager role
 ```solidity
 function acceptAlgebraFeeManagerRole() external
 ```
+**Selector**: `0xad6129ac`
 
 accept Algebra FeeManager role
 
@@ -177,6 +183,7 @@ accept Algebra FeeManager role
 ```solidity
 function proposeAlgebraFeeChange(uint16 newAlgebraFee) external
 ```
+**Selector**: `0xd9fb4353`
 
 Proposes new Algebra fee value for protocol
 
@@ -191,6 +198,7 @@ Proposes new Algebra fee value for protocol
 ```solidity
 function cancelAlgebraFeeChangeProposal() external
 ```
+**Selector**: `0xd17bc783`
 
 Cancels Algebra fee change proposal
 
@@ -199,6 +207,7 @@ Cancels Algebra fee change proposal
 ```solidity
 function changeAlgebraFeeReceiver(address newAlgebraFeeReceiver) external
 ```
+**Selector**: `0x48a50fcf`
 
 Change Algebra community fee part receiver
 

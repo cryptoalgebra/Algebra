@@ -16,6 +16,7 @@ This contract combines the standard implementations of the volatility oracle and
 ```solidity
 function initialize() external
 ```
+**Selector**: `0x8129fc1c`
 
 Initialize the plugin externally
 

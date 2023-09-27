@@ -16,6 +16,7 @@ The interface for the virtual pool
 ```solidity
 function crossTo(int24 targetTick, bool zeroToOne) external returns (bool success)
 ```
+**Selector**: `0x34d33590`
 
 
 

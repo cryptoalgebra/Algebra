@@ -16,6 +16,7 @@ An interface for a contract that is capable of deploying Algebra plugins
 ```solidity
 function createPlugin(address pool) external returns (address)
 ```
+**Selector**: `0x361c0f76`
 
 Deploys new plugin contract for pool
 

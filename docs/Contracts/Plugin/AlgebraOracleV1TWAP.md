@@ -35,6 +35,7 @@ constructor(address _pluginFactory) public
 ```solidity
 function getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken) external pure returns (uint256 quoteAmount)
 ```
+**Selector**: `0x43c57a27`
 
 Given a tick and a token amount, calculates the amount of token received in exchange
 
@@ -58,6 +59,7 @@ Given a tick and a token amount, calculates the amount of token received in exch
 ```solidity
 function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick)
 ```
+**Selector**: `0x57f32330`
 
 Fetches time-weighted average tick using Algebra VolatilityOracle
 
@@ -81,6 +83,7 @@ It is recommended to check the latest available timestamp using the &#x60;latest
 ```solidity
 function latestTimestamp(address pool) external view returns (uint32)
 ```
+**Selector**: `0x59dd1ce6`
 
 Returns the last timestamp written in the oracle
 
@@ -99,6 +102,7 @@ Returns the last timestamp written in the oracle
 ```solidity
 function oldestTimestamp(address pool) external view returns (uint32 _oldestTimestamp)
 ```
+**Selector**: `0x42c7d5bf`
 
 Returns the oldest timestamp available in the oracle
 
@@ -117,6 +121,7 @@ Returns the oldest timestamp available in the oracle
 ```solidity
 function latestIndex(address pool) external view returns (uint16)
 ```
+**Selector**: `0x057e9b96`
 
 Returns the index of last record written in the oracle
 
@@ -135,6 +140,7 @@ Returns the index of last record written in the oracle
 ```solidity
 function oldestIndex(address pool) external view returns (uint16 _oldestIndex)
 ```
+**Selector**: `0x4a2b7c70`
 
 Returns the index of oldest record available in the oracle
 

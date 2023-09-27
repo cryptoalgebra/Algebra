@@ -16,6 +16,7 @@ The Algebra plugin interface
 ```solidity
 function defaultPluginConfig() external view returns (uint8)
 ```
+**Selector**: `0x689ea370`
 
 Returns plugin config
 
@@ -30,6 +31,7 @@ Returns plugin config
 ```solidity
 function beforeInitialize(address sender, uint160 sqrtPriceX96) external returns (bytes4)
 ```
+**Selector**: `0x636fd804`
 
 The hook called before the state of a pool is initialized
 
@@ -49,6 +51,7 @@ The hook called before the state of a pool is initialized
 ```solidity
 function afterInitialize(address sender, uint160 sqrtPriceX96, int24 tick) external returns (bytes4)
 ```
+**Selector**: `0x82dd6522`
 
 The hook called after the state of a pool is initialized
 
@@ -69,6 +72,7 @@ The hook called after the state of a pool is initialized
 ```solidity
 function beforeModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, bytes data) external returns (bytes4)
 ```
+**Selector**: `0x5e2411b2`
 
 The hook called before a position is modified
 
@@ -92,6 +96,7 @@ The hook called before a position is modified
 ```solidity
 function afterModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, uint256 amount0, uint256 amount1, bytes data) external returns (bytes4)
 ```
+**Selector**: `0xd6852010`
 
 The hook called after a position is modified
 
@@ -117,6 +122,7 @@ The hook called after a position is modified
 ```solidity
 function beforeSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bool withPaymentInAdvance, bytes data) external returns (bytes4)
 ```
+**Selector**: `0x029c1cb7`
 
 The hook called before a swap
 
@@ -141,6 +147,7 @@ The hook called before a swap
 ```solidity
 function afterSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, int256 amount0, int256 amount1, bytes data) external returns (bytes4)
 ```
+**Selector**: `0x9cb5a963`
 
 The hook called after a swap
 
@@ -166,6 +173,7 @@ The hook called after a swap
 ```solidity
 function beforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data) external returns (bytes4)
 ```
+**Selector**: `0x8de0a8ee`
 
 The hook called before flash
 
@@ -188,6 +196,7 @@ The hook called before flash
 ```solidity
 function afterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data) external returns (bytes4)
 ```
+**Selector**: `0x343d37ff`
 
 The hook called after flash
 

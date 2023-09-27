@@ -29,6 +29,7 @@ constructor(address _factory, address _communityVault) public
 ```solidity
 function getDeployParameters() external view returns (address _plugin, address _factory, address _communityVault, address _token0, address _token1)
 ```
+**Selector**: `0x04889e26`
 
 Get the parameters to be used in constructing the pool, set transiently during pool creation.
 
@@ -49,6 +50,7 @@ Get the parameters to be used in constructing the pool, set transiently during p
 ```solidity
 function deploy(address plugin, address token0, address token1) external returns (address pool)
 ```
+**Selector**: `0xd9181cd3`
 
 
 

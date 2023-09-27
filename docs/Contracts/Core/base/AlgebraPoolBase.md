@@ -148,6 +148,7 @@ This value is an int24 to avoid casting even though it is always positive.*
 ```solidity
 function safelyGetStateOfAMM() external view returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
 ```
+**Selector**: `0x97ce1c51`
 
 Safely get most important state values of Algebra Integral AMM
 
@@ -170,6 +171,7 @@ Safely get most important state values of Algebra Integral AMM
 ```solidity
 function isUnlocked() external view returns (bool unlocked)
 ```
+**Selector**: `0x8380edb7`
 
 Allows to easily get current reentrancy lock status
 
@@ -187,6 +189,7 @@ This method just returns &#x60;globalState.unlocked&#x60; value*
 ```solidity
 function getCommunityFeePending() external view returns (uint128, uint128)
 ```
+**Selector**: `0x7bd78025`
 
 The amounts of token0 and token1 that will be sent to the vault
 
@@ -204,6 +207,7 @@ The amounts of token0 and token1 that will be sent to the vault
 ```solidity
 function fee() external view returns (uint16 currentFee)
 ```
+**Selector**: `0xddca3f43`
 
 The current pool fee value
 

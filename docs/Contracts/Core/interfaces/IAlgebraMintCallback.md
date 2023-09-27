@@ -17,6 +17,7 @@ https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces*
 ```solidity
 function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes data) external
 ```
+**Selector**: `0x3dd657c5`
 
 Called to &#x60;msg.sender&#x60; after minting liquidity to a position from IAlgebraPool#mint.
 

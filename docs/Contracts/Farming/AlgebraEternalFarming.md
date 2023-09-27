@@ -133,6 +133,7 @@ constructor(contract IAlgebraPoolDeployer _deployer, contract INonfungiblePositi
 ```solidity
 function isIncentiveDeactivated(bytes32 incentiveId) external view returns (bool res)
 ```
+**Selector**: `0xb5bae00a`
 
 Check if incentive is deactivated (manually or automatically)
 
@@ -153,6 +154,7 @@ Check if incentive is deactivated (manually or automatically)
 ```solidity
 function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
 ```
+**Selector**: `0x566d3c71`
 
 Creates a new liquidity farming incentive program
 
@@ -172,6 +174,7 @@ Creates a new liquidity farming incentive program
 ```solidity
 function deactivateIncentive(struct IncentiveKey key) external
 ```
+**Selector**: `0x2912bf10`
 
 Detach incentive from the pool and deactivate it
 
@@ -184,6 +187,7 @@ Detach incentive from the pool and deactivate it
 ```solidity
 function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
+**Selector**: `0xf6de3cae`
 
 Decrease rewards for incentive and withdraw
 
@@ -198,6 +202,7 @@ Decrease rewards for incentive and withdraw
 ```solidity
 function setFarmingCenterAddress(address _farmingCenter) external
 ```
+**Selector**: `0xdf42efda`
 
 Updates farming center address
 
@@ -210,6 +215,7 @@ Updates farming center address
 ```solidity
 function setEmergencyWithdrawStatus(bool newStatus) external
 ```
+**Selector**: `0x890cdcb3`
 
 Changes &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if activated.
 User cannot enter to farmings if activated.
@@ -226,6 +232,7 @@ _Must_ only be used in emergency situations. Farmings may be unusable after acti
 ```solidity
 function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
+**Selector**: `0xf26ebf7a`
 
 Add rewards for incentive
 
@@ -240,6 +247,7 @@ Add rewards for incentive
 ```solidity
 function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external
 ```
+**Selector**: `0x84335241`
 
 Change reward rates for incentive
 
@@ -254,6 +262,7 @@ Change reward rates for incentive
 ```solidity
 function enterFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
+**Selector**: `0x5739f0b9`
 
 enter farming for Algebra LP token
 
@@ -267,6 +276,7 @@ enter farming for Algebra LP token
 ```solidity
 function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external
 ```
+**Selector**: `0x36808b19`
 
 exitFarmings for Algebra LP token
 
@@ -281,6 +291,7 @@ exitFarmings for Algebra LP token
 ```solidity
 function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
+**Selector**: `0x2f2d783d`
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 
@@ -301,6 +312,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if pos
 ```solidity
 function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
+**Selector**: `0x0a530754`
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
@@ -323,6 +335,7 @@ only for FarmingCenter
 ```solidity
 function getRewardInfo(struct IncentiveKey key, uint256 tokenId) external view returns (uint256 reward, uint256 bonusReward)
 ```
+**Selector**: `0x96da9bd5`
 
 reward amounts can be outdated, actual amounts could be obtained via static call of &#x60;collectRewards&#x60; in FarmingCenter
 
@@ -343,6 +356,7 @@ reward amounts can be outdated, actual amounts could be obtained via static call
 ```solidity
 function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)
 ```
+**Selector**: `0x046ec166`
 
 reward amounts should be updated before calling this method
 

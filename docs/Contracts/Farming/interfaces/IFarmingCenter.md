@@ -16,6 +16,7 @@ Algebra main farming contract interface
 ```solidity
 function virtualPoolAddresses(address poolAddress) external view returns (address virtualPoolAddresses)
 ```
+**Selector**: `0x32dc5a25`
 
 Returns current virtual pool address for Algebra pool
 
@@ -34,6 +35,7 @@ Returns current virtual pool address for Algebra pool
 ```solidity
 function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)
 ```
+**Selector**: `0xb44a2722`
 
 The nonfungible position manager with which this farming contract is compatible
 
@@ -48,6 +50,7 @@ The nonfungible position manager with which this farming contract is compatible
 ```solidity
 function eternalFarming() external view returns (contract IAlgebraEternalFarming)
 ```
+**Selector**: `0xde2356d1`
 
 The eternal farming contract
 
@@ -62,6 +65,7 @@ The eternal farming contract
 ```solidity
 function algebraPoolDeployer() external view returns (address)
 ```
+**Selector**: `0x14258256`
 
 The Algebra poolDeployer contract
 
@@ -76,6 +80,7 @@ The Algebra poolDeployer contract
 ```solidity
 function deposits(uint256 tokenId) external view returns (bytes32 eternalIncentiveId)
 ```
+**Selector**: `0xb02c43d0`
 
 Returns information about a deposited NFT
 
@@ -94,6 +99,7 @@ Returns information about a deposited NFT
 ```solidity
 function incentiveKeys(bytes32 incentiveId) external view returns (contract IERC20Minimal rewardToken, contract IERC20Minimal bonusRewardToken, contract IAlgebraPool pool, uint256 nonce)
 ```
+**Selector**: `0x8c27f1f6`
 
 Returns incentive key for specific incentiveId
 
@@ -115,6 +121,7 @@ Returns incentive key for specific incentiveId
 ```solidity
 function connectVirtualPoolToPlugin(address virtualPool, contract IFarmingPlugin plugin) external
 ```
+**Selector**: `0xd68516bc`
 
 Used to connect incentive to compatible AlgebraPool plugin
 
@@ -131,6 +138,7 @@ Will revert if something is already connected to the plugin*
 ```solidity
 function disconnectVirtualPoolFromPlugin(address virtualPool, contract IFarmingPlugin plugin) external
 ```
+**Selector**: `0x2bd34c48`
 
 Used to disconnect incentive from compatible AlgebraPool plugin
 
@@ -147,6 +155,7 @@ If the specified virtual pool is not connected to the plugin, nothing will happe
 ```solidity
 function enterFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
+**Selector**: `0x5739f0b9`
 
 Enters in incentive (eternal farming) with NFT-position token
 
@@ -162,6 +171,7 @@ Enters in incentive (eternal farming) with NFT-position token
 ```solidity
 function exitFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
+**Selector**: `0x4473eca6`
 
 Exits from incentive (eternal farming) with NFT-position token
 
@@ -177,6 +187,7 @@ Exits from incentive (eternal farming) with NFT-position token
 ```solidity
 function collectRewards(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)
 ```
+**Selector**: `0x6af00aee`
 
 Used to collect reward from eternal farming. Then reward can be claimed.
 
@@ -197,6 +208,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 ```solidity
 function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
+**Selector**: `0x2f2d783d`
 
 Used to claim and send rewards from farming(s)
 

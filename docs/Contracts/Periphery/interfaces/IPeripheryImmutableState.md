@@ -17,6 +17,7 @@ https://github.com/Uniswap/v3-periphery*
 ```solidity
 function factory() external view returns (address)
 ```
+**Selector**: `0xc45a0155`
 
 
 
@@ -31,6 +32,7 @@ function factory() external view returns (address)
 ```solidity
 function poolDeployer() external view returns (address)
 ```
+**Selector**: `0x3119049a`
 
 
 
@@ -45,6 +47,7 @@ function poolDeployer() external view returns (address)
 ```solidity
 function WNativeToken() external view returns (address)
 ```
+**Selector**: `0x8af3ac85`
 
 
 

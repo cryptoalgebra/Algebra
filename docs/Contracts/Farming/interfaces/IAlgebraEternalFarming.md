@@ -191,6 +191,7 @@ struct IncentiveParams {
 ```solidity
 function INCENTIVE_MAKER_ROLE() external view returns (bytes32)
 ```
+**Selector**: `0xb8883c50`
 
 Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive creation
 
@@ -205,6 +206,7 @@ Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive cre
 ```solidity
 function FARMINGS_ADMINISTRATOR_ROLE() external view returns (bytes32)
 ```
+**Selector**: `0x3c6d0715`
 
 Returns hash of &#x27;FARMINGS_ADMINISTRATOR_ROLE&#x27;, used as role for permissioned actions in farming
 
@@ -219,6 +221,7 @@ Returns hash of &#x27;FARMINGS_ADMINISTRATOR_ROLE&#x27;, used as role for permis
 ```solidity
 function nonfungiblePositionManager() external view returns (contract INonfungiblePositionManager)
 ```
+**Selector**: `0xb44a2722`
 
 The nonfungible position manager with which this farming contract is compatible
 
@@ -233,6 +236,7 @@ The nonfungible position manager with which this farming contract is compatible
 ```solidity
 function incentives(bytes32 incentiveId) external view returns (uint128 totalReward, uint128 bonusReward, address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated, address pluginAddress)
 ```
+**Selector**: `0x60777795`
 
 Represents a farming incentive
 
@@ -256,6 +260,7 @@ Represents a farming incentive
 ```solidity
 function isIncentiveDeactivated(bytes32 incentiveId) external view returns (bool)
 ```
+**Selector**: `0xb5bae00a`
 
 Check if incentive is deactivated (manually or automatically)
 
@@ -276,6 +281,7 @@ Check if incentive is deactivated (manually or automatically)
 ```solidity
 function farmingCenter() external view returns (address)
 ```
+**Selector**: `0xdd56e5d8`
 
 Returns address of current farmingCenter
 
@@ -290,6 +296,7 @@ Returns address of current farmingCenter
 ```solidity
 function isEmergencyWithdrawActivated() external view returns (bool)
 ```
+**Selector**: `0xf2256319`
 
 Users can withdraw liquidity without any checks if active.
 
@@ -304,6 +311,7 @@ Users can withdraw liquidity without any checks if active.
 ```solidity
 function deactivateIncentive(struct IncentiveKey key) external
 ```
+**Selector**: `0x2912bf10`
 
 Detach incentive from the pool and deactivate it
 
@@ -316,6 +324,7 @@ Detach incentive from the pool and deactivate it
 ```solidity
 function addRewards(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
+**Selector**: `0xf26ebf7a`
 
 Add rewards for incentive
 
@@ -330,6 +339,7 @@ Add rewards for incentive
 ```solidity
 function decreaseRewardsAmount(struct IncentiveKey key, uint128 rewardAmount, uint128 bonusRewardAmount) external
 ```
+**Selector**: `0xf6de3cae`
 
 Decrease rewards for incentive and withdraw
 
@@ -344,6 +354,7 @@ Decrease rewards for incentive and withdraw
 ```solidity
 function setEmergencyWithdrawStatus(bool newStatus) external
 ```
+**Selector**: `0x890cdcb3`
 
 Changes &#x60;isEmergencyWithdrawActivated&#x60;. Users can withdraw liquidity without any checks if activated.
 User cannot enter to farmings if activated.
@@ -360,6 +371,7 @@ _Must_ only be used in emergency situations. Farmings may be unusable after acti
 ```solidity
 function numOfIncentives() external view returns (uint256)
 ```
+**Selector**: `0x82bd79ea`
 
 Returns amount of created incentives
 
@@ -374,6 +386,7 @@ Returns amount of created incentives
 ```solidity
 function rewards(address owner, contract IERC20Minimal rewardToken) external view returns (uint256 rewardsOwed)
 ```
+**Selector**: `0xe70b9e27`
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
@@ -393,6 +406,7 @@ Returns amounts of reward tokens owed to a given address according to the last t
 ```solidity
 function setFarmingCenterAddress(address _farmingCenter) external
 ```
+**Selector**: `0xdf42efda`
 
 Updates farming center address
 
@@ -405,6 +419,7 @@ Updates farming center address
 ```solidity
 function enterFarming(struct IncentiveKey key, uint256 tokenId) external
 ```
+**Selector**: `0x5739f0b9`
 
 enter farming for Algebra LP token
 
@@ -418,6 +433,7 @@ enter farming for Algebra LP token
 ```solidity
 function exitFarming(struct IncentiveKey key, uint256 tokenId, address _owner) external
 ```
+**Selector**: `0x36808b19`
 
 exitFarmings for Algebra LP token
 
@@ -432,6 +448,7 @@ exitFarmings for Algebra LP token
 ```solidity
 function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
+**Selector**: `0x2f2d783d`
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 
@@ -452,6 +469,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if pos
 ```solidity
 function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)
 ```
+**Selector**: `0x0a530754`
 
 Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if possible) rewards from the contract to the recipient &#x60;to&#x60;
 only for FarmingCenter
@@ -474,6 +492,7 @@ only for FarmingCenter
 ```solidity
 function getRewardInfo(struct IncentiveKey key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward)
 ```
+**Selector**: `0x96da9bd5`
 
 Calculates the reward amount that will be received for the given farm
 
@@ -494,6 +513,7 @@ Calculates the reward amount that will be received for the given farm
 ```solidity
 function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1)
 ```
+**Selector**: `0x27e6a99a`
 
 Returns information about a farmed liquidity NFT
 
@@ -517,6 +537,7 @@ Returns information about a farmed liquidity NFT
 ```solidity
 function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
 ```
+**Selector**: `0x566d3c71`
 
 Creates a new liquidity farming incentive program
 
@@ -536,6 +557,7 @@ Creates a new liquidity farming incentive program
 ```solidity
 function setRates(struct IncentiveKey key, uint128 rewardRate, uint128 bonusRewardRate) external
 ```
+**Selector**: `0x84335241`
 
 Change reward rates for incentive
 
@@ -550,6 +572,7 @@ Change reward rates for incentive
 ```solidity
 function collectRewards(struct IncentiveKey key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward)
 ```
+**Selector**: `0x046ec166`
 
 Collect rewards for tokenId
 
@@ -575,6 +598,7 @@ Collect rewards for tokenId
 ```solidity
 error farmDoesNotExist()
 ```
+**Selector**: `0x7aa92c66`
 
 
 
@@ -583,6 +607,7 @@ error farmDoesNotExist()
 ```solidity
 error tokenAlreadyFarmed()
 ```
+**Selector**: `0xf352b375`
 
 
 
@@ -591,6 +616,7 @@ error tokenAlreadyFarmed()
 ```solidity
 error incentiveNotExist()
 ```
+**Selector**: `0xe4c82292`
 
 
 
@@ -599,6 +625,7 @@ error incentiveNotExist()
 ```solidity
 error incentiveStopped()
 ```
+**Selector**: `0x260e553a`
 
 
 
@@ -607,6 +634,7 @@ error incentiveStopped()
 ```solidity
 error anotherFarmingIsActive()
 ```
+**Selector**: `0x47146bcc`
 
 
 
@@ -615,6 +643,7 @@ error anotherFarmingIsActive()
 ```solidity
 error pluginNotConnected()
 ```
+**Selector**: `0x093d6f17`
 
 
 
@@ -623,6 +652,7 @@ error pluginNotConnected()
 ```solidity
 error minimalPositionWidthTooWide()
 ```
+**Selector**: `0x1db98911`
 
 
 
@@ -631,6 +661,7 @@ error minimalPositionWidthTooWide()
 ```solidity
 error zeroRewardAmount()
 ```
+**Selector**: `0x36ab0f6a`
 
 
 
@@ -639,6 +670,7 @@ error zeroRewardAmount()
 ```solidity
 error positionIsTooNarrow()
 ```
+**Selector**: `0xeab05850`
 
 
 
@@ -647,6 +679,7 @@ error positionIsTooNarrow()
 ```solidity
 error zeroLiquidity()
 ```
+**Selector**: `0x4eed4360`
 
 
 
@@ -655,6 +688,7 @@ error zeroLiquidity()
 ```solidity
 error invalidPool()
 ```
+**Selector**: `0xdce28093`
 
 
 
@@ -663,6 +697,7 @@ error invalidPool()
 ```solidity
 error claimToZeroAddress()
 ```
+**Selector**: `0xabd17636`
 
 
 
@@ -671,6 +706,7 @@ error claimToZeroAddress()
 ```solidity
 error invalidTokenAmount()
 ```
+**Selector**: `0x3ba11f1e`
 
 
 
@@ -679,6 +715,7 @@ error invalidTokenAmount()
 ```solidity
 error emergencyActivated()
 ```
+**Selector**: `0x05bfeb59`
 
 
 
@@ -687,6 +724,7 @@ error emergencyActivated()
 ```solidity
 error reentrancyLock()
 ```
+**Selector**: `0x2446d79f`
 
 
 
@@ -695,6 +733,7 @@ error reentrancyLock()
 ```solidity
 error poolReentrancyLock()
 ```
+**Selector**: `0x9ded0f57`
 
 
 

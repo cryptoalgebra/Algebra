@@ -17,6 +17,7 @@ If the dynamic fee logic does not allow the fee to be calculated without additio
 ```solidity
 function getCurrentFee() external view returns (uint16 fee)
 ```
+**Selector**: `0xf70d9362`
 
 Returns fee from plugin
 

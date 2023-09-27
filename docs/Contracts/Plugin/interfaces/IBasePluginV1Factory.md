@@ -42,6 +42,7 @@ Emitted when the farming address is changed
 ```solidity
 function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32)
 ```
+**Selector**: `0xcddff269`
 
 The hash of &#x27;ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR&#x27; used as role
 
@@ -58,6 +59,7 @@ The hash of &#x27;ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR&#x27; used as role
 ```solidity
 function algebraFactory() external view returns (address)
 ```
+**Selector**: `0xa7b64b04`
 
 Returns the address of AlgebraFactory
 
@@ -72,6 +74,7 @@ Returns the address of AlgebraFactory
 ```solidity
 function defaultFeeConfiguration() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
 ```
+**Selector**: `0x4e09a96a`
 
 Current default dynamic fee configuration
 
@@ -95,6 +98,7 @@ This value is set by default in new plugins*
 ```solidity
 function farmingAddress() external view returns (address)
 ```
+**Selector**: `0x8a2ade58`
 
 Returns current farming address
 
@@ -109,6 +113,7 @@ Returns current farming address
 ```solidity
 function pluginByPool(address pool) external view returns (address)
 ```
+**Selector**: `0xcdef16f6`
 
 Returns address of plugin created for given AlgebraPool
 
@@ -127,6 +132,7 @@ Returns address of plugin created for given AlgebraPool
 ```solidity
 function createPluginForExistingPool(address token0, address token1) external returns (address)
 ```
+**Selector**: `0x27733026`
 
 Create plugin for already existing pool
 
@@ -146,6 +152,7 @@ Create plugin for already existing pool
 ```solidity
 function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external
 ```
+**Selector**: `0xf718949a`
 
 Changes initial fee configuration for new pools
 
@@ -161,6 +168,7 @@ alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max
 ```solidity
 function setFarmingAddress(address newFarmingAddress) external
 ```
+**Selector**: `0xb001f618`
 
 
 

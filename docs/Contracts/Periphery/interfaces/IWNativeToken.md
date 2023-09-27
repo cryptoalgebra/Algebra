@@ -14,6 +14,7 @@ Interface for WNativeToken
 ```solidity
 function deposit() external payable
 ```
+**Selector**: `0xd0e30db0`
 
 Deposit ether to get wrapped ether
 
@@ -22,6 +23,7 @@ Deposit ether to get wrapped ether
 ```solidity
 function withdraw(uint256) external
 ```
+**Selector**: `0x2e1a7d4d`
 
 Withdraw wrapped ether to get ether
 

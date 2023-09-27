@@ -32,6 +32,7 @@ Emitted when the fee configuration is changed
 ```solidity
 function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
 ```
+**Selector**: `0x1e5eb1d0`
 
 Current dynamic fee configuration
 
@@ -54,6 +55,7 @@ Current dynamic fee configuration
 ```solidity
 function changeFeeConfiguration(struct AlgebraFeeConfiguration feeConfig) external
 ```
+**Selector**: `0x1d39215e`
 
 Changes fee configuration for the pool
 
