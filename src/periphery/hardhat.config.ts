@@ -4,6 +4,7 @@ import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
+import { task } from 'hardhat/config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -47,6 +48,21 @@ const DEFAULT_COMPILER_SETTINGS = {
     },
   },
 };
+
+task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
+  const poolArtifact = await hre.artifacts.readArtifact('IAlgebraPool');
+
+  const routerArtifact = await hre.artifacts.readArtifact('SwapRouter');
+  const positionManagerArtifact = await hre.artifacts.readArtifact('NonfungiblePositionManager');
+
+  const poolErrors = poolArtifact.abi.filter((x) => x.type == 'error');
+
+  routerArtifact.abi.push(poolErrors);
+  positionManagerArtifact.abi.push(poolErrors);
+
+  await hre.artifacts.saveArtifactAndDebugFile(routerArtifact);
+  await hre.artifacts.saveArtifactAndDebugFile(positionManagerArtifact);
+});
 
 export default {
   networks: baseConfig.networks,

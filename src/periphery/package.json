@@ -35,9 +35,11 @@
   "scripts": {
     "compile": "npm --prefix ../core run compile  && hardhat compile",
     "test": "hardhat test --parallel",
+    "expand-abi": "hardhat expand-abi",
     "precommit": "pretty-quick --staged --pattern **/*.sol",
     "solhint": "solhint ./contracts/**/*.sol",
-    "coverage": "npm --prefix ../core run compile && hardhat coverage"
+    "coverage": "npm --prefix ../core run compile && hardhat coverage",
+    "prepublish": "npm run compile && npm run expand-abi"
   },
   "engines": {
     "npm": ">=8.0.0",
