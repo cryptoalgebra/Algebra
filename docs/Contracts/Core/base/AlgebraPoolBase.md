@@ -42,6 +42,15 @@ struct GlobalState {
 }
 ```
 
+| Name | Description |
+| ---- | ----------- |
+| price | The square root of the current price in Q64.96 format |
+| tick | The current tick (price(tick) <= current price). May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary |
+| lastFee | The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin |
+| pluginConfig | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
+| communityFee | The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%) |
+| unlocked | // Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
+
 
 ## Variables
 ### uint128 maxLiquidityPerTick constant
