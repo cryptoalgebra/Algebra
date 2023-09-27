@@ -47,12 +47,32 @@ export function publicVariables({ item }: DocItemContext): VariableDeclaration[]
     : undefined;
 }
 
-export function constantValue({ item }: DocItemContext): string | undefined {
+const cachedConstants = {};
+
+export function constantValue({ item, build }: DocItemContext): string | undefined {
   if (!item || !item['constant']) return undefined;
 
   if (item['value']) {
     let value = item['value'];
     if (value['value']) return value['value'];
+
+    if (value['referencedDeclaration']) {
+      if (cachedConstants[value['referencedDeclaration']]) return cachedConstants[value['referencedDeclaration']];
+
+      const sources = build.output.sources;
+      for (const source of Object.keys(sources)) {
+        const constants = [...findAll('VariableDeclaration', sources[source].ast)].filter((x) => x.constant).filter((x) => x.value);
+        const index = constants.findIndex((x) => x.id == value['referencedDeclaration']);
+        if (index != -1) {
+          const constantValue = constants[index].value;
+          if (!constantValue) return undefined;
+
+          cachedConstants[value['referencedDeclaration']] = constantValue['value'];
+          return constantValue['value'];
+          break;
+        }
+      }
+    }
   }
 }
 

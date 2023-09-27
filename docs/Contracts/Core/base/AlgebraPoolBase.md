@@ -55,7 +55,7 @@ struct GlobalState {
 ## Public variables
 ### maxLiquidityPerTick
 ```solidity
-uint128 constant maxLiquidityPerTick
+uint128 constant maxLiquidityPerTick = 191757638537527648490752896198553
 ```
 **Selector**: `0x70cf754a`
 
