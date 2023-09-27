@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "keywords": [
     "algebra",
     "periphery"
@@ -39,7 +39,7 @@
     "precommit": "pretty-quick --staged --pattern **/*.sol",
     "solhint": "solhint ./contracts/**/*.sol",
     "coverage": "npm --prefix ../core run compile && hardhat coverage",
-    "prepublish": "npm run compile && npm run expand-abi"
+    "prepublish": "hardhat clean && npm run compile && npm run expand-abi"
   },
   "engines": {
     "npm": ">=8.0.0",

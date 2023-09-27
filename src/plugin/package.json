@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@cryptoalgebra/integral-core": "0.1.0",
-    "@cryptoalgebra/integral-periphery": "0.1.0"
+    "@cryptoalgebra/integral-periphery": "0.1.1"
   },
   "scripts": {
     "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",

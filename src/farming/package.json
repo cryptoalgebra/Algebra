@@ -22,7 +22,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "4.9.3",
     "@cryptoalgebra/integral-core": "0.1.0",
-    "@cryptoalgebra/integral-periphery": "0.1.0",
+    "@cryptoalgebra/integral-periphery": "0.1.1",
     "@cryptoalgebra/integral-base-plugin": "0.1.0"
   },
   "devDependencies": {
