@@ -11,7 +11,7 @@ Nonfungible tokens that support an approve via signature, i.e. permit
 ## Public variables
 ### PERMIT_TYPEHASH
 ```solidity
-bytes32 constant PERMIT_TYPEHASH
+bytes32 constant PERMIT_TYPEHASH = 0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad
 ```
 **Selector**: `0x30adf81f`
 

@@ -39,7 +39,7 @@ modifier onlyAlgebraFeeManager()
 ## Public variables
 ### COMMUNITY_FEE_WITHDRAWER_ROLE
 ```solidity
-bytes32 constant COMMUNITY_FEE_WITHDRAWER_ROLE
+bytes32 constant COMMUNITY_FEE_WITHDRAWER_ROLE = 0xb77a63f119f4dc2174dc6c76fc1a1565fa4f2b0dde50ed5c0465471cd9b331f6
 ```
 **Selector**: `0x1de41613`
 
@@ -49,7 +49,7 @@ bytes32 constant COMMUNITY_FEE_WITHDRAWER_ROLE
 
 ### COMMUNITY_FEE_VAULT_ADMINISTRATOR
 ```solidity
-bytes32 constant COMMUNITY_FEE_VAULT_ADMINISTRATOR
+bytes32 constant COMMUNITY_FEE_VAULT_ADMINISTRATOR = 0x63e58c34d94475ba3fc063e19800b940485850d84d09cd3c1f2c14192c559a68
 ```
 **Selector**: `0xbbac3b8d`
 

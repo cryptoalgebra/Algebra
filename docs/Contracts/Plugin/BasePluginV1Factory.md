@@ -20,7 +20,7 @@ modifier onlyAdministrator()
 ## Public variables
 ### ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR
 ```solidity
-bytes32 constant ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR
+bytes32 constant ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = 0x267da724c255813ae00f4522fe843cb70148a4b8099cbc5af64f9a4151e55ed6
 ```
 **Selector**: `0xcddff269`
 

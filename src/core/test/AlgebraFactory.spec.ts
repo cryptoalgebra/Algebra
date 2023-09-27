@@ -61,7 +61,15 @@ describe('AlgebraFactory', () => {
   });
 
   it('has POOL_INIT_CODE_HASH', async () => {
-    expect(await factory.POOL_INIT_CODE_HASH()).to.be.not.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+    expect(await factory.POOL_INIT_CODE_HASH()).to.be.not.eq(
+      '0x0000000000000000000000000000000000000000000000000000000000000000'
+    );
+  });
+
+  it('has POOLS_ADMINISTRATOR_ROLE', async () => {
+    expect(await factory.POOLS_ADMINISTRATOR_ROLE()).to.be.eq(
+      '0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442'
+    );
   });
 
   it('has correct POOL_INIT_CODE_HASH [ @skip-on-coverage ]', async () => {
@@ -79,7 +87,11 @@ describe('AlgebraFactory', () => {
 
   it('pool bytecode size  [ @skip-on-coverage ]', async () => {
     await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
-    const poolAddress = getCreate2Address(await poolDeployer.getAddress(), [TEST_ADDRESSES[0], TEST_ADDRESSES[1]], poolBytecode);
+    const poolAddress = getCreate2Address(
+      await poolDeployer.getAddress(),
+      [TEST_ADDRESSES[0], TEST_ADDRESSES[1]],
+      poolBytecode
+    );
     expect(((await ethers.provider.getCode(poolAddress)).length - 2) / 2).to.matchSnapshot();
   });
 

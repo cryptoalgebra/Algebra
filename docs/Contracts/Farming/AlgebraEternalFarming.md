@@ -67,7 +67,7 @@ struct Farm {
 ## Public variables
 ### INCENTIVE_MAKER_ROLE
 ```solidity
-bytes32 constant INCENTIVE_MAKER_ROLE
+bytes32 constant INCENTIVE_MAKER_ROLE = 0xa777c10270ee0b99d2c737c09ff865ed48064b252418bbd31d39c8b88ea12219
 ```
 **Selector**: `0xb8883c50`
 
@@ -76,7 +76,7 @@ Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive cre
 
 ### FARMINGS_ADMINISTRATOR_ROLE
 ```solidity
-bytes32 constant FARMINGS_ADMINISTRATOR_ROLE
+bytes32 constant FARMINGS_ADMINISTRATOR_ROLE = 0x681ab0361ab5f3ae8c1d864335ef2b9a8c12a6a67e1ed0f4083d00a4b8a9a395
 ```
 **Selector**: `0x3c6d0715`
 

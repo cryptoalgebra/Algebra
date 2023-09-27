@@ -20,7 +20,7 @@ modifier onlyPool()
 ## Public variables
 ### ALGEBRA_BASE_PLUGIN_MANAGER
 ```solidity
-bytes32 constant ALGEBRA_BASE_PLUGIN_MANAGER
+bytes32 constant ALGEBRA_BASE_PLUGIN_MANAGER = 0x8e8000aba5b365c0be9685da1153f7f096e76d1ecfb42c050ae1e387aa65b4f5
 ```
 **Selector**: `0x31b25d1a`
 

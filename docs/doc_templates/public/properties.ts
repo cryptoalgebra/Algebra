@@ -2,6 +2,7 @@ import { DocItemWithContext, DocItemContext } from 'solidity-docgen/dist/site';
 import { NatSpec } from 'solidity-docgen/dist/utils/natspec';
 import { FunctionDefinition, VariableDeclaration, ContractDefinition, StructDefinition, ErrorDefinition } from 'solidity-ast';
 import { findAll, isNodeType } from 'solidity-ast/utils';
+import { keccak256, toUtf8Bytes } from 'ethers';
 
 export function notTest({ item }: DocItemContext): boolean {
   if (item.nodeType !== 'ContractDefinition') return true;
@@ -69,8 +70,17 @@ export function constantValue({ item, build }: DocItemContext): string | undefin
 
           cachedConstants[value['referencedDeclaration']] = constantValue['value'];
           return constantValue['value'];
-          break;
         }
+      }
+    }
+
+    if (value['kind'] == 'functionCall' && value['expression'] && value['expression']['name'] == 'keccak256') {
+      if (!value['arguments'] || value['arguments'].length > 1) return undefined;
+
+      if (value['arguments'][0].nodeType == 'Literal' && value['arguments'][0].kind == 'string') {
+        const constantValue = keccak256(toUtf8Bytes(value['arguments'][0].value));
+        cachedConstants[value['referencedDeclaration']] = constantValue;
+        return constantValue;
       }
     }
   }

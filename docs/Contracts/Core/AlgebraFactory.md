@@ -13,7 +13,7 @@ Is used to deploy pools and its plugins
 ## Public variables
 ### POOLS_ADMINISTRATOR_ROLE
 ```solidity
-bytes32 constant POOLS_ADMINISTRATOR_ROLE
+bytes32 constant POOLS_ADMINISTRATOR_ROLE = 0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442
 ```
 **Selector**: `0xb500a48b`
 
