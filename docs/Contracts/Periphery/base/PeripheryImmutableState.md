@@ -11,18 +11,30 @@ Immutable state used by periphery contracts
 https://github.com/Uniswap/v3-periphery*
 
 
-## Variables
-### address factory immutable
+## Public variables
+### factory
+```solidity
+address immutable factory
+```
+**Selector**: `0xc45a0155`
 
 
 
 
-### address poolDeployer immutable
+### poolDeployer
+```solidity
+address immutable poolDeployer
+```
+**Selector**: `0x3119049a`
 
 
 
 
-### address WNativeToken immutable
+### WNativeToken
+```solidity
+address immutable WNativeToken
+```
+**Selector**: `0x8af3ac85`
 
 
 

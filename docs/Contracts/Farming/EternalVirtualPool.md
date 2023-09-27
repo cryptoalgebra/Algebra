@@ -17,33 +17,57 @@ modifier onlyFromFarming()
 
 
 
-## Variables
-### address farmingAddress immutable
+## Public variables
+### farmingAddress
+```solidity
+address immutable farmingAddress
+```
+**Selector**: `0x8a2ade58`
 
 Returns address of the AlgebraEternalFarming
 
 
-### address plugin immutable
+### plugin
+```solidity
+address immutable plugin
+```
+**Selector**: `0xef01df4f`
 
 Returns address of the plugin for which this virtual pool was created
 
 
-### uint128 currentLiquidity 
+### currentLiquidity
+```solidity
+uint128 currentLiquidity
+```
+**Selector**: `0x46caf2ae`
 
 Returns the current liquidity in virtual pool
 
 
-### int24 globalTick 
+### globalTick
+```solidity
+int24 globalTick
+```
+**Selector**: `0x8e76c332`
 
 Returns the current tick in virtual pool
 
 
-### uint32 prevTimestamp 
+### prevTimestamp
+```solidity
+uint32 prevTimestamp
+```
+**Selector**: `0xd576dfc0`
 
 Returns the timestamp after previous virtual pool update
 
 
-### bool deactivated 
+### deactivated
+```solidity
+bool deactivated
+```
+**Selector**: `0x556ed30e`
 
 Returns true if virtual pool is deactivated
 

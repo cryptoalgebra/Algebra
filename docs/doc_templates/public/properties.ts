@@ -47,6 +47,15 @@ export function publicVariables({ item }: DocItemContext): VariableDeclaration[]
     : undefined;
 }
 
+export function constantValue({ item }: DocItemContext): string | undefined {
+  if (!item || !item['constant']) return undefined;
+
+  if (item['value']) {
+    let value = item['value'];
+    if (value['value']) return value['value'];
+  }
+}
+
 export function structures({ item }: DocItemContext): StructDefinition[] | undefined {
   return item.nodeType === 'ContractDefinition' ? item.nodes.filter(isNodeType('StructDefinition')) : undefined;
 }
@@ -64,16 +73,20 @@ export function typeFormatted({ item }: DocItemContext): string | undefined {
   if (item.nodeType === 'VariableDeclaration') {
     if (item.typeName) {
       if (item.typeName.nodeType == 'ElementaryTypeName') {
-        return item.typeName.name;
+        return _replaceSpecialCharacters(item.typeName.name);
       } else {
         if (item.typeName.typeDescriptions && item.typeName.typeDescriptions.typeString) {
-          return item.typeName.typeDescriptions.typeString;
+          return _replaceSpecialCharacters(item.typeName.typeDescriptions.typeString);
         }
       }
     }
   } else {
     return undefined;
   }
+}
+
+function _replaceSpecialCharacters(str) {
+  return str.replaceAll('&#x3D;&gt;', '=>');
 }
 
 export function stateMutabilityFiltered({ item }: DocItemContext): string | undefined {

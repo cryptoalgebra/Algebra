@@ -24,13 +24,21 @@ struct TokenRatioSortData {
 ```
 
 
-## Variables
-### address WNativeToken immutable
+## Public variables
+### WNativeToken
+```solidity
+address immutable WNativeToken
+```
+**Selector**: `0x8af3ac85`
 
 
 
 
-### address cachedThis immutable
+### cachedThis
+```solidity
+address immutable cachedThis
+```
+**Selector**: `0x8ba7888d`
 
 
 

@@ -49,91 +49,151 @@ struct GlobalState {
 | lastFee | The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin |
 | pluginConfig | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
 | communityFee | The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%) |
-| unlocked | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
+| unlocked | // Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
 
 
-## Variables
-### uint128 maxLiquidityPerTick constant
+## Public variables
+### maxLiquidityPerTick
+```solidity
+uint128 constant maxLiquidityPerTick
+```
+**Selector**: `0x70cf754a`
 
 The maximum amount of position liquidity that can use any tick in the range
 
 *Developer note: This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
 also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool*
 
-### address factory immutable
+### factory
+```solidity
+address immutable factory
+```
+**Selector**: `0xc45a0155`
 
 The Algebra factory contract, which must adhere to the IAlgebraFactory interface
 
 
-### address token0 immutable
+### token0
+```solidity
+address immutable token0
+```
+**Selector**: `0x0dfe1681`
 
 The first of the two tokens of the pool, sorted by address
 
 
-### address token1 immutable
+### token1
+```solidity
+address immutable token1
+```
+**Selector**: `0xd21220a7`
 
 The second of the two tokens of the pool, sorted by address
 
 
-### address communityVault immutable
+### communityVault
+```solidity
+address immutable communityVault
+```
+**Selector**: `0x53e97868`
 
 The contract to which community fees are transferred
 
 
-### uint256 totalFeeGrowth0Token 
+### totalFeeGrowth0Token
+```solidity
+uint256 totalFeeGrowth0Token
+```
+**Selector**: `0x6378ae44`
 
 The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
 
 *Developer note: This value can overflow the uint256*
 
-### uint256 totalFeeGrowth1Token 
+### totalFeeGrowth1Token
+```solidity
+uint256 totalFeeGrowth1Token
+```
+**Selector**: `0xecdecf42`
 
 The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
 
 *Developer note: This value can overflow the uint256*
 
-### struct AlgebraPoolBase.GlobalState globalState 
+### globalState
+```solidity
+struct AlgebraPoolBase.GlobalState globalState
+```
+**Selector**: `0xe76c01e4`
 
 The globalState structure in the pool stores many values but requires only one slot
 and is exposed as a single method to save gas when accessed externally.
 
 *Developer note: **important security note: caller should check &#x60;unlocked&#x60; flag to prevent read-only reentrancy***
 
-### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
+### ticks
+```solidity
+mapping(int24 => struct TickManagement.Tick) ticks
+```
+**Selector**: `0xf30dba93`
 
 Look up information about a specific tick in the pool
 
 *Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
-### uint32 communityFeeLastTimestamp 
+### communityFeeLastTimestamp
+```solidity
+uint32 communityFeeLastTimestamp
+```
+**Selector**: `0x1131b110`
 
 The timestamp of the last sending of tokens to community vault
 
 
-### address plugin 
+### plugin
+```solidity
+address plugin
+```
+**Selector**: `0xef01df4f`
 
 Returns the address of currently used plugin
 
 *Developer note: The plugin is subject to change*
 
-### mapping(int16 &#x3D;&gt; uint256) tickTable 
+### tickTable
+```solidity
+mapping(int16 => uint256) tickTable
+```
+**Selector**: `0xc677e3e0`
 
 Returns 256 packed tick initialized boolean values. See TickTree for more information
 
 
-### int24 nextTickGlobal 
+### nextTickGlobal
+```solidity
+int24 nextTickGlobal
+```
+**Selector**: `0xd5c35a7e`
 
 The next initialized tick after current global tick
 
 *Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
-### int24 prevTickGlobal 
+### prevTickGlobal
+```solidity
+int24 prevTickGlobal
+```
+**Selector**: `0x050a4d21`
 
 The previous initialized tick before (or at) current global tick
 
 *Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
-### uint128 liquidity 
+### liquidity
+```solidity
+uint128 liquidity
+```
+**Selector**: `0x1a686502`
 
 The currently in range liquidity available to the pool
 
@@ -141,7 +201,11 @@ The currently in range liquidity available to the pool
 Returned value cannot exceed type(uint128).max
 **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
-### int24 tickSpacing 
+### tickSpacing
+```solidity
+int24 tickSpacing
+```
+**Selector**: `0xd0c93a7c`
 
 The current tick spacing
 

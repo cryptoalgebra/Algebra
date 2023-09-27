@@ -11,8 +11,12 @@ Algebra Migrator
 https://github.com/Uniswap/v3-periphery*
 
 
-## Variables
-### address nonfungiblePositionManager immutable
+## Public variables
+### nonfungiblePositionManager
+```solidity
+address immutable nonfungiblePositionManager
+```
+**Selector**: `0xb44a2722`
 
 
 

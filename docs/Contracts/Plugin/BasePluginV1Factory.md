@@ -17,31 +17,51 @@ modifier onlyAdministrator()
 
 
 
-## Variables
-### bytes32 ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR constant
+## Public variables
+### ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR
+```solidity
+bytes32 constant ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR
+```
+**Selector**: `0xcddff269`
 
 The hash of &#x27;ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR&#x27; used as role
 
 *Developer note: allows to change settings of BasePluginV1Factory*
 
-### address algebraFactory immutable
+### algebraFactory
+```solidity
+address immutable algebraFactory
+```
+**Selector**: `0xa7b64b04`
 
 Returns the address of AlgebraFactory
 
 
-### struct AlgebraFeeConfiguration defaultFeeConfiguration 
+### defaultFeeConfiguration
+```solidity
+struct AlgebraFeeConfiguration defaultFeeConfiguration
+```
+**Selector**: `0x4e09a96a`
 
 Current default dynamic fee configuration
 
 *Developer note: See the AdaptiveFee struct for more details about params.
 This value is set by default in new plugins*
 
-### address farmingAddress 
+### farmingAddress
+```solidity
+address farmingAddress
+```
+**Selector**: `0x8a2ade58`
 
 Returns current farming address
 
 
-### mapping(address &#x3D;&gt; address) pluginByPool 
+### pluginByPool
+```solidity
+mapping(address => address) pluginByPool
+```
+**Selector**: `0xcdef16f6`
 
 Returns address of plugin created for given AlgebraPool
 

@@ -36,46 +36,78 @@ modifier onlyAlgebraFeeManager()
 
 
 
-## Variables
-### bytes32 COMMUNITY_FEE_WITHDRAWER_ROLE constant
+## Public variables
+### COMMUNITY_FEE_WITHDRAWER_ROLE
+```solidity
+bytes32 constant COMMUNITY_FEE_WITHDRAWER_ROLE
+```
+**Selector**: `0x1de41613`
 
 
 
 *Developer note: The role can be granted in AlgebraFactory*
 
-### bytes32 COMMUNITY_FEE_VAULT_ADMINISTRATOR constant
+### COMMUNITY_FEE_VAULT_ADMINISTRATOR
+```solidity
+bytes32 constant COMMUNITY_FEE_VAULT_ADMINISTRATOR
+```
+**Selector**: `0xbbac3b8d`
 
 
 
 *Developer note: The role can be granted in AlgebraFactory*
 
-### address communityFeeReceiver 
+### communityFeeReceiver
+```solidity
+address communityFeeReceiver
+```
+**Selector**: `0x371abc95`
 
 Address to which community fees are sent from vault
 
 
-### uint16 algebraFee 
+### algebraFee
+```solidity
+uint16 algebraFee
+```
+**Selector**: `0x9f856b8d`
 
 The percentage of the protocol fee that Algebra will receive
 
 *Developer note: Value in thousandths,i.e. 1e-3*
 
-### bool hasNewAlgebraFeeProposal 
+### hasNewAlgebraFeeProposal
+```solidity
+bool hasNewAlgebraFeeProposal
+```
+**Selector**: `0xc53b3fbe`
 
 Represents whether there is a new Algebra fee proposal or not
 
 
-### uint16 proposedNewAlgebraFee 
+### proposedNewAlgebraFee
+```solidity
+uint16 proposedNewAlgebraFee
+```
+**Selector**: `0x62744405`
 
 Suggested Algebra fee value
 
 
-### address algebraFeeReceiver 
+### algebraFeeReceiver
+```solidity
+address algebraFeeReceiver
+```
+**Selector**: `0x4738761c`
 
 Address of recipient Algebra part of community fee
 
 
-### address algebraFeeManager 
+### algebraFeeManager
+```solidity
+address algebraFeeManager
+```
+**Selector**: `0x9d754dde`
 
 Address of Algebra fee manager
 

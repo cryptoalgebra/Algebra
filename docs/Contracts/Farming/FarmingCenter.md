@@ -23,33 +23,57 @@ modifier isApprovedOrOwner(uint256 tokenId)
 | tokenId | uint256 |  |
 
 
-## Variables
-### contract IAlgebraEternalFarming eternalFarming immutable
+## Public variables
+### eternalFarming
+```solidity
+contract IAlgebraEternalFarming immutable eternalFarming
+```
+**Selector**: `0xde2356d1`
 
 The eternal farming contract
 
 
-### contract INonfungiblePositionManager nonfungiblePositionManager immutable
+### nonfungiblePositionManager
+```solidity
+contract INonfungiblePositionManager immutable nonfungiblePositionManager
+```
+**Selector**: `0xb44a2722`
 
 The nonfungible position manager with which this farming contract is compatible
 
 
-### address algebraPoolDeployer immutable
+### algebraPoolDeployer
+```solidity
+address immutable algebraPoolDeployer
+```
+**Selector**: `0x14258256`
 
 The Algebra poolDeployer contract
 
 
-### mapping(address &#x3D;&gt; address) virtualPoolAddresses 
+### virtualPoolAddresses
+```solidity
+mapping(address => address) virtualPoolAddresses
+```
+**Selector**: `0x32dc5a25`
 
 Returns current virtual pool address for Algebra pool
 
 
-### mapping(uint256 &#x3D;&gt; bytes32) deposits 
+### deposits
+```solidity
+mapping(uint256 => bytes32) deposits
+```
+**Selector**: `0xb02c43d0`
 
 Returns information about a deposited NFT
 
 
-### mapping(bytes32 &#x3D;&gt; struct IncentiveKey) incentiveKeys 
+### incentiveKeys
+```solidity
+mapping(bytes32 => struct IncentiveKey) incentiveKeys
+```
+**Selector**: `0x8c27f1f6`
 
 Returns incentive key for specific incentiveId
 

@@ -64,54 +64,90 @@ struct Farm {
 ```
 
 
-## Variables
-### bytes32 INCENTIVE_MAKER_ROLE constant
+## Public variables
+### INCENTIVE_MAKER_ROLE
+```solidity
+bytes32 constant INCENTIVE_MAKER_ROLE
+```
+**Selector**: `0xb8883c50`
 
 Returns hash of &#x27;INCENTIVE_MAKER_ROLE&#x27;, used as role for incentive creation
 
 
-### bytes32 FARMINGS_ADMINISTRATOR_ROLE constant
+### FARMINGS_ADMINISTRATOR_ROLE
+```solidity
+bytes32 constant FARMINGS_ADMINISTRATOR_ROLE
+```
+**Selector**: `0x3c6d0715`
 
 Returns hash of &#x27;FARMINGS_ADMINISTRATOR_ROLE&#x27;, used as role for permissioned actions in farming
 
 
-### contract INonfungiblePositionManager nonfungiblePositionManager immutable
+### nonfungiblePositionManager
+```solidity
+contract INonfungiblePositionManager immutable nonfungiblePositionManager
+```
+**Selector**: `0xb44a2722`
 
 The nonfungible position manager with which this farming contract is compatible
 
 
-### address farmingCenter 
+### farmingCenter
+```solidity
+address farmingCenter
+```
+**Selector**: `0xdd56e5d8`
 
 Returns address of current farmingCenter
 
 
-### bool isEmergencyWithdrawActivated 
+### isEmergencyWithdrawActivated
+```solidity
+bool isEmergencyWithdrawActivated
+```
+**Selector**: `0xf2256319`
 
 Users can withdraw liquidity without any checks if active.
 
 
-### mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Incentive) incentives 
+### incentives
+```solidity
+mapping(bytes32 => struct AlgebraEternalFarming.Incentive) incentives
+```
+**Selector**: `0x60777795`
 
 Represents a farming incentive
 
 *Developer note: bytes32 incentiveId refers to the return value of IncentiveId.compute*
 
-### mapping(uint256 &#x3D;&gt; mapping(bytes32 &#x3D;&gt; struct AlgebraEternalFarming.Farm)) farms 
+### farms
+```solidity
+mapping(uint256 => mapping(bytes32 => struct AlgebraEternalFarming.Farm)) farms
+```
+**Selector**: `0x27e6a99a`
 
 Returns information about a farmed liquidity NFT
 
-*Developer note: farms[tokenId][incentiveHash] &#x3D;&gt; Farm*
+*Developer note: farms[tokenId][incentiveHash] => Farm*
 
-### uint256 numOfIncentives 
+### numOfIncentives
+```solidity
+uint256 numOfIncentives
+```
+**Selector**: `0x82bd79ea`
 
 Returns amount of created incentives
 
 
-### mapping(address &#x3D;&gt; mapping(contract IERC20Minimal &#x3D;&gt; uint256)) rewards 
+### rewards
+```solidity
+mapping(address => mapping(contract IERC20Minimal => uint256)) rewards
+```
+**Selector**: `0xe70b9e27`
 
 Returns amounts of reward tokens owed to a given address according to the last time all farms were updated
 
-*Developer note: rewards[owner][rewardToken] &#x3D;&gt; uint256*
+*Developer note: rewards[owner][rewardToken] => uint256*
 
 
 ## Functions

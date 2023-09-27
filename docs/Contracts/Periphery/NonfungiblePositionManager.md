@@ -45,24 +45,40 @@ struct Position {
 ```
 
 
-## Variables
-### bytes32 NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE constant
+## Public variables
+### NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+```solidity
+bytes32 constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+```
+**Selector**: `0xb227aa79`
 
 
 
 *Developer note: The role which has the right to change the farming center address*
 
-### address farmingCenter 
+### farmingCenter
+```solidity
+address farmingCenter
+```
+**Selector**: `0xdd56e5d8`
 
 Returns the address of currently connected farming, if any
 
 
-### mapping(uint256 &#x3D;&gt; address) farmingApprovals 
+### farmingApprovals
+```solidity
+mapping(uint256 => address) farmingApprovals
+```
+**Selector**: `0x2d0b22de`
 
 Returns the address of farming that is approved for this token, if any
 
 
-### mapping(uint256 &#x3D;&gt; address) tokenFarmedIn 
+### tokenFarmedIn
+```solidity
+mapping(uint256 => address) tokenFarmedIn
+```
+**Selector**: `0xe7ce18a3`
 
 Returns the address of farming in which this token is farmed, if any
 

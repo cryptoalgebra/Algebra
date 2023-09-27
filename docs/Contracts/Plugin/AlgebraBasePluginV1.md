@@ -17,45 +17,77 @@ modifier onlyPool()
 
 
 
-## Variables
-### bytes32 ALGEBRA_BASE_PLUGIN_MANAGER constant
+## Public variables
+### ALGEBRA_BASE_PLUGIN_MANAGER
+```solidity
+bytes32 constant ALGEBRA_BASE_PLUGIN_MANAGER
+```
+**Selector**: `0x31b25d1a`
 
 
 
 *Developer note: The role can be granted in AlgebraFactory*
 
-### uint8 defaultPluginConfig constant
+### defaultPluginConfig
+```solidity
+uint8 constant defaultPluginConfig
+```
+**Selector**: `0x689ea370`
 
 Returns plugin config
 
 
-### address pool immutable
+### pool
+```solidity
+address immutable pool
+```
+**Selector**: `0x16f0115b`
 
 Returns the address of the pool the plugin is created for
 
 
-### struct VolatilityOracle.Timepoint[65536] timepoints 
+### timepoints
+```solidity
+struct VolatilityOracle.Timepoint[65536] timepoints
+```
+**Selector**: `0x74eceae6`
 
 Returns data belonging to a certain timepoint
 
 *Developer note: There is more convenient function to fetch a timepoint: getTimepoints(). Which requires not an index but seconds*
 
-### uint16 timepointIndex 
+### timepointIndex
+```solidity
+uint16 timepointIndex
+```
+**Selector**: `0x0786feb6`
 
 Returns the index of the last timepoint that was written.
 
 
-### uint32 lastTimepointTimestamp 
+### lastTimepointTimestamp
+```solidity
+uint32 lastTimepointTimestamp
+```
+**Selector**: `0xf5985d35`
 
 Returns the timestamp of the last timepoint that was written.
 
 
-### bool isInitialized 
+### isInitialized
+```solidity
+bool isInitialized
+```
+**Selector**: `0x392e53cd`
 
 Returns information about whether oracle is initialized
 
 
-### address incentive 
+### incentive
+```solidity
+address incentive
+```
+**Selector**: `0x1d4632ac`
 
 Returns the address of active incentive
 

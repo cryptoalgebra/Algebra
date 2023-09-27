@@ -10,8 +10,12 @@ Encapsulates the logic of interaction with the data structure with ticks
 *Developer note: Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list*
 
 
-## Variables
-### mapping(int24 &#x3D;&gt; struct TickManagement.Tick) ticks 
+## Public variables
+### ticks
+```solidity
+mapping(int24 => struct TickManagement.Tick) ticks
+```
+**Selector**: `0xf30dba93`
 
 Returns data associated with a tick
 

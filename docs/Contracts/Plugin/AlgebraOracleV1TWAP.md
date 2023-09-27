@@ -10,8 +10,12 @@ Provides data from oracle corresponding pool
 *Developer note: These functions are not very gas efficient and it is better not to use them on-chain*
 
 
-## Variables
-### address pluginFactory immutable
+## Public variables
+### pluginFactory
+```solidity
+address immutable pluginFactory
+```
+**Selector**: `0xe2a1bd59`
 
 The address of the factory of plugins that are used as oracles by this contract
 

@@ -8,8 +8,12 @@ ERC721 with permit
 Nonfungible tokens that support an approve via signature, i.e. permit
 
 
-## Variables
-### bytes32 PERMIT_TYPEHASH constant
+## Public variables
+### PERMIT_TYPEHASH
+```solidity
+bytes32 constant PERMIT_TYPEHASH
+```
+**Selector**: `0x30adf81f`
 
 The permit typehash used in the permit signature
 
