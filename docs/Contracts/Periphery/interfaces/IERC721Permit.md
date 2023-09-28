@@ -7,7 +7,7 @@ ERC721 with permit
 
 Extension to ERC721 that includes a permit function for signature based approvals
 
-**Inherits:** [IERC721](../../@openzeppelin/contracts/token/ERC721/IERC721.md)
+**Inherits:** [IERC721](https://docs.openzeppelin.com/contracts/4.x/)
 
 ## Functions
 ### PERMIT_TYPEHASH
