@@ -10,7 +10,7 @@ Wraps Algebra positions in the ERC721 non-fungible token interface
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** INonfungiblePositionManager Multicall ERC721Permit PeripheryImmutableState PoolInitializer LiquidityManagement PeripheryValidation SelfPermit
+**Inherits:** [INonfungiblePositionManager](interfaces/INonfungiblePositionManager.md) [Multicall](base/Multicall.md) [ERC721Permit](base/ERC721Permit.md) [PeripheryImmutableState](base/PeripheryImmutableState.md) [PoolInitializer](base/PoolInitializer.md) [LiquidityManagement](base/LiquidityManagement.md) [PeripheryValidation](base/PeripheryValidation.md) [SelfPermit](base/SelfPermit.md)
 ## Modifiers
 ### isAuthorizedForToken
 

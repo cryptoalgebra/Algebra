@@ -10,7 +10,7 @@ Internal functions for safely managing liquidity in Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** IAlgebraMintCallback PeripheryImmutableState PeripheryPayments
+**Inherits:** [IAlgebraMintCallback](../../Core/interfaces/callback/IAlgebraMintCallback.md) [PeripheryImmutableState](PeripheryImmutableState.md) [PeripheryPayments](PeripheryPayments.md)
 
 ## Structs
 ### MintCallbackData

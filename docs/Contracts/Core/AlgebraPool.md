@@ -9,7 +9,7 @@ This contract is responsible for liquidity positions, swaps and flashloans
 
 *Developer note: Version: Algebra Integral*
 
-**Inherits:** AlgebraPoolBase TickStructure ReentrancyGuard Positions SwapCalculation ReservesManager
+**Inherits:** [AlgebraPoolBase](base/AlgebraPoolBase.md) [TickStructure](base/TickStructure.md) [ReentrancyGuard](base/ReentrancyGuard.md) [Positions](base/Positions.md) [SwapCalculation](base/SwapCalculation.md) [ReservesManager](base/ReservesManager.md)
 
 ## Functions
 ### initialize

@@ -7,7 +7,7 @@ ERC721 with permit
 
 Nonfungible tokens that support an approve via signature, i.e. permit
 
-**Inherits:** BlockTimestamp ERC721Enumerable IERC721Permit
+**Inherits:** [BlockTimestamp](BlockTimestamp.md) [ERC721Enumerable](../../@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.md) [IERC721Permit](../interfaces/IERC721Permit.md)
 
 ## Public variables
 ### PERMIT_TYPEHASH

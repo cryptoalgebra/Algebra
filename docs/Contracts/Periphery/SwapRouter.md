@@ -10,7 +10,7 @@ Router for stateless execution of swaps against Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** ISwapRouter PeripheryImmutableState PeripheryValidation PeripheryPaymentsWithFee Multicall SelfPermit
+**Inherits:** [ISwapRouter](interfaces/ISwapRouter.md) [PeripheryImmutableState](base/PeripheryImmutableState.md) [PeripheryValidation](base/PeripheryValidation.md) [PeripheryPaymentsWithFee](base/PeripheryPaymentsWithFee.md) [Multicall](base/Multicall.md) [SelfPermit](base/SelfPermit.md)
 
 ## Structs
 ### SwapCallbackData

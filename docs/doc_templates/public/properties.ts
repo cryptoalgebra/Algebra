@@ -4,6 +4,8 @@ import { FunctionDefinition, VariableDeclaration, ContractDefinition, StructDefi
 import { findAll, isNodeType } from 'solidity-ast/utils';
 import { keccak256, toUtf8Bytes } from 'ethers';
 
+import path from 'path';
+
 export function notTest({ item }: DocItemContext): boolean {
   if (item.nodeType !== 'ContractDefinition') return true;
   return !(
@@ -18,6 +20,8 @@ export function notTest({ item }: DocItemContext): boolean {
 
 export function hasPublicMembers({ item }: DocItemContext): boolean {
   if (item.nodeType !== 'ContractDefinition') return false;
+
+  if (item.contractKind == 'interface') return true;
 
   let variables = item.nodes
     .filter(isNodeType('VariableDeclaration'))
@@ -141,37 +145,35 @@ export function withModifiers({ item }: DocItemContext): string | undefined {
   }
 }
 
-const contractsNames = {};
+const contractDatas = {};
 
-export function linearizedBaseContractsNames({ item, build }: DocItemContext): { name: string }[] | undefined {
-  if (!item || !item['linearizedBaseContracts']) return undefined;
+export function baseContractsLinks({ item, build }: DocItemContext): { link: string }[] | undefined {
+  if (!item || !item['baseContracts'] || item['baseContracts'].length == 0) return undefined;
 
-  const contractsIds = item['linearizedBaseContracts'];
-  if (contractsIds.length <= 1) return undefined;
-
+  const links: { link: string }[] = [];
   const sources = build.output.sources;
-  const names: { name: string }[] = [];
-  for (let i = 1; i < item['linearizedBaseContracts'].length; i++) {
-    if (!contractsNames[item['linearizedBaseContracts'][i]]) {
+  for (let i = 0; i < item['baseContracts'].length; i++) {
+    //names.push({ name: item['baseContracts'][i].baseName.name });
+
+    if (!contractDatas[item['baseContracts'][i].id] || !contractDatas[item.id]) {
       for (const source of Object.keys(sources)) {
         const contracts = [...findAll('ContractDefinition', sources[source].ast)];
         for (const contract of contracts) {
-          contractsNames[contract.id] = contract.name;
+          contractDatas[contract.id] = {
+            name: contract.name,
+            absolutePath: sources[source].ast.absolutePath,
+          };
         }
       }
     }
 
-    names.push({ name: contractsNames[item['linearizedBaseContracts'][i]] });
-  }
-  return names;
-}
+    const contractData = contractDatas[item['baseContracts'][i].baseName.referencedDeclaration];
+    const currentData = contractDatas[item.id];
 
-export function baseContractsNames({ item, build }: DocItemContext): { name: string }[] | undefined {
-  if (!item || !item['baseContracts'] || item['baseContracts'].length == 0) return undefined;
-
-  const names: { name: string }[] = [];
-  for (let i = 0; i < item['baseContracts'].length; i++) {
-    names.push({ name: item['baseContracts'][i].baseName.name });
+    const pathTo = path.relative(path.dirname(currentData.absolutePath), contractData.absolutePath.replace('.sol', '.md'));
+    links.push({
+      link: `[${contractData.name}](${pathTo.replace(/\\/gi, '/')})`,
+    });
   }
-  return names;
+  return links;
 }

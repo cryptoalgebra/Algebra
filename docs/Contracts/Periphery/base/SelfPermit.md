@@ -10,7 +10,7 @@ Functionality to call permit on any EIP-2612-compliant token for use in the rout
 *Developer note: These functions are expected to be embedded in multicalls to allow EOAs to approve a contract and call a function
 that requires an approval in a single transaction.*
 
-**Inherits:** ISelfPermit
+**Inherits:** [ISelfPermit](../interfaces/ISelfPermit.md)
 
 ## Functions
 ### selfPermit

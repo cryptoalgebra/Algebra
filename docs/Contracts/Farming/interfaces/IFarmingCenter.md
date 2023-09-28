@@ -9,7 +9,7 @@ Algebra main farming contract interface
 
 *Developer note: Manages users deposits and performs entry, exit and other actions.*
 
-**Inherits:** IMulticall
+**Inherits:** [IMulticall](../../Periphery/interfaces/IMulticall.md)
 
 ## Functions
 ### virtualPoolAddresses

@@ -9,7 +9,7 @@ This contract combines the standard implementations of the volatility oracle and
 
 *Developer note: This contract stores timepoints and calculates adaptive fee and statistical averages*
 
-**Inherits:** IVolatilityOracle IDynamicFeeManager IFarmingPlugin
+**Inherits:** [IVolatilityOracle](plugins/IVolatilityOracle.md) [IDynamicFeeManager](plugins/IDynamicFeeManager.md) [IFarmingPlugin](plugins/IFarmingPlugin.md)
 
 ## Functions
 ### initialize

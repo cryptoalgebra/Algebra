@@ -10,7 +10,7 @@ Community fee from pools is sent here, if it is enabled
 *Developer note: Role system is used to withdraw tokens
 Version: Algebra Integral*
 
-**Inherits:** IAlgebraCommunityVault
+**Inherits:** [IAlgebraCommunityVault](interfaces/IAlgebraCommunityVault.md)
 ## Modifiers
 ### onlyAdministrator
 

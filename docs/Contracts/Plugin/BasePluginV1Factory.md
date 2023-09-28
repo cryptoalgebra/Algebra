@@ -7,7 +7,7 @@ Algebra default plugin factory
 
 This contract creates Algebra default plugins for Algebra liquidity pools
 
-**Inherits:** IBasePluginV1Factory
+**Inherits:** [IBasePluginV1Factory](interfaces/IBasePluginV1Factory.md)
 ## Modifiers
 ### onlyAdministrator
 

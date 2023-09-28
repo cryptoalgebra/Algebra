@@ -9,7 +9,7 @@ Provides data from oracle corresponding pool
 
 *Developer note: These functions are not very gas efficient and it is better not to use them on-chain*
 
-**Inherits:** IAlgebraOracleV1TWAP
+**Inherits:** [IAlgebraOracleV1TWAP](IAlgebraOracleV1TWAP.md)
 
 ## Public variables
 ### pluginFactory

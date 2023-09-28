@@ -1,5 +1,15 @@
 
 
+# IAlgebraPoolErrors
+
+
+Errors emitted by a pool
+
+Contains custom errors emitted by the pool
+
+*Developer note: Custom errors are separated from the common pool interface for compatibility with older versions of Solidity*
+
+
 ## Errors
 ## locked
 
