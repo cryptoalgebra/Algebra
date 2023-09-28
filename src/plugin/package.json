@@ -14,8 +14,8 @@
     "url": "https://github.com/cryptoalgebra/Algebra/"
   },
   "dependencies": {
-    "@cryptoalgebra/integral-core": "0.1.0",
-    "@cryptoalgebra/integral-periphery": "0.1.1"
+    "@cryptoalgebra/integral-core": "0.2.0",
+    "@cryptoalgebra/integral-periphery": "0.2.0"
   },
   "scripts": {
     "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",
