@@ -53,8 +53,6 @@ event Collect(address owner, address recipient, int24 bottomTick, int24 topTick,
 
 Emitted when fees are collected by the owner of a position
 
-*Developer note: Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees*
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | owner | address | The owner of the position for which fees are collected |

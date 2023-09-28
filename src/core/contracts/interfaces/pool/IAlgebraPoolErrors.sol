@@ -33,8 +33,9 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if actual amount of liquidity is zero (due to insufficient amount of tokens received)
   error zeroLiquidityActual();
 
-  /// @notice Emitted if the pool received fewer tokens{0,1} after flash than it should have
+  /// @notice Emitted if the pool received fewer tokens0 after flash than it should have
   error flashInsufficientPaid0();
+  /// @notice Emitted if the pool received fewer tokens1 after flash than it should have
   error flashInsufficientPaid1();
 
   /// @notice Emitted if limitSqrtPrice param is incorrect
@@ -45,37 +46,53 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if a method is called that is accessible only to the factory owner or dedicated role
   error notAllowed();
-  /// @notice Emitted if a method is called that is accessible only to the farming
-  error onlyFarming();
 
+  /// @notice Emitted if new tick spacing exceeds max allowed value
   error invalidNewTickSpacing();
+  /// @notice Emitted if new community fee exceeds max allowed value
   error invalidNewCommunityFee();
 
+  /// @notice Emitted if an attempt is made to manually change the fee value, but dynamic fee is enabled
   error dynamicFeeActive();
+  /// @notice Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
   error dynamicFeeDisabled();
-
+  /// @notice Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
   error pluginIsNotConnected();
-
-  error invalidHookResponse(bytes4 selector);
+  /// @notice Emitted if a plugin returns invalid selector after hook call
+  /// @param expectedSelector The expected selector
+  error invalidHookResponse(bytes4 expectedSelector);
 
   // ####  LiquidityMath errors  ####
+
   /// @notice Emitted if liquidity underflows
   error liquiditySub();
   /// @notice Emitted if liquidity overflows
   error liquidityAdd();
 
   // ####  TickManagement errors  ####
+
+  /// @notice Emitted if the topTick param not greater then the bottomTick param
   error topTickLowerOrEqBottomTick();
+  /// @notice Emitted if the bottomTick param is lower than min allowed value
   error bottomTickLowerThanMIN();
+  /// @notice Emitted if the topTick param is greater than max allowed value
   error topTickAboveMAX();
+  /// @notice Emitted if the liquidity value associated with the tick exceeds MAX_LIQUIDITY_PER_TICK
   error liquidityOverflow();
+  /// @notice Emitted if an attempt is made to interact with an uninitialized tick
   error tickIsNotInitialized();
+  /// @notice Emitted if there is an attempt to insert a new tick into the list of ticks with incorrect indexes of the previous and next ticks
   error tickInvalidLinks();
 
   // ####  SafeTransfer errors  ####
+
+  /// @notice Emitted if token transfer failed internally
   error transferFailed();
 
   // ####  TickMath errors  ####
+
+  /// @notice Emitted if tick is greater than the maximum or less than the minimum allowed value
   error tickOutOfRange();
+  /// @notice Emitted if price is greater than the maximum or less than the minimum allowed value
   error priceOutOfRange();
 }
