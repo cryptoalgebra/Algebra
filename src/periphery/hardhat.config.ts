@@ -57,8 +57,8 @@ task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
 
   const poolErrors = poolArtifact.abi.filter((x) => x.type == 'error');
 
-  routerArtifact.abi.push(poolErrors);
-  positionManagerArtifact.abi.push(poolErrors);
+  routerArtifact.abi = routerArtifact.abi.concat(poolErrors);
+  positionManagerArtifact.abi = positionManagerArtifact.abi.concat(poolErrors);
 
   await hre.artifacts.saveArtifactAndDebugFile(routerArtifact);
   await hre.artifacts.saveArtifactAndDebugFile(positionManagerArtifact);
