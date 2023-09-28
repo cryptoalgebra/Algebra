@@ -140,3 +140,38 @@ export function withModifiers({ item }: DocItemContext): string | undefined {
     return undefined;
   }
 }
+
+const contractsNames = {};
+
+export function linearizedBaseContractsNames({ item, build }: DocItemContext): { name: string }[] | undefined {
+  if (!item || !item['linearizedBaseContracts']) return undefined;
+
+  const contractsIds = item['linearizedBaseContracts'];
+  if (contractsIds.length <= 1) return undefined;
+
+  const sources = build.output.sources;
+  const names: { name: string }[] = [];
+  for (let i = 1; i < item['linearizedBaseContracts'].length; i++) {
+    if (!contractsNames[item['linearizedBaseContracts'][i]]) {
+      for (const source of Object.keys(sources)) {
+        const contracts = [...findAll('ContractDefinition', sources[source].ast)];
+        for (const contract of contracts) {
+          contractsNames[contract.id] = contract.name;
+        }
+      }
+    }
+
+    names.push({ name: contractsNames[item['linearizedBaseContracts'][i]] });
+  }
+  return names;
+}
+
+export function baseContractsNames({ item, build }: DocItemContext): { name: string }[] | undefined {
+  if (!item || !item['baseContracts'] || item['baseContracts'].length == 0) return undefined;
+
+  const names: { name: string }[] = [];
+  for (let i = 0; i < item['baseContracts'].length; i++) {
+    names.push({ name: item['baseContracts'][i].baseName.name });
+  }
+  return names;
+}

@@ -7,6 +7,7 @@ Algebra default plugin
 
 This contract stores timepoints and calculates adaptive fee and statistical averages
 
+**Inherits:** IAlgebraBasePluginV1 Timestamp IAlgebraPlugin
 ## Modifiers
 ### onlyPool
 

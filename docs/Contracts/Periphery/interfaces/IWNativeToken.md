@@ -7,6 +7,7 @@ Interface for WNativeToken
 
 
 
+**Inherits:** IERC20
 
 ## Functions
 ### deposit

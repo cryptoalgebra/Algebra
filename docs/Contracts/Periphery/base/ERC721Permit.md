@@ -7,6 +7,7 @@ ERC721 with permit
 
 Nonfungible tokens that support an approve via signature, i.e. permit
 
+**Inherits:** BlockTimestamp ERC721Enumerable IERC721Permit
 
 ## Public variables
 ### PERMIT_TYPEHASH

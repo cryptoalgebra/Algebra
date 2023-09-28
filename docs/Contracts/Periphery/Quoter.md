@@ -12,6 +12,7 @@ the swap and check the amounts in the callback.
 Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
+**Inherits:** IQuoter IAlgebraSwapCallback PeripheryImmutableState
 
 ## Functions
 ### constructor

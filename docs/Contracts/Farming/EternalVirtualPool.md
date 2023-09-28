@@ -7,6 +7,7 @@ Algebra eternal virtual pool
 
 used to track active liquidity in farming and distribute rewards
 
+**Inherits:** Timestamp VirtualTickStructure
 ## Modifiers
 ### onlyFromFarming
 

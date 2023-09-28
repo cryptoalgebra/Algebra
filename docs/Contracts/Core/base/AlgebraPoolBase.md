@@ -9,6 +9,7 @@ Contains state variables, immutables and common internal functions
 
 *Developer note: Decoupling into a separate abstract contract simplifies testing*
 
+**Inherits:** IAlgebraPool Timestamp
 ## Modifiers
 ### onlyValidTicks
 
@@ -49,7 +50,7 @@ struct GlobalState {
 | lastFee | The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin |
 | pluginConfig | The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic |
 | communityFee | The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%) |
-| unlocked | // Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
+| unlocked | Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false |
 
 
 ## Public variables

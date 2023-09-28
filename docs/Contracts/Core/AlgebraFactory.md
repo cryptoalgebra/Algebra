@@ -9,6 +9,7 @@ Is used to deploy pools and its plugins
 
 *Developer note: Version: Algebra Integral*
 
+**Inherits:** IAlgebraFactory Ownable2Step AccessControlEnumerable
 
 ## Public variables
 ### POOLS_ADMINISTRATOR_ROLE

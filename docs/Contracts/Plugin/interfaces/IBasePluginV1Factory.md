@@ -7,6 +7,7 @@ The interface for the BasePluginV1Factory
 
 This contract creates Algebra default plugins for Algebra liquidity pools
 
+**Inherits:** IAlgebraPluginFactory
 
 ## Events
 ### DefaultFeeConfiguration

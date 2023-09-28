@@ -10,6 +10,7 @@ Enables migration of liquidity from Uniswap v2-compatible pairs into Algebra poo
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
+**Inherits:** IMulticall ISelfPermit IPoolInitializer
 
 ## Structs
 ### MigrateParams

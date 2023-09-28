@@ -9,6 +9,7 @@ Contains the logic of recalculation and change of liquidity positions
 
 *Developer note: Relies on method _addOrRemoveTicks, which is implemented in TickStructure*
 
+**Inherits:** AlgebraPoolBase
 
 ## Structs
 ### Position

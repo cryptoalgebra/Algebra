@@ -14,6 +14,9 @@
 *Developer note: {{natspec.dev}}*
 
 {{/if}}
+{{#if baseContractsNames}}
+**Inherits:**{{#each baseContractsNames}} {{name}}{{/each}}
+{{/if}}
 {{#if modifiers}}
 ## Modifiers
 {{#hsection}}
