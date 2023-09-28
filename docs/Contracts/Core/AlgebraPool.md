@@ -68,7 +68,7 @@ function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) exter
 Burn liquidity from the sender and account tokens owed for the liquidity to the position
 
 *Developer note: Can be used to trigger a recalculation of fees owed to a position by calling with an amount of 0
-Fees must be collected separately via a call to #collect*
+Fees must be collected separately via a call to [#collect](#collect)*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

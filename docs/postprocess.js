@@ -80,6 +80,17 @@ function updateLinks(currentPath, directory) {
       }
       fs.writeFileSync(path.resolve(currentDirectory, file.name), content);
     }
+
+    if (content.match(/[\,\s\.\'\"\`\*\r\n]\#[a-z][\w\d]+[\,\s\.\'\"\`\*\r\n]/)) {
+      const results = content.match(/[\,\s\.\'\"\`\*\r\n]\#[a-z][\w\d]+[\,\s\.\'\"\`\*\r\n]/g).map((x) => x);
+      for (const result of results) {
+        const functionName = result.substring(1, result.length - 1).replace('#', '');
+        if (content.includes(`### ${functionName}`)) {
+          content = content.replaceAll(result, result[0] + `[#${functionName}](#${functionName})` + result[result.length - 1]);
+        }
+      }
+      fs.writeFileSync(path.resolve(currentDirectory, file.name), content);
+    }
   }
 }
 

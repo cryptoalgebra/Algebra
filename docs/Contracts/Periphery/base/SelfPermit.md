@@ -43,7 +43,7 @@ function selfPermitIfNecessary(address token, uint256 value, uint256 deadline, u
 Permits this contract to spend a given token from &#x60;msg.sender&#x60;
 
 *Developer note: The &#x60;owner&#x60; is always msg.sender and the &#x60;spender&#x60; is always address(this).
-Can be used instead of #selfPermit to prevent calls from failing due to a frontrun of a call to #selfPermit*
+Can be used instead of [#selfPermit](#selfPermit) to prevent calls from failing due to a frontrun of a call to [#selfPermit](#selfPermit)*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -84,7 +84,7 @@ function selfPermitAllowedIfNecessary(address token, uint256 nonce, uint256 expi
 Permits this contract to spend the sender&#x27;s tokens for permit signatures that have the &#x60;allowed&#x60; parameter
 
 *Developer note: The &#x60;owner&#x60; is always msg.sender and the &#x60;spender&#x60; is always address(this)
-Can be used instead of #selfPermitAllowed to prevent calls from failing due to a frontrun of a call to #selfPermitAllowed.*
+Can be used instead of [#selfPermitAllowed](#selfPermitAllowed) to prevent calls from failing due to a frontrun of a call to [#selfPermitAllowed](#selfPermitAllowed).*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
