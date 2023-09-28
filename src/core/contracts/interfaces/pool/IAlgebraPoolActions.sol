@@ -12,7 +12,7 @@ interface IAlgebraPoolActions {
   function initialize(uint160 initialPrice) external;
 
   /// @notice Adds liquidity for the given recipient/bottomTick/topTick position
-  /// @dev The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
+  /// @dev The caller of this method receives a callback in the form of IAlgebraMintCallback#algebraMintCallback
   /// in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
   /// on bottomTick, topTick, the amount of liquidity, and the current price.
   /// @param leftoversRecipient The address which will receive potential surplus of paid tokens
@@ -65,7 +65,7 @@ interface IAlgebraPoolActions {
   function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes calldata data) external returns (uint256 amount0, uint256 amount1);
 
   /// @notice Swap token0 for token1, or token1 for token0
-  /// @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
+  /// @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#algebraSwapCallback
   /// @param recipient The address to receive the output of the swap
   /// @param zeroToOne The direction of the swap, true for token0 to token1, false for token1 to token0
   /// @param amountRequired The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
@@ -83,7 +83,7 @@ interface IAlgebraPoolActions {
   ) external returns (int256 amount0, int256 amount1);
 
   /// @notice Swap token0 for token1, or token1 for token0 with prepayment
-  /// @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
+  /// @dev The caller of this method receives a callback in the form of IAlgebraSwapCallback#algebraSwapCallback
   /// caller must send tokens in callback before swap calculation
   /// the actually sent amount of tokens is used for further calculations
   /// @param leftoversRecipient The address which will receive potential surplus of paid tokens
@@ -105,7 +105,7 @@ interface IAlgebraPoolActions {
   ) external returns (int256 amount0, int256 amount1);
 
   /// @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
-  /// @dev The caller of this method receives a callback in the form of IAlgebraFlashCallback#AlgebraFlashCallback
+  /// @dev The caller of this method receives a callback in the form of IAlgebraFlashCallback#algebraFlashCallback
   /// @dev All excess tokens paid in the callback are distributed to currently in-range liquidity providers as an additional fee.
   /// If there are no in-range liquidity providers, the fee will be transferred to the first active provider in the future
   /// @param recipient The address which will receive the token0 and token1 amounts

@@ -36,7 +36,7 @@ function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes pat
 ```
 **Selector**: `0x2c8958f6`
 
-Called to &#x60;msg.sender&#x60; after executing a swap via IAlgebraPool#swap.
+Called to &#x60;msg.sender&#x60; after executing a swap via [IAlgebraPool#swap](../../Core/interfaces/IAlgebraPool.md#swap).
 
 *Developer note: In the implementation you must pay the pool tokens owed for the swap.
 The caller of this method _must_ be checked to be a AlgebraPool deployed by the canonical AlgebraFactory.
