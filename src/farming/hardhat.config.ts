@@ -39,10 +39,8 @@ const config: HardhatUserConfig = {
   },
   docgen: {
     outputDir: '../../docs/Contracts/Farming',
-    pages: (x: any) => {
-      if (x.name.toString().match(/^I[A-Z]/)) return `interfaces/${x.name.toString()}.md`;
-      if (x.abstract) return `base/${x.name.toString()}.md`;
-      return x.name.toString() + '.md';
+    pages: (x: any, buildInfo: any) => {
+      return `${buildInfo.relativePath}`.replace('.sol', '.md');
     },
     templates: '../../docs/doc_templates/public',
     collapseNewlines: true,

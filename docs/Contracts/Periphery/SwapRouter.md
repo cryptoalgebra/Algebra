@@ -10,7 +10,7 @@ Router for stateless execution of swaps against Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** ISwapRouter PeripheryImmutableState PeripheryValidation PeripheryPaymentsWithFee Multicall SelfPermit
+**Inherits:** [ISwapRouter](interfaces/ISwapRouter.md) [PeripheryImmutableState](base/PeripheryImmutableState.md) PeripheryValidation [PeripheryPaymentsWithFee](base/PeripheryPaymentsWithFee.md) [Multicall](base/Multicall.md) [SelfPermit](base/SelfPermit.md)
 
 ## Structs
 ### SwapCallbackData
@@ -47,7 +47,7 @@ function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes _da
 ```
 **Selector**: `0x2c8958f6`
 
-Called to &#x60;msg.sender&#x60; after executing a swap via IAlgebraPool#swap.
+Called to &#x60;msg.sender&#x60; after executing a swap via [IAlgebraPool#swap](../Core/interfaces/IAlgebraPool.md#swap).
 
 *Developer note: In the implementation you must pay the pool tokens owed for the swap.
 The caller of this method _must_ be checked to be a AlgebraPool deployed by the canonical AlgebraFactory.

@@ -9,7 +9,7 @@ Is used to deploy pools and its plugins
 
 *Developer note: Version: Algebra Integral*
 
-**Inherits:** IAlgebraFactory Ownable2Step AccessControlEnumerable
+**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/)
 
 ## Public variables
 ### POOLS_ADMINISTRATOR_ROLE

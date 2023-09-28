@@ -7,7 +7,7 @@ Multicall
 
 Enables calling multiple methods in a single call to the contract
 
-**Inherits:** IMulticall
+**Inherits:** [IMulticall](../interfaces/IMulticall.md)
 
 ## Functions
 ### multicall

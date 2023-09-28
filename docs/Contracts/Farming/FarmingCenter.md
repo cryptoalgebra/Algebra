@@ -9,7 +9,7 @@ Algebra main farming contract
 
 *Developer note: Manages farmings and performs entry, exit and other actions.*
 
-**Inherits:** IFarmingCenter IPositionFollower Multicall
+**Inherits:** [IFarmingCenter](interfaces/IFarmingCenter.md) [IPositionFollower](../Periphery/interfaces/IPositionFollower.md) [Multicall](../Periphery/base/Multicall.md)
 ## Modifiers
 ### isApprovedOrOwner
 

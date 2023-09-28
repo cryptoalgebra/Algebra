@@ -7,7 +7,7 @@ Algebra eternal (v2-like) farming
 
 Manages rewards and virtual pools
 
-**Inherits:** IAlgebraEternalFarming
+**Inherits:** [IAlgebraEternalFarming](../interfaces/IAlgebraEternalFarming.md)
 ## Modifiers
 ### onlyIncentiveMaker
 

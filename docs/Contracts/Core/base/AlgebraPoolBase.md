@@ -9,7 +9,7 @@ Contains state variables, immutables and common internal functions
 
 *Developer note: Decoupling into a separate abstract contract simplifies testing*
 
-**Inherits:** IAlgebraPool Timestamp
+**Inherits:** [IAlgebraPool](../interfaces/IAlgebraPool.md) Timestamp
 ## Modifiers
 ### onlyValidTicks
 

@@ -9,7 +9,7 @@ Encapsulates the logic of interaction with the data structure with ticks
 
 *Developer note: Ticks are stored as a doubly linked list. A three-level bitmap tree is used to search through the list*
 
-**Inherits:** AlgebraPoolBase
+**Inherits:** [AlgebraPoolBase](AlgebraPoolBase.md)
 
 ## Public variables
 ### tickTreeRoot

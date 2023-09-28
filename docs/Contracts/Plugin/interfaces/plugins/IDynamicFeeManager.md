@@ -9,7 +9,7 @@ The interface for the Algebra dynamic fee manager
 
 *Developer note: This contract calculates adaptive fee*
 
-**Inherits:** IAlgebraDynamicFeePlugin
+**Inherits:** [IAlgebraDynamicFeePlugin](../../../Core/interfaces/plugin/IAlgebraDynamicFeePlugin.md)
 
 ## Events
 ### FeeConfiguration

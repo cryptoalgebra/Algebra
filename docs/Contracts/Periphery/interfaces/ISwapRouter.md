@@ -10,7 +10,7 @@ Functions for swapping tokens via Algebra
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** IAlgebraSwapCallback
+**Inherits:** [IAlgebraSwapCallback](../../Core/interfaces/callback/IAlgebraSwapCallback.md)
 
 ## Structs
 ### ExactInputSingleParams

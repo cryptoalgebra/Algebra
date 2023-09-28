@@ -10,7 +10,7 @@ Algebra Migrator
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
-**Inherits:** IV3Migrator PeripheryImmutableState PoolInitializer Multicall SelfPermit
+**Inherits:** [IV3Migrator](interfaces/IV3Migrator.md) [PeripheryImmutableState](base/PeripheryImmutableState.md) [PoolInitializer](base/PoolInitializer.md) [Multicall](base/Multicall.md) [SelfPermit](base/SelfPermit.md)
 
 ## Public variables
 ### nonfungiblePositionManager

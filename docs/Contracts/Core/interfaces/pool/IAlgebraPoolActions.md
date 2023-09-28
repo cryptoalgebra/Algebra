@@ -37,7 +37,7 @@ function mint(address leftoversRecipient, address recipient, int24 bottomTick, i
 
 Adds liquidity for the given recipient/bottomTick/topTick position
 
-*Developer note: The caller of this method receives a callback in the form of IAlgebraMintCallback# AlgebraMintCallback
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraMintCallback#algebraMintCallback](../callback/IAlgebraMintCallback.md#algebraMintCallback)
 in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
 on bottomTick, topTick, the amount of liquidity, and the current price.*
 
@@ -97,7 +97,7 @@ function burn(int24 bottomTick, int24 topTick, uint128 amount, bytes data) exter
 Burn liquidity from the sender and account tokens owed for the liquidity to the position
 
 *Developer note: Can be used to trigger a recalculation of fees owed to a position by calling with an amount of 0
-Fees must be collected separately via a call to #collect*
+Fees must be collected separately via a call to [#collect](#collect)*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -122,7 +122,7 @@ function swap(address recipient, bool zeroToOne, int256 amountRequired, uint160 
 
 Swap token0 for token1, or token1 for token0
 
-*Developer note: The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback*
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](../callback/IAlgebraSwapCallback.md#algebraSwapCallback)*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -130,7 +130,7 @@ Swap token0 for token1, or token1 for token0
 | zeroToOne | bool | The direction of the swap, true for token0 to token1, false for token1 to token0 |
 | amountRequired | int256 | The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative) |
 | limitSqrtPrice | uint160 | The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this value after the swap. If one for zero, the price cannot be greater than this value after the swap |
-| data | bytes | Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData |
+| data | bytes | Any data to be passed through to the callback. If using the Router it should contain [SwapRouter#SwapCallbackData](../../../Periphery/SwapRouter.md#SwapCallbackData) |
 
 **Returns:**
 
@@ -148,7 +148,7 @@ function swapWithPaymentInAdvance(address leftoversRecipient, address recipient,
 
 Swap token0 for token1, or token1 for token0 with prepayment
 
-*Developer note: The caller of this method receives a callback in the form of IAlgebraSwapCallback#AlgebraSwapCallback
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraSwapCallback#algebraSwapCallback](../callback/IAlgebraSwapCallback.md#algebraSwapCallback)
 caller must send tokens in callback before swap calculation
 the actually sent amount of tokens is used for further calculations*
 
@@ -159,7 +159,7 @@ the actually sent amount of tokens is used for further calculations*
 | zeroToOne | bool | The direction of the swap, true for token0 to token1, false for token1 to token0 |
 | amountToSell | int256 | The amount of the swap, only positive (exact input) amount allowed |
 | limitSqrtPrice | uint160 | The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this value after the swap. If one for zero, the price cannot be greater than this value after the swap |
-| data | bytes | Any data to be passed through to the callback. If using the Router it should contain SwapRouter#SwapCallbackData |
+| data | bytes | Any data to be passed through to the callback. If using the Router it should contain [SwapRouter#SwapCallbackData](../../../Periphery/SwapRouter.md#SwapCallbackData) |
 
 **Returns:**
 
@@ -177,7 +177,7 @@ function flash(address recipient, uint256 amount0, uint256 amount1, bytes data) 
 
 Receive token0 and/or token1 and pay it back, plus a fee, in the callback
 
-*Developer note: The caller of this method receives a callback in the form of IAlgebraFlashCallback#AlgebraFlashCallback
+*Developer note: The caller of this method receives a callback in the form of [IAlgebraFlashCallback#algebraFlashCallback](../callback/IAlgebraFlashCallback.md#algebraFlashCallback)
 All excess tokens paid in the callback are distributed to currently in-range liquidity providers as an additional fee.
 If there are no in-range liquidity providers, the fee will be transferred to the first active provider in the future*
 

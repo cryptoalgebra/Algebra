@@ -9,7 +9,7 @@ Is used by AlgebraFactory to deploy pools
 
 *Developer note: Version: Algebra Integral*
 
-**Inherits:** IAlgebraPoolDeployer
+**Inherits:** [IAlgebraPoolDeployer](interfaces/IAlgebraPoolDeployer.md)
 
 ## Functions
 ### constructor

@@ -1,5 +1,15 @@
 
 
+# IAlgebraPoolErrors
+
+
+Errors emitted by a pool
+
+Contains custom errors emitted by the pool
+
+*Developer note: Custom errors are separated from the common pool interface for compatibility with older versions of Solidity*
+
+
 ## Errors
 ## locked
 
@@ -89,7 +99,7 @@ error flashInsufficientPaid0()
 ```
 **Selector**: `0x6dbca1fe`
 
-Emitted if the pool received fewer tokens{0,1} after flash than it should have
+Emitted if the pool received fewer tokens0 after flash than it should have
 
 ## flashInsufficientPaid1
 
@@ -98,7 +108,7 @@ error flashInsufficientPaid1()
 ```
 **Selector**: `0xc998149f`
 
-
+Emitted if the pool received fewer tokens1 after flash than it should have
 
 ## invalidLimitSqrtPrice
 
@@ -127,15 +137,6 @@ error notAllowed()
 
 Emitted if a method is called that is accessible only to the factory owner or dedicated role
 
-## onlyFarming
-
-```solidity
-error onlyFarming()
-```
-**Selector**: `0xae74b178`
-
-Emitted if a method is called that is accessible only to the farming
-
 ## invalidNewTickSpacing
 
 ```solidity
@@ -143,7 +144,7 @@ error invalidNewTickSpacing()
 ```
 **Selector**: `0xafe09f44`
 
-
+Emitted if new tick spacing exceeds max allowed value
 
 ## invalidNewCommunityFee
 
@@ -152,7 +153,7 @@ error invalidNewCommunityFee()
 ```
 **Selector**: `0xa709b9af`
 
-
+Emitted if new community fee exceeds max allowed value
 
 ## dynamicFeeActive
 
@@ -161,7 +162,7 @@ error dynamicFeeActive()
 ```
 **Selector**: `0xd39b8e0e`
 
-
+Emitted if an attempt is made to manually change the fee value, but dynamic fee is enabled
 
 ## dynamicFeeDisabled
 
@@ -170,7 +171,7 @@ error dynamicFeeDisabled()
 ```
 **Selector**: `0x3a4528ef`
 
-
+Emitted if an attempt is made by plugin to change the fee value, but dynamic fee is disabled
 
 ## pluginIsNotConnected
 
@@ -179,20 +180,20 @@ error pluginIsNotConnected()
 ```
 **Selector**: `0x9e727ce3`
 
-
+Emitted if an attempt is made to change the plugin configuration, but the plugin is not connected
 
 ## invalidHookResponse
 
 ```solidity
-error invalidHookResponse(bytes4 selector)
+error invalidHookResponse(bytes4 expectedSelector)
 ```
 **Selector**: `0xd3f5153b`
 
-
+Emitted if a plugin returns invalid selector after hook call
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| selector | bytes4 |  |
+| expectedSelector | bytes4 | The expected selector |
 
 ## liquiditySub
 
@@ -219,7 +220,7 @@ error topTickLowerOrEqBottomTick()
 ```
 **Selector**: `0xd9a841a7`
 
-
+Emitted if the topTick param not greater then the bottomTick param
 
 ## bottomTickLowerThanMIN
 
@@ -228,7 +229,7 @@ error bottomTickLowerThanMIN()
 ```
 **Selector**: `0x746b1fc4`
 
-
+Emitted if the bottomTick param is lower than min allowed value
 
 ## topTickAboveMAX
 
@@ -237,7 +238,7 @@ error topTickAboveMAX()
 ```
 **Selector**: `0x1445443d`
 
-
+Emitted if the topTick param is greater than max allowed value
 
 ## liquidityOverflow
 
@@ -246,7 +247,7 @@ error liquidityOverflow()
 ```
 **Selector**: `0x25b8364a`
 
-
+Emitted if the liquidity value associated with the tick exceeds MAX_LIQUIDITY_PER_TICK
 
 ## tickIsNotInitialized
 
@@ -255,7 +256,7 @@ error tickIsNotInitialized()
 ```
 **Selector**: `0x0d6e0949`
 
-
+Emitted if an attempt is made to interact with an uninitialized tick
 
 ## tickInvalidLinks
 
@@ -264,7 +265,7 @@ error tickInvalidLinks()
 ```
 **Selector**: `0xe45ac17d`
 
-
+Emitted if there is an attempt to insert a new tick into the list of ticks with incorrect indexes of the previous and next ticks
 
 ## transferFailed
 
@@ -273,7 +274,7 @@ error transferFailed()
 ```
 **Selector**: `0xe465903e`
 
-
+Emitted if token transfer failed internally
 
 ## tickOutOfRange
 
@@ -282,7 +283,7 @@ error tickOutOfRange()
 ```
 **Selector**: `0x3c10250f`
 
-
+Emitted if tick is greater than the maximum or less than the minimum allowed value
 
 ## priceOutOfRange
 
@@ -291,5 +292,5 @@ error priceOutOfRange()
 ```
 **Selector**: `0x55cf1e23`
 
-
+Emitted if price is greater than the maximum or less than the minimum allowed value
 
