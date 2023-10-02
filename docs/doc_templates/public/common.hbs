@@ -12,6 +12,9 @@
 {{#else}}
 {{stateMutabilityFiltered}} {{visibility}}
 {{/else}}
+{{#if selector}}
+**Selector**: `0x{{selector}}`
+{{/if}}
 {{#with natspec}}
 
 {{notice}}

@@ -9,6 +9,7 @@ Contains the logic of recalculation and change of liquidity positions
 
 *Developer note: Relies on method _addOrRemoveTicks, which is implemented in TickStructure*
 
+**Inherits:** [AlgebraPoolBase](AlgebraPoolBase.md)
 
 ## Structs
 ### Position
@@ -26,8 +27,12 @@ struct Position {
 ```
 
 
-## Variables
-### mapping(bytes32 &#x3D;&gt; struct Positions.Position) positions 
+## Public variables
+### positions
+```solidity
+mapping(bytes32 => struct Positions.Position) positions
+```
+**Selector**: `0x514ea4bf`
 
 Returns the information about a position by the position&#x27;s key
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
-import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
 
 import '../../libraries/EpochLibrary.sol';
 

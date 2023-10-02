@@ -6,7 +6,7 @@ import { expect } from './shared/expect';
 import { TestERC20, TestCallbackValidation } from '../typechain';
 
 describe('CallbackValidation', () => {
-  let nonpairAddr: Wallet, wallets: Wallet[];
+  let nonpairAddr: Wallet;
 
   let callbackValidationFixture: () => Promise<{
     callbackValidation: TestCallbackValidation;
@@ -19,21 +19,21 @@ describe('CallbackValidation', () => {
   let factory: Contract;
 
   before('create fixture loader', async () => {
-    [nonpairAddr, ...wallets] = await (ethers as any).getSigners();
+    [nonpairAddr] = await (ethers as any).getSigners();
     callbackValidationFixture = async () => {
-      const { factory } = await loadFixture(completeFixture);
+      const { factory: _factory } = await loadFixture(completeFixture);
       const tokenFactory = await ethers.getContractFactory('TestERC20');
       const callbackValidationFactory = await ethers.getContractFactory('TestCallbackValidation');
-      const tokens: [TestERC20, TestERC20] = [
+      const _tokens: [TestERC20, TestERC20] = [
         (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20, // do not use maxu256 to avoid overflowing
         (await tokenFactory.deploy(MaxUint256 / 2n)) as any as TestERC20,
       ];
-      const callbackValidation = (await callbackValidationFactory.deploy()) as any as TestCallbackValidation;
+      const _callbackValidation = (await callbackValidationFactory.deploy()) as any as TestCallbackValidation;
 
       return {
-        tokens,
-        callbackValidation,
-        factory,
+        tokens: _tokens,
+        callbackValidation: _callbackValidation,
+        factory: _factory,
       };
     };
   });
@@ -47,6 +47,6 @@ describe('CallbackValidation', () => {
       callbackValidation
         .connect(nonpairAddr)
         .verifyCallback(await factory.poolDeployer(), await tokens[0].getAddress(), await tokens[1].getAddress())
-    ).to.be.reverted;
+    ).to.be.revertedWith('Invalid caller of callback');
   });
 });

@@ -10,6 +10,7 @@ Produces a string containing the data URI for a JSON metadata string
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
+**Inherits:** [INonfungibleTokenPositionDescriptor](interfaces/INonfungibleTokenPositionDescriptor.md)
 
 ## Structs
 ### TokenRatioSortData
@@ -24,13 +25,21 @@ struct TokenRatioSortData {
 ```
 
 
-## Variables
-### address WNativeToken immutable
+## Public variables
+### WNativeToken
+```solidity
+address immutable WNativeToken
+```
+**Selector**: `0x8af3ac85`
 
 
 
 
-### address cachedThis immutable
+### cachedThis
+```solidity
+address immutable cachedThis
+```
+**Selector**: `0x8ba7888d`
 
 
 
@@ -56,6 +65,7 @@ constructor(address _WNativeToken, string _nativeCurrencySymbol_, struct Nonfung
 ```solidity
 function tokenRatioPriority(address token) public view returns (int256)
 ```
+**Selector**: `0x7d4a8689`
 
 
 
@@ -74,6 +84,7 @@ function tokenRatioPriority(address token) public view returns (int256)
 ```solidity
 function nativeCurrencySymbol() public view returns (string)
 ```
+**Selector**: `0xe1e06b9f`
 
 
 
@@ -88,6 +99,7 @@ function nativeCurrencySymbol() public view returns (string)
 ```solidity
 function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
 ```
+**Selector**: `0xe9dc6375`
 
 Produces the URI describing a particular token ID for a position manager
 
@@ -109,6 +121,7 @@ Produces the URI describing a particular token ID for a position manager
 ```solidity
 function flipRatio(address token0, address token1) public view returns (bool)
 ```
+**Selector**: `0xdee91a2c`
 
 
 

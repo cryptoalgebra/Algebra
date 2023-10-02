@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';

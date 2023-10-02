@@ -1,21 +1,21 @@
 import { ethers } from 'hardhat';
-import { abi as FACTORY_ABI, bytecode as FACTORY_BYTECODE } from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
+import { abi as FACTORY_ABI, bytecode as FACTORY_BYTECODE } from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
 import {
   abi as TEST_CALLEE_ABI,
   bytecode as TEST_CALLEE_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/test/TestAlgebraCallee.sol/TestAlgebraCallee.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/test/TestAlgebraCallee.sol/TestAlgebraCallee.json';
 import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json';
 import {
   abi as POOL_ABI,
   bytecode as POOL_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
 import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory, LimitOrderPlugin } from '../../typechain';
 import {tokensFixture} from './externalFixtures';
 import { getCreateAddress } from 'ethers';
-import {AlgebraPool, AlgebraFactory, TestAlgebraCallee, AlgebraPoolDeployer, TestERC20 } from '@cryptoalgebra/core/typechain';
+import {AlgebraPool, AlgebraFactory, TestAlgebraCallee, AlgebraPoolDeployer, TestERC20 } from '@cryptoalgebra/integral-core/typechain';
 
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {

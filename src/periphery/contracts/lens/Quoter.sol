@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
 import '../interfaces/IQuoter.sol';
 import '../base/PeripheryImmutableState.sol';
@@ -39,7 +39,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
 
     /// @inheritdoc IAlgebraSwapCallback
     function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+        require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
 
@@ -59,7 +59,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
             }
         } else {
             // if the cache has been populated, ensure that the full output amount has been received
-            if (amountOutCached != 0) require(amountReceived == amountOutCached);
+            if (amountOutCached != 0) require(amountReceived == amountOutCached, 'Not received full amountOut');
             assembly {
                 let ptr := mload(0x40)
                 mstore(ptr, amountToPay)

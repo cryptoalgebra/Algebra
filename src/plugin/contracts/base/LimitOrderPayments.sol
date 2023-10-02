@@ -3,8 +3,8 @@ pragma solidity =0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import '@cryptoalgebra/periphery/contracts/interfaces/external/IWNativeToken.sol';
-import '@cryptoalgebra/periphery/contracts/libraries/PoolAddress.sol';
+import '@cryptoalgebra/integral-periphery/contracts/interfaces/external/IWNativeToken.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
 
 import '../libraries/TransferHelper.sol';
 

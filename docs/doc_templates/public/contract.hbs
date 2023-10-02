@@ -14,6 +14,9 @@
 *Developer note: {{natspec.dev}}*
 
 {{/if}}
+{{#if baseContractsLinks}}
+**Inherits:**{{#each baseContractsLinks}} {{link}}{{/each}}
+{{/if}}
 {{#if modifiers}}
 ## Modifiers
 {{#hsection}}
@@ -45,7 +48,7 @@
 {{/if}}
 {{#if publicVariables}}
 
-## Variables
+## Public variables
 {{#hsection}}
 {{#each publicVariables}}
 {{>item}}

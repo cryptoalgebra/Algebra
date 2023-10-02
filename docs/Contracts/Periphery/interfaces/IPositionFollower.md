@@ -14,6 +14,7 @@ Using these methods farmingCenter receives information about changes in the posi
 ```solidity
 function applyLiquidityDelta(uint256 tokenId, int256 liquidityDelta) external
 ```
+**Selector**: `0x06e65c90`
 
 Report a change of liquidity in position
 

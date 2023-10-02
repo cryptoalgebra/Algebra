@@ -1,7 +1,7 @@
 #format can be "text" or "json" for different output (human or machine readable)
 format: 'text'
 #checkAsserts checks assertions
-testMode: "assertion"
+testMode: 'assertion'
 #coverage controls coverage guided testing
 coverage: false
 # #psender is the sender for property transactions; by default intentionally
@@ -36,7 +36,7 @@ coverage: false
 # #balanceContract overrides balanceAddr for the contract address
 # balanceContract: 0
 # #solcArgs allows special args to solc
-# solcArgs: "--allow-paths node_modules/@cryptoalgebra/core/contracts/libraries/Constants.sol"
+# solcArgs: "--allow-paths node_modules/@cryptoalgebra/integral-core/contracts/libraries/Constants.sol"
 # #solcLibs is solc libraries
 # solcLibs: []
 cryticArgs: ['--hardhat-ignore-compile']

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/base/common/Timestamp.sol';
-import '@cryptoalgebra/core/contracts/libraries/Plugins.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
-import '@cryptoalgebra/core/contracts/interfaces/pool/IAlgebraPoolState.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/IAlgebraBasePluginV1.sol';
 import './interfaces/IBasePluginV1Factory.sol';

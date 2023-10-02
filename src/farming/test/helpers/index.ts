@@ -6,7 +6,7 @@ import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/Etern
 import { HelperTypes } from './types';
 import { ActorFixture } from '../shared/actors';
 import { mintPosition } from '../shared/fixtures';
-import { ISwapRouter } from '@cryptoalgebra/periphery/typechain';
+import { ISwapRouter } from '@cryptoalgebra/integral-periphery/typechain';
 import { ethers } from 'hardhat';
 import { ContractParams } from '../../types/contractParams';
 import { TestContext } from '../types';

@@ -1,0 +1,11 @@
+#format can be "text" or "json" for different output (human or machine readable)
+format: 'text'
+#checkAsserts checks assertions
+testMode: 'assertion'
+#coverage controls coverage guided testing
+coverage: false
+# #solcArgs allows special args to solc
+# solcArgs: "--allow-paths node_modules/@cryptoalgebra/core/contracts/libraries/Constants.sol"
+cryticArgs: ['--hardhat-ignore-compile']
+# #directory to save the corpus; by default is disabled
+# corpusDir: null

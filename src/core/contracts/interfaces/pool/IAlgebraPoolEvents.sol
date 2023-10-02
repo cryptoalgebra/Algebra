@@ -30,7 +30,6 @@ interface IAlgebraPoolEvents {
   );
 
   /// @notice Emitted when fees are collected by the owner of a position
-  /// @dev Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees
   /// @param owner The owner of the position for which fees are collected
   /// @param recipient The address that received fees
   /// @param bottomTick The lower tick of the position

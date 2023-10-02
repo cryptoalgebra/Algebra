@@ -1,19 +1,28 @@
-import { abi as FACTORY_ABI, bytecode as FACTORY_BYTECODE } from '@cryptoalgebra/core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
+import {
+  abi as FACTORY_ABI,
+  bytecode as FACTORY_BYTECODE,
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json';
 import {
   abi as TEST_CALLEE_ABI,
   bytecode as TEST_CALLEE_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/test/TestAlgebraCallee.sol/TestAlgebraCallee.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/test/TestAlgebraCallee.sol/TestAlgebraCallee.json';
 import {
   abi as POOL_DEPLOYER_ABI,
   bytecode as POOL_DEPLOYER_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/test/MockTimeAlgebraPoolDeployer.sol/MockTimeAlgebraPoolDeployer.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/test/MockTimeAlgebraPoolDeployer.sol/MockTimeAlgebraPoolDeployer.json';
 import {
   abi as POOL_ABI,
   bytecode as POOL_BYTECODE,
-} from '@cryptoalgebra/core/artifacts/contracts/test/MockTimeAlgebraPool.sol/MockTimeAlgebraPool.json';
+} from '@cryptoalgebra/integral-core/artifacts/contracts/test/MockTimeAlgebraPool.sol/MockTimeAlgebraPool.json';
 
 import { ethers } from 'hardhat';
-import { MockTimeAlgebraPoolDeployer, TestAlgebraCallee, MockTimeAlgebraPool, AlgebraFactory, TestERC20 } from '@cryptoalgebra/core/typechain';
+import {
+  MockTimeAlgebraPoolDeployer,
+  TestAlgebraCallee,
+  MockTimeAlgebraPool,
+  AlgebraFactory,
+  TestERC20,
+} from '@cryptoalgebra/integral-core/typechain';
 import { getCreateAddress } from 'ethers';
 import { ZERO_ADDRESS } from './fixtures';
 

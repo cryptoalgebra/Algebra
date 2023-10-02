@@ -33,15 +33,15 @@ describe('SwapRouter', function () {
   const liquidity = 1000000;
 
   async function createPool(
-    nft: MockTimeNonfungiblePositionManager,
-    wallet: Wallet,
+    _nft: MockTimeNonfungiblePositionManager,
+    _wallet: Wallet,
     tokenAddressA: string,
     tokenAddressB: string
   ) {
     if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
       [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+    await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
 
     const liquidityParams = {
       token0: tokenAddressA,
@@ -49,7 +49,7 @@ describe('SwapRouter', function () {
       fee: FeeAmount.MEDIUM,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-      recipient: wallet.address,
+      recipient: _wallet.address,
       amount0Desired: 1000000,
       amount1Desired: 1000000,
       amount0Min: 0,
@@ -57,7 +57,7 @@ describe('SwapRouter', function () {
       deadline: 1,
     };
 
-    return nft.mint(liquidityParams);
+    return _nft.mint(liquidityParams);
   }
 
   const swapRouterFixture: () => Promise<{
@@ -140,16 +140,16 @@ describe('SwapRouter', function () {
 
   describe('swaps', () => {
     it('cannot swap entirely within 0-liquidity region', async () => {
-      const liquidity = (await nft.positions(1)).liquidity;
+      const _liquidity = (await nft.positions(1)).liquidity;
       await nft.decreaseLiquidity({
         tokenId: 1,
         amount0Min: 0,
         amount1Min: 0,
-        liquidity: liquidity,
+        liquidity: _liquidity,
         deadline: 2,
       });
 
-      expect(
+      await expect(
         router.exactInputSingle({
           tokenIn: tokens[0].address,
           tokenOut: tokens[1].address,
@@ -159,23 +159,23 @@ describe('SwapRouter', function () {
           amountIn: 100,
           recipient: wallet.address,
         })
-      ).to.be.revertedWithoutReason;
+      ).to.be.revertedWith('Zero liquidity swap');
     });
 
     describe('#exactInput', () => {
       async function exactInput(
-        tokens: string[],
+        _tokens: string[],
         amountIn: number = 3,
         amountOutMinimum: number = 1,
         setTime: number = 1
       ): Promise<ContractTransactionResponse> {
-        const inputIsWNativeToken = (await wnative.getAddress()) === tokens[0];
-        const outputIsWNativeToken = tokens[tokens.length - 1] === (await wnative.getAddress());
+        const inputIsWNativeToken = (await wnative.getAddress()) === _tokens[0];
+        const outputIsWNativeToken = _tokens[_tokens.length - 1] === (await wnative.getAddress());
 
         const value = inputIsWNativeToken ? amountIn : 0;
 
         const params = {
-          path: encodePath(tokens),
+          path: encodePath(_tokens),
           recipient: outputIsWNativeToken ? ZeroAddress : trader.address,
           deadline: 1,
           amountIn,
@@ -675,18 +675,18 @@ describe('SwapRouter', function () {
 
     describe('#exactOutput', () => {
       async function exactOutput(
-        tokens: string[],
+        _tokens: string[],
         amountOut: number = 1,
         amountInMaximum: number = 3,
         setTime: number = 1
       ): Promise<ContractTransactionResponse> {
-        const inputIsWNativeToken = tokens[0] === (await wnative.getAddress());
-        const outputIsWNativeToken = tokens[tokens.length - 1] === (await wnative.getAddress());
+        const inputIsWNativeToken = _tokens[0] === (await wnative.getAddress());
+        const outputIsWNativeToken = _tokens[_tokens.length - 1] === (await wnative.getAddress());
 
         const value = inputIsWNativeToken ? amountInMaximum : 0;
 
         const params = {
-          path: encodePath(tokens.slice().reverse()),
+          path: encodePath(_tokens.slice().reverse()),
           recipient: outputIsWNativeToken ? ZeroAddress : trader.address,
           deadline: 1,
           amountOut,

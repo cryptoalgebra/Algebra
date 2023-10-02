@@ -17,7 +17,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
@@ -31,7 +31,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
   version: '0.8.20',
@@ -45,9 +45,7 @@ const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
       bytecodeHash: 'none',
     },
   },
-}
-
-
+};
 
 if (process.env.RUN_COVERAGE == '1') {
   /**
@@ -55,13 +53,13 @@ if (process.env.RUN_COVERAGE == '1') {
    *
    * See https://github.com/sc-forks/solidity-coverage/issues/417#issuecomment-730526466
    */
-  console.info('Using coverage compiler settings')
+  console.info('Using coverage compiler settings');
   const details = {
     yul: true,
     yulDetails: {
       stackAllocation: true,
     },
-  }
+  };
 
   HIGHEST_OPTIMIZER_COMPILER_SETTINGS.settings.details = details;
   DEFAULT_COMPILER_SETTINGS.settings.details = details;
@@ -77,17 +75,15 @@ export default {
     compilers: [HIGHEST_OPTIMIZER_COMPILER_SETTINGS],
   },
   docgen: {
-    outputDir: '../../docs/Contracts/Plugins',
-    pages: (x: any) => {
-      if (x.name.toString().match(/^I[A-Z]/)) return `interfaces/${x.name.toString()}.md`;
-      if (x.abstract) return `base/${x.name.toString()}.md`;
-      return x.name.toString() + '.md';
+    outputDir: '../../docs/Contracts/Plugin',
+    pages: (x: any, buildInfo: any) => {
+      return `${buildInfo.relativePath}`.replace('.sol', '.md');
     },
     templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
+    collapseNewlines: true,
   },
   outputValidator: {
     runOnCompile: false,
     exclude: ['contracts/test'],
   },
-}
+};

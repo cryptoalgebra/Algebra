@@ -9,6 +9,7 @@ Encapsulates logic for tracking and changing pool reserves
 
 *Developer note: The reserve mechanism allows the pool to keep track of unexpected increases in balances*
 
+**Inherits:** [AlgebraPoolBase](AlgebraPoolBase.md)
 
 ## Functions
 ### getReserves
@@ -16,6 +17,7 @@ Encapsulates logic for tracking and changing pool reserves
 ```solidity
 function getReserves() external view returns (uint128, uint128)
 ```
+**Selector**: `0x0902f1ac`
 
 The tracked token0 and token1 reserves of pool
 

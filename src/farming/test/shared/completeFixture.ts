@@ -8,7 +8,7 @@ import {
   NonfungibleTokenPositionDescriptor,
   TestERC20,
   IAlgebraFactory,
-} from '@cryptoalgebra/periphery/typechain';
+} from '@cryptoalgebra/integral-periphery/typechain';
 
 type Fixture<T> = () => Promise<T>;
 

@@ -10,9 +10,14 @@ Algebra Migrator
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
+**Inherits:** [IV3Migrator](interfaces/IV3Migrator.md) [PeripheryImmutableState](base/PeripheryImmutableState.md) [PoolInitializer](base/PoolInitializer.md) [Multicall](base/Multicall.md) [SelfPermit](base/SelfPermit.md)
 
-## Variables
-### address nonfungiblePositionManager immutable
+## Public variables
+### nonfungiblePositionManager
+```solidity
+address immutable nonfungiblePositionManager
+```
+**Selector**: `0xb44a2722`
 
 
 
@@ -47,6 +52,7 @@ receive() external payable
 ```solidity
 function migrate(struct IV3Migrator.MigrateParams params) external
 ```
+**Selector**: `0x8be74fb6`
 
 Migrates liquidity to Algebra by burning v2 liquidity and minting a new position for Algebra
 

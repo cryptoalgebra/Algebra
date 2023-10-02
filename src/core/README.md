@@ -1,6 +1,8 @@
  <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_core.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_core.yml/badge.svg"></a>
   <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml/badge.svg"></a>
-  
+
+[![npm](https://img.shields.io/npm/v/@cryptoalgebra/integral-core?style=flat)](https://npmjs.com/package/@cryptoalgebra/integral-core)
+
 # Algebra
 
 This directory contains the core smart contracts for the Algebra DEX. For higher level contracts, see the `periphery` directory.

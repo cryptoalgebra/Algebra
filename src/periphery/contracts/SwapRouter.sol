@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/ISwapRouter.sol';
 import './base/PeripheryImmutableState.sol';
@@ -55,7 +55,7 @@ contract SwapRouter is
 
     /// @inheritdoc IAlgebraSwapCallback
     function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+        require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
@@ -207,7 +207,7 @@ contract SwapRouter is
             : (uint256(amount1Delta), uint256(-amount0Delta));
         // it's technically possible to not receive the full output amount,
         // so if no price limit has been specified, require this possibility away
-        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut);
+        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut, 'Not received full amountOut');
     }
 
     /// @inheritdoc ISwapRouter

@@ -17,6 +17,7 @@ https://github.com/Uniswap/v3-periphery*
 ```solidity
 function tokenURI(contract INonfungiblePositionManager positionManager, uint256 tokenId) external view returns (string)
 ```
+**Selector**: `0xe9dc6375`
 
 Produces the URI describing a particular token ID for a position manager
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 
-import '@cryptoalgebra/periphery/contracts/libraries/CallbackValidation.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/CallbackValidation.sol';
 
 import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/plugins/ILimitOrderPlugin.sol';

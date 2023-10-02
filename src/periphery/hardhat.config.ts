@@ -1,9 +1,9 @@
 import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-output-validator';
 import 'hardhat-contract-sizer';
-import 'hardhat-dependency-compiler';
 import 'solidity-docgen';
 import baseConfig from '../../hardhat.base.config';
+import { task } from 'hardhat/config';
 
 const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -17,7 +17,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -32,7 +32,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
 
 const DEFAULT_COMPILER_SETTINGS = {
   version: '0.8.20',
@@ -46,7 +46,22 @@ const DEFAULT_COMPILER_SETTINGS = {
       bytecodeHash: 'none',
     },
   },
-}
+};
+
+task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
+  const poolArtifact = await hre.artifacts.readArtifact('IAlgebraPool');
+
+  const routerArtifact = await hre.artifacts.readArtifact('SwapRouter');
+  const positionManagerArtifact = await hre.artifacts.readArtifact('NonfungiblePositionManager');
+
+  const poolErrors = poolArtifact.abi.filter((x) => x.type == 'error');
+
+  routerArtifact.abi = routerArtifact.abi.concat(poolErrors);
+  positionManagerArtifact.abi = positionManagerArtifact.abi.concat(poolErrors);
+
+  await hre.artifacts.saveArtifactAndDebugFile(routerArtifact);
+  await hre.artifacts.saveArtifactAndDebugFile(positionManagerArtifact);
+});
 
 export default {
   networks: baseConfig.networks,
@@ -63,25 +78,22 @@ export default {
     },
   },
   typechain: {
-    outDir: 'typechain'
+    outDir: 'typechain',
   },
   docgen: {
     outputDir: '../../docs/Contracts/Periphery',
-    pages: (x: any) => {
-      if (x.name.toString().match(/^I[A-Z]/)) return `interfaces/${x.name.toString()}.md`;
-      if (x.abstract) return `base/${x.name.toString()}.md`;
-      return x.name.toString() + '.md';
+    pages: (x: any, buildInfo: any) => {
+      return `${buildInfo.relativePath}`.replace('.sol', '.md');
     },
     templates: '../../docs/doc_templates/public',
-    collapseNewlines: true
+    collapseNewlines: true,
   },
   dependencyCompiler: {
-    paths: [
-      '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol',
-    ],
+    paths: ['@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol'],
+    keep: true,
   },
   outputValidator: {
     runOnCompile: false,
     exclude: ['contracts/test'],
   },
-}
+};

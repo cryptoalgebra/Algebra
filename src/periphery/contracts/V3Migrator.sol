@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/LowGasSafeMath.sol';
 
 import './interfaces/external/IUniswapV2Pair.sol';
 import './interfaces/external/IWNativeToken.sol';

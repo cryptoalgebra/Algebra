@@ -1,11 +1,11 @@
 {
-  "name": "@cryptoalgebra/plugins",
-  "description": "Plugins for Algebra Core",
+  "name": "@cryptoalgebra/integral-base-plugin",
+  "description": "Plugins for Algebra Integral core",
   "license": "GPL-2.0-or-later",
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.0",
+  "version": "0.1.0",
   "keywords": [
     "algebra"
   ],
@@ -14,9 +14,9 @@
     "url": "https://github.com/cryptoalgebra/Algebra/"
   },
   "dependencies": {
-    "@cryptoalgebra/core": "3.1.0",
-    "@cryptoalgebra/periphery": "2.0.1",
-    "@openzeppelin/contracts": "4.9.3"
+    "@openzeppelin/contracts": "4.9.3",
+    "@cryptoalgebra/integral-core": "0.2.0",
+    "@cryptoalgebra/integral-periphery": "0.2.0"
   },
   "scripts": {
     "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",

@@ -10,6 +10,7 @@
 *Developer note: Credit to Uniswap Labs under GPL-2.0-or-later license:
 https://github.com/Uniswap/v3-periphery*
 
+**Inherits:** [IPeripheryPayments](../interfaces/IPeripheryPayments.md) [PeripheryImmutableState](PeripheryImmutableState.md)
 
 ## Functions
 ### receive
@@ -25,6 +26,7 @@ receive() external payable
 ```solidity
 function unwrapWNativeToken(uint256 amountMinimum, address recipient) external payable
 ```
+**Selector**: `0x69bc35b2`
 
 Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as NativeToken.
 
@@ -40,6 +42,7 @@ Unwraps the contract&#x27;s WNativeToken balance and sends it to recipient as Na
 ```solidity
 function sweepToken(address token, uint256 amountMinimum, address recipient) external payable
 ```
+**Selector**: `0xdf2ab5bb`
 
 Transfers the full amount of a token held by this contract to recipient
 
@@ -56,6 +59,7 @@ Transfers the full amount of a token held by this contract to recipient
 ```solidity
 function refundNativeToken() external payable
 ```
+**Selector**: `0x41865270`
 
 Refunds any NativeToken balance held by this contract to the &#x60;msg.sender&#x60;
 

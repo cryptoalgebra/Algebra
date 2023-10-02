@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '../base/AlgebraFeeConfiguration.sol';
 import '../types/AlgebraFeeConfigurationU144.sol';
 

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPoolDeployer.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IERC20Minimal.sol';
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/FullMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/libraries/LowGasSafeMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPoolDeployer.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IERC20Minimal.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/LowGasSafeMath.sol';
 
-import '@cryptoalgebra/periphery/contracts/libraries/TransferHelper.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/TransferHelper.sol';
 
-import '@cryptoalgebra/plugins/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
 import '../interfaces/IAlgebraEternalFarming.sol';
 import '../interfaces/IAlgebraEternalVirtualPool.sol';

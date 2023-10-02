@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 
-import '@cryptoalgebra/core/contracts/libraries/Constants.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 
 contract AdaptiveFeeTest {
   using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;

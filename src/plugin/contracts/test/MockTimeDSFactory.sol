@@ -8,7 +8,7 @@ import './MockTimeAlgebraBasePluginV1.sol';
 
 import '../interfaces/IBasePluginV1Factory.sol';
 
-import '@cryptoalgebra/core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
 contract MockTimeDSFactory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory

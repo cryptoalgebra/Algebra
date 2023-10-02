@@ -1,4 +1,10 @@
-{{h}} {{typeFormatted}} {{name}} {{stateMutabilityFiltered}}
+{{h}} {{name}}
+```solidity
+{{typeFormatted}}{{#if stateMutabilityFiltered}} {{stateMutabilityFiltered}}{{/if}} {{name}}{{#if constantValue}} = {{constantValue}}{{/if}}
+```
+{{#if functionSelector}}
+**Selector**: `0x{{functionSelector}}`
+{{/if}}
 
 {{natspec.notice}}
 
