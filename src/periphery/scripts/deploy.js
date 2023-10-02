@@ -12,6 +12,8 @@ async function main() {
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
+  deploysData.wrapped = WNativeTokenAddress;
+
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens');
   const TickLens = await TickLensFactory.deploy();
 
@@ -27,12 +29,13 @@ async function main() {
 
   await Quoter.waitForDeployment();
 
+  deploysData.quoter = Quoter.target;
   console.log('Quoter deployed to:', Quoter.target);
 
   // arg1 factory address
   // arg2 wnative address
   const QuoterV2Factory = await hre.ethers.getContractFactory('QuoterV2');
-  const QuoterV2 = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const QuoterV2 = await QuoterV2Factory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
 
   await QuoterV2.waitForDeployment();
 
@@ -77,6 +80,8 @@ async function main() {
 
   await Proxy.waitForDeployment();
 
+  deploysData.proxy = Proxy.target;
+
   console.log('Proxy deployed to:', Proxy.target);
   // // arg1 factory address
   // // arg2 wnative address
@@ -97,15 +102,15 @@ async function main() {
   // // arg1 factory address
   // // arg2 wnative address
   // // arg3 nonfungiblePositionManager address
-  const V3MigratorFactory = await hre.ethers.getContractFactory('V3Migrator');
-  const V3Migrator = await V3MigratorFactory.deploy(
-    deploysData.factory,
-    WNativeTokenAddress,
-    NonfungiblePositionManager.target,
-    deploysData.poolDeployer
-  );
+  // const V3MigratorFactory = await hre.ethers.getContractFactory('V3Migrator');
+  // const V3Migrator = await V3MigratorFactory.deploy(
+  //   deploysData.factory,
+  //   WNativeTokenAddress,
+  //   NonfungiblePositionManager.target,
+  //   deploysData.poolDeployer
+  // );
 
-  await V3Migrator.waitForDeployment();
+  // await V3Migrator.waitForDeployment();
 
   const AlgebraInterfaceMulticallFactory = await hre.ethers.getContractFactory('AlgebraInterfaceMulticall');
   const AlgebraInterfaceMulticall = await AlgebraInterfaceMulticallFactory.deploy();
@@ -113,7 +118,7 @@ async function main() {
   await AlgebraInterfaceMulticall.waitForDeployment();
 
   console.log('AlgebraInterfaceMulticall deployed to:', AlgebraInterfaceMulticall.target);
-  console.log('V3Migrator deployed to:', V3Migrator.target);
+  // console.log('V3Migrator deployed to:', V3Migrator.target);
 
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }

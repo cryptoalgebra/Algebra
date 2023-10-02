@@ -47,8 +47,8 @@ export default {
     bsc: {
       url: `https://bsc-dataseed3.binance.org`,
     },
-    maticTestnet: {
-      url: `https://rpc-mumbai.maticvigil.com`,
+    mumbai: {
+      url: `https://polygon-mumbai-bor.publicnode.com`,
       chainId: 80001,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
