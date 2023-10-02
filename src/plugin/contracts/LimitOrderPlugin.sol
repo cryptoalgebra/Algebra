@@ -192,7 +192,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
       epochInfo.token0Total = 1;
     }
 
-    emit Place(msg.sender, epoch, tickLower, zeroForOne, liquidityActual);
+    emit Place(msg.sender, epoch, pool, tickLower, tickUpper, zeroForOne, liquidityActual);
   }
 
   function kill(

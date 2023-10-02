@@ -15,7 +15,7 @@ interface ILimitOrderPlugin is IAlgebraMintCallback {
   error NotPoolManagerToken();
   error NotPlugin();
 
-  event Place(address indexed owner, Epoch indexed epoch, int24 tickLower, bool zeroForOne, uint128 liquidity);
+  event Place(address indexed owner, Epoch indexed epoch, address pool, int24 tickLower, int24 tickUpper, bool zeroForOne, uint128 liquidity);
 
   event Fill(Epoch indexed epoch, int24 tickLower, bool zeroForOne);
 
