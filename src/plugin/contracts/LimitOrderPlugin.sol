@@ -30,6 +30,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
 
   Epoch internal constant EPOCH_DEFAULT = Epoch.wrap(0);
 
+  mapping(address => bool) public initialized;
   mapping(address => int24) public tickLowerLasts;
   mapping(address => int24) public tickSpacings;
 
@@ -129,6 +130,11 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     }
   }
 
+  function _initialize(address pool, int24 tick) internal {
+    tickLowerLasts[pool] = getTickLower(tick, getTickSpacing(pool));
+    initialized[pool] = true;
+  }
+
   function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata data) external override {
     MintCallbackData memory decoded = abi.decode(data, (MintCallbackData));
     CallbackValidation.verifyCallback(poolDeployer, decoded.poolKey);
@@ -137,7 +143,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     if (amount1Owed > 0) _pay(decoded.poolKey.token1, decoded.payer, msg.sender, amount1Owed);
   }
 
-  function place(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, uint128 liquidity) external override {
+  function place(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, uint128 liquidity) external payable override {
     if (liquidity == 0) revert ZeroLiquidity();
 
     address pool = PoolAddress.computeAddress(poolDeployer, poolKey);
@@ -145,7 +151,10 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     bytes memory data = abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}));
     int24 tickUpper = tickLower + getTickSpacing(pool);
 
-    // TODO  set last tick if skip initialize?
+    if (initialized[pool] == false) {
+      _initialize(pool, getTick(pool));
+    }
+
     (uint256 amount0, uint256 amount1, uint128 liquidityActual) = IAlgebraPool(pool).mint(
       msg.sender,
       address(this),
@@ -199,9 +208,11 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
     PoolAddress.PoolKey memory poolKey,
     int24 tickLower,
     int24 tickUpper,
+    uint128 liquidity,
     bool zeroForOne,
     address to
   ) external override returns (uint256 amount0, uint256 amount1) {
+    if (liquidity == 0) revert ZeroLiquidity();
     address pool = PoolAddress.computeAddress(poolDeployer, poolKey);
 
     Epoch epoch = getEpoch(pool, tickLower, tickUpper, zeroForOne);
@@ -209,9 +220,8 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
 
     if (epochInfo.filled) revert Filled();
 
-    uint128 liquidity = epochInfo.liquidity[msg.sender];
-    if (liquidity == 0) revert ZeroLiquidity();
-    delete epochInfo.liquidity[msg.sender];
+    if (liquidity > epochInfo.liquidity[msg.sender]) revert InsufficientLiquidity();
+    epochInfo.liquidity[msg.sender] -= liquidity;
     uint128 liquidityTotal = epochInfo.liquidityTotal;
     epochInfo.liquidityTotal = liquidityTotal - liquidity;
 
@@ -271,7 +281,7 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
   }
 
   function afterInitialize(address pool, int24 tick) external override onlyPlugin(pool) {
-    tickLowerLasts[pool] = getTickLower(tick, getTickSpacing(pool));
+    _initialize(pool, tick);
   }
 
   function afterSwap(address pool, bool zeroToOne, int24 tick) external override onlyPlugin(pool) {

@@ -209,7 +209,7 @@ describe('LimitOrders', () => {
         await loPlugin.place(poolKey, -60, false, 10n**8n);
 
         let balanceBefore = await token1.balanceOf(other);
-        await loPlugin.kill(poolKey, -60, 0, false, other);
+        await loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, other);
         let balanceAfter =  await token1.balanceOf(other);
         await expect(balanceAfter - balanceBefore).to.be.eq(299535)
     });
@@ -218,7 +218,7 @@ describe('LimitOrders', () => {
       await loPlugin.place(poolKey, -60, false, 10n**8n);
       await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(99,100), wallet);
 
-      await expect( loPlugin.kill(poolKey, -60, 0, false, wallet)).to.be.revertedWithCustomError(loPlugin,"ZeroLiquidity()")      
+      await expect(loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, wallet)).to.be.revertedWithCustomError(loPlugin,"InsufficientLiquidity()")      
     });
 
   })

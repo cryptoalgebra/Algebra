@@ -14,6 +14,7 @@ interface ILimitOrderPlugin is IAlgebraMintCallback {
   error NotFilled();
   error NotPoolManagerToken();
   error NotPlugin();
+  error InsufficientLiquidity();
 
   event Place(address indexed owner, Epoch indexed epoch, address pool, int24 tickLower, int24 tickUpper, bool zeroForOne, uint128 liquidity);
 
@@ -23,12 +24,13 @@ interface ILimitOrderPlugin is IAlgebraMintCallback {
 
   event Withdraw(address indexed owner, Epoch indexed epoch, uint128 liquidity);
 
-  function place(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, uint128 liquidity) external;
+  function place(PoolAddress.PoolKey memory poolKey, int24 tickLower, bool zeroForOne, uint128 liquidity) external payable;
 
   function kill(
     PoolAddress.PoolKey memory poolKey,
     int24 tickLower,
     int24 tickUpper,
+    uint128 liquidity,
     bool zeroForOne,
     address to
   ) external returns (uint256 amount0, uint256 amount1);

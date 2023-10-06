@@ -15,6 +15,10 @@ abstract contract LimitOrderPayments {
 
   address public immutable wNativeToken;
 
+  receive() external payable {
+    require(msg.sender == wNativeToken, 'Not WNativeToken');
+  }
+
   function _balanceOfToken(address token) private view returns (uint256) {
     return (IERC20(token).balanceOf(address(this)));
   }

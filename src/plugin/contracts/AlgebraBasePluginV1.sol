@@ -39,8 +39,6 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   address private immutable factory;
   address private immutable pluginFactory;
 
-  address private limitOrderPlugin;
-
   /// @inheritdoc IVolatilityOracle
   VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
 
@@ -58,6 +56,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
+
+  address public limitOrderPlugin;
 
   /// @dev the address which connected the last incentive. Needed so that he can disconnect it
   address private _lastIncentiveOwner;
