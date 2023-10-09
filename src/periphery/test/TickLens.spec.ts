@@ -442,7 +442,7 @@ describe('TickLens', () => {
 
     it('getNextActiveTicks 512 ticks [ @skip-on-coverage ]', async () => {
       const ticks = await tickLens.getNextActiveTicks(poolAddress, getMinTick(1), 512, true);
-      console.log(ticks.length);
+      expect(ticks.length).to.be.eq(260);
 
       await snapshotGasCost(tickLens.getGasCostOfGetNextActiveTicks(poolAddress, getMinTick(1), 512, true));
     }).timeout(300_000);

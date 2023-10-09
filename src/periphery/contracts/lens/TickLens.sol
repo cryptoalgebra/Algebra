@@ -138,6 +138,7 @@ contract TickLens is ITickLens {
         int24 currentTick = startingTick;
 
         // prevent pointers from being initialized
+        // if we initialize the populatedTicks array directly, it will automatically write `amount` pointers to structs in array
         bytes32[] memory populatedTicksPointers = new bytes32[](amount);
         assembly {
             populatedTicks := populatedTicksPointers
@@ -147,32 +148,39 @@ contract TickLens is ITickLens {
             .ticks(currentTick);
         require(previousTick != nextTick, 'Invalid startingTick');
 
+        bytes32 freeMemoryPointer;
+        assembly {
+            freeMemoryPointer := mload(0x40)
+        }
         unchecked {
-            for (uint256 i = 0; i < amount; i++) {
-                PopulatedTick memory s = PopulatedTick({
-                    tick: currentTick,
-                    liquidityNet: liquidityNet,
-                    liquidityGross: uint128(liquidityGross)
-                });
-
-                // prevent array length check
+            for (uint256 i; i < amount; ++i) {
+                // allocate memory for new struct and set it without rewriting free memory pointer
                 assembly {
-                    mstore(add(mul(i, 0x20), add(populatedTicks, 0x20)), s)
+                    mstore(freeMemoryPointer, currentTick)
+                    mstore(add(freeMemoryPointer, 0x20), liquidityNet)
+                    mstore(add(freeMemoryPointer, 0x40), liquidityGross)
+                }
+
+                // prevent array length check and store new pointer in array
+                assembly {
+                    mstore(add(mul(i, 0x20), add(populatedTicks, 0x20)), freeMemoryPointer)
+                    freeMemoryPointer := add(freeMemoryPointer, 0x60)
                 }
 
                 int24 newCurrentTick = upperDirection ? nextTick : previousTick;
                 if (newCurrentTick == currentTick) {
                     // reached MAX or MIN tick
-                    // cap returning array length
                     assembly {
-                        mstore(populatedTicks, add(i, 1))
+                        mstore(populatedTicks, add(i, 1)) // cap returning array length
                     }
                     break;
                 }
                 currentTick = newCurrentTick;
-
                 (liquidityGross, liquidityNet, previousTick, nextTick) = _getTick(pool, currentTick);
             }
+        }
+        assembly {
+            mstore(0x40, freeMemoryPointer) // rewrite free memory pointer slot
         }
     }
 
