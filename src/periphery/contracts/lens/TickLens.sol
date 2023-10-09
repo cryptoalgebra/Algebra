@@ -137,7 +137,11 @@ contract TickLens is ITickLens {
     ) public view override returns (PopulatedTick[] memory populatedTicks) {
         int24 currentTick = startingTick;
 
-        populatedTicks = new PopulatedTick[](amount);
+        // prevent pointers from being initialized
+        bytes32[] memory populatedTicksPointers = new bytes32[](amount);
+        assembly {
+            populatedTicks := populatedTicksPointers
+        }
 
         (uint256 liquidityGross, int128 liquidityNet, int24 previousTick, int24 nextTick, , ) = IAlgebraPool(pool)
             .ticks(currentTick);
@@ -145,15 +149,24 @@ contract TickLens is ITickLens {
 
         unchecked {
             for (uint256 i = 0; i < amount; i++) {
-                populatedTicks[i] = PopulatedTick({
+                PopulatedTick memory s = PopulatedTick({
                     tick: currentTick,
                     liquidityNet: liquidityNet,
                     liquidityGross: uint128(liquidityGross)
                 });
 
+                // prevent array length check
+                assembly {
+                    mstore(add(mul(i, 0x20), add(populatedTicks, 0x20)), s)
+                }
+
                 int24 newCurrentTick = upperDirection ? nextTick : previousTick;
                 if (newCurrentTick == currentTick) {
                     // reached MAX or MIN tick
+                    // cap returning array length
+                    assembly {
+                        mstore(populatedTicks, add(i, 1))
+                    }
                     break;
                 }
                 currentTick = newCurrentTick;

@@ -439,5 +439,12 @@ describe('TickLens', () => {
 
       await snapshotGasCost(tickLens.getGasCostOfGetNextActiveTicks(poolAddress, getMinTick(1), 255, true));
     }).timeout(300_000);
+
+    it('getNextActiveTicks 512 ticks [ @skip-on-coverage ]', async () => {
+      const ticks = await tickLens.getNextActiveTicks(poolAddress, getMinTick(1), 512, true);
+      console.log(ticks.length);
+
+      await snapshotGasCost(tickLens.getGasCostOfGetNextActiveTicks(poolAddress, getMinTick(1), 512, true));
+    }).timeout(300_000);
   });
 });
