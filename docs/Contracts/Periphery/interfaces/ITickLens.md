@@ -75,7 +75,7 @@ function getNextActiveTicks(address pool, int24 startingTick, uint256 amount, bo
 ```
 **Selector**: `0xc5493f77`
 
-Get all the tick data for the &#x60;amount&#x60; of populated ticks after &#x60;startingTick&#x60; (including &#x60;startingTick&#x60; itself)
+Get all the tick data for the &#x60;amount&#x60; (or less) of populated ticks after &#x60;startingTick&#x60; (including &#x60;startingTick&#x60; itself)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -88,5 +88,5 @@ Get all the tick data for the &#x60;amount&#x60; of populated ticks after &#x60;
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| populatedTicks | struct ITickLens.PopulatedTick[] | An array of tick data for fetched ticks |
+| populatedTicks | struct ITickLens.PopulatedTick[] | An array of tick data for fetched ticks (`amount` or less) |
 
