@@ -15,7 +15,6 @@ import './interfaces/IAlgebraVirtualPool.sol';
 import './interfaces/plugins/ILimitOrderPlugin.sol';
 
 import './libraries/VolatilityOracle.sol';
-import './libraries/TransferHelper.sol';
 import './libraries/AdaptiveFee.sol';
 import './types/AlgebraFeeConfigurationU144.sol';
 

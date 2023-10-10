@@ -168,7 +168,6 @@ contract LimitOrderPlugin is ILimitOrderPlugin, LimitOrderPayments {
       if (amount1 != 0) revert InRange();
       if (!zeroForOne) revert CrossedRange();
     } else {
-      if (amount0 != 0) revert InRange();
       if (zeroForOne) revert CrossedRange();
     }
 

@@ -26,33 +26,48 @@ import {
 import { getCreateAddress } from 'ethers';
 import { ZERO_ADDRESS } from './fixtures';
 
+import WNativeToken from '../contracts/WNativeToken.json';
+
+import { IWNativeToken } from '../../typechain';
+
+const wnativeFixture: () => Promise<{ wnative: IWNativeToken & {address: string} }> = async () => {
+  const wnativeFactory = await ethers.getContractFactory(WNativeToken.abi, WNativeToken.bytecode);
+  const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken & { address: string};
+
+  return { wnative };
+};
 interface TokensFixture {
   token0: TestERC20;
   token1: TestERC20;
+  wnative: IWNativeToken;
 }
 
 export async function tokensFixture(): Promise<TokensFixture> {
   const tokenFactory = await ethers.getContractFactory('TestERC20');
   const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address: string };
   const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address: string };
+  const {wnative} = await wnativeFixture();
 
   tokenA.address = await tokenA.getAddress();
   tokenB.address = await tokenB.getAddress();
+  const wnativeAddress = await wnative.getAddress();
 
   const [token0, token1] = [tokenA, tokenB].sort((_tokenA, _tokenB) => (_tokenA.address.toLowerCase() < _tokenB.address.toLowerCase() ? -1 : 1));
 
-  return { token0, token1 };
+  return { token0, token1, wnative };
 }
 
-interface MockPoolDeployerFixture extends TokensFixture {
+interface MockPoolDeployerFixture {
   poolDeployer: MockTimeAlgebraPoolDeployer;
   swapTargetCallee: TestAlgebraCallee;
+  token0: TestERC20;
+  token1: TestERC20;
   factory: AlgebraFactory;
   createPool(firstToken?: TestERC20, secondToken?: TestERC20): Promise<MockTimeAlgebraPool>;
 }
 
 export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixture> = async () => {
-  const { token0, token1 } = await tokensFixture();
+  const { token0, token1, wnative } = await tokensFixture();
 
   const [deployer] = await ethers.getSigners();
   // precompute
@@ -88,5 +103,6 @@ export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixtu
       const poolAddress = await poolDeployer.computeAddress(sortedTokens[0], sortedTokens[1]);
       return MockTimeAlgebraPoolFactory.attach(poolAddress) as any as MockTimeAlgebraPool;
     },
+    
   };
 };

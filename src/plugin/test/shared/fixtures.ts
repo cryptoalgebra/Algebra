@@ -12,7 +12,7 @@ import {
   abi as POOL_ABI,
   bytecode as POOL_BYTECODE,
 } from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
-import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory, LimitOrderPlugin } from '../../typechain';
+import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory, LimitOrderPlugin, IWNativeToken } from '../../typechain';
 import {tokensFixture} from './externalFixtures';
 import { getCreateAddress } from 'ethers';
 import {AlgebraPool, AlgebraFactory, TestAlgebraCallee, AlgebraPoolDeployer, TestERC20 } from '@cryptoalgebra/integral-core/typechain';
@@ -85,14 +85,17 @@ interface LimitOrderPluginFixture{
   loPlugin: LimitOrderPlugin;
   token0: TestERC20;
   token1: TestERC20;
+  wnative: IWNativeToken;
   pool: AlgebraPool;
+  pool0Wnative: AlgebraPool;
+  poolWnative1: AlgebraPool;
   swapTarget: TestAlgebraCallee;
  }
 
 
 export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async function (): Promise<LimitOrderPluginFixture> {
 
-  const { token0, token1 } = await tokensFixture();
+  const { token0, token1, wnative } = await tokensFixture();
 
   const [deployer] = await ethers.getSigners();
   // precompute
@@ -116,7 +119,7 @@ export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async f
   const pluginFactory = (await BasePluginV1FactoryFactory.deploy(factory)) as any as BasePluginV1Factory;
 
   const loPluginFactory = await ethers.getContractFactory('LimitOrderPlugin');
-  const loPlugin = (await loPluginFactory.deploy(ZERO_ADDRESS, poolDeployer, pluginFactory, factory)) as any as LimitOrderPlugin
+  const loPlugin = (await loPluginFactory.deploy(wnative, poolDeployer, pluginFactory, factory)) as any as LimitOrderPlugin
 
   await pluginFactory.setLimitOrderPlugin(loPlugin);
   await factory.setDefaultPluginFactory(pluginFactory)
@@ -125,12 +128,25 @@ export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async f
   const poolAddress = await factory.poolByPair(token0, token1);
   const pool = (poolFactory.attach(poolAddress)) as any as AlgebraPool;
 
+  await factory.createPool(token0, wnative);
+  const poolAddress0Wnative = await factory.poolByPair(token0, wnative);
+  const pool0Wnative = (poolFactory.attach(poolAddress0Wnative)) as any as AlgebraPool;
+
+  await pluginFactory.setLimitOrderPlugin(ZERO_ADDRESS);
+
+  await factory.createPool(wnative, token1);
+  const poolAddressWnative1 = await factory.poolByPair(wnative, token1);
+  const poolWnative1 = (poolFactory.attach(poolAddressWnative1)) as any as AlgebraPool;
+
   return {
     pluginFactory,
     loPlugin,
     token0,
     token1,
+    wnative,
     pool,
+    pool0Wnative,
+    poolWnative1,
     swapTarget
   };
 };

@@ -5,8 +5,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '@cryptoalgebra/integral-periphery/contracts/interfaces/external/IWNativeToken.sol';
 import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
-
-import '../libraries/TransferHelper.sol';
+import '@cryptoalgebra/integral-periphery/contracts/libraries/TransferHelper.sol';
 
 abstract contract LimitOrderPayments {
   constructor(address _wnative) {
