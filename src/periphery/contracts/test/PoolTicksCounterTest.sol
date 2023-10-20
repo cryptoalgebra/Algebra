@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
-
 pragma solidity >=0.8.20;
 
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '../libraries/PoolTicksCounter.sol';
 
 contract PoolTicksCounterTest {
