@@ -34,12 +34,12 @@ interface ITickLens {
         int24 targetTick
     ) external view returns (PopulatedTick[2] memory populatedTicks);
 
-    /// @notice Get all the tick data for the `amount` of populated ticks after `startingTick` (including `startingTick` itself)
+    /// @notice Get all the tick data for the `amount` (or less) of populated ticks after `startingTick` (including `startingTick` itself)
     /// @param pool The address of the pool for which to fetch populated tick data
     /// @param startingTick The starting tick index. Must be populated tick
     /// @param amount The maximum amount of ticks requested
     /// @param upperDirection The direction of search. Will fetch 'next' ticks in direction of price increase if true
-    /// @return populatedTicks An array of tick data for fetched ticks
+    /// @return populatedTicks An array of tick data for fetched ticks (`amount` or less)
     function getNextActiveTicks(
         address pool,
         int24 startingTick,
