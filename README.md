@@ -34,9 +34,15 @@ The documentation page is located at: <a href="https://cryptoalgebra.gitbook.io/
 
 ## Versions
 
-Please note that different DEX-partners of our protocol may use different versions of the protocol. 
+Please note that different DEX-partners of our protocol may use different versions of the protocol. This repo contains the latest version: **Algebra Integral**. 
 
 A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/en/docs/contracts/partners/introduction)
+
+Previous versions of the protocol have been moved to separate repositories:
+
+[Algebra V1.9](https://github.com/cryptoalgebra/AlgebraV1.9)
+
+[Algebra V1](https://github.com/cryptoalgebra/AlgebraV1)
 
 ## Packages
 
