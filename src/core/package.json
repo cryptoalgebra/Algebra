@@ -1,11 +1,11 @@
 {
-  "name": "@cryptoalgebra/core",
-  "description": "Core smart contracts of Algebra",
+  "name": "@cryptoalgebra/integral-core",
+  "description": "Core smart contracts of Algebra Integral",
   "license": "GPL-2.0-or-later",
   "publishConfig": {
     "access": "public"
   },
-  "version": "3.1.0",
+  "version": "0.2.0",
   "keywords": [
     "algebra"
   ],
@@ -14,26 +14,28 @@
     "url": "https://github.com/cryptoalgebra/Algebra/"
   },
   "files": [
+    "contracts/base/common",
     "contracts/interfaces",
     "contracts/libraries",
     "artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json",
     "artifacts/contracts/AlgebraPool.sol/AlgebraPool.json",
-    "artifacts/contracts/DataStorageOperator.sol/DataStorageOperator.json",
     "artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json",
     "artifacts/contracts/interfaces/**/*.json",
     "!artifacts/contracts/interfaces/**/*.dbg.json"
   ],
   "scripts": {
     "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "solhint": "solhint ./contracts/**/*.sol",
     "compile": "hardhat compile",
     "test": "hardhat test --parallel",
-    "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
+    "coverage": "hardhat coverage --solcoverjs ./.solcover.js",
+    "validateNatspec": "hardhat validateOutput"
   },
   "engines": {
     "npm": ">=8.0.0",
     "node": ">=14.0.0"
   },
-  "devDependencies": {
-    "@openzeppelin/contracts": "4.8.1"
+  "dependencies": {
+    "@openzeppelin/contracts": "4.9.3"
   }
 }

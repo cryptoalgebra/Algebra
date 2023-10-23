@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import './PeripheryImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
 
@@ -20,19 +20,23 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         address token1,
         uint160 sqrtPriceX96
     ) external payable override returns (address pool) {
-        require(token0 < token1);
+        require(token0 < token1, 'Invalid order of tokens');
 
         pool = IAlgebraFactory(factory).poolByPair(token0, token1);
 
         if (pool == address(0)) {
             pool = IAlgebraFactory(factory).createPool(token0, token1);
 
-            IAlgebraPool(pool).initialize(sqrtPriceX96);
+            _initializePool(pool, sqrtPriceX96);
         } else {
             uint160 sqrtPriceX96Existing = IAlgebraPool(pool)._getSqrtPrice();
             if (sqrtPriceX96Existing == 0) {
-                IAlgebraPool(pool).initialize(sqrtPriceX96);
+                _initializePool(pool, sqrtPriceX96);
             }
         }
+    }
+
+    function _initializePool(address pool, uint160 initPrice) private {
+        IAlgebraPool(pool).initialize(initPrice);
     }
 }

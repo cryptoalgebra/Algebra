@@ -1,34 +1,47 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
+import '../interfaces/callback/IAlgebraMintCallback.sol';
+import '../interfaces/callback/IAlgebraFlashCallback.sol';
+import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
+import '../interfaces/IAlgebraFactory.sol';
 import '../interfaces/IAlgebraPoolDeployer.sol';
-import '../interfaces/IAlgebraPoolErrors.sol';
-import '../interfaces/IDataStorageOperator.sol';
 import '../interfaces/IERC20Minimal.sol';
+
 import '../libraries/TickManagement.sol';
-import '../libraries/LimitOrderManagement.sol';
+import '../libraries/SafeTransfer.sol';
 import '../libraries/Constants.sol';
+import '../libraries/Plugins.sol';
+
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
-abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp {
+/// @dev Decoupling into a separate abstract contract simplifies testing
+abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
+  /// @notice The struct with important state values of pool
+  /// @dev fits into one storage slot
+  /// @param price The square root of the current price in Q64.96 format
+  /// @param tick The current tick (price(tick) <= current price). May not always be equal to SqrtTickMath.getTickAtSqrtRatio(price) if the price is on a tick boundary
+  /// @param lastFee The current (last known) fee in hundredths of a bip, i.e. 1e-6 (so 100 is 0.01%). May be obsolete if using dynamic fee plugin
+  /// @param pluginConfig The current plugin config as bitmap. Each bit is responsible for enabling/disabling the hooks, the last bit turns on/off dynamic fees logic
+  /// @param communityFee The community fee represented as a percent of all collected fee in thousandths, i.e. 1e-3 (so 100 is 10%)
+  /// @param unlocked  Reentrancy lock flag, true if the pool currently is unlocked, otherwise - false
   struct GlobalState {
-    uint160 price; // The square root of the current price in Q64.96 format
-    int24 tick; // The current tick
-    int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint16 timepointIndex; // The index of the last written timepoint
-    uint8 communityFee; // The community fee represented as a percent of all collected fee in thousandths (1e-3)
-    bool unlocked; // True if the contract is unlocked, otherwise - false
+    uint160 price;
+    int24 tick;
+    uint16 lastFee;
+    uint8 pluginConfig;
+    uint16 communityFee;
+    bool unlocked;
   }
 
   /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override dataStorageOperator;
+  uint128 public constant override maxLiquidityPerTick = Constants.MAX_LIQUIDITY_PER_TICK;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables
@@ -38,121 +51,134 @@ abstract contract AlgebraPoolBase is IAlgebraPool, IAlgebraPoolErrors, Timestamp
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override communityVault;
 
+  // ! IMPORTANT security note: the pool state can be manipulated
+  // ! external contracts using this data must prevent read-only reentrancy
+
   /// @inheritdoc IAlgebraPoolState
   uint256 public override totalFeeGrowth0Token;
   /// @inheritdoc IAlgebraPoolState
   uint256 public override totalFeeGrowth1Token;
+
   /// @inheritdoc IAlgebraPoolState
   GlobalState public override globalState;
 
   /// @inheritdoc IAlgebraPoolState
-  uint128 public override liquidity;
-  /// @inheritdoc IAlgebraPoolState
-  int24 public override tickSpacing;
-  /// @inheritdoc IAlgebraPoolState
-  int24 public override tickSpacingLimitOrders;
+  mapping(int24 => TickManagement.Tick) public override ticks;
+
   /// @inheritdoc IAlgebraPoolState
   uint32 public override communityFeeLastTimestamp;
-
   /// @dev The amounts of token0 and token1 that will be sent to the vault
-  uint128 internal communityFeePending0;
-  uint128 internal communityFeePending1;
-
-  /// @dev The timestamp of the last timepoint write to the DataStorage
-  uint32 internal lastTimepointTimestamp;
-  /// @inheritdoc IAlgebraPoolState
-  uint160 public override secondsPerLiquidityCumulative;
+  uint104 internal communityFeePending0;
+  uint104 internal communityFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
-  address public override activeIncentive;
-
-  /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => TickManagement.Tick) public override ticks;
-  /// @inheritdoc IAlgebraPoolState
-  mapping(int24 => LimitOrderManagement.LimitOrder) public override limitOrders;
+  address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
-  /// @inheritdoc IAlgebraPoolImmutables
-  function maxLiquidityPerTick() external pure override returns (uint128) {
-    return Constants.MAX_LIQUIDITY_PER_TICK;
-  }
-
   /// @inheritdoc IAlgebraPoolState
-  function getCommunityFeePending() external view returns (uint128, uint128) {
-    return (communityFeePending0, communityFeePending1);
-  }
+  int24 public override nextTickGlobal;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override prevTickGlobal;
+  /// @inheritdoc IAlgebraPoolState
+  uint128 public override liquidity;
+  /// @inheritdoc IAlgebraPoolState
+  int24 public override tickSpacing;
+  // shares one slot with TickStructure.tickTreeRoot
 
+  /// @notice Check that the lower and upper ticks do not violate the boundaries of allowed ticks and are specified in the correct order
   modifier onlyValidTicks(int24 bottomTick, int24 topTick) {
     TickManagement.checkTickRangeValidity(bottomTick, topTick);
     _;
   }
 
   constructor() {
-    (dataStorageOperator, factory, communityVault, token0, token1) = IAlgebraPoolDeployer(msg.sender).getDeployParameters();
-    globalState.fee = Constants.BASE_FEE;
-    globalState.prevInitializedTick = TickMath.MIN_TICK;
-    tickSpacing = Constants.INIT_TICK_SPACING;
-    tickSpacingLimitOrders = Constants.INIT_TICK_SPACING;
+    (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
+    (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
+    globalState.unlocked = true;
   }
 
-  function _balanceToken0() internal view returns (uint256) {
+  /// @inheritdoc IAlgebraPoolState
+  /// @dev safe from read-only reentrancy getter function
+  function safelyGetStateOfAMM()
+    external
+    view
+    override
+    returns (uint160 sqrtPrice, int24 tick, uint16 lastFee, uint8 pluginConfig, uint128 activeLiquidity, int24 nextTick, int24 previousTick)
+  {
+    sqrtPrice = globalState.price;
+    tick = globalState.tick;
+    lastFee = globalState.lastFee;
+    pluginConfig = globalState.pluginConfig;
+    bool unlocked = globalState.unlocked;
+    if (!unlocked) revert IAlgebraPoolErrors.locked();
+
+    activeLiquidity = liquidity;
+    nextTick = nextTickGlobal;
+    previousTick = prevTickGlobal;
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function isUnlocked() external view override returns (bool unlocked) {
+    return globalState.unlocked;
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getCommunityFeePending() external view override returns (uint128, uint128) {
+    return (communityFeePending0, communityFeePending1);
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function fee() external view override returns (uint16 currentFee) {
+    currentFee = globalState.lastFee;
+    uint8 pluginConfig = globalState.pluginConfig;
+
+    if (Plugins.hasFlag(pluginConfig, Plugins.DYNAMIC_FEE)) return IAlgebraDynamicFeePlugin(plugin).getCurrentFee();
+  }
+
+  /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
+  /// Can be overridden in tests
+  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
+    return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
+  }
+
+  /// @dev Gets the default settings for pool initialization. Can be overridden in tests
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
+    return IAlgebraFactory(factory).defaultConfigurationForPool();
+  }
+
+  // The main external calls that are used by the pool. Can be overridden in tests
+
+  function _balanceToken0() internal view virtual returns (uint256) {
     return IERC20Minimal(token0).balanceOf(address(this));
   }
 
-  function _balanceToken1() internal view returns (uint256) {
+  function _balanceToken1() internal view virtual returns (uint256) {
     return IERC20Minimal(token1).balanceOf(address(this));
   }
 
+  function _transfer(address token, address to, uint256 amount) internal virtual {
+    SafeTransfer.safeTransfer(token, to, amount);
+  }
+
+  // These 'callback' functions are wrappers over the callbacks that the pool calls on the msg.sender
+  // These methods can be overridden in tests
+
   /// @dev Using function to save bytecode
-  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _swapCallback(int256 amount0, int256 amount1, bytes calldata data) internal virtual {
     IAlgebraSwapCallback(msg.sender).algebraSwapCallback(amount0, amount1, data);
   }
 
-  /// @dev Once per block, writes data to dataStorage and updates the accumulator `secondsPerLiquidityCumulative`
-  function _writeTimepoint(
-    uint16 timepointIndex,
-    uint32 blockTimestamp,
-    int24 tick,
-    uint128 currentLiquidity
-  ) internal returns (uint16 newTimepointIndex, uint16 newFee) {
-    uint32 _lastTs = lastTimepointTimestamp;
-    if (_lastTs == blockTimestamp) return (timepointIndex, 0); // writing should only happen once per block
-
-    unchecked {
-      // just timedelta if liquidity == 0
-      // overflow and underflow are desired
-      secondsPerLiquidityCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
-    lastTimepointTimestamp = blockTimestamp;
-
-    // failure should not occur. But in case of failure, the pool will remain operational
-    try IDataStorageOperator(dataStorageOperator).write(timepointIndex, blockTimestamp, tick) returns (uint16 _newTimepointIndex, uint16 _newFee) {
-      return (_newTimepointIndex, _newFee);
-    } catch {
-      emit DataStorageFailure();
-      return (timepointIndex, 0);
-    }
+  function _mintCallback(uint256 amount0, uint256 amount1, bytes calldata data) internal virtual {
+    IAlgebraMintCallback(msg.sender).algebraMintCallback(amount0, amount1, data);
   }
 
-  /// @dev Get secondsPerLiquidityCumulative accumulator value for current blockTimestamp
-  function _getSecondsPerLiquidityCumulative(uint32 blockTimestamp, uint128 currentLiquidity) internal view returns (uint160 _secPerLiqCumulative) {
-    uint32 _lastTs;
-    (_lastTs, _secPerLiqCumulative) = (lastTimepointTimestamp, secondsPerLiquidityCumulative);
-    unchecked {
-      if (_lastTs != blockTimestamp)
-        // just timedelta if liquidity == 0
-        // overflow and underflow are desired
-        _secPerLiqCumulative += (uint160(blockTimestamp - _lastTs) << 128) / (currentLiquidity > 0 ? currentLiquidity : 1);
-    }
+  function _flashCallback(uint256 fee0, uint256 fee1, bytes calldata data) internal virtual {
+    IAlgebraFlashCallback(msg.sender).algebraFlashCallback(fee0, fee1, data);
   }
 
-  /// @dev Add or remove a tick to the corresponding data structure
-  function _insertOrRemoveTick(
-    int24 tick,
-    int24 currentTick,
-    int24 prevInitializedTick,
-    bool remove
-  ) internal virtual returns (int24 newPrevInitializedTick);
+  // This virtual function is implemented in TickStructure and used in Positions
+  /// @dev Add or remove a pair of ticks to the corresponding data structure
+  function _addOrRemoveTicks(int24 bottomTick, int24 topTick, bool toggleBottom, bool toggleTop, int24 currentTick, bool remove) internal virtual;
 }

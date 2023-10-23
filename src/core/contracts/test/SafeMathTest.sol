@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
@@ -34,6 +34,14 @@ contract SafeMathTest {
   }
 
   function toInt128(int256 y) external pure returns (int128 z) {
+    return SafeCast.toInt128(y);
+  }
+
+  function toUint128(uint256 y) external pure returns (uint128 z) {
+    return SafeCast.toUint128(y);
+  }
+
+  function toInt128U(uint128 y) external pure returns (int128 z) {
     return SafeCast.toInt128(y);
   }
 

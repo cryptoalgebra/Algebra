@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`unit/Deposits #onERC721Received on successful transfer with staking data has gas cost [ @skip-on-coverage ] 1`] = `354531`;
-
-exports[`unit/Deposits #withdrawToken works and has gas cost [ @skip-on-coverage ] 1`] = `155932`;

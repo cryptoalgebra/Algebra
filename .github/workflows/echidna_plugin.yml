@@ -1,0 +1,48 @@
+name: Echidna Plugin
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  UnitAsserts:
+    strategy:
+      matrix:
+        testName:
+          - AdaptiveFeeEchidnaTest
+          - VolatilityOracleEchidnaTest
+          - VolatilityOracleMathEchidnaTest
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run ci-install
+
+      - name: Compile contracts
+        run: npm run compile
+        working-directory: ./src/plugin
+
+      - name: Run ${{ matrix.testName }}
+        uses: crytic/echidna-action@v2
+        with:
+          solc-version: 0.8.20
+          files: ./src/plugin/
+          contract: ${{ matrix.testName }}
+          crytic-args: --hardhat-ignore-compile
+          solc-args: --evm-version paris
+          config: ./src/plugin/contracts/test/echidna/echidna.config.yml

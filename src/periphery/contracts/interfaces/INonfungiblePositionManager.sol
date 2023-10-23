@@ -9,7 +9,6 @@ import './IPoolInitializer.sol';
 import './IERC721Permit.sol';
 import './IPeripheryPayments.sol';
 import './IPeripheryImmutableState.sol';
-import '../libraries/PoolAddress.sol';
 
 /// @title Non-fungible token for positions
 /// @notice Wraps Algebra positions in a non-fungible token interface which allows for them to be transferred
@@ -27,14 +26,14 @@ interface INonfungiblePositionManager is
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
     /// @param tokenId The ID of the token for which liquidity was increased
-    /// @param liquidity The amount by which liquidity for the NFT position was increased
+    /// @param liquidityDesired The amount by which liquidity for the NFT position was increased
     /// @param actualLiquidity the actual liquidity that was added into a pool. Could differ from
     /// _liquidity_ when using FeeOnTransfer tokens
     /// @param amount0 The amount of token0 that was paid for the increase in liquidity
     /// @param amount1 The amount of token1 that was paid for the increase in liquidity
     event IncreaseLiquidity(
         uint256 indexed tokenId,
-        uint128 liquidity,
+        uint128 liquidityDesired,
         uint128 actualLiquidity,
         uint256 amount0,
         uint256 amount1,
@@ -60,6 +59,10 @@ interface INonfungiblePositionManager is
     /// @dev Should never be emitted
     /// @param tokenId The ID of corresponding token
     event FarmingFailed(uint256 indexed tokenId);
+
+    /// @notice Emitted after farming center address change
+    /// @param farmingCenterAddress The new address of connected farming center
+    event FarmingCenter(address farmingCenterAddress);
 
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
@@ -112,7 +115,7 @@ interface INonfungiblePositionManager is
     /// a method does not exist, i.e. the pool is assumed to be initialized.
     /// @param params The params necessary to mint a position, encoded as `MintParams` in calldata
     /// @return tokenId The ID of the token that represents the minted position
-    /// @return liquidity The amount of liquidity for this position
+    /// @return liquidity The liquidity delta amount as a result of the increase
     /// @return amount0 The amount of token0
     /// @return amount1 The amount of token1
     function mint(
@@ -135,7 +138,7 @@ interface INonfungiblePositionManager is
     /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
     /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
     /// deadline The time by which the transaction must be included to effect the change
-    /// @return liquidity The new liquidity amount as a result of the increase
+    /// @return liquidity The liquidity delta amount as a result of the increase
     /// @return amount0 The amount of token0 to achieve resulting liquidity
     /// @return amount1 The amount of token1 to achieve resulting liquidity
     function increaseLiquidity(
@@ -186,16 +189,31 @@ interface INonfungiblePositionManager is
     /// @notice Changes approval of token ID for farming.
     /// @param tokenId The ID of the token that is being approved / unapproved
     /// @param approve New status of approval
-    function approveForFarming(uint256 tokenId, bool approve) external payable;
+    /// @param farmingAddress The address of farming: used to prevent tx frontrun
+    function approveForFarming(uint256 tokenId, bool approve, address farmingAddress) external payable;
 
     /// @notice Changes farming status of token to 'farmed' or 'not farmed'
     /// @dev can be called only by farmingCenter
-    /// @param tokenId tokenId The ID of the token
-    /// @param tokenId isFarmed The new status
-    function switchFarmingStatus(uint256 tokenId, bool isFarmed) external;
+    /// @param tokenId The ID of the token
+    /// @param toActive The new status
+    function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
     /// @param newFarmingCenter The new address of farmingCenter
     function setFarmingCenter(address newFarmingCenter) external;
+
+    /// @notice Returns whether `spender` is allowed to manage `tokenId`
+    /// @dev Requirement: `tokenId` must exist
+    function isApprovedOrOwner(address spender, uint256 tokenId) external view returns (bool);
+
+    /// @notice Returns the address of currently connected farming, if any
+    /// @return The address of the farming center contract, which handles farmings logic
+    function farmingCenter() external view returns (address);
+
+    /// @notice Returns the address of farming that is approved for this token, if any
+    function farmingApprovals(uint256 tokenId) external view returns (address);
+
+    /// @notice Returns the address of farming in which this token is farmed, if any
+    function tokenFarmedIn(uint256 tokenId) external view returns (address);
 }

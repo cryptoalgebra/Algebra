@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import './PoolAddress.sol';
 
 /// @notice Provides validation for callbacks from Algebra Pools
@@ -25,12 +25,11 @@ library CallbackValidation {
     /// @param poolDeployer The contract address of the Algebra pool deployer
     /// @param poolKey The identifying key of the ALgebra pool
     /// @return pool The Algebra pool contract address
-    function verifyCallback(address poolDeployer, PoolAddress.PoolKey memory poolKey)
-        internal
-        view
-        returns (IAlgebraPool pool)
-    {
+    function verifyCallback(
+        address poolDeployer,
+        PoolAddress.PoolKey memory poolKey
+    ) internal view returns (IAlgebraPool pool) {
         pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
-        require(msg.sender == address(pool));
+        require(msg.sender == address(pool), 'Invalid caller of callback');
     }
 }

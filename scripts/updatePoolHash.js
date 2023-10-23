@@ -24,8 +24,3 @@ updateHash(
         '../src/core/contracts/AlgebraFactory.sol',
     ]
 );
-
-updateHash(
-    '../src/core/artifacts/contracts/test/simulation/SimulationTimeAlgebraPool.sol/SimulationTimeAlgebraPool.json', 
-    ['../src/core/contracts/test/simulation/SimulationTimeFactory.sol']
-);

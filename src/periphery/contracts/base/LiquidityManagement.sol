@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
-pragma abicoder v2;
+pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraMintCallback.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
@@ -52,7 +51,7 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         AddLiquidityParams memory params
     )
         internal
-        returns (uint128 liquidity, uint256 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
+        returns (uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1});
 
@@ -83,26 +82,5 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         );
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
-    }
-
-    /// @notice Create limit order in pool
-    function createLimitOrder(
-        IAlgebraPool pool,
-        address token0,
-        address token1,
-        int24 tick,
-        uint128 amount
-    ) internal returns (bool depositedToken) {
-        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: token0, token1: token1});
-
-        (, uint256 amount1, ) = pool.mint(
-            msg.sender,
-            address(this),
-            tick,
-            tick,
-            amount,
-            abi.encode(MintCallbackData({poolKey: poolKey, payer: msg.sender}))
-        );
-        depositedToken = amount1 > 0;
     }
 }

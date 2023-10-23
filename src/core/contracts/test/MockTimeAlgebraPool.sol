@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v1;
 
 import '../AlgebraPool.sol';
-import './MockTimeDataStorageOperator.sol';
 
 // used for testing time dependent behavior
 contract MockTimeAlgebraPool is AlgebraPool {
@@ -33,27 +32,6 @@ contract MockTimeAlgebraPool is AlgebraPool {
   function checkBlockTimestamp() external view returns (bool) {
     require(super._blockTimestamp() == uint32(block.timestamp));
     return true;
-  }
-
-  function getAverageVolatility() external view returns (uint112 volatilityAverage) {
-    volatilityAverage = MockTimeDataStorageOperator(dataStorageOperator).getAverageVolatility(
-      _blockTimestamp(),
-      int24(uint24(globalState.fee)),
-      globalState.timepointIndex
-    );
-  }
-
-  function getPrevTick() external view returns (int24 tick, int24 currentTick) {
-    unchecked {
-      if (globalState.timepointIndex > 2) {
-        (, , , , tick, , ) = IDataStorageOperator(dataStorageOperator).timepoints(globalState.timepointIndex);
-      }
-      currentTick = globalState.tick;
-    }
-  }
-
-  function getFee() external view returns (uint16 fee) {
-    return MockTimeDataStorageOperator(dataStorageOperator).getFee(_blockTimestamp(), globalState.tick, globalState.timepointIndex);
   }
 
   function getKeyForPosition(address owner, int24 bottomTick, int24 topTick) external pure returns (bytes32 key) {

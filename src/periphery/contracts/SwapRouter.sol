@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
-pragma abicoder v2;
+pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/libraries/SafeCast.sol';
-import '@cryptoalgebra/core/contracts/libraries/TickMath.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeCast.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './interfaces/ISwapRouter.sol';
 import './base/PeripheryImmutableState.sol';
@@ -15,7 +14,6 @@ import './base/SelfPermit.sol';
 import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
-import './interfaces/external/IWNativeToken.sol';
 
 /// @title Algebra Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
@@ -56,12 +54,8 @@ contract SwapRouter is
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata _data
-    ) external override {
-        require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
+    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
+        require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
@@ -111,13 +105,9 @@ contract SwapRouter is
     }
 
     /// @inheritdoc ISwapRouter
-    function exactInputSingle(ExactInputSingleParams calldata params)
-        external
-        payable
-        override
-        checkDeadline(params.deadline)
-        returns (uint256 amountOut)
-    {
+    function exactInputSingle(
+        ExactInputSingleParams calldata params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         amountOut = exactInputInternal(
             params.amountIn,
             params.recipient,
@@ -128,13 +118,9 @@ contract SwapRouter is
     }
 
     /// @inheritdoc ISwapRouter
-    function exactInput(ExactInputParams memory params)
-        external
-        payable
-        override
-        checkDeadline(params.deadline)
-        returns (uint256 amountOut)
-    {
+    function exactInput(
+        ExactInputParams memory params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         address payer = msg.sender; // msg.sender pays for the first hop
 
         while (true) {
@@ -165,12 +151,9 @@ contract SwapRouter is
     }
 
     /// @inheritdoc ISwapRouter
-    function exactInputSingleSupportingFeeOnTransferTokens(ExactInputSingleParams calldata params)
-        external
-        override
-        checkDeadline(params.deadline)
-        returns (uint256 amountOut)
-    {
+    function exactInputSingleSupportingFeeOnTransferTokens(
+        ExactInputSingleParams calldata params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         SwapCallbackData memory data = SwapCallbackData({
             path: abi.encodePacked(params.tokenIn, params.tokenOut),
             payer: msg.sender
@@ -179,7 +162,7 @@ contract SwapRouter is
 
         bool zeroToOne = params.tokenIn < params.tokenOut;
 
-        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut).swapSupportingFeeOnInputTokens(
+        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut).swapWithPaymentInAdvance(
             msg.sender,
             recipient,
             zeroToOne,
@@ -224,17 +207,13 @@ contract SwapRouter is
             : (uint256(amount1Delta), uint256(-amount0Delta));
         // it's technically possible to not receive the full output amount,
         // so if no price limit has been specified, require this possibility away
-        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut);
+        if (limitSqrtPrice == 0) require(amountOutReceived == amountOut, 'Not received full amountOut');
     }
 
     /// @inheritdoc ISwapRouter
-    function exactOutputSingle(ExactOutputSingleParams calldata params)
-        external
-        payable
-        override
-        checkDeadline(params.deadline)
-        returns (uint256 amountIn)
-    {
+    function exactOutputSingle(
+        ExactOutputSingleParams calldata params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountIn) {
         // avoid an SLOAD by using the swap return data
         amountIn = exactOutputInternal(
             params.amountOut,
@@ -248,13 +227,9 @@ contract SwapRouter is
     }
 
     /// @inheritdoc ISwapRouter
-    function exactOutput(ExactOutputParams calldata params)
-        external
-        payable
-        override
-        checkDeadline(params.deadline)
-        returns (uint256 amountIn)
-    {
+    function exactOutput(
+        ExactOutputParams calldata params
+    ) external payable override checkDeadline(params.deadline) returns (uint256 amountIn) {
         // it's okay that the payer is fixed to msg.sender here, as they're only paying for the "final" exact output
         // swap, which happens first, and subsequent swaps are paid for within nested callback frames
         exactOutputInternal(

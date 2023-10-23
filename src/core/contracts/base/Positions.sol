@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import './AlgebraPoolBase.sol';
 import '../libraries/LiquidityMath.sol';
 import '../libraries/TickManagement.sol';
+import './AlgebraPoolBase.sol';
 
 /// @title Algebra positions abstract contract
 /// @notice Contains the logic of recalculation and change of liquidity positions
+/// @dev Relies on method _addOrRemoveTicks, which is implemented in TickStructure
 abstract contract Positions is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
@@ -21,13 +22,11 @@ abstract contract Positions is AlgebraPoolBase {
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
 
-  /**
-   * @notice This function fetches certain position object
-   * @param owner The address owing the position
-   * @param bottomTick The position's bottom tick
-   * @param topTick The position's top tick
-   * @return position The Position object
-   */
+  /// @notice This function fetches certain position object
+  /// @param owner The address owing the position
+  /// @param bottomTick The position's bottom tick
+  /// @param topTick The position's top tick
+  /// @return position The Position object
   function getOrCreatePosition(address owner, int24 bottomTick, int24 topTick) internal view returns (Position storage) {
     bytes32 key;
     assembly {
@@ -36,116 +35,48 @@ abstract contract Positions is AlgebraPoolBase {
     return positions[key];
   }
 
-  struct UpdatePositionCache {
-    uint160 price; // The square root of the current price in Q64.96 format
-    int24 prevInitializedTick; // The previous initialized tick in linked list
-    uint16 fee; // The current fee in hundredths of a bip, i.e. 1e-6
-    uint16 timepointIndex; // The index of the last written timepoint
-  }
-
-  /**
-   * @dev Updates position's ticks and its fees
-   * @return amount0 The abs amount of token0 that corresponds to liquidityDelta
-   * @return amount1 The abs amount of token1 that corresponds to liquidityDelta
-   */
+  /// @dev Updates position's ticks and its fees
+  /// @return amount0 The abs amount of token0 that corresponds to liquidityDelta
+  /// @return amount1 The abs amount of token1 that corresponds to liquidityDelta
   function _updatePositionTicksAndFees(
     Position storage position,
     int24 bottomTick,
     int24 topTick,
     int128 liquidityDelta
   ) internal returns (uint256 amount0, uint256 amount1) {
-    // using memory cache to avoid "stack too deep" error
-    UpdatePositionCache memory cache = UpdatePositionCache(
-      globalState.price,
-      globalState.prevInitializedTick,
-      globalState.fee,
-      globalState.timepointIndex
-    );
-
-    int24 currentTick = globalState.tick;
+    (uint160 currentPrice, int24 currentTick) = (globalState.price, globalState.tick);
 
     bool toggledBottom;
     bool toggledTop;
     {
       // scope to prevent "stack too deep"
-      (uint256 _totalFeeGrowth0Token, uint256 _totalFeeGrowth1Token) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
+      (uint256 _totalFeeGrowth0, uint256 _totalFeeGrowth1) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
-        uint32 time = _blockTimestamp();
-        uint160 _secondsPerLiquidityCumulative = _getSecondsPerLiquidityCumulative(time, liquidity);
-
-        toggledBottom = ticks.update(
-          bottomTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          _secondsPerLiquidityCumulative,
-          time,
-          false // isTopTick: false
-        );
-
-        toggledTop = ticks.update(
-          topTick,
-          currentTick,
-          liquidityDelta,
-          _totalFeeGrowth0Token,
-          _totalFeeGrowth1Token,
-          _secondsPerLiquidityCumulative,
-          time,
-          true // isTopTick: true
-        );
+        toggledBottom = ticks.update(bottomTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, false); // isTopTick: false
+        toggledTop = ticks.update(topTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, true); // isTopTick: true
       }
 
-      (uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128) = ticks.getInnerFeeGrowth(
-        bottomTick,
-        topTick,
-        currentTick,
-        _totalFeeGrowth0Token,
-        _totalFeeGrowth1Token
-      );
-
-      _recalculatePosition(position, liquidityDelta, feeGrowthInside0X128, feeGrowthInside1X128);
+      (uint256 feeGrowth0, uint256 feeGrowth1) = ticks.getInnerFeeGrowth(bottomTick, topTick, currentTick, _totalFeeGrowth0, _totalFeeGrowth1);
+      _recalculatePosition(position, liquidityDelta, feeGrowth0, feeGrowth1);
     }
 
     if (liquidityDelta != 0) {
       // if liquidityDelta is negative and the tick was toggled, it means that it should not be initialized anymore, so we delete it
       if (toggledBottom || toggledTop) {
-        int24 previousTick = cache.prevInitializedTick;
-        if (toggledBottom) {
-          previousTick = _insertOrRemoveTick(bottomTick, currentTick, previousTick, liquidityDelta < 0);
-        }
-        if (toggledTop) {
-          previousTick = _insertOrRemoveTick(topTick, currentTick, previousTick, liquidityDelta < 0);
-        }
-        cache.prevInitializedTick = previousTick;
+        _addOrRemoveTicks(bottomTick, topTick, toggledBottom, toggledTop, currentTick, liquidityDelta < 0);
       }
 
       int128 globalLiquidityDelta;
-      (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, cache.price);
-      if (globalLiquidityDelta != 0) {
-        uint128 liquidityBefore = liquidity;
-        (uint16 newTimepointIndex, uint16 newFee) = _writeTimepoint(cache.timepointIndex, _blockTimestamp(), currentTick, liquidityBefore);
-        if (cache.timepointIndex != newTimepointIndex) {
-          cache.timepointIndex = newTimepointIndex;
-          if (cache.fee != newFee) {
-            cache.fee = newFee;
-            emit Fee(newFee);
-          }
-        }
-        liquidity = LiquidityMath.addDelta(liquidityBefore, liquidityDelta);
-      }
-
-      (globalState.prevInitializedTick, globalState.fee, globalState.timepointIndex) = (cache.prevInitializedTick, cache.fee, cache.timepointIndex);
+      (amount0, amount1, globalLiquidityDelta) = LiquidityMath.getAmountsForLiquidity(bottomTick, topTick, liquidityDelta, currentTick, currentPrice);
+      if (globalLiquidityDelta != 0) liquidity = LiquidityMath.addDelta(liquidity, liquidityDelta); // update global liquidity
     }
   }
 
-  /**
-   * @notice Increases amounts of tokens owed to owner of the position
-   * @param position The position object to operate with
-   * @param liquidityDelta The amount on which to increase\decrease the liquidity
-   * @param innerFeeGrowth0Token Total fee token0 fee growth per 1/liquidity between position's lower and upper ticks
-   * @param innerFeeGrowth1Token Total fee token1 fee growth per 1/liquidity between position's lower and upper ticks
-   */
+  /// @notice Increases amounts of tokens owed to owner of the position
+  /// @param position The position object to operate with
+  /// @param liquidityDelta The amount on which to increase\decrease the liquidity
+  /// @param innerFeeGrowth0Token Total fee token0 fee growth per liquidity between position's lower and upper ticks
+  /// @param innerFeeGrowth1Token Total fee token1 fee growth per liquidity between position's lower and upper ticks
   function _recalculatePosition(
     Position storage position,
     int128 liquidityDelta,
@@ -163,17 +94,16 @@ abstract contract Positions is AlgebraPoolBase {
 
     unchecked {
       // update the position
-      uint256 _innerFeeGrowth0Token;
+      (uint256 lastInnerFeeGrowth0Token, uint256 lastInnerFeeGrowth1Token) = (position.innerFeeGrowth0Token, position.innerFeeGrowth1Token);
       uint128 fees0;
-      if ((_innerFeeGrowth0Token = position.innerFeeGrowth0Token) != innerFeeGrowth0Token) {
+      if (lastInnerFeeGrowth0Token != innerFeeGrowth0Token) {
         position.innerFeeGrowth0Token = innerFeeGrowth0Token;
-        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - _innerFeeGrowth0Token, liquidityBefore, Constants.Q128));
+        fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - lastInnerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
-      uint256 _innerFeeGrowth1Token;
       uint128 fees1;
-      if ((_innerFeeGrowth1Token = position.innerFeeGrowth1Token) != innerFeeGrowth1Token) {
+      if (lastInnerFeeGrowth1Token != innerFeeGrowth1Token) {
         position.innerFeeGrowth1Token = innerFeeGrowth1Token;
-        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - _innerFeeGrowth1Token, liquidityBefore, Constants.Q128));
+        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - lastInnerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
 
       // To avoid overflow owner has to collect fee before it

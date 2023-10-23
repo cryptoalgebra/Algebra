@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AdaptiveFee #getFee fee grid snapshot 1`] = `
+"[Volt: 0] Fee:100 Correct: 100 Error: 0.00% 
+[Volt: 25] Fee:109 Correct: 109.88566020116735 Error: -0.81% 
+[Volt: 50] Fee:115 Correct: 115.07468734318519 Error: -0.06% 
+[Volt: 75] Fee:122 Correct: 122.9658142057126 Error: -0.79% 
+[Volt: 100] Fee:134 Correct: 134.9376736874884 Error: -0.69% 
+[Volt: 112] Fee:142 Correct: 142.70183650179465 Error: -0.49% 
+[Volt: 125] Fee:152 Correct: 153.03530578674327 Error: -0.68% 
+[Volt: 150] Fee:179 Correct: 180.24490575058215 Error: -0.69% 
+[Volt: 175] Fee:220 Correct: 220.82186928039468 Error: -0.37% 
+[Volt: 200] Fee:279 Correct: 280.6029635235478 Error: -0.57% 
+[Volt: 250] Fee:486 Correct: 489.1516735854751 Error: -0.64% 
+[Volt: 300] Fee:870 Correct: 870.304074017156 Error: -0.03% 
+[Volt: 325] Fee:1126 Correct: 1132.099271807873 Error: -0.54% 
+[Volt: 350] Fee:1427 Correct: 1427.4119730278996 Error: -0.03% 
+[Volt: 359] Fee:1537 Correct: 1537.7121585699178 Error: -0.05% 
+[Volt: 360] Fee:1550 Correct: 1550 Error: 0.00% 
+[Volt: 375] Fee:1733 Correct: 1733.3355803968775 Error: -0.02% 
+[Volt: 400] Fee:2029 Correct: 2023.525343786886 Error: 0.27% 
+[Volt: 500] Fee:2752 Correct: 2752.733988897282 Error: -0.03% 
+[Volt: 525] Fee:2834 Correct: 2833.227869910604 Error: 0.03% 
+[Volt: 800] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 1000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 1500] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 2000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 3000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 5000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 8000] Fee:3000 Correct: 3000 Error: 0.00% 
+[Volt: 10000] Fee:3033 Correct: 3033.3655740185636 Error: -0.01% 
+[Volt: 20000] Fee:3107 Correct: 3107.5309030862936 Error: -0.02% 
+[Volt: 50000] Fee:5828 Correct: 5828.2486461390345 Error: -0.00% 
+[Volt: 60000] Fee:9000 Correct: 9000 Error: 0.00% 
+[Volt: 80000] Fee:13957 Correct: 13958.012690048654 Error: -0.01% 
+[Volt: 100000] Fee:14892 Correct: 14892.469096913706 Error: -0.00% 
+Mean error: -0.19%
+Max error: 0.27%
+
+======================================
+"
+`;
+
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 0 volatility 1`] = `548`;
+
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 100 volatility 1`] = `548`;
+
+exports[`AdaptiveFee #getFee gas cost  [ @skip-on-coverage ] gas cost of 2000 volatility 1`] = `1272`;

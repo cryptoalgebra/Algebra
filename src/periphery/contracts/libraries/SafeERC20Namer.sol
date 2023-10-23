@@ -8,37 +8,41 @@ import './AddressStringUtil.sol';
 // this library will always produce a string symbol to represent the token
 library SafeERC20Namer {
     function bytes32ToString(bytes32 x) private pure returns (string memory) {
-        bytes memory bytesString = new bytes(32);
-        uint256 charCount = 0;
-        for (uint256 j = 0; j < 32; j++) {
-            bytes1 char = x[j];
-            if (char != 0) {
-                bytesString[charCount] = char;
-                charCount++;
+        unchecked {
+            bytes memory bytesString = new bytes(32);
+            uint256 charCount = 0;
+            for (uint256 j = 0; j < 32; j++) {
+                bytes1 char = x[j];
+                if (char != 0) {
+                    bytesString[charCount] = char;
+                    charCount++;
+                }
             }
+            bytes memory bytesStringTrimmed = new bytes(charCount);
+            for (uint256 j = 0; j < charCount; j++) {
+                bytesStringTrimmed[j] = bytesString[j];
+            }
+            return string(bytesStringTrimmed);
         }
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (uint256 j = 0; j < charCount; j++) {
-            bytesStringTrimmed[j] = bytesString[j];
-        }
-        return string(bytesStringTrimmed);
     }
 
     // assumes the data is in position 2
     function parseStringData(bytes memory b) private pure returns (string memory) {
-        uint256 charCount = 0;
-        // first parse the charCount out of the data
-        for (uint256 i = 32; i < 64; i++) {
-            charCount <<= 8;
-            charCount += uint8(b[i]);
-        }
+        unchecked {
+            uint256 charCount = 0;
+            // first parse the charCount out of the data
+            for (uint256 i = 32; i < 64; i++) {
+                charCount <<= 8;
+                charCount += uint8(b[i]);
+            }
 
-        bytes memory bytesStringTrimmed = new bytes(charCount);
-        for (uint256 i = 0; i < charCount; i++) {
-            bytesStringTrimmed[i] = b[i + 64];
-        }
+            bytes memory bytesStringTrimmed = new bytes(charCount);
+            for (uint256 i = 0; i < charCount; i++) {
+                bytesStringTrimmed[i] = b[i + 64];
+            }
 
-        return string(bytesStringTrimmed);
+            return string(bytesStringTrimmed);
+        }
     }
 
     // uses a heuristic to produce a token name from the address

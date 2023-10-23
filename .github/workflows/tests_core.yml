@@ -1,0 +1,27 @@
+name: Autotests Core
+
+on:
+  push:
+    branches:
+      - master
+      - staged
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  Autotests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - run: npm run ci-install
+      - run: npm run compile
+        working-directory: ./src/core
+      - run: npm run test
+        working-directory: ./src/core

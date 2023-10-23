@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v1;
 
 import '../libraries/TickTree.sol';
 
 contract TickTreeTest {
   using TickTree for mapping(int16 => uint256);
-  uint256 public word;
+  uint32 public root;
 
-  mapping(int16 => uint256) public tickWordsTable;
-  mapping(int16 => uint256) public tickTree;
+  mapping(int16 => uint256) public tickSecondLayer;
+  mapping(int16 => uint256) public tickTable;
 
   function toggleTick(int24 tick) external {
-    word = tickTree.toggleTick(tickWordsTable, tick, word);
-    (tickWordsTable, tick, word);
+    root = tickTable.toggleTick(tickSecondLayer, root, tick);
+    (tickSecondLayer, tick, root);
   }
 
   function _isInitTick(int24 tick) private view returns (bool) {
@@ -25,27 +25,31 @@ contract TickTreeTest {
       rowNumber := sar(8, tick)
     }
 
-    return ((tickTree[rowNumber] & (1 << bitNumber)) > 0);
+    return ((tickTable[rowNumber] & (1 << bitNumber)) > 0);
   }
 
   function getGasCostOfFlipTick(int24 tick) external returns (uint256) {
     unchecked {
       uint256 gasBefore = gasleft();
-      word = tickTree.toggleTick(tickWordsTable, tick, word);
-      (tickWordsTable, tick, word);
+      root = tickTable.toggleTick(tickSecondLayer, root, tick);
+      (tickSecondLayer, tick, root);
       return gasBefore - gasleft();
     }
   }
 
-  function nextTickInTheSameNode(int24 tick) external view returns (int24 next, bool initialized) {
-    next = tickTree.getNextTick(tickWordsTable, word, tick);
+  function nextTick(int24 tick) external view returns (int24 next, bool initialized) {
+    next = tickTable.getNextTick(tickSecondLayer, root, tick);
     initialized = _isInitTick(next);
   }
 
-  function getGasCostOfNextTickInTheSameNode(int24 tick) external view returns (uint256) {
+  function nextTickInSameNode(uint256 node, uint8 tick) external pure returns (int24 next, bool initialized) {
+    (next, initialized) = TickTree._nextActiveBitInWord(node, int24(uint24(tick)));
+  }
+
+  function getGasCostOfNextTick(int24 tick) external view returns (uint256) {
     unchecked {
       uint256 gasBefore = gasleft();
-      tickTree.getNextTick(tickWordsTable, word, tick);
+      tickTable.getNextTick(tickSecondLayer, root, tick);
       return gasBefore - gasleft();
     }
   }

@@ -6,13 +6,12 @@ pragma solidity >=0.5.0;
 /// https://github.com/Uniswap/v3-core/tree/main/contracts/interfaces
 interface IAlgebraPoolEvents {
   /// @notice Emitted exactly once by a pool when #initialize is first called on the pool
-  /// @dev Mint/Burn/Swap cannot be emitted by the pool before Initialize
+  /// @dev Mint/Burn/Swaps cannot be emitted by the pool before Initialize
   /// @param price The initial sqrt price of the pool, as a Q64.96
   /// @param tick The initial tick of the pool, i.e. log base 1.0001 of the starting price of the pool
   event Initialize(uint160 price, int24 tick);
 
   /// @notice Emitted when liquidity is minted for a given position
-  /// @dev If the top and bottom ticks match, this should be treated as a limit order
   /// @param sender The address that minted the liquidity
   /// @param owner The owner of the position and recipient of any minted liquidity
   /// @param bottomTick The lower tick of the position
@@ -31,7 +30,6 @@ interface IAlgebraPoolEvents {
   );
 
   /// @notice Emitted when fees are collected by the owner of a position
-  /// @dev Collect events may be emitted with zero amount0 and amount1 when the caller chooses not to collect fees
   /// @param owner The owner of the position for which fees are collected
   /// @param recipient The address that received fees
   /// @param bottomTick The lower tick of the position
@@ -71,22 +69,21 @@ interface IAlgebraPoolEvents {
 
   /// @notice Emitted when the community fee is changed by the pool
   /// @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
-  event CommunityFee(uint8 communityFeeNew);
+  event CommunityFee(uint16 communityFeeNew);
 
   /// @notice Emitted when the tick spacing changes
   /// @param newTickSpacing The updated value of the new tick spacing
-  /// @param newTickSpacingLimitOrders The updated value of the new tick spacing for limit orders
-  event TickSpacing(int24 newTickSpacing, int24 newTickSpacingLimitOrders);
+  event TickSpacing(int24 newTickSpacing);
 
-  /// @notice Emitted when new activeIncentive is set
-  /// @param newIncentiveAddress The address of the new incentive
-  event Incentive(address indexed newIncentiveAddress);
+  /// @notice Emitted when the plugin address changes
+  /// @param newPluginAddress New plugin address
+  event Plugin(address newPluginAddress);
+
+  /// @notice Emitted when the plugin config changes
+  /// @param newPluginConfig New plugin config
+  event PluginConfig(uint8 newPluginConfig);
 
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
   event Fee(uint16 fee);
-
-  /// @notice Emitted in case of an error when trying to write to the DataStorage
-  /// @dev This shouldn't happen
-  event DataStorageFailure();
 }

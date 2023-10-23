@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 pragma abicoder v1;
 
 import '../interfaces/IERC20Minimal.sol';
@@ -18,12 +18,16 @@ import './LiquidityAmounts.sol';
 contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgebraFlashCallback {
   using SafeCast for uint256;
 
+  function getPriceAtTick(int24 tick) external pure returns (uint160 sqrtPrice) {
+    return TickMath.getSqrtRatioAtTick(tick);
+  }
+
   function swapExact0For1(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
     IAlgebraPool(pool).swap(recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swapExact0For1SupportingFee(address pool, uint256 amount0In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapWithPaymentInAdvance(msg.sender, recipient, true, int256(amount0In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap0ForExact1(address pool, uint256 amount1Out, address recipient, uint160 limitSqrtPrice) external {
@@ -37,7 +41,7 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   }
 
   function swapExact1For0SupportingFee(address pool, uint256 amount1In, address recipient, uint160 limitSqrtPrice) external {
-    IAlgebraPool(pool).swapSupportingFeeOnInputTokens(msg.sender, recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
+    IAlgebraPool(pool).swapWithPaymentInAdvance(msg.sender, recipient, false, int256(amount1In), limitSqrtPrice, abi.encode(msg.sender));
   }
 
   function swap1ForExact0(address pool, uint256 amount0Out, address recipient, uint160 limitSqrtPrice) external {
@@ -84,28 +88,6 @@ contract TestAlgebraCallee is IAlgebraMintCallback, IAlgebraSwapCallback, IAlgeb
   ) external returns (uint256 amount0Owed, uint256 amount1Owed, uint256 resultLiquidity) {
     (amount0Owed, amount1Owed, resultLiquidity) = IAlgebraPool(pool).mint(msg.sender, recipient, bottomTick, topTick, amount, abi.encode(msg.sender));
     emit MintResult(amount0Owed, amount1Owed, resultLiquidity);
-  }
-
-  function addLimitOrder(address pool, address recipient, int24 tick, uint128 amount) external {
-    IAlgebraPool(pool).mint(msg.sender, recipient, tick, tick, amount, abi.encode(msg.sender));
-  }
-
-  function decreaseLimitOrder(address pool, int24 tick, uint128 amount) external returns (uint256 amount0, uint256 amount1) {
-    return IAlgebraPool(pool).burn(tick, tick, amount);
-  }
-
-  function collectLimitOrder(address pool, address recipient, int24 tick) external returns (uint256 amount0, uint256 amount1) {
-    return IAlgebraPool(pool).collect(recipient, tick, tick, type(uint128).max, type(uint128).max);
-  }
-
-  function removeLimitOrder(address pool, address recipient, int24 tick) external returns (uint256 amount0, uint256 amount1) {
-    IAlgebraPool(pool).burn(tick, tick, 0);
-    (uint256 liquidityLeft, , , , ) = IAlgebraPool(pool).positions(getPositionKey(address(this), tick, tick));
-    liquidityLeft = liquidityLeft >> 128;
-    if (liquidityLeft > 0) {
-      IAlgebraPool(pool).burn(tick, tick, uint128(liquidityLeft));
-    }
-    return IAlgebraPool(pool).collect(recipient, tick, tick, type(uint128).max, type(uint128).max);
   }
 
   event MintCallback(uint256 amount0Owed, uint256 amount1Owed);

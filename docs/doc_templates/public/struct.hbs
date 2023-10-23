@@ -1,0 +1,19 @@
+{{>common}}
+
+```solidity
+struct {{name}} {
+{{#each members}}
+  {{{typeName.typeDescriptions.typeString}}} {{name}};
+{{/each}}
+}
+```
+{{#with natspec}}
+{{#if params}}
+
+| Name | Description |
+| ---- | ----------- |
+{{#each params}}
+| {{name}} | {{{joinLines description}}} |
+{{/each}}
+{{/if}}
+{{/with}}

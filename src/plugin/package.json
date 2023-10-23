@@ -1,0 +1,31 @@
+{
+  "name": "@cryptoalgebra/integral-base-plugin",
+  "description": "Plugins for Algebra Integral core",
+  "license": "GPL-2.0-or-later",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.1.0",
+  "keywords": [
+    "algebra"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptoalgebra/Algebra/"
+  },
+  "dependencies": {
+    "@cryptoalgebra/integral-core": "0.2.0",
+    "@cryptoalgebra/integral-periphery": "0.2.0"
+  },
+  "scripts": {
+    "precommit": "pretty-quick --staged --pattern **/*.sol && hardhat compile",
+    "compile": "npm --prefix ../core run compile && npm --prefix ../periphery run compile && hardhat compile",
+    "solhint": "solhint ./contracts/**/*.sol",
+    "test": "hardhat test --parallel",
+    "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
+  }
+}

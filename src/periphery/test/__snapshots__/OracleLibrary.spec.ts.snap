@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`DataStorageLibrary #consult gas test [ @skip-on-coverage ] 1`] = `22200`;
-
-exports[`DataStorageLibrary #getQuoteAtTick gas test [ @skip-on-coverage ] 1`] = `1219`;

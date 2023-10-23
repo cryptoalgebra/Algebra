@@ -1,0 +1,47 @@
+{
+  "name": "@cryptoalgebra/integral-farming",
+  "description": "Liquidity mining contracts for Algebra Integral protocol",
+  "license": "GPL-3.0-or-later",
+  "version": "0.1.0",
+  "keywords": [
+    "algebra",
+    "liquidity mining"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptoalgebra/Algebra"
+  },
+  "files": [
+    "contracts",
+    "!contracts/test",
+    "artifacts/contracts/**/*.json",
+    "!artifacts/contracts/**/*.dbg.json",
+    "!artifacts/contracts/test/**/*",
+    "!artifacts/contracts/base/**/*"
+  ],
+  "dependencies": {
+    "@openzeppelin/contracts": "4.9.3",
+    "@cryptoalgebra/integral-core": "0.2.0",
+    "@cryptoalgebra/integral-periphery": "0.2.0",
+    "@cryptoalgebra/integral-base-plugin": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.170",
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "compile": "npm --prefix ../periphery run compile && npm --prefix ../plugin run compile && hardhat compile",
+    "lint": "eslint . --ext .ts",
+    "prettier:check": "prettier-check contracts/**/*.sol test/**/*.ts types/*.ts",
+    "size-contracts": "hardhat compile && hardhat size-contracts",
+    "solhint": "solhint ./contracts/**/*.sol",
+    "test": "hardhat test --parallel",
+    "clear-cache": "rm -rf artifacts/ cache/ typechain/",
+    "coverage": "npm --prefix ../periphery run compile && hardhat coverage",
+    "precommit": "pretty-quick --staged --pattern **/*.sol"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=14.0.0"
+  }
+}

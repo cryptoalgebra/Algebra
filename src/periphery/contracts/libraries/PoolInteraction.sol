@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraFactory.sol';
-import '@cryptoalgebra/core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './PositionKey.sol';
 
@@ -29,7 +29,7 @@ library PoolInteraction {
     }
 
     function _getSqrtPrice(IAlgebraPool pool) internal view returns (uint160 sqrtPriceX96) {
-        (sqrtPriceX96, , , , , , ) = pool.globalState();
+        (sqrtPriceX96, , , , , ) = pool.globalState();
     }
 
     function _burnPositionInPool(
@@ -38,6 +38,6 @@ library PoolInteraction {
         int24 tickUpper,
         uint128 liquidity
     ) internal returns (uint256 amount0, uint256 amount1) {
-        return pool.burn(tickLower, tickUpper, liquidity);
+        return pool.burn(tickLower, tickUpper, liquidity, '0x0');
     }
 }

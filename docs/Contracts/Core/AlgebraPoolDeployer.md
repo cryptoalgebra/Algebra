@@ -7,18 +7,16 @@ Algebra pool deployer
 
 Is used by AlgebraFactory to deploy pools
 
-*Developer note: Version: Algebra V2.1*
+*Developer note: Version: Algebra Integral*
 
-
-
+**Inherits:** [IAlgebraPoolDeployer](interfaces/IAlgebraPoolDeployer.md)
 
 ## Functions
 ### constructor
 
-
-`constructor(address _factory, address _communityVault) public`  public
-
-
+```solidity
+constructor(address _factory, address _communityVault) public
+```
 
 
 
@@ -27,23 +25,22 @@ Is used by AlgebraFactory to deploy pools
 | _factory | address |  |
 | _communityVault | address |  |
 
-
 ### getDeployParameters
 
-
-`function getDeployParameters() external view returns (address _dataStorage, address _factory, address _communityVault, address _token0, address _token1)` view external
+```solidity
+function getDeployParameters() external view returns (address _plugin, address _factory, address _communityVault, address _token0, address _token1)
+```
+**Selector**: `0x04889e26`
 
 Get the parameters to be used in constructing the pool, set transiently during pool creation.
+
 *Developer note: Called by the pool constructor to fetch the parameters of the pool*
-
-
-
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| _dataStorage | address |  |
+| _plugin | address |  |
 | _factory | address |  |
 | _communityVault | address |  |
 | _token0 | address |  |
@@ -51,17 +48,18 @@ Get the parameters to be used in constructing the pool, set transiently during p
 
 ### deploy
 
+```solidity
+function deploy(address plugin, address token0, address token1) external returns (address pool)
+```
+**Selector**: `0xd9181cd3`
 
-`function deploy(address dataStorage, address token0, address token1) external returns (address pool)`  external
 
 
 *Developer note: Deploys a pool with the given parameters by transiently setting the parameters in cache.*
 
-
-
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| dataStorage | address | The pools associated dataStorage |
+| plugin | address | The pool associated plugin (if any) |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
 
@@ -69,8 +67,5 @@ Get the parameters to be used in constructing the pool, set transiently during p
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address | The deployed pool&#x27;s address |
-
-
-
+| pool | address | The deployed pool's address |
 

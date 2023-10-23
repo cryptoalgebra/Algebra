@@ -5,56 +5,112 @@
 
 Algebra factory
 
-Is used to deploy pools and its dataStorages
+Is used to deploy pools and its plugins
 
-*Developer note: Version: Algebra V2.1*
+*Developer note: Version: Algebra Integral*
 
+**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/)
 
-
-## Variables
-### bytes32 POOLS_ADMINISTRATOR_ROLE constant
+## Public variables
+### POOLS_ADMINISTRATOR_ROLE
+```solidity
+bytes32 constant POOLS_ADMINISTRATOR_ROLE = 0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442
+```
+**Selector**: `0xb500a48b`
 
 role that can change communityFee and tickspacing in pools
 
-### address poolDeployer immutable
+
+### poolDeployer
+```solidity
+address immutable poolDeployer
+```
+**Selector**: `0x3119049a`
 
 Returns the current poolDeployerAddress
 
-### address communityVault immutable
+
+### communityVault
+```solidity
+address immutable communityVault
+```
+**Selector**: `0x53e97868`
 
 Returns the current communityVaultAddress
 
-### address farmingAddress 
 
-
-
-*Developer note: Is retrieved from the pools to restrict calling certain functions not by a tokenomics contract*
-### uint8 defaultCommunityFee 
+### defaultCommunityFee
+```solidity
+uint16 defaultCommunityFee
+```
+**Selector**: `0x2f8a39dd`
 
 Returns the default community fee
 
-### uint256 renounceOwnershipStartTimestamp 
+
+### defaultFee
+```solidity
+uint16 defaultFee
+```
+**Selector**: `0x5a6c72d0`
+
+Returns the default fee
+
+
+### defaultTickspacing
+```solidity
+int24 defaultTickspacing
+```
+**Selector**: `0x29bc3446`
+
+Returns the default tickspacing
+
+
+### renounceOwnershipStartTimestamp
+```solidity
+uint256 renounceOwnershipStartTimestamp
+```
+**Selector**: `0x084bfff9`
 
 
 
-### struct AlgebraFeeConfiguration defaultFeeConfiguration 
+
+### defaultPluginFactory
+```solidity
+contract IAlgebraPluginFactory defaultPluginFactory
+```
+**Selector**: `0xd0ad2792`
+
+Return the current pluginFactory address
 
 
-
-*Developer note: values of constants for sigmoids in fee calculation formula*
-### mapping(address &#x3D;&gt; mapping(address &#x3D;&gt; address)) poolByPair 
+### poolByPair
+```solidity
+mapping(address => mapping(address => address)) poolByPair
+```
+**Selector**: `0xd9a641e1`
 
 Returns the pool address for a given pair of tokens, or address 0 if it does not exist
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
+### POOL_INIT_CODE_HASH
+```solidity
+bytes32 constant POOL_INIT_CODE_HASH = 0x177d5fbf994f4d130c008797563306f1a168dc689f81b2fa23b4396931014d91
+```
+**Selector**: `0xdc6fd8ab`
+
+returns keccak256 of AlgebraPool init bytecode.
+
+*Developer note: keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically*
+
+
 ## Functions
 ### constructor
 
-
-`constructor(address _poolDeployer) public`  public
-
-
+```solidity
+constructor(address _poolDeployer) public
+```
 
 
 
@@ -62,17 +118,16 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 | ---- | ---- | ----------- |
 | _poolDeployer | address |  |
 
-
 ### owner
 
-
-`function owner() public view returns (address)` view public
+```solidity
+function owner() public view returns (address)
+```
+**Selector**: `0x8da5cb5b`
 
 Returns the current owner of the factory
+
 *Developer note: Can be changed by the current owner via transferOwnership(address newOwner)*
-
-
-
 
 **Returns:**
 
@@ -82,35 +137,74 @@ Returns the current owner of the factory
 
 ### hasRoleOrOwner
 
+```solidity
+function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)
+```
+**Selector**: `0xe8ae2b69`
 
-`function hasRoleOrOwner(bytes32 role, address account) public view returns (bool)` view public
-
-
-*Developer note: Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.*
-
-
+Returns &#x60;true&#x60; if &#x60;account&#x60; has been granted &#x60;role&#x60; or &#x60;account&#x60; is owner.
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| role | bytes32 |  |
-| account | address |  |
+| role | bytes32 | The hash corresponding to the role |
+| account | address | The address for which the role is checked |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bool |  |
+| [0] | bool | bool Whether the address has this role or the owner role or not |
+
+### defaultConfigurationForPool
+
+```solidity
+function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee)
+```
+**Selector**: `0x25b355d6`
+
+Returns the default communityFee and tickspacing
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| communityFee | uint16 | which will be set at the creation of the pool |
+| tickSpacing | int24 | which will be set at the creation of the pool |
+| fee | uint16 | which will be set at the creation of the pool |
+
+### computePoolAddress
+
+```solidity
+function computePoolAddress(address token0, address token1) public view returns (address pool)
+```
+**Selector**: `0xd8ed2241`
+
+Deterministically computes the pool address given the token0 and token1
+
+*Developer note: The method does not check if such a pool has been created*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token0 | address | first token |
+| token1 | address | second token |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | address | The contract address of the Algebra pool |
 
 ### createPool
 
-
-`function createPool(address tokenA, address tokenB) external returns (address pool)`  external
+```solidity
+function createPool(address tokenA, address tokenB) external returns (address pool)
+```
+**Selector**: `0xe3433615`
 
 Creates a pool for the given two tokens
+
 *Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
 The call will revert if the pool already exists or the token arguments are invalid.*
-
-
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -123,89 +217,95 @@ The call will revert if the pool already exists or the token arguments are inval
 | ---- | ---- | ----------- |
 | pool | address | The address of the newly created pool |
 
-### setFarmingAddress
-
-
-`function setFarmingAddress(address newFarmingAddress) external`  external
-
-
-*Developer note: updates tokenomics address on the factory*
-
-
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| newFarmingAddress | address | The new tokenomics contract address |
-
-
 ### setDefaultCommunityFee
 
+```solidity
+function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external
+```
+**Selector**: `0x8d5a8711`
 
-`function setDefaultCommunityFee(uint8 newDefaultCommunityFee) external`  external
 
 
 *Developer note: updates default community fee for new pools*
 
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultCommunityFee | uint16 | The new community fee, _must_ be <= MAX_COMMUNITY_FEE |
 
+### setDefaultFee
+
+```solidity
+function setDefaultFee(uint16 newDefaultFee) external
+```
+**Selector**: `0x77326584`
+
+
+
+*Developer note: updates default fee for new pools*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newDefaultCommunityFee | uint8 | The new community fee, _must_ be &lt;&#x3D; MAX_COMMUNITY_FEE |
+| newDefaultFee | uint16 | The new fee, _must_ be <= MAX_DEFAULT_FEE |
+
+### setDefaultTickspacing
+
+```solidity
+function setDefaultTickspacing(int24 newDefaultTickspacing) external
+```
+**Selector**: `0xf09489ac`
 
 
-### setDefaultFeeConfiguration
 
-
-`function setDefaultFeeConfiguration(struct AlgebraFeeConfiguration newConfig) external`  external
-
-Changes initial fee configuration for new pools
-*Developer note: changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-alpha1 + alpha2 + baseFee (max possible fee) must be &lt;&#x3D; type(uint16).max and gammas must be &gt; 0*
-
-
+*Developer note: updates default tickspacing for new pools*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| newConfig | struct AlgebraFeeConfiguration | new default fee configuration. See the #AdaptiveFee.sol library for details |
+| newDefaultTickspacing | int24 | The new tickspacing, _must_ be <= MAX_TICK_SPACING and >= MIN_TICK_SPACING |
 
+### setDefaultPluginFactory
+
+```solidity
+function setDefaultPluginFactory(address newDefaultPluginFactory) external
+```
+**Selector**: `0x2939dd97`
+
+
+
+*Developer note: updates pluginFactory address*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newDefaultPluginFactory | address | address of new plugin factory |
 
 ### startRenounceOwnership
 
-
-`function startRenounceOwnership() external`  external
+```solidity
+function startRenounceOwnership() external
+```
+**Selector**: `0x469388c4`
 
 Starts process of renounceOwnership. After that, a certain period
 of time must pass before the ownership renounce can be completed.
 
-
-
-
-
 ### stopRenounceOwnership
 
-
-`function stopRenounceOwnership() external`  external
+```solidity
+function stopRenounceOwnership() external
+```
+**Selector**: `0x238a1d74`
 
 Stops process of renounceOwnership and removes timer.
 
-
-
-
-
 ### renounceOwnership
 
+```solidity
+function renounceOwnership() public
+```
+**Selector**: `0x715018a6`
 
-`function renounceOwnership() public`  public
 
 
 *Developer note: Leaves the contract without owner. It will not be possible to call &#x60;onlyOwner&#x60; functions anymore.
 Can only be called by the current owner if RENOUNCE_OWNERSHIP_DELAY seconds
 have passed since the call to the startRenounceOwnership() function.*
-
-
-
-
-
-
-
 

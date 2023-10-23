@@ -1,29 +1,29 @@
-import { BigNumber, BigNumberish, constants, Signature, Wallet } from 'ethers'
-import { splitSignature } from 'ethers/lib/utils'
-import { NonfungiblePositionManager } from '../../typechain'
+import { BigNumberish, Signature, Wallet, MaxUint256 } from 'ethers';
+import { NonfungiblePositionManager } from '../../typechain';
 
 export default async function getPermitNFTSignature(
   wallet: Wallet,
   positionManager: NonfungiblePositionManager,
   spender: string,
   tokenId: BigNumberish,
-  deadline: BigNumberish = constants.MaxUint256,
+  deadline: BigNumberish = MaxUint256,
   permitConfig?: { nonce?: BigNumberish; name?: string; chainId?: number; version?: string }
 ): Promise<Signature> {
+  if (!wallet.provider) throw new Error('No provider');
   const [nonce, name, version, chainId] = await Promise.all([
     permitConfig?.nonce ?? positionManager.positions(tokenId).then((p) => p.nonce),
     permitConfig?.name ?? positionManager.name(),
     permitConfig?.version ?? '2',
-    permitConfig?.chainId ?? wallet.getChainId(),
-  ])
+    permitConfig?.chainId ?? (await wallet.provider.getNetwork()).chainId,
+  ]);
 
-  return splitSignature(
-    await wallet._signTypedData(
+  return Signature.from(
+    await wallet.signTypedData(
       {
         name,
         version,
         chainId,
-        verifyingContract: positionManager.address,
+        verifyingContract: await positionManager.getAddress(),
       },
       {
         Permit: [
@@ -53,5 +53,5 @@ export default async function getPermitNFTSignature(
         deadline,
       }
     )
-  )
+  );
 }

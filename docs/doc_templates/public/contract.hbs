@@ -12,53 +12,69 @@
 
 {{#if natspec.dev}}
 *Developer note: {{natspec.dev}}*
-{{/if}}
 
+{{/if}}
+{{#if baseContractsLinks}}
+**Inherits:**{{#each baseContractsLinks}} {{link}}{{/each}}
+{{/if}}
 {{#if modifiers}}
 ## Modifiers
 {{#hsection}}
 {{#each modifiers}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
-
 {{#if events}}
+
 ## Events
 {{#hsection}}
 {{#each events}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
+{{#if structures}}
 
+## Structs
+{{#hsection}}
+{{#each structures}}
+{{>item}}
+
+{{/each}}
+{{/hsection}}
+{{/if}}
 {{#if publicVariables}}
-## Variables
+
+## Public variables
 {{#hsection}}
 {{#each publicVariables}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
-
 {{#if publicExternalFunctions}}
+
 ## Functions
 {{#hsection}}
 {{#each publicExternalFunctions}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}
-
 {{/hsection}}
-
 {{/if}}
-
 {{#if errors}}
+
 ## Errors
 {{#hsection}}
 {{#each errors}}
 {{>item}}
+
 {{/each}}
 {{/hsection}}
 {{/if}}

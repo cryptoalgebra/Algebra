@@ -1,4 +1,8 @@
 # Algebra Periphery
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml/badge.svg"></a>
+
+[![npm](https://img.shields.io/npm/v/@cryptoalgebra/integral-periphery?style=flat)](https://www.npmjs.com/package/@cryptoalgebra/integral-periphery)
 
 This directory contains the periphery smart contracts for the Algebra DEX. For the lower level core contracts, see the `core` directory.
 

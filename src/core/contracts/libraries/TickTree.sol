@@ -1,56 +1,55 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import './Constants.sol';
 import './TickMath.sol';
 
 /// @title Packed tick initialized state library
 /// @notice Stores a packed mapping of tick index to its initialized state and search tree
 /// @dev The leafs mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
 library TickTree {
-  int16 internal constant SECOND_LAYER_OFFSET = 3466; // ceil(MAX_TICK / 256)
+  int16 internal constant SECOND_LAYER_OFFSET = 3466; // ceil(-MIN_TICK / 256)
 
   /// @notice Toggles the initialized state for a given tick from false to true, or vice versa
   /// @param leafs The mapping of words with ticks
   /// @param secondLayer The mapping of words with leafs
-  /// @param tick The tick to toggle
   /// @param treeRoot The word with info about active subtrees
+  /// @param tick The tick to toggle
   function toggleTick(
     mapping(int16 => uint256) storage leafs,
     mapping(int16 => uint256) storage secondLayer,
-    int24 tick,
-    uint256 treeRoot
-  ) internal returns (uint256 newTreeRoot) {
+    uint32 treeRoot,
+    int24 tick
+  ) internal returns (uint32 newTreeRoot) {
     newTreeRoot = treeRoot;
-    (bool toggledNode, int16 nodeNumber) = _toggleTickInNode(leafs, tick);
+    (bool toggledNode, int16 nodeIndex) = _toggleBitInNode(leafs, tick); // toggle in leaf
     if (toggledNode) {
       unchecked {
-        (toggledNode, nodeNumber) = _toggleTickInNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET);
+        (toggledNode, nodeIndex) = _toggleBitInNode(secondLayer, nodeIndex + SECOND_LAYER_OFFSET);
       }
       if (toggledNode) {
         assembly {
-          newTreeRoot := xor(newTreeRoot, shl(nodeNumber, 1))
+          newTreeRoot := xor(newTreeRoot, shl(nodeIndex, 1))
         }
       }
     }
   }
 
-  /// @notice Calculates the required node and toggles tick in it
-  /// @param row The level of tree
-  /// @param tick The tick to toggle
+  /// @notice Toggles a bit in a tree layer by its index
+  /// @param treeLevel The level of tree
+  /// @param bitIndex The end-to-end index of a bit in a layer of tree
   /// @return toggledNode Toggled whole node or not
-  /// @return nodeNumber Number of corresponding node
-  function _toggleTickInNode(mapping(int16 => uint256) storage row, int24 tick) private returns (bool toggledNode, int16 nodeNumber) {
+  /// @return nodeIndex Number of corresponding node
+  function _toggleBitInNode(mapping(int16 => uint256) storage treeLevel, int24 bitIndex) private returns (bool toggledNode, int16 nodeIndex) {
     assembly {
-      nodeNumber := sar(8, tick)
+      nodeIndex := sar(8, bitIndex)
     }
-    uint256 node = row[nodeNumber];
+    uint256 node = treeLevel[nodeIndex];
     assembly {
       toggledNode := iszero(node)
-      node := xor(node, shl(and(tick, 0xFF), 1))
+      node := xor(node, shl(and(bitIndex, 0xFF), 1))
       toggledNode := xor(toggledNode, iszero(node))
     }
-    row[nodeNumber] = node;
+    treeLevel[nodeIndex] = node;
   }
 
   /// @notice Returns the next initialized tick in tree to the right (gte) of the given tick or `MAX_TICK`
@@ -62,80 +61,80 @@ library TickTree {
   function getNextTick(
     mapping(int16 => uint256) storage leafs,
     mapping(int16 => uint256) storage secondLayer,
-    uint256 treeRoot,
+    uint32 treeRoot,
     int24 tick
   ) internal view returns (int24 nextTick) {
     unchecked {
-      tick++;
-      int16 nodeNumber;
-      bool initialized;
+      tick++; // start searching from the next tick
+      int16 nodeIndex;
       assembly {
         // index in treeRoot
-        nodeNumber := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
+        nodeIndex := shr(8, add(sar(8, tick), SECOND_LAYER_OFFSET))
       }
-      if (treeRoot & (1 << uint16(nodeNumber)) != 0) {
-        // if subtree has active ticks
+      bool initialized;
+      // if subtree has active ticks
+      if (treeRoot & (1 << uint16(nodeIndex)) != 0) {
         // try to find initialized tick in the corresponding leaf of the tree
-        (nodeNumber, nextTick, initialized) = _getNextActiveBitInSameNode(leafs, tick);
+        (nodeIndex, nextTick, initialized) = _nextActiveBitInSameNode(leafs, tick);
         if (initialized) return nextTick;
 
         // try to find next initialized leaf in the tree
-        (nodeNumber, nextTick, initialized) = _getNextActiveBitInSameNode(secondLayer, nodeNumber + SECOND_LAYER_OFFSET + 1);
+        (nodeIndex, nextTick, initialized) = _nextActiveBitInSameNode(secondLayer, nodeIndex + SECOND_LAYER_OFFSET + 1);
       }
       if (!initialized) {
         // try to find which subtree has an active leaf
-        (nextTick, initialized) = _nextActiveBitInTheSameNode(treeRoot, ++nodeNumber);
+        // nodeIndex is now the index of the second level node
+        (nextTick, initialized) = _nextActiveBitInWord(treeRoot, ++nodeIndex);
         if (!initialized) return TickMath.MAX_TICK;
-        nextTick = _getFirstActiveBitInNode(secondLayer, nextTick);
+        nextTick = _firstActiveBitInNode(secondLayer, nextTick); // we found a second level node that has a leaf with an active tick
       }
-      nextTick = _getFirstActiveBitInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
+      nextTick = _firstActiveBitInNode(leafs, nextTick - SECOND_LAYER_OFFSET);
     }
   }
 
-  /// @notice Calculates node with given tick and returns next active tick
-  /// @param row level of search tree
-  /// @param tick The starting tick
-  /// @return nodeNumber Number of corresponding node
-  /// @return nextTick Number of next active tick or last tick in node
-  /// @return initialized Is nextTick initialized or not
-  function _getNextActiveBitInSameNode(
-    mapping(int16 => uint256) storage row,
-    int24 tick
-  ) private view returns (int16 nodeNumber, int24 nextTick, bool initialized) {
+  /// @notice Returns the index of the next active bit in the same tree node
+  /// @param treeLevel The level of search tree
+  /// @param bitIndex The starting bit index
+  /// @return nodeIndex The index of corresponding node
+  /// @return nextBitIndex The index of next active bit or last bit in node
+  /// @return initialized Is nextBitIndex initialized or not
+  function _nextActiveBitInSameNode(
+    mapping(int16 => uint256) storage treeLevel,
+    int24 bitIndex
+  ) internal view returns (int16 nodeIndex, int24 nextBitIndex, bool initialized) {
     assembly {
-      nodeNumber := sar(8, tick)
+      nodeIndex := sar(8, bitIndex)
     }
-    (nextTick, initialized) = _nextActiveBitInTheSameNode(row[nodeNumber], tick);
+    (nextBitIndex, initialized) = _nextActiveBitInWord(treeLevel[nodeIndex], bitIndex);
   }
 
-  /// @notice Returns first active tick in given node
-  /// @param row level of search tree
-  /// @param nodeNumber Number of corresponding node
-  /// @return nextTick Number of next active tick or last tick in node
-  function _getFirstActiveBitInNode(mapping(int16 => uint256) storage row, int24 nodeNumber) private view returns (int24 nextTick) {
+  /// @notice Returns first active bit in given node
+  /// @param treeLevel The level of search tree
+  /// @param nodeIndex The index of corresponding node in the level of tree
+  /// @return bitIndex Number of next active bit or last bit in node
+  function _firstActiveBitInNode(mapping(int16 => uint256) storage treeLevel, int24 nodeIndex) internal view returns (int24 bitIndex) {
     assembly {
-      nextTick := shl(8, nodeNumber)
+      bitIndex := shl(8, nodeIndex)
     }
-    (nextTick, ) = _nextActiveBitInTheSameNode(row[int16(nodeNumber)], nextTick);
+    (bitIndex, ) = _nextActiveBitInWord(treeLevel[int16(nodeIndex)], bitIndex);
   }
 
-  /// @notice Returns the next initialized tick contained in the same word as the tick that is
-  /// to the right or at (gte) of the given tick
-  /// @param word The word in which to compute the next initialized tick
-  /// @param tick The starting tick
-  /// @return nextTick The next initialized or uninitialized tick up to 256 ticks away from the current tick
-  /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
-  function _nextActiveBitInTheSameNode(uint256 word, int24 tick) private pure returns (int24 nextTick, bool initialized) {
-    uint256 bitNumber;
+  /// @notice Returns the next initialized bit contained in the word that is to the right or at (gte) of the given bit
+  /// @param word The word in which to compute the next initialized bit
+  /// @param bitIndex The end-to-end index of a bit in a layer of tree
+  /// @return nextBitIndex The next initialized or uninitialized bit up to 256 bits away from the current bit
+  /// @return initialized Whether the next bit is initialized, as the function only searches within up to 256 bits
+  function _nextActiveBitInWord(uint256 word, int24 bitIndex) internal pure returns (int24 nextBitIndex, bool initialized) {
+    uint256 bitIndexInWord;
     assembly {
-      bitNumber := and(tick, 0xFF)
+      bitIndexInWord := and(bitIndex, 0xFF)
     }
     unchecked {
-      uint256 _row = word >> bitNumber; // all the 1s at or to the left of the bitNumber
+      uint256 _row = word >> bitIndexInWord; // all the 1s at or to the left of the bitIndexInWord
       if (_row == 0) {
-        nextTick = tick + int24(uint24(255 - bitNumber));
+        nextBitIndex = bitIndex + int24(uint24(255 - bitIndexInWord));
       } else {
-        nextTick = tick + int24(uint24(getSingleSignificantBit((0 - _row) & _row))); // least significant bit
+        nextBitIndex = bitIndex + int24(uint24(getSingleSignificantBit((0 - _row) & _row))); // least significant bit
         initialized = true;
       }
     }

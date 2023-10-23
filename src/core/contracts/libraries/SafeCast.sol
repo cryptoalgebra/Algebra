@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.5.0 || ^0.6.0 || ^0.7.0 || ^0.8.0;
+pragma solidity >=0.5.0 <0.9.0;
 
 /// @title Safe casting methods
 /// @notice Contains methods for safely casting between types
@@ -25,6 +25,13 @@ library SafeCast {
   /// @return z The downcasted integer, now type int128
   function toInt128(int256 y) internal pure returns (int128 z) {
     require((z = int128(y)) == y);
+  }
+
+  /// @notice Cast a uint128 to a int128, revert on overflow
+  /// @param y The uint128 to be downcasted
+  /// @return z The downcasted integer, now type int128
+  function toInt128(uint128 y) internal pure returns (int128 z) {
+    require((z = int128(y)) >= 0);
   }
 
   /// @notice Cast a uint256 to a int256, revert on overflow

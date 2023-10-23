@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity =0.8.17;
+pragma solidity =0.8.20;
 
-import '../interfaces/IAlgebraPoolErrors.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 import './FullMath.sol';
 import './LowGasSafeMath.sol';
 import './TokenDeltaMath.sol';
-import './TickMath.sol';
 import './Constants.sol';
 
 /// @title Computes the result of price movement
@@ -40,10 +39,10 @@ library PriceMovementMath {
     unchecked {
       require(price != 0);
       require(liquidity != 0);
+      if (amount == 0) return price;
 
       if (zeroToOne == fromInput) {
         // rounding up or down
-        if (amount == 0) return price;
         uint256 liquidityShifted = uint256(liquidity) << Constants.RESOLUTION;
 
         if (fromInput) {
@@ -80,19 +79,19 @@ library PriceMovementMath {
     }
   }
 
-  function getTokenADelta01(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
+  function getInputTokenDelta01(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
     return TokenDeltaMath.getToken0Delta(to, from, liquidity, true);
   }
 
-  function getTokenADelta10(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
+  function getInputTokenDelta10(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
     return TokenDeltaMath.getToken1Delta(from, to, liquidity, true);
   }
 
-  function getTokenBDelta01(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
+  function getOutputTokenDelta01(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
     return TokenDeltaMath.getToken1Delta(to, from, liquidity, false);
   }
 
-  function getTokenBDelta10(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
+  function getOutputTokenDelta10(uint160 to, uint160 from, uint128 liquidity) internal pure returns (uint256) {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
@@ -117,32 +116,29 @@ library PriceMovementMath {
     uint16 fee
   ) internal pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
     unchecked {
-      function(uint160, uint160, uint128) pure returns (uint256) getAmountA = zeroToOne ? getTokenADelta01 : getTokenADelta10;
+      function(uint160, uint160, uint128) pure returns (uint256) getInputTokenAmount = zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10;
 
       if (amountAvailable >= 0) {
         // exactIn or not
         uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
-        input = getAmountA(targetPrice, currentPrice, liquidity);
+        input = getInputTokenAmount(targetPrice, currentPrice, liquidity);
         if (amountAvailableAfterFee >= input) {
           resultPrice = targetPrice;
           feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
         } else {
           resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
-          if (targetPrice != resultPrice) {
-            input = getAmountA(resultPrice, currentPrice, liquidity);
+          assert(targetPrice != resultPrice); // should always be true
 
-            // we didn't reach the target, so take the remainder of the maximum input as fee
-            feeAmount = uint256(amountAvailable) - input;
-          } else {
-            feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
-          }
+          input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+          // we didn't reach the target, so take the remainder of the maximum input as fee
+          feeAmount = uint256(amountAvailable) - input; // input <= amountAvailable due to used formulas. This invariant is checked by fuzzy tests
         }
 
-        output = (zeroToOne ? getTokenBDelta01 : getTokenBDelta10)(resultPrice, currentPrice, liquidity);
+        output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
       } else {
-        function(uint160, uint160, uint128) pure returns (uint256) getAmountB = zeroToOne ? getTokenBDelta01 : getTokenBDelta10;
+        function(uint160, uint160, uint128) pure returns (uint256) getOutputTokenAmount = zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10;
 
-        output = getAmountB(targetPrice, currentPrice, liquidity);
+        output = getOutputTokenAmount(targetPrice, currentPrice, liquidity);
         amountAvailable = -amountAvailable;
         if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
 
@@ -150,17 +146,14 @@ library PriceMovementMath {
         else {
           resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
 
-          if (targetPrice != resultPrice) {
-            output = getAmountB(resultPrice, currentPrice, liquidity);
-          }
+          // should be always true if the price is in the allowed range
+          if (targetPrice != resultPrice) output = getOutputTokenAmount(resultPrice, currentPrice, liquidity);
 
           // cap the output amount to not exceed the remaining output amount
-          if (output > uint256(amountAvailable)) {
-            output = uint256(amountAvailable);
-          }
+          if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
         }
 
-        input = getAmountA(resultPrice, currentPrice, liquidity);
+        input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
         feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
       }
     }

@@ -8,6 +8,7 @@ skipFiles.push("libraries/NFTSVG.sol"); // TODO remove after fix of https://gith
 module.exports = {
     skipFiles: skipFiles,
     testfiles: "test/*.ts",
+    configureYulOptimizer: true,
     mocha: {
       grep: "@skip-on-coverage", // Find everything with this tag
       invert: true               // Run the grep's inverse set.

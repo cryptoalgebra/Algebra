@@ -3,32 +3,54 @@
 </p>
 
 <p align="center">
-Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
+Innovative DEX with concentrated liquidity and customizable plugins.
 </p>
  
- <p align="center">
- <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests.yml/badge.svg"></a>
-  <a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna.yml/badge.svg"></a>
+<p align="center">
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_core.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_core.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_periphery.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_plugin.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_plugin.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_farmings.yml"><img alt="Tests status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/tests_farmings.yml/badge.svg"></a>
+</p>
+<p align="center">
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_core.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_periphery.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugin.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_plugin.yml/badge.svg"></a>
+<a href="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_farming.yml"><img alt="Echidna status" src="https://github.com/cryptoalgebra/Algebra/actions/workflows/echidna_farming.yml/badge.svg"></a>
 </p>
 
-- [Docs](#Docs)
-- [Versions](#Versions)
-- [Build](#Build)
-- [Tests](#Tests)
-- [Coverage](#Tests-coverage)
-- [Deploy](#Deploy)
+
+- [Docs](#docs)
+- [Versions](#versions)
+- [Packages](#packages)
+- [Build](#build)
+- [Tests](#tests)
+- [Tests coverage](#tests-coverage)
+- [Deploy](#deploy)
 
 ## Docs
 
-The current short documentation page is located at: <a href="https://docs.algebra.finance/">https://docs.algebra.finance/</a>
-
-We are currently in the process of creating a more complete and comprehensive version of the documentation. It will be published when ready.
+The documentation page is located at: <a href="https://cryptoalgebra.gitbook.io/algebra-integral/">https://cryptoalgebra.gitbook.io/algebra-integral/</a>
 
 ## Versions
 
-Please note that different DEX-partners of our protocol may use different versions of the protocol. 
+Please note that different DEX-partners of our protocol may use different versions of the protocol. This repo contains the latest version: **Algebra Integral**. 
 
 A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/en/docs/contracts/partners/introduction)
+
+Previous versions of the protocol have been moved to separate repositories:
+
+[Algebra V1.9](https://github.com/cryptoalgebra/AlgebraV1.9)
+
+[Algebra V1](https://github.com/cryptoalgebra/AlgebraV1)
+
+## Packages
+
+Core: https://www.npmjs.com/package/@cryptoalgebra/integral-core
+
+Periphery: https://www.npmjs.com/package/@cryptoalgebra/integral-periphery
+
+Basic plugin: https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin
 
 ## Build
 
