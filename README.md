@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
+Innovative DEX with concentrated liquidity and customizable plugins.
 </p>
  
 <p align="center">
@@ -22,6 +22,7 @@ Innovative DEX with concentrated liquidity, adaptive fee, built-in farming etc.
 
 - [Docs](#docs)
 - [Versions](#versions)
+- [Packages](#packages)
 - [Build](#build)
 - [Tests](#tests)
 - [Tests coverage](#tests-coverage)
@@ -36,6 +37,14 @@ The documentation page is located at: <a href="https://cryptoalgebra.gitbook.io/
 Please note that different DEX-partners of our protocol may use different versions of the protocol. 
 
 A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/en/docs/contracts/partners/introduction)
+
+## Packages
+
+Core: https://www.npmjs.com/package/@cryptoalgebra/integral-core
+
+Periphery: https://www.npmjs.com/package/@cryptoalgebra/integral-periphery
+
+Basic plugin: https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin
 
 ## Build
 
