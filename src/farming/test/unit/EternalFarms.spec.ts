@@ -1719,7 +1719,7 @@ describe('unit/EternalFarms', () => {
       //it('does not overflow totalSecondsUnclaimed')
     });
 
-    it.only('rewards calculation underflow', async () => {
+    it('rewards calculation underflow', async () => {
       const helpers = HelperCommands.fromTestContext(context, actors, provider);
 
       const localNonce = await context.eternalFarming.numOfIncentives();
@@ -1730,8 +1730,8 @@ describe('unit/EternalFarms', () => {
         token0: await context.token0.getAddress(),
         token1: await context.token1.getAddress(),
         fee: FeeAmount.MEDIUM,
-        tickLower:  getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-        tickUpper:  getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: lpUser0.address,
         amount0Desired: amountDesired,
         amount1Desired: amountDesired,
@@ -1810,7 +1810,6 @@ describe('unit/EternalFarms', () => {
         direction: 'down',
         desiredValue: -150,
       });
-
 
       tokenId = await mintPosition(context.nft.connect(lpUser0), {
         token0: await context.token0.getAddress(),
