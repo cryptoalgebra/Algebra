@@ -1719,6 +1719,146 @@ describe('unit/EternalFarms', () => {
       //it('does not overflow totalSecondsUnclaimed')
     });
 
+    it.only('rewards calculation underflow', async () => {
+      const helpers = HelperCommands.fromTestContext(context, actors, provider);
+
+      const localNonce = await context.eternalFarming.numOfIncentives();
+
+      await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired * 3n, await context.nft.getAddress());
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower:  getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        tickUpper:  getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      });
+
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward: 1000000n,
+        bonusReward: 1000000n,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: localNonce,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+      };
+
+      const incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs));
+
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      );
+
+      const trader = actors.traderUser0();
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'down',
+        desiredValue: -30,
+      });
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'up',
+        desiredValue: 0,
+      });
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: -120,
+        tickUpper: -60,
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      });
+
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      );
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'down',
+        desiredValue: -150,
+      });
+
+
+      tokenId = await mintPosition(context.nft.connect(lpUser0), {
+        token0: await context.token0.getAddress(),
+        token1: await context.token1.getAddress(),
+        fee: FeeAmount.MEDIUM,
+        tickLower: -240,
+        tickUpper: -60,
+        recipient: lpUser0.address,
+        amount0Desired: amountDesired,
+        amount1Desired: amountDesired,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 1000,
+      });
+
+      await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
+
+      await context.farmingCenter.connect(lpUser0).enterFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      );
+
+      let time = await blockTimestamp();
+
+      await Time.set(time + 10000);
+
+      await helpers.makeTickGoFlow({
+        trader,
+        direction: 'down',
+        desiredValue: -238,
+      });
+
+      await context.farmingCenter.connect(lpUser0).exitFarming(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        tokenId
+      );
+    });
+
     describe('fails if', () => {
       it('farm has already been exitFarming', async () => {
         await expect(subject(lpUser0)).to.revertedWith('ERC721: invalid token ID');
