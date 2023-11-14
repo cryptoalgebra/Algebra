@@ -24,7 +24,8 @@ interface IAlgebraOracleV1TWAP {
   /// @param pool The address of Algebra Integral pool
   /// @param period Number of seconds in the past to start calculating time-weighted average
   /// @return timeWeightedAverageTick The time-weighted average tick from (block.timestamp - period) to block.timestamp
-  function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick);
+  /// @return isConnected Is oracle currently connected to the pool. If disconnected data can be obsolete
+  function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick, bool isConnected);
 
   /// @notice Returns the last timestamp written in the oracle
   function latestTimestamp(address pool) external view returns (uint32);
@@ -37,4 +38,8 @@ interface IAlgebraOracleV1TWAP {
 
   /// @notice Returns the index of oldest record available in the oracle
   function oldestIndex(address pool) external view returns (uint16);
+
+  /// @notice Whether or not the oracle is connected to the liquidity pool
+  /// @dev Oracle should not be used if disconnected from pool
+  function isOracleConnected(address pool) external view returns (bool connected);
 }

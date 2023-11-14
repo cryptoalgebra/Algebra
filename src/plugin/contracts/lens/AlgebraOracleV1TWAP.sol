@@ -30,8 +30,10 @@ contract AlgebraOracleV1TWAP is IAlgebraOracleV1TWAP {
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
-  function getAverageTick(address pool, uint32 period) external view override returns (int24 timeWeightedAverageTick) {
-    return OracleLibrary.consult(_getPluginForPool(pool), period);
+  function getAverageTick(address pool, uint32 period) external view override returns (int24 timeWeightedAverageTick, bool isConnected) {
+    address oracleAddress = _getPluginForPool(pool);
+    timeWeightedAverageTick = OracleLibrary.consult(oracleAddress, period);
+    isConnected = OracleLibrary.isOracleConnectedToPool(oracleAddress, pool);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP
@@ -48,6 +50,11 @@ contract AlgebraOracleV1TWAP is IAlgebraOracleV1TWAP {
   /// @inheritdoc IAlgebraOracleV1TWAP
   function latestIndex(address pool) external view override returns (uint16) {
     return OracleLibrary.latestIndex(_getPluginForPool(pool));
+  }
+
+  /// @inheritdoc IAlgebraOracleV1TWAP
+  function isOracleConnected(address pool) external view override returns (bool connected) {
+    connected = OracleLibrary.isOracleConnectedToPool(_getPluginForPool(pool), pool);
   }
 
   /// @inheritdoc IAlgebraOracleV1TWAP

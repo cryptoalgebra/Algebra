@@ -36,4 +36,8 @@ contract OracleLibraryTest {
     OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken);
     return gasBefore - gasleft();
   }
+
+  function isConnected(address oracleAddress, address poolAddress) external view returns (bool) {
+    return OracleLibrary.isOracleConnectedToPool(oracleAddress, poolAddress);
+  }
 }
