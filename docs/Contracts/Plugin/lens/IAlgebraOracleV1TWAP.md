@@ -53,7 +53,7 @@ Given a tick and a token amount, calculates the amount of token received in exch
 ### getAverageTick
 
 ```solidity
-function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick)
+function getAverageTick(address pool, uint32 period) external view returns (int24 timeWeightedAverageTick, bool isConnected)
 ```
 **Selector**: `0x57f32330`
 
@@ -73,6 +73,7 @@ It is recommended to check the latest available timestamp using the &#x60;latest
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | timeWeightedAverageTick | int24 | The time-weighted average tick from (block.timestamp - period) to block.timestamp |
+| isConnected | bool | Is oracle currently connected to the pool. If disconnected data can be obsolete |
 
 ### latestTimestamp
 
@@ -149,4 +150,25 @@ Returns the index of oldest record available in the oracle
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | uint16 |  |
+
+### isOracleConnected
+
+```solidity
+function isOracleConnected(address pool) external view returns (bool connected)
+```
+**Selector**: `0x9905d9a5`
+
+Whether or not the oracle is connected to the liquidity pool
+
+*Developer note: Oracle should not be used if disconnected from pool*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pool | address |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| connected | bool |  |
 

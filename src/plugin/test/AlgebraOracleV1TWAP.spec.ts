@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ContractFactory } from 'ethers';
-import { AlgebraOracleV1TWAP, MockTimeDSFactory, TestERC20 } from '../typechain';
+import { AlgebraOracleV1TWAP, MockPool, MockTimeDSFactory, TestERC20 } from '../typechain';
 import { tokensFixture } from './shared/externalFixtures';
 import { ZERO_ADDRESS } from './shared/fixtures';
 
@@ -41,36 +41,77 @@ describe('AlgebraOracleV1TWAP', () => {
 
   describe('#getAverageTick', () => {
     let mockVolatilityOracleFactory: ContractFactory;
+    let mockPool: MockPool;
 
-    before('create mockVolatilityOracleFactory', async () => {
+    beforeEach('create mockVolatilityOracleFactory', async () => {
       mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
     });
 
     it('reverts if oracle not exist', async () => {
       await expect(algebraOracleV1TWAP.getAverageTick(ZERO_ADDRESS, 0)).to.be.revertedWith('Oracle does not exist');
     });
 
-    it('correct output when tick is 0', async () => {
-      const period = 3;
-      const tickCumulatives = [12n, 12n];
-      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
-      await mockPluginFactory.setPluginForPool(mockVolatilityOracle, mockVolatilityOracle);
+    describe('plugin connected', async () => {
+      it('correct output when tick is 0', async () => {
+        const period = 3;
+        const tickCumulatives = [12n, 12n];
+        const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
+        await mockPluginFactory.setPluginForPool(mockPool, mockVolatilityOracle);
 
-      const oracleLibraryTick = await algebraOracleV1TWAP.getAverageTick(mockVolatilityOracle, period);
+        await mockPool.setPlugin(mockVolatilityOracle);
+        await mockPool.setPluginConfig(1);
 
-      expect(oracleLibraryTick).to.equal(0n);
+        const [oracleLibraryTick, isConnected] = await algebraOracleV1TWAP.getAverageTick(mockPool, period);
+
+        expect(oracleLibraryTick).to.equal(0n);
+        expect(isConnected).to.be.true;
+      });
+
+      it('correct output for positive tick', async () => {
+        const period = 3;
+        const tickCumulatives = [7n, 12n];
+        const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
+        await mockPluginFactory.setPluginForPool(mockPool, mockVolatilityOracle);
+        await mockPool.setPlugin(mockVolatilityOracle);
+        await mockPool.setPluginConfig(1);
+
+        const [oracleLibraryTick, isConnected] = await algebraOracleV1TWAP.getAverageTick(mockPool, period);
+
+        // Always round to negative infinity
+        // In this case, we don't have do anything
+        expect(oracleLibraryTick).to.equal(1n);
+        expect(isConnected).to.be.true;
+      });
     });
 
-    it('correct output for positive tick', async () => {
-      const period = 3;
-      const tickCumulatives = [7n, 12n];
-      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
-      await mockPluginFactory.setPluginForPool(mockVolatilityOracle, mockVolatilityOracle);
-      const oracleLibraryTick = await algebraOracleV1TWAP.getAverageTick(mockVolatilityOracle, period);
+    describe('plugin not connected', async () => {
+      it('correct output when tick is 0', async () => {
+        const period = 3;
+        const tickCumulatives = [12n, 12n];
+        const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
+        await mockPluginFactory.setPluginForPool(mockPool, mockVolatilityOracle);
 
-      // Always round to negative infinity
-      // In this case, we don't have do anything
-      expect(oracleLibraryTick).to.equal(1n);
+        const [oracleLibraryTick, isConnected] = await algebraOracleV1TWAP.getAverageTick(mockPool, period);
+
+        expect(oracleLibraryTick).to.equal(0n);
+        expect(isConnected).to.be.false;
+      });
+
+      it('correct output for positive tick', async () => {
+        const period = 3;
+        const tickCumulatives = [7n, 12n];
+        const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
+        await mockPluginFactory.setPluginForPool(mockPool, mockVolatilityOracle);
+
+        const [oracleLibraryTick, isConnected] = await algebraOracleV1TWAP.getAverageTick(mockPool, period);
+
+        // Always round to negative infinity
+        // In this case, we don't have do anything
+        expect(oracleLibraryTick).to.equal(1n);
+        expect(isConnected).to.be.false;
+      });
     });
   });
 
@@ -129,6 +170,28 @@ describe('AlgebraOracleV1TWAP', () => {
 
       const latestIndex = await algebraOracleV1TWAP.latestIndex(mockVolatilityOracle);
       expect(latestIndex).to.equal(1);
+    });
+  });
+
+  describe('#isOracleConnected', () => {
+    it('returns correct value', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 0], tickCumulatives);
+
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      const mockPool = await mockPoolFactory.deploy();
+
+      await mockPluginFactory.setPluginForPool(mockPool, mockVolatilityOracle);
+
+      expect(await algebraOracleV1TWAP.isOracleConnected(mockPool)).to.be.false;
+
+      await mockPool.setPlugin(mockVolatilityOracle);
+      expect(await algebraOracleV1TWAP.isOracleConnected(mockPool)).to.be.false;
+
+      await mockPool.setPluginConfig(1);
+      expect(await algebraOracleV1TWAP.isOracleConnected(mockPool)).to.be.true;
     });
   });
 

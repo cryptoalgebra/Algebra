@@ -142,6 +142,26 @@ describe('OracleLibrary', () => {
     });
   });
 
+  describe('#isConnected', () => {
+    it('returns correct value', async () => {
+      const period = 3;
+      const tickCumulatives = [7n, 12n];
+      const mockVolatilityOracleFactory = await ethers.getContractFactory('MockVolatilityOracle');
+      const mockVolatilityOracle = await mockVolatilityOracleFactory.deploy([period, 1], tickCumulatives);
+
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      const mockPool = await mockPoolFactory.deploy();
+
+      expect(await oracleLibraryTest.isConnected(mockVolatilityOracle, mockPool)).to.be.false;
+
+      await mockPool.setPlugin(mockVolatilityOracle);
+      expect(await oracleLibraryTest.isConnected(mockVolatilityOracle, mockPool)).to.be.false;
+
+      await mockPool.setPluginConfig(1);
+      expect(await oracleLibraryTest.isConnected(mockVolatilityOracle, mockPool)).to.be.true;
+    });
+  });
+
   describe('#getQuoteAtTick', () => {
     // sanity check
     it('token0: returns correct value when tick = 0', async () => {

@@ -10,7 +10,7 @@ interface IFarmingPlugin {
 
   /// @notice Returns the address of the pool the plugin is created for
   /// @return address of the pool
-  function pool() external returns (address);
+  function pool() external view returns (address);
 
   /// @notice Connects or disconnects an incentive.
   /// @dev Only farming can connect incentives.

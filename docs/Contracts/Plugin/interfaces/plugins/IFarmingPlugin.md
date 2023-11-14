@@ -28,7 +28,7 @@ Emitted when new activeIncentive is set
 ### pool
 
 ```solidity
-function pool() external returns (address)
+function pool() external view returns (address)
 ```
 **Selector**: `0x16f0115b`
 
