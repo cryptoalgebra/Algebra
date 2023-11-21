@@ -30,7 +30,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
   /// @inheritdoc IFarmingPlugin
   address public immutable override pool;
@@ -45,6 +46,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
+
+  uint16 public cachedFee;
 
   /// @inheritdoc IVolatilityOracle
   bool public override isInitialized;
@@ -263,10 +266,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (_incentive != address(0)) {
       (, int24 tick, , ) = _getPoolState();
       IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
-    } else {
-      _updatePluginConfigInPool(); // should not be called, reset config
     }
 
+    if (cachedFee > 0) {
+      IAlgebraPool(pool).setFee(cachedFee);
+      cachedFee = 0;
+    }
     return IAlgebraPlugin.afterSwap.selector;
   }
 
@@ -314,7 +319,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
     uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
     if (newFee != fee) {
-      IAlgebraPool(pool).setFee(newFee);
+      if (INFTVerifier(pluginFactory.nftVerifier()).isVerified(tx.oirigin)) {
+        IAlgebraPool(pool).setFee(newFee / 2);
+        cachedFee = newFee;
+      } else {
+        IAlgebraPool(pool).setFee(newFee);
+      }
     }
   }
 }

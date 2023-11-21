@@ -20,6 +20,8 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
+  address public override nftVerifier;
+
   /// @inheritdoc IBasePluginV1Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
@@ -71,5 +73,11 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  function setNFTVerifier(address newVerifier) external override onlyAdministrator {
+    require(nftVerifier != newVerifier);
+    nftVerifier = newVerifier;
+    emit Verifier(newVerifier);
   }
 }
