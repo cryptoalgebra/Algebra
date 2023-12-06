@@ -319,13 +319,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     lastTimepointTimestamp = currentTimestamp;
 
     uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
+    if (INFTVerifier(IBasePluginV1Factory(pluginFactory).nftVerifier()).isVerified(tx.origin)) {
+      cachedFee = newFee;
+      newFee = newFee / 2;
+    }
     if (newFee != fee) {
-      if (INFTVerifier(IBasePluginV1Factory(pluginFactory).nftVerifier()).isVerified(tx.origin)) {
-        IAlgebraPool(pool).setFee(newFee / 2);
-        cachedFee = newFee;
-      } else {
-        IAlgebraPool(pool).setFee(newFee);
-      }
+      IAlgebraPool(pool).setFee(newFee);
     }
   }
 }
