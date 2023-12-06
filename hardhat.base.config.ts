@@ -40,7 +40,7 @@ export default {
       gasPrice: 8000000000,
     },
     bscTestnet: {
-      url: `https://data-seed-prebsc-2-s3.binance.org:8545`,
+      url: `https://data-seed-prebsc-1-s2.bnbchain.org:8545`,
       chainId: 97,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },

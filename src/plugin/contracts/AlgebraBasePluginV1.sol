@@ -12,6 +12,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import './interfaces/IAlgebraBasePluginV1.sol';
 import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/IAlgebraVirtualPool.sol';
+import './interfaces/INFTVerifier.sol';
 
 import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
@@ -47,7 +48,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IVolatilityOracle
   uint32 public override lastTimepointTimestamp;
 
-  uint16 public cachedFee;
+  uint16 public override cachedFee;
 
   /// @inheritdoc IVolatilityOracle
   bool public override isInitialized;
@@ -319,7 +320,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
     uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
     if (newFee != fee) {
-      if (INFTVerifier(pluginFactory.nftVerifier()).isVerified(tx.oirigin)) {
+      if (INFTVerifier(IBasePluginV1Factory(pluginFactory).nftVerifier()).isVerified(tx.origin)) {
         IAlgebraPool(pool).setFee(newFee / 2);
         cachedFee = newFee;
       } else {

@@ -16,6 +16,8 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
 
   address public immutable override algebraFactory;
 
+  address public override nftVerifier;
+
   /// @dev values of constants for sigmoids in fee calculation formula
   AlgebraFeeConfiguration public override defaultFeeConfiguration;
 
@@ -68,5 +70,11 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  function setNFTVerifier(address newVerifier) external override {
+    require(nftVerifier != newVerifier);
+    nftVerifier = newVerifier;
+    emit NFTVerifier(newVerifier);
   }
 }

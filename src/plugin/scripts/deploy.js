@@ -7,6 +7,13 @@ async function main() {
     const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
     const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
+    const NFTVerifierFactory = await hre.ethers.getContractFactory("NFTVerifier");
+    const nftVerifier = await NFTVerifierFactory.deploy(deploysData.factory);
+
+    await nftVerifier.waitForDeployment()
+
+    console.log(nftVerifier.target)
+
     const BasePluginV1Factory = await hre.ethers.getContractFactory("BasePluginV1Factory");
     const dsFactory = await BasePluginV1Factory.deploy(deploysData.factory);
 

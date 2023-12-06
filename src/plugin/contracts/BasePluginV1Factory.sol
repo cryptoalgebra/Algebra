@@ -78,6 +78,6 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   function setNFTVerifier(address newVerifier) external override onlyAdministrator {
     require(nftVerifier != newVerifier);
     nftVerifier = newVerifier;
-    emit Verifier(newVerifier);
+    emit NFTVerifier(newVerifier);
   }
 }

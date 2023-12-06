@@ -18,6 +18,8 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
 
+  event NFTVerifier(address newNftVerifier);
+
   /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR' used as role
   /// @dev allows to change settings of BasePluginV1Factory
   function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32);
@@ -25,6 +27,8 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @notice Returns the address of AlgebraFactory
   /// @return The AlgebraFactory contract address
   function algebraFactory() external view returns (address);
+
+  function nftVerifier() external view returns (address);
 
   /// @notice Current default dynamic fee configuration
   /// @dev See the AdaptiveFee struct for more details about params.
@@ -58,4 +62,6 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @dev updates farmings manager address on the factory
   /// @param newFarmingAddress The new tokenomics contract address
   function setFarmingAddress(address newFarmingAddress) external;
+
+  function setNFTVerifier(address newNFTVerifier) external;
 }
