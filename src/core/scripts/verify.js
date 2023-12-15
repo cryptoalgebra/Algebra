@@ -26,7 +26,7 @@ async function main() {
     await hre.run("verify:verify", {
         address: poolDeployer,
         constructorArguments: [
-            factory,
+            deploysData.factory,
             vaultAddress
         ],
         });
