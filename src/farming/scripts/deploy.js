@@ -8,7 +8,7 @@ async function main() {
   const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
   const AlgebraEternalFarmingFactory = await hre.ethers.getContractFactory('AlgebraEternalFarming')
-  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager)
+  const AlgebraEternalFarming = await AlgebraEternalFarmingFactory.deploy(deploysData.poolDeployer, deploysData.nonfungiblePositionManager,{gasLimit:"8000000"})
 
   deploysData.eternal = AlgebraEternalFarming.target;
 
@@ -16,26 +16,26 @@ async function main() {
   console.log('AlgebraEternalFarming deployed to:', AlgebraEternalFarming.target)
 
   const FarmingCenterFactory = await hre.ethers.getContractFactory('FarmingCenter')
-  const FarmingCenter = await FarmingCenterFactory.deploy(AlgebraEternalFarming.target, deploysData.nonfungiblePositionManager)
+  const FarmingCenter = await FarmingCenterFactory.deploy(AlgebraEternalFarming.target, deploysData.nonfungiblePositionManager,{gasLimit:"8000000"})
 
   deploysData.fc = FarmingCenter.target;
 
   await FarmingCenter.waitForDeployment()
   console.log('FarmingCenter deployed to:', FarmingCenter.target)
 
-  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target)
+  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target,{gasLimit:"8000000"})
   console.log('Updated farming center address in eternal(incentive) farming')
 
   const pluginFactory = await hre.ethers.getContractAt(BasePluginV1FactoryComplied.abi, deploysData.BasePluginV1Factory)
 
-  await pluginFactory.setFarmingAddress(FarmingCenter.target)
+  await pluginFactory.setFarmingAddress(FarmingCenter.target,{gasLimit:"8000000"})
   console.log('Updated farming center address in plugin factory')
 
   const posManager = await hre.ethers.getContractAt(
     'INonfungiblePositionManager',
     deploysData.nonfungiblePositionManager
   )
-  await posManager.setFarmingCenter(FarmingCenter.target)
+  await posManager.setFarmingCenter(FarmingCenter.target,{gasLimit:"8000000"})
 
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }

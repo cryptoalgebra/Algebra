@@ -8,14 +8,14 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
   // WNativeTokenAddress
-  const WNativeTokenAddress = '0x6E2542aFC68a1697FeB2810437DF9409D3b93493';
+  const WNativeTokenAddress = '0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8';
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
   deploysData.wrapped = WNativeTokenAddress;
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens');
-  const TickLens = await TickLensFactory.deploy();
+  const TickLens = await TickLensFactory.deploy({gasLimit:"8000000"});
 
   await TickLens.waitForDeployment();
 
@@ -25,7 +25,7 @@ async function main() {
   // arg1 factory address
   // arg2 wnative address
   const QuoterFactory = await hre.ethers.getContractFactory('Quoter');
-  const Quoter = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const Quoter = await QuoterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer,{gasLimit:"8000000"});
 
   await Quoter.waitForDeployment();
 
@@ -35,7 +35,7 @@ async function main() {
   // arg1 factory address
   // arg2 wnative address
   const QuoterV2Factory = await hre.ethers.getContractFactory('QuoterV2');
-  const QuoterV2 = await QuoterV2Factory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const QuoterV2 = await QuoterV2Factory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer,{gasLimit:"8000000"});
 
   await QuoterV2.waitForDeployment();
 
@@ -44,7 +44,7 @@ async function main() {
   // arg1 factory address
   // arg2 wnative address
   const SwapRouterFactory = await hre.ethers.getContractFactory('SwapRouter');
-  const SwapRouter = await SwapRouterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer);
+  const SwapRouter = await SwapRouterFactory.deploy(deploysData.factory, WNativeTokenAddress, deploysData.poolDeployer,{gasLimit:"8000000"});
 
   await SwapRouter.waitForDeployment();
 
@@ -52,7 +52,7 @@ async function main() {
   console.log('SwapRouter deployed to:', SwapRouter.target);
 
   const NFTDescriptorFactory = await hre.ethers.getContractFactory('NFTDescriptor');
-  const NFTDescriptor = await NFTDescriptorFactory.deploy();
+  const NFTDescriptor = await NFTDescriptorFactory.deploy({gasLimit:"8000000"});
 
   await NFTDescriptor.waitForDeployment();
   // arg1 wnative address
@@ -67,7 +67,7 @@ async function main() {
   const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(
     WNativeTokenAddress,
     'WTLS',
-    []
+    [],{gasLimit:"8000000"}
   );
 
   await NonfungibleTokenPositionDescriptor.waitForDeployment();
@@ -76,7 +76,7 @@ async function main() {
 
   //console.log('NFTDescriptor deployed to:', NFTDescriptor.target)
   const ProxyFactory = await hre.ethers.getContractFactory('TransparentUpgradeableProxy');
-  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdmin, '0x');
+  const Proxy = await ProxyFactory.deploy(NonfungibleTokenPositionDescriptor.target, ProxyAdmin, '0x',{gasLimit:"8000000"});
 
   await Proxy.waitForDeployment();
 
@@ -91,7 +91,7 @@ async function main() {
     deploysData.factory,
     WNativeTokenAddress,
     Proxy.target,
-    deploysData.poolDeployer
+    deploysData.poolDeployer,{gasLimit:"8000000"}
   );
 
   await NonfungiblePositionManager.waitForDeployment();
@@ -113,7 +113,7 @@ async function main() {
   // await V3Migrator.waitForDeployment();
 
   const AlgebraInterfaceMulticallFactory = await hre.ethers.getContractFactory('AlgebraInterfaceMulticall');
-  const AlgebraInterfaceMulticall = await AlgebraInterfaceMulticallFactory.deploy();
+  const AlgebraInterfaceMulticall = await AlgebraInterfaceMulticallFactory.deploy({gasLimit:"8000000"});
 
   await AlgebraInterfaceMulticall.waitForDeployment();
 
