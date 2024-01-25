@@ -8,7 +8,7 @@ import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/LiquidityMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
-import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 
 import '../base/VirtualTickStructure.sol';
 
