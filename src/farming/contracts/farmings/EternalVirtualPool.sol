@@ -123,6 +123,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != plugin) revert onlyPlugin();
 
+    // All storage reads in this code block use the same slot
     uint128 _currentLiquidity = currentLiquidity;
     int24 _globalTick = globalTick;
     uint32 _prevTimestamp = prevTimestamp;
