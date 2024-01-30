@@ -5,8 +5,23 @@ pragma abicoder v2;
 import '../base/Multicall.sol';
 
 contract TestMulticall is Multicall {
+    error CustomError();
+
     function functionThatRevertsWithError(string memory error) external pure {
         revert(error);
+    }
+
+    function functionThatRevertsSilently() external pure {
+        revert();
+    }
+
+    function functionThatRevertsWithCustomError() external pure {
+        revert CustomError();
+    }
+
+    function functionThatRevertsWithPanic() external pure returns (uint256) {
+        uint256 a = 5;
+        return a - 10;
     }
 
     struct Tuple {
