@@ -84,11 +84,10 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         returns (uint256 amountReceived, uint256 amountToPay, uint160 sqrtPriceX96After, int24 tickAfter, uint16 fee)
     {
         if (reason.length != 224) {
-            if (reason.length < 68) revert('Unexpected error');
-            assembly {
-                reason := add(reason, 0x04)
+            require(reason.length > 0, 'Unexpected error');
+            assembly ('memory-safe') {
+                revert(add(32, reason), mload(reason))
             }
-            revert(abi.decode(reason, (string)));
         }
         return abi.decode(reason, (uint256, uint256, uint160, int24, uint16));
     }
