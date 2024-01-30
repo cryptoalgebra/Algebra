@@ -136,13 +136,17 @@ describe('unit/EternalFarms', () => {
 
     it('reverts if not incentiveMaker', async () => {
       expect(
-        context.eternalFarming.connect(actors.farmingDeployer()).createEternalFarming(dummyKey, {
-          reward: 100,
-          bonusReward: 100,
-          rewardRate: 100,
-          bonusRewardRate: 100,
-          minimalPositionWidth: 100,
-        })
+        context.eternalFarming.connect(actors.farmingDeployer()).createEternalFarming(
+          dummyKey,
+          {
+            reward: 100,
+            bonusReward: 100,
+            rewardRate: 100,
+            bonusRewardRate: 100,
+            minimalPositionWidth: 100,
+          },
+          await context.poolObj.connect(incentiveCreator).plugin()
+        )
       ).to.be.revertedWithoutReason;
 
       expect(context.eternalFarming.connect(actors.farmingDeployer()).deactivateIncentive(dummyKey)).to.be.revertedWithoutReason;

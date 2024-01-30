@@ -161,8 +161,9 @@ interface IAlgebraEternalFarming {
   /// @notice Creates a new liquidity farming incentive program
   /// @param key Details of the incentive to create
   /// @param params Params of incentive
+  /// @param plugin The address of corresponding plugin
   /// @return virtualPool The created virtual pool
-  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params) external returns (address virtualPool);
+  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params, address plugin) external returns (address virtualPool);
 
   /// @notice Change reward rates for incentive
   /// @param key The key of incentive
