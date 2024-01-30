@@ -239,6 +239,24 @@ describe('unit/FarmingCenter', () => {
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
+    it('works if liquidity decreased and emergency activated', async () => {
+      await context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(true);
+
+      await expect(
+        context.nft.connect(lpUser0).decreaseLiquidity({
+          tokenId: tokenIdEternal,
+          liquidity: 5,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .to.not.emit(context.nft, 'FarmingFailed');
+
+      expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+    });
+
     it('works if liquidity decreased and incentive deactivated automatically', async () => {
       await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
 
