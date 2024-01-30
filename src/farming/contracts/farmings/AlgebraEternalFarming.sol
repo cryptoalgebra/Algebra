@@ -120,10 +120,11 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   function createEternalFarming(
     IncentiveKey memory key,
-    IncentiveParams memory params
+    IncentiveParams memory params,
+    address plugin
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address connectedPlugin = key.pool.plugin();
-    if (connectedPlugin == address(0)) revert pluginNotConnected();
+    if (connectedPlugin != plugin || connectedPlugin == address(0)) revert pluginNotConnected();
     if (IFarmingPlugin(connectedPlugin).incentive() != address(0)) revert anotherFarmingIsActive();
 
     virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
