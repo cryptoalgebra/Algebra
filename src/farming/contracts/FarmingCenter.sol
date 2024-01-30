@@ -116,10 +116,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external override returns (uint256 reward) {
-    unchecked {
-      if (amountRequested != 0) reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
-    }
+  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external override returns (uint256 rewardBalanceBefore) {
+    rewardBalanceBefore = eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
   }
 
   /// @inheritdoc IFarmingCenter
