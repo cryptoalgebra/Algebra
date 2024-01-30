@@ -48,6 +48,7 @@ interface ISwapRouter is IAlgebraSwapCallback {
     }
 
     /// @notice Swaps as little as possible of one token for `amountOut` of another token
+    /// @dev If native token is used as input, this function should be accompanied by a `refundNativeToken` in multicall to avoid potential loss of native tokens
     /// @param params The parameters necessary for the swap, encoded as `ExactOutputSingleParams` in calldata
     /// @return amountIn The amount of the input token
     function exactOutputSingle(ExactOutputSingleParams calldata params) external payable returns (uint256 amountIn);
@@ -61,6 +62,7 @@ interface ISwapRouter is IAlgebraSwapCallback {
     }
 
     /// @notice Swaps as little as possible of one token for `amountOut` of another along the specified path (reversed)
+    /// @dev If native token is used as input, this function should be accompanied by a `refundNativeToken` in multicall to avoid potential loss of native tokens
     /// @param params The parameters necessary for the multi-hop swap, encoded as `ExactOutputParams` in calldata
     /// @return amountIn The amount of the input token
     function exactOutput(ExactOutputParams calldata params) external payable returns (uint256 amountIn);
