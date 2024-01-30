@@ -25,6 +25,23 @@ describe('Multicall', async () => {
     ).to.be.revertedWith('abcdef');
   });
 
+  it('silent revert handled correctly', async () => {
+    await expect(multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsSilently', [])])).to.be
+      .revertedWithoutReason;
+  });
+
+  it('custom error bubbles up', async () => {
+    await expect(
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithCustomError', [])])
+    ).to.be.revertedWithCustomError(multicall, 'CustomError');
+  });
+
+  it('punic bubbles up', async () => {
+    await expect(
+      multicall.multicall([multicall.interface.encodeFunctionData('functionThatRevertsWithPanic', [])])
+    ).to.be.revertedWithPanic(0x11);
+  });
+
   it('return data is properly encoded', async () => {
     const [data] = await multicall.multicall.staticCall([
       multicall.interface.encodeFunctionData('functionThatReturnsTuple', ['1', '2']),
