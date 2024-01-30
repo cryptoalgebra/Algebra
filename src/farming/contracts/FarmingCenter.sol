@@ -89,12 +89,15 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
 
       if (liquidity == 0 || virtualPoolAddresses[address(key.pool)] == address(0)) {
-        _exitFarming(key, tokenId, tokenOwner);
+        _exitFarming(key, tokenId, tokenOwner); // nft burned or incentive deactivated, exit completely
       } else {
         IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
 
-        if (IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key))) {
-          // exit completely if the incentive has stopped (manually or automatically)
+        if (
+          IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key)) ||
+          IAlgebraEternalFarming(eternalFarming).isEmergencyWithdrawActivated()
+        ) {
+          // exit completely if the incentive has stopped (manually or automatically) or there is emergency
           _switchFarmingStatusOff(tokenId);
         } else {
           // reenter with new liquidity value
