@@ -1,7 +1,7 @@
 import { MaxUint256, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
+import { IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { MaxUint128 } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
@@ -22,6 +22,7 @@ describe('QuoterV2', function () {
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     quoter: QuoterV2;
+    factory: IAlgebraFactory;
   }> = async () => {
     const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
@@ -41,12 +42,14 @@ describe('QuoterV2', function () {
       tokens: _tokens,
       nft,
       quoter,
+      factory,
     };
   };
 
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
   let quoter: QuoterV2;
+  let factory: IAlgebraFactory;
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners();
@@ -55,7 +58,7 @@ describe('QuoterV2', function () {
 
   describe('quotes', () => {
     const subFixture = async () => {
-      ({ tokens, nft, quoter } = await swapRouterFixture());
+      const { tokens, nft, quoter, factory } = await swapRouterFixture();
       await createPool(nft, wallet, tokens[0].address, tokens[1].address);
       await createPool(nft, wallet, tokens[1].address, tokens[2].address);
       await createPoolWithMultiplePositions(nft, wallet, tokens[0].address, tokens[2].address);
@@ -63,11 +66,12 @@ describe('QuoterV2', function () {
         tokens,
         nft,
         quoter,
+        factory,
       };
     };
 
     beforeEach(async () => {
-      ({ tokens, nft, quoter } = await loadFixture(subFixture));
+      ({ tokens, nft, quoter, factory } = await loadFixture(subFixture));
     });
 
     describe('#quoteExactInput', () => {
@@ -249,6 +253,23 @@ describe('QuoterV2', function () {
         expect(amountIn).to.be.eq(10158);
         expect(sqrtPriceX96After).to.eq(encodePriceSqrt(100, 102));
         expect(fee).to.be.eq(500);
+      });
+
+      it('0 -> 2, bubbles custom error', async () => {
+        const pool = await ethers.getContractAt(
+          'IAlgebraPool',
+          await factory.poolByPair(tokens[0].address, tokens[2].address)
+        );
+
+        await expect(
+          quoter.quoteExactInputSingle.staticCall({
+            tokenIn: tokens[0].address,
+            tokenOut: tokens[2].address,
+            amountIn: MaxUint128,
+            // +2%
+            limitSqrtPrice: encodePriceSqrt(104, 102),
+          })
+        ).to.be.revertedWithCustomError(pool, 'invalidLimitSqrtPrice');
       });
 
       it('2 -> 0', async () => {
