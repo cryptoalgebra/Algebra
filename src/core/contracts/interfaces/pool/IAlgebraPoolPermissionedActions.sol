@@ -28,4 +28,6 @@ interface IAlgebraPoolPermissionedActions {
   /// Called by the plugin if dynamic fee is enabled
   /// @param newFee The new fee value
   function setFee(uint16 newFee) external;
+
+  function setCommunityVault(address newCommunityVault) external;
 }

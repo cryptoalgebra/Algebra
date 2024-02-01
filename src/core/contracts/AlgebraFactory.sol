@@ -5,6 +5,7 @@ import './libraries/Constants.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
+import './interfaces/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import './AlgebraCommunityVault.sol';
@@ -21,9 +22,6 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
-
-  /// @inheritdoc IAlgebraFactory
-  address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraFactory
   uint16 public override defaultCommunityFee;
@@ -43,17 +41,18 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   IAlgebraPluginFactory public defaultPluginFactory;
 
+  IAlgebraVaultFactory public vaultFactory;
+
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0xb3417ac4d8fb3544dbe9a9ee91d3facb2a56d37b34fac72117f0b567930b5f3c;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0xd83b5181fca1df089092eec8c5c973030caa1995e88218184149b2200d552bc7;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
-    communityVault = address(new AlgebraCommunityVault(msg.sender));
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.INIT_DEFAULT_FEE;
 
@@ -95,6 +94,10 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
 
+    if (address(vaultFactory) != address(0)) {
+      vaultFactory.setCommunityVault(pool);
+    }
+
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
     emit Pool(token0, token1, pool);
@@ -130,6 +133,12 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(newDefaultPluginFactory != address(defaultPluginFactory));
     defaultPluginFactory = IAlgebraPluginFactory(newDefaultPluginFactory);
     emit DefaultPluginFactory(newDefaultPluginFactory);
+  }
+
+  function setVaultFactory(address newVaultFactory) external override onlyOwner {
+    require(newVaultFactory != address(vaultFactory));
+    vaultFactory = IAlgebraVaultFactory(newVaultFactory);
+    emit VaultFactory(newVaultFactory);
   }
 
   /// @inheritdoc IAlgebraFactory
