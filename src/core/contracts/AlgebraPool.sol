@@ -34,26 +34,26 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
     globalState.price = initialPrice;
 
-    if (plugin != address(0)) {
-      IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
+    address _plugin = plugin;
+    if (_plugin != address(0)) {
+      IAlgebraPlugin(_plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
     (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, address _communityVault) = _getDefaultConfiguration();
-    tickSpacing = _tickSpacing;
-    communityVault = _communityVault;
 
     uint8 pluginConfig = globalState.pluginConfig;
     globalState.tick = tick;
-    globalState.lastFee = _fee;
     globalState.communityFee = _communityFee;
 
     emit Initialize(initialPrice, tick);
-    emit TickSpacing(_tickSpacing);
-    emit CommunityVault(_communityVault);
-    emit CommunityFee(_communityFee);
+
+    _setFee(_fee);
+    _setTickSpacing(_tickSpacing);
+    _setCommunityFee(_communityFee);
+    _setCommunityFeeVault(_communityVault);
 
     if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
-      IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
+      IAlgebraPlugin(_plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
     }
   }
 
@@ -395,25 +395,21 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   function setCommunityFee(uint16 newCommunityFee) external override onlyUnlocked {
     _checkIfAdministrator();
     if (newCommunityFee > Constants.MAX_COMMUNITY_FEE || newCommunityFee == globalState.communityFee) revert invalidNewCommunityFee();
-    globalState.communityFee = newCommunityFee;
-    emit CommunityFee(newCommunityFee);
+    _setCommunityFee(newCommunityFee);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setTickSpacing(int24 newTickSpacing) external override onlyUnlocked {
     _checkIfAdministrator();
     if (newTickSpacing <= 0 || newTickSpacing > Constants.MAX_TICK_SPACING || tickSpacing == newTickSpacing) revert invalidNewTickSpacing();
-    tickSpacing = newTickSpacing;
-    emit TickSpacing(newTickSpacing);
+    _setTickSpacing(newTickSpacing);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override onlyUnlocked {
     _checkIfAdministrator();
-    globalState.pluginConfig = 0;
-    plugin = newPluginAddress;
-    emit PluginConfig(0);
-    emit Plugin(newPluginAddress);
+    _setPluginConfig(0);
+    _setPlugin(newPluginAddress);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
@@ -423,15 +419,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     if (msg.sender != _plugin) _checkIfAdministrator();
 
-    globalState.pluginConfig = newConfig;
-    emit PluginConfig(newConfig);
+    _setPluginConfig(newConfig);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
     _checkIfAdministrator();
-    communityVault = newCommunityVault;
-    emit CommunityVault(newCommunityVault);
+    _setCommunityFeeVault(newCommunityVault);
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
@@ -445,7 +439,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (isDynamicFeeEnabled) revert dynamicFeeActive();
       _checkIfAdministrator();
     }
-    globalState.lastFee = newFee;
-    emit Fee(newFee);
+    _setFee(newFee);
   }
 }
