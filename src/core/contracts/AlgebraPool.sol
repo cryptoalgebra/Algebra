@@ -34,9 +34,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
     globalState.price = initialPrice;
 
-    address _plugin = plugin;
-    if (_plugin != address(0)) {
-      IAlgebraPlugin(_plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
+    if (plugin != address(0)) {
+      IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
     (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, address _communityVault) = _getDefaultConfiguration();
@@ -53,7 +52,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _setCommunityFeeVault(_communityVault);
 
     if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
-      IAlgebraPlugin(_plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
+      IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
     }
   }
 
