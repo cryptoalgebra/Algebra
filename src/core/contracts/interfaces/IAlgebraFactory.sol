@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 pragma abicoder v2;
 
 import './plugin/IAlgebraPluginFactory.sol';
+import './IAlgebraVaultFactory.sol';
 
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -43,6 +44,8 @@ interface IAlgebraFactory {
   /// @param defaultPluginFactoryAddress The new defaultPluginFactory address
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
+  event VaultFactory(address newVaultFactory);
+
   /// @notice role that can change communityFee and tickspacing in pools
   /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
@@ -62,10 +65,6 @@ interface IAlgebraFactory {
   /// @return The address of the poolDeployer
   function poolDeployer() external view returns (address);
 
-  /// @notice Returns the current communityVaultAddress
-  /// @return The address to which community fees are transferred
-  function communityVault() external view returns (address);
-
   /// @notice Returns the default community fee
   /// @return Fee which will be set at the creation of the pool
   function defaultCommunityFee() external view returns (uint16);
@@ -81,6 +80,8 @@ interface IAlgebraFactory {
   /// @notice Return the current pluginFactory address
   /// @return Algebra plugin factory
   function defaultPluginFactory() external view returns (IAlgebraPluginFactory);
+
+  function vaultFactory() external view returns (IAlgebraVaultFactory);
 
   /// @notice Returns the default communityFee and tickspacing
   /// @return communityFee which will be set at the creation of the pool
@@ -133,6 +134,8 @@ interface IAlgebraFactory {
   /// @dev updates pluginFactory address
   /// @param newDefaultPluginFactory address of new plugin factory
   function setDefaultPluginFactory(address newDefaultPluginFactory) external;
+
+  function setVaultFactory(address newVaultFactory) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
   /// of time must pass before the ownership renounce can be completed.

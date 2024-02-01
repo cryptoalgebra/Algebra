@@ -439,4 +439,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     globalState.lastFee = newFee;
     emit Fee(newFee);
   }
+
+  function setCommunityVault(address newCommunityVault) external override {
+    if (
+      !IAlgebraFactory(factory).hasRoleOrOwner(Constants.POOLS_ADMINISTRATOR_ROLE, msg.sender) &&
+      !(address(IAlgebraFactory(factory).vaultFactory()) == msg.sender)
+    ) revert notAllowed();
+    communityVault = newCommunityVault;
+    emit CommunityVault(newCommunityVault);
+  }
 }
