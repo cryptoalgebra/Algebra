@@ -87,7 +87,8 @@ interface IAlgebraFactory {
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
   /// @return fee which will be set at the creation of the pool
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
+  /// @return vault
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address vault);
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @dev The method does not check if such a pool has been created

@@ -145,7 +145,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
-  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, address) {
     return IAlgebraFactory(factory).defaultConfigurationForPool();
   }
 
