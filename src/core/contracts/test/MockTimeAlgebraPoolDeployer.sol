@@ -7,7 +7,6 @@ import './MockTimeAlgebraPool.sol';
 
 contract MockTimeAlgebraPoolDeployer {
   address private factory;
-  address private vault;
 
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
@@ -19,15 +18,15 @@ contract MockTimeAlgebraPoolDeployer {
     mockPoolHash = keccak256(type(MockTimeAlgebraPool).creationCode);
   }
 
-  function getDeployParameters() external view returns (address, address, address, address, address) {
+  function getDeployParameters() external view returns (address, address, address, address) {
     (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, vault, token0, token1);
+    return (dataStorage, factory, token0, token1);
   }
 
   event PoolDeployed(address pool);
 
-  function deployMock(address _factory, address _vault, address token0, address token1) external returns (address pool) {
-    (factory, vault) = (_factory, _vault);
+  function deployMock(address _factory, address token0, address token1) external returns (address pool) {
+    factory = _factory;
     _writeToCache(address(0), token0, token1);
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     (cache0, cache1) = (bytes32(0), bytes32(0));

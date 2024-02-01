@@ -74,6 +74,11 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    // try to reenter setCommunityFeeVault
+    try IAlgebraPool(msg.sender).setCommunityVault(address(this)) {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
     // try to get AMM state
     try IAlgebraPool(msg.sender).safelyGetStateOfAMM() {} catch (bytes memory reason) {
       require(bytes4(reason) == desiredSelector);

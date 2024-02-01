@@ -428,6 +428,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
+  function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
+    _checkIfAdministrator();
+    communityVault = newCommunityVault;
+    emit CommunityVault(newCommunityVault);
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
     bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
     if (!globalState.unlocked) revert IAlgebraPoolErrors.locked(); // cheaper to check lock here
@@ -440,11 +447,5 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
     globalState.lastFee = newFee;
     emit Fee(newFee);
-  }
-
-  function setCommunityVault(address newCommunityVault) external override {
-    _checkIfAdministrator();
-    communityVault = newCommunityVault;
-    emit CommunityVault(newCommunityVault);
   }
 }
