@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
+pragma abicoder v1;
 
 import './interfaces/IAlgebraPoolDeployer.sol';
 
@@ -40,7 +41,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     assembly {
       // cache0 = [plugin, token0[0, 96]], cache1 = [token0[0, 64], 0-s x32 , token1]
       token0 := and(token0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // clean higher bits, just in case
-      sstore(cache0.slot, or(shr(64, token0), shl(96, and(plugin, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
+      sstore(cache0.slot, or(shr(64, token0), shl(96, plugin)))
       sstore(cache1.slot, or(shl(160, token0), and(token1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)))
     }
   }
