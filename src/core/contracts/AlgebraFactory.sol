@@ -41,6 +41,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   IAlgebraPluginFactory public defaultPluginFactory;
 
+  /// @inheritdoc IAlgebraFactory
   IAlgebraVaultFactory public vaultFactory;
 
   /// @inheritdoc IAlgebraFactory
@@ -138,6 +139,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     emit DefaultPluginFactory(newDefaultPluginFactory);
   }
 
+  /// @inheritdoc IAlgebraFactory
   function setVaultFactory(address newVaultFactory) external override onlyOwner {
     require(newVaultFactory != address(vaultFactory));
     vaultFactory = IAlgebraVaultFactory(newVaultFactory);

@@ -78,9 +78,13 @@ interface IAlgebraFactory {
   function defaultTickspacing() external view returns (int24);
 
   /// @notice Return the current pluginFactory address
+  /// @dev This contract is used to automatically set a plugin address in new liquidity pools
   /// @return Algebra plugin factory
   function defaultPluginFactory() external view returns (IAlgebraPluginFactory);
 
+  /// @notice Return the current vaultFactory address
+  /// @dev This contract is used to automatically set a vault address in new liquidity pools
+  /// @return Algebra vault factory
   function vaultFactory() external view returns (IAlgebraVaultFactory);
 
   /// @notice Returns the default communityFee and tickspacing
@@ -136,6 +140,8 @@ interface IAlgebraFactory {
   /// @param newDefaultPluginFactory address of new plugin factory
   function setDefaultPluginFactory(address newDefaultPluginFactory) external;
 
+  /// @dev updates vaultFactory address
+  /// @param newVaultFactory address of new vault factory
   function setVaultFactory(address newVaultFactory) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
