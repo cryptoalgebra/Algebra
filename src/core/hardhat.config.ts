@@ -76,6 +76,7 @@ export default {
     overrides: {
       'contracts/AlgebraFactory.sol': HIGHEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/AlgebraPool.sol': HIGH_COMPILER_SETTINGS,
+      'contracts/AlgebraPoolDeployer.sol': HIGH_COMPILER_SETTINGS,
     },
   },
   docgen: {

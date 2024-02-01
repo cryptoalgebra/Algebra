@@ -31,17 +31,23 @@ describe('AlgebraFactory', () => {
     });
 
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
-
-    const vaultAddress = await _factory.communityVault();
+    const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as any as AlgebraPoolDeployer;
+    const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
+
+    const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
+    const vault = await vaultFactory.deploy(factory, deployer.address);
+
+    const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
+    const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
+
+    await factory.setVaultFactory(vaultFactoryStub);
 
     const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
-    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
+    const defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
 
-    return _factory;
+    return { factory, poolDeployer, defaultPluginFactory };
   };
 
   before('create fixture loader', async () => {
@@ -53,7 +59,7 @@ describe('AlgebraFactory', () => {
   });
 
   beforeEach('deploy factory', async () => {
-    factory = await loadFixture(fixture);
+    ({ factory, poolDeployer, defaultPluginFactory } = await loadFixture(fixture));
   });
 
   it('owner is deployer', async () => {
@@ -185,7 +191,7 @@ describe('AlgebraFactory', () => {
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-      await expect(poolDeployerFactory.deploy(ZeroAddress, ZeroAddress)).to.be.reverted;
+      await expect(poolDeployerFactory.deploy(ZeroAddress)).to.be.reverted;
     });
   });
 
@@ -371,7 +377,7 @@ describe('AlgebraFactory', () => {
   });
 
   it('defaultConfigurationForPool', async () => {
-    const { communityFee, tickSpacing } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing } = await factory.defaultConfigurationForPool(ZeroAddress);
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
   });
