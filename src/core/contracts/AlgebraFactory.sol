@@ -49,7 +49,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x0781f562c2c555dde5906f79d90c29a3245315b355c25f9a1cfc7b20d9205d49;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0xd7e96feb679d15d152f465cd75fbeb72992498150b3fd743cc5d51f3c073a3f8;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -72,9 +72,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityVault) {
+  function defaultConfigurationForPool(
+    address pool
+  ) external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityVault) {
     if (address(vaultFactory) != address(0)) {
-      communityVault = vaultFactory.getVaultForPool(msg.sender);
+      communityVault = vaultFactory.getVaultForPool(pool);
     }
     return (defaultCommunityFee, defaultTickspacing, defaultFee, communityVault);
   }
@@ -98,13 +100,13 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
 
-    if (address(vaultFactory) != address(0)) {
-      vaultFactory.createVault(pool);
-    }
-
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
     emit Pool(token0, token1, pool);
+
+    if (address(vaultFactory) != address(0)) {
+      vaultFactory.createVaultForPool(pool);
+    }
   }
 
   /// @inheritdoc IAlgebraFactory

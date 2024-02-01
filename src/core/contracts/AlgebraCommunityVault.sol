@@ -50,8 +50,8 @@ contract AlgebraCommunityVault is IAlgebraCommunityVault {
     _;
   }
 
-  constructor(address _algebraFeeManager) {
-    (factory, algebraFeeManager) = (msg.sender, _algebraFeeManager);
+  constructor(address _factory, address _algebraFeeManager) {
+    (factory, algebraFeeManager) = (_factory, _algebraFeeManager);
   }
 
   /// @inheritdoc IAlgebraCommunityVault
