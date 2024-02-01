@@ -87,12 +87,15 @@ interface IAlgebraFactory {
   /// @return Algebra vault factory
   function vaultFactory() external view returns (IAlgebraVaultFactory);
 
-  /// @notice Returns the default communityFee and tickspacing
+  /// @notice Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
+  /// @param pool the address of liquidity pool
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
   /// @return fee which will be set at the creation of the pool
-  /// @return vault
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address vault);
+  /// @return communityFeeVault the address of communityFeeVault
+  function defaultConfigurationForPool(
+    address pool
+  ) external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityFeeVault);
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @dev The method does not check if such a pool has been created
