@@ -21,7 +21,7 @@ interface IAlgebraVaultFactory {
 
   function createVault(address pool) external returns (address);
 
-  function setCommunityVault(address pool) external;
+  function getVaultForPool(address pool) external view returns (address);
 
   /// @notice Create vault for already existing pool
   /// @param token0 The address of first token in pool

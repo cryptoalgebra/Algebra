@@ -26,19 +26,17 @@ contract AlgebraVaultFactory is IAlgebraVaultFactory {
     algebraFactory = _algebraFactory;
   }
 
-  function setCommunityVault(address pool) external override {
-    require(msg.sender == algebraFactory);
-    address communityVault;
+  function getVaultForPool(address pool) external view override returns (address communityVault) {
     if (defaultCommunityVault == address(0)) {
-      communityVault = _createVault(pool);
+      communityVault = vaultByPool[pool];
     } else {
       communityVault = defaultCommunityVault;
     }
-    IAlgebraPool(pool).setCommunityVault(communityVault);
   }
 
   /// @inheritdoc IAlgebraVaultFactory
   function createVault(address pool) external override returns (address) {
+    require(msg.sender == algebraFactory);
     return _createVault(pool);
   }
 
@@ -52,17 +50,17 @@ contract AlgebraVaultFactory is IAlgebraVaultFactory {
     return _createVault(pool);
   }
 
-  function _createVault(address pool) internal returns (address) {
-    require(vaultByPool[pool] == address(0), 'Already created');
-    IAlgebraVault vault = new AlgebraVault(algebraFactory);
-    vaultByPool[pool] = address(vault);
-    return address(vault);
-  }
-
   /// @inheritdoc IAlgebraVaultFactory
   function setDefaultCommunityVault(address newDefaultCommunityVault) external override onlyAdministrator {
     require(defaultCommunityVault != newDefaultCommunityVault);
     defaultCommunityVault = newDefaultCommunityVault;
     emit DefaultCommunityVault(newDefaultCommunityVault);
+  }
+
+  function _createVault(address pool) internal returns (address) {
+    require(vaultByPool[pool] == address(0), 'Already created');
+    IAlgebraVault vault = new AlgebraVault(algebraFactory);
+    vaultByPool[pool] = address(vault);
+    return address(vault);
   }
 }
