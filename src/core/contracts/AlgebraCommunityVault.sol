@@ -5,7 +5,7 @@ import './libraries/SafeTransfer.sol';
 import './libraries/FullMath.sol';
 
 import './interfaces/IAlgebraFactory.sol';
-import './interfaces/IAlgebraCommunityVault.sol';
+import './interfaces/vault/IAlgebraCommunityVault.sol';
 
 /// @title Algebra community fee vault
 /// @notice Community fee from pools is sent here, if it is enabled

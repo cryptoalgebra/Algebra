@@ -2,7 +2,7 @@
 pragma solidity =0.8.20;
 pragma abicoder v1;
 
-import './interfaces/IAlgebraVaultFactory.sol';
+import './interfaces/vault/IAlgebraVaultFactory.sol';
 
 /// @title Algebra vault factory stub
 /// @notice This contract is used to set AlgebraCommunityVault as communityVault in new pools
