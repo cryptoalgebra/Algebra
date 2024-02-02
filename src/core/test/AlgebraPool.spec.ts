@@ -146,6 +146,12 @@ describe('AlgebraPool', () => {
       await expect(pool.initialize(MAX_SQRT_RATIO)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
       await expect(pool.initialize(2n ** 160n - 1n)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
     });
+    it('fails if community fee nonzero without vault', async () => {
+      await factory.setVaultFactory(ZeroAddress);
+      await factory.setDefaultCommunityFee(100);
+
+      await expect(pool.initialize(MIN_SQRT_RATIO)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
+    });
     it('can be initialized at MIN_SQRT_RATIO', async () => {
       await pool.initialize(MIN_SQRT_RATIO);
       expect((await pool.globalState()).tick).to.eq(getMinTick(1));
@@ -2431,6 +2437,11 @@ describe('AlgebraPool', () => {
         await pool.initialize(encodePriceSqrt(1, 1));
       });
 
+      it('cannot be positive without vault', async () => {
+        await pool.setCommunityVault(ZeroAddress);
+        await expect(pool.setCommunityFee(1)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
+      });
+
       it('can only be called by factory owner', async () => {
         await expect(pool.connect(other).setCommunityFee(200)).to.be.reverted;
       });
@@ -2476,6 +2487,45 @@ describe('AlgebraPool', () => {
         await pool.setCommunityFee(200);
         await expect(pool.setCommunityFee(200)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
       });
+    });
+
+    describe('#setCommunityVault', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+      });
+
+      it('can only be called by factory owner', async () => {
+        await expect(pool.connect(other).setCommunityVault(other.address)).to.be.reverted;
+      });
+      it('sets community vault', async () => {
+        await pool.setCommunityVault(other.address);
+        expect(await pool.communityVault()).to.eq(other.address);
+      });
+      it('can change community vault', async () => {
+        await pool.setCommunityVault(other.address);
+        await pool.setCommunityVault(wallet.address);
+        expect(await pool.communityVault()).to.eq(wallet.address);
+      });
+      it('can set zero address with zero community fee', async () => {
+        await pool.setCommunityVault(ZeroAddress);
+        expect(await pool.communityVault()).to.eq(ZeroAddress);
+      });
+      it('can set zero address with nonzero community fee', async () => {
+        await pool.setCommunityFee(200);
+        await pool.setCommunityVault(ZeroAddress);
+        expect(await pool.communityVault()).to.eq(ZeroAddress);
+        expect((await pool.globalState()).communityFee).to.eq(0);
+      });
+      it('emits an event when changed', async () => {
+        await expect(pool.setCommunityVault(other.address)).to.be.emit(pool, 'CommunityVault').withArgs(other.address);
+      });
+      it('emits an event when set to zero', async () => {
+        await expect(pool.setCommunityVault(ZeroAddress)).to.be.emit(pool, 'CommunityVault').withArgs(ZeroAddress);
+      });
+      //it('fails if unchanged', async () => {
+      //  await pool.setCommunityVault(other.address);
+      //  await expect(pool.setCommunityVault(other.address)).to.be.revertedWithCustomError(pool, 'InvalidVault');
+      //});
     });
 
     describe('#setTickSpacing', () => {
@@ -2871,7 +2921,7 @@ describe('AlgebraPool', () => {
       expect(amount1).to.eq(MaxUint128 - 1n);
     });
 
-    it('reserves overflow max uint 128', async () => {
+    it('both reserves overflow max uint 128', async () => {
       await pool.initialize(encodePriceSqrt(1, 1));
       await mint(wallet.address, minTick, maxTick, 1);
       const [reserve0before, reserve1before] = await pool.getReserves();
@@ -2896,6 +2946,62 @@ describe('AlgebraPool', () => {
       );
       // fees burned
       expect(amount0).to.eq(MaxUint128 - 1n);
+      expect(amount1).to.eq(MaxUint128 - 1n);
+    });
+
+    it('reserve0 overflow max uint 128', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, minTick, maxTick, 1);
+      const [reserve0before] = await pool.getReserves();
+
+      await flash(0, 0, wallet.address, MaxUint128, 0);
+      await flash(0, 0, wallet.address, 1, 0);
+
+      await pool.burn(minTick, maxTick, 0, '0x');
+      const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
+        pool.totalFeeGrowth0Token(),
+        pool.totalFeeGrowth1Token(),
+      ]);
+      // all 1s in first 128 bits
+      expect(totalFeeGrowth0Token).to.eq((MaxUint128 << 128n) - (reserve0before << 128n));
+      expect(totalFeeGrowth1Token).to.eq(0);
+      const { amount0, amount1 } = await pool.collect.staticCall(
+        wallet.address,
+        minTick,
+        maxTick,
+        MaxUint128,
+        MaxUint128
+      );
+      // fees burned
+      expect(amount0).to.eq(MaxUint128 - 1n);
+      expect(amount1).to.eq(0);
+    });
+
+    it('reserve1 overflow max uint 128', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, minTick, maxTick, 1);
+      const [, reserve1before] = await pool.getReserves();
+
+      await flash(0, 0, wallet.address, 0, MaxUint128);
+      await flash(0, 0, wallet.address, 0, 1);
+
+      await pool.burn(minTick, maxTick, 0, '0x');
+      const [totalFeeGrowth0Token, totalFeeGrowth1Token] = await Promise.all([
+        pool.totalFeeGrowth0Token(),
+        pool.totalFeeGrowth1Token(),
+      ]);
+      // all 1s in first 128 bits
+      expect(totalFeeGrowth0Token).to.eq(0);
+      expect(totalFeeGrowth1Token).to.eq((MaxUint128 << 128n) - (reserve1before << 128n));
+      const { amount0, amount1 } = await pool.collect.staticCall(
+        wallet.address,
+        minTick,
+        maxTick,
+        MaxUint128,
+        MaxUint128
+      );
+      // fees burned
+      expect(amount0).to.eq(0);
       expect(amount1).to.eq(MaxUint128 - 1n);
     });
 
