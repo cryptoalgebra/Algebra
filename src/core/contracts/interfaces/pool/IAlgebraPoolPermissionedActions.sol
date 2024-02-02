@@ -24,7 +24,8 @@ interface IAlgebraPoolPermissionedActions {
   function setPluginConfig(uint8 newConfig) external;
 
   /// @notice Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
-  /// @dev Community fee vault receives collected community fees
+  /// @dev Community fee vault receives collected community fees.
+  /// **accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address**
   /// @param newCommunityVault The address of new community fee vault
   function setCommunityVault(address newCommunityVault) external;
 
