@@ -315,13 +315,29 @@ describe('AlgebraFactory', () => {
       await expect(factory.setDefaultCommunityFee(0)).to.be.reverted;
     });
 
+    it('fails if community vault factory is zero address', async () => {
+      await factory.setVaultFactory(ZeroAddress);
+      await expect(factory.setDefaultCommunityFee(60)).to.be.reverted;
+    });
+
     it('works correct', async () => {
       await factory.setDefaultCommunityFee(60);
       expect(await factory.defaultCommunityFee()).to.eq(60);
     });
 
+    it('can set to zero', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await factory.setDefaultCommunityFee(0);
+      expect(await factory.defaultCommunityFee()).to.eq(0);
+    });
+
     it('emits event', async () => {
       await expect(factory.setDefaultCommunityFee(60)).to.emit(factory, 'DefaultCommunityFee').withArgs(60);
+    });
+
+    it('emits event when changes to zero', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await expect(factory.setDefaultCommunityFee(0)).to.emit(factory, 'DefaultCommunityFee').withArgs(0);
     });
   });
 
@@ -397,6 +413,11 @@ describe('AlgebraFactory', () => {
     it('fails if equals current value', async () => {
       const vaultFactoryAddress = await factory.vaultFactory();
       await expect(factory.setVaultFactory(vaultFactoryAddress)).to.be.reverted;
+    });
+
+    it('fails if tries to set to zero with nonzero default community fee', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await expect(factory.setVaultFactory(ZeroAddress)).to.be.reverted;
     });
 
     it('emits event', async () => {

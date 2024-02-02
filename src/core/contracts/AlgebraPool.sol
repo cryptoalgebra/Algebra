@@ -429,7 +429,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
     _checkIfAdministrator();
-    if (newCommunityVault == address(0)) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
+    if (newCommunityVault == address(0) && globalState.communityFee != 0) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
     _setCommunityFeeVault(newCommunityVault); // accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address
   }
 

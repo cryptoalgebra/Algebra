@@ -147,8 +147,11 @@ describe('AlgebraPool', () => {
       await expect(pool.initialize(2n ** 160n - 1n)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
     });
     it('fails if community fee nonzero without vault', async () => {
-      await factory.setVaultFactory(ZeroAddress);
+      const _factory = await ethers.getContractFactory('FaultyVaultFactoryStub');
+      const faultyVaultFactory = await _factory.deploy(ZeroAddress);
+
       await factory.setDefaultCommunityFee(100);
+      await factory.setVaultFactory(faultyVaultFactory);
 
       await expect(pool.initialize(MIN_SQRT_RATIO)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
     });
