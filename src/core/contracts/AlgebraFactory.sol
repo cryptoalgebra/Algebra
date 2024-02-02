@@ -95,7 +95,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     address defaultPlugin;
     if (address(defaultPluginFactory) != address(0)) {
-      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
+      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1), token0, token1);
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
