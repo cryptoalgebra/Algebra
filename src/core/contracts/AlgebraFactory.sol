@@ -8,8 +8,6 @@ import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
-import './AlgebraCommunityVault.sol';
-
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
