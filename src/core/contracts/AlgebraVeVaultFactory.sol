@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './interfaces/IAlgebraVeVaultFactory.sol';
+import './interfaces/vault/IAlgebraVeVaultFactory.sol';
 import './interfaces/IAlgebraPool.sol';
 import './AlgebraVeVault.sol';
 import './libraries/Constants.sol';

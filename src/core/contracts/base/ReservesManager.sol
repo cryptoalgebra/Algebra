@@ -25,6 +25,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
     (balance0, balance1) = (_balanceToken0(), _balanceToken1());
     // we do not support tokens with totalSupply > type(uint128).max, so any excess will be sent to communityVault
     // this situation can only occur if the tokens are sent directly to the pool from outside
+    // **such excessive tokens will be burned if there is no communityVault connected**
     if (balance0 > type(uint128).max || balance1 > type(uint128).max) {
       unchecked {
         address _communityVault = communityVault;

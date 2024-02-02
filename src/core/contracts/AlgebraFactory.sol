@@ -5,7 +5,7 @@ import './libraries/Constants.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
-import './interfaces/IAlgebraVaultFactory.sol';
+import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
@@ -47,7 +47,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x9c2fc00d601f72f91091a755b74cf50a05dd8d8fc7a188ff0fb8a3160b0ec972;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x7c8c3779c783950581b4057196bff81ae13beca2a65f4d3762174843860c2300;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -93,7 +93,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     address defaultPlugin;
     if (address(defaultPluginFactory) != address(0)) {
-      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
+      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1), token0, token1);
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);

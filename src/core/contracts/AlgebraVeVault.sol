@@ -3,7 +3,7 @@ pragma solidity =0.8.20;
 
 import './libraries/SafeTransfer.sol';
 
-import './interfaces/IAlgebraVeVault.sol';
+import './interfaces/vault/IAlgebraVeVault.sol';
 import './interfaces/IAlgebraFactory.sol';
 
 /// @title Algebra community fee vault
