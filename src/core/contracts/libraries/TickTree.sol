@@ -132,7 +132,7 @@ library TickTree {
     unchecked {
       uint256 _row = word >> bitIndexInWord; // all the 1s at or to the left of the bitIndexInWord
       if (_row == 0) {
-        nextBitIndex = bitIndex + int24(uint24(255 - bitIndexInWord));
+        nextBitIndex = bitIndex | 255;
       } else {
         nextBitIndex = bitIndex + int24(uint24(getSingleSignificantBit((0 - _row) & _row))); // least significant bit
         initialized = true;
