@@ -3,7 +3,7 @@ pragma solidity >=0.5.0;
 pragma abicoder v2;
 
 import './plugin/IAlgebraPluginFactory.sol';
-import './IAlgebraVaultFactory.sol';
+import './vault/IAlgebraVaultFactory.sol';
 
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -44,6 +44,8 @@ interface IAlgebraFactory {
   /// @param defaultPluginFactoryAddress The new defaultPluginFactory address
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
+  /// @notice Emitted when the vaultFactory address is changed
+  /// @param newVaultFactory The new vaultFactory address
   event VaultFactory(address newVaultFactory);
 
   /// @notice role that can change communityFee and tickspacing in pools
