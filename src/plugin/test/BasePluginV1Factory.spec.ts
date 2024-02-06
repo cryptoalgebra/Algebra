@@ -22,15 +22,15 @@ describe('BasePluginV1Factory', () => {
 
   describe('#Create plugin', () => {
     it('only factory', async () => {
-      expect(pluginFactory.createPlugin(wallet.address)).to.be.revertedWithoutReason;
+      expect(pluginFactory.createPlugin(wallet.address, ZERO_ADDRESS, ZERO_ADDRESS)).to.be.revertedWithoutReason;
     });
 
     it('factory can create plugin', async () => {
       const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
       const pluginFactoryMock = (await pluginFactoryFactory.deploy(wallet.address)) as any as BasePluginV1Factory;
 
-      const pluginAddress = await pluginFactoryMock.createPlugin.staticCall(wallet.address);
-      await pluginFactoryMock.createPlugin(wallet.address);
+      const pluginAddress = await pluginFactoryMock.createPlugin.staticCall(wallet.address, ZERO_ADDRESS, ZERO_ADDRESS);
+      await pluginFactoryMock.createPlugin(wallet.address, ZERO_ADDRESS, ZERO_ADDRESS);
 
       const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
       const feeConfig = await pluginMock.feeConfig();
