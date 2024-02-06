@@ -6,6 +6,8 @@ pragma solidity >=0.5.0;
 interface IAlgebraPluginFactory {
   /// @notice Deploys new plugin contract for pool
   /// @param pool The address of the pool for which the new plugin will be created
+  /// @param token0 First token of the pool
+  /// @param token1 Second token of the pool
   /// @return New plugin address
-  function createPlugin(address pool) external returns (address);
+  function createPlugin(address pool, address token0, address token1) external returns (address);
 }
