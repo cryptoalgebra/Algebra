@@ -220,12 +220,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     {
       // scope to prevent "stack too deep"
+      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       uint160 currentPrice;
       int24 currentTick;
       uint128 currentLiquidity;
       uint256 communityFee;
       (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
-      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       if (zeroToOne) {
         unchecked {
           if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
