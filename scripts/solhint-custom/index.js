@@ -7,7 +7,7 @@ const ignore = ['test/**/*'];
 class Base {
   constructor(reporter, config, source, fileName) {
     this.reporter = reporter;
-    this.ignored = this.constructor.global || ignore.some(p => minimatch(path.normalize(fileName), p));
+    this.ignored = this.constructor.global || ignore.some((p) => minimatch.minimatch(path.normalize(fileName), p));
     this.ruleId = this.constructor.ruleId;
     if (this.ruleId === undefined) {
       throw Error('missing ruleId static property');
