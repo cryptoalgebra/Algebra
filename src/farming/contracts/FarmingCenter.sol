@@ -12,7 +12,7 @@ import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmin
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';
 
-/// @title Algebra main farming contract
+/// @title Algebra Integral 1.0 main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter

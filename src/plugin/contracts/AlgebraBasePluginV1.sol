@@ -17,7 +17,7 @@ import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
 import './types/AlgebraFeeConfigurationU144.sol';
 
-/// @title Algebra default plugin
+/// @title Algebra Integral 1.0 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
   using Plugins for uint8;
