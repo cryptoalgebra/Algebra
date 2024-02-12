@@ -2,13 +2,13 @@
 
 exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for all possible range 1`] = `7785`;
 
-exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for entire word 1`] = `9895`;
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for entire word 1`] = `9889`;
 
 exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for next subtree 1`] = `7785`;
 
-exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost just below boundary 1`] = `12631`;
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost just below boundary 1`] = `12619`;
 
-exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost on boundary 1`] = `12631`;
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost on boundary 1`] = `12619`;
 
 exports[`TickTree #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `29765`;
 

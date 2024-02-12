@@ -54,6 +54,8 @@ abstract contract PeripheryPayments is IPeripheryPayments, PeripheryImmutableSta
     function pay(address token, address payer, address recipient, uint256 value) internal {
         if (token == WNativeToken && address(this).balance >= value) {
             // pay with WNativeToken
+            // "address(this).balance >= value" may unexpectedly become false (including due to frontrun)
+            // so this function should be accompanied by a `refundNativeToken` in multicall to avoid potential loss of tokens
             IWNativeToken(WNativeToken).deposit{value: value}(); // wrap only what is needed to pay
             IWNativeToken(WNativeToken).transfer(recipient, value);
         } else if (payer == address(this)) {

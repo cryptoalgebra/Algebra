@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
+pragma abicoder v1;
 
 import './interfaces/IAlgebraPoolDeployer.sol';
 
@@ -7,29 +8,23 @@ import './AlgebraPool.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools
-/// @dev Version: Algebra Integral
+/// @dev Version: Algebra Integral 1.0
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
   bytes32 private cache1;
 
   address private immutable factory;
-  address private immutable communityVault;
 
-  constructor(address _factory, address _communityVault) {
-    require(_factory != address(0) && _communityVault != address(0));
-    (factory, communityVault) = (_factory, _communityVault);
+  constructor(address _factory) {
+    require(_factory != address(0));
+    factory = _factory;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters()
-    external
-    view
-    override
-    returns (address _plugin, address _factory, address _communityVault, address _token0, address _token1)
-  {
+  function getDeployParameters() external view override returns (address _plugin, address _factory, address _token0, address _token1) {
     (_plugin, _token0, _token1) = _readFromCache();
-    (_factory, _communityVault) = (factory, communityVault);
+    _factory = factory;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
@@ -46,7 +41,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     assembly {
       // cache0 = [plugin, token0[0, 96]], cache1 = [token0[0, 64], 0-s x32 , token1]
       token0 := and(token0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // clean higher bits, just in case
-      sstore(cache0.slot, or(shr(64, token0), shl(96, and(plugin, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
+      sstore(cache0.slot, or(shr(64, token0), shl(96, plugin)))
       sstore(cache1.slot, or(shl(160, token0), and(token1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)))
     }
   }

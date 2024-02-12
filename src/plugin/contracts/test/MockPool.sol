@@ -51,6 +51,8 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
 
+  address public override communityVault;
+
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
 
@@ -231,5 +233,9 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     }
 
     globalState.fee = newFee;
+  }
+
+  function setCommunityVault(address newCommunityVault) external override {
+    communityVault = newCommunityVault;
   }
 }

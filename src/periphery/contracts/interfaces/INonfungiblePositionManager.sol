@@ -113,6 +113,7 @@ interface INonfungiblePositionManager is
     /// @notice Creates a new position wrapped in a NFT
     /// @dev Call this when the pool does exist and is initialized. Note that if the pool is created but not initialized
     /// a method does not exist, i.e. the pool is assumed to be initialized.
+    /// @dev If native token is used as input, this function should be accompanied by a `refundNativeToken` in multicall to avoid potential loss of native tokens
     /// @param params The params necessary to mint a position, encoded as `MintParams` in calldata
     /// @return tokenId The ID of the token that represents the minted position
     /// @return liquidity The liquidity delta amount as a result of the increase
@@ -138,6 +139,7 @@ interface INonfungiblePositionManager is
     /// amount0Min The minimum amount of token0 to spend, which serves as a slippage check,
     /// amount1Min The minimum amount of token1 to spend, which serves as a slippage check,
     /// deadline The time by which the transaction must be included to effect the change
+    /// @dev If native token is used as input, this function should be accompanied by a `refundNativeToken` in multicall to avoid potential loss of native tokens
     /// @return liquidity The liquidity delta amount as a result of the increase
     /// @return amount0 The amount of token0 to achieve resulting liquidity
     /// @return amount1 The amount of token1 to achieve resulting liquidity

@@ -76,6 +76,6 @@ interface IFarmingCenter is IMulticall {
   /// @param rewardToken The token that is a reward
   /// @param to The address to be rewarded
   /// @param amountRequested Amount to claim in eternal farming
-  /// @return reward The summary amount of claimed rewards
-  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward);
+  /// @return rewardBalanceBefore The total amount of unclaimed reward *before* claim
+  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 rewardBalanceBefore);
 }

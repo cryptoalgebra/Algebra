@@ -22,6 +22,7 @@ import {
   MaxUint128,
   SwapToPriceFunction,
 } from '../../core/test/shared/utilities';
+import { ZERO_ADDRESS } from './shared/fixtures';
 
 describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let wallet: Wallet, other: Wallet;
@@ -44,7 +45,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
     const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory)) as any as MockTimeDSFactory;
 
-    await mockPluginFactory.createPlugin(pool);
+    await mockPluginFactory.createPlugin(pool, ZERO_ADDRESS, ZERO_ADDRESS);
     const pluginAddress = await mockPluginFactory.pluginByPool(pool);
 
     const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV1');
@@ -68,6 +69,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     const virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
 
     await pool.initialize(encodePriceSqrt(1, 1));
+    await pool.setCommunityVault(wallet.address);
 
     await advanceTime(1);
     await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));

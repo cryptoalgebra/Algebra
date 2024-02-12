@@ -25,14 +25,18 @@ abstract contract ReservesManager is AlgebraPoolBase {
     (balance0, balance1) = (_balanceToken0(), _balanceToken1());
     // we do not support tokens with totalSupply > type(uint128).max, so any excess will be sent to communityVault
     // this situation can only occur if the tokens are sent directly to the pool from outside
-    unchecked {
-      if (balance0 > type(uint128).max) {
-        _transfer(token0, communityVault, balance0 - type(uint128).max);
-        balance0 = type(uint128).max;
-      }
-      if (balance1 > type(uint128).max) {
-        _transfer(token1, communityVault, balance1 - type(uint128).max);
-        balance1 = type(uint128).max;
+    // **such excessive tokens will be burned if there is no communityVault connected**
+    if (balance0 > type(uint128).max || balance1 > type(uint128).max) {
+      unchecked {
+        address _communityVault = communityVault;
+        if (balance0 > type(uint128).max) {
+          _transfer(token0, _communityVault, balance0 - type(uint128).max);
+          balance0 = type(uint128).max;
+        }
+        if (balance1 > type(uint128).max) {
+          _transfer(token1, _communityVault, balance1 - type(uint128).max);
+          balance1 = type(uint128).max;
+        }
       }
     }
 
@@ -69,8 +73,9 @@ abstract contract ReservesManager is AlgebraPoolBase {
           _cfPending0 > type(uint104).max ||
           _cfPending1 > type(uint104).max
         ) {
-          if (_cfPending0 > 0) _transfer(token0, communityVault, _cfPending0);
-          if (_cfPending1 > 0) _transfer(token1, communityVault, _cfPending1);
+          address _communityVault = communityVault;
+          if (_cfPending0 > 0) _transfer(token0, _communityVault, _cfPending0);
+          if (_cfPending1 > 0) _transfer(token1, _communityVault, _cfPending1);
           communityFeeLastTimestamp = currentTimestamp;
           (deltaR0, deltaR1) = (deltaR0 - _cfPending0.toInt256(), deltaR1 - _cfPending1.toInt256());
           (_cfPending0, _cfPending1) = (0, 0);

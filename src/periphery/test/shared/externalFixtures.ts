@@ -42,7 +42,7 @@ const v3CoreFactoryFixture: () => Promise<IAlgebraFactory> = async () => {
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
-  const poolDeployer = await poolDeployerFactory.deploy(_factory, vaultAddress);
+  const poolDeployer = await poolDeployerFactory.deploy(_factory);
 
   return _factory;
 };

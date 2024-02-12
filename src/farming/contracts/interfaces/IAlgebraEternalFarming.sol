@@ -126,8 +126,8 @@ interface IAlgebraEternalFarming {
   /// @param rewardToken The token being distributed as a reward
   /// @param to The address where claimed rewards will be sent to
   /// @param amountRequested The amount of reward tokens to claim. Claims entire reward amount if set to 0.
-  /// @return reward The amount of reward tokens claimed
-  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward);
+  /// @return rewardBalanceBefore The total amount of unclaimed reward *before* claim
+  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 rewardBalanceBefore);
 
   /// @notice Transfers `amountRequested` of accrued `rewardToken` (if possible) rewards from the contract to the recipient `to`
   /// @notice only for FarmingCenter
@@ -135,8 +135,13 @@ interface IAlgebraEternalFarming {
   /// @param from The address of position owner
   /// @param to The address where claimed rewards will be sent to
   /// @param amountRequested The amount of reward tokens to claim. Claims entire reward amount if set to 0.
-  /// @return reward The amount of reward tokens claimed
-  function claimRewardFrom(IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward);
+  /// @return rewardBalanceBefore The total amount of unclaimed reward *before* claim
+  function claimRewardFrom(
+    IERC20Minimal rewardToken,
+    address from,
+    address to,
+    uint256 amountRequested
+  ) external returns (uint256 rewardBalanceBefore);
 
   /// @notice Calculates the reward amount that will be received for the given farm
   /// @param key The key of the incentive
@@ -161,8 +166,9 @@ interface IAlgebraEternalFarming {
   /// @notice Creates a new liquidity farming incentive program
   /// @param key Details of the incentive to create
   /// @param params Params of incentive
+  /// @param plugin The address of corresponding plugin
   /// @return virtualPool The created virtual pool
-  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params) external returns (address virtualPool);
+  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params, address plugin) external returns (address virtualPool);
 
   /// @notice Change reward rates for incentive
   /// @param key The key of incentive

@@ -12,7 +12,7 @@ import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmin
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';
 
-/// @title Algebra main farming contract
+/// @title Algebra Integral 1.0 main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter
@@ -89,12 +89,15 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
       IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
 
       if (liquidity == 0 || virtualPoolAddresses[address(key.pool)] == address(0)) {
-        _exitFarming(key, tokenId, tokenOwner);
+        _exitFarming(key, tokenId, tokenOwner); // nft burned or incentive deactivated, exit completely
       } else {
         IAlgebraEternalFarming(eternalFarming).exitFarming(key, tokenId, tokenOwner);
 
-        if (IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key))) {
-          // exit completely if the incentive has stopped (manually or automatically)
+        if (
+          IAlgebraEternalFarming(eternalFarming).isIncentiveDeactivated(IncentiveId.compute(key)) ||
+          IAlgebraEternalFarming(eternalFarming).isEmergencyWithdrawActivated()
+        ) {
+          // exit completely if the incentive has stopped (manually or automatically) or there is emergency
           _switchFarmingStatusOff(tokenId);
         } else {
           // reenter with new liquidity value
@@ -113,10 +116,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external override returns (uint256 reward) {
-    unchecked {
-      if (amountRequested != 0) reward += eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
-    }
+  function claimReward(IERC20Minimal rewardToken, address to, uint256 amountRequested) external override returns (uint256 rewardBalanceBefore) {
+    rewardBalanceBefore = eternalFarming.claimRewardFrom(rewardToken, msg.sender, to, amountRequested);
   }
 
   /// @inheritdoc IFarmingCenter

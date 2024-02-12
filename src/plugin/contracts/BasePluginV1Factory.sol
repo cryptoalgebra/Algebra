@@ -5,7 +5,7 @@ import './interfaces/IBasePluginV1Factory.sol';
 import './libraries/AdaptiveFee.sol';
 import './AlgebraBasePluginV1.sol';
 
-/// @title Algebra default plugin factory
+/// @title Algebra Integral 1.0 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
@@ -35,7 +35,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   }
 
   /// @inheritdoc IAlgebraPluginFactory
-  function createPlugin(address pool) external override returns (address) {
+  function createPlugin(address pool, address, address) external override returns (address) {
     require(msg.sender == algebraFactory);
     return _createPlugin(pool);
   }

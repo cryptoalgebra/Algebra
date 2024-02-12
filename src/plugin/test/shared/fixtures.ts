@@ -34,7 +34,7 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
   const mockPoolFactory = await ethers.getContractFactory('MockPool');
   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
 
-  await mockPluginFactory.createPlugin(mockPool);
+  await mockPluginFactory.createPlugin(mockPool, ZERO_ADDRESS, ZERO_ADDRESS);
   const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
 
   const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV1');

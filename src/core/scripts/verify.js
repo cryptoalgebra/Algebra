@@ -1,37 +1,30 @@
-const hre = require("hardhat");
+const hre = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 
 async function main() {
+  const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
+  let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
-    const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
-    let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
+  await hre.run('verify:verify', {
+    address: deploysData.factory,
+    constructorArguments: [deploysData.poolDeployer],
+  });
 
-    const poolDeployer = deploysData.poolDeployer;
+  await hre.run('verify:verify', {
+    address: deploysData.poolDeployer,
+    constructorArguments: [deploysData.factory],
+  });
 
-    const factory = await hre.ethers.getContractAt(
-        'IAlgebraFactory',
-        deploysData.factory
-        )
+  await hre.run('verify:verify', {
+    address: deploysData.vault,
+    constructorArguments: [deploysData.factory, deploysData.poolDeployer],
+  });
 
-    const vaultAddress = await factory.communityVault();
-
-    await hre.run("verify:verify", {
-        address: deploysData.factory,
-        constructorArguments: [
-            poolDeployer
-        ],
-        });
-
-    await hre.run("verify:verify", {
-        address: poolDeployer,
-        constructorArguments: [
-            deploysData.factory,
-            vaultAddress
-        ],
-        });
-
-    
+  await hre.run('verify:verify', {
+    address: deploysData.vaultFactory,
+    constructorArguments: [deploysData.vault],
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere

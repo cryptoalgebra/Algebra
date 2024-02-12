@@ -5,6 +5,7 @@ import './libraries/Constants.sol';
 
 import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
+import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
 
 import './AlgebraCommunityVault.sol';
@@ -14,16 +15,13 @@ import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
-/// @dev Version: Algebra Integral
+/// @dev Version: Algebra Integral 1.0
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
-
-  /// @inheritdoc IAlgebraFactory
-  address public immutable override communityVault;
 
   /// @inheritdoc IAlgebraFactory
   uint16 public override defaultCommunityFee;
@@ -44,16 +42,18 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   IAlgebraPluginFactory public defaultPluginFactory;
 
   /// @inheritdoc IAlgebraFactory
+  IAlgebraVaultFactory public vaultFactory;
+
+  /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x177d5fbf994f4d130c008797563306f1a168dc689f81b2fa23b4396931014d91;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0xf96d2474815c32e070cd63233f06af5413efc5dcb430aee4ff18cc29007c562d;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
-    communityVault = address(new AlgebraCommunityVault(msg.sender));
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.INIT_DEFAULT_FEE;
 
@@ -72,8 +72,13 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
-    return (defaultCommunityFee, defaultTickspacing, defaultFee);
+  function defaultConfigurationForPool(
+    address pool
+  ) external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityVault) {
+    if (address(vaultFactory) != address(0)) {
+      communityVault = vaultFactory.getVaultForPool(pool);
+    }
+    return (defaultCommunityFee, defaultTickspacing, defaultFee, communityVault);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -90,7 +95,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     address defaultPlugin;
     if (address(defaultPluginFactory) != address(0)) {
-      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1));
+      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1), token0, token1);
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
@@ -98,12 +103,17 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
     poolByPair[token1][token0] = pool;
     emit Pool(token0, token1, pool);
+
+    if (address(vaultFactory) != address(0)) {
+      vaultFactory.createVaultForPool(pool);
+    }
   }
 
   /// @inheritdoc IAlgebraFactory
   function setDefaultCommunityFee(uint16 newDefaultCommunityFee) external override onlyOwner {
     require(newDefaultCommunityFee <= Constants.MAX_COMMUNITY_FEE);
     require(defaultCommunityFee != newDefaultCommunityFee);
+    if (newDefaultCommunityFee != 0) require(address(vaultFactory) != address(0));
     defaultCommunityFee = newDefaultCommunityFee;
     emit DefaultCommunityFee(newDefaultCommunityFee);
   }
@@ -130,6 +140,14 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     require(newDefaultPluginFactory != address(defaultPluginFactory));
     defaultPluginFactory = IAlgebraPluginFactory(newDefaultPluginFactory);
     emit DefaultPluginFactory(newDefaultPluginFactory);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function setVaultFactory(address newVaultFactory) external override onlyOwner {
+    require(newVaultFactory != address(vaultFactory));
+    if (newVaultFactory == address(0)) require(defaultCommunityFee == 0);
+    vaultFactory = IAlgebraVaultFactory(newVaultFactory);
+    emit VaultFactory(newVaultFactory);
   }
 
   /// @inheritdoc IAlgebraFactory

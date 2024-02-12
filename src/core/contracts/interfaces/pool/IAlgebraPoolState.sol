@@ -83,6 +83,10 @@ interface IAlgebraPoolState {
   /// @return pluginAddress The address of currently used plugin
   function plugin() external view returns (address pluginAddress);
 
+  /// @notice The contract to which community fees are transferred
+  /// @return communityVaultAddress The communityVault address
+  function communityVault() external view returns (address communityVaultAddress);
+
   /// @notice Returns 256 packed tick initialized boolean values. See TickTree for more information
   /// @param wordPosition Index of 256-bits word with ticks
   /// @return The 256-bits word with packed ticks info

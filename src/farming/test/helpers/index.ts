@@ -103,6 +103,12 @@ export class HelperCommands {
     await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.totalReward);
     await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.bonusReward);
 
+    let pluginAddres = params.plugin;
+    if (!pluginAddres) {
+      const pool = (await ethers.getContractAt('IAlgebraPool', params.poolAddress)) as any as IAlgebraPool;
+      pluginAddres = await pool.connect(incentiveCreator).plugin();
+    }
+
     txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
       {
         pool: params.poolAddress,
@@ -116,7 +122,8 @@ export class HelperCommands {
         rewardRate: params.rewardRate || 10,
         bonusRewardRate: params.bonusRewardRate || 10,
         minimalPositionWidth: params.minimalPositionWidth || 0,
-      }
+      },
+      pluginAddres
     );
     // @ts-ignore
     virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool'];

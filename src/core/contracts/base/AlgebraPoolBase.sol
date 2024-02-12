@@ -48,8 +48,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public immutable override token0;
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override token1;
-  /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override communityVault;
 
   // ! IMPORTANT security note: the pool state can be manipulated
   // ! external contracts using this data must prevent read-only reentrancy
@@ -75,6 +73,9 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   address public override plugin;
 
   /// @inheritdoc IAlgebraPoolState
+  address public override communityVault;
+
+  /// @inheritdoc IAlgebraPoolState
   mapping(int16 => uint256) public override tickTable;
 
   /// @inheritdoc IAlgebraPoolState
@@ -94,9 +95,13 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   }
 
   constructor() {
-    (plugin, factory, communityVault, token0, token1) = _getDeployParameters();
+    address _plugin;
+    (_plugin, factory, token0, token1) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
+    if (_plugin != address(0)) {
+      _setPlugin(_plugin);
+    }
   }
 
   /// @inheritdoc IAlgebraPoolState
@@ -139,13 +144,13 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
   /// Can be overridden in tests
-  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
+  function _getDeployParameters() internal virtual returns (address, address, address, address) {
     return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
   }
 
   /// @dev Gets the default settings for pool initialization. Can be overridden in tests
-  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16) {
-    return IAlgebraFactory(factory).defaultConfigurationForPool();
+  function _getDefaultConfiguration() internal virtual returns (uint16, int24, uint16, address) {
+    return IAlgebraFactory(factory).defaultConfigurationForPool(address(this));
   }
 
   // The main external calls that are used by the pool. Can be overridden in tests
@@ -181,4 +186,34 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   // This virtual function is implemented in TickStructure and used in Positions
   /// @dev Add or remove a pair of ticks to the corresponding data structure
   function _addOrRemoveTicks(int24 bottomTick, int24 topTick, bool toggleBottom, bool toggleTop, int24 currentTick, bool remove) internal virtual;
+
+  function _setCommunityFee(uint16 _communityFee) internal {
+    globalState.communityFee = _communityFee;
+    emit CommunityFee(_communityFee);
+  }
+
+  function _setCommunityFeeVault(address _communityFeeVault) internal {
+    communityVault = _communityFeeVault;
+    emit CommunityVault(_communityFeeVault);
+  }
+
+  function _setFee(uint16 _fee) internal {
+    globalState.lastFee = _fee;
+    emit Fee(_fee);
+  }
+
+  function _setTickSpacing(int24 _tickSpacing) internal {
+    tickSpacing = _tickSpacing;
+    emit TickSpacing(_tickSpacing);
+  }
+
+  function _setPlugin(address _plugin) internal {
+    plugin = _plugin;
+    emit Plugin(_plugin);
+  }
+
+  function _setPluginConfig(uint8 _pluginConfig) internal {
+    globalState.pluginConfig = _pluginConfig;
+    emit PluginConfig(_pluginConfig);
+  }
 }

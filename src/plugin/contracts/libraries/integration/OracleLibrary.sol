@@ -3,6 +3,8 @@ pragma solidity >=0.8.4;
 
 import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
 
 import '../../interfaces/plugins/IVolatilityOracle.sol';
@@ -95,5 +97,17 @@ library OracleLibrary {
   /// @return timestamp The timestamp of timepoint
   function timepointMetadata(address oracleAddress, uint16 index) internal view returns (bool initialized, uint32 timestamp) {
     (initialized, timestamp, , , , , ) = IVolatilityOracle(oracleAddress).timepoints(index);
+  }
+
+  /// @notice Checks if the oracle is currently connected to the pool
+  /// @param oracleAddress The address of oracle
+  /// @param oracleAddress The address of the pool
+  /// @return connected Whether or not the oracle is connected
+  function isOracleConnectedToPool(address oracleAddress, address poolAddress) internal view returns (bool connected) {
+    IAlgebraPool pool = IAlgebraPool(poolAddress);
+    if (oracleAddress == pool.plugin()) {
+      (, , , uint8 pluginConfig, , ) = pool.globalState();
+      connected = Plugins.hasFlag(pluginConfig, Plugins.BEFORE_SWAP_FLAG);
+    }
   }
 }
