@@ -239,6 +239,24 @@ describe('unit/FarmingCenter', () => {
       expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
     });
 
+    it('works if liquidity decreased and emergency activated', async () => {
+      await context.eternalFarming.connect(actors.wallets[0]).setEmergencyWithdrawStatus(true);
+
+      await expect(
+        context.nft.connect(lpUser0).decreaseLiquidity({
+          tokenId: tokenIdEternal,
+          liquidity: 5,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: (await blockTimestamp()) + 1000,
+        })
+      )
+        .to.emit(context.eternalFarming, 'FarmEnded')
+        .to.not.emit(context.nft, 'FarmingFailed');
+
+      expect(await context.farmingCenter.deposits(tokenIdEternal)).to.be.eq('0x0000000000000000000000000000000000000000000000000000000000000000');
+    });
+
     it('works if liquidity decreased and incentive deactivated automatically', async () => {
       await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
 
@@ -490,13 +508,18 @@ describe('unit/FarmingCenter', () => {
       });
 
       claimAndCheck = async (token: TestERC20, from: Wallet, amount: bigint, expectedAmountRewardBalance?: bigint) => {
+        const rewards = await context.eternalFarming.rewards(from.address, token);
+
         let balanceOfTokenBefore = await token.balanceOf(from.address);
 
         await context.farmingCenter.connect(from).claimReward(token, from.address, amount);
 
         let balanceOfTokenAfter = await token.balanceOf(from.address);
 
-        expect(balanceOfTokenAfter - balanceOfTokenBefore).to.equal(amount);
+        if (amount != 0n) expect(balanceOfTokenAfter - balanceOfTokenBefore).to.equal(amount);
+        else {
+          expect(balanceOfTokenAfter - balanceOfTokenBefore).to.equal(rewards);
+        }
 
         if (expectedAmountRewardBalance === undefined) expectedAmountRewardBalance = 0n;
 
@@ -700,8 +723,15 @@ describe('unit/FarmingCenter', () => {
       expect(balanceAfter - balanceBeforeSecondCollect).to.equal(0);
       expect(bonusBalanceAfter - bonusBalanceBeforeSecondCollect).to.equal(0);
 
-      await claimAndCheck(context.rewardToken, lpUser0, 0n, balanceBeforeSecondCollect - balanceBeforeFirstCollect);
-      await claimAndCheck(context.bonusRewardToken, lpUser0, 0n, bonusBalanceBeforeSecondCollect - bonusBalanceBeforeFirstCollect);
+      expect(await context.eternalFarming.rewards(lpUser0.address, context.rewardToken)).to.be.eq(
+        balanceBeforeSecondCollect - balanceBeforeFirstCollect
+      );
+      expect(await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken)).to.be.eq(
+        bonusBalanceBeforeSecondCollect - bonusBalanceBeforeFirstCollect
+      );
+
+      await claimAndCheck(context.rewardToken, lpUser0, 0n);
+      await claimAndCheck(context.bonusRewardToken, lpUser0, 0n);
     });
 
     it('collect with non-existent incentive', async () => {

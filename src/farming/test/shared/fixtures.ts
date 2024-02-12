@@ -60,7 +60,7 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const _factory = (await v3FactoryFactory.deploy(poolDeployerAddress)) as any as IAlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory(AlgebraPoolDeployerJson.abi, AlgebraPoolDeployerJson.bytecode);
-  const _deployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as any as IAlgebraPoolDeployer;
+  const _deployer = (await poolDeployerFactory.deploy(_factory)) as any as IAlgebraPoolDeployer;
 
   const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI, PLUGIN_FACTORY_BYTECODE);
   const pluginFactory = (await pluginContractFactory.deploy(_factory)) as any as IBasePluginV1Factory;

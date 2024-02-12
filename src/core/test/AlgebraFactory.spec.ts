@@ -6,7 +6,7 @@ import { expect } from './shared/expect';
 import { ZERO_ADDRESS } from './shared/fixtures';
 import snapshotGasCost from './shared/snapshotGasCost';
 
-import { getCreate2Address } from './shared/utilities';
+import { getCreate2Address, encodePriceSqrt } from './shared/utilities';
 
 const TEST_ADDRESSES: [string, string, string] = [
   '0x1000000000000000000000000000000000000000',
@@ -31,17 +31,23 @@ describe('AlgebraFactory', () => {
     });
 
     const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-    const _factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
-
-    const vaultAddress = await _factory.communityVault();
+    const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
     const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-    poolDeployer = (await poolDeployerFactory.deploy(_factory, vaultAddress)) as any as AlgebraPoolDeployer;
+    const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
+
+    const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
+    const vault = await vaultFactory.deploy(factory, deployer.address);
+
+    const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
+    const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
+
+    await factory.setVaultFactory(vaultFactoryStub);
 
     const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
-    defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
+    const defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
 
-    return _factory;
+    return { factory, poolDeployer, defaultPluginFactory };
   };
 
   before('create fixture loader', async () => {
@@ -53,7 +59,12 @@ describe('AlgebraFactory', () => {
   });
 
   beforeEach('deploy factory', async () => {
-    factory = await loadFixture(fixture);
+    ({ factory, poolDeployer, defaultPluginFactory } = await loadFixture(fixture));
+  });
+
+  it('cannot create invalid vault factory stub', async () => {
+    const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
+    expect(vaultFactoryStubFactory.deploy(ZeroAddress)).to.be.revertedWithoutReason;
   });
 
   it('owner is deployer', async () => {
@@ -159,6 +170,28 @@ describe('AlgebraFactory', () => {
       expect(await pool.plugin()).to.be.eq(pluginAddress);
     });
 
+    it('sets vault in pool', async () => {
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+
+      await pool.initialize(encodePriceSqrt(1, 1));
+      expect(await pool.communityVault()).to.not.eq(ZeroAddress);
+    });
+
+    it('works without community vault factory', async () => {
+      await factory.setVaultFactory(ZeroAddress);
+      await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+      await pool.initialize(encodePriceSqrt(1, 1));
+      expect(await pool.communityVault()).to.eq(ZeroAddress);
+    });
+
     it('fails if trying to create via pool deployer directly', async () => {
       await expect(poolDeployer.deploy(TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted;
     });
@@ -185,7 +218,7 @@ describe('AlgebraFactory', () => {
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-      await expect(poolDeployerFactory.deploy(ZeroAddress, ZeroAddress)).to.be.reverted;
+      await expect(poolDeployerFactory.deploy(ZeroAddress)).to.be.reverted;
     });
   });
 
@@ -282,13 +315,29 @@ describe('AlgebraFactory', () => {
       await expect(factory.setDefaultCommunityFee(0)).to.be.reverted;
     });
 
+    it('fails if community vault factory is zero address', async () => {
+      await factory.setVaultFactory(ZeroAddress);
+      await expect(factory.setDefaultCommunityFee(60)).to.be.reverted;
+    });
+
     it('works correct', async () => {
       await factory.setDefaultCommunityFee(60);
       expect(await factory.defaultCommunityFee()).to.eq(60);
     });
 
+    it('can set to zero', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await factory.setDefaultCommunityFee(0);
+      expect(await factory.defaultCommunityFee()).to.eq(0);
+    });
+
     it('emits event', async () => {
       await expect(factory.setDefaultCommunityFee(60)).to.emit(factory, 'DefaultCommunityFee').withArgs(60);
+    });
+
+    it('emits event when changes to zero', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await expect(factory.setDefaultCommunityFee(0)).to.emit(factory, 'DefaultCommunityFee').withArgs(0);
     });
   });
 
@@ -356,6 +405,26 @@ describe('AlgebraFactory', () => {
     });
   });
 
+  describe('#setVaultFactory', () => {
+    it('fails if caller is not owner', async () => {
+      await expect(factory.connect(other).setVaultFactory(other.address)).to.be.reverted;
+    });
+
+    it('fails if equals current value', async () => {
+      const vaultFactoryAddress = await factory.vaultFactory();
+      await expect(factory.setVaultFactory(vaultFactoryAddress)).to.be.reverted;
+    });
+
+    it('fails if tries to set to zero with nonzero default community fee', async () => {
+      await factory.setDefaultCommunityFee(60);
+      await expect(factory.setVaultFactory(ZeroAddress)).to.be.reverted;
+    });
+
+    it('emits event', async () => {
+      await expect(factory.setVaultFactory(other.address)).to.emit(factory, 'VaultFactory').withArgs(other.address);
+    });
+  });
+
   it('hasRoleOrOwner', async () => {
     expect(
       await factory.hasRoleOrOwner('0x0000000000000000000000000000000000000000000000000000000000000000', wallet.address)
@@ -371,8 +440,19 @@ describe('AlgebraFactory', () => {
   });
 
   it('defaultConfigurationForPool', async () => {
-    const { communityFee, tickSpacing } = await factory.defaultConfigurationForPool();
+    const { communityFee, tickSpacing, communityVault, fee } = await factory.defaultConfigurationForPool(ZeroAddress);
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
+    expect(communityVault).to.not.eq(ZeroAddress);
+    expect(fee).to.eq(500);
+  });
+
+  it('defaultConfigurationForPool works without vault factory', async () => {
+    await factory.setVaultFactory(ZeroAddress);
+    const { communityFee, tickSpacing, communityVault, fee } = await factory.defaultConfigurationForPool(ZeroAddress);
+    expect(communityFee).to.eq(0);
+    expect(tickSpacing).to.eq(60);
+    expect(communityVault).to.eq(ZeroAddress);
+    expect(fee).to.eq(500);
   });
 });

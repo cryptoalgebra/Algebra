@@ -3,6 +3,7 @@ pragma solidity >=0.5.0;
 pragma abicoder v2;
 
 import './plugin/IAlgebraPluginFactory.sol';
+import './vault/IAlgebraVaultFactory.sol';
 
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -43,6 +44,10 @@ interface IAlgebraFactory {
   /// @param defaultPluginFactoryAddress The new defaultPluginFactory address
   event DefaultPluginFactory(address defaultPluginFactoryAddress);
 
+  /// @notice Emitted when the vaultFactory address is changed
+  /// @param newVaultFactory The new vaultFactory address
+  event VaultFactory(address newVaultFactory);
+
   /// @notice role that can change communityFee and tickspacing in pools
   /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
@@ -62,10 +67,6 @@ interface IAlgebraFactory {
   /// @return The address of the poolDeployer
   function poolDeployer() external view returns (address);
 
-  /// @notice Returns the current communityVaultAddress
-  /// @return The address to which community fees are transferred
-  function communityVault() external view returns (address);
-
   /// @notice Returns the default community fee
   /// @return Fee which will be set at the creation of the pool
   function defaultCommunityFee() external view returns (uint16);
@@ -79,14 +80,24 @@ interface IAlgebraFactory {
   function defaultTickspacing() external view returns (int24);
 
   /// @notice Return the current pluginFactory address
+  /// @dev This contract is used to automatically set a plugin address in new liquidity pools
   /// @return Algebra plugin factory
   function defaultPluginFactory() external view returns (IAlgebraPluginFactory);
 
-  /// @notice Returns the default communityFee and tickspacing
+  /// @notice Return the current vaultFactory address
+  /// @dev This contract is used to automatically set a vault address in new liquidity pools
+  /// @return Algebra vault factory
+  function vaultFactory() external view returns (IAlgebraVaultFactory);
+
+  /// @notice Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
+  /// @param pool the address of liquidity pool
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
   /// @return fee which will be set at the creation of the pool
-  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
+  /// @return communityFeeVault the address of communityFeeVault
+  function defaultConfigurationForPool(
+    address pool
+  ) external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityFeeVault);
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @dev The method does not check if such a pool has been created
@@ -133,6 +144,10 @@ interface IAlgebraFactory {
   /// @dev updates pluginFactory address
   /// @param newDefaultPluginFactory address of new plugin factory
   function setDefaultPluginFactory(address newDefaultPluginFactory) external;
+
+  /// @dev updates vaultFactory address
+  /// @param newVaultFactory address of new vault factory
+  function setVaultFactory(address newVaultFactory) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
   /// of time must pass before the ownership renounce can be completed.

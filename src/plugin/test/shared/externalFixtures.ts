@@ -78,7 +78,7 @@ export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixtu
     token1,
     factory,
     createPool: async (firstToken = token0, secondToken = token1) => {
-      await poolDeployer.deployMock(factory, ZERO_ADDRESS, firstToken, secondToken);
+      await poolDeployer.deployMock(factory, firstToken, secondToken);
 
       const sortedTokens =
         BigInt(await firstToken.getAddress()) < BigInt(await secondToken.getAddress())

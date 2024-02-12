@@ -106,7 +106,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
-          }
+          },
+          await context.poolObj.connect(incentiveCreator).plugin()
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -124,7 +125,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: 887272 * 2 + 1,
-          }
+          },
+          await context.poolObj.connect(incentiveCreator).plugin()
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -142,7 +144,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
-          }
+          },
+          await context.poolObj.connect(incentiveCreator).plugin()
         )
       ).to.be.not.reverted;
     });

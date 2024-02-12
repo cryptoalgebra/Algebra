@@ -136,13 +136,17 @@ describe('unit/EternalFarms', () => {
 
     it('reverts if not incentiveMaker', async () => {
       expect(
-        context.eternalFarming.connect(actors.farmingDeployer()).createEternalFarming(dummyKey, {
-          reward: 100,
-          bonusReward: 100,
-          rewardRate: 100,
-          bonusRewardRate: 100,
-          minimalPositionWidth: 100,
-        })
+        context.eternalFarming.connect(actors.farmingDeployer()).createEternalFarming(
+          dummyKey,
+          {
+            reward: 100,
+            bonusReward: 100,
+            rewardRate: 100,
+            bonusRewardRate: 100,
+            minimalPositionWidth: 100,
+          },
+          await context.poolObj.connect(incentiveCreator).plugin()
+        )
       ).to.be.revertedWithoutReason;
 
       expect(context.eternalFarming.connect(actors.farmingDeployer()).deactivateIncentive(dummyKey)).to.be.revertedWithoutReason;
@@ -401,6 +405,26 @@ describe('unit/EternalFarms', () => {
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
+      };
+
+      await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(
+        context.eternalFarming as AlgebraEternalFarming,
+        'pluginNotConnected'
+      );
+    });
+
+    it('cannot create farming if incorrect plugin is connected', async () => {
+      await context.poolObj.connect(actors.wallets[0]).setPlugin(actors.wallets[1].address);
+      const incentiveArgs = {
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        totalReward: 10n,
+        bonusReward,
+        poolAddress: await context.poolObj.getAddress(),
+        nonce: localNonce,
+        rewardRate: 10n,
+        bonusRewardRate: 50n,
+        plugin: actors.wallets[0].address,
       };
 
       await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(

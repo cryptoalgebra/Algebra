@@ -18,11 +18,16 @@ interface IAlgebraPoolPermissionedActions {
   /// @param newPluginAddress The new plugin address
   function setPlugin(address newPluginAddress) external;
 
-  /// @notice Set new plugin config
+  /// @notice Set new plugin config. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   /// @param newConfig In the new configuration of the plugin,
   /// each bit of which is responsible for a particular hook.
-  /// Only factory owner or POOLS_ADMINISTRATOR_ROLE role
   function setPluginConfig(uint8 newConfig) external;
+
+  /// @notice Set new community fee vault address. Only factory owner or POOLS_ADMINISTRATOR_ROLE role
+  /// @dev Community fee vault receives collected community fees.
+  /// **accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address**
+  /// @param newCommunityVault The address of new community fee vault
+  function setCommunityVault(address newCommunityVault) external;
 
   /// @notice Set new pool fee. Can be called by owner if dynamic fee is disabled.
   /// Called by the plugin if dynamic fee is enabled

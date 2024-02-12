@@ -86,4 +86,6 @@ interface IAlgebraPoolEvents {
   /// @notice Emitted when the fee changes inside the pool
   /// @param fee The current fee in hundredths of a bip, i.e. 1e-6
   event Fee(uint16 fee);
+
+  event CommunityVault(address newCommunityVault);
 }

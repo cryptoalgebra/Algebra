@@ -5,6 +5,7 @@ pragma abicoder v2;
 import '../libraries/NFTDescriptor.sol';
 import '../libraries/NFTSVG.sol';
 import '../libraries/HexStrings.sol';
+import '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol';
 
 contract NFTDescriptorTest {
     using HexStrings for uint256;

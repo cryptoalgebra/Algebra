@@ -72,11 +72,10 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     /// @dev Parses a revert reason that should contain the numeric quote
     function parseRevertReason(bytes memory reason) private pure returns (uint256, uint16) {
         if (reason.length != 64) {
-            if (reason.length < 68) revert('Unexpected error');
-            assembly {
-                reason := add(reason, 0x04)
+            require(reason.length > 0, 'Unexpected error');
+            assembly ('memory-safe') {
+                revert(add(32, reason), mload(reason))
             }
-            revert(abi.decode(reason, (string)));
         }
         return abi.decode(reason, (uint256, uint16));
     }

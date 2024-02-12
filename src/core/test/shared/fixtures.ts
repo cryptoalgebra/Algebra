@@ -27,16 +27,18 @@ async function factoryFixture(): Promise<FactoryFixture> {
   });
 
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
-  const factory_c = (await factoryFactory.deploy(poolDeployerAddress)) ;
-  const factory = (factory_c as any) as AlgebraFactory;
-
-  const vaultAddress = await factory.communityVault();
+  const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-  const poolDeployer = (await poolDeployerFactory.deploy(factory, vaultAddress)) as any as AlgebraPoolDeployer;
+  const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
 
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
-  const vault = vaultFactory.attach(vaultAddress) as any as AlgebraCommunityVault;
+  const vault = (await vaultFactory.deploy(factory, deployer.address)) as any as AlgebraCommunityVault;
+
+  const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
+  const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
+
+  await factory.setVaultFactory(vaultFactoryStub);
   return { factory, vault };
 }
 interface TokensFixture {
@@ -47,9 +49,9 @@ interface TokensFixture {
 
 async function tokensFixture(): Promise<TokensFixture> {
   const tokenFactory = await ethers.getContractFactory('TestERC20');
-  const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
-  const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
-  const tokenC = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & {address_: string};
+  const tokenA = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address_: string };
+  const tokenB = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address_: string };
+  const tokenC = (await tokenFactory.deploy(2n ** 255n)) as any as TestERC20 & { address_: string };
 
   tokenA.address_ = await tokenA.getAddress();
   tokenB.address_ = await tokenB.getAddress();
@@ -97,20 +99,14 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
     swapTargetCallee,
     swapTargetRouter,
     createPool: async (firstToken = token0, secondToken = token1) => {
-      const mockTimePoolDeployer = (await MockTimeAlgebraPoolDeployerFactory.deploy()) as any as MockTimeAlgebraPoolDeployer;
-      await mockTimePoolDeployer.deployMock(
-        factory,
-        vault,
-        firstToken,
-        secondToken
-      );
+      const mockTimePoolDeployer =
+        (await MockTimeAlgebraPoolDeployerFactory.deploy()) as any as MockTimeAlgebraPoolDeployer;
+      await mockTimePoolDeployer.deployMock(factory, firstToken, secondToken);
 
       const firstAddress = await firstToken.getAddress();
-      const secondAddress = await secondToken.getAddress()
+      const secondAddress = await secondToken.getAddress();
       const sortedTokens =
-        BigInt(firstAddress) < BigInt(secondAddress)
-          ? [firstAddress, secondAddress]
-          : [secondAddress, firstAddress];
+        BigInt(firstAddress) < BigInt(secondAddress) ? [firstAddress, secondAddress] : [secondAddress, firstAddress];
       const poolAddress = await mockTimePoolDeployer.computeAddress(sortedTokens[0], sortedTokens[1]);
       return MockTimeAlgebraPoolFactory.attach(poolAddress) as any as MockTimeAlgebraPool;
     },

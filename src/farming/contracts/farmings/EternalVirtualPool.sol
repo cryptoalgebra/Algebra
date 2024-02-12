@@ -8,7 +8,7 @@ import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/LiquidityMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
-import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 
 import '../base/VirtualTickStructure.sol';
 
@@ -123,6 +123,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
     if (msg.sender != plugin) revert onlyPlugin();
 
+    // All storage reads in this code block use the same slot
     uint128 _currentLiquidity = currentLiquidity;
     int24 _globalTick = globalTick;
     uint32 _prevTimestamp = prevTimestamp;
