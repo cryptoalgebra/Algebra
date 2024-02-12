@@ -13,8 +13,8 @@ contract TickTreeEchidnaTest {
 
   function _getPositionInBitmap(int24 tick) private pure returns (int16 wordIndex, uint8 bitIndex) {
     assembly {
-      wordIndex := and(tick, 0xFF)
-      bitIndex := sar(8, tick)
+      wordIndex := sar(8, tick)
+      bitIndex := and(tick, 0xFF)
     }
   }
 
