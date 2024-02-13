@@ -19,6 +19,7 @@
     "contracts/libraries",
     "artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json",
     "artifacts/contracts/AlgebraPool.sol/AlgebraPool.json",
+    "artifacts/contracts/AlgebraCommunityVault.sol/AlgebraCommunityVault.json",
     "artifacts/contracts/AlgebraPoolDeployer.sol/AlgebraPoolDeployer.json",
     "artifacts/contracts/interfaces/**/*.json",
     "!artifacts/contracts/interfaces/**/*.dbg.json"

@@ -3,6 +3,9 @@
   "description": "Liquidity mining contracts for Algebra Integral protocol",
   "license": "GPL-3.0-or-later",
   "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "algebra",
     "liquidity mining"
