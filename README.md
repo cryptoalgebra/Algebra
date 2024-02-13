@@ -30,13 +30,13 @@ Innovative DEX with concentrated liquidity and customizable plugins.
 
 ## Docs
 
-The documentation page is located at: <a href="https://cryptoalgebra.gitbook.io/algebra-integral/">https://cryptoalgebra.gitbook.io/algebra-integral/</a>
+The documentation page is located at: [https://docs.algebra.finance/](https://docs.algebra.finance/)
 
 ## Versions
 
 Please note that different DEX-partners of our protocol may use different versions of the protocol. This repo contains the latest version: **Algebra Integral**. 
 
-A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/en/docs/contracts/partners/introduction)
+A page describing the versions used by partners can be found in the documentation: [partners page](https://docs-v1.algebra.finance/en/docs/contracts/partners/introduction)
 
 Previous versions of the protocol have been moved to separate repositories:
 
@@ -46,11 +46,13 @@ Previous versions of the protocol have been moved to separate repositories:
 
 ## Packages
 
-Core: https://www.npmjs.com/package/@cryptoalgebra/integral-core
+Core: [https://www.npmjs.com/package/@cryptoalgebra/integral-core](https://www.npmjs.com/package/@cryptoalgebra/integral-core)
 
-Periphery: https://www.npmjs.com/package/@cryptoalgebra/integral-periphery
+Periphery: [https://www.npmjs.com/package/@cryptoalgebra/integral-periphery](https://www.npmjs.com/package/@cryptoalgebra/integral-periphery)
 
-Basic plugin: https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin
+Farming: [https://www.npmjs.com/package/@cryptoalgebra/integral-farming](https://www.npmjs.com/package/@cryptoalgebra/integral-farming)
+
+Basic plugin: [https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin](https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin)
 
 ## Build
 
