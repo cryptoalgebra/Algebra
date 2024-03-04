@@ -19,7 +19,7 @@ async function main() {
         address: deploysData.fc,
         constructorArguments: [
             deploysData.eternal,
-            deploysData.poolDeployer
+            deploysData.nonfungiblePositionManager
         ],
         });
 

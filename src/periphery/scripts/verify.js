@@ -15,6 +15,15 @@ async function main() {
             deploysData.poolDeployer
         ],
         });
+
+    await hre.run("verify:verify", {
+        address: deploysData.quoterV2,
+        constructorArguments: [
+            deploysData.factory,
+            deploysData.wrapped,
+            deploysData.poolDeployer
+        ],
+        });
    
     await hre.run("verify:verify", {
         address: deploysData.swapRouter,

@@ -6,6 +6,8 @@ async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
+  const [deployer] = await hre.ethers.getSigners();
+
   await hre.run('verify:verify', {
     address: deploysData.factory,
     constructorArguments: [deploysData.poolDeployer],
@@ -18,12 +20,14 @@ async function main() {
 
   await hre.run('verify:verify', {
     address: deploysData.vault,
-    constructorArguments: [deploysData.factory, deploysData.poolDeployer],
+    constructorArguments: [deploysData.factory, deployer.address],
   });
 
   await hre.run('verify:verify', {
+    contract: "contracts/AlgebraVaultFactoryStub.sol:AlgebraVaultFactoryStub",
     address: deploysData.vaultFactory,
     constructorArguments: [deploysData.vault],
+
   });
 }
 

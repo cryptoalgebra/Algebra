@@ -39,6 +39,7 @@ async function main() {
 
   await QuoterV2.waitForDeployment();
 
+  deploysData.quoterV2 = QuoterV2.target;
   console.log('QuoterV2 deployed to:', QuoterV2.target);
 
   // arg1 factory address
