@@ -8,6 +8,11 @@ async function main() {
     let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
     await hre.run("verify:verify", {
+        address: deploysData.tickLens,
+        constructorArguments: [],
+        });
+
+    await hre.run("verify:verify", {
         address: deploysData.quoter,
         constructorArguments: [
             deploysData.factory,

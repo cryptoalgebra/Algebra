@@ -62,9 +62,29 @@ export default {
       chainId: 5000,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    seiTestnet: {
+      url: `https://evm-rpc.arctic-1.seinetwork.io`,
+      chainId: 713715,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    mode: {
+      url: `https://mainnet.mode.network/`,
+      chainId: 34443,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    blastTestnet: {
+      url: `https://blast-sepolia.blockpi.network/v1/rpc/public`,
+      chainId: 168587773,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
     telosTestnet: {
       url: `https://testnet.telos.net/evm`,
       chainId: 41,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    beraTestnet: {
+      url: `https://artio.rpc.berachain.com/`,
+      chainId: 80085,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     maticMainnet: {
@@ -85,11 +105,27 @@ export default {
     apiKey: `${POLYGONSCAN_API_KEY}`,
     customChains: [
       {
-        network: 'mantleTestnet',
-        chainId: 5001,
+        network: 'seiTestnet',
+        chainId: 713715,
         urls: {
-          apiURL: 'https://explorer.testnet.mantle.xyz/api',
-          browserURL: 'https://explorer.testnet.mantle.xyz/',
+          apiURL: 'https://seitrace.com/api',
+          browserURL: 'https://seitrace.com/',
+        },
+      },
+      {
+        network: 'mode',
+        chainId: 34443,
+        urls: {
+          apiURL: 'https://explorer.mode.network/api',
+          browserURL: 'https://explorer.mode.network/',
+        },
+      },
+      {
+        network: 'blastTestnet',
+        chainId: 168587773,
+        urls: {
+          apiURL: 'https://api-sepolia.blastscan.io/api',
+          browserURL: 'https://sepolia.blastscan.io/',
         },
       },
       {
@@ -98,6 +134,14 @@ export default {
         urls: {
           apiURL: 'https://explorer.mantle.xyz/api',
           browserURL: 'https://explorer.mantle.xyz/',
+        },
+      },
+      {
+        network: 'beraTestnet',
+        chainId: 80085,
+        urls: {
+          apiURL: 'https://api.routescan.io/v2/network/testnet/evm/80085/etherscan/api/',
+          browserURL: 'https://artio.beratrail.io/',
         },
       },
     ],
