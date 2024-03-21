@@ -28,11 +28,17 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function deploy(address plugin, address token0, address token1) external override returns (address pool) {
+  function deploy(address plugin, address token0, address token1, address deployer) external override returns (address pool) {
     require(msg.sender == factory);
 
     _writeToCache(plugin, token0, token1);
-    pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
+    bytes32 salt;
+    if (deployer == address(0)) {
+      salt = keccak256(abi.encode(token0, token1));
+    } else {
+      salt = keccak256(abi.encode(token0, token1, deployer));
+    }
+    pool = address(new AlgebraPool{salt: salt}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
   }
 

@@ -21,7 +21,7 @@ contract AlgebraVaultFactoryStub is IAlgebraVaultFactory {
   }
 
   /// @inheritdoc IAlgebraVaultFactory
-  function createVaultForPool(address) external view override returns (address) {
+  function createVaultForPool(address, address, address, address, address) external view override returns (address) {
     return defaultAlgebraCommunityVault;
   }
 }

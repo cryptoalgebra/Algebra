@@ -38,7 +38,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
 
-    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee, address _communityVault) = _getDefaultConfiguration();
+    (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
 
     uint8 pluginConfig = globalState.pluginConfig;
     globalState.tick = tick;
@@ -48,8 +48,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     _setFee(_fee);
     _setTickSpacing(_tickSpacing);
-    _setCommunityFeeVault(_communityVault);
-    if (_communityFee != 0 && _communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
+    if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
     _setCommunityFee(_communityFee);
 
     if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
@@ -428,7 +427,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setCommunityVault(address newCommunityVault) external override onlyUnlocked {
-    _checkIfAdministrator();
+    // factory is allowed to set initial vault
+    if (msg.sender != factory) _checkIfAdministrator();
     if (newCommunityVault == address(0) && globalState.communityFee != 0) _setCommunityFee(0); // the pool should not accumulate a community fee without a vault
     _setCommunityFeeVault(newCommunityVault); // accumulated but not yet sent to the vault community fees once will be sent to the `newCommunityVault` address
   }

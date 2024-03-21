@@ -28,6 +28,13 @@ interface IAlgebraFactory {
   /// @param pool The address of the created pool
   event Pool(address indexed token0, address indexed token1, address pool);
 
+  /// @notice Emitted when a pool is created
+  /// @param deployer The corresponding custom deployer contract
+  /// @param token0 The first token of the pool by address sort order
+  /// @param token1 The second token of the pool by address sort order
+  /// @param pool The address of the created pool
+  event CustomPool(address indexed deployer, address indexed token0, address indexed token1, address pool);
+
   /// @notice Emitted when the default community fee is changed
   /// @param newDefaultCommunityFee The new default community fee value
   event DefaultCommunityFee(uint16 newDefaultCommunityFee);
@@ -90,14 +97,10 @@ interface IAlgebraFactory {
   function vaultFactory() external view returns (IAlgebraVaultFactory);
 
   /// @notice Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
-  /// @param pool the address of liquidity pool
   /// @return communityFee which will be set at the creation of the pool
   /// @return tickSpacing which will be set at the creation of the pool
   /// @return fee which will be set at the creation of the pool
-  /// @return communityFeeVault the address of communityFeeVault
-  function defaultConfigurationForPool(
-    address pool
-  ) external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityFeeVault);
+  function defaultConfigurationForPool() external view returns (uint16 communityFee, int24 tickSpacing, uint16 fee);
 
   /// @notice Deterministically computes the pool address given the token0 and token1
   /// @dev The method does not check if such a pool has been created

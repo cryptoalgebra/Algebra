@@ -193,7 +193,8 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if trying to create via pool deployer directly', async () => {
-      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted;
+      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to
+        .be.reverted;
     });
 
     it('fails if token a == token b', async () => {
@@ -440,19 +441,17 @@ describe('AlgebraFactory', () => {
   });
 
   it('defaultConfigurationForPool', async () => {
-    const { communityFee, tickSpacing, communityVault, fee } = await factory.defaultConfigurationForPool(ZeroAddress);
+    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
-    expect(communityVault).to.not.eq(ZeroAddress);
     expect(fee).to.eq(500);
   });
 
   it('defaultConfigurationForPool works without vault factory', async () => {
     await factory.setVaultFactory(ZeroAddress);
-    const { communityFee, tickSpacing, communityVault, fee } = await factory.defaultConfigurationForPool(ZeroAddress);
+    const { communityFee, tickSpacing, fee } = await factory.defaultConfigurationForPool();
     expect(communityFee).to.eq(0);
     expect(tickSpacing).to.eq(60);
-    expect(communityVault).to.eq(ZeroAddress);
     expect(fee).to.eq(500);
   });
 });
