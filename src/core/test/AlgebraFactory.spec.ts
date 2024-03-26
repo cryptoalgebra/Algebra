@@ -1,12 +1,12 @@
 import { Wallet, getCreateAddress, ZeroAddress, keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { AlgebraFactory, AlgebraPoolDeployer, MockDefaultPluginFactory } from '../typechain';
+import { AlgebraFactory, AlgebraPoolDeployer, IAlgebraFactory, MockDefaultPluginFactory } from '../typechain';
 import { expect } from './shared/expect';
 import { ZERO_ADDRESS } from './shared/fixtures';
 import snapshotGasCost from './shared/snapshotGasCost';
 
-import { getCreate2Address, encodePriceSqrt } from './shared/utilities';
+import { getCreate2Address, getCreate2CustomAddress, encodePriceSqrt } from './shared/utilities';
 
 const TEST_ADDRESSES: [string, string, string] = [
   '0x1000000000000000000000000000000000000000',
@@ -216,6 +216,121 @@ describe('AlgebraFactory', () => {
       await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[2]));
     });
   });
+
+  describe('#createCustomPool', () => {
+    let customPoolCreator: any;
+
+    async function createAndCheckCustomPool(_factory: IAlgebraFactory, tokens: [string, string], data: string = '0x') {
+      const create2Address = getCreate2CustomAddress(
+        await poolDeployer.getAddress(),
+        await customPoolCreator.getAddress(),
+        tokens,
+        poolBytecode
+      );
+      const create = customPoolCreator.createCustomPool(_factory, tokens[0], tokens[1], data);
+
+      await expect(create).to.emit(_factory, 'CustomPool');
+      await expect(create).to.emit(customPoolCreator, 'BeforeCreateHook');
+
+      await expect(customPoolCreator.createCustomPool(_factory, tokens[0], tokens[1], data)).to.be.reverted;
+      await expect(customPoolCreator.createCustomPool(_factory, tokens[1], tokens[0], data)).to.be.reverted;
+      expect(await _factory.customPoolByPair(customPoolCreator, tokens[0], tokens[1]), 'getPool in order').to.eq(
+        create2Address
+      );
+      expect(await _factory.customPoolByPair(customPoolCreator, tokens[1], tokens[0]), 'getPool in reverse').to.eq(
+        create2Address
+      );
+
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      const pool = poolContractFactory.attach(create2Address);
+      expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
+      expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
+      expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
+    }
+
+    beforeEach('Deploy CustomPoolCreator', async () => {
+      const CustomPoolCreator = await ethers.getContractFactory('MockCustomPoolCreator');
+      customPoolCreator = await CustomPoolCreator.deploy();
+
+      const CUSTOM_POOL_DEPLOYER = await factory.CUSTOM_POOL_DEPLOYER();
+      await factory.grantRole(CUSTOM_POOL_DEPLOYER, customPoolCreator);
+    });
+
+    it('succeeds for pool', async () => {
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+    });
+
+    it('succeeds if tokens are passed in reverse', async () => {
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[1], TEST_ADDRESSES[0]]);
+    });
+
+    it('correctly computes pool address [ @skip-on-coverage ]', async () => {
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.customPoolByPair(customPoolCreator, TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const addressCalculatedByFactory = await factory.computeCustomPoolAddress(
+        customPoolCreator,
+        TEST_ADDRESSES[0],
+        TEST_ADDRESSES[1]
+      );
+
+      expect(addressCalculatedByFactory).to.be.eq(poolAddress);
+    });
+
+    it('sets vault in pool', async () => {
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.customPoolByPair(customPoolCreator, TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+
+      await pool.initialize(encodePriceSqrt(1, 1));
+      expect(await pool.communityVault()).to.not.eq(ZeroAddress);
+    });
+
+    it('works without community vault factory', async () => {
+      await factory.setVaultFactory(ZeroAddress);
+      await createAndCheckCustomPool(factory, [TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
+
+      let poolAddress = await factory.customPoolByPair(customPoolCreator, TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+      await pool.initialize(encodePriceSqrt(1, 1));
+      expect(await pool.communityVault()).to.eq(ZeroAddress);
+    });
+
+    it('fails if trying to create via pool deployer directly', async () => {
+      await expect(poolDeployer.deploy(TEST_ADDRESSES[0], TEST_ADDRESSES[0], TEST_ADDRESSES[0], customPoolCreator)).to
+        .be.reverted;
+    });
+
+    it('fails if token a == token b', async () => {
+      await expect(customPoolCreator.createCustomPool(factory, TEST_ADDRESSES[0], TEST_ADDRESSES[0], '0x')).to.be
+        .reverted;
+    });
+
+    it('fails if token a is 0 or token b is 0', async () => {
+      await expect(customPoolCreator.createCustomPool(factory, TEST_ADDRESSES[0], ZeroAddress, '0x')).to.be.reverted;
+      await expect(customPoolCreator.createCustomPool(factory, ZeroAddress, TEST_ADDRESSES[0], '0x')).to.be.reverted;
+      expect(customPoolCreator.createCustomPool(factory, ZeroAddress, ZeroAddress, '0x')).to.be.revertedWithoutReason;
+    });
+
+    it('fails if called by address without a role', async () => {
+      await expect(
+        factory.createCustomPool(customPoolCreator, ZeroAddress, TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x')
+      ).to.be.revertedWith('Can`t create custom pools');
+    });
+
+    it('gas [ @skip-on-coverage ]', async () => {
+      await snapshotGasCost(customPoolCreator.createCustomPool(factory, TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x'));
+    });
+
+    it('gas for second pool [ @skip-on-coverage ]', async () => {
+      await customPoolCreator.createCustomPool(factory, TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      await snapshotGasCost(customPoolCreator.createCustomPool(factory, TEST_ADDRESSES[0], TEST_ADDRESSES[2], '0x'));
+    });
+  });
+
   describe('Pool deployer', () => {
     it('cannot set zero address as factory', async () => {
       const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');

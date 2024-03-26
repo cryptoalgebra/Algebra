@@ -36,7 +36,7 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     if (deployer == address(0)) {
       salt = keccak256(abi.encode(token0, token1));
     } else {
-      salt = keccak256(abi.encode(token0, token1, deployer));
+      salt = keccak256(abi.encode(deployer, token0, token1));
     }
     pool = address(new AlgebraPool{salt: salt}());
     (cache0, cache1) = (bytes32(0), bytes32(0));

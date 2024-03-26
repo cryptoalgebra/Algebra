@@ -21,8 +21,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
-  // TODO
-  bytes32 public constant CUSTOM_POOL_DEPLOYER = keccak256('CUSTOM_POOL_DEPLOYER');
+  /// @inheritdoc IAlgebraFactory
+  bytes32 public constant override CUSTOM_POOL_DEPLOYER = keccak256('CUSTOM_POOL_DEPLOYER');
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
@@ -51,8 +51,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @inheritdoc IAlgebraFactory
   mapping(address => mapping(address => address)) public override poolByPair;
 
-  // TODO
-  mapping(address => mapping(address => mapping(address => address))) public customPoolByPair;
+  /// @inheritdoc IAlgebraFactory
+  mapping(address => mapping(address => mapping(address => address))) public override customPoolByPair;
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
@@ -88,24 +88,31 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     pool = address(uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1)), POOL_INIT_CODE_HASH)))));
   }
 
-  function computeCustomPoolAddress(address deployer, address token0, address token1) public view returns (address pool) {
-    pool = address(
-      uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(token0, token1, deployer)), POOL_INIT_CODE_HASH))))
+  /// @inheritdoc IAlgebraFactory
+  function computeCustomPoolAddress(address deployer, address token0, address token1) public view override returns (address customPool) {
+    customPool = address(
+      uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(deployer, token0, token1)), POOL_INIT_CODE_HASH))))
     );
   }
 
   /// @inheritdoc IAlgebraFactory
   function createPool(address tokenA, address tokenB) external override returns (address pool) {
-    return _createPool(address(0), msg.sender, tokenA, tokenB);
+    return _createPool(address(0), msg.sender, tokenA, tokenB, '');
   }
 
-  // TODO
-  function createCustomPool(address deployer, address creator, address tokenA, address tokenB) external returns (address pool) {
+  /// @inheritdoc IAlgebraFactory
+  function createCustomPool(
+    address deployer,
+    address creator,
+    address tokenA,
+    address tokenB,
+    bytes calldata data
+  ) external override returns (address customPool) {
     require(hasRole(CUSTOM_POOL_DEPLOYER, msg.sender), 'Can`t create custom pools');
-    return _createPool(deployer, creator, tokenA, tokenB);
+    return _createPool(deployer, creator, tokenA, tokenB, data);
   }
 
-  function _createPool(address deployer, address creator, address tokenA, address tokenB) private returns (address pool) {
+  function _createPool(address deployer, address creator, address tokenA, address tokenB, bytes memory data) private returns (address pool) {
     require(tokenA != tokenB);
     (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
     require(token0 != address(0));
@@ -116,7 +123,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     address plugin;
     if (deployer == address(0)) {
       if (address(defaultPluginFactory) != address(0)) {
-        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1);
+        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, '');
       }
     } else {
       plugin = IAlgebraPluginFactory(msg.sender).beforeCreatePoolHook(
@@ -124,7 +131,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
         creator,
         deployer,
         token0,
-        token1
+        token1,
+        data
       );
     }
 
