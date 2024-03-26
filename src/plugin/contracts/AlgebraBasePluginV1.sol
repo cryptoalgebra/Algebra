@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
@@ -54,6 +55,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
+
+  uint16 private cachedFee;
 
   /// @dev the address which connected the last incentive. Needed so that he can disconnect it
   address private _lastIncentiveOwner;
@@ -258,11 +261,22 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.beforeSwap.selector;
   }
 
-  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
+  function afterSwap(
+    address,
+    address,
+    bool zeroToOne,
+    int256,
+    uint160,
+    int256 amount0,
+    int256 amount1,
+    bytes calldata
+  ) external override onlyPool returns (bytes4) {
     address _incentive = incentive;
     if (_incentive != address(0)) {
       (, int24 tick, , ) = _getPoolState();
-      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+      uint256 amount = uint256(zeroToOne ? amount0 : amount1);
+      uint128 feeAmount = uint128((amount * cachedFee) / Constants.FEE_DENOMINATOR);
+      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne, feeAmount);
     } else {
       _updatePluginConfigInPool(); // should not be called, reset config
     }
@@ -316,5 +330,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
+    // cache fee for farming, since we don't know the exact amounts until swap complete
+    cachedFee = newFee;
   }
 }

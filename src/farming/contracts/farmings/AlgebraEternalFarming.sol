@@ -54,6 +54,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   bytes32 public constant override FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
+  uint16 public constant FEE_WEIGHT_DENOMINATOR = 1e3;
+
   /// @inheritdoc IAlgebraEternalFarming
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
@@ -153,11 +155,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       key.nonce,
       params.reward,
       params.bonusReward,
-      params.minimalPositionWidth
+      params.minimalPositionWidth,
+      params.weight0,
+      params.weight1
     );
 
     _addRewards(IAlgebraEternalVirtualPool(virtualPool), params.reward, params.bonusReward, incentiveId);
     _setRewardRates(IAlgebraEternalVirtualPool(virtualPool), params.rewardRate, params.bonusRewardRate, incentiveId);
+    _setFeesWeights(IAlgebraEternalVirtualPool(virtualPool), params.weight0, params.weight1, incentiveId);
   }
 
   /// @inheritdoc IAlgebraEternalFarming
@@ -239,6 +244,13 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     if ((rewardRate | bonusRewardRate != 0) && (_isIncentiveDeactivated(incentive))) revert incentiveStopped();
 
     _setRewardRates(virtualPool, rewardRate, bonusRewardRate, incentiveId);
+  }
+
+  function setWeights(IncentiveKey memory key, uint16 weight0, uint16 weight1) external override onlyIncentiveMaker {
+    (bytes32 incentiveId, Incentive storage incentive) = _getExistingIncentiveByKey(key);
+    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+
+    _setFeesWeights(virtualPool, weight0, weight1, incentiveId);
   }
 
   /// @inheritdoc IAlgebraEternalFarming
@@ -395,6 +407,12 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function _setRewardRates(IAlgebraEternalVirtualPool virtualPool, uint128 rate0, uint128 rate1, bytes32 incentiveId) private {
     virtualPool.setRates(rate0, rate1);
     emit RewardsRatesChanged(rate0, rate1, incentiveId);
+  }
+
+  function _setFeesWeights(IAlgebraEternalVirtualPool virtualPool, uint16 weight0, uint16 weight1, bytes32 incentiveId) private {
+    if (weight0 + weight0 != FEE_WEIGHT_DENOMINATOR) revert incorrectWeight();
+    virtualPool.setWeights(weight0, weight1);
+    emit FeesWeightsChanged(weight0, weight1, incentiveId);
   }
 
   function _getFarm(uint256 tokenId, bytes32 incentiveId) private view returns (Farm memory result) {

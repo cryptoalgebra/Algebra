@@ -22,6 +22,9 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   address public immutable override plugin;
 
+  uint32 public constant RATE_CHANGE_FREQUENCY = 1 hours;
+  uint16 public constant FEE_WEIGHT_DENOMINATOR = 1e3;
+
   /// @inheritdoc IAlgebraEternalVirtualPool
   uint128 public override currentLiquidity;
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -34,11 +37,23 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
 
+  uint16 internal fee1Weight;
+  uint16 internal fee0Weight;
+
   uint128 internal rewardReserve0;
   uint128 internal rewardReserve1;
 
   uint256 internal totalRewardGrowth0 = 1;
   uint256 internal totalRewardGrowth1 = 1;
+
+  uint32 internal prevDelta;
+  uint32 internal prevRateChangeTimestamp;
+
+  uint128 internal prevFees0Collected;
+  uint128 internal prevFees1Collected;
+
+  uint128 internal fees0Collected;
+  uint128 internal fees1Collected;
 
   modifier onlyFromFarming() {
     _checkIsFromFarming();
@@ -50,6 +65,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     plugin = _plugin;
 
     prevTimestamp = _blockTimestamp();
+    prevRateChangeTimestamp = _blockTimestamp();
     globalPrevInitializedTick = TickMath.MIN_TICK;
     globalNextInitializedTick = TickMath.MAX_TICK;
   }
@@ -120,7 +136,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
 
   /// @inheritdoc IAlgebraVirtualPool
   /// @dev If the virtual pool is deactivated, does nothing
-  function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
+  function crossTo(int24 targetTick, bool zeroToOne, uint128 feeAmount) external override returns (bool) {
     if (msg.sender != plugin) revert onlyPlugin();
 
     // All storage reads in this code block use the same slot
@@ -135,6 +151,12 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
+    if (zeroToOne) {
+      fees0Collected += feeAmount;
+    } else {
+      fees1Collected += feeAmount;
+    }
+
     // early return if without any crosses
     if (virtualZtO) {
       if (targetTick >= previousTick) return true;
@@ -148,6 +170,42 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     }
 
     _distributeRewards(_prevTimestamp, _currentLiquidity);
+
+    {
+      uint32 _prevRateChangeTimestamp = prevRateChangeTimestamp;
+      uint32 _prevDelta = prevDelta;
+      uint32 timeDelta = _blockTimestamp() - _prevRateChangeTimestamp;
+      if (timeDelta > RATE_CHANGE_FREQUENCY) {
+        uint128 currentFees0CollectedPerSec = fees0Collected / timeDelta;
+        uint128 currentFees1CollectedPerSec = fees1Collected / timeDelta;
+
+        if (_prevDelta != 0) {
+          uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
+          uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
+
+          // TODO muldiv
+          rewardRate0 =
+            (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
+            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+            (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
+            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+
+          rewardRate1 =
+            (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
+            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+            (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
+            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+        }
+
+        prevFees0Collected = fees0Collected;
+        prevFees1Collected = fees1Collected;
+
+        prevDelta = timeDelta;
+
+        fees0Collected = 0;
+        fees1Collected = 0;
+      }
+    }
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
     // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
@@ -241,6 +299,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
     _distributeRewards();
     (rewardRate0, rewardRate1) = (rate0, rate1);
+  }
+
+  function setWeights(uint16 weight0, uint16 weight1) external override onlyFromFarming {
+    (fee0Weight, fee1Weight) = (weight0, weight1);
   }
 
   function _checkIsFromFarming() internal view {

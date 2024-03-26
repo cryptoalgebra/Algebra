@@ -59,6 +59,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @param rate1 The new rate of bonus token distribution per sec
   function setRates(uint128 rate0, uint128 rate1) external;
 
+  function setWeights(uint16 weight0, uint16 weight1) external;
+
   /// @notice This function is used to deactivate virtual pool
   /// @dev Can only be called by farming
   function deactivate() external;

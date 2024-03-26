@@ -8,5 +8,5 @@ interface IAlgebraVirtualPool {
   /// If any one of crossed ticks is also initialized in a virtual pool it should be crossed too
   /// @param targetTick The target tick up to which we need to cross all active ticks
   /// @param zeroToOne Swap direction
-  function crossTo(int24 targetTick, bool zeroToOne) external returns (bool success);
+  function crossTo(int24 targetTick, bool zeroToOne, uint128 feeAmount) external returns (bool success);
 }

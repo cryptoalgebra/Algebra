@@ -18,6 +18,6 @@ contract PoolMock {
   }
 
   function crossTo(int24 targetTick, bool zeroToOne) external returns (bool) {
-    return IAlgebraEternalVirtualPool(virtualPool).crossTo(targetTick, zeroToOne);
+    return IAlgebraEternalVirtualPool(virtualPool).crossTo(targetTick, zeroToOne, 0);
   }
 }

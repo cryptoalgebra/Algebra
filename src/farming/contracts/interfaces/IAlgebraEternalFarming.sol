@@ -14,6 +14,8 @@ interface IAlgebraEternalFarming {
     uint128 rewardRate; // The rate of reward distribution per second
     uint128 bonusRewardRate; // The rate of bonus reward distribution per second
     uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+    uint16 weight0;
+    uint16 weight1;
   }
 
   error farmDoesNotExist();
@@ -23,6 +25,7 @@ interface IAlgebraEternalFarming {
   error anotherFarmingIsActive();
   error pluginNotConnected();
 
+  error incorrectWeight();
   error minimalPositionWidthTooWide();
   error zeroRewardAmount();
 
@@ -176,6 +179,8 @@ interface IAlgebraEternalFarming {
   /// @param bonusRewardRate The new rate of bonus token (token1) distribution per sec
   function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
 
+  function setWeights(IncentiveKey memory key, uint16 weight0, uint16 weight1) external;
+
   /// @notice Collect rewards for tokenId
   /// @dev only FarmingCenter
   /// @param key The key of incentive
@@ -242,6 +247,8 @@ interface IAlgebraEternalFarming {
   /// @param incentiveId The ID of the incentive for which rates were changed
   event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
 
+  event FeesWeightsChanged(uint16 weight0, uint16 weight1, bytes32 incentiveId);
+
   /// @notice Event emitted when rewards were collected
   /// @param tokenId The ID of the token for which rewards were collected
   /// @param incentiveId The ID of the incentive for which rewards were collected
@@ -266,7 +273,9 @@ interface IAlgebraEternalFarming {
     uint256 nonce,
     uint256 reward,
     uint256 bonusReward,
-    uint24 minimalAllowedPositionWidth
+    uint24 minimalAllowedPositionWidth,
+    uint16 weight0,
+    uint16 weight1
   );
 
   /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes

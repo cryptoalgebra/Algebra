@@ -38,7 +38,7 @@ contract EternalVirtualPoolEchidnaTest {
 
     bool zeroToOne = targetTick <= currentTick;
 
-    virtualPool.crossTo(targetTick, zeroToOne);
+    virtualPool.crossTo(targetTick, zeroToOne, 0);
     currentTick = targetTick;
 
     assert(!virtualPool.deactivated());
