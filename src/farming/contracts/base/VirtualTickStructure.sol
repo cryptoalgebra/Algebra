@@ -2,7 +2,8 @@
 pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/libraries/TickTree.sol';
-import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
+
+import './VirtualTickManagement.sol';
 
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
 
@@ -10,11 +11,10 @@ import '../interfaces/IAlgebraEternalVirtualPool.sol';
 /// @notice Encapsulates the logic of interaction with the data structure with ticks
 /// @dev Ticks are stored as a doubly linked list. A two-layer bitmap tree is used to search through the list
 abstract contract VirtualTickStructure is IAlgebraEternalVirtualPool {
-  using TickManagement for mapping(int24 => TickManagement.Tick);
+  using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
   using TickTree for mapping(int16 => uint256);
 
-  /// @inheritdoc IAlgebraEternalVirtualPool
-  mapping(int24 tickId => TickManagement.Tick tick) public override ticks;
+  mapping(int24 tickId => VirtualTickManagement.Tick tick) public ticks;
 
   uint32 internal tickTreeRoot; // The root of bitmap search tree
   mapping(int16 wordIndex => uint256 word) internal tickSecondLayer; // The second layer bitmap search tree

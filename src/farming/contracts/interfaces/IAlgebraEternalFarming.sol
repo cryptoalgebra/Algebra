@@ -9,10 +9,9 @@ import '../base/IncentiveKey.sol';
 interface IAlgebraEternalFarming {
   /// @notice Details of the incentive to create
   struct IncentiveParams {
+    address rewardToken;
     uint128 reward; // The amount of reward tokens to be distributed
-    uint128 bonusReward; // The amount of bonus reward tokens to be distributed
     uint128 rewardRate; // The rate of reward distribution per second
-    uint128 bonusRewardRate; // The rate of bonus reward distribution per second
     uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
     uint16 weight0;
     uint16 weight1;
@@ -54,17 +53,7 @@ interface IAlgebraEternalFarming {
   /// @param incentiveId The ID of the incentive computed from its parameters
   function incentives(
     bytes32 incentiveId
-  )
-    external
-    view
-    returns (
-      uint128 totalReward,
-      uint128 bonusReward,
-      address virtualPoolAddress,
-      uint24 minimalPositionWidth,
-      bool deactivated,
-      address pluginAddress
-    );
+  ) external view returns (address virtualPoolAddress, uint24 minimalPositionWidth, bool deactivated, address pluginAddress);
 
   /// @notice Check if incentive is deactivated (manually or automatically)
   /// @dev Does not check if the incentive is indeed currently connected to the Algebra pool or not
@@ -84,15 +73,19 @@ interface IAlgebraEternalFarming {
 
   /// @notice Add rewards for incentive
   /// @param key The key of the incentive
+  /// @param rewardToken Reward token
   /// @param rewardAmount The amount of token0
-  /// @param bonusRewardAmount The amount of token1
-  function addRewards(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
+  function addRewards(IncentiveKey memory key, address rewardToken, uint128 rewardAmount) external;
+
+  function addRewardToken(IncentiveKey memory key, address rewardToken) external;
+
+  function removeRewardToken(IncentiveKey memory key, uint index) external;
 
   /// @notice Decrease rewards for incentive and withdraw
   /// @param key The key of the incentive
+  /// @param rewardToken Reward token
   /// @param rewardAmount The amount of token0
-  /// @param bonusRewardAmount The amount of token1
-  function decreaseRewardsAmount(IncentiveKey memory key, uint128 rewardAmount, uint128 bonusRewardAmount) external;
+  function decreaseRewardsAmount(IncentiveKey memory key, address rewardToken, uint128 rewardAmount) external;
 
   /// @notice Changes `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if activated.
   /// User cannot enter to farmings if activated.
@@ -150,8 +143,7 @@ interface IAlgebraEternalFarming {
   /// @param key The key of the incentive
   /// @param tokenId The ID of the token
   /// @return reward The reward accrued to the NFT for the given incentive thus far
-  /// @return bonusReward The bonus reward accrued to the NFT for the given incentive thus far
-  function getRewardInfo(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward);
+  function getRewardInfo(IncentiveKey memory key, uint256 tokenId) external returns (uint256[] memory reward);
 
   /// @notice Returns information about a farmed liquidity NFT
   /// @param tokenId The ID of the farmed token
@@ -159,12 +151,7 @@ interface IAlgebraEternalFarming {
   /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
   /// @return tickLower The lower tick of position,
   /// @return tickUpper The upper tick of position,
-  /// @return innerRewardGrowth0 The last saved reward0 growth inside position,
-  /// @return innerRewardGrowth1 The last saved reward1 growth inside position
-  function farms(
-    uint256 tokenId,
-    bytes32 incentiveId
-  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1);
+  function farms(uint256 tokenId, bytes32 incentiveId) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper);
 
   /// @notice Creates a new liquidity farming incentive program
   /// @param key Details of the incentive to create
@@ -175,9 +162,9 @@ interface IAlgebraEternalFarming {
 
   /// @notice Change reward rates for incentive
   /// @param key The key of incentive
+  /// @param rewardToken Reward token
   /// @param rewardRate The new rate of main token (token0) distribution per sec
-  /// @param bonusRewardRate The new rate of bonus token (token1) distribution per sec
-  function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
+  function setRates(IncentiveKey memory key, address rewardToken, uint128 rewardRate) external;
 
   function setWeights(IncentiveKey memory key, uint16 weight0, uint16 weight1) external;
 
@@ -187,8 +174,11 @@ interface IAlgebraEternalFarming {
   /// @param tokenId The ID of the token to exit farming
   /// @param _owner Owner of the token
   /// @return reward The amount of main token (token0) collected
-  /// @param bonusReward The amount of bonus token (token1) collected
-  function collectRewards(IncentiveKey memory key, uint256 tokenId, address _owner) external returns (uint256 reward, uint256 bonusReward);
+  function collectRewards(
+    IncentiveKey memory key,
+    uint256 tokenId,
+    address _owner
+  ) external returns (uint256[] memory reward, address[] memory rewardTokens);
 
   /// @notice Event emitted when a liquidity mining incentive has been stopped from the outside
   /// @param incentiveId The stopped incentive
@@ -204,35 +194,25 @@ interface IAlgebraEternalFarming {
   /// @param tokenId The unique identifier of an Algebra LP token
   /// @param incentiveId The incentive in which the token is farming
   /// @param rewardAddress The token being distributed as a reward
-  /// @param bonusRewardToken The token being distributed as a bonus reward
   /// @param owner The address where claimed rewards were sent to
   /// @param reward The amount of reward tokens to be claimed
-  /// @param bonusReward The amount of bonus reward tokens to be claimed
-  event FarmEnded(
-    uint256 indexed tokenId,
-    bytes32 indexed incentiveId,
-    address indexed rewardAddress,
-    address bonusRewardToken,
-    address owner,
-    uint256 reward,
-    uint256 bonusReward
-  );
+  event FarmEnded(uint256 indexed tokenId, bytes32 indexed incentiveId, address indexed rewardAddress, address owner, uint256 reward);
 
   /// @notice Emitted when the farming center is changed
   /// @param farmingCenter The farming center after the address was changed
   event FarmingCenter(address indexed farmingCenter);
 
   /// @notice Event emitted when rewards were added
+  /// @param rewardToken reward token
   /// @param rewardAmount The additional amount of main token
-  /// @param bonusRewardAmount The additional amount of bonus token
   /// @param incentiveId The ID of the incentive for which rewards were added
-  event RewardsAdded(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
+  event RewardsAdded(address rewardToken, uint256 rewardAmount, bytes32 incentiveId);
 
   /// @notice Event emitted when rewards were decreased
+  /// @param rewardToken reward tokens
   /// @param rewardAmount The withdrawn amount of main token
-  /// @param bonusRewardAmount The withdrawn amount of bonus token
   /// @param incentiveId The ID of the incentive for which rewards were decreased
-  event RewardAmountsDecreased(uint256 rewardAmount, uint256 bonusRewardAmount, bytes32 incentiveId);
+  event RewardAmountsDecreased(address rewardToken, uint256 rewardAmount, bytes32 incentiveId);
 
   /// @notice Event emitted when a reward token has been claimed
   /// @param to The address where claimed rewards were sent to
@@ -242,37 +222,33 @@ interface IAlgebraEternalFarming {
   event RewardClaimed(address indexed to, uint256 reward, address indexed rewardAddress, address indexed owner);
 
   /// @notice Event emitted when reward rates were changed
+  /// @param rewardToken Reward token
   /// @param rewardRate The new rate of main token (token0) distribution per sec
-  /// @param bonusRewardRate The new rate of bonus token (token1) distribution per sec
   /// @param incentiveId The ID of the incentive for which rates were changed
-  event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
+  event RewardsRatesChanged(address rewardToken, uint128 rewardRate, bytes32 incentiveId);
 
   event FeesWeightsChanged(uint16 weight0, uint16 weight1, bytes32 incentiveId);
 
   /// @notice Event emitted when rewards were collected
   /// @param tokenId The ID of the token for which rewards were collected
   /// @param incentiveId The ID of the incentive for which rewards were collected
-  /// @param rewardAmount Collected amount of reward
-  /// @param bonusRewardAmount Collected amount of bonus reward
-  event RewardsCollected(uint256 tokenId, bytes32 incentiveId, uint256 rewardAmount, uint256 bonusRewardAmount);
+  /// @param rewardToken Collected amount of reward
+  /// @param rewardAmount Collected amount of bonus reward
+  event RewardsCollected(uint256 tokenId, bytes32 incentiveId, address rewardToken, uint256 rewardAmount);
 
   /// @notice Event emitted when a liquidity mining incentive has been created
-  /// @param rewardToken The token being distributed as a reward
-  /// @param bonusRewardToken The token being distributed as a bonus reward
   /// @param pool The Algebra pool
   /// @param virtualPool The virtual pool address
   /// @param nonce The nonce of new farming
+  /// @param rewardToken The token being distributed as a reward
   /// @param reward The amount of reward tokens to be distributed
-  /// @param bonusReward The amount of bonus reward tokens to be distributed
   /// @param minimalAllowedPositionWidth The minimal allowed position width (tickUpper - tickLower)
   event EternalFarmingCreated(
-    IERC20Minimal indexed rewardToken,
-    IERC20Minimal indexed bonusRewardToken,
     IAlgebraPool indexed pool,
     address virtualPool,
     uint256 nonce,
+    address indexed rewardToken,
     uint256 reward,
-    uint256 bonusReward,
     uint24 minimalAllowedPositionWidth,
     uint16 weight0,
     uint16 weight1
@@ -281,4 +257,6 @@ interface IAlgebraEternalFarming {
   /// @notice Emitted when status of `isEmergencyWithdrawActivated` changes
   /// @param newStatus New value of `isEmergencyWithdrawActivated`. Users can withdraw liquidity without any checks if active.
   event EmergencyWithdraw(bool newStatus);
+
+  event RewardTokenAdded(address rewardToken, bytes32 incentiveId);
 }

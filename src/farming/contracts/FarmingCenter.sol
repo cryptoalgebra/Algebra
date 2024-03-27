@@ -111,8 +111,8 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   function collectRewards(
     IncentiveKey memory key,
     uint256 tokenId
-  ) external override isApprovedOrOwner(tokenId) returns (uint256 reward, uint256 bonusReward) {
-    (reward, bonusReward) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
+  ) external override isApprovedOrOwner(tokenId) returns (uint256[] memory reward, address[] memory tokens) {
+    (reward, tokens) = eternalFarming.collectRewards(key, tokenId, nonfungiblePositionManager.ownerOf(tokenId));
   }
 
   /// @inheritdoc IFarmingCenter

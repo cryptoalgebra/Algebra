@@ -34,9 +34,7 @@ interface IFarmingCenter is IMulticall {
 
   /// @notice Returns incentive key for specific incentiveId
   /// @param incentiveId The hash of incentive key
-  function incentiveKeys(
-    bytes32 incentiveId
-  ) external view returns (IERC20Minimal rewardToken, IERC20Minimal bonusRewardToken, IAlgebraPool pool, uint256 nonce);
+  function incentiveKeys(bytes32 incentiveId) external view returns (IAlgebraPool pool, uint256 nonce);
 
   /// @notice Used to connect incentive to compatible AlgebraPool plugin
   /// @dev only farming can do it
@@ -68,8 +66,8 @@ interface IFarmingCenter is IMulticall {
   /// @param key The incentive key
   /// @param tokenId The id of position NFT
   /// @return reward The amount of collected reward
-  /// @return bonusReward The amount of collected  bonus reward
-  function collectRewards(IncentiveKey memory key, uint256 tokenId) external returns (uint256 reward, uint256 bonusReward);
+  /// @return tokens token
+  function collectRewards(IncentiveKey memory key, uint256 tokenId) external returns (uint256[] memory reward, address[] memory tokens);
 
   /// @notice Used to claim and send rewards from farming(s)
   /// @dev can be used via static call to get current rewards for user

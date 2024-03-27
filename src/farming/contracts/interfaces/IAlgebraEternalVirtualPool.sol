@@ -9,6 +9,16 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   error onlyPlugin();
   error onlyFarming();
 
+  error alreadyInList();
+  error nonZeroRate();
+  error indexOutOfRange();
+
+  struct RewardInfo {
+    uint128 rewardRate;
+    uint128 reserve;
+    uint256 totalRewardGrowth;
+  }
+
   /// @notice Returns address of the AlgebraEternalFarming
   function farmingAddress() external view returns (address);
 
@@ -16,20 +26,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function plugin() external view returns (address);
 
   /// @notice Returns data associated with a tick
-  function ticks(
-    int24 tickId
-  )
-    external
-    view
-    returns (
-      uint256 liquidityTotal,
-      int128 liquidityDelta,
-      int24 prevTick,
-      int24 nextTick,
-      uint256 outerFeeGrowth0Token,
-      uint256 outerFeeGrowth1Token
-    );
+  function ticks(int24 tickId) external view returns (uint256 liquidityTotal, int128 liquidityDelta, int24 prevTick, int24 nextTick);
 
+  function rewardsInfo(address token) external view returns (uint128 rewardRate, uint128 reserve, uint256 totalRewardGrowth);
   /// @notice Returns the current liquidity in virtual pool
   function currentLiquidity() external view returns (uint128);
 
@@ -55,9 +54,9 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function distributeRewards() external;
 
   /// @notice Change reward rates
-  /// @param rate0 The new rate of main token distribution per sec
-  /// @param rate1 The new rate of bonus token distribution per sec
-  function setRates(uint128 rate0, uint128 rate1) external;
+  /// @param token address
+  /// @param rate The new rate of bonus token distribution per sec
+  function setRates(address token, uint128 rate) external;
 
   function setWeights(uint16 weight0, uint16 weight1) external;
 
@@ -66,35 +65,39 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function deactivate() external;
 
   /// @notice Top up rewards reserves
-  /// @param token0Amount The amount of token0
-  /// @param token1Amount The amount of token1
-  function addRewards(uint128 token0Amount, uint128 token1Amount) external;
+  /// @param rewardToken reward token
+  /// @param amount The amount of token
+  function addRewards(address rewardToken, uint128 amount) external;
 
   /// @notice Withdraw rewards from reserves directly
-  /// @param token0Amount The amount of token0
-  /// @param token1Amount The amount of token1
-  function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external;
+  /// @param rewardToken reward token
+  /// @param amount The amount of token
+  function decreaseRewards(address rewardToken, uint128 amount) external;
+
+  function addRewardToken(address newRewardToken) external;
+
+  function removeRewardToken(uint256 tokenIndex) external;
 
   /// @notice Retrieves rewards growth data inside specified range
   /// @dev Should only be used for relative comparison of the same range over time
   /// @param bottomTick The lower tick boundary of the range
   /// @param topTick The upper tick boundary of the range
-  /// @return rewardGrowthInside0 The all-time reward growth in token0, per unit of liquidity, inside the range's tick boundaries
-  /// @return rewardGrowthInside1 The all-time reward growth in token1, per unit of liquidity, inside the range's tick boundaries
-  function getInnerRewardsGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1);
+  /// @param rewardToken token
+  /// @return rewardGrowthInside The all-time reward growth in token0, per unit of liquidity, inside the range's tick boundaries
+  function getInnerRewardsGrowth(int24 bottomTick, int24 topTick, address rewardToken) external view returns (uint256 rewardGrowthInside);
 
   /// @notice Get reserves of rewards in one call
-  /// @return reserve0 The reserve of token0
-  /// @return reserve1 The reserve of token1
-  function rewardReserves() external view returns (uint128 reserve0, uint128 reserve1);
+  /// @param rewardToken The reserve of token0
+  /// @return reserve The reserve of token1
+  function rewardReserve(address rewardToken) external view returns (uint128 reserve);
 
   /// @notice Get rates of rewards in one call
-  /// @return rate0 The rate of token0, rewards / sec
-  /// @return rate1 The rate of token1, rewards / sec
-  function rewardRates() external view returns (uint128 rate0, uint128 rate1);
+  /// @param rewardToken token
+  /// @return rate The rate of token1, rewards / sec
+  function rewardRate(address rewardToken) external view returns (uint128 rate);
 
   /// @notice Get reward growth accumulators
-  /// @return rewardGrowth0 The reward growth for reward0, per unit of liquidity, has only relative meaning
-  /// @return rewardGrowth1 The reward growth for reward1, per unit of liquidity, has only relative meaning
-  function totalRewardGrowth() external view returns (uint256 rewardGrowth0, uint256 rewardGrowth1);
+  /// @param rewardToken token
+  /// @return rewardGrowth The reward growth for reward0, per unit of liquidity, has only relative meaning
+  function totalRewardGrowth(address rewardToken) external view returns (uint256 rewardGrowth);
 }

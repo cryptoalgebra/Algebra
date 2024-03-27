@@ -7,15 +7,15 @@ import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/LiquidityMath.sol';
-import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 
+import '../base/VirtualTickManagement.sol';
 import '../base/VirtualTickStructure.sol';
 
 /// @title Algebra Integral 1.0 eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
 contract EternalVirtualPool is Timestamp, VirtualTickStructure {
-  using TickManagement for mapping(int24 => TickManagement.Tick);
+  using VirtualTickManagement for mapping(int24 => VirtualTickManagement.Tick);
 
   /// @inheritdoc IAlgebraEternalVirtualPool
   address public immutable override farmingAddress;
@@ -34,17 +34,12 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
 
-  uint128 internal rewardRate0;
-  uint128 internal rewardRate1;
+  mapping(address => RewardInfo) public override rewardsInfo;
+
+  address[] internal rewardTokensList;
 
   uint16 internal fee1Weight;
   uint16 internal fee0Weight;
-
-  uint128 internal rewardReserve0;
-  uint128 internal rewardReserve1;
-
-  uint256 internal totalRewardGrowth0 = 1;
-  uint256 internal totalRewardGrowth1 = 1;
 
   uint32 internal prevDelta;
   uint32 internal prevRateChangeTimestamp;
@@ -71,25 +66,22 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function rewardReserves() external view override returns (uint128 reserve0, uint128 reserve1) {
-    return (rewardReserve0, rewardReserve1);
+  function rewardReserve(address rewardToken) external view override returns (uint128 reserve) {
+    return rewardsInfo[rewardToken].reserve;
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function rewardRates() external view override returns (uint128 rate0, uint128 rate1) {
-    return (rewardRate0, rewardRate1);
+  function rewardRate(address rewardToken) external view override returns (uint128 rate) {
+    return rewardsInfo[rewardToken].rewardRate;
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function totalRewardGrowth() external view override returns (uint256 rewardGrowth0, uint256 rewardGrowth1) {
-    return (totalRewardGrowth0, totalRewardGrowth1);
+  function totalRewardGrowth(address rewardToken) external view override returns (uint256 rewardGrowth) {
+    return rewardsInfo[rewardToken].totalRewardGrowth;
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function getInnerRewardsGrowth(
-    int24 bottomTick,
-    int24 topTick
-  ) external view override returns (uint256 rewardGrowthInside0, uint256 rewardGrowthInside1) {
+  function getInnerRewardsGrowth(int24 bottomTick, int24 topTick, address rewardToken) external view override returns (uint256 rewardGrowthInside) {
     unchecked {
       // check if ticks are initialized
       if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick || ticks[topTick].prevTick == ticks[topTick].nextTick)
@@ -98,24 +90,25 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       uint32 timeDelta = _blockTimestamp() - prevTimestamp;
       int24 _globalTick = globalTick;
 
-      (uint256 _totalRewardGrowth0, uint256 _totalRewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
+      (uint128 _rewardRate, uint128 _rewardReserve, uint256 _totalRewardGrowth) = (
+        rewardsInfo[rewardToken].rewardRate,
+        rewardsInfo[rewardToken].reserve,
+        rewardsInfo[rewardToken].totalRewardGrowth
+      );
 
       if (timeDelta > 0) {
         // update rewards
         uint128 _currentLiquidity = currentLiquidity;
         if (_currentLiquidity > 0) {
-          (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
-          (uint256 _rewardReserve0, uint256 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+          uint256 reward = _rewardRate * timeDelta;
 
-          if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-          if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
+          if (reward > _rewardReserve) reward = _rewardReserve;
 
-          if (reward0 > 0) _totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
-          if (reward1 > 0) _totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+          if (reward > 0) _totalRewardGrowth += FullMath.mulDiv(reward, Constants.Q128, _currentLiquidity);
         }
       }
 
-      return ticks.getInnerFeeGrowth(bottomTick, topTick, _globalTick, _totalRewardGrowth0, _totalRewardGrowth1);
+      return ticks.getInnerFeeGrowth(bottomTick, topTick, _globalTick, _totalRewardGrowth, rewardToken);
     }
   }
 
@@ -125,13 +118,34 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function addRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
-    _applyRewardsDelta(true, token0Amount, token1Amount);
+  function addRewards(address rewardToken, uint128 amount) external override onlyFromFarming {
+    _applyRewardsDelta(true, rewardToken, amount);
+  }
+
+  function addRewardToken(address newRewardToken) external override onlyFromFarming {
+    for (uint i; i < rewardTokensList.length; i++) {
+      if (newRewardToken == rewardTokensList[i]) revert alreadyInList();
+    }
+
+    rewardTokensList.push(newRewardToken);
+    rewardsInfo[newRewardToken].totalRewardGrowth = 1;
+  }
+
+  function removeRewardToken(uint256 tokenIndex) external override onlyFromFarming {
+    address token = rewardTokensList[tokenIndex];
+
+    if (rewardsInfo[token].rewardRate != 0) revert nonZeroRate();
+    if (tokenIndex >= rewardTokensList.length) revert indexOutOfRange();
+
+    for (uint i = tokenIndex; i < rewardTokensList.length - 1; i++) {
+      rewardTokensList[i] = rewardTokensList[i + 1];
+    }
+    rewardTokensList.pop();
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function decreaseRewards(uint128 token0Amount, uint128 token1Amount) external override onlyFromFarming {
-    _applyRewardsDelta(false, token0Amount, token1Amount);
+  function decreaseRewards(address rewardToken, uint128 amount) external override onlyFromFarming {
+    _applyRewardsDelta(false, rewardToken, amount);
   }
 
   /// @inheritdoc IAlgebraVirtualPool
@@ -183,31 +197,28 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
           uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
 
-          // TODO muldiv
-          rewardRate0 =
-            (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
-            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-            (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
-            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
-
-          rewardRate1 =
-            (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
-            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-            (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
-            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+          for (uint i; i < rewardTokensList.length; i++) {
+            uint128 lastRewardRate = rewardsInfo[rewardTokensList[i]].rewardRate;
+            // TODO muldiv
+            rewardsInfo[rewardTokensList[i]].rewardRate =
+              (currentFees0CollectedPerSec * lastRewardRate * fee0Weight) /
+              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+              (currentFees1CollectedPerSec * lastRewardRate * fee1Weight) /
+              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+          }
         }
 
         prevFees0Collected = fees0Collected;
         prevFees1Collected = fees1Collected;
 
         prevDelta = timeDelta;
+        prevRateChangeTimestamp = _blockTimestamp();
 
         fees0Collected = 0;
         fees1Collected = 0;
       }
     }
 
-    (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
     // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
     // so this loop will cross no more ticks than the real pool
     if (zeroToOne) {
@@ -217,7 +228,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           int128 liquidityDelta;
           _globalTick = previousTick - 1; // safe since tick index range is narrower than the data type
           nextTick = previousTick;
-          (liquidityDelta, previousTick, ) = ticks.cross(previousTick, rewardGrowth0, rewardGrowth1);
+          for (uint i; i < rewardTokensList.length; i++) {
+            address rewardToken = rewardTokensList[i];
+            (liquidityDelta, previousTick, ) = ticks.cross(previousTick, rewardsInfo[rewardToken].totalRewardGrowth, rewardToken);
+          }
           _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -liquidityDelta);
         }
       }
@@ -227,7 +241,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
         int128 liquidityDelta;
         _globalTick = nextTick;
         previousTick = nextTick;
-        (liquidityDelta, , nextTick) = ticks.cross(nextTick, rewardGrowth0, rewardGrowth1);
+        for (uint i; i < rewardTokensList.length; i++) {
+          address rewardToken = rewardTokensList[i];
+          (liquidityDelta, , nextTick) = ticks.cross(nextTick, rewardsInfo[rewardToken].totalRewardGrowth, rewardToken);
+        }
         _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
       }
     }
@@ -281,9 +298,13 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
 
     if (liquidityDelta != 0) {
       // if we need to update the ticks, do it
-
-      bool flippedBottom = _updateTick(bottomTick, currentTick, liquidityDelta, false);
-      bool flippedTop = _updateTick(topTick, currentTick, liquidityDelta, true);
+      uint256 listLength = rewardTokensList.length;
+      uint256[] memory rewardGrowths = new uint256[](listLength);
+      for (uint i; i < listLength; i++) {
+        rewardGrowths[i] = rewardsInfo[rewardTokensList[i]].totalRewardGrowth;
+      }
+      bool flippedBottom = _updateTick(bottomTick, currentTick, liquidityDelta, false, rewardGrowths, rewardTokensList);
+      bool flippedTop = _updateTick(topTick, currentTick, liquidityDelta, true, rewardGrowths, rewardTokensList);
 
       if (_isTickInsideRange(currentTick, bottomTick, topTick)) {
         currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
@@ -296,9 +317,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
+  function setRates(address token, uint128 rate) external override onlyFromFarming {
     _distributeRewards();
-    (rewardRate0, rewardRate1) = (rate0, rate1);
+    // TODO check token list
+    rewardsInfo[token].rewardRate = rate;
   }
 
   function setWeights(uint16 weight0, uint16 weight1) external override onlyFromFarming {
@@ -313,18 +335,14 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     return tick >= bottomTick && tick < topTick;
   }
 
-  function _applyRewardsDelta(bool add, uint128 token0Delta, uint128 token1Delta) private {
+  function _applyRewardsDelta(bool add, address token, uint128 amount) private {
     _distributeRewards();
-    if (token0Delta | token1Delta != 0) {
-      (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+    if (amount != 0) {
       if (add) {
-        _rewardReserve0 = _rewardReserve0 + token0Delta;
-        _rewardReserve1 = _rewardReserve1 + token1Delta;
+        rewardsInfo[token].reserve += amount;
       } else {
-        _rewardReserve0 = _rewardReserve0 - token0Delta;
-        _rewardReserve1 = _rewardReserve1 - token1Delta;
+        rewardsInfo[token].reserve -= amount;
       }
-      (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
     }
   }
 
@@ -339,20 +357,20 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       if (timeDelta == 0) return; // only once per block
 
       if (_currentLiquidity > 0) {
-        (uint256 reward0, uint256 reward1) = (rewardRate0 * timeDelta, rewardRate1 * timeDelta);
-        (uint128 _rewardReserve0, uint128 _rewardReserve1) = (rewardReserve0, rewardReserve1);
+        for (uint i; i < rewardTokensList.length; i++) {
+          address rewardToken = rewardTokensList[i];
+          (uint128 _rewardRate, uint128 _rewardReserve) = (rewardsInfo[rewardToken].rewardRate, rewardsInfo[rewardToken].reserve);
+          uint256 reward = _rewardRate * timeDelta;
 
-        if (reward0 > _rewardReserve0) reward0 = _rewardReserve0;
-        if (reward1 > _rewardReserve1) reward1 = _rewardReserve1;
+          if (reward > _rewardReserve) reward = _rewardReserve;
 
-        if (reward0 | reward1 != 0) {
-          _rewardReserve0 = uint128(_rewardReserve0 - reward0);
-          _rewardReserve1 = uint128(_rewardReserve1 - reward1);
+          if (reward != 0) {
+            _rewardReserve = uint128(_rewardReserve - reward);
 
-          if (reward0 > 0) totalRewardGrowth0 += FullMath.mulDiv(reward0, Constants.Q128, _currentLiquidity);
-          if (reward1 > 0) totalRewardGrowth1 += FullMath.mulDiv(reward1, Constants.Q128, _currentLiquidity);
+            if (reward > 0) rewardsInfo[rewardToken].totalRewardGrowth += FullMath.mulDiv(reward, Constants.Q128, _currentLiquidity);
 
-          (rewardReserve0, rewardReserve1) = (_rewardReserve0, _rewardReserve1);
+            rewardsInfo[rewardToken].reserve = _rewardReserve;
+          }
         }
       }
     }
@@ -361,7 +379,14 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     return;
   }
 
-  function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal returns (bool updated) {
-    return ticks.update(tick, currentTick, liquidityDelta, totalRewardGrowth0, totalRewardGrowth1, isTopTick);
+  function _updateTick(
+    int24 tick,
+    int24 currentTick,
+    int128 liquidityDelta,
+    bool isTopTick,
+    uint256[] memory totalRewardGrowths,
+    address[] memory rewardTokens
+  ) internal returns (bool updated) {
+    return ticks.update(tick, currentTick, liquidityDelta, isTopTick, totalRewardGrowths, rewardTokens);
   }
 }

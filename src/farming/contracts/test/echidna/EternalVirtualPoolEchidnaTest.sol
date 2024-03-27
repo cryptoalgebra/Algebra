@@ -55,8 +55,8 @@ contract EternalVirtualPoolEchidnaTest {
     int24 prevTick = virtualPool.prevTick();
     int24 nextTick = virtualPool.nextTick();
 
-    (, , , int24 _nextTick, , ) = virtualPool.ticks(prevTick);
-    (, , int24 _prevTick, , , ) = virtualPool.ticks(nextTick);
+    (, , , int24 _nextTick) = virtualPool.ticks(prevTick);
+    (, , int24 _prevTick, ) = virtualPool.ticks(nextTick);
 
     assert(prevTick == _prevTick);
     assert(nextTick == _nextTick);

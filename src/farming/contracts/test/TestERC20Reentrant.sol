@@ -39,7 +39,7 @@ contract TestERC20Reentrant is TestERC20 {
 
   function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
     if (doReentrancy) {
-      IAlgebraEternalFarming(msg.sender).addRewards(keyForAttack, rewardAmountForAttack, bonusRewardAmountForAttack);
+      IAlgebraEternalFarming(msg.sender).addRewards(keyForAttack, address(this), bonusRewardAmountForAttack);
     }
 
     if (doComplexReentrancy) {
