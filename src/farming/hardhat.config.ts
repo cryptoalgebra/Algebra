@@ -23,11 +23,28 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
   },
 };
 
+const LOW_COMPILER_SETTINGS: SolcUserConfig = {
+  version: '0.8.20',
+  settings: {
+    evmVersion: 'paris',
+    optimizer: {
+      enabled: true,
+      runs: 800,
+    },
+    metadata: {
+      bytecodeHash: 'none',
+    },
+  },
+};
+
 const config: HardhatUserConfig = {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
+    overrides: {
+      'contracts/farmings/AlgebraEternalFarming.sol': LOW_COMPILER_SETTINGS,
+    },
   },
   typechain: {
     outDir: 'typechain',
