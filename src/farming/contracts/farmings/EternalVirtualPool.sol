@@ -183,18 +183,19 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
           uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
 
-          // TODO muldiv
-          rewardRate0 =
-            (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
-            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-            (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
-            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+          if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0) {
+            rewardRate0 =
+              (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
+              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+              (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
+              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
 
-          rewardRate1 =
-            (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
-            (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-            (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
-            (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+            rewardRate1 =
+              (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
+              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+              (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
+              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+          }
         }
 
         prevFees0Collected = fees0Collected;
