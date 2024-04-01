@@ -200,14 +200,16 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
           uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
 
-          for (uint i; i < rewardTokensList.length; i++) {
-            uint128 lastRewardRate = rewardsInfo[rewardTokensList[i]].rewardRate;
-            // TODO muldiv
-            rewardsInfo[rewardTokensList[i]].rewardRate =
-              (currentFees0CollectedPerSec * lastRewardRate * fee0Weight) /
-              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-              (currentFees1CollectedPerSec * lastRewardRate * fee1Weight) /
-              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+          if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0) {
+            for (uint i; i < rewardTokensList.length; i++) {
+              uint128 lastRewardRate = rewardsInfo[rewardTokensList[i]].rewardRate;
+              // TODO muldiv
+              rewardsInfo[rewardTokensList[i]].rewardRate =
+                (currentFees0CollectedPerSec * lastRewardRate * fee0Weight) /
+                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+                (currentFees1CollectedPerSec * lastRewardRate * fee1Weight) /
+                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+            }
           }
         }
 
