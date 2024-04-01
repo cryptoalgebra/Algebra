@@ -298,14 +298,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     Farm storage farm = _getFarm(tokenId, incentiveId);
 
     uint256[] memory positionRewards;
+    address[] memory rewardTokensList;
     if (!isEmergencyWithdrawActivated) {
-      (positionRewards, ) = _updatePosition(farm, key, incentiveId, _owner, -int256(uint256(farm.liquidity)).toInt128());
+      (positionRewards, rewardTokensList) = _updatePosition(farm, key, incentiveId, _owner, -int256(uint256(farm.liquidity)).toInt128());
     }
 
     delete farms[tokenId][incentiveId];
 
-    // TODO update event
-    emit FarmEnded(tokenId, incentiveId, address(0), _owner, positionRewards[0]);
+    emit FarmEnded(tokenId, incentiveId, rewardTokensList, _owner, positionRewards);
   }
 
   /// @inheritdoc IAlgebraEternalFarming
@@ -396,8 +396,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       }
     }
 
-    // TODO update event
-    emit RewardsCollected(tokenId, incentiveId, rewardTokensList[0], reward[0]);
+    emit RewardsCollected(tokenId, incentiveId, rewardTokensList, reward);
   }
 
   /// @dev Does not check if the incentive is indeed currently connected to the Algebra pool or not

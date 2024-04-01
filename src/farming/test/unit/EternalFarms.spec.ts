@@ -1477,9 +1477,9 @@ describe('unit/EternalFarms', () => {
             .withArgs(
               tokenId,
               incentiveId,
-              await context.rewardToken.getAddress(),
+              [await context.rewardToken.getAddress()],
               lpUser0.address,
-              9999n
+              [9999n]
             );
         });
 
@@ -1517,9 +1517,9 @@ describe('unit/EternalFarms', () => {
           .withArgs(
             tokenIdOut,
             incentiveId,
-            await context.rewardToken.getAddress(),
+            [await context.rewardToken.getAddress()],
             lpUser0.address,
-            BN('0')
+            [BN('0')]
           );
       });
 

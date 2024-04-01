@@ -448,7 +448,6 @@ describe('unit/EternalVirtualPool', () => {
         expect(globalTick).to.be.eq(101);
 
         const tickDataAfter = await virtualPool.getTickGrowth(100, rewardTokenAddress);
-        console.log(tickDataAfter)
         expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 1000n + 1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK);

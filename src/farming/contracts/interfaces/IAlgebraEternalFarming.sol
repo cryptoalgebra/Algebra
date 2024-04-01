@@ -195,10 +195,10 @@ interface IAlgebraEternalFarming {
   /// @notice Event emitted when a Algebra LP token exited from farming
   /// @param tokenId The unique identifier of an Algebra LP token
   /// @param incentiveId The incentive in which the token is farming
-  /// @param rewardAddress The token being distributed as a reward
+  /// @param rewardAddresses The token being distributed as a reward
   /// @param owner The address where claimed rewards were sent to
-  /// @param reward The amount of reward tokens to be claimed
-  event FarmEnded(uint256 indexed tokenId, bytes32 indexed incentiveId, address indexed rewardAddress, address owner, uint256 reward);
+  /// @param rewards The amount of reward tokens to be claimed
+  event FarmEnded(uint256 indexed tokenId, bytes32 indexed incentiveId, address[] rewardAddresses, address indexed owner, uint256[] rewards);
 
   /// @notice Emitted when the farming center is changed
   /// @param farmingCenter The farming center after the address was changed
@@ -234,9 +234,9 @@ interface IAlgebraEternalFarming {
   /// @notice Event emitted when rewards were collected
   /// @param tokenId The ID of the token for which rewards were collected
   /// @param incentiveId The ID of the incentive for which rewards were collected
-  /// @param rewardToken Collected amount of reward
-  /// @param rewardAmount Collected amount of bonus reward
-  event RewardsCollected(uint256 tokenId, bytes32 incentiveId, address rewardToken, uint256 rewardAmount);
+  /// @param rewardTokens Collected amount of reward
+  /// @param rewardAmounts Collected amount of bonus reward
+  event RewardsCollected(uint256 tokenId, bytes32 incentiveId, address[] rewardTokens, uint256[] rewardAmounts);
 
   /// @notice Event emitted when a liquidity mining incentive has been created
   /// @param pool The Algebra pool
