@@ -8,8 +8,6 @@ export module ContractParams {
 
   export type IncentiveKey = {
     pool: string
-    rewardToken: string
-    bonusRewardToken: string
     nonce: BigNumberish
   } 
 

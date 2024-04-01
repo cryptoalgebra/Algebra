@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { expect, blockTimestamp, snapshotGasCost } from '../shared';
+import { expect, blockTimestamp, snapshotGasCost, ZERO_ADDRESS} from '../shared';
 
 import { createTimeMachine } from '../shared/time';
 
-import { PoolMock, TestVirtualPool } from '../../typechain';
+import { PoolMock, TestVirtualPool, TestERC20} from '../../typechain';
 
 const MIN_TICK = -887272;
 const MAX_TICK = 887272;
@@ -18,6 +18,7 @@ describe('unit/EternalVirtualPool', () => {
   let poolMock: PoolMock;
   let virtualPool: TestVirtualPool;
 
+  let rewardTokenAddress: string;
   let initTimestamp: number;
 
   before(async () => {
@@ -25,35 +26,41 @@ describe('unit/EternalVirtualPool', () => {
     pseudoFarming = wallets[1];
   });
 
-  const virtualPoolFixture: () => Promise<{ poolMock: PoolMock; virtualPool: TestVirtualPool; initTimestamp: number }> = async () => {
+  const virtualPoolFixture: () => Promise<{ poolMock: PoolMock; virtualPool: TestVirtualPool; initTimestamp: number , rewardTokenAddress: string}> = async () => {
     const _blockTimestamp = await blockTimestamp();
     const _initTimestamp = _blockTimestamp + 1000000;
 
     const poolMockFactory = await ethers.getContractFactory('PoolMock');
     const _poolMock = (await poolMockFactory.deploy()) as any as PoolMock;
 
+    const token = await ethers.getContractFactory('TestERC20')
+    const _token = (await token.deploy(2n**128n)) as any as TestERC20
+    let _rewardTokenAddress = await _token.getAddress()
     await Time.set(_initTimestamp);
 
     const virtualPoolFactory = await ethers.getContractFactory('TestVirtualPool');
     const _virtualPool = (await virtualPoolFactory.deploy(pseudoFarming.address, _poolMock)) as any as TestVirtualPool;
 
+    await _virtualPool.connect(pseudoFarming).addRewardToken(_rewardTokenAddress)
+
     return {
       poolMock: _poolMock,
       virtualPool: _virtualPool,
       initTimestamp: _initTimestamp,
+      rewardTokenAddress: _rewardTokenAddress
     };
   };
 
   beforeEach('load fixture', async () => {
-    ({ poolMock, virtualPool, initTimestamp } = await loadFixture(virtualPoolFixture));
+    ({ poolMock, virtualPool, initTimestamp, rewardTokenAddress } = await loadFixture(virtualPoolFixture));
   });
 
   it('cannot call onlyFarming methods as not farming', async () => {
-    await expect(virtualPool.addRewards(100, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
-    await expect(virtualPool.decreaseRewards(100, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
+    await expect(virtualPool.addRewards(rewardTokenAddress, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
+    await expect(virtualPool.decreaseRewards(rewardTokenAddress, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
     await expect(virtualPool.distributeRewards()).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
     await expect(virtualPool.applyLiquidityDeltaToPosition(100, 110, 100, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
-    await expect(virtualPool.setRates(100, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
+    await expect(virtualPool.setRates(rewardTokenAddress, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
     await expect(virtualPool.deactivate()).to.be.revertedWithCustomError(virtualPool, 'onlyFarming');
   });
 
@@ -73,67 +80,55 @@ describe('unit/EternalVirtualPool', () => {
     const prevTimestamp = await virtualPool.prevTimestamp();
     expect(prevTimestamp).to.be.eq(initTimestamp);
 
-    const rewardRates = await virtualPool.rewardRates();
-    expect(rewardRates.rate0).to.be.eq(0);
-    expect(rewardRates.rate1).to.be.eq(0);
+    const rewardRate = await virtualPool.rewardRate(rewardTokenAddress);
+    expect(rewardRate).to.be.eq(0);
 
-    const rewardReserves = await virtualPool.rewardReserves();
-    expect(rewardReserves.reserve0).to.be.eq(0);
-    expect(rewardReserves.reserve1).to.be.eq(0);
+    const rewardReserve = await virtualPool.rewardReserve(rewardTokenAddress);
+    expect(rewardReserve).to.be.eq(0);
 
-    const totalRewardGrowth = await virtualPool.totalRewardGrowth();
-    expect(totalRewardGrowth[0]).to.be.eq(1);
-    expect(totalRewardGrowth[1]).to.be.eq(1);
+    const totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+    expect(totalRewardGrowth).to.be.eq(1);
   });
 
   describe('#add and decrease rewards', async () => {
     it('add rewards works', async () => {
-      await virtualPool.connect(pseudoFarming).addRewards(100, 101);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 101);
 
-      const rewardReserves = await virtualPool.rewardReserves();
-      expect(rewardReserves.reserve0).to.be.eq(100);
-      expect(rewardReserves.reserve1).to.be.eq(101);
+      const rewardReserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(rewardReserve).to.be.eq(101);
     });
 
     it('add rewards cannot overflow', async () => {
-      await virtualPool.connect(pseudoFarming).addRewards(2n ** 128n - 10n, 2n ** 128n - 10n);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 2n ** 128n - 10n);
 
-      const rewardReserves = await virtualPool.rewardReserves();
-      expect(rewardReserves.reserve0).to.be.eq(2n ** 128n - 10n);
-      expect(rewardReserves.reserve1).to.be.eq(2n ** 128n - 10n);
+      const rewardReserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(rewardReserve).to.be.eq(2n ** 128n - 10n);
 
-      await expect(virtualPool.connect(pseudoFarming).addRewards(10, 0)).to.be.revertedWithPanic();
-      await expect(virtualPool.connect(pseudoFarming).addRewards(0, 10)).to.be.revertedWithPanic();
-      await expect(virtualPool.connect(pseudoFarming).addRewards(10, 10)).to.be.revertedWithPanic();
+      await expect(virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10)).to.be.revertedWithPanic();
     });
 
     it('decrease rewards works', async () => {
-      await virtualPool.connect(pseudoFarming).addRewards(100, 101);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 101);
 
-      await virtualPool.connect(pseudoFarming).decreaseRewards(49, 40);
-      const rewardReserves = await virtualPool.rewardReserves();
-      expect(rewardReserves.reserve0).to.be.eq(51);
-      expect(rewardReserves.reserve1).to.be.eq(61);
+      await virtualPool.connect(pseudoFarming).decreaseRewards(rewardTokenAddress, 40);
+      const rewardReserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(rewardReserve).to.be.eq(61);
     });
 
     it('decrease rewards cannot underflow', async () => {
-      await virtualPool.connect(pseudoFarming).addRewards(100, 101);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 101);
 
-      await expect(virtualPool.connect(pseudoFarming).decreaseRewards(100, 102)).to.be.revertedWithPanic();
-      await expect(virtualPool.connect(pseudoFarming).decreaseRewards(101, 101)).to.be.revertedWithPanic();
-      await expect(virtualPool.connect(pseudoFarming).decreaseRewards(101, 102)).to.be.revertedWithPanic();
+      await expect(virtualPool.connect(pseudoFarming).decreaseRewards(rewardTokenAddress, 102)).to.be.revertedWithPanic();
     });
 
     it('works with zero args', async () => {
-      await virtualPool.connect(pseudoFarming).addRewards(0, 0);
-      const rewardReserves = await virtualPool.rewardReserves();
-      expect(rewardReserves.reserve0).to.be.eq(0);
-      expect(rewardReserves.reserve1).to.be.eq(0);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 0);
+      const rewardReserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(rewardReserve).to.be.eq(0);
 
-      await virtualPool.connect(pseudoFarming).decreaseRewards(0, 0);
-      const rewardReserves1 = await virtualPool.rewardReserves();
-      expect(rewardReserves1.reserve0).to.be.eq(0);
-      expect(rewardReserves1.reserve1).to.be.eq(0);
+      await virtualPool.connect(pseudoFarming).decreaseRewards(rewardTokenAddress, 0);
+      const rewardReserve1 = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(rewardReserve1).to.be.eq(0);
     });
   });
 
@@ -278,26 +273,24 @@ describe('unit/EternalVirtualPool', () => {
     it('does not distribute anything if zero liquidity', async () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-200, -10, 1000, 1);
 
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(10000, 10000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10000);
 
       const timestamp = await blockTimestamp();
       await Time.setAndMine(timestamp + 10000);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
 
-      const reserves = await virtualPool.rewardReserves();
-      expect(reserves.reserve0).to.be.eq(10000);
-      expect(reserves.reserve1).to.be.eq(10000);
+      const reserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(reserve).to.be.eq(10000);
 
-      const totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(1);
-      expect(totalRewardGrowth[1]).to.be.eq(1);
+      const totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+      expect(totalRewardGrowth).to.be.eq(1);
     });
 
     it('distributes all rewards correctly in normal case', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(10000, 10000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
@@ -306,24 +299,21 @@ describe('unit/EternalVirtualPool', () => {
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
 
-      const reserves = await virtualPool.rewardReserves();
-      expect(reserves.reserve0).to.be.eq(0);
-      expect(reserves.reserve1).to.be.eq(0);
+      const reserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(reserve).to.be.eq(0);
 
-      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
+      let totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+      expect(totalRewardGrowth).to.be.eq(3402823669209384634633746074317682114561n);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
 
-      totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
+      totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+      expect(totalRewardGrowth).to.be.eq(3402823669209384634633746074317682114561n);
     });
 
     it('can distribute reward0 only', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(10000, 0);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
@@ -332,121 +322,89 @@ describe('unit/EternalVirtualPool', () => {
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
 
-      const reserves = await virtualPool.rewardReserves();
-      expect(reserves.reserve0).to.be.eq(0);
-      expect(reserves.reserve1).to.be.eq(0);
+      const reserve = await virtualPool.rewardReserve(rewardTokenAddress);
+      expect(reserve).to.be.eq(0);
 
-      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(totalRewardGrowth[1]).to.be.eq(1n);
+      let totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+      expect(totalRewardGrowth).to.be.eq(3402823669209384634633746074317682114561n);
 
       await virtualPool.connect(pseudoFarming).distributeRewards();
 
-      totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(3402823669209384634633746074317682114561n);
-      expect(totalRewardGrowth[1]).to.be.eq(1n);
+      totalRewardGrowth = await virtualPool.totalRewardGrowth(rewardTokenAddress);
+      expect(totalRewardGrowth).to.be.eq(3402823669209384634633746074317682114561n);
     });
 
-    it('can distribute reward1 only', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(0, 10000);
-
-      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-
-      const timestamp = await blockTimestamp();
-      await Time.setAndMine(timestamp + 10000);
-
-      await virtualPool.connect(pseudoFarming).distributeRewards();
-
-      const reserves = await virtualPool.rewardReserves();
-      expect(reserves.reserve0).to.be.eq(0);
-      expect(reserves.reserve1).to.be.eq(0);
-
-      let totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(1);
-      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
-
-      await virtualPool.connect(pseudoFarming).distributeRewards();
-
-      totalRewardGrowth = await virtualPool.totalRewardGrowth();
-      expect(totalRewardGrowth[0]).to.be.eq(1);
-      expect(totalRewardGrowth[1]).to.be.eq(3402823669209384634633746074317682114561n);
-    });
   });
 
   describe('#getInnerRewardsGrowth', async () => {
     it('reverts if ticks are invalid', async () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-200, 100, 1000, 1);
 
-      await expect(virtualPool.getInnerRewardsGrowth(-220, 220)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
-      await expect(virtualPool.getInnerRewardsGrowth(-220, -200)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
-      await expect(virtualPool.getInnerRewardsGrowth(100, 120)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
+      await expect(virtualPool.getInnerRewardsGrowth(-220, 220, rewardTokenAddress)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
+      await expect(virtualPool.getInnerRewardsGrowth(-220, -200, rewardTokenAddress)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
+      await expect(virtualPool.getInnerRewardsGrowth(100, 120, rewardTokenAddress)).to.be.revertedWithCustomError(virtualPool, 'tickIsNotInitialized');
     });
 
     it('works with actual timedelta', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(10000, 10000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
       const timestamp = await blockTimestamp();
       await Time.setAndMine(timestamp + 10000);
 
-      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100);
+      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100, rewardTokenAddress);
 
-      expect(innerRewardsGrowth[0]).to.be.eq(3402823669209384634633746074317682114560n);
-      expect(innerRewardsGrowth[1]).to.be.eq(3402823669209384634633746074317682114560n);
+      expect(innerRewardsGrowth).to.be.eq(3402823669209384634633746074317682114560n);
     });
 
     it('works with actual timedelta and 0 active liquidity', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(100, 100);
-      await virtualPool.connect(pseudoFarming).addRewards(10000, 10000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 10000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 101);
 
       const timestamp = await blockTimestamp();
       await Time.setAndMine(timestamp + 10000);
 
-      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100);
+      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100, rewardTokenAddress);
 
-      expect(innerRewardsGrowth[0]).to.be.eq(0);
-      expect(innerRewardsGrowth[1]).to.be.eq(0);
+      expect(innerRewardsGrowth).to.be.eq(0);
     });
 
     it('works with actual timedelta with partial distribution', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(1, 1);
-      await virtualPool.connect(pseudoFarming).addRewards(1000000, 1000000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1000000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
       const timestamp = await blockTimestamp();
       await Time.setAndMine(timestamp + 1000);
 
-      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100);
+      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100, rewardTokenAddress);
 
-      expect(innerRewardsGrowth[0]).to.be.gt(0);
-      expect(innerRewardsGrowth[1]).to.be.gt(0);
+      expect(innerRewardsGrowth).to.be.gt(0);
     });
 
     it('works with actual timedelta if rates are zero', async () => {
-      await virtualPool.connect(pseudoFarming).setRates(0, 0);
-      await virtualPool.connect(pseudoFarming).addRewards(1000000, 1000000);
+      await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 0);
+      await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1000000);
 
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
       const timestamp = await blockTimestamp();
       await Time.setAndMine(timestamp + 1000);
 
-      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100);
+      const innerRewardsGrowth = await virtualPool.getInnerRewardsGrowth(-100, 100, rewardTokenAddress);
 
-      expect(innerRewardsGrowth[0]).to.be.eq(0);
-      expect(innerRewardsGrowth[1]).to.be.eq(0);
+      expect(innerRewardsGrowth).to.be.eq(0);
     });
   });
 
   describe('#crossTo', async () => {
     it('reverts if not from pool', async () => {
-      await expect(virtualPool.crossTo(100, true)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+      await expect(virtualPool.crossTo(100, true, 10)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     });
 
     describe('otz', async () => {
@@ -456,8 +414,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         const timestamp = await blockTimestamp();
         await Time.setAndMine(timestamp + 10000);
@@ -469,8 +427,8 @@ describe('unit/EternalVirtualPool', () => {
 
         expect(await virtualPool.deactivated()).to.be.false;
 
-        const tickDataAfter = await virtualPool.ticks(100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(0n);
+        const tickDataAfter = await virtualPool.getTickGrowth(100, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq(0n);
 
         expect(await virtualPool.nextTick()).to.be.eq(100);
         expect(await virtualPool.prevTick()).to.be.eq(-100);
@@ -482,15 +440,16 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
-
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
         await poolMock.crossTo(101, false);
+
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(101);
 
-        const tickDataAfter = await virtualPool.ticks(100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 1000n + 1n);
+        const tickDataAfter = await virtualPool.getTickGrowth(100, rewardTokenAddress);
+        console.log(tickDataAfter)
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 1000n + 1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK);
         expect(await virtualPool.prevTick()).to.be.eq(100);
@@ -504,15 +463,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(101, false);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(101);
 
-        const tickDataAfter = await virtualPool.ticks(100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
+        const tickDataAfter = await virtualPool.getTickGrowth(100, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK - 1);
         expect(await virtualPool.prevTick()).to.be.eq(100);
@@ -526,15 +485,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(111, false);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(111);
 
-        const tickDataAfter = await virtualPool.ticks(110);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
+        const tickDataAfter = await virtualPool.getTickGrowth(110, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK);
         expect(await virtualPool.prevTick()).to.be.eq(110);
@@ -548,15 +507,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(MAX_TICK - 1, false);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(MAX_TICK - 1);
 
-        const tickDataAfter = await virtualPool.ticks(MAX_TICK - 1);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
+        const tickDataAfter = await virtualPool.getTickGrowth(MAX_TICK - 1, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n + 1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK);
         expect(await virtualPool.prevTick()).to.be.eq(MAX_TICK - 1);
@@ -568,8 +527,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         expect(await virtualPool.deactivated()).to.be.false;
         await poolMock.crossTo(-101, false);
@@ -584,8 +543,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
         await virtualPool.connect(pseudoFarming).deactivate();
 
         await poolMock.crossTo(101, false);
@@ -601,8 +560,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(1, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(1, false);
 
@@ -618,8 +577,8 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, -1);
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, -1);
 
-        await virtualPool.connect(pseudoFarming).setRates(100, 100);
-        await virtualPool.connect(pseudoFarming).addRewards(100, 100);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 100);
 
         const timestamp = await blockTimestamp();
         await Time.setAndMine(timestamp + 1000);
@@ -628,25 +587,23 @@ describe('unit/EternalVirtualPool', () => {
 
         expect(await virtualPool.globalTick()).to.be.eq(6);
 
-        const tickData = await virtualPool.ticks(0);
+        const tickData = await virtualPool.getTickGrowth(0, rewardTokenAddress);;
 
         expect(await virtualPool.nextTick()).to.be.eq(240);
         expect(await virtualPool.prevTick()).to.be.eq(0);
 
-        expect(tickData.outerFeeGrowth0Token).to.be.not.eq(1n);
-        expect(tickData.outerFeeGrowth1Token).to.be.not.eq(1n);
+        expect(tickData).to.be.not.eq(1n);
 
         await poolMock.crossTo(-6, true);
 
         expect(await virtualPool.globalTick()).to.be.eq(-6);
 
-        const tickDataAfter = await virtualPool.ticks(0);
+        const tickDataAfter = await virtualPool.getTickGrowth(0, rewardTokenAddress);;
 
         expect(await virtualPool.nextTick()).to.be.eq(0);
         expect(await virtualPool.prevTick()).to.be.eq(-600);
 
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(0);
-        expect(tickDataAfter.outerFeeGrowth1Token).to.be.eq(0);
+        expect(tickDataAfter).to.be.eq(0);
 
         expect(await virtualPool.deactivated()).to.be.false;
       });
@@ -659,8 +616,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         const timestamp = await blockTimestamp();
         await Time.setAndMine(timestamp + 10000);
@@ -672,8 +629,8 @@ describe('unit/EternalVirtualPool', () => {
 
         expect(await virtualPool.deactivated()).to.be.false;
 
-        const tickDataAfter = await virtualPool.ticks(-100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(1n);
+        const tickDataAfter = await virtualPool.getTickGrowth(-100, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq(1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(100);
         expect(await virtualPool.prevTick()).to.be.eq(-100);
@@ -685,15 +642,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(-101, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(-101);
 
-        const tickDataAfter = await virtualPool.ticks(-100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 1000n);
+        const tickDataAfter = await virtualPool.getTickGrowth(-100, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 1000n);
 
         expect(await virtualPool.nextTick()).to.be.eq(-100);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK);
@@ -707,15 +664,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(-101, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(-101);
 
-        const tickDataAfter = await virtualPool.ticks(-100);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n);
+        const tickDataAfter = await virtualPool.getTickGrowth(-100, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n);
 
         expect(await virtualPool.nextTick()).to.be.eq(-100);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK + 1);
@@ -729,15 +686,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(-111, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(-111);
 
-        const tickDataAfter = await virtualPool.ticks(-110);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n);
+        const tickDataAfter = await virtualPool.getTickGrowth(-110, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n);
 
         expect(await virtualPool.nextTick()).to.be.eq(-110);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK);
@@ -751,15 +708,15 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(MIN_TICK, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(MIN_TICK);
 
-        const tickDataAfter = await virtualPool.ticks(MIN_TICK + 1);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n);
+        const tickDataAfter = await virtualPool.getTickGrowth(MIN_TICK + 1, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 2000n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MIN_TICK + 1);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK);
@@ -773,18 +730,18 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(MIN_TICK + 1, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(MIN_TICK + 1);
 
-        const tickDataCrossed = await virtualPool.ticks(-100);
-        expect(tickDataCrossed.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 2000n);
+        const tickDataCrossed = await virtualPool.getTickGrowth(-100, rewardTokenAddress);
+        expect(tickDataCrossed).to.be.eq((1n * 2n ** 128n) / 2000n);
 
-        const tickDataNotCrossed = await virtualPool.ticks(MIN_TICK + 1);
-        expect(tickDataNotCrossed.outerFeeGrowth0Token).to.be.eq(1n);
+        const tickDataNotCrossed = await virtualPool.getTickGrowth(MIN_TICK + 1, rewardTokenAddress);
+        expect(tickDataNotCrossed).to.be.eq(1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(-100);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK + 1);
@@ -800,18 +757,18 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK, MAX_TICK, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(MIN_TICK, true);
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(MIN_TICK);
 
-        const tickDataAfter = await virtualPool.ticks(MIN_TICK + 1);
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq((1n * 2n ** 128n) / 3000n);
+        const tickDataAfter = await virtualPool.getTickGrowth(MIN_TICK + 1, rewardTokenAddress);
+        expect(tickDataAfter).to.be.eq((1n * 2n ** 128n) / 3000n);
 
-        const tickDataMin = await virtualPool.ticks(MIN_TICK);
-        expect(tickDataMin.outerFeeGrowth0Token).to.be.eq(1n);
+        const tickDataMin = await virtualPool.getTickGrowth(MIN_TICK, rewardTokenAddress);
+        expect(tickDataMin).to.be.eq(1n);
 
         expect(await virtualPool.nextTick()).to.be.eq(MIN_TICK + 1);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK);
@@ -823,8 +780,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(99, true);
         expect(await virtualPool.deactivated()).to.be.false;
@@ -841,8 +798,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
         await virtualPool.connect(pseudoFarming).deactivate();
 
         await poolMock.crossTo(-101, true);
@@ -858,8 +815,8 @@ describe('unit/EternalVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(1, 1);
-        await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
         await poolMock.crossTo(1, true);
 
@@ -878,8 +835,8 @@ describe('unit/EternalVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 1);
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
 
-        await virtualPool.connect(pseudoFarming).setRates(100, 100);
-        await virtualPool.connect(pseudoFarming).addRewards(100, 100);
+        await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 100);
+        await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 100);
 
         const timestamp = await blockTimestamp();
         await Time.setAndMine(timestamp + 1000);
@@ -888,10 +845,10 @@ describe('unit/EternalVirtualPool', () => {
 
         expect(await virtualPool.globalTick()).to.be.eq(-6);
 
-        const tickData = await virtualPool.ticks(0);
+        const tickData = await virtualPool.getTickGrowth(0, rewardTokenAddress);
 
-        expect(tickData.outerFeeGrowth0Token).to.be.not.eq(0n);
-        expect(tickData.outerFeeGrowth1Token).to.be.not.eq(0n);
+        expect(tickData).to.be.not.eq(0n);
+        expect(tickData).to.be.not.eq(0n);
 
         expect(await virtualPool.nextTick()).to.be.eq(0);
         expect(await virtualPool.prevTick()).to.be.eq(-600);
@@ -900,13 +857,13 @@ describe('unit/EternalVirtualPool', () => {
 
         expect(await virtualPool.globalTick()).to.be.eq(6);
 
-        const tickDataAfter = await virtualPool.ticks(0);
+        const tickDataAfter = await virtualPool.getTickGrowth(0, rewardTokenAddress);
 
         expect(await virtualPool.nextTick()).to.be.eq(240);
         expect(await virtualPool.prevTick()).to.be.eq(0);
 
-        expect(tickDataAfter.outerFeeGrowth0Token).to.be.eq(1); // initial value of totalRewardGrowth0
-        expect(tickDataAfter.outerFeeGrowth1Token).to.be.eq(1);
+        expect(tickDataAfter).to.be.eq(1); // initial value of totalRewardGrowth0
+        expect(tickDataAfter).to.be.eq(1);
 
         expect(await virtualPool.deactivated()).to.be.false;
       });
@@ -920,8 +877,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
@@ -935,8 +892,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
@@ -952,8 +909,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
@@ -967,8 +924,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
@@ -986,8 +943,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);
@@ -1003,8 +960,8 @@ describe('unit/EternalVirtualPool', () => {
 
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-          await virtualPool.connect(pseudoFarming).setRates(1, 1);
-          await virtualPool.connect(pseudoFarming).addRewards(1, 1);
+          await virtualPool.connect(pseudoFarming).setRates(rewardTokenAddress, 1);
+          await virtualPool.connect(pseudoFarming).addRewards(rewardTokenAddress, 1);
 
           const timestamp = await blockTimestamp();
           await Time.setAndMine(timestamp + 10000);

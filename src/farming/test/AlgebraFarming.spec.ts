@@ -88,24 +88,21 @@ describe('AlgebraFarming', () => {
       let nonce = await context.eternalFarming.numOfIncentives();
 
       await context.rewardToken.transfer(incentiveCreator.address, totalReward);
-      await context.bonusRewardToken.transfer(incentiveCreator.address, bonusReward);
       await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming, totalReward);
-      await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming, bonusReward);
 
       await expect(
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken,
-            bonusRewardToken: context.bonusRewardToken,
             nonce,
           },
           {
+            rewardToken: context.rewardToken,
             reward: totalReward,
-            bonusReward: bonusReward,
             rewardRate: 10,
-            bonusRewardRate: 10,
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
+            weight0: 500,
+            weight1: 500
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -115,16 +112,15 @@ describe('AlgebraFarming', () => {
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken,
-            bonusRewardToken: context.bonusRewardToken,
             nonce,
           },
           {
+            rewardToken: context.rewardToken,
             reward: totalReward,
-            bonusReward: bonusReward,
             rewardRate: 10,
-            bonusRewardRate: 10,
             minimalPositionWidth: 887272 * 2 + 1,
+            weight0: 500,
+            weight1: 500
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -134,16 +130,15 @@ describe('AlgebraFarming', () => {
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
             pool: context.pool01,
-            rewardToken: context.rewardToken,
-            bonusRewardToken: context.bonusRewardToken,
             nonce,
           },
           {
+            rewardToken: context.rewardToken,
             reward: totalReward,
-            bonusReward: bonusReward,
             rewardRate: 10,
-            bonusRewardRate: 10,
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
+            weight0: 500,
+            weight1: 500
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -200,11 +195,9 @@ describe('AlgebraFarming', () => {
       const createIncentiveResult = await helpers.createIncentiveFlow({
         nonce: nonce,
         rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
         minimalPositionWidth: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         poolAddress: context.pool01,
-        totalReward,
-        bonusReward,
+        totalReward
       });
 
       await expect(
@@ -226,7 +219,6 @@ describe('AlgebraFarming', () => {
     let subject: TestSubject;
 
     const totalReward = BNe18(3_000);
-    const bonusReward = BNe18(4_000);
 
     const duration = days(1);
     const ticksToFarm: [number, number] = [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])];
@@ -238,7 +230,7 @@ describe('AlgebraFarming', () => {
       const epoch = await blockTimestamp();
 
       const {
-        tokens: [token0, token1, rewardToken, bonusRewardToken],
+        tokens: [token0, token1, rewardToken],
       } = context;
       const helpers = HelperCommands.fromTestContext(context, actors, provider);
 
@@ -252,10 +244,8 @@ describe('AlgebraFarming', () => {
       const createIncentiveResult = await helpers.createIncentiveFlow({
         nonce,
         rewardToken,
-        bonusRewardToken,
         poolAddress: context.pool01,
         totalReward,
-        bonusReward,
       });
       const params = {
         tokensToFarm,

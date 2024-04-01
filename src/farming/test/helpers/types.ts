@@ -8,22 +8,19 @@ export module HelperTypes {
   export module CreateIncentive {
     export type Args = {
       rewardToken: TestERC20;
-      bonusRewardToken: TestERC20;
       poolAddress: string;
       nonce: bigint;
       totalReward: bigint;
-      bonusReward: bigint;
-
+      
       rewardRate?: bigint;
-      bonusRewardRate?: bigint;
       minimalPositionWidth?: number;
+      weight0?: number;
+      weight1?: number;
       plugin?: string;
     };
     export type Result = {
       poolAddress: string;
       rewardToken: TestERC20;
-      bonusRewardToken: TestERC20;
-      bonusReward: bigint;
       totalReward: bigint;
       nonce: bigint;
       virtualPool: Contract;

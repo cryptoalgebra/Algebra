@@ -236,7 +236,6 @@ export type AlgebraFixtureType = {
   token0: TestERC20;
   token1: TestERC20;
   rewardToken: TestERC20;
-  bonusRewardToken: TestERC20;
   ownerSigner: Signer;
 };
 export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {

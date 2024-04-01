@@ -87,21 +87,15 @@ export class HelperCommands {
     const incentiveCreator = this.actors.incentiveCreator();
 
     const bal = await params.rewardToken.balanceOf(incentiveCreator.address);
-    const bonusBal = await params.bonusRewardToken.balanceOf(incentiveCreator.address);
 
     if (bal < params.totalReward) {
       await params.rewardToken.transfer(incentiveCreator.address, params.totalReward);
-    }
-
-    if (bonusBal < params.bonusReward) {
-      await params.bonusRewardToken.transfer(incentiveCreator.address, params.bonusReward);
     }
 
     let txResult;
     let virtualPoolAddress;
 
     await params.rewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.totalReward);
-    await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.bonusReward);
 
     let pluginAddres = params.plugin;
     if (!pluginAddres) {
@@ -112,24 +106,22 @@ export class HelperCommands {
     txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
       {
         pool: params.poolAddress,
-        rewardToken: params.rewardToken,
-        bonusRewardToken: params.bonusRewardToken,
         nonce,
       },
       {
+        rewardToken: params.rewardToken,
         reward: params.totalReward,
-        bonusReward: params.bonusReward,
         rewardRate: params.rewardRate || 10,
-        bonusRewardRate: params.bonusRewardRate || 10,
         minimalPositionWidth: params.minimalPositionWidth || 0,
+        weight0: params.weight0 || 500,
+        weight1: params.weight1 || 500
       },
       pluginAddres
     );
     // @ts-ignore
-    virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool'];
-
+    virtualPoolAddress = (await txResult.wait(1)).logs[3].args['virtualPool'];
     return {
-      ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
+      ..._.pick(params, ['poolAddress', 'totalReward', 'rewardToken']),
       nonce,
 
       virtualPool: new ethers.Contract(virtualPoolAddress, new Interface(abi.abi), this.actors.lpUser0()),
@@ -230,8 +222,6 @@ export class HelperCommands {
 
     await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.rewardToken, params.lp.address, 0);
 
-    await this.eternalFarming.connect(params.lp).claimReward(params.createIncentiveResult.bonusRewardToken, params.lp.address, 0);
-
     const { liquidity } = await this.nft.connect(params.lp).positions(params.tokenId);
 
     await this.nft.connect(params.lp).decreaseLiquidity(
@@ -260,11 +250,9 @@ export class HelperCommands {
     await this.nft.connect(params.lp).burn(params.tokenId, maxGas);
 
     const balance = await params.createIncentiveResult.rewardToken.connect(params.lp).balanceOf(params.lp.address);
-    const bonusBalance = await params.createIncentiveResult.bonusRewardToken.connect(params.lp).balanceOf(params.lp.address);
 
     return {
       balance,
-      bonusBalance,
       exitFarmingdAt,
     };
   };
@@ -301,8 +289,6 @@ export class HelperCommands {
 
   getIncentiveId: HelperTypes.GetIncentiveId.Command = async (params) => {
     return this.testIncentiveId.compute({
-      rewardToken: params.rewardToken,
-      bonusRewardToken: params.bonusRewardToken,
       pool: params.poolAddress,
       nonce: params.nonce,
     });
@@ -344,7 +330,6 @@ export class HelperCommands {
       await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
       const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
-
       await this.router.connect(actor).exactInput(
         {
           recipient: actor.address,
@@ -571,8 +556,6 @@ export class ERC20Helper {
 type IncentiveAdapterFunc = (params: HelperTypes.CreateIncentive.Result) => Promise<ContractParams.IncentiveKey>;
 
 export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = async (params: any) => ({
-  rewardToken: await params.rewardToken.getAddress(),
-  bonusRewardToken: await params.bonusRewardToken.getAddress(),
   pool: params.poolAddress,
   nonce: params.nonce,
 });

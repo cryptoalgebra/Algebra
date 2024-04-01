@@ -8,8 +8,6 @@ import { HelperCommands, ERC20Helper } from '../helpers';
 import { createTimeMachine } from '../shared/time';
 
 type FarmIncentiveKey = {
-  rewardToken: string;
-  bonusRewardToken: string;
   pool: string;
   nonce: number;
 };
@@ -53,29 +51,18 @@ describe('unit/Multicall', () => {
       const tokenId = mintResult.tokenId;
 
       const farmIncentiveKey = {
-        rewardToken: await context.rewardToken.getAddress(),
-        bonusRewardToken: await context.bonusRewardToken.getAddress(),
         pool: context.pool01,
         nonce: 0,
       };
 
       await erc20Helper.ensureBalancesAndApprovals(incentiveCreator, context.rewardToken, totalReward, await context.eternalFarming.getAddress());
-      await erc20Helper.ensureBalancesAndApprovals(
-        incentiveCreator,
-        context.bonusRewardToken,
-        totalReward,
-        await context.eternalFarming.getAddress()
-      );
 
       await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
         totalReward,
-        bonusReward,
         poolAddress: await context.poolObj.getAddress(),
         nonce: 0n,
         rewardRate: 10n,
-        bonusRewardRate: 50n,
       });
 
       await context.nft.connect(multicaller).approveForFarming(tokenId, true, context.farmingCenter);
@@ -112,18 +99,10 @@ describe('unit/Multicall', () => {
       2n ** 128n - 1n,
     ]);
 
-    const claimRewardsTx1 = context.farmingCenter.interface.encodeFunctionData('claimReward', [
-      await context.bonusRewardToken.getAddress(),
-      multicaller.address,
-      2n ** 128n - 1n,
-    ]);
+    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
+
+    await context.farmingCenter.connect(multicaller).multicall([collectRewardsTx, claimRewardsTx0], maxGas);
 
     expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
-    expect(await context.eternalFarming.rewards(multicaller.address, context.bonusRewardToken)).to.be.eq(0);
-
-    await context.farmingCenter.connect(multicaller).multicall([collectRewardsTx, claimRewardsTx0, claimRewardsTx1], maxGas);
-
-    expect(await context.eternalFarming.rewards(multicaller.address, context.rewardToken)).to.be.eq(0);
-    expect(await context.eternalFarming.rewards(multicaller.address, context.bonusRewardToken)).to.be.eq(0);
   });
 });
