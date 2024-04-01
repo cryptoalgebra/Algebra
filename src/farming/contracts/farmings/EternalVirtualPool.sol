@@ -126,9 +126,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   function addRewardToken(address newRewardToken) external override onlyFromFarming {
-    for (uint i; i < rewardTokensList.length; i++) {
-      if (newRewardToken == rewardTokensList[i]) revert alreadyInList();
-    }
+    if (_inRewardTokenList(newRewardToken)) revert alreadyInList();
 
     rewardTokensList.push(newRewardToken);
     rewardsInfo[newRewardToken].totalRewardGrowth = 1;
@@ -193,8 +191,8 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       uint32 _prevDelta = prevDelta;
       uint32 timeDelta = _blockTimestamp() - _prevRateChangeTimestamp;
       if (timeDelta > RATE_CHANGE_FREQUENCY) {
-        uint128 currentFees0CollectedPerSec = fees0Collected / timeDelta;
-        uint128 currentFees1CollectedPerSec = fees1Collected / timeDelta;
+        uint256 currentFees0CollectedPerSec = fees0Collected / timeDelta;
+        uint256 currentFees1CollectedPerSec = fees1Collected / timeDelta;
 
         if (_prevDelta != 0) {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
@@ -203,12 +201,13 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0) {
             for (uint i; i < rewardTokensList.length; i++) {
               uint128 lastRewardRate = rewardsInfo[rewardTokensList[i]].rewardRate;
-              // TODO muldiv
-              rewardsInfo[rewardTokensList[i]].rewardRate =
+
+              rewardsInfo[rewardTokensList[i]].rewardRate = uint128(
                 (currentFees0CollectedPerSec * lastRewardRate * fee0Weight) /
-                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-                (currentFees1CollectedPerSec * lastRewardRate * fee1Weight) /
-                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+                  (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+                  (currentFees1CollectedPerSec * lastRewardRate * fee1Weight) /
+                  (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR)
+              );
             }
           }
         }
@@ -324,12 +323,19 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   function setRates(address token, uint128 rate) external override onlyFromFarming {
     _distributeRewards();
-    // TODO check token list
+    if (!_inRewardTokenList(token)) revert isNotInRewardTokenList();
     rewardsInfo[token].rewardRate = rate;
   }
 
   function setWeights(uint16 weight0, uint16 weight1) external override onlyFromFarming {
     (fee0Weight, fee1Weight) = (weight0, weight1);
+  }
+
+  function _inRewardTokenList(address token) internal view returns (bool result) {
+    address[] memory tokenList = rewardTokensList;
+    for (uint i; i < tokenList.length; i++) {
+      if (token == tokenList[i]) result = true;
+    }
   }
 
   function _checkIsFromFarming() internal view {

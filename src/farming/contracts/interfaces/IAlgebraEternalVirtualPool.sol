@@ -10,6 +10,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   error onlyFarming();
 
   error alreadyInList();
+  error isNotInRewardTokenList();
   error nonZeroRate();
   error indexOutOfRange();
 

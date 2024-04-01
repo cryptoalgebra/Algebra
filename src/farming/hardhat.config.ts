@@ -29,7 +29,7 @@ const LOW_COMPILER_SETTINGS: SolcUserConfig = {
     evmVersion: 'paris',
     optimizer: {
       enabled: true,
-      runs: 800,
+      runs: 500,
     },
     metadata: {
       bytecodeHash: 'none',
