@@ -112,6 +112,9 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     }
   }
 
+  function getTickGrowth(int24 tick, address rewardToken) external view override returns (uint256 outerFeeGrowth) {
+    outerFeeGrowth = ticks[tick].outerFeeGrowth[rewardToken];
+  }
   /// @inheritdoc IAlgebraEternalVirtualPool
   function deactivate() external override onlyFromFarming {
     deactivated = true;

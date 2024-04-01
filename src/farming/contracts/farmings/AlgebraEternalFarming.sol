@@ -364,6 +364,12 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (reward, , ) = _getNewRewardsForFarm(virtualPool, farm, incentiveId);
   }
 
+  function getIncentiveTotalRewards(IncentiveKey memory key, address rewardToken) external view override returns (uint256 rewardAmount) {
+    (bytes32 incentiveId, ) = _getExistingIncentiveByKey(key);
+
+    rewardAmount = incentives[incentiveId].totalRewards[rewardToken];
+  }
+
   /// @notice reward amounts should be updated before calling this method
   /// @inheritdoc IAlgebraEternalFarming
   function collectRewards(

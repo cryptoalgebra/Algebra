@@ -103,6 +103,8 @@ interface IAlgebraEternalFarming {
   /// @return rewardsOwed The amount of the reward token claimable by the owner
   function rewards(address owner, IERC20Minimal rewardToken) external view returns (uint256 rewardsOwed);
 
+  function getIncentiveTotalRewards(IncentiveKey memory key, address rewardToken) external view returns (uint256 rewardAmount);
+
   /// @notice Updates farming center address
   /// @param _farmingCenter The new farming center contract address
   function setFarmingCenterAddress(address _farmingCenter) external;

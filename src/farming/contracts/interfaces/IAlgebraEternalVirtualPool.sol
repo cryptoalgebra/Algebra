@@ -35,6 +35,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @notice Returns the current tick in virtual pool
   function globalTick() external view returns (int24);
 
+  function getTickGrowth(int24 tick, address rewardToken) external view returns (uint256 outerFeeGrowth);
+
   /// @notice Returns the timestamp after previous virtual pool update
   function prevTimestamp() external view returns (uint32);
 
