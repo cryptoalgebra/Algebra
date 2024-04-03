@@ -4,10 +4,10 @@ exports[`AlgebraFactory #createCustomPool gas [ @skip-on-coverage ] 1`] = `48208
 
 exports[`AlgebraFactory #createCustomPool gas for second pool [ @skip-on-coverage ] 1`] = `4820877`;
 
-exports[`AlgebraFactory #createPool gas [ @skip-on-coverage ] 1`] = `4790337`;
+exports[`AlgebraFactory #createPool gas [ @skip-on-coverage ] 1`] = `4808577`;
 
-exports[`AlgebraFactory #createPool gas for second pool [ @skip-on-coverage ] 1`] = `4790337`;
+exports[`AlgebraFactory #createPool gas for second pool [ @skip-on-coverage ] 1`] = `4808577`;
 
-exports[`AlgebraFactory factory bytecode size  [ @skip-on-coverage ] 1`] = `8563`;
+exports[`AlgebraFactory factory bytecode size  [ @skip-on-coverage ] 1`] = `10097`;
 
-exports[`AlgebraFactory pool bytecode size  [ @skip-on-coverage ] 1`] = `22827`;
+exports[`AlgebraFactory pool bytecode size  [ @skip-on-coverage ] 1`] = `22795`;

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-// TODO
-
 /// @title An interface for a contract that is capable of deploying Algebra plugins
-/// @dev Such a factory is needed if the plugin should be automatically created and connected to each new pool
+/// @dev Such a factory can be used for automatic plugin creation for new pools.
+/// Also a factory be used as an entry point for custom (additional) pools creation
 interface IAlgebraPluginFactory {
   /// @notice Deploys new plugin contract for pool
-  /// @param pool The address of the pool for which the new plugin will be created
-  /// @param creator TODO
-  /// @param deployer TODO
+  /// @param pool The address of the new pool
+  /// @param creator The address that initiated the pool creation
+  /// @param deployer The address of new plugin deployer contract (0 if not used)
   /// @param token0 First token of the pool
   /// @param token1 Second token of the pool
   /// @return New plugin address
