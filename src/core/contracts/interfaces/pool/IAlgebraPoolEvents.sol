@@ -67,6 +67,13 @@ interface IAlgebraPoolEvents {
   /// @param paid1 The amount of token1 paid for the flash, which can exceed the amount1 plus the fee
   event Flash(address indexed sender, address indexed recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1);
 
+  /// @notice Emitted when the pool has higher balances than expected.
+  /// Any excess of tokens will be distributed between liquidity providers as fee.
+  /// @dev Fees after flash also will trigger this event due to mechanics of flash.
+  /// @param amount0 The excess of token0
+  /// @param amount1 The excess of token1
+  event ExcessTokens(uint256 amount0, uint256 amount1);
+
   /// @notice Emitted when the community fee is changed by the pool
   /// @param communityFeeNew The updated value of the community fee in thousandths (1e-3)
   event CommunityFee(uint16 communityFeeNew);

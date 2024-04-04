@@ -49,6 +49,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
       unchecked {
         if (hasExcessToken0) totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
         if (hasExcessToken1) totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
+        emit ExcessTokens(balance0 - _reserve0, balance1 - _reserve1);
         (reserve0, reserve1) = (uint128(balance0), uint128(balance1));
       }
     }
