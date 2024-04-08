@@ -106,6 +106,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
+            weight0: 500,
+            weight1: 500,
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -125,6 +127,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: 887272 * 2 + 1,
+            weight0: 500,
+            weight1: 500,
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -144,6 +148,8 @@ describe('AlgebraFarming', () => {
             rewardRate: 10,
             bonusRewardRate: 10,
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
+            weight0: 500,
+            weight1: 500,
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )

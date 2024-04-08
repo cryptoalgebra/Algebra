@@ -122,6 +122,8 @@ export class HelperCommands {
         rewardRate: params.rewardRate || 10,
         bonusRewardRate: params.bonusRewardRate || 10,
         minimalPositionWidth: params.minimalPositionWidth || 0,
+        weight0: params.weight0 || 500,
+        weight1: params.weight1 || 500,
       },
       pluginAddres
     );

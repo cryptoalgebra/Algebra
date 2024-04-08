@@ -446,7 +446,7 @@ describe('unit/EternalVirtualPool', () => {
 
   describe('#crossTo', async () => {
     it('reverts if not from pool', async () => {
-      await expect(virtualPool.crossTo(100, true)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+      await expect(virtualPool.crossTo(100, true, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     });
 
     describe('otz', async () => {
