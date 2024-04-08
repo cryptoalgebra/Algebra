@@ -181,6 +181,8 @@ interface IAlgebraEternalFarming {
 
   function setWeights(IncentiveKey memory key, uint16 weight0, uint16 weight1) external;
 
+  function switchDynamicRate(IncentiveKey memory key, bool isActive) external;
+
   /// @notice Collect rewards for tokenId
   /// @dev only FarmingCenter
   /// @param key The key of incentive

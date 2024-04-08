@@ -253,6 +253,13 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     _setFeesWeights(virtualPool, weight0, weight1, incentiveId);
   }
 
+  function switchDynamicRate(IncentiveKey memory key, bool isActive) external override onlyIncentiveMaker {
+    (, Incentive storage incentive) = _getExistingIncentiveByKey(key);
+    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+
+    virtualPool.switchDynamicRate(isActive);
+  }
+
   /// @inheritdoc IAlgebraEternalFarming
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
     if (isEmergencyWithdrawActivated) revert emergencyActivated();

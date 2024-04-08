@@ -42,6 +42,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @notice Returns true if virtual pool is deactivated
   function deactivated() external view returns (bool);
 
+  function dynamicRateActivated() external view returns (bool);
+
   /// @dev This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly.
   /// If the virtual pool is deactivated, does nothing.
   /// @param bottomTick The bottom tick of a position
@@ -60,6 +62,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   function setRates(uint128 rate0, uint128 rate1) external;
 
   function setWeights(uint16 weight0, uint16 weight1) external;
+
+  function switchDynamicRate(bool isActive) external;
 
   /// @notice This function is used to deactivate virtual pool
   /// @dev Can only be called by farming

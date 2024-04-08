@@ -33,6 +33,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   uint32 public override prevTimestamp;
   /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
+  bool public override dynamicRateActivated;
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
@@ -65,6 +66,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     plugin = _plugin;
 
     prevTimestamp = _blockTimestamp();
+    dynamicRateActivated = true;
     prevRateChangeTimestamp = _blockTimestamp();
     globalPrevInitializedTick = TickMath.MIN_TICK;
     globalNextInitializedTick = TickMath.MAX_TICK;
@@ -183,7 +185,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
           uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
 
-          if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0) {
+          if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0 && dynamicRateActivated) {
             rewardRate0 =
               (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
               (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
@@ -304,6 +306,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
 
   function setWeights(uint16 weight0, uint16 weight1) external override onlyFromFarming {
     (fee0Weight, fee1Weight) = (weight0, weight1);
+  }
+
+  function switchDynamicRate(bool isActive) external override onlyFromFarming {
+    dynamicRateActivated = isActive;
   }
 
   function _checkIsFromFarming() internal view {
