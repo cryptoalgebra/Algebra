@@ -35,17 +35,17 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   bool public override deactivated;
   bool public override dynamicRateActivated;
 
-  uint128 internal rewardRate0;
-  uint128 internal rewardRate1;
-
-  uint16 internal fee1Weight;
-  uint16 internal fee0Weight;
-
   uint128 internal rewardReserve0;
   uint128 internal rewardReserve1;
 
   uint256 internal totalRewardGrowth0 = 1;
   uint256 internal totalRewardGrowth1 = 1;
+
+  uint128 internal rewardRate0;
+  uint128 internal rewardRate1;
+
+  uint16 internal fee1Weight;
+  uint16 internal fee0Weight;
 
   uint32 internal prevDelta;
   uint32 internal prevRateChangeTimestamp;
@@ -303,6 +303,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   function setRates(uint128 rate0, uint128 rate1) external override onlyFromFarming {
     _distributeRewards();
+    if (dynamicRateActivated) _resetDynamicRateState();
     (rewardRate0, rewardRate1) = (rate0, rate1);
   }
 
@@ -311,7 +312,19 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   function switchDynamicRate(bool isActive) external override onlyFromFarming {
+    if (dynamicRateActivated) _resetDynamicRateState();
     dynamicRateActivated = isActive;
+  }
+
+  function _resetDynamicRateState() internal {
+    prevDelta = 0;
+    prevRateChangeTimestamp = _blockTimestamp();
+
+    prevFees0Collected = 0;
+    prevFees1Collected = 0;
+
+    fees0Collected = 0;
+    fees1Collected = 0;
   }
 
   function _checkIsFromFarming() internal view {
