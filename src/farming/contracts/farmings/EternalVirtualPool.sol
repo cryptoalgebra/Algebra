@@ -174,29 +174,30 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     _distributeRewards(_prevTimestamp, _currentLiquidity);
 
     {
-      uint32 _prevRateChangeTimestamp = prevRateChangeTimestamp;
       uint32 _prevDelta = prevDelta;
-      uint32 timeDelta = _blockTimestamp() - _prevRateChangeTimestamp;
+      uint32 timeDelta = _blockTimestamp() - prevRateChangeTimestamp;
       if (timeDelta > RATE_CHANGE_FREQUENCY) {
-        uint128 currentFees0CollectedPerSec = fees0Collected / timeDelta;
-        uint128 currentFees1CollectedPerSec = fees1Collected / timeDelta;
+        uint256 currentFees0CollectedPerSec = fees0Collected / timeDelta;
+        uint256 currentFees1CollectedPerSec = fees1Collected / timeDelta;
 
         if (_prevDelta != 0) {
           uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
           uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
 
           if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0 && dynamicRateActivated) {
-            rewardRate0 =
+            rewardRate0 = uint128(
               (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
-              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-              (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
-              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+                (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
+                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR)
+            );
 
-            rewardRate1 =
+            rewardRate1 = uint128(
               (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
-              (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-              (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
-              (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR);
+                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
+                (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
+                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR)
+            );
           }
         }
 
@@ -204,6 +205,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
         prevFees1Collected = fees1Collected;
 
         prevDelta = timeDelta;
+        prevRateChangeTimestamp = _blockTimestamp();
 
         fees0Collected = 0;
         fees1Collected = 0;
