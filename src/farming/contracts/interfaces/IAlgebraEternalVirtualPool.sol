@@ -9,6 +9,10 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   error onlyPlugin();
   error onlyFarming();
 
+  error invalidNewMaxRate();
+  error invalidNewMinRate();
+  error invalidFeeWeights();
+
   /// @notice Returns address of the AlgebraEternalFarming
   function farmingAddress() external view returns (address);
 
@@ -63,6 +67,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
 
   function setWeights(uint16 weight0, uint16 weight1) external;
 
+  function setDynamicRateBounds(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external;
+
   function switchDynamicRate(bool isActive) external;
 
   /// @notice This function is used to deactivate virtual pool
@@ -96,6 +102,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
   /// @return rate0 The rate of token0, rewards / sec
   /// @return rate1 The rate of token1, rewards / sec
   function rewardRates() external view returns (uint128 rate0, uint128 rate1);
+
+  function feeWeights() external view returns (uint16 weight0, uint16 weight1);
 
   /// @notice Get reward growth accumulators
   /// @return rewardGrowth0 The reward growth for reward0, per unit of liquidity, has only relative meaning

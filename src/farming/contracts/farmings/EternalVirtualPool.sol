@@ -11,19 +11,17 @@ import '@cryptoalgebra/integral-core/contracts/libraries/TickManagement.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 
 import '../base/VirtualTickStructure.sol';
+import '../base/DynamicRate.sol';
 
 /// @title Algebra Integral 1.0 eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
-contract EternalVirtualPool is Timestamp, VirtualTickStructure {
+contract EternalVirtualPool is DynamicRate, VirtualTickStructure {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   /// @inheritdoc IAlgebraEternalVirtualPool
   address public immutable override farmingAddress;
   /// @inheritdoc IAlgebraEternalVirtualPool
   address public immutable override plugin;
-
-  uint32 public constant RATE_CHANGE_FREQUENCY = 1 hours;
-  uint16 public constant FEE_WEIGHT_DENOMINATOR = 1e3;
 
   /// @inheritdoc IAlgebraEternalVirtualPool
   uint128 public override currentLiquidity;
@@ -43,18 +41,6 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
 
   uint128 internal rewardRate0;
   uint128 internal rewardRate1;
-
-  uint16 internal fee1Weight;
-  uint16 internal fee0Weight;
-
-  uint32 internal prevDelta;
-  uint32 internal prevRateChangeTimestamp;
-
-  uint128 internal prevFees0Collected;
-  uint128 internal prevFees1Collected;
-
-  uint128 internal fees0Collected;
-  uint128 internal fees1Collected;
 
   modifier onlyFromFarming() {
     _checkIsFromFarming();
@@ -85,6 +71,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   function totalRewardGrowth() external view override returns (uint256 rewardGrowth0, uint256 rewardGrowth1) {
     return (totalRewardGrowth0, totalRewardGrowth1);
+  }
+
+  function feeWeights() external view override returns (uint16 weight0, uint16 weight1) {
+    return (fee0Weight, fee1Weight);
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -153,12 +143,6 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
-    if (zeroToOne) {
-      fees0Collected += feeAmount;
-    } else {
-      fees1Collected += feeAmount;
-    }
-
     // early return if without any crosses
     if (virtualZtO) {
       if (targetTick >= previousTick) return true;
@@ -173,43 +157,13 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
 
     _distributeRewards(_prevTimestamp, _currentLiquidity);
 
-    {
-      uint32 _prevDelta = prevDelta;
-      uint32 timeDelta = _blockTimestamp() - prevRateChangeTimestamp;
-      if (timeDelta > RATE_CHANGE_FREQUENCY) {
-        uint256 currentFees0CollectedPerSec = fees0Collected / timeDelta;
-        uint256 currentFees1CollectedPerSec = fees1Collected / timeDelta;
-
-        if (_prevDelta != 0) {
-          uint128 prevFees0CollectedPerSec = prevFees0Collected / _prevDelta;
-          uint128 prevFees1CollectedPerSec = prevFees1Collected / _prevDelta;
-
-          if (prevFees0CollectedPerSec | prevFees1CollectedPerSec != 0 && dynamicRateActivated) {
-            rewardRate0 = uint128(
-              (currentFees0CollectedPerSec * rewardRate0 * fee0Weight) /
-                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-                (currentFees1CollectedPerSec * rewardRate0 * fee1Weight) /
-                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR)
-            );
-
-            rewardRate1 = uint128(
-              (currentFees0CollectedPerSec * rewardRate1 * fee0Weight) /
-                (prevFees0CollectedPerSec * FEE_WEIGHT_DENOMINATOR) +
-                (currentFees1CollectedPerSec * rewardRate1 * fee1Weight) /
-                (prevFees1CollectedPerSec * FEE_WEIGHT_DENOMINATOR)
-            );
-          }
-        }
-
-        prevFees0Collected = fees0Collected;
-        prevFees1Collected = fees1Collected;
-
-        prevDelta = timeDelta;
-        prevRateChangeTimestamp = _blockTimestamp();
-
-        fees0Collected = 0;
-        fees1Collected = 0;
+    if (dynamicRateActivated) {
+      if (zeroToOne) {
+        fees0Collected += feeAmount;
+      } else {
+        fees1Collected += feeAmount;
       }
+      (rewardRate0, rewardRate1) = _getNewRates(rewardRate0, rewardRate1);
     }
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
@@ -308,6 +262,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   function setWeights(uint16 weight0, uint16 weight1) external override onlyFromFarming {
+    if (weight0 + weight1 != FEE_WEIGHT_DENOMINATOR) revert invalidFeeWeights();
     (fee0Weight, fee1Weight) = (weight0, weight1);
   }
 
@@ -316,15 +271,14 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     dynamicRateActivated = isActive;
   }
 
-  function _resetDynamicRateState() internal {
-    prevDelta = 0;
-    prevRateChangeTimestamp = _blockTimestamp();
+  function setDynamicRateBounds(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external override onlyFromFarming {
+    if (maxRate0 < rewardRate0 || maxRate1 < rewardRate1) revert invalidNewMaxRate();
+    maxRate0 = _maxRate0;
+    maxRate1 = _maxRate1;
 
-    prevFees0Collected = 0;
-    prevFees1Collected = 0;
-
-    fees0Collected = 0;
-    fees1Collected = 0;
+    if (minRate0 > rewardRate0 || minRate1 > rewardRate1) revert invalidNewMinRate();
+    minRate0 = _minRate0;
+    minRate1 = _minRate1;
   }
 
   function _checkIsFromFarming() internal view {

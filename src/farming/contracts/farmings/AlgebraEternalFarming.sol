@@ -54,8 +54,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   /// @inheritdoc IAlgebraEternalFarming
   bytes32 public constant override FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
 
-  uint16 public constant FEE_WEIGHT_DENOMINATOR = 1e3;
-
   /// @inheritdoc IAlgebraEternalFarming
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
 
@@ -417,7 +415,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   function _setFeesWeights(IAlgebraEternalVirtualPool virtualPool, uint16 weight0, uint16 weight1, bytes32 incentiveId) private {
-    if (weight0 + weight1 != FEE_WEIGHT_DENOMINATOR) revert incorrectWeight();
     virtualPool.setWeights(weight0, weight1);
     emit FeesWeightsChanged(weight0, weight1, incentiveId);
   }

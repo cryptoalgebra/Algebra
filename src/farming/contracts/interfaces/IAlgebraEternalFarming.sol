@@ -25,7 +25,6 @@ interface IAlgebraEternalFarming {
   error anotherFarmingIsActive();
   error pluginNotConnected();
 
-  error incorrectWeight();
   error minimalPositionWidthTooWide();
   error zeroRewardAmount();
 
