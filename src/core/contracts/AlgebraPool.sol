@@ -31,18 +31,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolActions
   function initialize(uint160 initialPrice) external override {
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
+    if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
+    globalState.price = initialPrice;
+    globalState.tick = tick;
+    emit Initialize(initialPrice, tick);
 
     if (plugin != address(0)) {
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
     }
-
-    if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
-    uint8 pluginConfig = globalState.pluginConfig;
-
-    globalState.price = initialPrice;
-    globalState.tick = tick;
-
-    emit Initialize(initialPrice, tick);
 
     (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
 
@@ -51,7 +47,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
     _setCommunityFee(_communityFee);
 
-    if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
     }
   }

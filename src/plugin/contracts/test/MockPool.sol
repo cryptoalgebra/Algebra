@@ -238,4 +238,14 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   function setCommunityVault(address newCommunityVault) external override {
     communityVault = newCommunityVault;
   }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function sync() external pure override {
+    revert('Not implemented');
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function skim() external pure override {
+    revert('Not implemented');
+  }
 }
