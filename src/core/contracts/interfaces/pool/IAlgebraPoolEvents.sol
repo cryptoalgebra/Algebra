@@ -97,4 +97,10 @@ interface IAlgebraPoolEvents {
   /// @notice Emitted when the community vault address changes
   /// @param newCommunityVault New community vault
   event CommunityVault(address newCommunityVault);
+
+  /// @notice Emitted when the plugin does skim the excess of tokens
+  /// @param to THe receiver of tokens (plugin)
+  /// @param amount0 The amount of token0
+  /// @param amount1 The amount of token1
+  event Skim(address indexed to, uint256 amount0, uint256 amount1);
 }

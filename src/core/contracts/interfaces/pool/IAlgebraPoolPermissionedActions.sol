@@ -33,4 +33,12 @@ interface IAlgebraPoolPermissionedActions {
   /// Called by the plugin if dynamic fee is enabled
   /// @param newFee The new fee value
   function setFee(uint16 newFee) external;
+
+  /// @notice Forces balances to match reserves. Excessive tokens will be distributed between active LPs
+  /// @dev Only plugin can call this function
+  function sync() external;
+
+  /// @notice Forces balances to match reserves. Excessive tokens will be sent to msg.sender
+  /// @dev Only plugin can call this function
+  function skim() external;
 }

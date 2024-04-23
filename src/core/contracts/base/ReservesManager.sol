@@ -55,6 +55,17 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
+  /// @notice Forces reserves to match balances. Excess of tokens will be sent to `receiver`
+  function _skimReserves(address receiver) internal {
+    (uint256 balance0, uint256 balance1) = (_balanceToken0(), _balanceToken1());
+    (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
+    if (balance0 > _reserve0 || balance1 > _reserve1) {
+      if (balance0 > _reserve0) _transfer(token0, receiver, balance0 - _reserve0);
+      if (balance1 > _reserve1) _transfer(token1, receiver, balance1 - _reserve1);
+      emit Skim(receiver, balance0 - _reserve0, balance1 - _reserve1);
+    }
+  }
+
   /// @notice Applies deltas to reserves and pays communityFees
   /// @dev Community fee is sent to the vault at a specified frequency or when variables communityFeePending{0,1} overflow
   /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
