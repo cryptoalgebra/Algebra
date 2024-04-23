@@ -1,6 +1,7 @@
 import { Wallet, Contract, ContractTransactionResponse } from 'ethers';
 import { TestERC20 } from '../../typechain';
 import { FeeAmount } from '../shared';
+import { number } from 'yargs';
 
 export module HelperTypes {
   export type CommandFunction<Input, Output> = (input: Input) => Promise<Output>;
@@ -19,8 +20,13 @@ export module HelperTypes {
       minimalPositionWidth?: number;
       weight0?: number;
       weight1?: number; 
+      maxRate0?: number;
+      maxRate1?: number;
+      minRate0?: number;
+      minRate1?:number
       plugin?: string;
     };
+    
     export type Result = {
       poolAddress: string;
       rewardToken: TestERC20;

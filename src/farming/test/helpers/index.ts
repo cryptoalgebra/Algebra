@@ -124,6 +124,10 @@ export class HelperCommands {
         minimalPositionWidth: params.minimalPositionWidth || 0,
         weight0: params.weight0 || 500,
         weight1: params.weight1 || 500,
+        maxRate0: 0,
+        maxRate1: 0,
+        minRate0: 0,
+        minRate1: 0,
       },
       pluginAddres
     );

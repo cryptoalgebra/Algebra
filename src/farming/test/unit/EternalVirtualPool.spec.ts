@@ -444,6 +444,74 @@ describe('unit/EternalVirtualPool', () => {
     });
   });
 
+  describe('#dynamic rate', async () => {
+    it('the rates have decreased in proportion to the fees', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      await virtualPool.connect(pseudoFarming).setRates(1000, 1000);
+      await virtualPool.connect(pseudoFarming).addRewards(1000000, 1000000);
+      await virtualPool.connect(pseudoFarming).setWeights(500, 500);
+
+      await poolMock.crossToWithFees(50, false, 10000);
+      await poolMock.crossToWithFees(0, true, 10000);
+
+      const timestamp = await blockTimestamp();
+
+      await Time.setAndMine(timestamp + 3601);
+
+      await poolMock.crossToWithFees(50, false, 0);
+      await poolMock.crossToWithFees(0, true, 1000);
+      await poolMock.crossToWithFees(50, false, 1000);
+
+      await Time.setAndMine(timestamp + 7250);
+
+      await poolMock.crossToWithFees(0, true, 0);
+
+      let rates = await virtualPool.rewardRates();
+      expect(rates.rate0).to.be.eq(98);
+
+      expect(await virtualPool.deactivated()).to.be.false;
+
+    });
+
+    it('the rates have increased in proportion to the fees', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      await virtualPool.connect(pseudoFarming).setRates(1000, 1000);
+      await virtualPool.connect(pseudoFarming).addRewards(1000000, 1000000);
+      await virtualPool.connect(pseudoFarming).setWeights(500, 500);
+
+      await poolMock.crossToWithFees(50, false, 1000);
+      await poolMock.crossToWithFees(0, true, 1000);
+
+      const timestamp = await blockTimestamp();
+
+      await Time.setAndMine(timestamp + 3601);
+
+      await poolMock.crossToWithFees(50, false, 0);
+      await poolMock.crossToWithFees(0, true, 10000);
+      await poolMock.crossToWithFees(50, false, 10000);
+
+      await Time.setAndMine(timestamp + 7250);
+
+      await poolMock.crossToWithFees(0, true, 0);
+
+      let rates = await virtualPool.rewardRates();
+      expect(rates.rate0).to.be.eq(9882);
+
+      console.log(await virtualPool.connect(pseudoFarming).rewardReserves())
+
+      expect(await virtualPool.deactivated()).to.be.false;
+
+    });
+  });
+
   describe('#crossTo', async () => {
     it('reverts if not from pool', async () => {
       await expect(virtualPool.crossTo(100, true, 100)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');

@@ -108,6 +108,10 @@ describe('AlgebraFarming', () => {
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
             weight0: 500,
             weight1: 500,
+            maxRate0: 0,
+            maxRate1: 0,
+            minRate0: 0,
+            minRate1: 0
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -129,6 +133,10 @@ describe('AlgebraFarming', () => {
             minimalPositionWidth: 887272 * 2 + 1,
             weight0: 500,
             weight1: 500,
+            maxRate0: 0,
+            maxRate1: 0,
+            minRate0: 0,
+            minRate1: 0
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -150,6 +158,10 @@ describe('AlgebraFarming', () => {
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
             weight0: 500,
             weight1: 500,
+            maxRate0: 0,
+            maxRate1: 0,
+            minRate0: 0,
+            minRate1: 0
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
