@@ -32,13 +32,13 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
     require(msg.sender == factory);
 
     _writeToCache(plugin, token0, token1);
-    bytes32 salt;
+    bytes memory _encodedParams;
     if (deployer == address(0)) {
-      salt = keccak256(abi.encode(token0, token1));
+      _encodedParams = abi.encode(token0, token1);
     } else {
-      salt = keccak256(abi.encode(deployer, token0, token1));
+      _encodedParams = abi.encode(deployer, token0, token1);
     }
-    pool = address(new AlgebraPool{salt: salt}());
+    pool = address(new AlgebraPool{salt: keccak256(_encodedParams)}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
   }
 

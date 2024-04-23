@@ -33,6 +33,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int24 tick = TickMath.getTickAtSqrtRatio(initialPrice); // getTickAtSqrtRatio checks validity of initialPrice inside
     if (globalState.price != 0) revert alreadyInitialized(); // after initialization, the price can never become zero
     globalState.price = initialPrice;
+    globalState.tick = tick;
+    emit Initialize(initialPrice, tick);
 
     if (plugin != address(0)) {
       IAlgebraPlugin(plugin).beforeInitialize(msg.sender, initialPrice).shouldReturn(IAlgebraPlugin.beforeInitialize.selector);
@@ -40,18 +42,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     (uint16 _communityFee, int24 _tickSpacing, uint16 _fee) = _getDefaultConfiguration();
 
-    uint8 pluginConfig = globalState.pluginConfig;
-    globalState.tick = tick;
-    globalState.communityFee = _communityFee;
-
-    emit Initialize(initialPrice, tick);
-
     _setFee(_fee);
     _setTickSpacing(_tickSpacing);
     if (_communityFee != 0 && communityVault == address(0)) revert invalidNewCommunityFee(); // the pool should not accumulate a community fee without a vault
     _setCommunityFee(_communityFee);
 
-    if (pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_INIT_FLAG)) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick).shouldReturn(IAlgebraPlugin.afterInitialize.selector);
     }
   }
@@ -241,7 +237,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
 
-      emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+      _emitSwapEvent(recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
     }
 
     _unlock();
@@ -309,10 +305,15 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    emit Swap(msg.sender, recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+    _emitSwapEvent(recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
 
     _unlock();
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
+  }
+
+  /// @dev internal function to reduce bytecode size
+  function _emitSwapEvent(address recipient, int256 amount0, int256 amount1, uint160 newPrice, uint128 newLiquidity, int24 newTick) private {
+    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
   function _beforeSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, bool payInAdvance, bytes calldata data) internal {
@@ -436,7 +437,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
     bool isDynamicFeeEnabled = globalState.pluginConfig.hasFlag(Plugins.DYNAMIC_FEE);
-    if (!globalState.unlocked) revert IAlgebraPoolErrors.locked(); // cheaper to check lock here
+    if (!globalState.unlocked) revert locked(); // cheaper to check lock here
 
     if (msg.sender == plugin) {
       if (!isDynamicFeeEnabled) revert dynamicFeeDisabled();
@@ -445,5 +446,26 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       _checkIfAdministrator();
     }
     _setFee(newFee);
+  }
+
+  /// @dev using function to save bytecode
+  function _checkIfPlugin() private view {
+    if (msg.sender != plugin) revert notAllowed();
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function sync() external override {
+    _checkIfPlugin();
+    _lock();
+    _updateReserves();
+    _unlock();
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function skim() external override {
+    _checkIfPlugin();
+    _lock();
+    _skimReserves(msg.sender);
+    _unlock();
   }
 }

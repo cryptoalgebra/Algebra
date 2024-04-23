@@ -84,6 +84,16 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
       require(bytes4(reason) == desiredSelector);
     }
 
+    // try to reenter sync
+    try IAlgebraPool(msg.sender).sync() {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
+    // try to reenter skim
+    try IAlgebraPool(msg.sender).skim() {} catch (bytes memory reason) {
+      require(bytes4(reason) == desiredSelector);
+    }
+
     require(IAlgebraPool(msg.sender).isUnlocked() == false);
 
     require(false, 'Unable to reenter');
