@@ -505,8 +505,6 @@ describe('unit/EternalVirtualPool', () => {
       let rates = await virtualPool.rewardRates();
       expect(rates.rate0).to.be.eq(9882);
 
-      console.log(await virtualPool.connect(pseudoFarming).rewardReserves())
-
       expect(await virtualPool.deactivated()).to.be.false;
 
     });
