@@ -2966,6 +2966,52 @@ describe('AlgebraPool', () => {
         expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before + amount0);
         expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before + amount1);
       });
+
+      it('can skim excess token0 only', async () => {
+        await pool.setPlugin(wallet);
+        const amount0 = 1000000n;
+        await token0.transfer(pool, amount0);
+
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+
+        const walletBalance0Before = await token0.balanceOf(wallet.address);
+        const walletBalance1Before = await token1.balanceOf(wallet.address);
+        await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, amount0, 0n);
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0 - amount0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1);
+        const reservesAfter = await pool.getReserves();
+        expect(reservesAfter[0]).to.be.eq(reserves[0]);
+        expect(reservesAfter[1]).to.be.eq(reserves[1]);
+
+        expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before + amount0);
+        expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before);
+      });
+    });
+
+    it('can skim excess token1 only', async () => {
+      await pool.setPlugin(wallet);
+      const amount1 = 1000010n;
+      await token1.transfer(pool, amount1);
+
+      const balance0 = await token0.balanceOf(pool);
+      const balance1 = await token1.balanceOf(pool);
+      const reserves = await pool.getReserves();
+
+      const walletBalance0Before = await token0.balanceOf(wallet.address);
+      const walletBalance1Before = await token1.balanceOf(wallet.address);
+      await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, 0n, amount1);
+
+      expect(await token0.balanceOf(pool)).to.be.eq(balance0);
+      expect(await token1.balanceOf(pool)).to.be.eq(balance1 - amount1);
+      const reservesAfter = await pool.getReserves();
+      expect(reservesAfter[0]).to.be.eq(reserves[0]);
+      expect(reservesAfter[1]).to.be.eq(reserves[1]);
+
+      expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before);
+      expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before + amount1);
     });
   });
 
