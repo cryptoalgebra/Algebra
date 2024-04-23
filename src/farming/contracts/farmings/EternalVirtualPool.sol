@@ -77,6 +77,15 @@ contract EternalVirtualPool is DynamicRate, VirtualTickStructure {
     return (fee0Weight, fee1Weight);
   }
 
+  function rateLimits()
+    external
+    view
+    override
+    returns (uint128 maxRewardRate0, uint128 maxRewardRate1, uint128 minRewardRate0, uint128 minRewardRate1)
+  {
+    return (maxRate0, maxRate1, minRate0, minRate1);
+  }
+
   /// @inheritdoc IAlgebraEternalVirtualPool
   function getInnerRewardsGrowth(
     int24 bottomTick,
@@ -143,6 +152,19 @@ contract EternalVirtualPool is DynamicRate, VirtualTickStructure {
     if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
+    if (dynamicRateActivated) {
+      if (zeroToOne) {
+        fees0Collected += feeAmount;
+      } else {
+        fees1Collected += feeAmount;
+      }
+      uint32 timeDelta = _blockTimestamp() - prevRateChangeTimestamp;
+      if (timeDelta > RATE_CHANGE_FREQUENCY) {
+        _distributeRewards(_prevTimestamp, _currentLiquidity);
+        (rewardRate0, rewardRate1) = _getNewRates(rewardRate0, rewardRate1);
+      }
+    }
+
     // early return if without any crosses
     if (virtualZtO) {
       if (targetTick >= previousTick) return true;
@@ -156,15 +178,6 @@ contract EternalVirtualPool is DynamicRate, VirtualTickStructure {
     }
 
     _distributeRewards(_prevTimestamp, _currentLiquidity);
-
-    if (dynamicRateActivated) {
-      if (zeroToOne) {
-        fees0Collected += feeAmount;
-      } else {
-        fees1Collected += feeAmount;
-      }
-      (rewardRate0, rewardRate1) = _getNewRates(rewardRate0, rewardRate1);
-    }
 
     (uint256 rewardGrowth0, uint256 rewardGrowth1) = (totalRewardGrowth0, totalRewardGrowth1);
     // The set of active ticks in the virtual pool must be a subset of the active ticks in the real pool
@@ -271,12 +284,12 @@ contract EternalVirtualPool is DynamicRate, VirtualTickStructure {
     dynamicRateActivated = isActive;
   }
 
-  function setDynamicRateBounds(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external override onlyFromFarming {
-    if (maxRate0 < rewardRate0 || maxRate1 < rewardRate1) revert invalidNewMaxRate();
+  function setDynamicRateLimits(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external override onlyFromFarming {
+    if ((_maxRate0 < rewardRate0 && _maxRate0 != 0) || (_maxRate1 < rewardRate1 && _maxRate1 != 0)) revert invalidNewMaxRate();
     maxRate0 = _maxRate0;
     maxRate1 = _maxRate1;
 
-    if (minRate0 > rewardRate0 || minRate1 > rewardRate1) revert invalidNewMinRate();
+    if (_minRate0 > rewardRate0 || _minRate1 > rewardRate1) revert invalidNewMinRate();
     minRate0 = _minRate0;
     minRate1 = _minRate1;
   }

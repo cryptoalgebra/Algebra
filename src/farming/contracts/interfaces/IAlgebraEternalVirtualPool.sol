@@ -48,6 +48,8 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
 
   function dynamicRateActivated() external view returns (bool);
 
+  function rateLimits() external view returns (uint128 maxRate0, uint128 maxRate1, uint128 minRate0, uint128 minRate1);
+
   /// @dev This function is called when anyone changes their farmed liquidity. The position in a virtual pool should be changed accordingly.
   /// If the virtual pool is deactivated, does nothing.
   /// @param bottomTick The bottom tick of a position
@@ -67,7 +69,7 @@ interface IAlgebraEternalVirtualPool is IAlgebraVirtualPool {
 
   function setWeights(uint16 weight0, uint16 weight1) external;
 
-  function setDynamicRateBounds(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external;
+  function setDynamicRateLimits(uint128 _maxRate0, uint128 _maxRate1, uint128 _minRate0, uint128 _minRate1) external;
 
   function switchDynamicRate(bool isActive) external;
 

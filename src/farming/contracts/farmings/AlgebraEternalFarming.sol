@@ -141,6 +141,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       if (int256(uint256(params.minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)))
         revert minimalPositionWidthTooWide();
     }
+
     newIncentive.virtualPoolAddress = virtualPool;
     newIncentive.minimalPositionWidth = params.minimalPositionWidth;
     newIncentive.pluginAddress = connectedPlugin;
@@ -161,6 +162,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     _addRewards(IAlgebraEternalVirtualPool(virtualPool), params.reward, params.bonusReward, incentiveId);
     _setRewardRates(IAlgebraEternalVirtualPool(virtualPool), params.rewardRate, params.bonusRewardRate, incentiveId);
     _setFeesWeights(IAlgebraEternalVirtualPool(virtualPool), params.weight0, params.weight1, incentiveId);
+    _setRateLimits(IAlgebraEternalVirtualPool(virtualPool), params.maxRate0, params.maxRate1, params.minRate0, params.minRate1);
   }
 
   /// @inheritdoc IAlgebraEternalFarming
@@ -256,6 +258,19 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
     virtualPool.switchDynamicRate(isActive);
+  }
+
+  function setDynamicRateLimits(
+    IncentiveKey memory key,
+    uint128 maxRate0,
+    uint128 maxRate1,
+    uint128 minRate0,
+    uint128 minRate1
+  ) external override onlyIncentiveMaker {
+    (, Incentive storage incentive) = _getExistingIncentiveByKey(key);
+    IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
+
+    _setRateLimits(virtualPool, maxRate0, maxRate1, minRate0, minRate1);
   }
 
   /// @inheritdoc IAlgebraEternalFarming
@@ -417,6 +432,10 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function _setFeesWeights(IAlgebraEternalVirtualPool virtualPool, uint16 weight0, uint16 weight1, bytes32 incentiveId) private {
     virtualPool.setWeights(weight0, weight1);
     emit FeesWeightsChanged(weight0, weight1, incentiveId);
+  }
+
+  function _setRateLimits(IAlgebraEternalVirtualPool virtualPool, uint128 maxRate0, uint128 maxRate1, uint128 minRate0, uint128 minRate1) private {
+    virtualPool.setDynamicRateLimits(maxRate0, maxRate1, minRate0, minRate1);
   }
 
   function _getFarm(uint256 tokenId, bytes32 incentiveId) private view returns (Farm memory result) {

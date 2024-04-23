@@ -16,6 +16,10 @@ interface IAlgebraEternalFarming {
     uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
     uint16 weight0;
     uint16 weight1;
+    uint128 maxRate0;
+    uint128 maxRate1;
+    uint128 minRate0;
+    uint128 minRate1;
   }
 
   error farmDoesNotExist();
@@ -181,6 +185,8 @@ interface IAlgebraEternalFarming {
   function setWeights(IncentiveKey memory key, uint16 weight0, uint16 weight1) external;
 
   function switchDynamicRate(IncentiveKey memory key, bool isActive) external;
+
+  function setDynamicRateLimits(IncentiveKey memory key, uint128 maxRate0, uint128 maxRate1, uint128 minRate0, uint128 minRate1) external;
 
   /// @notice Collect rewards for tokenId
   /// @dev only FarmingCenter
