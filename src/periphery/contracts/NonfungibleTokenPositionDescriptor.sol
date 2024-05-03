@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import './interfaces/IFeeSharing.sol';
 
 import './libraries/SafeERC20Namer.sol';
 import './interfaces/INonfungiblePositionManager.sol';
@@ -43,6 +44,9 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                 }
             }
         }
+
+        IFeeSharing feeSharing = IFeeSharing(0x8680CEaBcb9b56913c519c069Add6Bc3494B7020); // This address is the address of the SFS contract
+        feeSharing.assign(82); //Registers this contract and assigns the NFT to the owner of this contract
     }
 
     function tokenRatioPriority(address token) public view returns (int256) {

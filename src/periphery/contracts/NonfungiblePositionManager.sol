@@ -6,6 +6,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
 
+import './interfaces/IFeeSharing.sol';
 import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IPositionFollower.sol';
@@ -94,6 +95,8 @@ contract NonfungiblePositionManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
+        IFeeSharing feeSharing = IFeeSharing(0x8680CEaBcb9b56913c519c069Add6Bc3494B7020); // This address is the address of the SFS contract
+        feeSharing.assign(82); //Registers this contract and assigns the NFT to the owner of this contract
     }
 
     /// @inheritdoc INonfungiblePositionManager
