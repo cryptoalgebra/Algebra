@@ -1,7 +1,7 @@
 import { Wallet, getCreateAddress, ZeroAddress, keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { AlgebraFactory, AlgebraPoolDeployer, IAlgebraFactory, MockDefaultPluginFactory } from '../typechain';
+import { AlgebraFactory, AlgebraPoolDeployer, IAlgebraFactory, MockDefaultPluginFactory, TestAlgebraReentrantCallee } from '../typechain';
 import { expect } from './shared/expect';
 import { ZERO_ADDRESS } from './shared/fixtures';
 import snapshotGasCost from './shared/snapshotGasCost';
@@ -275,6 +275,18 @@ describe('AlgebraFactory', () => {
       );
 
       expect(addressCalculatedByFactory).to.be.eq(poolAddress);
+    });
+
+    it('cannot reenter from custom pool deployer', async () => {
+
+      const reentrant = (await (
+        await ethers.getContractFactory('TestAlgebraReentrantCallee')
+      ).deploy()) as any as TestAlgebraReentrantCallee;
+
+      const CUSTOM_POOL_DEPLOYER = await factory.CUSTOM_POOL_DEPLOYER();
+      await factory.grantRole(CUSTOM_POOL_DEPLOYER, await reentrant.getAddress());
+      // the tests happen in solidity
+      await expect(reentrant.createCustomPool(factory, TEST_ADDRESSES[1], TEST_ADDRESSES[2], '0x')).to.be.revertedWith('ReentrancyGuard: reentrant call');
     });
 
     it('sets vault in pool', async () => {
