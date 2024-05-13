@@ -148,7 +148,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     }
 
     if (address(vaultFactory) != address(0)) {
-      address vault = vaultFactory.createVaultForPool(pool, creator, address(0), token0, token1);
+      address vault = vaultFactory.createVaultForPool(pool, creator, deployer, token0, token1);
       IAlgebraPool(pool).setCommunityVault(vault);
     }
   }
