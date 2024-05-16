@@ -21,11 +21,13 @@ import '../interfaces/IFarmingCenter.sol';
 import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 
+import '../blast/Blast.sol';
+
 import './EternalVirtualPool.sol';
 
 /// @title Algebra Integral 1.0  eternal (v2-like) farming
 /// @notice Manages rewards and virtual pools
-contract AlgebraEternalFarming is IAlgebraEternalFarming {
+contract AlgebraEternalFarming is IAlgebraEternalFarming, Blast {
   using SafeCast for int256;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for uint128;
@@ -99,7 +101,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
   /// @param _deployer pool deployer contract address
   /// @param _nonfungiblePositionManager the NFT position manager contract address
-  constructor(IAlgebraPoolDeployer _deployer, INonfungiblePositionManager _nonfungiblePositionManager) {
+  constructor(IAlgebraPoolDeployer _deployer, INonfungiblePositionManager _nonfungiblePositionManager) Blast() {
     (deployer, nonfungiblePositionManager) = (_deployer, _nonfungiblePositionManager);
     factory = IAlgebraFactory(_nonfungiblePositionManager.factory());
   }

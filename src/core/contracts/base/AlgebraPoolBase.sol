@@ -15,12 +15,14 @@ import '../libraries/SafeTransfer.sol';
 import '../libraries/Constants.sol';
 import '../libraries/Plugins.sol';
 
+import '../blast/Blast.sol';
+
 import './common/Timestamp.sol';
 
 /// @title Algebra pool base abstract contract
 /// @notice Contains state variables, immutables and common internal functions
 /// @dev Decoupling into a separate abstract contract simplifies testing
-abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
+abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp, Blast {
   using TickManagement for mapping(int24 => TickManagement.Tick);
 
   /// @notice The struct with important state values of pool
@@ -94,7 +96,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     _;
   }
 
-  constructor() {
+  constructor() Blast() {
     address _plugin;
     (_plugin, factory, token0, token1) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);

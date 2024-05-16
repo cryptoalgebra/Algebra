@@ -19,6 +19,8 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
+import './blast/Blast.sol';
+
 /// @title Algebra Integral 1.0 NFT positions
 /// @notice Wraps Algebra positions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -31,7 +33,8 @@ contract NonfungiblePositionManager is
     PoolInitializer,
     LiquidityManagement,
     PeripheryValidation,
-    SelfPermit
+    SelfPermit,
+    Blast
 {
     using PoolInteraction for IAlgebraPool;
 
@@ -92,6 +95,7 @@ contract NonfungiblePositionManager is
     )
         ERC721Permit('Algebra Positions NFT-V2', 'ALGB-POS', '2')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
+        Blast()
     {
         _tokenDescriptor = _tokenDescriptor_;
     }

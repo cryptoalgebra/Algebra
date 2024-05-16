@@ -5,9 +5,11 @@ import './interfaces/IBasePluginV1Factory.sol';
 import './libraries/AdaptiveFee.sol';
 import './AlgebraBasePluginV1.sol';
 
+import './blast/Blast.sol';
+
 /// @title Algebra Integral 1.0 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
-contract BasePluginV1Factory is IBasePluginV1Factory {
+contract BasePluginV1Factory is IBasePluginV1Factory, Blast {
   /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
@@ -28,7 +30,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     _;
   }
 
-  constructor(address _algebraFactory) {
+  constructor(address _algebraFactory) Blast() {
     algebraFactory = _algebraFactory;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
     emit DefaultFeeConfiguration(defaultFeeConfiguration);

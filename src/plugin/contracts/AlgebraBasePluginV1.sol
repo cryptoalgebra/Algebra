@@ -17,9 +17,11 @@ import './libraries/VolatilityOracle.sol';
 import './libraries/AdaptiveFee.sol';
 import './types/AlgebraFeeConfigurationU144.sol';
 
+import './blast/Blast.sol';
+
 /// @title Algebra Integral 1.0 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
+contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin, Blast {
   using Plugins for uint8;
   using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
 
@@ -63,7 +65,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     _;
   }
 
-  constructor(address _pool, address _factory, address _pluginFactory) {
+  constructor(address _pool, address _factory, address _pluginFactory) Blast() {
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 

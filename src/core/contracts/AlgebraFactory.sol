@@ -7,6 +7,7 @@ import './interfaces/IAlgebraFactory.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
+import './blast/Blast.sol';
 
 import './AlgebraCommunityVault.sol';
 
@@ -16,7 +17,7 @@ import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra Integral 1.0
-contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, Blast {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
@@ -49,9 +50,9 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0xf96d2474815c32e070cd63233f06af5413efc5dcb430aee4ff18cc29007c562d;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x9d7a0d0c8a73d193ce75fddc7c27a0da009f272251638342b34b1cfeb6f200d1;
 
-  constructor(address _poolDeployer) {
+  constructor(address _poolDeployer) Blast() {
     require(_poolDeployer != address(0));
     poolDeployer = _poolDeployer;
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;

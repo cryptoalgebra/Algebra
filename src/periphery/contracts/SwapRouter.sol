@@ -15,6 +15,8 @@ import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
 
+import './blast/Blast.sol';
+
 /// @title Algebra Integral 1.0 Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -25,7 +27,8 @@ contract SwapRouter is
     PeripheryValidation,
     PeripheryPaymentsWithFee,
     Multicall,
-    SelfPermit
+    SelfPermit,
+    Blast
 {
     using Path for bytes;
     using SafeCast for uint256;
@@ -41,7 +44,7 @@ contract SwapRouter is
         address _factory,
         address _WNativeToken,
         address _poolDeployer
-    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
+    ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) Blast() {}
 
     /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
     function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {
