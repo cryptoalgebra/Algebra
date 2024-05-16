@@ -10,6 +10,20 @@ interface IAlgebraCustomPoolEntryPoint is IAlgebraPluginFactory {
   /// @return factory The address of AlgebraFactory
   function factory() external view returns (address factory);
 
+  /// @notice Using for custom pools creation
+  /// @param deployer The address of plugin deployer, also used for custom pool address calculation
+  /// @param creator The initiator of custom pool creation
+  /// @param tokenA One of the two tokens in the desired pool
+  /// @param tokenB The other of the two tokens in the desired pool
+  /// @param data The additional data bytes
+  function createCustomPool(
+    address deployer,
+    address creator,
+    address tokenA,
+    address tokenB,
+    bytes calldata data
+  ) external returns (address customPool);
+
   /// @notice Changes the tick spacing value in the Algebra Integral custom pool
   /// @dev Only corresponding custom pool deployer contract can call this function
   /// @param pool The address of the Algebra Integral custom pool

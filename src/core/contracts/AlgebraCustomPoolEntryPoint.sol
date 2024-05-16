@@ -22,6 +22,19 @@ contract AlgebraCustomPoolEntryPoint is IAlgebraCustomPoolEntryPoint {
     factory = _factory;
   }
 
+  /// @inheritdoc IAlgebraCustomPoolEntryPoint
+  function createCustomPool(
+    address deployer,
+    address creator,
+    address tokenA,
+    address tokenB,
+    bytes calldata data
+  ) external override returns (address customPool) {
+    require(msg.sender == deployer, 'Only deployer');
+
+    return IAlgebraFactory(factory).createCustomPool(deployer, creator, tokenA, tokenB, data);
+  }
+
   /// @inheritdoc IAlgebraPluginFactory
   function beforeCreatePoolHook(
     address pool,
