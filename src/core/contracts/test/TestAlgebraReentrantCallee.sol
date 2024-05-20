@@ -6,6 +6,7 @@ import '../libraries/TickMath.sol';
 import '../interfaces/callback/IAlgebraSwapCallback.sol';
 
 import '../interfaces/IAlgebraPool.sol';
+import '../interfaces/IAlgebraFactory.sol';
 
 contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
   bytes4 private constant desiredSelector = bytes4(keccak256(bytes('locked()')));
@@ -97,5 +98,26 @@ contract TestAlgebraReentrantCallee is IAlgebraSwapCallback {
     require(IAlgebraPool(msg.sender).isUnlocked() == false);
 
     require(false, 'Unable to reenter');
+  }
+
+  // factory reentrancy
+  address public factory;
+  address public tokenA;
+  address public tokenB;
+
+  function beforeCreatePoolHook(address, address, address, address, address, bytes calldata data) external returns (address plugin) {
+    plugin = address(0);
+    _createCustomPool(factory, tokenA, tokenB, data);
+  }
+
+  function createCustomPool(address _factory, address _tokenA, address _tokenB, bytes calldata data) external returns (address pool) {
+    factory = _factory;
+    tokenA = _tokenA;
+    tokenB = _tokenB;
+    pool = _createCustomPool(_factory, _tokenA, _tokenB, data);
+  }
+
+  function _createCustomPool(address _factory, address _tokenA, address _tokenB, bytes calldata data) internal returns (address pool) {
+    pool = IAlgebraFactory(_factory).createCustomPool(address(this), msg.sender, _tokenA, _tokenB, data);
   }
 }

@@ -7,6 +7,7 @@ import './AlgebraBasePluginV1.sol';
 
 /// @title Algebra Integral 1.0 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
+/// @dev This plugin factory can only be used for Algebra base pools
 contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');

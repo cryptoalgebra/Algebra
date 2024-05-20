@@ -13,11 +13,12 @@ import './AlgebraCommunityVault.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra Integral 1.0
-contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
 
@@ -96,7 +97,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function createPool(address tokenA, address tokenB) external override returns (address pool) {
+  function createPool(address tokenA, address tokenB) external override nonReentrant returns (address pool) {
     return _createPool(address(0), msg.sender, tokenA, tokenB, '');
   }
 
@@ -107,7 +108,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     address tokenA,
     address tokenB,
     bytes calldata data
-  ) external override returns (address customPool) {
+  ) external override nonReentrant returns (address customPool) {
     require(hasRole(CUSTOM_POOL_DEPLOYER, msg.sender), 'Can`t create custom pools');
     return _createPool(deployer, creator, tokenA, tokenB, data);
   }
@@ -148,7 +149,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     }
 
     if (address(vaultFactory) != address(0)) {
-      address vault = vaultFactory.createVaultForPool(pool, creator, address(0), token0, token1);
+      address vault = vaultFactory.createVaultForPool(pool, creator, deployer, token0, token1);
       IAlgebraPool(pool).setCommunityVault(vault);
     }
   }
