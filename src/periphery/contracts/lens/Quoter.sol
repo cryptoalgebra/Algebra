@@ -14,7 +14,7 @@ import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 
-/// @title Algebra Integral 1.0 Quoter
+/// @title Algebra Integral 1.1 Quoter
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
