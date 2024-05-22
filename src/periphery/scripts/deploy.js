@@ -2,6 +2,7 @@ const hre = require('hardhat');
 const fs = require('fs');
 const path = require('path');
 const { ethers } = require('ethers');
+const AlgebraFactoryComplied = require('@cryptoalgebra/integral-core/artifacts/contracts/AlgebraFactory.sol/AlgebraFactory.json');
 
 async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
@@ -13,6 +14,19 @@ async function main() {
   const ProxyAdmin = signers[0].address;
 
   deploysData.wrapped = WNativeTokenAddress;
+
+  const entryPointFactory = await hre.ethers.getContractFactory('AlgebraCustomPoolEntryPoint')
+  const entryPoint = await entryPointFactory.deploy(deploysData.factory)
+
+  await entryPoint.waitForDeployment()
+
+  deploysData.entryPoint = entryPoint.target
+  console.log('EntryPoint deployed to:', entryPoint.target)
+
+  const factory = await hre.ethers.getContractAt(AlgebraFactoryComplied.abi, deploysData.factory)
+
+  await factory.grantRole("0xc9cf812513d9983585eb40fcfe6fd49fbb6a45815663ec33b30a6c6c7de3683b", entryPoint.target);
+  await factory.grantRole("0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442", entryPoint.target);
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens');
   const TickLens = await TickLensFactory.deploy();
