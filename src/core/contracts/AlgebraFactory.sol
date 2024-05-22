@@ -4,6 +4,7 @@ pragma solidity =0.8.20;
 import './libraries/Constants.sol';
 
 import './interfaces/IAlgebraFactory.sol';
+import './interfaces/IAlgebraPool.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
@@ -12,13 +13,17 @@ import './AlgebraCommunityVault.sol';
 
 import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
-/// @dev Version: Algebra Integral 1.0
-contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable {
+/// @dev Version: Algebra Integral 1.1
+contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
+
+  /// @inheritdoc IAlgebraFactory
+  bytes32 public constant override CUSTOM_POOL_DEPLOYER = keccak256('CUSTOM_POOL_DEPLOYER');
 
   /// @inheritdoc IAlgebraFactory
   address public immutable override poolDeployer;
@@ -48,8 +53,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   mapping(address => mapping(address => address)) public override poolByPair;
 
   /// @inheritdoc IAlgebraFactory
+  mapping(address => mapping(address => mapping(address => address))) public override customPoolByPair;
+
+  /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0xf96d2474815c32e070cd63233f06af5413efc5dcb430aee4ff18cc29007c562d;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x4b9e4a8044ce5695e06fce9421a63b6f5c3db8a561eebb30ea4c775469e36eaf;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -72,13 +80,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function defaultConfigurationForPool(
-    address pool
-  ) external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee, address communityVault) {
-    if (address(vaultFactory) != address(0)) {
-      communityVault = vaultFactory.getVaultForPool(pool);
-    }
-    return (defaultCommunityFee, defaultTickspacing, defaultFee, communityVault);
+  function defaultConfigurationForPool() external view override returns (uint16 communityFee, int24 tickSpacing, uint16 fee) {
+    return (defaultCommunityFee, defaultTickspacing, defaultFee);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -87,25 +90,67 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function createPool(address tokenA, address tokenB) external override returns (address pool) {
+  function computeCustomPoolAddress(address deployer, address token0, address token1) public view override returns (address customPool) {
+    customPool = address(
+      uint160(uint256(keccak256(abi.encodePacked(hex'ff', poolDeployer, keccak256(abi.encode(deployer, token0, token1)), POOL_INIT_CODE_HASH))))
+    );
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function createPool(address tokenA, address tokenB) external override nonReentrant returns (address pool) {
+    return _createPool(address(0), msg.sender, tokenA, tokenB, '');
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function createCustomPool(
+    address deployer,
+    address creator,
+    address tokenA,
+    address tokenB,
+    bytes calldata data
+  ) external override nonReentrant returns (address customPool) {
+    require(hasRole(CUSTOM_POOL_DEPLOYER, msg.sender), 'Can`t create custom pools');
+    return _createPool(deployer, creator, tokenA, tokenB, data);
+  }
+
+  function _createPool(address deployer, address creator, address tokenA, address tokenB, bytes memory data) private returns (address pool) {
     require(tokenA != tokenB);
     (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
     require(token0 != address(0));
-    require(poolByPair[token0][token1] == address(0));
 
-    address defaultPlugin;
-    if (address(defaultPluginFactory) != address(0)) {
-      defaultPlugin = defaultPluginFactory.createPlugin(computePoolAddress(token0, token1), token0, token1);
+    mapping(address => mapping(address => address)) storage _poolByPair = deployer == address(0) ? poolByPair : customPoolByPair[deployer];
+    require(_poolByPair[token0][token1] == address(0));
+
+    address plugin;
+    if (deployer == address(0)) {
+      if (address(defaultPluginFactory) != address(0)) {
+        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, '');
+      }
+    } else {
+      plugin = IAlgebraPluginFactory(msg.sender).beforeCreatePoolHook(
+        computeCustomPoolAddress(deployer, token0, token1),
+        creator,
+        deployer,
+        token0,
+        token1,
+        data
+      );
     }
 
-    pool = IAlgebraPoolDeployer(poolDeployer).deploy(defaultPlugin, token0, token1);
+    pool = IAlgebraPoolDeployer(poolDeployer).deploy(plugin, token0, token1, deployer);
 
-    poolByPair[token0][token1] = pool; // to avoid future addresses comparison we are populating the mapping twice
-    poolByPair[token1][token0] = pool;
-    emit Pool(token0, token1, pool);
+    _poolByPair[token0][token1] = pool;
+    _poolByPair[token1][token0] = pool;
+
+    if (deployer == address(0)) {
+      emit Pool(token0, token1, pool);
+    } else {
+      emit CustomPool(deployer, token0, token1, pool);
+    }
 
     if (address(vaultFactory) != address(0)) {
-      vaultFactory.createVaultForPool(pool);
+      address vault = vaultFactory.createVaultForPool(pool, creator, deployer, token0, token1);
+      IAlgebraPool(pool).setCommunityVault(vault);
     }
   }
 

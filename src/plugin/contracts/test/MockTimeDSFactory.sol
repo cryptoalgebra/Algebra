@@ -31,7 +31,7 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
   }
 
   /// @inheritdoc IAlgebraPluginFactory
-  function createPlugin(address pool, address, address) external override returns (address) {
+  function beforeCreatePoolHook(address pool, address, address, address, address, bytes calldata) external override returns (address) {
     return _createPlugin(pool);
   }
 

@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "keywords": [
     "algebra"
   ],
@@ -34,7 +34,7 @@
   },
   "engines": {
     "npm": ">=8.0.0",
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.9.3"

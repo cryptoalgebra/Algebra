@@ -147,12 +147,8 @@ describe('AlgebraPool', () => {
       await expect(pool.initialize(2n ** 160n - 1n)).to.be.revertedWithCustomError(pool, 'priceOutOfRange');
     });
     it('fails if community fee nonzero without vault', async () => {
-      const _factory = await ethers.getContractFactory('FaultyVaultFactoryStub');
-      const faultyVaultFactory = await _factory.deploy(ZeroAddress);
-
       await factory.setDefaultCommunityFee(100);
-      await factory.setVaultFactory(faultyVaultFactory);
-
+      await pool.setCommunityVault(ZeroAddress);
       await expect(pool.initialize(MIN_SQRT_RATIO)).to.be.revertedWithCustomError(pool, 'invalidNewCommunityFee');
     });
     it('can be initialized at MIN_SQRT_RATIO', async () => {
@@ -2879,6 +2875,144 @@ describe('AlgebraPool', () => {
         await expect(pool.setFee(20000)).to.be.revertedWithCustomError(pool, 'dynamicFeeActive');
       });
     });
+
+    describe('#sync', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+      });
+
+      it('cannot call if not plugin', async () => {
+        await expect(pool.sync()).to.be.revertedWithCustomError(pool, 'notAllowed');
+      });
+
+      it('can call without excess tokens', async () => {
+        await pool.setPlugin(wallet);
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+        await pool.sync();
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1);
+        const reservesAfter = await pool.getReserves();
+        expect(reserves[0]).to.be.eq(reservesAfter[0]);
+        expect(reserves[1]).to.be.eq(reservesAfter[1]);
+      });
+
+      it('can sync excess tokens', async () => {
+        await pool.setPlugin(wallet);
+        await token0.transfer(pool, 100000);
+        await token1.transfer(pool, 100000);
+
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+        await pool.sync();
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1);
+        const reservesAfter = await pool.getReserves();
+        expect(reservesAfter[0]).to.be.eq(reserves[0] + 100000n);
+        expect(reservesAfter[1]).to.be.eq(reserves[1] + 100000n);
+      });
+    });
+
+    describe('#skim', () => {
+      beforeEach('initialize the pool', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+      });
+
+      it('cannot call if not plugin', async () => {
+        await expect(pool.skim()).to.be.revertedWithCustomError(pool, 'notAllowed');
+      });
+
+      it('can call without excess tokens', async () => {
+        await pool.setPlugin(wallet);
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+        await expect(pool.skim()).to.not.emit(pool, 'Skim');
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1);
+        const reservesAfter = await pool.getReserves();
+        expect(reserves[0]).to.be.eq(reservesAfter[0]);
+        expect(reserves[1]).to.be.eq(reservesAfter[1]);
+      });
+
+      it('can skim excess tokens', async () => {
+        await pool.setPlugin(wallet);
+        const amount0 = 1000000n;
+        const amount1 = 1000010n;
+        await token0.transfer(pool, amount0);
+        await token1.transfer(pool, amount1);
+
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+
+        const walletBalance0Before = await token0.balanceOf(wallet.address);
+        const walletBalance1Before = await token1.balanceOf(wallet.address);
+        await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, amount0, amount1);
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0 - amount0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1 - amount1);
+        const reservesAfter = await pool.getReserves();
+        expect(reservesAfter[0]).to.be.eq(reserves[0]);
+        expect(reservesAfter[1]).to.be.eq(reserves[1]);
+
+        expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before + amount0);
+        expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before + amount1);
+      });
+
+      it('can skim excess token0 only', async () => {
+        await pool.setPlugin(wallet);
+        const amount0 = 1000000n;
+        await token0.transfer(pool, amount0);
+
+        const balance0 = await token0.balanceOf(pool);
+        const balance1 = await token1.balanceOf(pool);
+        const reserves = await pool.getReserves();
+
+        const walletBalance0Before = await token0.balanceOf(wallet.address);
+        const walletBalance1Before = await token1.balanceOf(wallet.address);
+        await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, amount0, 0n);
+
+        expect(await token0.balanceOf(pool)).to.be.eq(balance0 - amount0);
+        expect(await token1.balanceOf(pool)).to.be.eq(balance1);
+        const reservesAfter = await pool.getReserves();
+        expect(reservesAfter[0]).to.be.eq(reserves[0]);
+        expect(reservesAfter[1]).to.be.eq(reserves[1]);
+
+        expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before + amount0);
+        expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before);
+      });
+    });
+
+    it('can skim excess token1 only', async () => {
+      await pool.setPlugin(wallet);
+      const amount1 = 1000010n;
+      await token1.transfer(pool, amount1);
+
+      const balance0 = await token0.balanceOf(pool);
+      const balance1 = await token1.balanceOf(pool);
+      const reserves = await pool.getReserves();
+
+      const walletBalance0Before = await token0.balanceOf(wallet.address);
+      const walletBalance1Before = await token1.balanceOf(wallet.address);
+      await expect(pool.skim()).to.emit(pool, 'Skim').withArgs(wallet.address, 0n, amount1);
+
+      expect(await token0.balanceOf(pool)).to.be.eq(balance0);
+      expect(await token1.balanceOf(pool)).to.be.eq(balance1 - amount1);
+      const reservesAfter = await pool.getReserves();
+      expect(reservesAfter[0]).to.be.eq(reserves[0]);
+      expect(reservesAfter[1]).to.be.eq(reserves[1]);
+
+      expect(await token0.balanceOf(wallet.address)).to.be.eq(walletBalance0Before);
+      expect(await token1.balanceOf(wallet.address)).to.be.eq(walletBalance1Before + amount1);
+    });
   });
 
   describe('#lock', () => {
@@ -2892,6 +3026,7 @@ describe('AlgebraPool', () => {
         await ethers.getContractFactory('TestAlgebraReentrantCallee')
       ).deploy()) as any as TestAlgebraReentrantCallee;
 
+      await pool.setPlugin(reentrant);
       // the tests happen in solidity
       await expect(reentrant.swapToReenter(pool)).to.be.revertedWith('Unable to reenter');
     });

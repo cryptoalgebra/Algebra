@@ -8,7 +8,7 @@ import './AlgebraPool.sol';
 
 /// @title Algebra pool deployer
 /// @notice Is used by AlgebraFactory to deploy pools
-/// @dev Version: Algebra Integral 1.0
+/// @dev Version: Algebra Integral 1.1
 contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
@@ -28,11 +28,17 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function deploy(address plugin, address token0, address token1) external override returns (address pool) {
+  function deploy(address plugin, address token0, address token1, address deployer) external override returns (address pool) {
     require(msg.sender == factory);
 
     _writeToCache(plugin, token0, token1);
-    pool = address(new AlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
+    bytes memory _encodedParams;
+    if (deployer == address(0)) {
+      _encodedParams = abi.encode(token0, token1);
+    } else {
+      _encodedParams = abi.encode(deployer, token0, token1);
+    }
+    pool = address(new AlgebraPool{salt: keccak256(_encodedParams)}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
   }
 

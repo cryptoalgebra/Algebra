@@ -9,7 +9,7 @@ import './MockPoolPlugin.sol';
 contract MockDefaultPluginFactory is IAlgebraPluginFactory {
   mapping(address => address) public pluginsForPools;
 
-  function createPlugin(address pool, address, address) external override returns (address plugin) {
+  function beforeCreatePoolHook(address pool, address, address, address, address, bytes calldata) external override returns (address plugin) {
     plugin = address(new MockPoolPlugin(pool));
     pluginsForPools[pool] = plugin;
   }

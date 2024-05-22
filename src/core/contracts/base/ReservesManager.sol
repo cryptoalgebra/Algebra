@@ -49,8 +49,20 @@ abstract contract ReservesManager is AlgebraPoolBase {
       unchecked {
         if (hasExcessToken0) totalFeeGrowth0Token += FullMath.mulDiv(balance0 - _reserve0, Constants.Q128, _liquidity);
         if (hasExcessToken1) totalFeeGrowth1Token += FullMath.mulDiv(balance1 - _reserve1, Constants.Q128, _liquidity);
+        emit ExcessTokens(balance0 - _reserve0, balance1 - _reserve1);
         (reserve0, reserve1) = (uint128(balance0), uint128(balance1));
       }
+    }
+  }
+
+  /// @notice Forces reserves to match balances. Excess of tokens will be sent to `receiver`
+  function _skimReserves(address receiver) internal {
+    (uint256 balance0, uint256 balance1) = (_balanceToken0(), _balanceToken1());
+    (uint128 _reserve0, uint128 _reserve1) = (reserve0, reserve1);
+    if (balance0 > _reserve0 || balance1 > _reserve1) {
+      if (balance0 > _reserve0) _transfer(token0, receiver, balance0 - _reserve0);
+      if (balance1 > _reserve1) _transfer(token1, receiver, balance1 - _reserve1);
+      emit Skim(receiver, balance0 - _reserve0, balance1 - _reserve1);
     }
   }
 

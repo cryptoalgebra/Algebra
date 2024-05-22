@@ -14,10 +14,19 @@ import {
   abi as POOL_ABI,
   bytecode as POOL_BYTECODE,
 } from '@cryptoalgebra/integral-core/artifacts/contracts/test/MockTimeAlgebraPool.sol/MockTimeAlgebraPool.json';
+import {
+  abi as COM_VAULT_DEPLOYER_ABI,
+  bytecode as COM_VAULT_DEPLOYER_BYTECODE,
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraCommunityVault.sol/AlgebraCommunityVault.json';
+import {
+  abi as COM_VAULT_STUB_DEPLOYER_ABI,
+  bytecode as COM_VAULT_STUB_DEPLOYER_BYTECODE,
+} from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraVaultFactoryStub.sol/AlgebraVaultFactoryStub.json';
 
 import { ethers } from 'hardhat';
 import {
   MockTimeAlgebraPoolDeployer,
+  AlgebraCommunityVault,
   TestAlgebraCallee,
   MockTimeAlgebraPool,
   AlgebraFactory,
@@ -65,6 +74,17 @@ export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixtu
 
   const poolDeployerFactory = await ethers.getContractFactory(POOL_DEPLOYER_ABI, POOL_DEPLOYER_BYTECODE);
   const poolDeployer = (await poolDeployerFactory.deploy()) as any as MockTimeAlgebraPoolDeployer;
+
+  const ADMIN_ROLE = await factory.POOLS_ADMINISTRATOR_ROLE();
+  await factory.grantRole(ADMIN_ROLE, poolDeployer);
+
+  const vaultFactory = await ethers.getContractFactory(COM_VAULT_DEPLOYER_ABI, COM_VAULT_DEPLOYER_BYTECODE);
+  const vault = (await vaultFactory.deploy(factory, deployer.address)) as any as AlgebraCommunityVault;
+
+  const vaultFactoryStubFactory = await ethers.getContractFactory(COM_VAULT_STUB_DEPLOYER_ABI, COM_VAULT_STUB_DEPLOYER_BYTECODE);
+  const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
+
+  await factory.setVaultFactory(vaultFactoryStub);
 
   const calleeContractFactory = await ethers.getContractFactory(TEST_CALLEE_ABI, TEST_CALLEE_BYTECODE);
   const swapTargetCallee = (await calleeContractFactory.deploy()) as any as TestAlgebraCallee;

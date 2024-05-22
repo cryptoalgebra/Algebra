@@ -6,7 +6,7 @@ import '@cryptoalgebra/integral-core/contracts/libraries/TickTree.sol';
 
 import '../interfaces/ITickLens.sol';
 
-/// @title Algebra Integral 1.0 Tick Lens contract
+/// @title Algebra Integral 1.1 Tick Lens contract
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 contract TickLens is ITickLens {

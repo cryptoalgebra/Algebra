@@ -12,7 +12,7 @@ import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmin
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';
 
-/// @title Algebra Integral 1.0 main farming contract
+/// @title Algebra Integral 1.1 main farming contract
 /// @dev Manages farmings and performs entry, exit and other actions.
 contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   /// @inheritdoc IFarmingCenter
@@ -136,7 +136,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @dev checks input params and fetches corresponding Algebra Integral pool
-  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal returns (IAlgebraPool pool) {
+  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal view returns (IAlgebraPool pool) {
     require(msg.sender == address(eternalFarming), 'Only farming can call this');
     require(virtualPool != address(0), 'Zero address as virtual pool');
     pool = IAlgebraPool(plugin.pool());

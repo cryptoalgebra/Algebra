@@ -2,6 +2,8 @@
 pragma solidity =0.8.20;
 
 import '../interfaces/IAlgebraPoolDeployer.sol';
+import '../interfaces/IAlgebraFactory.sol';
+import '../interfaces/vault/IAlgebraVaultFactory.sol';
 
 import './MockTimeAlgebraPool.sol';
 
@@ -31,6 +33,10 @@ contract MockTimeAlgebraPoolDeployer {
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
     emit PoolDeployed(pool);
+
+    IAlgebraVaultFactory _vaultFactory = IAlgebraFactory(_factory).vaultFactory();
+    address _vault = _vaultFactory.getVaultForPool(pool);
+    IAlgebraPool(pool).setCommunityVault(_vault);
   }
 
   /// @notice Deterministically computes the pool address given the factory and PoolKey

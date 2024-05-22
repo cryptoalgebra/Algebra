@@ -5,8 +5,9 @@ import './interfaces/IBasePluginV1Factory.sol';
 import './libraries/AdaptiveFee.sol';
 import './AlgebraBasePluginV1.sol';
 
-/// @title Algebra Integral 1.0 default plugin factory
+/// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
+/// @dev This plugin factory can only be used for Algebra base pools
 contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
@@ -35,7 +36,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   }
 
   /// @inheritdoc IAlgebraPluginFactory
-  function createPlugin(address pool, address, address) external override returns (address) {
+  function beforeCreatePoolHook(address pool, address, address, address, address, bytes calldata) external override returns (address) {
     require(msg.sender == algebraFactory);
     return _createPlugin(pool);
   }
