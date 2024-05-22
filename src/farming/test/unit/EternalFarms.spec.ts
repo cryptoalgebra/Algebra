@@ -2135,7 +2135,7 @@ describe('unit/EternalFarms', () => {
 
         await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, amountDesired, amountDesired)).to.be.revertedWithCustomError(
           context.eternalFarming,
-          'invalidTokenAmount'
+          'STF'
         );
       });
 
