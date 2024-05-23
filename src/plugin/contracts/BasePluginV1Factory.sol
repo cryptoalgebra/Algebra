@@ -2,8 +2,14 @@
 pragma solidity =0.8.20;
 
 import './interfaces/IBasePluginV1Factory.sol';
+import './interfaces/IAlgebraModuleFactory.sol';
+import './base/AlgebraModuleFactory.sol';
 import './libraries/AdaptiveFee.sol';
 import './AlgebraBasePluginV1.sol';
+
+import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/AlgebraModularHub.sol';
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
 
 /// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
@@ -16,23 +22,24 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   address public immutable override algebraFactory;
 
   /// @inheritdoc IBasePluginV1Factory
-  AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
-
-  /// @inheritdoc IBasePluginV1Factory
-  address public override farmingAddress;
-
-  /// @inheritdoc IBasePluginV1Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
+
+  mapping(uint256 factoryIndex => address factoryAddress) public factoryByIndex;
+  uint256 public factoriesCounter;
 
   modifier onlyAdministrator() {
     require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'Only administrator');
     _;
   }
 
-  constructor(address _algebraFactory) {
+  constructor(address _algebraFactory, address _dynamicFeeModuleFactory, address _farmingModuleFactory, address _oracleModuleFactory) {
     algebraFactory = _algebraFactory;
-    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
-    emit DefaultFeeConfiguration(defaultFeeConfiguration);
+
+    factoryByIndex[0] = _oracleModuleFactory;
+    factoryByIndex[1] = _dynamicFeeModuleFactory;
+    factoryByIndex[2] = _farmingModuleFactory;
+    
+    factoriesCounter = 3;
   }
 
   /// @inheritdoc IAlgebraPluginFactory
@@ -54,23 +61,24 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
-    IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
-    volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
-    pluginByPool[pool] = address(volatilityOracle);
-    return address(volatilityOracle);
-  }
 
-  /// @inheritdoc IBasePluginV1Factory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
-    AdaptiveFee.validateFeeConfiguration(newConfig);
-    defaultFeeConfiguration = newConfig;
-    emit DefaultFeeConfiguration(newConfig);
-  }
+    AlgebraModularHub modularHub = new AlgebraModularHub(pool, algebraFactory);
 
-  /// @inheritdoc IBasePluginV1Factory
-  function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
-    require(farmingAddress != newFarmingAddress);
-    farmingAddress = newFarmingAddress;
-    emit FarmingAddress(newFarmingAddress);
+    IAlgebraPool(pool).setPlugin(address(modularHub));
+
+    for (uint256 i = 0; i < factoriesCounter; ++i) {
+      address moduleFactoryAddress = factoryByIndex[i];
+      address moduleAddress = IAlgebraModuleFactory(moduleFactoryAddress).deploy(address(modularHub));
+
+      uint256 globalModuleIndex = modularHub.registerModule(moduleAddress);
+      InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(globalModuleIndex);
+
+      modularHub.insertModulesToHookLists(insertModuleParams);
+    }
+
+    IAlgebraPool(pool).setPluginConfig(uint8(Plugins.DYNAMIC_FEE));
+
+    pluginByPool[pool] = address(modularHub);
+    return address(modularHub);
   }
 }

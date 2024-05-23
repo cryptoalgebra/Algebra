@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture, reset as resetNetwork } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool } from '../../core/typechain';
-import { MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
+import { AlgebraFactory, MockTimeAlgebraPool } from '../../core/typechain';
+import { AlgebraModularHub, FarmingModule, FarmingModuleFactory, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeDynamicFeeModule, MockTimeOracleModule, MockTimeVirtualPool } from '../typechain';
 import { expect } from './shared/expect';
 
 import { algebraPoolDeployerMockFixture } from './shared/externalFixtures';
@@ -41,21 +41,37 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   async function gasTestFixture() {
     const fix = await algebraPoolDeployerMockFixture();
     const pool = await fix.createPool();
+    const farmingModuleFactory = fix.farmingModuleFactory;
 
     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory)) as any as MockTimeDSFactory;
+    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory, fix.dynamicFeeModuleFactory, fix.farmingModuleFactory, fix.mockTimeOracleModuleFactory)) as any as MockTimeDSFactory;
 
+    await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), mockPluginFactory);
+    await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), mockPluginFactory);
+    
     await mockPluginFactory.beforeCreatePoolHook(pool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
     const pluginAddress = await mockPluginFactory.pluginByPool(pool);
 
-    const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV1');
-    const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeAlgebraBasePluginV1;
+    const mockDSOperatorFactory = await ethers.getContractFactory('AlgebraModularHub');
+    const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as AlgebraModularHub;
 
-    await pool.setPlugin(plugin);
+    const mockTimeOracleModuleAddress = await plugin.modules(1);
+    const dynamicFeeModuleAddress = await plugin.modules(2);
+    const farmingModuleAddress = await plugin.modules(3);
+  
+    const mockTimeOracleModuleFactory_ethers = await ethers.getContractFactory('MockTimeOracleModule');
+    const mockOracleModule = mockTimeOracleModuleFactory_ethers.attach(mockTimeOracleModuleAddress) as any as MockTimeOracleModule;
+  
+    const mockTimeDynamicFeeModule_ethers = await ethers.getContractFactory('MockTimeDynamicFeeModule');
+    const mockDynamicFeeModule = mockTimeDynamicFeeModule_ethers.attach(dynamicFeeModuleAddress) as any as MockTimeDynamicFeeModule;
+  
+    const farmingModuleFactory_ethers = await ethers.getContractFactory('FarmingModule');
+    const mockFarmingModule = farmingModuleFactory_ethers.attach(farmingModuleAddress) as any as FarmingModule;
 
     const advanceTime = async (secs: any) => {
       await pool.advanceTime(secs);
-      await plugin.advanceTime(secs);
+      await mockOracleModule.advanceTime(secs);
+      await mockDynamicFeeModule.advanceTime(secs);
     };
 
     const { swapExact0For1, swapExact1For0, swapToHigherPrice, mint, swapToLowerPrice } = createPoolFunctions({
@@ -86,6 +102,10 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       plugin,
       virtualPoolMock,
       mockPluginFactory,
+      mockOracleModule,
+      mockDynamicFeeModule,
+      mockFarmingModule,
+      farmingModuleFactory,
       swapExact0For1,
       swapExact1For0,
       mint,
@@ -98,9 +118,13 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
   let swapExact1For0: SwapFunction;
   let swapToHigherPrice: SwapToPriceFunction;
   let pool: MockTimeAlgebraPool;
-  let plugin: MockTimeAlgebraBasePluginV1;
+  let plugin: AlgebraModularHub;
   let virtualPoolMock: MockTimeVirtualPool;
   let mockPluginFactory: MockTimeDSFactory;
+  let mockOracleModule: MockTimeOracleModule;
+  let mockDynamicFeeModule: MockTimeDynamicFeeModule;
+  let mockFarmingModule: FarmingModule;
+  let farmingModuleFactory: FarmingModuleFactory;
   let mint: MintFunction;
   let advanceTime: any;
 
@@ -122,7 +146,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       };
 
       beforeEach('load the fixture', async () => {
-        ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mint, swapToHigherPrice } =
+        ({ advanceTime, swapExact0For1, swapExact1For0, pool, plugin, virtualPoolMock, mockPluginFactory, mockOracleModule, mockDynamicFeeModule,
+          mockFarmingModule, farmingModuleFactory, mint, swapToHigherPrice } =
           await loadFixture(gasTestCommunityFeeFixture));
       });
 
@@ -155,7 +180,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           });
 
           it('first swap in block with no tick movement, static fee', async () => {
-            await plugin.changeFeeConfiguration({
+            await mockDynamicFeeModule.changeFeeConfiguration({
               alpha1: 0,
               alpha2: 0,
               beta1: 0,
@@ -287,8 +312,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
         describe('farming connected', async () => {
           beforeEach('connect virtual pool', async () => {
-            await mockPluginFactory.setFarmingAddress(wallet);
-            await plugin.connect(wallet).setIncentive(virtualPoolMock);
+            await farmingModuleFactory.setFarmingAddress(wallet);
+            await mockFarmingModule.connect(wallet).setIncentive(virtualPoolMock);
           });
 
           it('first swap in block with no tick movement', async () => {
@@ -457,7 +482,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
             tick: startingTick + i - j,
           });
         }
-        await fix.plugin.batchUpdate(batch);
+        await fix.mockOracleModule.batchUpdate(batch);
       }
       await fix.pool.advanceTime(summaryTimeDelta);
 
@@ -475,7 +500,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         describe(isDynamicFee ? 'dynamic fee' : 'static fee', async () => {
           beforeEach(async () => {
             if (!isDynamicFee) {
-              await plugin.changeFeeConfiguration({
+              await mockDynamicFeeModule.changeFeeConfiguration({
                 alpha1: 0,
                 alpha2: 0,
                 beta1: 0,

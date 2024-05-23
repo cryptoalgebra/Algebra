@@ -32,8 +32,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @inheritdoc IAlgebraPlugin
   uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
-  /// @inheritdoc IFarmingPlugin
-  address public immutable override pool;
+  address public immutable pool;
   address private immutable factory;
   address private immutable pluginFactory;
 
@@ -183,12 +182,12 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     bool toConnect = newIncentive != address(0);
     bool accessAllowed;
     if (toConnect) {
-      accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+      // accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
     } else {
       // we allow the one who connected the incentive to disconnect it,
       // even if he no longer has the rights to connect incentives
       if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
-      if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+      // if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
     }
     require(accessAllowed, 'Not allowed to set incentive');
 
@@ -317,4 +316,22 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
       IAlgebraPool(pool).setFee(newFee);
     }
   }
+
+  function getCurrentAverageVolatility() external view override returns (uint88) {
+        uint16 lastIndex = timepointIndex;
+
+        uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+        (, int24 tick, , ) = _getPoolState();
+
+        return timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+    }
+
+    function getAverageVolatilityAtLastTimepoint(
+        uint32 currentTime,
+        int24 tick,
+        uint16 lastIndex,
+        uint16 oldestIndex
+    ) external view override returns (uint88) {
+        return timepoints.getAverageVolatility(currentTime, tick, lastIndex, oldestIndex);
+    }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
+import '../../libraries/VolatilityOracle.sol';
+
 /// @title The interface for the Algebra volatility oracle
 /// @dev This contract stores timepoints and calculates statistical averages
 interface IVolatilityOracle {
@@ -64,4 +66,7 @@ interface IVolatilityOracle {
   /// @param startIndex The start index, must be not initialized
   /// @param amount of slots to fill, startIndex + amount must be <= type(uint16).max
   function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external;
+
+  function getCurrentAverageVolatility() external view returns (uint88);
+  function getAverageVolatilityAtLastTimepoint(uint32 currentTime, int24 tick, uint16 lastIndex, uint16 oldestIndex) external view returns (uint88);
 }

@@ -13,6 +13,8 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolPermi
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
 contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlgebraPoolState {
   struct GlobalState {
@@ -50,6 +52,8 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
+
+  address public pluginFactory;
 
   address public override communityVault;
 
@@ -209,20 +213,30 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     tickSpacing = newTickSpacing;
   }
 
+  function setOwner(address newOwner) external {
+    owner = newOwner;
+  }
+
+  function setPluginFactory(address newPluginFactory) external {
+    require(msg.sender == owner);
+    pluginFactory = newPluginFactory;
+  }
+
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPlugin(address newPluginAddress) external override {
-    require(msg.sender == owner);
+    require(msg.sender == owner || msg.sender == pluginFactory);
     plugin = newPluginAddress;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override {
-    require(msg.sender == owner || msg.sender == plugin);
+    require(msg.sender == owner || msg.sender == plugin || msg.sender == pluginFactory);
     globalState.pluginConfig = newConfig;
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
+    // console.log(msg.sender, owner, plugin); // plugin
     require(msg.sender == owner || msg.sender == plugin);
     bool isDynamicFeeEnabled = globalState.pluginConfig & uint8(Plugins.DYNAMIC_FEE) != 0;
 
