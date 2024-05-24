@@ -13,6 +13,18 @@ interface IDynamicFeeManager is IAlgebraDynamicFeePlugin {
   /// @dev See the AdaptiveFee struct for more details
   event FeeConfiguration(AlgebraFeeConfiguration feeConfig);
 
+  /// @notice Returns address of oracle module
+  /// @return Address of oracle module, which is connected to the same pool
+  function oracleModule() external view returns (address);
+
+  /// @notice Returns address of AlgebraFactory
+  /// @return Address of AlgebraFactory
+  function factory() external view returns (address);
+
+  /// @notice Returns address of plugin factory (BasePluginV1Factory now)
+  /// @return Address of plugin factory
+  function pluginFactory() external view returns (address);
+
   /// @notice Current dynamic fee configuration
   /// @dev See the AdaptiveFee struct for more details
   function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);

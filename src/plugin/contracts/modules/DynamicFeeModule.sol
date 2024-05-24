@@ -18,31 +18,33 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/VolatilityOracle.sol';
 
-// DEV
-import 'hardhat/console.sol';
-import './OracleModule.sol';
-
 contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
-    string public override constant MODULE_NAME = 'Dynamic Fee';
-
     using Plugins for uint8;
     using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
 
     uint256 internal constant UINT16_MODULO = 65536;
     using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
+    /// @inheritdoc AlgebraModule
+    string public override constant MODULE_NAME = 'Dynamic Fee';
+
+    /// @inheritdoc AlgebraModule
     uint8 public override constant DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
     /// @dev The role can be granted in AlgebraFactory
     bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
-    address private immutable factory;
-    address private immutable pluginFactory;
+    /// @inheritdoc	IDynamicFeeManager
+    address public immutable override oracleModule;
+
+    /// @inheritdoc	IDynamicFeeManager
+    address public immutable override factory;
+
+    /// @inheritdoc	IDynamicFeeManager
+    address public immutable override pluginFactory;
 
     /// @dev AlgebraFeeConfiguration struct packed in uint144
     AlgebraFeeConfigurationU144 private _feeConfig;
-
-    address public immutable oracleModule;
 
     constructor(address _factory, address _pluginFactory, address _oracleModule, address _modularHub) AlgebraModule(_modularHub) {
         (factory, pluginFactory, oracleModule) = (_factory, _pluginFactory, _oracleModule);
@@ -86,7 +88,7 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
         baseFee = _feeConfig.baseFee();
     }
 
-    function _getPoolState(address pool) internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
         (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
     }
 
@@ -98,15 +100,14 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
     }
 
     function _beforeSwap(
-        bytes memory params,
+        bytes memory /* params */,
         uint16 /* poolFeeCache */
     ) internal view override {
-        BeforeSwapParams memory decodedParams = abi.decode(params, (BeforeSwapParams));
-        uint16 newFee = _getNewFee(decodedParams.pool);
+        uint16 newFee = _getNewFee();
         ModuleUtils.returnDynamicFeeResult(newFee, false);
     }
 
-    function _getNewFee(address pool) internal view returns (uint16 newFee) {
+    function _getNewFee() internal view returns (uint16 newFee) {
         uint16 lastTimepointIndex = IVolatilityOracle(oracleModule).timepointIndex();
         
         uint16 lastTimepointIndexOutsideCurrentBlock;
@@ -125,7 +126,7 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
 
         oldestTimepointIndex = initialized ? oldestTimepointIndex : 0;
 
-        (, int24 tick, uint16 fee, ) = _getPoolState(pool);
+        (, int24 tick, uint16 fee, ) = _getPoolState();
 
         newFee = lastTimepointTimestampOutsideCurrentBlock != _blockTimestamp() ? _getFeeAtLastTimepoint(lastTimepointIndex, oldestTimepointIndex, tick, _feeConfig) : fee;
     }

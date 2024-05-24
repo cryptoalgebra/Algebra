@@ -5,7 +5,6 @@ import './interfaces/IBasePluginV1Factory.sol';
 import './interfaces/IAlgebraModuleFactory.sol';
 import './base/AlgebraModuleFactory.sol';
 import './libraries/AdaptiveFee.sol';
-import './AlgebraBasePluginV1.sol';
 
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/AlgebraModularHub.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
@@ -32,14 +31,14 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     _;
   }
 
-  constructor(address _algebraFactory, address _dynamicFeeModuleFactory, address _farmingModuleFactory, address _oracleModuleFactory) {
+  constructor(address _algebraFactory, address[] memory factories) {
     algebraFactory = _algebraFactory;
 
-    factoryByIndex[0] = _oracleModuleFactory;
-    factoryByIndex[1] = _dynamicFeeModuleFactory;
-    factoryByIndex[2] = _farmingModuleFactory;
-    
-    factoriesCounter = 3;
+    for (uint256 i = 0; i < factories.length; ++i) {
+      factoryByIndex[i] = factories[i];
+    }
+
+    factoriesCounter = factories.length;
   }
 
   /// @inheritdoc IAlgebraPluginFactory

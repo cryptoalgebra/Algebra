@@ -33,7 +33,7 @@ describe('BasePluginV1Factory', () => {
 
     it('factory can create plugin', async () => {
       const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory)) as any as BasePluginV1Factory;
+      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
 
       const mockPoolFactory = await ethers.getContractFactory('MockPool');
       const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;

@@ -16,16 +16,16 @@ import '../libraries/VolatilityOracle.sol';
 import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../interfaces/plugins/IDynamicFeeManager.sol';
 
-import 'hardhat/console.sol';
-
 contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
-    string public constant override MODULE_NAME = 'TWAP Oracle';
-
     using Plugins for uint8;
 
     uint256 internal constant UINT16_MODULO = 65536;
     using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
+    /// @inheritdoc AlgebraModule
+    string public constant override MODULE_NAME = 'TWAP Oracle';
+
+    /// @inheritdoc AlgebraModule
     uint8 public constant override DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG);
 
     /// @inheritdoc IVolatilityOracle

@@ -4,7 +4,6 @@ pragma solidity =0.8.20;
 import '../base/AlgebraFeeConfiguration.sol';
 import '../libraries/AdaptiveFee.sol';
 
-import './MockTimeAlgebraBasePluginV1.sol';
 import './MockPool.sol';
 
 import '../interfaces/IBasePluginV1Factory.sol';
@@ -25,14 +24,14 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
   mapping(uint256 factoryIndex => address factoryAddress) public factoryByIndex;
   uint256 factoriesCounter;
 
-  constructor(address _algebraFactory, address _dynamicFeeModuleFactory, address _farmingModuleFactory, address _oracleModuleFactory) {
+  constructor(address _algebraFactory, address[] memory factories) {
     algebraFactory = _algebraFactory;
 
-    factoryByIndex[0] = _oracleModuleFactory;
-    factoryByIndex[1] = _dynamicFeeModuleFactory;
-    factoryByIndex[2] = _farmingModuleFactory;
-    
-    factoriesCounter = 3;
+    for (uint256 i = 0; i < factories.length; ++i) {
+      factoryByIndex[i] = factories[i];
+    }
+
+    factoriesCounter = factories.length;
   }
 
   /// @inheritdoc IAlgebraPluginFactory

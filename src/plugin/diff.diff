@@ -1,0 +1,1083 @@
+diff --git a/src/plugin/contracts/AlgebraBasePluginV1.sol b/src/plugin/contracts/AlgebraBasePluginV1.sol
+deleted file mode 100644
+index 9dc669ed..00000000
+--- a/src/plugin/contracts/AlgebraBasePluginV1.sol
++++ /dev/null
+@@ -1,337 +0,0 @@
+-// SPDX-License-Identifier: BUSL-1.1
+-pragma solidity =0.8.20;
+-
+-import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
+-import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+-
+-import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
+-import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
+-import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
+-import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+-
+-import './interfaces/IAlgebraBasePluginV1.sol';
+-import './interfaces/IBasePluginV1Factory.sol';
+-import './interfaces/IAlgebraVirtualPool.sol';
+-
+-import './libraries/VolatilityOracle.sol';
+-import './libraries/AdaptiveFee.sol';
+-import './types/AlgebraFeeConfigurationU144.sol';
+-
+-/// @title Algebra Integral 1.1 default plugin
+-/// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
+-contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin {
+-  using Plugins for uint8;
+-  using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
+-
+-  uint256 internal constant UINT16_MODULO = 65536;
+-  using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
+-
+-  /// @dev The role can be granted in AlgebraFactory
+-  bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
+-
+-  /// @inheritdoc IAlgebraPlugin
+-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+-
+-  address public immutable pool;
+-  address private immutable factory;
+-  address private immutable pluginFactory;
+-
+-  /// @inheritdoc IVolatilityOracle
+-  VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
+-
+-  /// @inheritdoc IVolatilityOracle
+-  uint16 public override timepointIndex;
+-
+-  /// @inheritdoc IVolatilityOracle
+-  uint32 public override lastTimepointTimestamp;
+-
+-  /// @inheritdoc IVolatilityOracle
+-  bool public override isInitialized;
+-
+-  /// @dev AlgebraFeeConfiguration struct packed in uint144
+-  AlgebraFeeConfigurationU144 private _feeConfig;
+-
+-  /// @inheritdoc IFarmingPlugin
+-  address public override incentive;
+-
+-  /// @dev the address which connected the last incentive. Needed so that he can disconnect it
+-  address private _lastIncentiveOwner;
+-
+-  modifier onlyPool() {
+-    _checkIfFromPool();
+-    _;
+-  }
+-
+-  constructor(address _pool, address _factory, address _pluginFactory) {
+-    (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
+-  }
+-
+-  /// @inheritdoc IDynamicFeeManager
+-  function feeConfig()
+-    external
+-    view
+-    override
+-    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee)
+-  {
+-    (alpha1, alpha2) = (_feeConfig.alpha1(), _feeConfig.alpha2());
+-    (beta1, beta2) = (_feeConfig.beta1(), _feeConfig.beta2());
+-    (gamma1, gamma2) = (_feeConfig.gamma1(), _feeConfig.gamma2());
+-    baseFee = _feeConfig.baseFee();
+-  }
+-
+-  function _checkIfFromPool() internal view {
+-    require(msg.sender == pool, 'Only pool can call this');
+-  }
+-
+-  function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+-    (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+-  }
+-
+-  function _getPluginInPool() internal view returns (address plugin) {
+-    return IAlgebraPool(pool).plugin();
+-  }
+-
+-  /// @inheritdoc IAlgebraBasePluginV1
+-  function initialize() external override {
+-    require(!isInitialized, 'Already initialized');
+-    require(_getPluginInPool() == address(this), 'Plugin not attached');
+-    (uint160 price, int24 tick, , ) = _getPoolState();
+-    require(price != 0, 'Pool is not initialized');
+-
+-    uint32 time = _blockTimestamp();
+-    timepoints.initialize(time, tick);
+-    lastTimepointTimestamp = time;
+-    isInitialized = true;
+-
+-    _updatePluginConfigInPool();
+-  }
+-
+-  // ###### Volatility and TWAP oracle ######
+-
+-  /// @inheritdoc IVolatilityOracle
+-  function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {
+-    // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
+-    (, int24 tick, , ) = _getPoolState();
+-    uint16 lastTimepointIndex = timepointIndex;
+-    uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
+-    VolatilityOracle.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
+-    (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
+-  }
+-
+-  /// @inheritdoc IVolatilityOracle
+-  function getTimepoints(
+-    uint32[] memory secondsAgos
+-  ) external view override returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
+-    // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
+-    (, int24 tick, , ) = _getPoolState();
+-    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
+-  }
+-
+-  /// @inheritdoc IVolatilityOracle
+-  function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external override {
+-    require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
+-    require(amount > 0 && type(uint16).max - startIndex >= amount);
+-
+-    unchecked {
+-      for (uint256 i = startIndex; i < startIndex + amount; ++i) {
+-        timepoints[i].blockTimestamp = 1; // will be overwritten
+-      }
+-    }
+-  }
+-
+-  // ###### Fee manager ######
+-
+-  /// @inheritdoc IDynamicFeeManager
+-  function changeFeeConfiguration(AlgebraFeeConfiguration calldata _config) external override {
+-    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+-    AdaptiveFee.validateFeeConfiguration(_config);
+-
+-    _feeConfig = _config.pack(); // pack struct to uint144 and write in storage
+-    emit FeeConfiguration(_config);
+-  }
+-
+-  /// @inheritdoc IAlgebraDynamicFeePlugin
+-  function getCurrentFee() external view override returns (uint16 fee) {
+-    uint16 lastIndex = timepointIndex;
+-    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig;
+-    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
+-
+-    uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+-    (, int24 tick, , ) = _getPoolState();
+-
+-    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+-    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
+-  }
+-
+-  function _getFeeAtLastTimepoint(
+-    uint16 lastTimepointIndex,
+-    uint16 oldestTimepointIndex,
+-    int24 currentTick,
+-    AlgebraFeeConfigurationU144 feeConfig_
+-  ) internal view returns (uint16 fee) {
+-    if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
+-
+-    uint88 volatilityAverage = timepoints.getAverageVolatility(_blockTimestamp(), currentTick, lastTimepointIndex, oldestTimepointIndex);
+-    return AdaptiveFee.getFee(volatilityAverage, feeConfig_);
+-  }
+-
+-  // ###### Farming plugin ######
+-
+-  /// @inheritdoc IFarmingPlugin
+-  function setIncentive(address newIncentive) external override {
+-    bool toConnect = newIncentive != address(0);
+-    bool accessAllowed;
+-    if (toConnect) {
+-      // accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+-    } else {
+-      // we allow the one who connected the incentive to disconnect it,
+-      // even if he no longer has the rights to connect incentives
+-      if (_lastIncentiveOwner != address(0)) accessAllowed = msg.sender == _lastIncentiveOwner;
+-      // if (!accessAllowed) accessAllowed = msg.sender == IBasePluginV1Factory(pluginFactory).farmingAddress();
+-    }
+-    require(accessAllowed, 'Not allowed to set incentive');
+-
+-    bool isPluginConnected = _getPluginInPool() == address(this);
+-    if (toConnect) require(isPluginConnected, 'Plugin not attached');
+-
+-    address currentIncentive = incentive;
+-    require(currentIncentive != newIncentive, 'Already active');
+-    if (toConnect) require(currentIncentive == address(0), 'Has active incentive');
+-
+-    incentive = newIncentive;
+-    emit Incentive(newIncentive);
+-
+-    if (toConnect) {
+-      _lastIncentiveOwner = msg.sender; // write creator of this incentive
+-    } else {
+-      _lastIncentiveOwner = address(0);
+-    }
+-
+-    if (isPluginConnected) {
+-      _updatePluginConfigInPool();
+-    }
+-  }
+-
+-  /// @inheritdoc IFarmingPlugin
+-  function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
+-    if (incentive != targetIncentive) return false;
+-    if (_getPluginInPool() != address(this)) return false;
+-    (, , , uint8 pluginConfig) = _getPoolState();
+-    if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
+-
+-    return true;
+-  }
+-
+-  // ###### HOOKS ######
+-
+-  function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
+-    _updatePluginConfigInPool();
+-    return IAlgebraPlugin.beforeInitialize.selector;
+-  }
+-
+-  function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
+-    uint32 _timestamp = _blockTimestamp();
+-    timepoints.initialize(_timestamp, tick);
+-
+-    lastTimepointTimestamp = _timestamp;
+-    isInitialized = true;
+-
+-    IAlgebraPool(pool).setFee(_feeConfig.baseFee());
+-    return IAlgebraPlugin.afterInitialize.selector;
+-  }
+-
+-  /// @dev unused
+-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+-    _updatePluginConfigInPool(); // should not be called, reset config
+-    return IAlgebraPlugin.beforeModifyPosition.selector;
+-  }
+-
+-  /// @dev unused
+-  function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+-    _updatePluginConfigInPool(); // should not be called, reset config
+-    return IAlgebraPlugin.afterModifyPosition.selector;
+-  }
+-
+-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
+-    _writeTimepointAndUpdateFee();
+-    return IAlgebraPlugin.beforeSwap.selector;
+-  }
+-
+-  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
+-    address _incentive = incentive;
+-    if (_incentive != address(0)) {
+-      (, int24 tick, , ) = _getPoolState();
+-      IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
+-    } else {
+-      _updatePluginConfigInPool(); // should not be called, reset config
+-    }
+-
+-    return IAlgebraPlugin.afterSwap.selector;
+-  }
+-
+-  /// @dev unused
+-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+-    _updatePluginConfigInPool(); // should not be called, reset config
+-    return IAlgebraPlugin.beforeFlash.selector;
+-  }
+-
+-  /// @dev unused
+-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
+-    _updatePluginConfigInPool(); // should not be called, reset config
+-    return IAlgebraPlugin.afterFlash.selector;
+-  }
+-
+-  function _updatePluginConfigInPool() internal {
+-    uint8 newPluginConfig = defaultPluginConfig;
+-    if (incentive != address(0)) {
+-      newPluginConfig |= uint8(Plugins.AFTER_SWAP_FLAG);
+-    }
+-
+-    (, , , uint8 currentPluginConfig) = _getPoolState();
+-    if (currentPluginConfig != newPluginConfig) {
+-      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+-    }
+-  }
+-
+-  function _writeTimepointAndUpdateFee() internal {
+-    // single SLOAD
+-    uint16 _lastIndex = timepointIndex;
+-    uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+-    AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig; // struct packed in uint144
+-    bool _isInitialized = isInitialized;
+-    require(_isInitialized, 'Not initialized');
+-
+-    uint32 currentTimestamp = _blockTimestamp();
+-
+-    if (_lastTimepointTimestamp == currentTimestamp) return;
+-
+-    (, int24 tick, uint16 fee, ) = _getPoolState();
+-    (uint16 newLastIndex, uint16 newOldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
+-
+-    timepointIndex = newLastIndex;
+-    lastTimepointTimestamp = currentTimestamp;
+-
+-    uint16 newFee = _getFeeAtLastTimepoint(newLastIndex, newOldestIndex, tick, feeConfig_);
+-    if (newFee != fee) {
+-      IAlgebraPool(pool).setFee(newFee);
+-    }
+-  }
+-
+-  function getCurrentAverageVolatility() external view override returns (uint88) {
+-        uint16 lastIndex = timepointIndex;
+-
+-        uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
+-        (, int24 tick, , ) = _getPoolState();
+-
+-        return timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
+-    }
+-
+-    function getAverageVolatilityAtLastTimepoint(
+-        uint32 currentTime,
+-        int24 tick,
+-        uint16 lastIndex,
+-        uint16 oldestIndex
+-    ) external view override returns (uint88) {
+-        return timepoints.getAverageVolatility(currentTime, tick, lastIndex, oldestIndex);
+-    }
+-}
+diff --git a/src/plugin/contracts/BasePluginV1Factory.sol b/src/plugin/contracts/BasePluginV1Factory.sol
+index 5c9bea3b..b09161d7 100644
+--- a/src/plugin/contracts/BasePluginV1Factory.sol
++++ b/src/plugin/contracts/BasePluginV1Factory.sol
+@@ -5,7 +5,6 @@ import './interfaces/IBasePluginV1Factory.sol';
+ import './interfaces/IAlgebraModuleFactory.sol';
+ import './base/AlgebraModuleFactory.sol';
+ import './libraries/AdaptiveFee.sol';
+-import './AlgebraBasePluginV1.sol';
+ 
+ import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/AlgebraModularHub.sol';
+ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+@@ -32,14 +31,14 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
+     _;
+   }
+ 
+-  constructor(address _algebraFactory, address _dynamicFeeModuleFactory, address _farmingModuleFactory, address _oracleModuleFactory) {
++  constructor(address _algebraFactory, address[] memory factories) {
+     algebraFactory = _algebraFactory;
+ 
+-    factoryByIndex[0] = _oracleModuleFactory;
+-    factoryByIndex[1] = _dynamicFeeModuleFactory;
+-    factoryByIndex[2] = _farmingModuleFactory;
+-    
+-    factoriesCounter = 3;
++    for (uint256 i = 0; i < factories.length; ++i) {
++      factoryByIndex[i] = factories[i];
++    }
++
++    factoriesCounter = factories.length;
+   }
+ 
+   /// @inheritdoc IAlgebraPluginFactory
+diff --git a/src/plugin/contracts/interfaces/IAlgebraBasePluginV1.sol b/src/plugin/contracts/interfaces/IAlgebraBasePluginV1.sol
+deleted file mode 100644
+index 7567769e..00000000
+--- a/src/plugin/contracts/interfaces/IAlgebraBasePluginV1.sol
++++ /dev/null
+@@ -1,16 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-pragma solidity >=0.5.0;
+-pragma abicoder v2;
+-
+-import './plugins/IVolatilityOracle.sol';
+-import './plugins/IDynamicFeeManager.sol';
+-import './plugins/IFarmingPlugin.sol';
+-
+-/// @title The interface for the AlgebraBasePluginV1
+-/// @notice This contract combines the standard implementations of the volatility oracle and the dynamic fee manager
+-/// @dev This contract stores timepoints and calculates adaptive fee and statistical averages
+-interface IAlgebraBasePluginV1 is IVolatilityOracle, IDynamicFeeManager, IFarmingPlugin {
+-  /// @notice Initialize the plugin externally
+-  /// @dev This function allows to initialize the plugin if it was created after the pool was created
+-  function initialize() external;
+-}
+diff --git a/src/plugin/contracts/interfaces/plugins/IDynamicFeeManager.sol b/src/plugin/contracts/interfaces/plugins/IDynamicFeeManager.sol
+index 6a52594c..3a08c78a 100644
+--- a/src/plugin/contracts/interfaces/plugins/IDynamicFeeManager.sol
++++ b/src/plugin/contracts/interfaces/plugins/IDynamicFeeManager.sol
+@@ -13,6 +13,18 @@ interface IDynamicFeeManager is IAlgebraDynamicFeePlugin {
+   /// @dev See the AdaptiveFee struct for more details
+   event FeeConfiguration(AlgebraFeeConfiguration feeConfig);
+ 
++  /// @notice Returns address of oracle module
++  /// @return Address of oracle module, which is connected to the same pool
++  function oracleModule() external view returns (address);
++
++  /// @notice Returns address of AlgebraFactory
++  /// @return Address of AlgebraFactory
++  function factory() external view returns (address);
++
++  /// @notice Returns address of plugin factory (BasePluginV1Factory now)
++  /// @return Address of plugin factory
++  function pluginFactory() external view returns (address);
++
+   /// @notice Current dynamic fee configuration
+   /// @dev See the AdaptiveFee struct for more details
+   function feeConfig() external view returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
+diff --git a/src/plugin/contracts/interfaces/plugins/IFarmingPlugin.sol b/src/plugin/contracts/interfaces/plugins/IFarmingPlugin.sol
+index a5e43882..ee55935b 100644
+--- a/src/plugin/contracts/interfaces/plugins/IFarmingPlugin.sol
++++ b/src/plugin/contracts/interfaces/plugins/IFarmingPlugin.sol
+@@ -8,6 +8,10 @@ interface IFarmingPlugin {
+   /// @param newIncentive The address of the new incentive
+   event Incentive(address newIncentive);
+ 
++  /// @notice Returns address of plugin factory (BasePluginV1Factory now)
++  /// @return Address of plugin factory
++  function pluginFactory() external view returns (address);
++
+   /// @notice Connects or disconnects an incentive.
+   /// @dev Only farming can connect incentives.
+   /// The one who connected it and the current farming has the right to disconnect the incentive.
+diff --git a/src/plugin/contracts/modules/DynamicFeeModule.sol b/src/plugin/contracts/modules/DynamicFeeModule.sol
+index ee04cc27..a2b34d14 100644
+--- a/src/plugin/contracts/modules/DynamicFeeModule.sol
++++ b/src/plugin/contracts/modules/DynamicFeeModule.sol
+@@ -18,32 +18,34 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
+ import '../libraries/AdaptiveFee.sol';
+ import '../libraries/VolatilityOracle.sol';
+ 
+-// DEV
+-import 'hardhat/console.sol';
+-import './OracleModule.sol';
+-
+ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
+-    string public override constant MODULE_NAME = 'Dynamic Fee';
+-
+     using Plugins for uint8;
+     using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
+ 
+     uint256 internal constant UINT16_MODULO = 65536;
+     using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
+ 
++    /// @inheritdoc AlgebraModule
++    string public override constant MODULE_NAME = 'Dynamic Fee';
++
++    /// @inheritdoc AlgebraModule
+     uint8 public override constant DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+ 
+     /// @dev The role can be granted in AlgebraFactory
+     bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
+ 
+-    address private immutable factory;
+-    address private immutable pluginFactory;
++    /// @inheritdoc	IDynamicFeeManager
++    address public immutable override oracleModule;
++
++    /// @inheritdoc	IDynamicFeeManager
++    address public immutable override factory;
++
++    /// @inheritdoc	IDynamicFeeManager
++    address public immutable override pluginFactory;
+ 
+     /// @dev AlgebraFeeConfiguration struct packed in uint144
+     AlgebraFeeConfigurationU144 private _feeConfig;
+ 
+-    address public immutable oracleModule;
+-
+     constructor(address _factory, address _pluginFactory, address _oracleModule, address _modularHub) AlgebraModule(_modularHub) {
+         (factory, pluginFactory, oracleModule) = (_factory, _pluginFactory, _oracleModule);
+     }
+@@ -86,7 +88,7 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
+         baseFee = _feeConfig.baseFee();
+     }
+ 
+-    function _getPoolState(address pool) internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
++    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+         (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+     }
+ 
+@@ -98,15 +100,14 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
+     }
+ 
+     function _beforeSwap(
+-        bytes memory params,
++        bytes memory /* params */,
+         uint16 /* poolFeeCache */
+     ) internal view override {
+-        BeforeSwapParams memory decodedParams = abi.decode(params, (BeforeSwapParams));
+-        uint16 newFee = _getNewFee(decodedParams.pool);
++        uint16 newFee = _getNewFee();
+         ModuleUtils.returnDynamicFeeResult(newFee, false);
+     }
+ 
+-    function _getNewFee(address pool) internal view returns (uint16 newFee) {
++    function _getNewFee() internal view returns (uint16 newFee) {
+         uint16 lastTimepointIndex = IVolatilityOracle(oracleModule).timepointIndex();
+         
+         uint16 lastTimepointIndexOutsideCurrentBlock;
+@@ -125,7 +126,7 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
+ 
+         oldestTimepointIndex = initialized ? oldestTimepointIndex : 0;
+ 
+-        (, int24 tick, uint16 fee, ) = _getPoolState(pool);
++        (, int24 tick, uint16 fee, ) = _getPoolState();
+ 
+         newFee = lastTimepointTimestampOutsideCurrentBlock != _blockTimestamp() ? _getFeeAtLastTimepoint(lastTimepointIndex, oldestTimepointIndex, tick, _feeConfig) : fee;
+     }
+diff --git a/src/plugin/contracts/modules/FarmingModule.sol b/src/plugin/contracts/modules/FarmingModule.sol
+index 4765038e..cc7a599a 100644
+--- a/src/plugin/contracts/modules/FarmingModule.sol
++++ b/src/plugin/contracts/modules/FarmingModule.sol
+@@ -14,23 +14,25 @@ import '../interfaces/IBasePluginV1Factory.sol';
+ import '../interfaces/IAlgebraVirtualPool.sol';
+ import '../interfaces/IAlgebraFarmingModuleFactory.sol';
+ 
+-import 'hardhat/console.sol';
+ 
+ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
+-    string public constant override MODULE_NAME = 'Farming';
+-
+     using Plugins for uint8;
+ 
++    /// @inheritdoc AlgebraModule
++    string public constant override MODULE_NAME = 'Farming';
++
++    /// @inheritdoc AlgebraModule
+     uint8 public constant override DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_SWAP_FLAG);
+ 
+     /// @inheritdoc IFarmingPlugin
+     address public override incentive;
+ 
++    /// @inheritdoc IFarmingPlugin
++    address public immutable override pluginFactory;
++
+     /// @dev the address which connected the last incentive. Needed so that he can disconnect it
+     address private _lastIncentiveOwner;
+ 
+-    address private immutable pluginFactory;
+-
+     constructor(address _modularHub, address _pluginFactory) AlgebraModule(_modularHub) {
+         pluginFactory =  _pluginFactory;
+     }
+@@ -69,14 +71,13 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
+     function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
+         if (incentive != targetIncentive) return false;
+         if (IAlgebraModularHub(modularHub).moduleAddressToIndex(address(this)) == 0) return false;
+-        address pool = IAlgebraModularHub(modularHub).pool();
+-        (, , , uint8 pluginConfig) = _getPoolState(pool);
++        (, , , uint8 pluginConfig) = _getPoolState();
+         if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
+ 
+         return true;
+     }
+ 
+-    function _getPoolState(address pool) internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
++    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+         (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
+     }
+ 
+@@ -90,7 +91,7 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
+ 
+         address _incentive = incentive;
+         if (_incentive != address(0)) {
+-            (, int24 tick, , ) = _getPoolState(decodedParams.pool);
++            (, int24 tick, , ) = _getPoolState();
+             IAlgebraVirtualPool(_incentive).crossTo(tick, decodedParams.zeroToOne);
+         }
+     }
+diff --git a/src/plugin/contracts/modules/OracleModule.sol b/src/plugin/contracts/modules/OracleModule.sol
+index 1608bf37..b3a8c363 100644
+--- a/src/plugin/contracts/modules/OracleModule.sol
++++ b/src/plugin/contracts/modules/OracleModule.sol
+@@ -16,16 +16,16 @@ import '../libraries/VolatilityOracle.sol';
+ import '../interfaces/plugins/IVolatilityOracle.sol';
+ import '../interfaces/plugins/IDynamicFeeManager.sol';
+ 
+-import 'hardhat/console.sol';
+-
+ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
+-    string public constant override MODULE_NAME = 'TWAP Oracle';
+-
+     using Plugins for uint8;
+ 
+     uint256 internal constant UINT16_MODULO = 65536;
+     using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
+ 
++    /// @inheritdoc AlgebraModule
++    string public constant override MODULE_NAME = 'TWAP Oracle';
++
++    /// @inheritdoc AlgebraModule
+     uint8 public constant override DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG);
+ 
+     /// @inheritdoc IVolatilityOracle
+diff --git a/src/plugin/contracts/test/MockTimeAlgebraBasePluginV1.sol b/src/plugin/contracts/test/MockTimeAlgebraBasePluginV1.sol
+deleted file mode 100644
+index 47765764..00000000
+--- a/src/plugin/contracts/test/MockTimeAlgebraBasePluginV1.sol
++++ /dev/null
+@@ -1,70 +0,0 @@
+-// SPDX-License-Identifier: UNLICENSED
+-pragma solidity =0.8.20;
+-
+-import '../AlgebraBasePluginV1.sol';
+-
+-// used for testing time dependent behavior
+-contract MockTimeAlgebraBasePluginV1 is AlgebraBasePluginV1 {
+-  using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
+-
+-  // Monday, October 5, 2020 9:00:00 AM GMT-05:00
+-  uint256 public time = 1601906400;
+-
+-  constructor(address _pool, address _factory, address _pluginFactory) AlgebraBasePluginV1(_pool, _factory, _pluginFactory) {
+-    //
+-  }
+-
+-  function advanceTime(uint256 by) external {
+-    unchecked {
+-      time += by;
+-    }
+-  }
+-
+-  function _blockTimestamp() internal view override returns (uint32) {
+-    return uint32(time);
+-  }
+-
+-  struct UpdateParams {
+-    uint32 advanceTimeBy;
+-    int24 tick;
+-  }
+-
+-  function batchUpdate(UpdateParams[] calldata params) external {
+-    // sload everything
+-    uint16 _index = timepointIndex;
+-    uint32 _time = lastTimepointTimestamp;
+-    int24 _tick;
+-    unchecked {
+-      for (uint256 i; i < params.length; ++i) {
+-        _time += params[i].advanceTimeBy;
+-        _tick = params[i].tick;
+-        (_index, ) = timepoints.write(_index, _time, _tick);
+-      }
+-    }
+-
+-    // sstore everything
+-    lastTimepointTimestamp = _time;
+-    timepointIndex = _index;
+-    time = _time;
+-  }
+-
+-  function checkBlockTimestamp() external view returns (bool) {
+-    require(super._blockTimestamp() == uint32(block.timestamp));
+-    return true;
+-  }
+-
+-  function getTimepointsWithParams(
+-    uint32 _time,
+-    uint32[] memory secondsAgos,
+-    int24 tick,
+-    uint16 lastIndex
+-  ) external view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
+-    return timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
+-  }
+-
+-  function getAverageVolatility(uint32 timestamp, int24 tick) public view returns (uint88 volatilityAverage) {
+-    uint16 index = timepointIndex;
+-    uint16 oldestIndex = timepoints.getOldestIndex(index);
+-    return timepoints.getAverageVolatility(timestamp, tick, index, oldestIndex);
+-  }
+-}
+diff --git a/src/plugin/contracts/test/MockTimeDSFactory.sol b/src/plugin/contracts/test/MockTimeDSFactory.sol
+index bdf06965..e35be01b 100644
+--- a/src/plugin/contracts/test/MockTimeDSFactory.sol
++++ b/src/plugin/contracts/test/MockTimeDSFactory.sol
+@@ -4,7 +4,6 @@ pragma solidity =0.8.20;
+ import '../base/AlgebraFeeConfiguration.sol';
+ import '../libraries/AdaptiveFee.sol';
+ 
+-import './MockTimeAlgebraBasePluginV1.sol';
+ import './MockPool.sol';
+ 
+ import '../interfaces/IBasePluginV1Factory.sol';
+@@ -25,14 +24,14 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
+   mapping(uint256 factoryIndex => address factoryAddress) public factoryByIndex;
+   uint256 factoriesCounter;
+ 
+-  constructor(address _algebraFactory, address _dynamicFeeModuleFactory, address _farmingModuleFactory, address _oracleModuleFactory) {
++  constructor(address _algebraFactory, address[] memory factories) {
+     algebraFactory = _algebraFactory;
+ 
+-    factoryByIndex[0] = _oracleModuleFactory;
+-    factoryByIndex[1] = _dynamicFeeModuleFactory;
+-    factoryByIndex[2] = _farmingModuleFactory;
+-    
+-    factoriesCounter = 3;
++    for (uint256 i = 0; i < factories.length; ++i) {
++      factoryByIndex[i] = factories[i];
++    }
++
++    factoriesCounter = factories.length;
+   }
+ 
+   /// @inheritdoc IAlgebraPluginFactory
+diff --git a/src/plugin/test/AlgebraOracleV1TWAP.spec.ts b/src/plugin/test/AlgebraOracleV1TWAP.spec.ts
+index e4202a4d..8274b235 100644
+--- a/src/plugin/test/AlgebraOracleV1TWAP.spec.ts
++++ b/src/plugin/test/AlgebraOracleV1TWAP.spec.ts
+@@ -16,7 +16,7 @@ describe('AlgebraOracleV1TWAP', () => {
+     tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1];
+ 
+     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
+-    const _mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
++    const _mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS, [ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]);
+ 
+     const algebraOracleV1TWAPFactory = await ethers.getContractFactory('AlgebraOracleV1TWAP');
+     const _algebraOracleV1TWAP = await algebraOracleV1TWAPFactory.deploy(_mockPluginFactory);
+diff --git a/src/plugin/test/AlgebraPool.gas.spec.ts b/src/plugin/test/AlgebraPool.gas.spec.ts
+index de1119f4..9d7a3d12 100644
+--- a/src/plugin/test/AlgebraPool.gas.spec.ts
++++ b/src/plugin/test/AlgebraPool.gas.spec.ts
+@@ -44,7 +44,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
+     const farmingModuleFactory = fix.farmingModuleFactory;
+ 
+     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
+-    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory, fix.dynamicFeeModuleFactory, fix.farmingModuleFactory, fix.mockTimeOracleModuleFactory)) as any as MockTimeDSFactory;
++    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory, [fix.mockTimeOracleModuleFactory, fix.dynamicFeeModuleFactory, fix.farmingModuleFactory])) as any as MockTimeDSFactory;
+ 
+     await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), mockPluginFactory);
+     await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), mockPluginFactory);
+diff --git a/src/plugin/test/BasePluginV1Factory.spec.ts b/src/plugin/test/BasePluginV1Factory.spec.ts
+index 3b197bc2..cb3d7cbe 100644
+--- a/src/plugin/test/BasePluginV1Factory.spec.ts
++++ b/src/plugin/test/BasePluginV1Factory.spec.ts
+@@ -33,7 +33,7 @@ describe('BasePluginV1Factory', () => {
+ 
+     it('factory can create plugin', async () => {
+       const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
+-      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory)) as any as BasePluginV1Factory;
++      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
+ 
+       const mockPoolFactory = await ethers.getContractFactory('MockPool');
+       const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
+diff --git a/src/plugin/test/__snapshots__/AlgebraPool.gas.spec.ts.snap b/src/plugin/test/__snapshots__/AlgebraPool.gas.spec.ts.snap
+index fe813f65..f1356262 100644
+--- a/src/plugin/test/__snapshots__/AlgebraPool.gas.spec.ts.snap
++++ b/src/plugin/test/__snapshots__/AlgebraPool.gas.spec.ts.snap
+@@ -1,46 +1,46 @@
+ // Jest Snapshot v1, https://goo.gl/fbAQLP
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee large swap crossing several initialized ticks 1`] = `265596`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee large swap crossing several initialized ticks 1`] = `264198`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle 1`] = `215536`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle 1`] = `214138`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 4h 1`] = `249041`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 4h 1`] = `247643`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 8h 1`] = `243805`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 8h 1`] = `242407`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 24h 1`] = `217276`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 24h 1`] = `215878`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee large swap crossing several initialized ticks 1`] = `265596`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee large swap crossing several initialized ticks 1`] = `264198`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle 1`] = `215536`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle 1`] = `214138`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 4h 1`] = `249133`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 4h 1`] = `247735`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 8h 1`] = `260144`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 8h 1`] = `258746`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 24h 1`] = `217276`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 24h 1`] = `215878`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price burn when only position using ticks 1`] = `115316`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price burn when only position using ticks 1`] = `115281`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price entire position burn but other positions are using the ticks 1`] = `108670`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price entire position burn but other positions are using the ticks 1`] = `108627`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price partial position burn 1`] = `113470`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price partial position burn 1`] = `113427`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price burn when only position using ticks 1`] = `125195`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price burn when only position using ticks 1`] = `125160`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price entire position burn but other positions are using the ticks 1`] = `113078`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price entire position burn but other positions are using the ticks 1`] = `113035`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price partial position burn 1`] = `117878`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price partial position burn 1`] = `117835`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price burn when only position using ticks 1`] = `124752`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price burn when only position using ticks 1`] = `124718`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price entire position burn but other positions are using the ticks 1`] = `109332`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price entire position burn but other positions are using the ticks 1`] = `109289`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price partial position burn 1`] = `114132`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price partial position burn 1`] = `114089`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case 1`] = `52499`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case 1`] = `52521`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case, two tokens 1`] = `70218`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case, two tokens 1`] = `70240`;
+ 
+ exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price add to position existing 1`] = `126222`;
+ 
+@@ -60,84 +60,84 @@ exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below curre
+ 
+ exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price second position in same range 1`] = `143891`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #poke best case 1`] = `61524`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #poke best case 1`] = `61481`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `206060`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `204662`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement 1`] = `206029`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement 1`] = `204631`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `205599`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `204202`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `222568`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `221170`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `255962`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `254564`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `206127`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `204729`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `255962`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `254564`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `275162`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `273764`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `178310`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `176868`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block with no tick movement 1`] = `178274`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block with no tick movement 1`] = `176832`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `194003`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `192561`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `228218`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `226776`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 several large swaps with pauses 1`] = `282991`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 several large swaps with pauses 1`] = `281593`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `213727`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `212329`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `206121`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `204723`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block with no tick movement 1`] = `206069`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block with no tick movement 1`] = `204671`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 second swap in block with no tick movement 1`] = `178335`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 second swap in block with no tick movement 1`] = `176893`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `233218`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `231850`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block with no tick movement 1`] = `233166`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block with no tick movement 1`] = `231798`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected second swap in block with no tick movement 1`] = `188332`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected second swap in block with no tick movement 1`] = `186920`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `213883`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `212485`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement 1`] = `213852`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement 1`] = `212454`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `205836`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `204439`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `230628`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `229230`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `264733`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `263335`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `213950`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `212552`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `264733`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `263335`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `283933`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `282535`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `186133`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `184691`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block with no tick movement 1`] = `186097`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block with no tick movement 1`] = `184655`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `202063`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `200621`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `236989`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `235547`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 several large swaps with pauses 1`] = `291762`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 several large swaps with pauses 1`] = `290364`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `213964`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `212566`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `213944`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `212546`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block with no tick movement 1`] = `213892`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block with no tick movement 1`] = `212494`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 second swap in block with no tick movement 1`] = `186158`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 second swap in block with no tick movement 1`] = `184716`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `241041`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `239673`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block with no tick movement 1`] = `240989`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block with no tick movement 1`] = `239621`;
+ 
+-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected second swap in block with no tick movement 1`] = `196155`;
++exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected second swap in block with no tick movement 1`] = `194743`;
+diff --git a/src/plugin/test/__snapshots__/VolatilityOracle.spec.ts.snap b/src/plugin/test/__snapshots__/VolatilityOracle.spec.ts.snap
+deleted file mode 100644
+index a1c05cee..00000000
+--- a/src/plugin/test/__snapshots__/VolatilityOracle.spec.ts.snap
++++ /dev/null
+@@ -1,101 +0,0 @@
+-// Jest Snapshot v1, https://goo.gl/fbAQLP
+-
+-exports[`VolatilityOracle #getTimepoints before initialization gas for getTimepoints since most recent  [ @skip-on-coverage ] 1`] = `8271`;
+-
+-exports[`VolatilityOracle #getTimepoints before initialization gas for single timepoint at current time  [ @skip-on-coverage ] 1`] = `6327`;
+-
+-exports[`VolatilityOracle #getTimepoints before initialization gas for single timepoint at current time after some time  [ @skip-on-coverage ] 1`] = `8137`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 fetch many values 1`] = `
+-Object {
+-  "tickCumulatives": Array [
+-    "-13",
+-    "-31",
+-    "-43",
+-    "-37",
+-    "-15",
+-    "9",
+-    "15",
+-  ],
+-}
+-`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `100743`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17966`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest equal  [ @skip-on-coverage ] 1`] = `6327`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas latest transform  [ @skip-on-coverage ] 1`] = `10137`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas middle  [ @skip-on-coverage ] 1`] = `17453`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 5 gas oldest  [ @skip-on-coverage ] 1`] = `17030`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 fetch many values 1`] = `
+-Object {
+-  "tickCumulatives": Array [
+-    "-13",
+-    "-31",
+-    "-43",
+-    "-37",
+-    "-15",
+-    "9",
+-    "15",
+-  ],
+-}
+-`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas all of last 20 seconds  [ @skip-on-coverage ] 1`] = `100395`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas between oldest and oldest + 1  [ @skip-on-coverage ] 1`] = `17908`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest equal  [ @skip-on-coverage ] 1`] = `6327`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas latest transform  [ @skip-on-coverage ] 1`] = `10166`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas middle  [ @skip-on-coverage ] 1`] = `17424`;
+-
+-exports[`VolatilityOracle #getTimepoints initialized with 5 timepoints with starting time of 4294967291 gas oldest  [ @skip-on-coverage ] 1`] = `16972`;
+-
+-exports[`VolatilityOracle #initialize gas  [ @skip-on-coverage ] 1`] = `50443`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6335`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `16887`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6469`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago)  [ @skip-on-coverage ] 1`] = `13127`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago) after 5 seconds  [ @skip-on-coverage ] 1`] = `14592`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(24h ago) after 15 minutes [ @skip-on-coverage ] 1`] = `54263`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(200 * 13 + 5)  [ @skip-on-coverage ] 1`] = `49033`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(200 * 13)  [ @skip-on-coverage ] 1`] = `48978`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12476`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `47091`;
+-
+-exports[`VolatilityOracle full volatilityOracle gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `47091`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(0)  [ @skip-on-coverage ] 1`] = `6335`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(0) after 5 seconds  [ @skip-on-coverage ] 1`] = `8174`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(5) after 5 seconds  [ @skip-on-coverage ] 1`] = `6469`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(24h ago) after 12 hours [ @skip-on-coverage ] 1`] = `69074`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(200 * 1 + 5)  [ @skip-on-coverage ] 1`] = `71383`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(200 * 1)  [ @skip-on-coverage ] 1`] = `65785`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(middle)  [ @skip-on-coverage ] 1`] = `12516`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(oldest)  [ @skip-on-coverage ] 1`] = `47131`;
+-
+-exports[`VolatilityOracle full volatilityOracle, maximal density gas cost of getTimepoints(oldest) after 5 seconds  [ @skip-on-coverage ] 1`] = `47131`;
+diff --git a/src/plugin/test/shared/fixtures.ts b/src/plugin/test/shared/fixtures.ts
+index 2957b832..09d2df48 100644
+--- a/src/plugin/test/shared/fixtures.ts
++++ b/src/plugin/test/shared/fixtures.ts
+@@ -42,7 +42,7 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
+   const mockTimeOracleModuleFactory = await mockTimeOracleModuleFactoryFactory.deploy(mockFactory);
+ 
+   const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
+-  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory, dynamicFeeModuleFactory, farmingModuleFactory, mockTimeOracleModuleFactory)) as any as MockTimeDSFactory;
++  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory, [mockTimeOracleModuleFactory, dynamicFeeModuleFactory, farmingModuleFactory])) as any as MockTimeDSFactory;
+ 
+   await mockFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), mockPluginFactory);
+ 
+@@ -112,7 +112,7 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
+   const mockOracleModuleFactory = await mockOracleModuleFactoryFactory.deploy(mockFactory) as any as MockTimeOracleModuleFactory;
+ 
+   const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
+-  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory)) as any as BasePluginV1Factory;
++  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
+ 
+   const mockPoolFactory = await ethers.getContractFactory('MockPool');
+   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;

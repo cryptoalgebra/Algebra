@@ -42,7 +42,7 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
   const mockTimeOracleModuleFactory = await mockTimeOracleModuleFactoryFactory.deploy(mockFactory);
 
   const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory, dynamicFeeModuleFactory, farmingModuleFactory, mockTimeOracleModuleFactory)) as any as MockTimeDSFactory;
+  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory, [mockTimeOracleModuleFactory, dynamicFeeModuleFactory, farmingModuleFactory])) as any as MockTimeDSFactory;
 
   await mockFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), mockPluginFactory);
 
@@ -112,7 +112,7 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
   const mockOracleModuleFactory = await mockOracleModuleFactoryFactory.deploy(mockFactory) as any as MockTimeOracleModuleFactory;
 
   const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory)) as any as BasePluginV1Factory;
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
 
   const mockPoolFactory = await ethers.getContractFactory('MockPool');
   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;

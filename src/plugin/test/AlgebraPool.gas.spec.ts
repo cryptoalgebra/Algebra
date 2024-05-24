@@ -44,7 +44,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     const farmingModuleFactory = fix.farmingModuleFactory;
 
     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory, fix.dynamicFeeModuleFactory, fix.farmingModuleFactory, fix.mockTimeOracleModuleFactory)) as any as MockTimeDSFactory;
+    const mockPluginFactory = (await mockPluginFactoryFactory.deploy(fix.factory, [fix.mockTimeOracleModuleFactory, fix.dynamicFeeModuleFactory, fix.farmingModuleFactory])) as any as MockTimeDSFactory;
 
     await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), mockPluginFactory);
     await fix.factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), mockPluginFactory);

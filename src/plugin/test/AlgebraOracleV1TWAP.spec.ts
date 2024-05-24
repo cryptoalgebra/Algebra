@@ -16,7 +16,7 @@ describe('AlgebraOracleV1TWAP', () => {
     tokens = [tokensFixtureRes.token0, tokensFixtureRes.token1];
 
     const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactory');
-    const _mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS);
+    const _mockPluginFactory = await mockPluginFactoryFactory.deploy(ZERO_ADDRESS, [ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]);
 
     const algebraOracleV1TWAPFactory = await ethers.getContractFactory('AlgebraOracleV1TWAP');
     const _algebraOracleV1TWAP = await algebraOracleV1TWAPFactory.deploy(_mockPluginFactory);

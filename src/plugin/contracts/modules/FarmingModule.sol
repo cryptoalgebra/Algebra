@@ -14,22 +14,24 @@ import '../interfaces/IBasePluginV1Factory.sol';
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../interfaces/IAlgebraFarmingModuleFactory.sol';
 
-import 'hardhat/console.sol';
 
 contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
-    string public constant override MODULE_NAME = 'Farming';
-
     using Plugins for uint8;
 
+    /// @inheritdoc AlgebraModule
+    string public constant override MODULE_NAME = 'Farming';
+
+    /// @inheritdoc AlgebraModule
     uint8 public constant override DEFAULT_PLUGIN_CONFIG = uint8(Plugins.AFTER_SWAP_FLAG);
 
     /// @inheritdoc IFarmingPlugin
     address public override incentive;
 
+    /// @inheritdoc IFarmingPlugin
+    address public immutable override pluginFactory;
+
     /// @dev the address which connected the last incentive. Needed so that he can disconnect it
     address private _lastIncentiveOwner;
-
-    address private immutable pluginFactory;
 
     constructor(address _modularHub, address _pluginFactory) AlgebraModule(_modularHub) {
         pluginFactory =  _pluginFactory;
@@ -69,14 +71,13 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
     function isIncentiveConnected(address targetIncentive) external view override returns (bool) {
         if (incentive != targetIncentive) return false;
         if (IAlgebraModularHub(modularHub).moduleAddressToIndex(address(this)) == 0) return false;
-        address pool = IAlgebraModularHub(modularHub).pool();
-        (, , , uint8 pluginConfig) = _getPoolState(pool);
+        (, , , uint8 pluginConfig) = _getPoolState();
         if (!pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) return false;
 
         return true;
     }
 
-    function _getPoolState(address pool) internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
         (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
     }
 
@@ -90,7 +91,7 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
 
         address _incentive = incentive;
         if (_incentive != address(0)) {
-            (, int24 tick, , ) = _getPoolState(decodedParams.pool);
+            (, int24 tick, , ) = _getPoolState();
             IAlgebraVirtualPool(_incentive).crossTo(tick, decodedParams.zeroToOne);
         }
     }
