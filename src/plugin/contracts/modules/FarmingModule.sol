@@ -31,7 +31,7 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
 
     address private immutable pluginFactory;
 
-    constructor(address _modularHub, address _pluginFactory) AlgebraModule(_modularHub, IAlgebraModule(_modularHub).pool()) {
+    constructor(address _modularHub, address _pluginFactory) AlgebraModule(_modularHub) {
         pluginFactory =  _pluginFactory;
     }
 

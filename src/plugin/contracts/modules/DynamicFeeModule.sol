@@ -44,7 +44,7 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
 
     address public immutable oracleModule;
 
-    constructor(address _factory, address _pluginFactory, address _oracleModule, address _modularHub) AlgebraModule(_modularHub, IAlgebraModule(_modularHub).pool()) {
+    constructor(address _factory, address _pluginFactory, address _oracleModule, address _modularHub) AlgebraModule(_modularHub) {
         (factory, pluginFactory, oracleModule) = (_factory, _pluginFactory, _oracleModule);
     }
 

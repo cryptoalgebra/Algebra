@@ -40,12 +40,11 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     /// @inheritdoc IVolatilityOracle
     VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
 
-    constructor(address _modularHub) AlgebraModule(_modularHub, IAlgebraModule(_modularHub).pool()) {}
+    constructor(address _modularHub) AlgebraModule(_modularHub) {}
 
     function initialize() external {
         require(!isInitialized, 'Already initialized');
         require(IAlgebraModularHub(modularHub).moduleAddressToIndex(address(this)) != 0, 'Plugin not attached');
-        address pool = IAlgebraModularHub(modularHub).pool();
         (uint160 price, int24 tick, , ) = _getPoolState(pool);
         require(price != 0, 'Pool is not initialized');
 
