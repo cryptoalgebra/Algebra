@@ -41,7 +41,7 @@ contract DynamicFeeModuleFactory is AlgebraModuleFactory {
         // dynamic fee hooks shoule be called after oracle, so indexInHookList = 1
         insertModuleParams[0] = InsertModuleParams({
             selector: IAlgebraPlugin.afterInitialize.selector,
-            indexInHookList: 1,
+            indexInHookList: 0,
             moduleGlobalIndex: moduleGlobalIndex,
             useDelegate: false,
             useDynamicFee: true
@@ -49,7 +49,7 @@ contract DynamicFeeModuleFactory is AlgebraModuleFactory {
 
         insertModuleParams[1] = InsertModuleParams({
             selector: IAlgebraPlugin.beforeSwap.selector,
-            indexInHookList: 1,
+            indexInHookList: 0,
             moduleGlobalIndex: moduleGlobalIndex,
             useDelegate: false,
             useDynamicFee: true

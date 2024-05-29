@@ -112,7 +112,7 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
   const mockOracleModuleFactory = await mockOracleModuleFactoryFactory.deploy(mockFactory) as any as MockTimeOracleModuleFactory;
 
   const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory, [mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory])) as any as BasePluginV1Factory;
 
   const mockPoolFactory = await ethers.getContractFactory('MockPool');
   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;

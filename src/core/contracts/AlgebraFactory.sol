@@ -139,6 +139,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(plugin, token0, token1, deployer);
 
+    defaultPluginFactory.afterCreatePoolHook(plugin);
+
     _poolByPair[token0][token1] = pool;
     _poolByPair[token1][token0] = pool;
 

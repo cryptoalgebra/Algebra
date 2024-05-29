@@ -33,7 +33,7 @@ describe('BasePluginV1Factory', () => {
 
     it('factory can create plugin', async () => {
       const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, [mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory])) as any as BasePluginV1Factory;
+      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, [mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory])) as any as BasePluginV1Factory;
 
       const mockPoolFactory = await ethers.getContractFactory('MockPool');
       const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
@@ -49,8 +49,7 @@ describe('BasePluginV1Factory', () => {
 
       const pluginMock = (await ethers.getContractFactory('AlgebraModularHub')).attach(pluginAddress) as any as AlgebraModularHub;
 
-      // plugin indexing inside modular hub starts from 1
-      const dynamicFeeModuleAddress = await pluginMock.modules(2);
+      const dynamicFeeModuleAddress = await pluginMock.modules(1);
   
       const DynamicFeeModule_ethers = await ethers.getContractFactory('DynamicFeeModule');
       const dynamicFeeModule = DynamicFeeModule_ethers.attach(dynamicFeeModuleAddress) as any as DynamicFeeModule;
@@ -93,7 +92,7 @@ describe('BasePluginV1Factory', () => {
       const pluginMock = (await ethers.getContractFactory('AlgebraModularHub')).attach(pluginAddress) as any as AlgebraModularHub;
 
       // plugin indexing inside modular hub starts from 1
-      const dynamicFeeModuleAddress = await pluginMock.modules(2);
+      const dynamicFeeModuleAddress = await pluginMock.modules(1);
 
       const DynamicFeeModule_ethers = await ethers.getContractFactory('DynamicFeeModule');
       const dynamicFeeModule = DynamicFeeModule_ethers.attach(dynamicFeeModuleAddress) as any as DynamicFeeModule;

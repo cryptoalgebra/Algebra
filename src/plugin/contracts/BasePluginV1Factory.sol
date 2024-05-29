@@ -7,6 +7,7 @@ import './base/AlgebraModuleFactory.sol';
 import './libraries/AdaptiveFee.sol';
 
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/AlgebraModularHub.sol';
+import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModularHub.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
 
@@ -47,15 +48,22 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     return _createPlugin(pool);
   }
 
+  function afterCreatePoolHook(address modularHub) external {
+    require(msg.sender == algebraFactory);
+    _insertModules(modularHub);
+  }
+
   /// @inheritdoc IBasePluginV1Factory
-  function createPluginForExistingPool(address token0, address token1) external override returns (address) {
+  function createPluginForExistingPool(address token0, address token1) external override returns (address pluginAddress) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
 
     address pool = factory.poolByPair(token0, token1);
     require(pool != address(0), 'Pool not exist');
 
-    return _createPlugin(pool);
+    pluginAddress = _createPlugin(pool);
+
+    _insertModules(pluginAddress);
   }
 
   function _createPlugin(address pool) internal returns (address) {
@@ -63,21 +71,30 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
     AlgebraModularHub modularHub = new AlgebraModularHub(pool, algebraFactory);
 
-    IAlgebraPool(pool).setPlugin(address(modularHub));
+    // IAlgebraPool(pool).setPlugin(address(modularHub));
 
     for (uint256 i = 0; i < factoriesCounter; ++i) {
       address moduleFactoryAddress = factoryByIndex[i];
       address moduleAddress = IAlgebraModuleFactory(moduleFactoryAddress).deploy(address(modularHub));
 
-      uint256 globalModuleIndex = modularHub.registerModule(moduleAddress);
-      InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(globalModuleIndex);
+      modularHub.registerModule(moduleAddress);
+      // InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(globalModuleIndex);
 
-      modularHub.insertModulesToHookLists(insertModuleParams);
+      // modularHub.insertModulesToHookLists(insertModuleParams);
     }
 
-    IAlgebraPool(pool).setPluginConfig(uint8(Plugins.DYNAMIC_FEE));
+    // IAlgebraPool(pool).setPluginConfig(uint8(Plugins.DYNAMIC_FEE));
 
     pluginByPool[pool] = address(modularHub);
     return address(modularHub);
+  }
+
+  function _insertModules(address modularHub) internal {
+    for (uint256 i = 0; i < factoriesCounter; ++i) {
+      address moduleFactoryAddress = factoryByIndex[i];
+      IAlgebraModularHub(modularHub).insertModulesToHookLists(
+        IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(i + 1)
+      );
+    }
   }
 }
