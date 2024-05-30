@@ -22,6 +22,7 @@ interface IAlgebraPluginFactory {
   ) external returns (address);
 
   function afterCreatePoolHook(
-    address modularHub
+    address modularHub,
+    address deployer
   ) external;
 }

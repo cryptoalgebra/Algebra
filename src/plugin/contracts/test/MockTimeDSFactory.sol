@@ -39,7 +39,7 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     return _createPlugin(pool);
   }
 
-  function afterCreatePoolHook(address modularHub) external {
+  function afterCreatePoolHook(address modularHub, address) external override {
     _insertModules(modularHub);
   }
 

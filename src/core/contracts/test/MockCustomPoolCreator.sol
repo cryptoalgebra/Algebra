@@ -25,7 +25,8 @@ contract MockCustomPoolCreator is IAlgebraPluginFactory {
   }
 
   function afterCreatePoolHook(
-    address modularHub
+    address modularHub,
+    address deployer
   ) external override {}
 
   function createCustomPool(address factory, address tokenA, address tokenB, bytes calldata data) external returns (address pool) {

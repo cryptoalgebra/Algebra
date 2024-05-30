@@ -50,10 +50,9 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     return _createPlugin(pool);
   }
 
-  function afterCreatePoolHook(address modularHub) external {
-    console.log('ale?');
+  function afterCreatePoolHook(address modularHub, address) external {
+    console.log('afterCreatePoolHook called');
     require(msg.sender == algebraFactory);
-    console.log('1');
     _insertModules(modularHub);
   }
 
@@ -100,9 +99,8 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   function _insertModules(address modularHub) internal {
     for (uint256 i = 0; i < factoriesCounter; ++i) {
       address moduleFactoryAddress = factoryByIndex[i];
-      console.log(3);
       InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(i + 1);
-      console.log(4);
+      AlgebraModularHub(modularHub).chto();
       IAlgebraModularHub(modularHub).insertModulesToHookLists(
         insertModuleParams
       );
