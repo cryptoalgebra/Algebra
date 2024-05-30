@@ -70,7 +70,7 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const dynamicFeeModuleFactoryFactory = await ethers.getContractFactory(DynamicFeeModuleFactoryJson.abi, DynamicFeeModuleFactoryJson.bytecode);
   const dynamicFeeModuleFactory = await dynamicFeeModuleFactoryFactory.deploy(_factory);
 
-  const farmingModuleFactoryFactory = await ethers.getContractFactory(FarmingModuleFactoryJson.abi, DynamicFeeModuleFactoryJson.bytecode);
+  const farmingModuleFactoryFactory = await ethers.getContractFactory(FarmingModuleFactoryJson.abi, FarmingModuleFactoryJson.bytecode);
   const farmingModuleFactory = await farmingModuleFactoryFactory.deploy(_factory) as any as IAlgebraFarmingModuleFactory;
 
   const oracleModuleFactoryFactory = await ethers.getContractFactory(OracleModuleFactoryJson.abi, OracleModuleFactoryJson.bytecode);
@@ -283,10 +283,6 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
   await factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), pluginFactory);
   await factory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), pluginFactory);
 
-  console.log(farmingModuleFactory.target);
-  const farmingAddress = await farmingModuleFactory.farmingAddress();
-  // console.log( farmingModuleFactory.farmingAddress(), farmingCenter.target);
-  console.log(farmingAddress);
   await farmingModuleFactory.setFarmingAddress(farmingCenter);
 
   const testIncentiveIdFactory = await ethers.getContractFactory('TestIncentiveId', signer);

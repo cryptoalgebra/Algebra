@@ -92,6 +92,9 @@ describe('AlgebraFarming', () => {
       await context.rewardToken.connect(incentiveCreator).approve(context.eternalFarming, totalReward);
       await context.bonusRewardToken.connect(incentiveCreator).approve(context.eternalFarming, bonusReward);
 
+      // проблема: при замене модуля в модулар хабе, он не заменится в фабрике
+      // console.log('farming ', await context.farmingModuleFactory.poolToPlugin(context.pool01));
+
       await expect(
         (context.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
           {
@@ -107,7 +110,7 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.farmingModuleFactory.poolToPlugin(context.pool01)
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -126,7 +129,7 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: 887272 * 2 + 1,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.farmingModuleFactory.poolToPlugin(context.pool01)
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -145,7 +148,7 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.farmingModuleFactory.poolToPlugin(context.pool01)
         )
       ).to.be.not.reverted;
     });
@@ -203,6 +206,7 @@ describe('AlgebraFarming', () => {
         bonusRewardToken: context.bonusRewardToken,
         minimalPositionWidth: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) - getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         poolAddress: context.pool01,
+        farmingModuleFactory: context.farmingModuleFactory,
         totalReward,
         bonusReward,
       });
@@ -254,6 +258,7 @@ describe('AlgebraFarming', () => {
         rewardToken,
         bonusRewardToken,
         poolAddress: context.pool01,
+        farmingModuleFactory: context.farmingModuleFactory,
         totalReward,
         bonusReward,
       });

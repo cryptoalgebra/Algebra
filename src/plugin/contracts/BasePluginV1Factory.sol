@@ -11,6 +11,8 @@ import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebra
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 /// @dev This plugin factory can only be used for Algebra base pools
@@ -49,7 +51,9 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   }
 
   function afterCreatePoolHook(address modularHub) external {
+    console.log('ale?');
     require(msg.sender == algebraFactory);
+    console.log('1');
     _insertModules(modularHub);
   }
 
@@ -70,6 +74,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(pluginByPool[pool] == address(0), 'Already created');
 
     AlgebraModularHub modularHub = new AlgebraModularHub(pool, algebraFactory);
+    console.log('modular Hub in contract: ', address(modularHub));
 
     // IAlgebraPool(pool).setPlugin(address(modularHub));
 
@@ -78,6 +83,9 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
       address moduleAddress = IAlgebraModuleFactory(moduleFactoryAddress).deploy(address(modularHub));
 
       modularHub.registerModule(moduleAddress);
+
+      // console.log('module', i, moduleAddress, globalIndex);
+
       // InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(globalModuleIndex);
 
       // modularHub.insertModulesToHookLists(insertModuleParams);
@@ -92,8 +100,11 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   function _insertModules(address modularHub) internal {
     for (uint256 i = 0; i < factoriesCounter; ++i) {
       address moduleFactoryAddress = factoryByIndex[i];
+      console.log(3);
+      InsertModuleParams[] memory insertModuleParams = IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(i + 1);
+      console.log(4);
       IAlgebraModularHub(modularHub).insertModulesToHookLists(
-        IAlgebraModuleFactory(moduleFactoryAddress).getInsertModuleParams(i + 1)
+        insertModuleParams
       );
     }
   }

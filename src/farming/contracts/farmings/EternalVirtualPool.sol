@@ -12,6 +12,8 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolError
 
 import '../base/VirtualTickStructure.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra Integral 1.1 eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
 contract EternalVirtualPool is Timestamp, VirtualTickStructure {
@@ -121,6 +123,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraVirtualPool
   /// @dev If the virtual pool is deactivated, does nothing
   function crossTo(int24 targetTick, bool zeroToOne) external override returns (bool) {
+    console.log('ALEEE BLYA');
     if (msg.sender != plugin) revert onlyPlugin();
 
     // All storage reads in this code block use the same slot
@@ -132,6 +135,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     int24 previousTick = globalPrevInitializedTick;
     int24 nextTick = globalNextInitializedTick;
 
+    console.log('???');
     if (_deactivated) return false; // early return if virtual pool is deactivated
     bool virtualZtO = targetTick <= _globalTick; // direction of movement from the point of view of the virtual pool
 
@@ -142,6 +146,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       if (targetTick < nextTick) return true;
     }
 
+    console.log('ale ', virtualZtO, zeroToOne);
     if (virtualZtO != zeroToOne) {
       deactivated = true; // deactivate if invalid input params (possibly desynchronization)
       return false;

@@ -15,6 +15,8 @@ import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra Integral 1.1
@@ -138,8 +140,11 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(plugin, token0, token1, deployer);
+    console.log('plugin: ', plugin);
 
-    defaultPluginFactory.afterCreatePoolHook(plugin);
+    if (deployer == address(0) && address(defaultPluginFactory) != address(0)) {
+      defaultPluginFactory.afterCreatePoolHook(plugin);
+    }
 
     _poolByPair[token0][token1] = pool;
     _poolByPair[token1][token0] = pool;

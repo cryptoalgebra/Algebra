@@ -23,6 +23,7 @@ import { HelperCommands, ERC20Helper, incentiveResultToFarmAdapter } from '../he
 import { ContractParams } from '../../types/contractParams';
 import { createTimeMachine } from '../shared/time';
 import { HelperTypes } from '../helpers/types';
+import { IFarmingPlugin } from '@cryptoalgebra/integral-base-plugin/typechain';
 
 describe('unit/EternalFarms', () => {
   let actors: ActorFixture;
@@ -40,9 +41,12 @@ describe('unit/EternalFarms', () => {
   let tokenId: string;
 
   const detachIncentiveIndirectly = async (localNonce: any) => {
-    await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+    await context.farmingModuleFactory.setFarmingAddress(actors.algebraRootUser().address);
 
-    const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+    const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+    const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+
+    const incentiveAddress = await farmingModule.incentive();
 
     await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
 
@@ -77,17 +81,17 @@ describe('unit/EternalFarms', () => {
       _tokenId
     );
 
-    await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+    await farmingModule.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
 
     const tick = (await context.poolObj.connect(actors.algebraRootUser()).globalState()).tick;
 
     await helpers.moveTickTo({ direction: 'down', desiredValue: Number(tick) - 130, trader: actors.farmingDeployer() });
 
-    await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
+    await farmingModule.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
     await helpers.moveTickTo({ direction: 'up', desiredValue: Number(tick) - 125, trader: actors.farmingDeployer() });
 
-    await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+    await context.farmingModuleFactory.setFarmingAddress(context.farmingCenter);
 
     const virtualPoolFactory = await ethers.getContractFactory('EternalVirtualPool');
     const deactivated = await (virtualPoolFactory.attach(incentiveAddress) as any as EternalVirtualPool).deactivated();
@@ -222,6 +226,7 @@ describe('unit/EternalFarms', () => {
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
+        farmingModuleFactory: context.farmingModuleFactory
       };
 
       const incentiveId = await helpers.getIncentiveId(await helpers.createIncentiveFlow(incentiveArgs));
@@ -269,6 +274,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -335,6 +341,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,

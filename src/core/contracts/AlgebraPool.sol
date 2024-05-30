@@ -210,6 +210,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
+    revert('dinah');
     _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
     _lock();
 

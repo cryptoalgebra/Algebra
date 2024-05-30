@@ -9,7 +9,7 @@ abstract contract AlgebraModuleFactory is IAlgebraModuleFactory {
 
     address public immutable algebraFactory;
 
-    mapping(address pool => address pluginAddress) public poolToPlugin;
+    mapping(address pool => address pluginAddress) public override poolToPlugin;
 
     modifier onlyAdministrator() {
         require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'Only administrator');

@@ -14,6 +14,7 @@ import '../interfaces/IBasePluginV1Factory.sol';
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../interfaces/IAlgebraFarmingModuleFactory.sol';
 
+import 'hardhat/console.sol';
 
 contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
     using Plugins for uint8;
@@ -85,11 +86,12 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
         bytes memory params ,
         uint16 /* poolFeeCache */
     ) internal override {
-        // console.log("Farming afterInitialize");
+        console.log("Farming afterInitialize");
 
         AfterSwapParams memory decodedParams = abi.decode(params, (AfterSwapParams));
 
         address _incentive = incentive;
+        console.log('incentive: ', _incentive);
         if (_incentive != address(0)) {
             (, int24 tick, , ) = _getPoolState();
             IAlgebraVirtualPool(_incentive).crossTo(tick, decodedParams.zeroToOne);

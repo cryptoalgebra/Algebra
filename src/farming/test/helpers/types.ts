@@ -1,5 +1,5 @@
 import { Wallet, Contract, ContractTransactionResponse } from 'ethers';
-import { TestERC20 } from '../../typechain';
+import { TestERC20, IAlgebraFarmingModuleFactory } from '../../typechain';
 import { FeeAmount } from '../shared';
 
 export module HelperTypes {
@@ -13,6 +13,7 @@ export module HelperTypes {
       nonce: bigint;
       totalReward: bigint;
       bonusReward: bigint;
+      farmingModuleFactory: IAlgebraFarmingModuleFactory;
 
       rewardRate?: bigint;
       bonusRewardRate?: bigint;
@@ -39,6 +40,7 @@ export module HelperTypes {
       amountsToFarm: [bigint, bigint];
       ticks: [number, number];
       createIncentiveResult: CreateIncentive.Result;
+      farmingModuleFactory: IAlgebraFarmingModuleFactory;
     };
 
     export type Result = {
