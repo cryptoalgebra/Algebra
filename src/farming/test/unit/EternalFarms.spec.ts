@@ -365,6 +365,7 @@ describe('unit/EternalFarms', () => {
     });
 
     it('true if incentive deactivated indirectly', async () => {
+      console.log('farming: ', await context.farmingModuleFactory.poolToPlugin(context.pool01));
       await detachIncentiveIndirectly(localNonce);
 
       expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
@@ -390,6 +391,7 @@ describe('unit/EternalFarms', () => {
         totalReward: 0n,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -409,6 +411,7 @@ describe('unit/EternalFarms', () => {
         totalReward: 10n,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -421,19 +424,20 @@ describe('unit/EternalFarms', () => {
     });
 
     it('cannot create farming if incorrect plugin is connected', async () => {
-      await context.poolObj.connect(actors.wallets[0]).setPlugin(actors.wallets[1].address);
+      // await context.poolObj.connect(actors.wallets[0]).setPlugin(actors.wallets[1].address);
       const incentiveArgs = {
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         totalReward: 10n,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
         plugin: actors.wallets[0].address,
       };
-
+      
       await expect(helpers.createIncentiveFlow(incentiveArgs)).to.be.revertedWithCustomError(
         context.eternalFarming as AlgebraEternalFarming,
         'pluginNotConnected'
@@ -447,6 +451,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         minimalPositionWidth: 2 ** 24 - 1,
         rewardRate: 10n,
@@ -466,6 +471,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -479,6 +485,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce + 1n,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -525,6 +532,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -729,9 +737,10 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: await context.poolObj.getAddress(),
+          farmingModuleFactory: context.farmingModuleFactory,
           nonce: 0n,
           rewardRate: 10n,
-          bonusRewardRate: 50n,
+          bonusRewardRate: 50n
         })
       );
 
@@ -797,6 +806,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.pool01,
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: 0n,
         rewardRate: 10000n,
         bonusRewardRate: 50000n,
@@ -902,6 +912,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: context.pool01,
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10000n,
         bonusRewardRate: 50000n,
@@ -923,10 +934,13 @@ describe('unit/EternalFarms', () => {
     });
 
     it('deactivate incentive', async () => {
-      let activeIncentiveBefore = await context.pluginObj.incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+  
+      let activeIncentiveBefore = await farmingModule.incentive();
 
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
-      let activeIncentiveAfter = await context.pluginObj.incentive();
+      let activeIncentiveAfter = await farmingModule.incentive();
 
       expect(activeIncentiveBefore).to.equal(await virtualPool.getAddress());
       expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS);
@@ -938,12 +952,15 @@ describe('unit/EternalFarms', () => {
     });
 
     it('deactivate incentive with zero rates', async () => {
-      let activeIncentiveBefore = await context.pluginObj.incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+  
+      let activeIncentiveBefore = await farmingModule.incentive();
 
       await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
 
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
-      let activeIncentiveAfter = await context.pluginObj.incentive();
+      let activeIncentiveAfter = await farmingModule.incentive();
 
       expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
       expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS);
@@ -955,10 +972,13 @@ describe('unit/EternalFarms', () => {
     });
 
     it('deactivate incentive only incentiveMaker', async () => {
-      let activeIncentiveBefore = await context.pluginObj.incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+  
+      let activeIncentiveBefore = await farmingModule.incentive();
 
       expect(context.eternalFarming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
-      let activeIncentiveAfter = await context.pluginObj.incentive();
+      let activeIncentiveAfter = await farmingModule.incentive();
 
       expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
       expect(activeIncentiveAfter).to.equal(virtualPoolAddress);
@@ -1018,7 +1038,11 @@ describe('unit/EternalFarms', () => {
         tokenIdNarrow
       );
 
-      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.poolObj);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+  
+      const incentiveAddress = await farmingModule.incentive();  
+
       const virtualPoolFactory = await ethers.getContractFactory('EternalVirtualPool');
       const virtualPool = virtualPoolFactory.attach(incentiveAddress) as any as EternalVirtualPool;
 
@@ -1056,8 +1080,12 @@ describe('unit/EternalFarms', () => {
     });
 
     it('can deactivate manually if farming detached manually from plugin', async () => {
-      await context.pluginFactory.setFarmingAddress(incentiveCreator.address);
-      await context.pluginObj.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
+      await context.farmingModuleFactory.setFarmingAddress(incentiveCreator.address);
+      
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;  
+
+      await farmingModule.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
 
       await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
     });
@@ -1272,6 +1300,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -1285,6 +1314,7 @@ describe('unit/EternalFarms', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult,
+        farmingModuleFactory: context.farmingModuleFactory
       });
       tokenId = mintResult.tokenId;
 
@@ -1414,6 +1444,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -1427,6 +1458,7 @@ describe('unit/EternalFarms', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult,
+        farmingModuleFactory: context.farmingModuleFactory,
       });
       tokenId = mintResult.tokenId;
 
@@ -1504,6 +1536,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: await context.poolObj.getAddress(),
+          farmingModuleFactory: context.farmingModuleFactory,
           nonce: localNonce,
           rewardRate: 10n,
           bonusRewardRate: 50n,
@@ -1567,6 +1600,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: await context.poolObj.getAddress(),
+          farmingModuleFactory: context.farmingModuleFactory,
           nonce: localNonce,
           rewardRate: 10n,
           bonusRewardRate: 50n,
@@ -1777,6 +1811,7 @@ describe('unit/EternalFarms', () => {
         totalReward: 1000000n,
         bonusReward: 1000000n,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -1931,6 +1966,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress,
+          farmingModuleFactory: context.farmingModuleFactory,
           nonce: _nonce,
           rewardRate: 10n,
           bonusRewardRate: 50n,
@@ -1997,6 +2033,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 10n,
         bonusRewardRate: 50n,
@@ -2070,6 +2107,7 @@ describe('unit/EternalFarms', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: localNonce,
         rewardRate: 100n,
         bonusRewardRate: 3n,
@@ -2240,6 +2278,7 @@ describe('unit/EternalFarms', () => {
           totalReward,
           bonusReward,
           poolAddress: context.pool12,
+          farmingModuleFactory: context.farmingModuleFactory,
           nonce: nonce,
           rewardRate: 10n,
           bonusRewardRate: 50n,

@@ -16,6 +16,7 @@ contract MockDefaultPluginFactory is IAlgebraPluginFactory {
 
   function afterCreatePoolHook(
     address modularHub,
+    address pool,
     address deployer
   ) external override {}
 }

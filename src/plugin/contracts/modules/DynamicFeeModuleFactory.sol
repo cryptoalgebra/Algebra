@@ -6,6 +6,8 @@ import '../base/AlgebraModuleFactory.sol';
 import './DynamicFeeModule.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
+import 'hardhat/console.sol';
+
 
 contract DynamicFeeModuleFactory is AlgebraModuleFactory {
     event DefaultFeeConfiguration(AlgebraFeeConfiguration newConfig);
@@ -27,7 +29,9 @@ contract DynamicFeeModuleFactory is AlgebraModuleFactory {
     }
 
     function deploy(address modularHub) external onlyAdministrator override returns (address) {
-        DynamicFeeModule dynamicFeeModule = new DynamicFeeModule(algebraFactory, address(this), IAlgebraModularHub(modularHub).modules(1), modularHub); // oracle module is stored at index 1 in modular hub
+        // ❗❗❗ убрать захаркоженный индекс модуля и сделать по красоте ❗❗❗
+        DynamicFeeModule dynamicFeeModule = new DynamicFeeModule(algebraFactory, address(this), IAlgebraModularHub(modularHub).modules(1), modularHub);
+        console.log('dynamicFeeModule', address(dynamicFeeModule));
         dynamicFeeModule.changeFeeConfiguration(defaultFeeConfiguration);
 
         poolToPlugin[IAlgebraModularHub(modularHub).pool()] = address(dynamicFeeModule);

@@ -39,8 +39,9 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     return _createPlugin(pool);
   }
 
-  function afterCreatePoolHook(address modularHub, address) external override {
+  function afterCreatePoolHook(address modularHub, address pool, address) external override {
     _insertModules(modularHub);
+    MockPool(pool).setPluginConfig(uint8(Plugins.DYNAMIC_FEE));
   }
 
   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
@@ -63,7 +64,6 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     // console.log("modular hub: ", address(modularHub));
 
     MockPool(pool).setPlugin(address(modularHub));
-    MockPool(pool).setPluginConfig(uint8(Plugins.DYNAMIC_FEE));
     
     for (uint256 i = 0; i < factoriesCounter; ++i) {
       address moduleFactoryAddress = factoryByIndex[i];

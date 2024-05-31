@@ -152,7 +152,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     console.log('plugin: ', plugin);
 
     if (deployer == address(0) && address(defaultPluginFactory) != address(0)) {
-      defaultPluginFactory.afterCreatePoolHook(plugin, deployer);
+      defaultPluginFactory.afterCreatePoolHook(plugin, pool, deployer);
     }
 
     _poolByPair[token0][token1] = pool;

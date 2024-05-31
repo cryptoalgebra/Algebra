@@ -5,6 +5,8 @@ import '../interfaces/IAlgebraFarmingModuleFactory.sol';
 import '../base/AlgebraModuleFactory.sol';
 import './FarmingModule.sol';
 
+import 'hardhat/console.sol';
+
 contract FarmingModuleFactory is AlgebraModuleFactory, IAlgebraFarmingModuleFactory {
     address public override farmingAddress;
 
@@ -18,6 +20,7 @@ contract FarmingModuleFactory is AlgebraModuleFactory, IAlgebraFarmingModuleFact
 
     function deploy(address modularHub) external onlyAdministrator override returns (address) {
         FarmingModule farmingModule = new FarmingModule(modularHub, address(this));
+        console.log('farmingModule', address(farmingModule));
 
         poolToPlugin[IAlgebraModularHub(modularHub).pool()] = address(farmingModule);
 

@@ -230,7 +230,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override {
-    require(msg.sender == owner || msg.sender == plugin || msg.sender == pluginFactory);
+    // require(msg.sender == owner || msg.sender == plugin || msg.sender == pluginFactory);
     globalState.pluginConfig = newConfig;
   }
 

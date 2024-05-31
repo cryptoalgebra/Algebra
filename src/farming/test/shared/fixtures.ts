@@ -77,7 +77,7 @@ const v3CoreFactoryFixture: () => Promise<[IAlgebraFactory, IAlgebraPoolDeployer
   const oracleModuleFactory = await oracleModuleFactoryFactory.deploy(_factory);
 
   const pluginContractFactory = await ethers.getContractFactory(PLUGIN_FACTORY_ABI, PLUGIN_FACTORY_BYTECODE);
-  const pluginFactory = (await pluginContractFactory.deploy(_factory, [dynamicFeeModuleFactory, farmingModuleFactory, oracleModuleFactory])) as any as IBasePluginV1Factory;
+  const pluginFactory = (await pluginContractFactory.deploy(_factory, [oracleModuleFactory, dynamicFeeModuleFactory, farmingModuleFactory])) as any as IBasePluginV1Factory;
 
   await _factory.setDefaultPluginFactory(pluginFactory);
 
