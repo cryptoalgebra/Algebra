@@ -12,8 +12,6 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolError
 
 import '../base/VirtualTickStructure.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra Integral 1.1 eternal virtual pool
 /// @notice used to track active liquidity in farming and distribute rewards
 contract EternalVirtualPool is Timestamp, VirtualTickStructure {

@@ -61,7 +61,6 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
     AlgebraModularHub modularHub = new AlgebraModularHub(pool, algebraFactory);
-    // console.log("modular hub: ", address(modularHub));
 
     MockPool(pool).setPlugin(address(modularHub));
     

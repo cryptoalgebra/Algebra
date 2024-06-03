@@ -16,7 +16,6 @@ import '../libraries/VolatilityOracle.sol';
 import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../interfaces/plugins/IDynamicFeeManager.sol';
 
-import 'hardhat/console.sol';
 
 contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     using Plugins for uint8;
@@ -134,8 +133,6 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     }
 
     function _writeTimepoint(address pool) internal {
-        // console.log('Write timepoint called');
-
         // single SLOAD
         uint16 _lastIndex = timepointIndex;
         uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
@@ -143,12 +140,10 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
         require(_isInitialized, 'Not initialized');
 
         uint32 currentTimestamp = _blockTimestamp();
-        // console.log('last timepoint timestamp: ', lastTimepointTimestamp, 'blocktimestamp: ', _blockTimestamp());
 
         if (_lastTimepointTimestamp == currentTimestamp) return;
 
         (, int24 tick, , ) = _getPoolState(pool);
-        // (uint16 newLastIndex, ) = timepoints.write(_lastIndex, currentTimestamp, tick);
         (uint16 newLastIndex, ) = timepoints.write(_lastIndex, currentTimestamp, tick);
         
         timepointIndex = newLastIndex;

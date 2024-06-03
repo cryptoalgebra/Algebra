@@ -25,8 +25,6 @@ import '../libraries/NFTPositionInfo.sol';
 
 import './EternalVirtualPool.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra Integral 1.1  eternal (v2-like) farming
 /// @notice Manages rewards and virtual pools
 contract AlgebraEternalFarming is IAlgebraEternalFarming {
@@ -128,7 +126,6 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     address farmingModule
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address modularHubAddress = key.pool.plugin();
-    console.log('modular hub address createEternalFarming in modularHubAddress: ', modularHubAddress);
     if (modularHubAddress == address(0) || IAlgebraModularHub(modularHubAddress).moduleAddressToIndex(farmingModule) == 0) revert pluginNotConnected();
     if (IFarmingPlugin(farmingModule).incentive() != address(0)) revert anotherFarmingIsActive();
 

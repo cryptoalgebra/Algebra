@@ -18,8 +18,6 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/VolatilityOracle.sol';
 
-import 'hardhat/console.sol';
-
 contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
     using Plugins for uint8;
     using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;

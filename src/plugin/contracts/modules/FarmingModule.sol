@@ -14,7 +14,6 @@ import '../interfaces/IBasePluginV1Factory.sol';
 import '../interfaces/IAlgebraVirtualPool.sol';
 import '../interfaces/IAlgebraFarmingModuleFactory.sol';
 
-import 'hardhat/console.sol';
 
 contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
     using Plugins for uint8;
