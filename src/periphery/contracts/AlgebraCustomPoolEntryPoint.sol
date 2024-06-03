@@ -52,10 +52,11 @@ contract AlgebraCustomPoolEntryPoint is IAlgebraCustomPoolEntryPoint {
 
     function afterCreatePoolHook(
         address modularHub,
+        address pool,
         address deployer
     ) external override {
         require(msg.sender == factory, 'Only factory');
-        IAlgebraPluginFactory(deployer).afterCreatePoolHook(modularHub, deployer);
+        IAlgebraPluginFactory(deployer).afterCreatePoolHook(modularHub, pool, deployer);
     }
 
     // ####### Permissioned actions #######
