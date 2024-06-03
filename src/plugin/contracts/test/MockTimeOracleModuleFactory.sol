@@ -14,6 +14,7 @@ contract MockTimeOracleModuleFactory is AlgebraModuleFactory {
     }
 
     function getInsertModuleParams(uint256 moduleGlobalIndex) external override pure returns (InsertModuleParams[] memory) {
+        console.log('getInsertModuleParams in oracle module has called');
         InsertModuleParams[] memory insertModuleParams = new InsertModuleParams[](2);
 
         insertModuleParams[0] = InsertModuleParams({

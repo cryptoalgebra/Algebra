@@ -16,6 +16,8 @@ import '../libraries/VolatilityOracle.sol';
 import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../interfaces/plugins/IDynamicFeeManager.sol';
 
+import 'hardhat/console.sol';
+
 contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     using Plugins for uint8;
 

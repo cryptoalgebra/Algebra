@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture, impersonateAccount, stopImpersonatingAccount, setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter } from '../../typechain';
+import { TestERC20, AlgebraEternalFarming, NftPosManagerMock, FarmingCenter, IFarmingPlugin } from '../../typechain';
 import { algebraFixture, AlgebraFixtureType, mintPosition } from '../shared/fixtures';
 import {
   expect,
@@ -82,7 +82,8 @@ describe('unit/FarmingCenter', () => {
       await impersonateAccount(eternalFarmingAddress);
       await setBalance(eternalFarmingAddress, 10 ** 18);
       const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
-      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.poolObj);
+      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, farmingModuleAddress, { from: eternalFarmingAddress });
       await setBalance(eternalFarmingAddress, 0);
       await stopImpersonatingAccount(eternalFarmingAddress);
       expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.not.be.eq(ZERO_ADDRESS);
@@ -93,11 +94,15 @@ describe('unit/FarmingCenter', () => {
       await impersonateAccount(eternalFarmingAddress);
       await setBalance(eternalFarmingAddress, 10 ** 18);
       const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
-      await context.pluginFactory.setFarmingAddress(incentiveCreator);
-      await context.pluginObj.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
-      await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+      
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+      
+      await context.farmingModuleFactory.setFarmingAddress(incentiveCreator);
+      await farmingModule.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
+      await context.farmingModuleFactory.setFarmingAddress(context.farmingCenter);
       await expect(
-        context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress })
+        context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, farmingModule, { from: eternalFarmingAddress })
       ).to.be.revertedWith('Another incentive is connected');
       await setBalance(eternalFarmingAddress, 0);
       await stopImpersonatingAccount(eternalFarmingAddress);
@@ -143,10 +148,11 @@ describe('unit/FarmingCenter', () => {
       await impersonateAccount(eternalFarmingAddress);
       await setBalance(eternalFarmingAddress, 10 ** 18);
       const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
-      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      await context.farmingCenter.connect(fakeSigner).connectVirtualPoolToPlugin(context.pool01, farmingModuleAddress, { from: eternalFarmingAddress });
       await context.farmingCenter
         .connect(fakeSigner)
-        .disconnectVirtualPoolFromPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+        .disconnectVirtualPoolFromPlugin(context.pool01, farmingModuleAddress, { from: eternalFarmingAddress });
       await setBalance(eternalFarmingAddress, 0);
       await stopImpersonatingAccount(eternalFarmingAddress);
       expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.be.eq(ZERO_ADDRESS);
@@ -157,12 +163,16 @@ describe('unit/FarmingCenter', () => {
       await impersonateAccount(eternalFarmingAddress);
       await setBalance(eternalFarmingAddress, 10 ** 18);
       const fakeSigner = await ethers.getSigner(eternalFarmingAddress);
-      await context.pluginFactory.setFarmingAddress(incentiveCreator);
-      await context.pluginObj.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
-      await context.pluginFactory.setFarmingAddress(context.farmingCenter);
+
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+
+      await context.farmingModuleFactory.setFarmingAddress(incentiveCreator);
+      await farmingModule.connect(incentiveCreator).setIncentive(eternalFarmingAddress);
+      await context.farmingModuleFactory.setFarmingAddress(context.farmingCenter);
       await context.farmingCenter
         .connect(fakeSigner)
-        .disconnectVirtualPoolFromPlugin(context.pool01, context.pluginObj, { from: eternalFarmingAddress });
+        .disconnectVirtualPoolFromPlugin(context.pool01, farmingModule, { from: eternalFarmingAddress });
       await setBalance(eternalFarmingAddress, 0);
       await stopImpersonatingAccount(eternalFarmingAddress);
       expect(await context.farmingCenter.virtualPoolAddresses(context.pool01)).to.be.eq(ZERO_ADDRESS);
@@ -185,6 +195,7 @@ describe('unit/FarmingCenter', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce,
         rewardRate: 100n,
         bonusRewardRate: 50n,
@@ -198,6 +209,7 @@ describe('unit/FarmingCenter', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult: createIncentiveResultEternal,
+        farmingModuleFactory: context.farmingModuleFactory
       });
       tokenIdEternal = mintResultEternal.tokenId;
     });
@@ -258,9 +270,12 @@ describe('unit/FarmingCenter', () => {
     });
 
     it('works if liquidity decreased and incentive deactivated automatically', async () => {
-      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+      await context.farmingModuleFactory.setFarmingAddress(actors.algebraRootUser().address);
 
-      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+
+      const incentiveAddress = await farmingModule.incentive();
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
 
@@ -289,11 +304,11 @@ describe('unit/FarmingCenter', () => {
         _tokenId
       );
 
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+      await farmingModule.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
 
       await helpers.moveTickTo({ direction: 'down', desiredValue: -160, trader: actors.farmingDeployer() });
 
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
+      await farmingModule.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
       await helpers.moveTickTo({ direction: 'up', desiredValue: -140, trader: actors.farmingDeployer() });
 
@@ -311,9 +326,12 @@ describe('unit/FarmingCenter', () => {
     });
 
     it('works if liquidity decreased and incentive detached indirectly', async () => {
-      await context.pluginFactory.setFarmingAddress(actors.algebraRootUser().address);
+      await context.farmingModuleFactory.setFarmingAddress(actors.algebraRootUser().address);
 
-      const incentiveAddress = await context.pluginObj.connect(actors.algebraRootUser()).incentive();
+      const farmingModuleAddress = await context.farmingModuleFactory.poolToPlugin(context.pool01);
+      const farmingModule = await ethers.getContractAt('FarmingModule', farmingModuleAddress) as any as IFarmingPlugin;
+
+      const incentiveAddress = await farmingModule.incentive();
 
       await erc20Helper.ensureBalancesAndApprovals(lpUser0, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
 
@@ -342,11 +360,11 @@ describe('unit/FarmingCenter', () => {
         _tokenId
       );
 
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
+      await farmingModule.connect(actors.algebraRootUser()).setIncentive(ZERO_ADDRESS);
 
       await helpers.moveTickTo({ direction: 'down', desiredValue: -160, trader: actors.farmingDeployer() });
 
-      await context.pluginObj.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
+      await farmingModule.connect(actors.algebraRootUser()).setIncentive(incentiveAddress);
 
       await expect(
         context.nft.connect(lpUser0).decreaseLiquidity({
@@ -432,6 +450,7 @@ describe('unit/FarmingCenter', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce,
         rewardRate: 100n,
         bonusRewardRate: 50n,
@@ -443,6 +462,7 @@ describe('unit/FarmingCenter', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult: createIncentiveResultEternal,
+        farmingModuleFactory: context.farmingModuleFactory
       });
       tokenIdEternal = mintResultEternal.tokenId;
     });
@@ -484,6 +504,7 @@ describe('unit/FarmingCenter', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce,
         rewardRate: 100n,
         bonusRewardRate: 50n,
@@ -497,6 +518,7 @@ describe('unit/FarmingCenter', () => {
         ticks: [getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]), getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM])],
         amountsToFarm: [amountDesired, amountDesired],
         createIncentiveResult: createIncentiveResultEternal,
+        farmingModuleFactory: context.farmingModuleFactory
       });
       tokenIdEternal = mintResultEternal.tokenId;
 

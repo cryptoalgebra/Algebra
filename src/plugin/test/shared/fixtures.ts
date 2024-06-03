@@ -55,7 +55,9 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
 
   await mockPluginFactory.beforeCreatePoolHook(mockPool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
   const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
+  await mockPluginFactory.afterCreatePoolHook(pluginAddress, mockPool, ZERO_ADDRESS);
 
+  console.log('mockpool pluginconfig: ', (await mockPool.globalState()).pluginConfig);
 
   const algebraModularHubFactory = await ethers.getContractFactory('AlgebraModularHub');
   const plugin = algebraModularHubFactory.attach(pluginAddress) as any as AlgebraModularHub;

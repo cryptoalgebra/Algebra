@@ -86,12 +86,9 @@ contract FarmingModule is AlgebraModule, IFarmingPlugin, Timestamp {
         bytes memory params ,
         uint16 /* poolFeeCache */
     ) internal override {
-        console.log("Farming afterInitialize");
-
         AfterSwapParams memory decodedParams = abi.decode(params, (AfterSwapParams));
 
         address _incentive = incentive;
-        console.log('incentive: ', _incentive);
         if (_incentive != address(0)) {
             (, int24 tick, , ) = _getPoolState();
             IAlgebraVirtualPool(_incentive).crossTo(tick, decodedParams.zeroToOne);

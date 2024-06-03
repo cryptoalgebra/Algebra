@@ -105,16 +105,11 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
         bytes memory /* params */,
         uint16 /* poolFeeCache */
     ) internal view override {
-        console.log('dynamicFeeModule beforeswap called');
         uint16 newFee = _getNewFee();
-        console.log('dynamicFeeModule after newFee');
         ModuleUtils.returnDynamicFeeResult(newFee, false);
-        console.log('dynamicFeeModule beforeswap end');
     }
 
     function _getNewFee() internal view returns (uint16 newFee) {
-        console.log('getNewfee entered');
-        console.log('oracleModule address: ', oracleModule);
         uint16 lastTimepointIndex = IVolatilityOracle(oracleModule).timepointIndex();
         
         uint16 lastTimepointIndexOutsideCurrentBlock;

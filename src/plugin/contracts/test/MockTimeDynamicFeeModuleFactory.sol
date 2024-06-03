@@ -32,7 +32,6 @@ contract MockTimeDynamicFeeModuleFactory is AlgebraModuleFactory {
     function getInsertModuleParams(uint256 moduleGlobalIndex) external override pure returns (InsertModuleParams[] memory) {
         InsertModuleParams[] memory insertModuleParams = new InsertModuleParams[](2);
 
-        // dynamic fee hooks shoule be called after oracle, so indexInHookList = 1
         insertModuleParams[0] = InsertModuleParams({
             selector: IAlgebraPlugin.afterInitialize.selector,
             indexInHookList: 0,

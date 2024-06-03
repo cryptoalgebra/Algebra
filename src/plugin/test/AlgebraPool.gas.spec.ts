@@ -51,6 +51,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     
     await mockPluginFactory.beforeCreatePoolHook(pool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
     const pluginAddress = await mockPluginFactory.pluginByPool(pool);
+    await mockPluginFactory.afterCreatePoolHook(pluginAddress, pool, ZERO_ADDRESS);
 
     const mockDSOperatorFactory = await ethers.getContractFactory('AlgebraModularHub');
     const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as AlgebraModularHub;

@@ -122,6 +122,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     globalState.price = initialPrice;
     globalState.tick = tick;
 
+    console.log('plugin config: ', pluginConfig);
     if (pluginConfig & Plugins.AFTER_INIT_FLAG != 0) {
       IAlgebraPlugin(plugin).afterInitialize(msg.sender, initialPrice, tick);
     }
@@ -231,6 +232,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setPluginConfig(uint8 newConfig) external override {
     // require(msg.sender == owner || msg.sender == plugin || msg.sender == pluginFactory);
+    console.log('newConfig: ', newConfig);
     globalState.pluginConfig = newConfig;
   }
 
