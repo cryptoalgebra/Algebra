@@ -20,6 +20,8 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
+  address public override withdrawalFeePlugin;
+
   /// @inheritdoc IBasePluginV1Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
@@ -71,5 +73,11 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  function setWithdrawalFeePlugin(address newWithDrawalFeePlugin) external override onlyAdministrator {
+    require(withdrawalFeePlugin != newWithDrawalFeePlugin);
+    withdrawalFeePlugin = newWithDrawalFeePlugin;
+    emit WithdrawalFeePlugin(newWithDrawalFeePlugin);
   }
 }

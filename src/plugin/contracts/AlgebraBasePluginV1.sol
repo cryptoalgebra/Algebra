@@ -30,7 +30,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.DYNAMIC_FEE | Plugins.BEFORE_POSITION_MODIFY_FLAG);
 
   /// @inheritdoc IFarmingPlugin
   address public immutable override pool;
@@ -51,6 +52,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
 
   /// @dev AlgebraFeeConfiguration struct packed in uint144
   AlgebraFeeConfigurationU144 private _feeConfig;
+
+  address public override withdrawalFeePlugin;
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
@@ -100,6 +103,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     require(price != 0, 'Pool is not initialized');
 
     uint32 time = _blockTimestamp();
+    withdrawalFeePlugin = IBasePluginV1Factory(pluginFactory).withdrawalFeePlugin();
     timepoints.initialize(time, tick);
     lastTimepointTimestamp = time;
     isInitialized = true;
@@ -223,6 +227,13 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return true;
   }
 
+  // ###### WithdrawalFeePlugin ######
+
+  function setWithdrawalFeePlugin(address newWithdrawalFeePlugin) external override {
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+    withdrawalFeePlugin = newWithdrawalFeePlugin;
+  }
+
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
@@ -241,9 +252,10 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  /// @dev unused
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
-    _updatePluginConfigInPool(); // should not be called, reset config
+  function beforeModifyPosition(address caller, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+    if (withdrawalFeePlugin != address(0)) {
+      require(caller == withdrawalFeePlugin, 'only WithdrawalFeePlugin');
+    }
     return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
