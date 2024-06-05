@@ -16,9 +16,10 @@ library CallbackValidation {
     function verifyCallback(
         address poolDeployer,
         address tokenA,
-        address tokenB
+        address tokenB,
+        address deployer
     ) internal view returns (IAlgebraPool pool) {
-        return verifyCallback(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB));
+        return verifyCallback(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer));
     }
 
     /// @notice Returns the address of a valid Algebra Pool

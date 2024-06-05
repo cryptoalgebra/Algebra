@@ -15,6 +15,8 @@ import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra Integral 1.1 Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -44,8 +46,8 @@ contract SwapRouter is
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
     /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
-    function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {
-        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));
+    function getPool(address tokenA, address tokenB, address deployer) private view returns (IAlgebraPool) {
+        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer)));
     }
 
     struct SwapCallbackData {
@@ -57,8 +59,8 @@ contract SwapRouter is
     function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
-        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
-        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
+        (address tokenIn, address deployer, address tokenOut) = data.path.decodeFirstPool();
+        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut, deployer);
 
         (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta))
@@ -87,11 +89,13 @@ contract SwapRouter is
     ) private returns (uint256 amountOut) {
         if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
-        (address tokenIn, address tokenOut) = data.path.decodeFirstPool();
+        (address tokenIn, address deployer, address tokenOut) = data.path.decodeFirstPool();
 
         bool zeroToOne = tokenIn < tokenOut;
 
-        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut).swap(
+        console.log('deployer: ', deployer);
+
+        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut, deployer).swap(
             recipient,
             zeroToOne,
             amountIn.toInt256(),
@@ -122,6 +126,9 @@ contract SwapRouter is
         ExactInputParams memory params
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         address payer = msg.sender; // msg.sender pays for the first hop
+
+        // console.log('path');
+        // console.logBytes(params.path);
 
         while (true) {
             bool hasMultiplePools = params.path.hasMultiplePools();
@@ -162,7 +169,7 @@ contract SwapRouter is
 
         bool zeroToOne = params.tokenIn < params.tokenOut;
 
-        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut).swapWithPaymentInAdvance(
+        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut, params.deployer).swapWithPaymentInAdvance(
             msg.sender,
             recipient,
             zeroToOne,
@@ -187,11 +194,11 @@ contract SwapRouter is
     ) private returns (uint256 amountIn) {
         if (recipient == address(0)) recipient = address(this); // allow swapping to the router address with address 0
 
-        (address tokenOut, address tokenIn) = data.path.decodeFirstPool();
+        (address tokenOut, address deployer, address tokenIn) = data.path.decodeFirstPool();
 
         bool zeroToOne = tokenIn < tokenOut;
 
-        (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut).swap(
+        (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut, deployer).swap(
             recipient,
             zeroToOne,
             -amountOut.toInt256(),

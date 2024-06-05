@@ -33,21 +33,21 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         address _poolDeployer
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
-    function getPool(address tokenA, address tokenB) private view returns (IAlgebraPool) {
-        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB)));
+    function getPool(address tokenA, address tokenB, address deployer) private view returns (IAlgebraPool) {
+        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer)));
     }
 
     /// @inheritdoc IAlgebraSwapCallback
     function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address tokenOut) = path.decodeFirstPool();
-        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut);
+        (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
+        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut, deployer);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta), uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
-        IAlgebraPool pool = getPool(tokenIn, tokenOut);
+        IAlgebraPool pool = getPool(tokenIn, tokenOut, deployer);
         (, , uint16 fee, , , ) = pool.globalState();
 
         if (isExactInput) {
@@ -84,13 +84,14 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     function quoteExactInputSingle(
         address tokenIn,
         address tokenOut,
+        address deployer,
         uint256 amountIn,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountOut, uint16 fee) {
         bool zeroToOne = tokenIn < tokenOut;
 
         try
-            getPool(tokenIn, tokenOut).swap(
+            getPool(tokenIn, tokenOut, deployer).swap(
                 address(this), // address(0) might cause issues with some tokens
                 zeroToOne,
                 amountIn.toInt256(),
@@ -114,10 +115,10 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         while (true) {
             bool hasMultiplePools = path.hasMultiplePools();
 
-            (address tokenIn, address tokenOut) = path.decodeFirstPool();
+            (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
 
             // the outputs of prior swaps become the inputs to subsequent ones
-            (amountIn, fees[i]) = quoteExactInputSingle(tokenIn, tokenOut, amountIn, 0);
+            (amountIn, fees[i]) = quoteExactInputSingle(tokenIn, tokenOut, deployer, amountIn, 0);
 
             // decide whether to continue or terminate
             if (hasMultiplePools) {
@@ -133,6 +134,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
     function quoteExactOutputSingle(
         address tokenIn,
         address tokenOut,
+        address deployer,
         uint256 amountOut,
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountIn, uint16 fee) {
@@ -141,7 +143,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (limitSqrtPrice == 0) amountOutCached = amountOut;
         try
-            getPool(tokenIn, tokenOut).swap(
+            getPool(tokenIn, tokenOut, deployer).swap(
                 address(this), // address(0) might cause issues with some tokens
                 zeroToOne,
                 -amountOut.toInt256(),
@@ -166,10 +168,10 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         while (true) {
             bool hasMultiplePools = path.hasMultiplePools();
 
-            (address tokenOut, address tokenIn) = path.decodeFirstPool();
+            (address tokenOut, address deployer, address tokenIn) = path.decodeFirstPool();
 
             // the inputs of prior swaps become the outputs of subsequent ones
-            (amountOut, fees[i]) = quoteExactOutputSingle(tokenIn, tokenOut, amountOut, 0);
+            (amountOut, fees[i]) = quoteExactOutputSingle(tokenIn, tokenOut, deployer, amountOut, 0);
 
             // decide whether to continue or terminate
             if (hasMultiplePools) {

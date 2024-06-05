@@ -5,6 +5,8 @@ import completeFixture from './shared/completeFixture';
 import { expect } from './shared/expect';
 import { TestERC20, TestCallbackValidation } from '../typechain';
 
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
 describe('CallbackValidation', () => {
   let nonpairAddr: Wallet;
 
@@ -46,7 +48,7 @@ describe('CallbackValidation', () => {
     await expect(
       callbackValidation
         .connect(nonpairAddr)
-        .verifyCallback(await factory.poolDeployer(), await tokens[0].getAddress(), await tokens[1].getAddress())
+        .verifyCallback(await factory.poolDeployer(), await tokens[0].getAddress(), await tokens[1].getAddress(), ZERO_ADDRESS)
     ).to.be.revertedWith('Invalid caller of callback');
   });
 });

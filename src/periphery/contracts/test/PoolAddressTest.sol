@@ -12,21 +12,23 @@ contract PoolAddressTest {
         address factory,
         address token0,
         address token1,
+        address deployer,
         uint24 fee
     ) external pure returns (address) {
         fee;
-        return PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1}));
+        return PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1, deployer: deployer}));
     }
 
     function getGasCostOfComputeAddress(
         address factory,
         address token0,
         address token1,
+        address deployer,
         uint24 fee
     ) external view returns (uint256) {
         fee;
         uint256 gasBefore = gasleft();
-        PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1}));
+        PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1, deployer: deployer}));
         return gasBefore - gasleft();
     }
 }
