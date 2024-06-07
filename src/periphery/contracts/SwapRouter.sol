@@ -127,9 +127,6 @@ contract SwapRouter is
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         address payer = msg.sender; // msg.sender pays for the first hop
 
-        // console.log('path');
-        // console.logBytes(params.path);
-
         while (true) {
             bool hasMultiplePools = params.path.hasMultiplePools();
 
@@ -239,6 +236,10 @@ contract SwapRouter is
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountIn) {
         // it's okay that the payer is fixed to msg.sender here, as they're only paying for the "final" exact output
         // swap, which happens first, and subsequent swaps are paid for within nested callback frames
+
+        console.log('path');
+        console.logBytes(params.path);
+
         exactOutputInternal(
             params.amountOut,
             params.recipient,

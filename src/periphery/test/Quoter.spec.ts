@@ -170,7 +170,7 @@ describe('Quoter', () => {
 
       it('2 -> 1 -> 0', async () => {
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath(path.reverse()),
+          encodePath(path.slice().reverse()),
           5
         );
 

@@ -64,6 +64,11 @@ const completeFixture: () => Promise<{
   tokens[1].address_ = await tokens[1].getAddress();
   tokens[2].address_ = await tokens[2].getAddress();
 
+  tokens.sort((tokenA: TestERC20WithAddress, tokenB: TestERC20WithAddress) => {
+    if (!tokenA.address_ || !tokenB.address_) return 0;
+    return tokenA.address_.toLowerCase() < tokenB.address_.toLowerCase() ? -1 : 1;
+  });
+
   const path: [string, string, string, string, string] = [
     tokens[0].address_,
     ZERO_ADDRESS, // deployer
@@ -71,11 +76,6 @@ const completeFixture: () => Promise<{
     ZERO_ADDRESS, // deployer,
     tokens[2].address_
   ]
-
-  tokens.sort((tokenA: TestERC20WithAddress, tokenB: TestERC20WithAddress) => {
-    if (!tokenA.address_ || !tokenB.address_) return 0;
-    return tokenA.address_.toLowerCase() < tokenB.address_.toLowerCase() ? -1 : 1;
-  });
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor');
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy();
