@@ -15,8 +15,6 @@ import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
 
-import 'hardhat/console.sol';
-
 /// @title Algebra Integral 1.1 Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -92,8 +90,6 @@ contract SwapRouter is
         (address tokenIn, address deployer, address tokenOut) = data.path.decodeFirstPool();
 
         bool zeroToOne = tokenIn < tokenOut;
-
-        console.log('deployer: ', deployer);
 
         (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut, deployer).swap(
             recipient,
@@ -236,9 +232,6 @@ contract SwapRouter is
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountIn) {
         // it's okay that the payer is fixed to msg.sender here, as they're only paying for the "final" exact output
         // swap, which happens first, and subsequent swaps are paid for within nested callback frames
-
-        console.log('path');
-        console.logBytes(params.path);
 
         exactOutputInternal(
             params.amountOut,

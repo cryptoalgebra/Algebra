@@ -31,7 +31,7 @@ import {
   TestIncentiveId,
   FarmingCenter,
 } from '../../typechain';
-import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT } from '../shared';
+import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT, ZERO_ADDRESS } from '../shared';
 import { ActorFixture } from './actors';
 import { IBasePluginV1Factory, IAlgebraBasePluginV1 } from '@cryptoalgebra/integral-base-plugin/typechain';
 
@@ -182,6 +182,7 @@ export const mintPosition = async (
       {
         token0: mintParams.token0,
         token1: mintParams.token1,
+        deployer: ZERO_ADDRESS,
         tickLower: mintParams.tickLower,
         tickUpper: mintParams.tickUpper,
         recipient: mintParams.recipient,
@@ -272,9 +273,9 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const fee = FeeAmount.MEDIUM;
 
-  await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
+  await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1));
 
-  await nft.createAndInitializePoolIfNecessary(tokens[1], tokens[2], encodePriceSqrt(1, 1));
+  await nft.createAndInitializePoolIfNecessary(tokens[1], tokens[2], ZERO_ADDRESS, encodePriceSqrt(1, 1));
 
   const pool01 = await factory.poolByPair(tokens[0], tokens[1]);
 
