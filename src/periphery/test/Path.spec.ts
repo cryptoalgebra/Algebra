@@ -58,7 +58,8 @@ describe('Path', () => {
 
       const firstPool = await path.decodeFirstPool(encodedPath);
       expect(firstPool.tokenA).to.be.eq(tokenAddresses[0]);
-      expect(firstPool.tokenB).to.be.eq(tokenAddresses[1]);
+      expect(firstPool.deployer).to.be.eq(tokenAddresses[1]);
+      expect(firstPool.tokenB).to.be.eq(tokenAddresses[2]);
 
       expect(await path.decodeFirstPool(await path.getFirstPool(encodedPath))).to.deep.eq(firstPool);
     });
@@ -67,17 +68,18 @@ describe('Path', () => {
 
     it('skips 1 item', async () => {
       const skipped = await path.skipToken(encodedPath);
-      expect(skipped).to.be.eq('0x' + encodedPath.slice(2 + offset * 2));
+      expect(skipped).to.be.eq('0x' + encodedPath.slice(2 + offset * 4));
 
       expect(await path.hasMultiplePools(skipped)).to.be.false;
 
-      const { tokenA, tokenB } = await path.decodeFirstPool(skipped);
-      expect(tokenA).to.be.eq(tokenAddresses[1]);
-      expect(tokenB).to.be.eq(tokenAddresses[2]);
+      const { tokenA, deployer, tokenB } = await path.decodeFirstPool(skipped);
+      expect(tokenA).to.be.eq(tokenAddresses[2]);
+      expect(deployer).to.be.eq(tokenAddresses[3]);
+      expect(tokenB).to.be.eq(tokenAddresses[4]);
     });
   });
 
   it('gas cost [ @skip-on-coverage ]', async () => {
-    await snapshotGasCost(path.getGasCostOfDecodeFirstPool(encodePath([tokenAddresses[0], tokenAddresses[1]])));
+    await snapshotGasCost(path.getGasCostOfDecodeFirstPool(encodePath([tokenAddresses[0], tokenAddresses[1], tokenAddresses[2]])));
   });
 });

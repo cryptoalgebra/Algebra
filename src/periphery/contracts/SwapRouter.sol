@@ -116,7 +116,7 @@ contract SwapRouter is
             params.amountIn,
             params.recipient,
             params.limitSqrtPrice,
-            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.tokenOut), payer: msg.sender})
+            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut), payer: msg.sender})
         );
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }
@@ -162,7 +162,7 @@ contract SwapRouter is
         ExactInputSingleParams calldata params
     ) external payable override checkDeadline(params.deadline) returns (uint256 amountOut) {
         SwapCallbackData memory data = SwapCallbackData({
-            path: abi.encodePacked(params.tokenIn, params.tokenOut),
+            path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut),
             payer: msg.sender
         });
         address recipient = params.recipient == address(0) ? address(this) : params.recipient;
@@ -226,7 +226,7 @@ contract SwapRouter is
             params.amountOut,
             params.recipient,
             params.limitSqrtPrice,
-            SwapCallbackData({path: abi.encodePacked(params.tokenOut, params.tokenIn), payer: msg.sender})
+            SwapCallbackData({path: abi.encodePacked(params.tokenOut, params.deployer, params.tokenIn), payer: msg.sender})
         );
 
         require(amountIn <= params.amountInMaximum, 'Too much requested');

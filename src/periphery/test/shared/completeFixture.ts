@@ -10,6 +10,7 @@ import {
   TestERC20,
   IAlgebraFactory,
 } from '../../typechain';
+import { ZERO_ADDRESS } from '../CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address_: string | undefined };
 
@@ -48,6 +49,7 @@ const completeFixture: () => Promise<{
   nft: MockTimeNonfungiblePositionManager;
   nftDescriptor: NonfungibleTokenPositionDescriptor;
   tokens: [TestERC20, TestERC20, TestERC20];
+  path: [string, string, string, string, string];
 }> = async () => {
   const { wnative, factory, router } = await v3RouterFixture();
   const tokenFactory = await ethers.getContractFactory('TestERC20');
@@ -61,6 +63,14 @@ const completeFixture: () => Promise<{
   tokens[0].address_ = await tokens[0].getAddress();
   tokens[1].address_ = await tokens[1].getAddress();
   tokens[2].address_ = await tokens[2].getAddress();
+
+  const path: [string, string, string, string, string] = [
+    tokens[0].address_,
+    ZERO_ADDRESS, // deployer
+    tokens[1].address_,
+    ZERO_ADDRESS, // deployer,
+    tokens[2].address_
+  ]
 
   tokens.sort((tokenA: TestERC20WithAddress, tokenB: TestERC20WithAddress) => {
     if (!tokenA.address_ || !tokenB.address_) return 0;
@@ -97,6 +107,7 @@ const completeFixture: () => Promise<{
     factory,
     router,
     tokens,
+    path,
     nft,
     nftDescriptor: nftDescriptorProxied,
   };

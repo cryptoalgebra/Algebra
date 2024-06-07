@@ -44,6 +44,7 @@ library Path {
     /// @return deployer The address of the custom pool deployer
     /// @return tokenB The second token of the given pool
     function decodeFirstPool(bytes memory path) internal pure returns (address tokenA, address deployer, address tokenB) {
+        console.logBytes(path);
         tokenA = path.toAddress(0);
         deployer = path.toAddress(DEPLOYER_OFFSET);
         tokenB = path.toAddress(NEXT_OFFSET);

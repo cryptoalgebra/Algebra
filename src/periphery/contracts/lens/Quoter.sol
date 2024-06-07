@@ -98,7 +98,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
                 limitSqrtPrice == 0
                     ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
-                abi.encodePacked(tokenIn, tokenOut)
+                abi.encodePacked(tokenIn, deployer, tokenOut)
             )
         {} catch (bytes memory reason) {
             (amountOut, fee) = parseRevertReason(reason);
@@ -150,7 +150,7 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
                 limitSqrtPrice == 0
                     ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : limitSqrtPrice,
-                abi.encodePacked(tokenOut, tokenIn)
+                abi.encodePacked(tokenOut, deployer, tokenIn)
             )
         {} catch (bytes memory reason) {
             if (limitSqrtPrice == 0) delete amountOutCached; // clear cache

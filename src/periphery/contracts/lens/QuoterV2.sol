@@ -136,7 +136,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         IAlgebraPool pool = getPool(params.tokenIn, params.tokenOut, params.deployer);
 
         uint256 gasBefore = gasleft();
-        bytes memory data = abi.encodePacked(params.tokenIn, params.tokenOut);
+        bytes memory data = abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut);
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
@@ -239,7 +239,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (params.limitSqrtPrice == 0) amountOutCached = params.amount;
         uint256 gasBefore = gasleft();
-        bytes memory data = abi.encodePacked(params.tokenOut, params.tokenIn);
+        bytes memory data = abi.encodePacked(params.tokenOut, params.deployer, params.tokenIn);
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens

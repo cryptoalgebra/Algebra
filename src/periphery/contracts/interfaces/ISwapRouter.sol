@@ -41,6 +41,7 @@ interface ISwapRouter is IAlgebraSwapCallback {
     struct ExactOutputSingleParams {
         address tokenIn;
         address tokenOut;
+        address deployer;
         address recipient;
         uint256 deadline;
         uint256 amountOut;
