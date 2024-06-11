@@ -1,7 +1,7 @@
 import { MaxUint256, Wallet } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
+import { CustomPoolDeployerTest, IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { MaxUint128 } from './shared/constants';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
@@ -22,10 +22,12 @@ describe('QuoterV2', function () {
   const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+    customPoolDeployer: CustomPoolDeployerTest;
+    path: [string, string, string, string, string];
     quoter: QuoterV2;
     factory: IAlgebraFactory;
   }> = async () => {
-    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
+    const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     // approve & fund wallets
     for (const token of _tokens) {
@@ -41,6 +43,8 @@ describe('QuoterV2', function () {
 
     return {
       tokens: _tokens,
+      customPoolDeployer: customPoolDeployer,
+      path: path,
       nft,
       quoter,
       factory,
@@ -49,6 +53,7 @@ describe('QuoterV2', function () {
 
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+  let path: [string, string, string, string, string];
   let quoter: QuoterV2;
   let factory: IAlgebraFactory;
 
@@ -59,12 +64,15 @@ describe('QuoterV2', function () {
 
   describe('quotes', () => {
     const subFixture = async () => {
-      const { tokens, nft, quoter, factory } = await swapRouterFixture();
-      await createPool(nft, wallet, tokens[0].address, tokens[1].address);
-      await createPool(nft, wallet, tokens[1].address, tokens[2].address);
+      const { tokens, customPoolDeployer, path, nft, quoter, factory } = await swapRouterFixture();
+      await createPool(nft, wallet, tokens[0].address, tokens[1].address, ZERO_ADDRESS);
+
+      await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, await tokens[1].getAddress(), await tokens[2].getAddress(), '0x');
+      await createPool(nft, wallet, tokens[1].address, tokens[2].address, await customPoolDeployer.getAddress());
       await createPoolWithMultiplePositions(nft, wallet, tokens[0].address, tokens[2].address);
       return {
         tokens,
+        path,
         nft,
         quoter,
         factory,
@@ -72,7 +80,7 @@ describe('QuoterV2', function () {
     };
 
     beforeEach(async () => {
-      ({ tokens, nft, quoter, factory } = await loadFixture(subFixture));
+      ({ tokens, path, nft, quoter, factory } = await loadFixture(subFixture));
     });
 
     describe('#quoteExactInput', () => {
@@ -206,7 +214,8 @@ describe('QuoterV2', function () {
 
       it('2 -> 1', async () => {
         const { amountOut, amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList } =
-          await quoter.quoteExactInput.staticCall(encodePath([tokens[2].address, ZERO_ADDRESS, tokens[1].address]), 10000);
+
+          await quoter.quoteExactInput.staticCall(encodePath([path[4], path[3], path[2]]), 10000);
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(1);
@@ -219,7 +228,7 @@ describe('QuoterV2', function () {
       it('0 -> 2 -> 1', async () => {
         const { amountOut, amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList } =
           await quoter.quoteExactInput.staticCall(
-            encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address, ZERO_ADDRESS, tokens[1].address]),
+            encodePath([path[0], ZERO_ADDRESS, path[4], path[3], path[2]]),
             10000
           );
 
@@ -438,7 +447,7 @@ describe('QuoterV2', function () {
 
       it('2 -> 1', async () => {
         const { amountOut, amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList } =
-          await quoter.quoteExactOutput.staticCall(encodePath([tokens[1].address, ZERO_ADDRESS, tokens[2].address]), 9897);
+          await quoter.quoteExactOutput.staticCall(encodePath([path[2], path[3], path[4]]), 9897);
 
         expect(sqrtPriceX96AfterList.length).to.eq(1);
         expect(sqrtPriceX96AfterList[0]).to.eq('80020121658316697953186638498');
@@ -450,7 +459,7 @@ describe('QuoterV2', function () {
       it('0 -> 2 -> 1', async () => {
         const { amountOut, amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList } =
           await quoter.quoteExactOutput.staticCall(
-            encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address, ZERO_ADDRESS, tokens[1].address].reverse()),
+            encodePath([path[0], ZERO_ADDRESS, path[4], path[3], path[2]].reverse()),
             9795
           );
 
@@ -544,7 +553,7 @@ describe('QuoterV2', function () {
 
         it('2 -> 1', async () => {
           const { gasEstimate } = await quoter.quoteExactOutput.staticCall(
-            encodePath([tokens[1].address, ZERO_ADDRESS, tokens[2].address]),
+            encodePath([path[2], path[3], path[4]]),
             9897
           );
 
@@ -553,7 +562,7 @@ describe('QuoterV2', function () {
 
         it('0 -> 2 -> 1', async () => {
           const { gasEstimate } = await quoter.quoteExactOutput.staticCall(
-            encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address, ZERO_ADDRESS, tokens[1].address].reverse()),
+            encodePath([path[0], ZERO_ADDRESS, path[4], path[3], path[2]].reverse()),
             9795
           );
 

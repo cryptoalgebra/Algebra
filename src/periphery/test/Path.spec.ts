@@ -8,7 +8,7 @@ import { PathTest } from '../typechain';
 import { decodePath, encodePath } from './shared/path';
 
 import snapshotGasCost from './shared/snapshotGasCost';
-import { ZERO_ADDRESS } from './CallbackValidation.spec';
+import { ZERO_ADDRESS, PLUGIN_DEPLOYER_ADDRESS } from './CallbackValidation.spec';
 
 describe('Path', () => {
   let path: PathTest;
@@ -17,7 +17,7 @@ describe('Path', () => {
     '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
     ZERO_ADDRESS,
     '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
-    ZERO_ADDRESS,
+    PLUGIN_DEPLOYER_ADDRESS,
     '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
   ];
   let fees = [FeeAmount.MEDIUM, FeeAmount.MEDIUM];

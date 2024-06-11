@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
+import 'hardhat/console.sol';
+
 /// @title Provides functions for deriving a pool address from the poolDeployer and tokens
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
@@ -45,6 +47,9 @@ library PoolAddress {
                 )
             );
         } else {
+            console.log('token0: ', key.token0);
+            console.log('token1: ', key.token1);
+            console.log('deployer: ', key.deployer);
             pool = address(
                 uint160(
                     uint256(
@@ -52,7 +57,7 @@ library PoolAddress {
                             abi.encodePacked(
                                 hex'ff',
                                 poolDeployer,
-                                keccak256(abi.encode(key.token0, key.token1, key.deployer)),
+                                keccak256(abi.encode(key.deployer, key.token0, key.token1)),
                                 POOL_INIT_CODE_HASH
                             )
                         )

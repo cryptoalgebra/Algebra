@@ -14,6 +14,8 @@ import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Algebra Integral 1.1 Quoter
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -89,6 +91,17 @@ contract Quoter is IQuoter, IAlgebraSwapCallback, PeripheryImmutableState {
         uint160 limitSqrtPrice
     ) public override returns (uint256 amountOut, uint16 fee) {
         bool zeroToOne = tokenIn < tokenOut;
+
+        {
+            address pooladdress = address(getPool(tokenIn, tokenOut, deployer));
+            console.log('pool in quoter: ', pooladdress);
+            console.log('deployer in quter: ', deployer);
+            uint256 cs;
+            assembly {
+                cs := extcodesize(pooladdress)
+            }
+            console.log('pool codesize: ', cs);
+        }
 
         try
             getPool(tokenIn, tokenOut, deployer).swap(

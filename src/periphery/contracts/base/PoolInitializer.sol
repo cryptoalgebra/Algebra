@@ -8,6 +8,8 @@ import '../interfaces/IPoolInitializer.sol';
 
 import '../libraries/PoolInteraction.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Creates and initializes Algebra Pools
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
@@ -23,16 +25,20 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
     ) external payable override returns (address pool) {
         require(token0 < token1, 'Invalid order of tokens');
 
-        pool = IAlgebraFactory(factory).poolByPair(token0, token1);
+        pool = deployer == address(0) ? IAlgebraFactory(factory).poolByPair(token0, token1) : IAlgebraFactory(factory).customPoolByPair(deployer, token0, token1);
 
         if (pool == address(0)) {
             if (deployer == address(0)) {
                 pool = IAlgebraFactory(factory).createPool(token0, token1);
             } else {
+                console.log(1);
+                console.log('factory: ', factory);
                 pool = IAlgebraFactory(factory).createCustomPool(deployer, msg.sender, token0, token1, '');
+                console.log(2);
             }
-
+            console.log(3);
             _initializePool(pool, sqrtPriceX96);
+            console.log(4);
         } else {
             uint160 sqrtPriceX96Existing = IAlgebraPool(pool)._getSqrtPrice();
             if (sqrtPriceX96Existing == 0) {

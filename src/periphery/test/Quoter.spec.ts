@@ -2,11 +2,15 @@ import { Wallet, ContractTransactionResponse, MaxUint256, ZeroAddress } from 'et
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import {
+  AlgebraCustomPoolEntryPoint,
+  CustomPoolDeployerTest,
   IAlgebraFactory,
   IAlgebraPool,
   IWNativeToken,
+  MockPluginFactory,
   MockTimeNonfungiblePositionManager,
   MockTimeSwapRouter,
+  PoolAddressTest,
   Quoter,
   TestERC20,
 } from '../typechain';
@@ -28,6 +32,7 @@ describe('Quoter', () => {
   const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+    customPoolDeployer: CustomPoolDeployerTest;
     path: [string, string, string, string, string];
     quoter: Quoter;
     router: MockTimeSwapRouter;
@@ -35,7 +40,7 @@ describe('Quoter', () => {
     factory: IAlgebraFactory;
   }> = async () => {
     let _tokens;
-    const { wnative, factory, router, tokens, path, nft } = await loadFixture(completeFixture);
+    const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     // approve & fund wallets
@@ -53,6 +58,7 @@ describe('Quoter', () => {
     return {
       tokens: _tokens,
       path: path,
+      customPoolDeployer: customPoolDeployer,
       nft,
       quoter,
       router,
@@ -76,9 +82,12 @@ describe('Quoter', () => {
 
   describe('quotes', () => {
     const subFixture = async () => {
-      const { tokens, path, nft, quoter, router, wnative, factory } = await swapRouterFixture();
-      const pool0 = await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress());
-      await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress());
+      const { tokens, customPoolDeployer, path, nft, quoter, router, wnative, factory } = await swapRouterFixture();
+      const pool0 = await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress(), ZERO_ADDRESS);
+
+      await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, await tokens[1].getAddress(), await tokens[2].getAddress(), '0x');
+      await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress(), await customPoolDeployer.getAddress());
+
       return { tokens, path, nft, quoter, router, wnative, factory };
     };
 

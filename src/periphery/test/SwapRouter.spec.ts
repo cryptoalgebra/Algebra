@@ -9,7 +9,7 @@ import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { getMaxTick, getMinTick } from './shared/ticks';
-import { computePoolAddress } from './shared/computePoolAddress';
+import { computePoolAddress, computeCustomPoolAddress } from './shared/computePoolAddress';
 import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
@@ -39,17 +39,18 @@ describe('SwapRouter', function () {
     _nft: MockTimeNonfungiblePositionManager,
     _wallet: Wallet,
     tokenAddressA: string,
-    tokenAddressB: string
+    tokenAddressB: string,
+    deployer: string
   ) {
     if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
       [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+    await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, deployer, encodePriceSqrt(1, 1));
 
     const liquidityParams = {
       token0: tokenAddressA,
       token1: tokenAddressB,
-      deployer: ZERO_ADDRESS,
+      deployer: deployer,
       fee: FeeAmount.MEDIUM,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -72,7 +73,7 @@ describe('SwapRouter', function () {
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
     path: [string, string, string, string, string];
   }> = async () => {
-    const { wnative, factory, router, tokens, path, nft } = await loadFixture(completeFixture);
+    const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     // approve & fund wallets
@@ -84,9 +85,11 @@ describe('SwapRouter', function () {
       token.address = await token.getAddress();
     }
 
-    await createPool(nft, wallet, _tokens[0].address, _tokens[1].address);
-    await createPool(nft, wallet, _tokens[1].address, _tokens[2].address);
+    await createPool(nft, wallet, _tokens[0].address, _tokens[1].address, ZERO_ADDRESS);
 
+    await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, _tokens[1].getAddress(), _tokens[2].getAddress(), '0x');
+    await createPool(nft, wallet, _tokens[1].address, _tokens[2].address, await customPoolDeployer.getAddress());
+    
     return {
       wnative,
       factory: factory as any as Contract,
@@ -100,7 +103,7 @@ describe('SwapRouter', function () {
   async function createPoolWNativeToken(tokenAddress: string) {
     await wnative.deposit({ value: liquidity });
     await wnative.approve(nft, MaxUint256);
-    return createPool(nft, wallet, await wnative.getAddress(), tokenAddress);
+    return createPool(nft, wallet, await wnative.getAddress(), tokenAddress, ZERO_ADDRESS);
   }
 
   before('create fixture loader', async () => {
@@ -311,12 +314,12 @@ describe('SwapRouter', function () {
             .to.emit(tokens[1], 'Transfer')
             .withArgs(
               await router.getAddress(),
-              computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[2].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[2], path[3], path[4]]),
               3
             )
             .to.emit(tokens[2], 'Transfer')
             .withArgs(
-              computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[2].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[2], path[3], path[4]]),
               trader.address,
               1
             );
@@ -817,14 +820,14 @@ describe('SwapRouter', function () {
           )
             .to.emit(tokens[2], 'Transfer')
             .withArgs(
-              computePoolAddress(await factory.poolDeployer(), [tokens[2].address, tokens[1].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[4], path[3], path[2]]),
               trader.address,
               1
             )
             .to.emit(tokens[1], 'Transfer')
             .withArgs(
               computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[0].address]),
-              computePoolAddress(await factory.poolDeployer(), [tokens[2].address, tokens[1].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[4], path[3], path[2]]),
               3
             )
             .to.emit(tokens[0], 'Transfer')

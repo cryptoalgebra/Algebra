@@ -9,17 +9,18 @@ export async function createPool(
   nft: MockTimeNonfungiblePositionManager,
   wallet: Wallet,
   tokenAddressA: string,
-  tokenAddressB: string
+  tokenAddressB: string,
+  deployer: string
 ) {
   if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
     [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-  await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+  await nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, deployer, encodePriceSqrt(1, 1));
 
   const liquidityParams = {
     token0: tokenAddressA,
     token1: tokenAddressB,
-    deployer: ZERO_ADDRESS,
+    deployer: deployer,
     tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
     tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
     recipient: wallet.address,
