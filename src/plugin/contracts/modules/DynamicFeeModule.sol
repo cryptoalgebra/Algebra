@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
@@ -12,13 +11,17 @@ import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebra
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/types/HookParams.sol';
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/libraries/ModuleUtils.sol';
 
+import '../base/AlgebraBaseModule.sol';
+
 import '../types/AlgebraFeeConfigurationU144.sol';
-import '../interfaces/plugins/IDynamicFeeManager.sol';
-import '../interfaces/plugins/IVolatilityOracle.sol';
+
 import '../libraries/AdaptiveFee.sol';
 import '../libraries/VolatilityOracle.sol';
 
-contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
+import '../interfaces/plugins/IDynamicFeeManager.sol';
+import '../interfaces/plugins/IVolatilityOracle.sol';
+
+contract DynamicFeeModule is AlgebraBaseModule, IDynamicFeeManager, Timestamp {
     using Plugins for uint8;
     using AlgebraFeeConfigurationU144Lib for AlgebraFeeConfiguration;
 
@@ -86,10 +89,6 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
         (beta1, beta2) = (_feeConfig.beta1(), _feeConfig.beta2());
         (gamma1, gamma2) = (_feeConfig.gamma1(), _feeConfig.gamma2());
         baseFee = _feeConfig.baseFee();
-    }
-
-    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
-        (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
     }
 
     function _afterInitialize(

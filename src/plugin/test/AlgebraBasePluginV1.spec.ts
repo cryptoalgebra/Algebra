@@ -114,54 +114,6 @@ describe('AlgebraBasePluginV1', () => {
       await expect(plugin.beforeFlash(wallet.address, wallet.address, 100, 100, '0x')).to.be.revertedWith(errorMessage);
       await expect(plugin.afterFlash(wallet.address, wallet.address, 100, 100, 100, 100, '0x')).to.be.revertedWith(errorMessage);
     });
-    
-    // ❗❗❗ удалить эти тесты, при коле хука, у которого нет модулей, modular hub не ревертит транзу ❗❗❗
-    // describe('not implemented hooks', async () => {
-    //   let defaultConfig: bigint;
-
-    //   beforeEach('connect plugin to pool', async () => {
-    //     defaultConfig = await plugin.defaultPluginConfig();
-    //     await mockPool.setPlugin(plugin);
-    //   });
-
-    //   it('resets config after beforeModifyPosition', async () => {
-    //     await mockPool.initialize(encodePriceSqrt(1, 1));
-    //     await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
-    //     await mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x');
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-    //   });
-
-    //   it('resets config after afterModifyPosition', async () => {
-    //     await mockPool.initialize(encodePriceSqrt(1, 1));
-    //     await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_POSITION_MODIFY_FLAG);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_POSITION_MODIFY_FLAG);
-    //     await mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x');
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-    //   });
-
-    //   it('resets config after afterSwap', async () => {
-    //     await mockPool.initialize(encodePriceSqrt(1, 1));
-    //     await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-    //     await mockPool.swapToTick(100);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-    //   });
-
-    //   it('resets config after beforeFlash', async () => {
-    //     await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
-    //     await mockPool.flash(wallet.address, 100, 100, '0x');
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-    //   });
-
-    //   it('resets config after afterFlash', async () => {
-    //     await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_FLASH_FLAG);
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_FLASH_FLAG);
-    //     await mockPool.flash(wallet.address, 100, 100, '0x');
-    //     expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-    //   });
-    // });
   });
 
   describe('#VolatilityVolatilityOracle', () => {

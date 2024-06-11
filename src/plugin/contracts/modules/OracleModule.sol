@@ -3,7 +3,6 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
-import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModule.sol';
@@ -11,10 +10,13 @@ import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/base/AlgebraModule.
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModularHub.sol';
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/types/HookParams.sol';
 
+import '../base/AlgebraBaseModule.sol';
+
 import '../libraries/VolatilityOracle.sol';
+
 import '../interfaces/plugins/IVolatilityOracle.sol';
 
-contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
+contract OracleModule is AlgebraBaseModule, IVolatilityOracle, Timestamp {
     using Plugins for uint8;
 
     uint256 internal constant UINT16_MODULO = 65536;
@@ -99,14 +101,6 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
         uint16 oldestIndex
     ) external view override returns (uint88) {
         return timepoints.getAverageVolatility(currentTime, tick, lastIndex, oldestIndex);
-    }
-
-    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
-        (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
-    }
-
-    function _getPluginInPool() internal view returns (address plugin) {
-        return IAlgebraPool(pool).plugin();
     }
 
     function _afterInitialize(
