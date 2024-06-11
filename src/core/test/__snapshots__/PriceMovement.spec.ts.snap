@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in capped 1`] = `1665`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact in partial 1`] = `2503`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out capped 1`] = `1489`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap one for zero exact out partial 1`] = `2503`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in capped 1`] = `1666`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact in partial 1`] = `2645`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out capped 1`] = `1490`;
+
+exports[`PriceMovementMath #movePriceTowardsTarget gas  [ @skip-on-coverage ] swap zero for one exact out partial 1`] = `2645`;
