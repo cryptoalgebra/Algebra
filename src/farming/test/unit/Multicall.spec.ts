@@ -73,6 +73,7 @@ describe('unit/Multicall', () => {
         totalReward,
         bonusReward,
         poolAddress: await context.poolObj.getAddress(),
+        farmingModuleFactory: context.farmingModuleFactory,
         nonce: 0n,
         rewardRate: 10n,
         bonusRewardRate: 50n,

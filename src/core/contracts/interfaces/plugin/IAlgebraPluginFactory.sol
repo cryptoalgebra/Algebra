@@ -20,4 +20,10 @@ interface IAlgebraPluginFactory {
     address token1,
     bytes calldata data
   ) external returns (address);
+
+  function afterCreatePoolHook(
+    address modularHub,
+    address pool,
+    address deployer
+  ) external;
 }

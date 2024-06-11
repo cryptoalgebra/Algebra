@@ -15,6 +15,8 @@ import '@cryptoalgebra/integral-periphery/contracts/libraries/TransferHelper.sol
 
 import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
 
+import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModularHub.sol';
+
 import '../interfaces/IAlgebraEternalFarming.sol';
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
 import '../interfaces/IFarmingCenter.sol';
@@ -121,14 +123,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function createEternalFarming(
     IncentiveKey memory key,
     IncentiveParams memory params,
-    address plugin
+    address farmingModule
   ) external override onlyIncentiveMaker returns (address virtualPool) {
-    address connectedPlugin = key.pool.plugin();
-    if (connectedPlugin != plugin || connectedPlugin == address(0)) revert pluginNotConnected();
-    if (IFarmingPlugin(connectedPlugin).incentive() != address(0)) revert anotherFarmingIsActive();
+    address modularHubAddress = key.pool.plugin();
+    if (modularHubAddress == address(0) || IAlgebraModularHub(modularHubAddress).moduleAddressToIndex(farmingModule) == 0) revert pluginNotConnected();
+    if (IFarmingPlugin(farmingModule).incentive() != address(0)) revert anotherFarmingIsActive();
 
-    virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
-    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
+    virtualPool = address(new EternalVirtualPool(address(this), farmingModule));
+    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(farmingModule));
 
     key.nonce = numOfIncentives++;
     bytes32 incentiveId = IncentiveId.compute(key);
@@ -143,7 +145,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     }
     newIncentive.virtualPoolAddress = virtualPool;
     newIncentive.minimalPositionWidth = params.minimalPositionWidth;
-    newIncentive.pluginAddress = connectedPlugin;
+    newIncentive.pluginAddress = farmingModule;
 
     emit EternalFarmingCreated(
       key.rewardToken,

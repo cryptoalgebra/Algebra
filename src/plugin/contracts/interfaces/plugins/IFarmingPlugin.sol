@@ -8,9 +8,9 @@ interface IFarmingPlugin {
   /// @param newIncentive The address of the new incentive
   event Incentive(address newIncentive);
 
-  /// @notice Returns the address of the pool the plugin is created for
-  /// @return address of the pool
-  function pool() external view returns (address);
+  /// @notice Returns address of plugin factory (BasePluginV1Factory now)
+  /// @return Address of plugin factory
+  function pluginFactory() external view returns (address);
 
   /// @notice Connects or disconnects an incentive.
   /// @dev Only farming can connect incentives.

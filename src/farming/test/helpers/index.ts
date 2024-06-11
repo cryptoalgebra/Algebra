@@ -11,6 +11,7 @@ import { ethers } from 'hardhat';
 import { ContractParams } from '../../types/contractParams';
 import { TestContext } from '../types';
 import Decimal from 'decimal.js';
+import { IAlgebraFarmingModuleFactory } from '@cryptoalgebra/integral-base-plugin/typechain';
 
 /***
  * HelperCommands is a utility that abstracts away lower-tier ethereum details
@@ -104,9 +105,9 @@ export class HelperCommands {
     await params.bonusRewardToken.connect(incentiveCreator).approve(this.eternalFarming, params.bonusReward);
 
     let pluginAddres = params.plugin;
+
     if (!pluginAddres) {
-      const pool = (await ethers.getContractAt('IAlgebraPool', params.poolAddress)) as any as IAlgebraPool;
-      pluginAddres = await pool.connect(incentiveCreator).plugin();
+      pluginAddres = await params.farmingModuleFactory.poolToPlugin(params.poolAddress);
     }
 
     txResult = await (this.eternalFarming as AlgebraEternalFarming).connect(incentiveCreator).createEternalFarming(
@@ -126,7 +127,7 @@ export class HelperCommands {
       pluginAddres
     );
     // @ts-ignore
-    virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool'];
+    virtualPoolAddress = (await txResult.wait(1)).logs[3].args['virtualPool'];
 
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),

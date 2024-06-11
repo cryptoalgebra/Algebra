@@ -8,6 +8,7 @@ import '@cryptoalgebra/integral-periphery/contracts/interfaces/INonfungiblePosit
 import '@cryptoalgebra/integral-periphery/contracts/base/Multicall.sol';
 import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
 import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/integral-base-plugin/contracts/modules/FarmingModule.sol';
 
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';
@@ -139,7 +140,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal view returns (IAlgebraPool pool) {
     require(msg.sender == address(eternalFarming), 'Only farming can call this');
     require(virtualPool != address(0), 'Zero address as virtual pool');
-    pool = IAlgebraPool(plugin.pool());
+    pool = IAlgebraPool(FarmingModule(address(plugin)).pool());
     require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'Invalid pool');
   }
 }

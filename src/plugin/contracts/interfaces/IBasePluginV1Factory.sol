@@ -26,18 +26,6 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @return The AlgebraFactory contract address
   function algebraFactory() external view returns (address);
 
-  /// @notice Current default dynamic fee configuration
-  /// @dev See the AdaptiveFee struct for more details about params.
-  /// This value is set by default in new plugins
-  function defaultFeeConfiguration()
-    external
-    view
-    returns (uint16 alpha1, uint16 alpha2, uint32 beta1, uint32 beta2, uint16 gamma1, uint16 gamma2, uint16 baseFee);
-
-  /// @notice Returns current farming address
-  /// @return The farming contract address
-  function farmingAddress() external view returns (address);
-
   /// @notice Returns address of plugin created for given AlgebraPool
   /// @param pool The address of AlgebraPool
   /// @return The address of corresponding plugin
@@ -48,14 +36,4 @@ interface IBasePluginV1Factory is IAlgebraPluginFactory {
   /// @param token1 The address of second token in pool
   /// @return The address of created plugin
   function createPluginForExistingPool(address token0, address token1) external returns (address);
-
-  /// @notice Changes initial fee configuration for new pools
-  /// @dev changes coefficients for sigmoids: α / (1 + e^( (β-x) / γ))
-  /// alpha1 + alpha2 + baseFee (max possible fee) must be <= type(uint16).max and gammas must be > 0
-  /// @param newConfig new default fee configuration. See the #AdaptiveFee.sol library for details
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external;
-
-  /// @dev updates farmings manager address on the factory
-  /// @param newFarmingAddress The new tokenomics contract address
-  function setFarmingAddress(address newFarmingAddress) external;
 }

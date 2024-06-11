@@ -4,20 +4,25 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 import { ZERO_ADDRESS, pluginFactoryFixture } from './shared/fixtures';
 
-import { BasePluginV1Factory, AlgebraBasePluginV1, MockFactory } from '../typechain';
+import { BasePluginV1Factory, MockFactory, FarmingModuleFactory, MockTimeDynamicFeeModuleFactory, MockTimeOracleModuleFactory, MockPool, AlgebraModularHub, DynamicFeeModule } from '../typechain';
 
 describe('BasePluginV1Factory', () => {
   let wallet: Wallet, other: Wallet;
 
   let pluginFactory: BasePluginV1Factory;
+  // let mockPool: MockPool;
+  let mockOracleModuleFactory: MockTimeOracleModuleFactory;
+  let mockDynamicFeeModuleFactory: MockTimeDynamicFeeModuleFactory;
+  let farmingModuleFactory: FarmingModuleFactory;
   let mockAlgebraFactory: MockFactory;
+
 
   before('prepare signers', async () => {
     [wallet, other] = await (ethers as any).getSigners();
   });
 
   beforeEach('deploy test volatilityOracle', async () => {
-    ({ pluginFactory, mockFactory: mockAlgebraFactory } = await loadFixture(pluginFactoryFixture));
+    ({ pluginFactory, mockOracleModuleFactory, mockDynamicFeeModuleFactory, farmingModuleFactory, mockFactory: mockAlgebraFactory } = await loadFixture(pluginFactoryFixture));
   });
 
   describe('#Create plugin', () => {
@@ -28,20 +33,28 @@ describe('BasePluginV1Factory', () => {
 
     it('factory can create plugin', async () => {
       const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-      const pluginFactoryMock = (await pluginFactoryFactory.deploy(wallet.address)) as any as BasePluginV1Factory;
+      const pluginFactoryMock = (await pluginFactoryFactory.deploy(mockAlgebraFactory, [mockDynamicFeeModuleFactory, farmingModuleFactory, mockOracleModuleFactory])) as any as BasePluginV1Factory;
 
-      const pluginAddress = await pluginFactoryMock.beforeCreatePoolHook.staticCall(
-        wallet.address,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        '0x'
-      );
-      await pluginFactoryMock.beforeCreatePoolHook(wallet.address, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
+    
+      await mockPool.setPluginFactory(pluginFactoryMock);
 
-      const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
-      const feeConfig = await pluginMock.feeConfig();
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), pluginFactoryMock);
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), pluginFactoryMock);
+
+      const pluginAddress = await mockAlgebraFactory.createPlugin.staticCall(pluginFactoryMock, mockPool);
+
+      await mockAlgebraFactory.createPlugin(pluginFactoryMock, mockPool);
+
+      const pluginMock = (await ethers.getContractFactory('AlgebraModularHub')).attach(pluginAddress) as any as AlgebraModularHub;
+
+      const dynamicFeeModuleAddress = await pluginMock.modules(1);
+  
+      const DynamicFeeModule_ethers = await ethers.getContractFactory('DynamicFeeModule');
+      const dynamicFeeModule = DynamicFeeModule_ethers.attach(dynamicFeeModuleAddress) as any as DynamicFeeModule;
+
+      const feeConfig = await dynamicFeeModule.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
     });
   });
@@ -56,22 +69,58 @@ describe('BasePluginV1Factory', () => {
     });
 
     it('can create for existing pool', async () => {
-      await mockAlgebraFactory.stubPool(wallet.address, other.address, other.address);
+      const tokenFactory = await ethers.getContractFactory('TestERC20');
+      const token0 = await tokenFactory.deploy(1337);
+      const token1 = await tokenFactory.deploy(1337);
 
-      await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
-      const pluginAddress = await pluginFactory.pluginByPool(other.address);
+      const poolAddress = await mockAlgebraFactory.createPool.staticCall(token0, token1);
+      await mockAlgebraFactory.createPool(token0, token1)
+
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      const mockPool = (await mockPoolFactory.attach(poolAddress)) as any as MockPool;
+    
+      await mockPool.setPluginFactory(pluginFactory);
+
+      await mockAlgebraFactory.stubPool(token0, token1, mockPool);
+
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), pluginFactory);
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), pluginFactory);
+
+      await pluginFactory.createPluginForExistingPool(token0, token1);
+      const pluginAddress = await pluginFactory.pluginByPool(mockPool);
       expect(pluginAddress).to.not.be.eq(ZERO_ADDRESS);
-      const pluginMock = (await ethers.getContractFactory('AlgebraBasePluginV1')).attach(pluginAddress) as any as AlgebraBasePluginV1;
-      const feeConfig = await pluginMock.feeConfig();
+      const pluginMock = (await ethers.getContractFactory('AlgebraModularHub')).attach(pluginAddress) as any as AlgebraModularHub;
+
+      // plugin indexing inside modular hub starts from 1
+      const dynamicFeeModuleAddress = await pluginMock.modules(1);
+
+      const DynamicFeeModule_ethers = await ethers.getContractFactory('DynamicFeeModule');
+      const dynamicFeeModule = DynamicFeeModule_ethers.attach(dynamicFeeModuleAddress) as any as DynamicFeeModule;
+      
+      const feeConfig = await dynamicFeeModule.feeConfig();
       expect(feeConfig.baseFee).to.be.not.eq(0);
     });
 
     it('cannot create twice for existing pool', async () => {
-      await mockAlgebraFactory.stubPool(wallet.address, other.address, other.address);
+      const tokenFactory = await ethers.getContractFactory('TestERC20');
+      const token0 = await tokenFactory.deploy(1337);
+      const token1 = await tokenFactory.deploy(1337);
 
-      await pluginFactory.createPluginForExistingPool(wallet.address, other.address);
+      const poolAddress = await mockAlgebraFactory.createPool.staticCall(token0, token1);
+      await mockAlgebraFactory.createPool(token0, token1)
 
-      await expect(pluginFactory.createPluginForExistingPool(wallet.address, other.address)).to.be.revertedWith('Already created');
+      const mockPoolFactory = await ethers.getContractFactory('MockPool');
+      const mockPool = (await mockPoolFactory.attach(poolAddress)) as any as MockPool;
+      mockPool.setPluginFactory(pluginFactory);
+
+      await mockAlgebraFactory.stubPool(token0, token1, mockPool);
+
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), pluginFactory);
+      await mockAlgebraFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), pluginFactory);
+
+      await pluginFactory.createPluginForExistingPool(token0, token1);
+
+      await expect(pluginFactory.createPluginForExistingPool(token0, token1)).to.be.revertedWith('Already created');
     });
   });
 
@@ -87,13 +136,13 @@ describe('BasePluginV1Factory', () => {
         baseFee: 150,
       };
       it('fails if caller is not owner', async () => {
-        await expect(pluginFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.revertedWith('Only administrator');
+        await expect(mockDynamicFeeModuleFactory.connect(other).setDefaultFeeConfiguration(configuration)).to.be.revertedWith('Only administrator');
       });
 
       it('updates defaultFeeConfiguration', async () => {
-        await pluginFactory.setDefaultFeeConfiguration(configuration);
+        await mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(configuration);
 
-        const newConfig = await pluginFactory.defaultFeeConfiguration();
+        const newConfig = await mockDynamicFeeModuleFactory.defaultFeeConfiguration();
 
         expect(newConfig.alpha1).to.eq(configuration.alpha1);
         expect(newConfig.alpha2).to.eq(configuration.alpha2);
@@ -105,8 +154,8 @@ describe('BasePluginV1Factory', () => {
       });
 
       it('emits event', async () => {
-        await expect(pluginFactory.setDefaultFeeConfiguration(configuration))
-          .to.emit(pluginFactory, 'DefaultFeeConfiguration')
+        await expect(mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(configuration))
+          .to.emit(mockDynamicFeeModuleFactory, 'DefaultFeeConfiguration')
           .withArgs([
             configuration.alpha1,
             configuration.alpha2,
@@ -123,43 +172,43 @@ describe('BasePluginV1Factory', () => {
         conf2.alpha1 = 30000;
         conf2.alpha2 = 30000;
         conf2.baseFee = 15000;
-        await expect(pluginFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Max fee exceeded');
+        await expect(mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Max fee exceeded');
       });
 
       it('cannot set zero gamma', async () => {
         let conf2 = { ...configuration };
         conf2.gamma1 = 0;
-        await expect(pluginFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
+        await expect(mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
 
         conf2 = { ...configuration };
         conf2.gamma2 = 0;
-        await expect(pluginFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
+        await expect(mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
 
         conf2 = { ...configuration };
         conf2.gamma1 = 0;
         conf2.gamma2 = 0;
-        await expect(pluginFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
+        await expect(mockDynamicFeeModuleFactory.setDefaultFeeConfiguration(conf2)).to.be.revertedWith('Gammas must be > 0');
       });
     });
   });
 
   describe('#setFarmingAddress', () => {
     it('fails if caller is not owner', async () => {
-      await expect(pluginFactory.connect(other).setFarmingAddress(wallet.address)).to.be.revertedWith('Only administrator');
+      await expect(farmingModuleFactory.connect(other).setFarmingAddress(wallet.address)).to.be.revertedWith('Only administrator');
     });
 
     it('updates farmingAddress', async () => {
-      await pluginFactory.setFarmingAddress(other.address);
-      expect(await pluginFactory.farmingAddress()).to.eq(other.address);
+      await farmingModuleFactory.setFarmingAddress(other.address);
+      expect(await farmingModuleFactory.farmingAddress()).to.eq(other.address);
     });
 
     it('emits event', async () => {
-      await expect(pluginFactory.setFarmingAddress(other.address)).to.emit(pluginFactory, 'FarmingAddress').withArgs(other.address);
+      await expect(farmingModuleFactory.setFarmingAddress(other.address)).to.emit(farmingModuleFactory, 'FarmingAddress').withArgs(other.address);
     });
 
     it('cannot set current address', async () => {
-      await pluginFactory.setFarmingAddress(other.address);
-      await expect(pluginFactory.setFarmingAddress(other.address)).to.be.reverted;
+      await farmingModuleFactory.setFarmingAddress(other.address);
+      await expect(farmingModuleFactory.setFarmingAddress(other.address)).to.be.reverted;
     });
   });
 });

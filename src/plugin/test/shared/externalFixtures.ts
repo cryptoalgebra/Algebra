@@ -34,6 +34,7 @@ import {
 } from '@cryptoalgebra/integral-core/typechain';
 import { getCreateAddress } from 'ethers';
 import { ZERO_ADDRESS } from './fixtures';
+import { FarmingModuleFactory, MockTimeDynamicFeeModuleFactory, MockTimeOracleModuleFactory } from '../../typechain';
 
 interface TokensFixture {
   token0: TestERC20;
@@ -57,6 +58,9 @@ interface MockPoolDeployerFixture extends TokensFixture {
   poolDeployer: MockTimeAlgebraPoolDeployer;
   swapTargetCallee: TestAlgebraCallee;
   factory: AlgebraFactory;
+  dynamicFeeModuleFactory: MockTimeDynamicFeeModuleFactory;
+  farmingModuleFactory: FarmingModuleFactory;
+  mockTimeOracleModuleFactory: MockTimeOracleModuleFactory;
   createPool(firstToken?: TestERC20, secondToken?: TestERC20): Promise<MockTimeAlgebraPool>;
 }
 export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixture> = async () => {
@@ -91,12 +95,25 @@ export const algebraPoolDeployerMockFixture: () => Promise<MockPoolDeployerFixtu
 
   const MockTimeAlgebraPoolFactory = await ethers.getContractFactory(POOL_ABI, POOL_BYTECODE);
 
+  const dynamicFeeModuleFactoryFactory = await ethers.getContractFactory('MockTimeDynamicFeeModuleFactory');
+  const dynamicFeeModuleFactory = await dynamicFeeModuleFactoryFactory.deploy(factory) as any as MockTimeDynamicFeeModuleFactory;
+
+  const farmingModuleFactoryFactory = await ethers.getContractFactory('FarmingModuleFactory');
+  const farmingModuleFactory = await farmingModuleFactoryFactory.deploy(factory) as any as FarmingModuleFactory;
+
+  const mockTimeOracleModuleFactoryFactory = await ethers.getContractFactory('MockTimeOracleModuleFactory');
+  const mockTimeOracleModuleFactory = await mockTimeOracleModuleFactoryFactory.deploy(factory) as any as MockTimeOracleModuleFactory;
+
+
   return {
     poolDeployer,
     swapTargetCallee,
     token0,
     token1,
     factory,
+    dynamicFeeModuleFactory,
+    farmingModuleFactory,
+    mockTimeOracleModuleFactory,
     createPool: async (firstToken = token0, secondToken = token1) => {
       await poolDeployer.deployMock(factory, firstToken, secondToken);
 

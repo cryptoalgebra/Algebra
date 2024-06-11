@@ -50,6 +50,15 @@ contract AlgebraCustomPoolEntryPoint is IAlgebraCustomPoolEntryPoint {
         return IAlgebraPluginFactory(deployer).beforeCreatePoolHook(pool, creator, deployer, token0, token1, data);
     }
 
+    function afterCreatePoolHook(
+        address modularHub,
+        address pool,
+        address deployer
+    ) external override {
+        require(msg.sender == factory, 'Only factory');
+        IAlgebraPluginFactory(deployer).afterCreatePoolHook(modularHub, pool, deployer);
+    }
+
     // ####### Permissioned actions #######
     // AlgebraCustomPoolEntryPoint must have a "POOLS_ADMINISTRATOR" role to be able to use permissioned actions
 
