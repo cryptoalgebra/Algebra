@@ -109,11 +109,6 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
 
     function _getNewFee() internal view returns (uint16 newFee) {
         uint16 lastTimepointIndex = IVolatilityOracle(oracleModule).timepointIndex();
-        
-        uint16 lastTimepointIndexOutsideCurrentBlock;
-        unchecked {
-            lastTimepointIndexOutsideCurrentBlock = lastTimepointIndex - 1;
-        }
 
         uint16 oldestTimepointIndex; /* ❗❗❗ вот тут еще подумать, точно ли правильно логика написана ❗❗❗ */
         unchecked {
@@ -122,12 +117,11 @@ contract DynamicFeeModule is AlgebraModule, IDynamicFeeManager, Timestamp {
         }
 
         (bool initialized, , , , , , ) = IVolatilityOracle(oracleModule).timepoints(oldestTimepointIndex);
-        (, uint32 lastTimepointTimestampOutsideCurrentBlock, , , , ,)  = IVolatilityOracle(oracleModule).timepoints(lastTimepointIndexOutsideCurrentBlock);
 
         oldestTimepointIndex = initialized ? oldestTimepointIndex : 0;
 
-        (, int24 tick, uint16 fee, ) = _getPoolState();
+        (, int24 tick, , ) = _getPoolState();
 
-        newFee = lastTimepointTimestampOutsideCurrentBlock != _blockTimestamp() ? _getFeeAtLastTimepoint(lastTimepointIndex, oldestTimepointIndex, tick, _feeConfig) : fee;
+        newFee = _getFeeAtLastTimepoint(lastTimepointIndex, oldestTimepointIndex, tick, _feeConfig);
     }
 }
