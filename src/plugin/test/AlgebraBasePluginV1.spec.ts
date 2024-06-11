@@ -45,43 +45,61 @@ describe('AlgebraBasePluginV1', () => {
     ({ plugin, mockPool, mockPluginFactory, mockOracleModule, mockDynamicFeeModule, mockFarmingModule, farmingModuleFactory } = await loadFixture(pluginFixture));
   });
 
-  // ❗❗❗ у ModularHub нет функции initialize, подумать как заменить эти тесты ❗❗❗
-  // describe('#Initialize', async () => {
-  //   it('cannot initialize twice', async () => {
-  //     console.log('Plugin: ', plugin);
-  //     await mockPool.setPlugin(plugin);
-  //     await initializeAtZeroTick(mockPool);
+  describe('#Initialize', async () => {
+    it('cannot initialize twice', async () => {
+      console.log('Plugin: ', plugin);
+      await mockPool.setPlugin(plugin);
+      await initializeAtZeroTick(mockPool);
 
-  //     await expect(mockPluginFactory.createPlugin(mockPool, ZERO_ADDRESS, ZERO_ADDRESS)).to.be.revertedWith('Already created');
-  //   });
+      await expect(mockPluginFactory.beforeCreatePoolHook(mockPool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x')).to.be.revertedWith('Already created');
+    });
 
-  //   it('cannot initialize detached plugin', async () => {
-  //     await initializeAtZeroTick(mockPool);
-  //     await expect(plugin.initialize()).to.be.revertedWith('Plugin not attached');
-  //   });
+    it('cannot initialize detached plugin', async () => {
+      await initializeAtZeroTick(mockPool);
+      
+      const oracleModuleFactory = await ethers.getContractFactory("OracleModule");
+      const oracleModule = await oracleModuleFactory.deploy(plugin);
 
-  //   it('cannot initialize if pool not initialized', async () => {
-  //     await mockPool.setPlugin(plugin);
-  //     await expect(plugin.initialize()).to.be.revertedWith('Pool is not initialized');
-  //   });
+      await expect(oracleModule.initialize()).to.be.revertedWith('Plugin not attached');
+    });
 
-  //   it('can initialize for existing pool', async () => {
-  //     await initializeAtZeroTick(mockPool);
-  //     await mockPool.setPlugin(plugin);
-  //     await plugin.initialize();
+    it('cannot initialize if pool not initialized', async () => {
+      await expect(mockOracleModule.initialize()).to.be.revertedWith('Pool is not initialized');
+    });
 
-  //     const timepoint = await plugin.timepoints(0);
-  //     expect(timepoint.initialized).to.be.true;
-  //   });
+    it('can initialize for existing pool', async () => {
+      await initializeAtZeroTick(mockPool);
 
-  //   it('can not write to uninitialized oracle', async () => {
-  //     await initializeAtZeroTick(mockPool);
-  //     await mockPool.setPlugin(plugin);
-  //     await mockPool.setPluginConfig(1); // BEFORE_SWAP_FLAG
+      const oracleModuleFactory = await ethers.getContractFactory("OracleModule");
+      const oracleModule = await oracleModuleFactory.deploy(plugin);
 
-  //     await expect(mockPool.swapToTick(5)).to.be.revertedWith('Not initialized');
-  //   });
-  // });
+      await plugin.registerModule(oracleModule);
+      await oracleModule.initialize();
+
+      const timepoint = await oracleModule.timepoints(0);
+      expect(timepoint.initialized).to.be.true;
+    });
+
+    it('can not write to uninitialized oracle', async () => {
+      await initializeAtZeroTick(mockPool);
+
+      const oracleModuleFactory = await ethers.getContractFactory("OracleModule");
+      const oracleModule = await oracleModuleFactory.deploy(plugin);
+
+      const moduleGlobalIndex = await plugin.registerModule.staticCall(oracleModule);
+      await plugin.registerModule(oracleModule);
+
+      await plugin.insertModulesToHookLists([{
+        selector: '0x029c1cb7',
+        indexInHookList: 0,
+        moduleGlobalIndex: moduleGlobalIndex,
+        useDelegate: false,
+        useDynamicFee: false
+      }]);
+
+      await expect(mockPool.swapToTick(5)).to.be.revertedWith('Not initialized');
+    });
+  });
 
   // plain tests for hooks functionality
   describe('#Hooks', () => {

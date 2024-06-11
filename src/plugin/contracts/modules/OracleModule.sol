@@ -3,10 +3,9 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
-
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
-import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
+
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModule.sol';
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/base/AlgebraModule.sol';
 import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/interfaces/IAlgebraModularHub.sol';
@@ -14,8 +13,6 @@ import '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/types/HookParams.so
 
 import '../libraries/VolatilityOracle.sol';
 import '../interfaces/plugins/IVolatilityOracle.sol';
-import '../interfaces/plugins/IDynamicFeeManager.sol';
-
 
 contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     using Plugins for uint8;
@@ -46,7 +43,7 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     function initialize() external {
         require(!isInitialized, 'Already initialized');
         require(IAlgebraModularHub(modularHub).moduleAddressToIndex(address(this)) != 0, 'Plugin not attached');
-        (uint160 price, int24 tick, , ) = _getPoolState(pool);
+        (uint160 price, int24 tick, , ) = _getPoolState();
         require(price != 0, 'Pool is not initialized');
 
         uint32 time = _blockTimestamp();
@@ -58,7 +55,7 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     /// @inheritdoc IVolatilityOracle
     function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {
         // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
-        (, int24 tick, , ) = _getPoolState(IAlgebraModularHub(modularHub).pool());
+        (, int24 tick, , ) = _getPoolState();
         uint16 lastTimepointIndex = timepointIndex;
         uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
         VolatilityOracle.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
@@ -70,7 +67,7 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
         uint32[] memory secondsAgos
     ) external view override returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
         // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
-        (, int24 tick, , ) = _getPoolState(IAlgebraModularHub(modularHub).pool());
+        (, int24 tick, , ) = _getPoolState();
         return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
     }
 
@@ -90,7 +87,7 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
         uint16 lastIndex = timepointIndex;
 
         uint16 oldestIndex = timepoints.getOldestIndex(lastIndex);
-        (, int24 tick, , ) = _getPoolState(IAlgebraModularHub(modularHub).pool());
+        (, int24 tick, , ) = _getPoolState();
 
         return timepoints.getAverageVolatility(_blockTimestamp(), tick, lastIndex, oldestIndex);
     }
@@ -104,11 +101,11 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
         return timepoints.getAverageVolatility(currentTime, tick, lastIndex, oldestIndex);
     }
 
-    function _getPoolState(address pool) internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
+    function _getPoolState() internal view returns (uint160 price, int24 tick, uint16 fee, uint8 pluginConfig) {
         (price, tick, fee, pluginConfig, , ) = IAlgebraPoolState(pool).globalState();
     }
 
-    function _getPluginInPool(address pool) internal view returns (address plugin) {
+    function _getPluginInPool() internal view returns (address plugin) {
         return IAlgebraPool(pool).plugin();
     }
 
@@ -125,14 +122,13 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
     }
 
     function _beforeSwap(
-        bytes memory params,
+        bytes memory /* params */,
         uint16 /* poolFeeCache */
     ) internal override {
-        BeforeSwapParams memory decodedParams = abi.decode(params, (BeforeSwapParams));
-        _writeTimepoint(decodedParams.pool);
+        _writeTimepoint();
     }
 
-    function _writeTimepoint(address pool) internal {
+    function _writeTimepoint() internal {
         // single SLOAD
         uint16 _lastIndex = timepointIndex;
         uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
@@ -143,7 +139,7 @@ contract OracleModule is AlgebraModule, IVolatilityOracle, Timestamp {
 
         if (_lastTimepointTimestamp == currentTimestamp) return;
 
-        (, int24 tick, , ) = _getPoolState(pool);
+        (, int24 tick, , ) = _getPoolState();
         (uint16 newLastIndex, ) = timepoints.write(_lastIndex, currentTimestamp, tick);
         
         timepointIndex = newLastIndex;
