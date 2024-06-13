@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TokenDeltaMath #getNewPriceAfterInput zeroToOne = false gas  [ @skip-on-coverage ] 1`] = `561`;
+
+exports[`TokenDeltaMath #getNewPriceAfterInput zeroToOne = true gas  [ @skip-on-coverage ] 1`] = `654`;
+
+exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = false gas  [ @skip-on-coverage ] 1`] = `728`;
+
+exports[`TokenDeltaMath #getNewPriceAfterOutput zeroToOne = true gas  [ @skip-on-coverage ] 1`] = `474`;
+
+exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = false  [ @skip-on-coverage ] 1`] = `419`;
+
+exports[`TokenDeltaMath #getToken0Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 1`] = `449`;
+
+exports[`TokenDeltaMath #getToken1Delta gas cost for amount0 where roundUp = false  [ @skip-on-coverage ] 1`] = `419`;
+
+exports[`TokenDeltaMath #getToken1Delta gas cost for amount0 where roundUp = true  [ @skip-on-coverage ] 1`] = `449`;

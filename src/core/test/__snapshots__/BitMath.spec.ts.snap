@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BitMath #leastSignificantBit gas cost of max uint128  [ @skip-on-coverage ] 1`] = `216`;
+
+exports[`BitMath #leastSignificantBit gas cost of max uint256  [ @skip-on-coverage ] 1`] = `216`;
+
+exports[`BitMath #leastSignificantBit gas cost of min number  [ @skip-on-coverage ] 1`] = `216`;
+
+exports[`BitMath #leastSignificantBit gas cost of smaller number  [ @skip-on-coverage ] 1`] = `216`;

@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for all possible range 1`] = `7785`;
+
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for entire word 1`] = `9889`;
+
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost for next subtree 1`] = `7785`;
+
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost just below boundary 1`] = `12619`;
+
+exports[`TickTree #nextTick gas  [ @skip-on-coverage ] gas cost on boundary 1`] = `12619`;
+
+exports[`TickTree #toggleTick gas cost of flipping a tick that results in deleting a word  [ @skip-on-coverage ] 1`] = `29765`;
+
+exports[`TickTree #toggleTick gas cost of flipping first tick in word to initialized  [ @skip-on-coverage ] 1`] = `88518`;
+
+exports[`TickTree #toggleTick gas cost of flipping second tick in word to initialized  [ @skip-on-coverage ] 1`] = `29199`;
