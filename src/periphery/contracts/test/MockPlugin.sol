@@ -3,9 +3,6 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin factory
-/// @notice This contract creates Algebra default plugins for Algebra liquidity pools
-/// @dev This plugin factory can only be used for Algebra base pools
 contract MockPlugin is IAlgebraPlugin {
     function defaultPluginConfig() external view returns (uint8) {
         return 0;
