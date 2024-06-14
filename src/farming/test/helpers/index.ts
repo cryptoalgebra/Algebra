@@ -1,5 +1,5 @@
 import { Wallet, MaxUint256, Interface } from 'ethers';
-import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick } from '../shared/index';
+import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick, ZERO_ADDRESS } from '../shared/index';
 import _ from 'lodash';
 import { TestERC20, INonfungiblePositionManager, AlgebraEternalFarming, IAlgebraPool, TestIncentiveId, FarmingCenter } from '../../typechain';
 import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json';
@@ -343,7 +343,7 @@ export class HelperCommands {
       const erc20Helper = new ERC20Helper();
       await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
-      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
+      const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, ZERO_ADDRESS, tok0Address] : [tok0Address, ZERO_ADDRESS, tok1Address]);
 
       await this.router.connect(actor).exactInput(
         {
@@ -410,6 +410,7 @@ export class HelperCommands {
         deadline: MaxUint256,
         tokenIn: zto ? tok0Address : tok1Address,
         tokenOut: zto ? tok1Address : tok0Address,
+        deployer: ZERO_ADDRESS,
         amountIn: 2n ** 128n - 1n,
         amountOutMinimum: 0,
         limitSqrtPrice: priceAtTarget,

@@ -9,6 +9,7 @@ import { expect } from './shared/expect';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { computePoolAddress } from './shared/computePoolAddress';
 import snapshotGasCost from './shared/snapshotGasCost';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
@@ -53,6 +54,7 @@ describe('TickLens', () => {
     const mintParams = {
       token0: tokens[0].address,
       token1: tokens[1].address,
+      deployer: ZERO_ADDRESS,
       tickLower,
       tickUpper,
       amount0Desired: amountBothDesired,
@@ -76,12 +78,13 @@ describe('TickLens', () => {
 
     if (BigInt(tokenAddressA) > BigInt(tokenAddressB)) [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    const tx = await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+    const tx = await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, ZERO_ADDRESS, encodePriceSqrt(1, 1));
     await tx.wait();
 
     const liquidityParams = {
       token0: tokenAddressA,
       token1: tokenAddressB,
+      deployer: ZERO_ADDRESS,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       recipient: wallets[0].address,

@@ -18,6 +18,7 @@ import completeFixture from './shared/completeFixture';
 import snapshotGasCost from './shared/snapshotGasCost';
 
 import { expect } from './shared/expect';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 describe('PositionValue', async () => {
   let wallets: any;
@@ -39,7 +40,7 @@ describe('PositionValue', async () => {
       await token.transfer(wallets[0].address, expandTo18Decimals(1_000_000));
     }
 
-    await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], encodePriceSqrt(1, 1));
+    await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1));
 
     return {
       positionValue,
@@ -80,6 +81,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: tokens[0],
         token1: tokens[1],
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -98,7 +100,7 @@ describe('PositionValue', async () => {
       await router.exactInput({
         recipient: wallets[0].address,
         deadline: 1,
-        path: encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()]),
+        path: encodePath([await tokens[0].getAddress(), ZERO_ADDRESS, await tokens[1].getAddress()]),
         amountIn: swapAmount,
         amountOutMinimum: 0,
       });
@@ -107,7 +109,7 @@ describe('PositionValue', async () => {
       await router.exactInput({
         recipient: wallets[0].address,
         deadline: 1,
-        path: encodePath([await tokens[1].getAddress(), await tokens[0].getAddress()]),
+        path: encodePath([await tokens[1].getAddress(), ZERO_ADDRESS, await tokens[0].getAddress()]),
         amountIn: swapAmount,
         amountOutMinimum: 0,
       });
@@ -141,6 +143,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -160,6 +163,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: -60,
         recipient: wallets[0].address,
@@ -179,6 +183,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: 60,
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -198,6 +203,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: -6_000,
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -217,6 +223,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: 6_000,
         recipient: wallets[0].address,
@@ -236,6 +243,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -260,6 +268,7 @@ describe('PositionValue', async () => {
       await nft.mint({
         token0: await tokens[0].getAddress(),
         token1: await tokens[1].getAddress(),
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -276,6 +285,7 @@ describe('PositionValue', async () => {
         await nft.mint({
           token0: await tokens[0].getAddress(),
           token1: await tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
           tickLower: TICK_SPACINGS[FeeAmount.MEDIUM] * -1_000,
           tickUpper: TICK_SPACINGS[FeeAmount.MEDIUM] * 1_000,
           recipient: wallets[0].address,
@@ -294,7 +304,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()]),
+          path: encodePath([await tokens[0].getAddress(), ZERO_ADDRESS, await tokens[1].getAddress()]),
           amountIn: swapAmount,
           amountOutMinimum: 0,
         });
@@ -303,7 +313,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[1].getAddress(), await tokens[0].getAddress()]),
+          path: encodePath([await tokens[1].getAddress(), ZERO_ADDRESS, await tokens[0].getAddress()]),
           amountIn: swapAmount,
           amountOutMinimum: 0,
         });
@@ -339,7 +349,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()]),
+          path: encodePath([await tokens[0].getAddress(), ZERO_ADDRESS, await tokens[1].getAddress()]),
           amountIn: swapAmount,
           amountOutMinimum: 0,
         });
@@ -365,6 +375,7 @@ describe('PositionValue', async () => {
         await nft.mint({
           token0: await tokens[0].getAddress(),
           token1: await tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
           tickLower: TICK_SPACINGS[FeeAmount.MEDIUM] * -10,
           tickUpper: TICK_SPACINGS[FeeAmount.MEDIUM] * 10,
           recipient: wallets[0].address,
@@ -382,7 +393,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[1].getAddress(), await tokens[0].getAddress()]),
+          path: encodePath([await tokens[1].getAddress(), ZERO_ADDRESS, await tokens[0].getAddress()]),
           amountIn: expandTo18Decimals(1_000),
           amountOutMinimum: 0,
         });
@@ -391,7 +402,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()]),
+          path: encodePath([await tokens[0].getAddress(), ZERO_ADDRESS, await tokens[1].getAddress()]),
           amountIn: expandTo18Decimals(50_000),
           amountOutMinimum: 0,
         });
@@ -420,6 +431,7 @@ describe('PositionValue', async () => {
         await nft.mint({
           token0: await tokens[0].getAddress(),
           token1: await tokens[1].getAddress(),
+          deployer: ZERO_ADDRESS,
           tickLower: TICK_SPACINGS[FeeAmount.MEDIUM] * -10,
           tickUpper: TICK_SPACINGS[FeeAmount.MEDIUM] * 10,
 
@@ -438,7 +450,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[0].getAddress(), await tokens[1].getAddress()]),
+          path: encodePath([await tokens[0].getAddress(), ZERO_ADDRESS, await tokens[1].getAddress()]),
           amountIn: expandTo18Decimals(1_000),
           amountOutMinimum: 0,
         });
@@ -447,7 +459,7 @@ describe('PositionValue', async () => {
         await router.exactInput({
           recipient: wallets[0].address,
           deadline: 1,
-          path: encodePath([await tokens[1].getAddress(), await tokens[0].getAddress()]),
+          path: encodePath([await tokens[1].getAddress(), ZERO_ADDRESS, await tokens[0].getAddress()]),
           amountIn: expandTo18Decimals(50_000),
           amountOutMinimum: 0,
         });

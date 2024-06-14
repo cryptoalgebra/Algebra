@@ -108,6 +108,7 @@ contract NonfungiblePositionManager is
             address operator,
             address token0,
             address token1,
+            address deployer,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
@@ -130,6 +131,7 @@ contract NonfungiblePositionManager is
             position.operator,
             poolKey.token0,
             poolKey.token1,
+            poolKey.deployer,
             tickLower,
             tickUpper,
             liquidity,
@@ -156,6 +158,7 @@ contract NonfungiblePositionManager is
             AddLiquidityParams({
                 token0: params.token0,
                 token1: params.token1,
+                deployer: params.deployer,
                 recipient: address(this),
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
@@ -178,7 +181,7 @@ contract NonfungiblePositionManager is
         // idempotent set
         uint80 poolId = _cachePoolKey(
             address(pool),
-            PoolAddress.PoolKey({token0: params.token0, token1: params.token1})
+            PoolAddress.PoolKey({token0: params.token0, token1: params.token1, deployer: params.deployer})
         );
 
         _positions[tokenId] = Position({
@@ -268,6 +271,7 @@ contract NonfungiblePositionManager is
             AddLiquidityParams({
                 token0: poolKey.token0,
                 token1: poolKey.token1,
+                deployer: poolKey.deployer,
                 tickLower: tickLower,
                 tickUpper: tickUpper,
                 amount0Desired: params.amount0Desired,

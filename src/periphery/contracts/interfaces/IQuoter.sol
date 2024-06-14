@@ -26,6 +26,7 @@ interface IQuoter {
     function quoteExactInputSingle(
         address tokenIn,
         address tokenOut,
+        address deployer,
         uint256 amountIn,
         uint160 limitSqrtPrice
     ) external returns (uint256 amountOut, uint16 fee);
@@ -47,6 +48,7 @@ interface IQuoter {
     function quoteExactOutputSingle(
         address tokenIn,
         address tokenOut,
+        address deployer,
         uint256 amountOut,
         uint160 limitSqrtPrice
     ) external returns (uint256 amountIn, uint16 fee);

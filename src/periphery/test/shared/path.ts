@@ -15,16 +15,20 @@ export function encodePath(path: string[]): string {
   return encoded.toLowerCase();
 }
 
-function decodeOne(tokenFeeToken: Buffer): [[string, string]] {
+function decodeOne(tokenFeeToken: Buffer): [[string, string, string]] {
   // reads the first 20 bytes for the token address
   const tokenABuf = tokenFeeToken.slice(0, ADDR_SIZE);
   const tokenA = getAddress('0x' + tokenABuf.toString('hex'));
 
+  // reads the first 20 bytes for the deployer address
+  const deployerBuf = tokenFeeToken.slice(OFFSET, DATA_SIZE);
+  const deployer = getAddress('0x' + deployerBuf.toString('hex'));
+  
   // reads the next 20 bytes for the token address
-  const tokenBBuf = tokenFeeToken.slice(OFFSET, DATA_SIZE);
+  const tokenBBuf = tokenFeeToken.slice(DATA_SIZE, DATA_SIZE + ADDR_SIZE);
   const tokenB = getAddress('0x' + tokenBBuf.toString('hex'));
 
-  return [[tokenA, tokenB]];
+  return [[tokenA, deployer, tokenB]];
 }
 
 export function decodePath(path: string): [string[]] {
@@ -34,10 +38,10 @@ export function decodePath(path: string): [string[]] {
   let i = 0;
   let finalToken: string = '';
   while (data.length >= DATA_SIZE) {
-    const [[tokenA, tokenB]] = decodeOne(data);
+    const [[tokenA, deployer, tokenB]] = decodeOne(data);
     finalToken = tokenB;
-    tokens = [...tokens, tokenA];
-    data = data.slice((i + 1) * OFFSET);
+    tokens = [...tokens, tokenA, deployer];
+    data = data.slice((i + 1) * DATA_SIZE);
     i += 1;
   }
   tokens = [...tokens, finalToken];

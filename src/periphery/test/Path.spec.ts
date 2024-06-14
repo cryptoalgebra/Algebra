@@ -8,13 +8,16 @@ import { PathTest } from '../typechain';
 import { decodePath, encodePath } from './shared/path';
 
 import snapshotGasCost from './shared/snapshotGasCost';
+import { ZERO_ADDRESS, PLUGIN_DEPLOYER_ADDRESS } from './CallbackValidation.spec';
 
 describe('Path', () => {
   let path: PathTest;
 
   let tokenAddresses = [
     '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
+    ZERO_ADDRESS,
     '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+    PLUGIN_DEPLOYER_ADDRESS,
     '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
   ];
   let fees = [FeeAmount.MEDIUM, FeeAmount.MEDIUM];
@@ -55,7 +58,8 @@ describe('Path', () => {
 
       const firstPool = await path.decodeFirstPool(encodedPath);
       expect(firstPool.tokenA).to.be.eq(tokenAddresses[0]);
-      expect(firstPool.tokenB).to.be.eq(tokenAddresses[1]);
+      expect(firstPool.deployer).to.be.eq(tokenAddresses[1]);
+      expect(firstPool.tokenB).to.be.eq(tokenAddresses[2]);
 
       expect(await path.decodeFirstPool(await path.getFirstPool(encodedPath))).to.deep.eq(firstPool);
     });
@@ -64,17 +68,18 @@ describe('Path', () => {
 
     it('skips 1 item', async () => {
       const skipped = await path.skipToken(encodedPath);
-      expect(skipped).to.be.eq('0x' + encodedPath.slice(2 + offset * 2));
+      expect(skipped).to.be.eq('0x' + encodedPath.slice(2 + offset * 4));
 
       expect(await path.hasMultiplePools(skipped)).to.be.false;
 
-      const { tokenA, tokenB } = await path.decodeFirstPool(skipped);
-      expect(tokenA).to.be.eq(tokenAddresses[1]);
-      expect(tokenB).to.be.eq(tokenAddresses[2]);
+      const { tokenA, deployer, tokenB } = await path.decodeFirstPool(skipped);
+      expect(tokenA).to.be.eq(tokenAddresses[2]);
+      expect(deployer).to.be.eq(tokenAddresses[3]);
+      expect(tokenB).to.be.eq(tokenAddresses[4]);
     });
   });
 
   it('gas cost [ @skip-on-coverage ]', async () => {
-    await snapshotGasCost(path.getGasCostOfDecodeFirstPool(encodePath([tokenAddresses[0], tokenAddresses[1]])));
+    await snapshotGasCost(path.getGasCostOfDecodeFirstPool(encodePath([tokenAddresses[0], tokenAddresses[1], tokenAddresses[2]])));
   });
 });

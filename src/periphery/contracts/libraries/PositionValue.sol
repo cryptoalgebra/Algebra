@@ -15,6 +15,7 @@ library PositionValue {
     struct PositionCache {
         address token0;
         address token1;
+        address deployer;
         int24 tickLower;
         int24 tickUpper;
         uint128 liquidity;
@@ -59,7 +60,7 @@ library PositionValue {
         uint256 tokenId,
         uint160 sqrtRatioX96
     ) internal view returns (uint256 amount0, uint256 amount1) {
-        (, , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = positionManager.positions(tokenId);
+        (, , , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = positionManager.positions(tokenId);
 
         return _principal(sqrtRatioX96, tickLower, tickUpper, liquidity);
     }
@@ -100,7 +101,7 @@ library PositionValue {
                 IAlgebraPool(
                     PoolAddress.computeAddress(
                         positionManager.poolDeployer(),
-                        PoolAddress.PoolKey({token0: position.token0, token1: position.token1})
+                        PoolAddress.PoolKey({token0: position.token0, token1: position.token1, deployer: position.deployer})
                     )
                 ),
                 position.tickLower,
@@ -134,6 +135,7 @@ library PositionValue {
             ,
             address token0,
             address token1,
+            address deployer,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
@@ -147,6 +149,7 @@ library PositionValue {
             PositionCache(
                 token0,
                 token1,
+                deployer,
                 tickLower,
                 tickUpper,
                 liquidity,

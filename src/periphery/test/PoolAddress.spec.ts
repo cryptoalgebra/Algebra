@@ -27,7 +27,7 @@ describe('PoolAddress', () => {
 
   describe('#computeAddress', () => {
     it('all arguments equal zero', async () => {
-      await expect(poolAddress.computeAddress(ZeroAddress, ZeroAddress, ZeroAddress, 0)).to.be.reverted;
+      await expect(poolAddress.computeAddress(ZeroAddress, ZeroAddress, ZeroAddress, ZeroAddress, 0)).to.be.reverted;
     });
 
     it('matches example from core repo', async () => {
@@ -36,6 +36,7 @@ describe('PoolAddress', () => {
           '0x5FbDB2315678afecb367f032d93F642f64180aa3',
           '0x1000000000000000000000000000000000000000',
           '0x2000000000000000000000000000000000000000',
+          ZeroAddress,
           250
         )
       ).to.matchSnapshot();
@@ -47,6 +48,7 @@ describe('PoolAddress', () => {
           '0x5FbDB2315678afecb367f032d93F642f64180aa3',
           '0x2000000000000000000000000000000000000000',
           '0x1000000000000000000000000000000000000000',
+          ZeroAddress,
           3000
         )
       ).to.be.reverted;
@@ -58,6 +60,7 @@ describe('PoolAddress', () => {
           '0x5FbDB2315678afecb367f032d93F642f64180aa3',
           '0x1000000000000000000000000000000000000000',
           '0x2000000000000000000000000000000000000000',
+          ZeroAddress,
           3000
         )
       );

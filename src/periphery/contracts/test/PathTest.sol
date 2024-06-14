@@ -8,7 +8,7 @@ contract PathTest {
         return Path.hasMultiplePools(path);
     }
 
-    function decodeFirstPool(bytes memory path) public pure returns (address tokenA, address tokenB) {
+    function decodeFirstPool(bytes memory path) public pure returns (address tokenA, address deployer, address tokenB) {
         return Path.decodeFirstPool(path);
     }
 
