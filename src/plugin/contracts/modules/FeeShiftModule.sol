@@ -51,7 +51,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         if (priceSnapshot.lastBlockNumber != block.number) {
             uint256 lastPrice = priceSnapshot.lastPrice;
 
-            (uint256 currentPrice, , , , ,) = IAlgebraPool(decodedParams.pool).globalState();
+            (uint256 currentPrice, , , , ,) = IAlgebraPool(pool).globalState();
 
             s_priceSnapshot = PriceSnapshot(
                 uint32(block.number),
