@@ -40,15 +40,6 @@ async function main() {
         });
 
     await hre.run("verify:verify", {
-        address: deploysData.swapRouter,
-        constructorArguments: [
-            deploysData.factory,
-            deploysData.wrapped,
-            deploysData.poolDeployer
-        ],
-        });
-
-    await hre.run("verify:verify", {
         address: deploysData.nonfungiblePositionManager,
         constructorArguments: [
             deploysData.factory,
