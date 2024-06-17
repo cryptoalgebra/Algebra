@@ -22,7 +22,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         uint128 oneToZeroFeeFactor;
     }
 
-    uint256 internal constant FEE_FACTOR_SHIFT = 64;
+    uint64 internal constant FEE_FACTOR_SHIFT = 64;
 
     PriceSnapshot internal s_priceSnapshot;
     FeeFactors public s_feeFactors;
