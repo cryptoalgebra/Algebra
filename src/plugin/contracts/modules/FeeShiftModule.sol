@@ -24,8 +24,11 @@ contract FeeShiftModule is AlgebraBaseModule {
 
     uint64 internal constant FEE_FACTOR_SHIFT = 64;
 
-    PriceSnapshot internal s_priceSnapshot;
     FeeFactors public s_feeFactors;
+
+    uint256 public s_priceChangeFactor = 1;
+
+    PriceSnapshot internal s_priceSnapshot;
 
     constructor(address _modularHub) AlgebraModule(_modularHub) {
         FeeFactors memory feeFactors = FeeFactors(
@@ -86,7 +89,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         console.log('currentPrice: ', uint256(currentPrice));
         // price change is positive after zeroToOne prevalence
         int256 priceChange = currentPrice - lastPrice;
-        int128 feeFactorImpact = int128((priceChange << FEE_FACTOR_SHIFT) / lastPrice); // TODO: add coefficient
+        int128 feeFactorImpact = int128((priceChange * 2 << FEE_FACTOR_SHIFT) / lastPrice); // TODO: add coefficient
 
         feeFactors = s_feeFactors;
 
@@ -95,6 +98,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         // we need to increase zeroToOneFeeFactor
         // and vice versa
         int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) + feeFactorImpact;
+        console.logInt(newZeroToOneFeeFactor);
 
         if ((int128(-2) << FEE_FACTOR_SHIFT) < newZeroToOneFeeFactor && newZeroToOneFeeFactor < int128(uint128(2) << FEE_FACTOR_SHIFT)) {
             feeFactors = FeeFactors(
