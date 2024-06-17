@@ -85,7 +85,6 @@ describe('QuoterV2', function () {
 
     describe('#quoteExactInput', () => {
       it('0 -> 2 cross 2 tick', async () => {
-        console.log(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]));
         const { amountOut, amountIn, sqrtPriceX96AfterList, initializedTicksCrossedList } =
           await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), 10000);
 

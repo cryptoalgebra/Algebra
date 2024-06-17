@@ -745,8 +745,6 @@ describe('SwapRouter', function () {
           const poolBefore = await getBalances(pool);
           const traderBefore = await getBalances(trader.address);
           
-          console.log('path: ', path);
-          
           await exactOutput(path.slice(0, 3));
 
           // get balances after

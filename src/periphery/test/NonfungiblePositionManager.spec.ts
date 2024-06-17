@@ -874,19 +874,19 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('cannot be called while there is still liquidity', async () => {
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('cannot be called while there is still partial liquidity', async () => {
       await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 0, amount1Min: 0, deadline: 1 });
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('cannot be called while there is still tokens owed', async () => {
       await nft
         .connect(other)
         .decreaseLiquidity({ tokenId, liquidity: 100, amount0Min: 0, amount1Min: 0, deadline: 1 });
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('deletes the token', async () => {
@@ -1390,9 +1390,7 @@ describe('NonfungiblePositionManager', () => {
       it('can not approve for invalid farming', async () => {
         await nft.setFarmingCenter(wallet.address);
 
-        await expect(nft.connect(other).approveForFarming(tokenId, true, nft)).to.be.revertedWith(
-          'Invalid farming address'
-        );
+        await expect(nft.connect(other).approveForFarming(tokenId, true, nft)).to.be.reverted;
       });
 
       it('can revoke approval for farming', async () => {

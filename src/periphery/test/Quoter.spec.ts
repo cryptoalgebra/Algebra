@@ -157,7 +157,6 @@ describe('Quoter', () => {
       });
 
       it('1 -> 0', async () => {
-        console.log(encodePath([tokens[1].address, ZERO_ADDRESS, tokens[0].address]))
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
           encodePath([tokens[1].address, ZERO_ADDRESS, tokens[0].address]),
           3

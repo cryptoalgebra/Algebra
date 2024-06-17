@@ -4,80 +4,72 @@ pragma solidity =0.8.20;
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
 contract MockPlugin is IAlgebraPlugin {
-    function defaultPluginConfig() external view returns (uint8) {
+    function defaultPluginConfig() external pure returns (uint8) {
         return 0;
     }
 
-    function beforeInitialize(address sender, uint160 sqrtPriceX96) external returns (bytes4) {
+    function beforeInitialize(address, uint160) external pure returns (bytes4) {
         return IAlgebraPlugin.beforeInitialize.selector;
     }
 
-    function afterInitialize(address sender, uint160 sqrtPriceX96, int24 tick) external returns (bytes4) {
+    function afterInitialize(address, uint160, int24) external pure returns (bytes4) {
         return IAlgebraPlugin.afterInitialize.selector;
     }
 
     function beforeModifyPosition(
-        address sender,
-        address recipient,
-        int24 bottomTick,
-        int24 topTick,
-        int128 desiredLiquidityDelta,
-        bytes calldata data
-    ) external returns (bytes4) {
+        address,
+        address,
+        int24,
+        int24,
+        int128,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IAlgebraPlugin.beforeModifyPosition.selector;
     }
 
     function afterModifyPosition(
-        address sender,
-        address recipient,
-        int24 bottomTick,
-        int24 topTick,
-        int128 desiredLiquidityDelta,
-        uint256 amount0,
-        uint256 amount1,
-        bytes calldata data
-    ) external returns (bytes4) {
+        address,
+        address,
+        int24,
+        int24,
+        int128,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterModifyPosition.selector;
     }
 
-    function beforeSwap(
-        address sender,
-        address recipient,
-        bool zeroToOne,
-        int256 amountRequired,
-        uint160 limitSqrtPrice,
-        bool withPaymentInAdvance,
-        bytes calldata data
-    ) external returns (bytes4) {
+    function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external pure returns (bytes4) {
         return IAlgebraPlugin.beforeSwap.selector;
     }
 
     function afterSwap(
-        address sender,
-        address recipient,
-        bool zeroToOne,
-        int256 amountRequired,
-        uint160 limitSqrtPrice,
-        int256 amount0,
-        int256 amount1,
-        bytes calldata data
-    ) external returns (bytes4) {
+        address,
+        address,
+        bool,
+        int256,
+        uint160,
+        int256,
+        int256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterSwap.selector;
     }
 
-    function beforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external returns (bytes4) {
+    function beforeFlash(address, address, uint256, uint256, bytes calldata) external pure returns (bytes4) {
         return IAlgebraPlugin.beforeFlash.selector;
     }
 
     function afterFlash(
-        address sender,
-        address recipient,
-        uint256 amount0,
-        uint256 amount1,
-        uint256 paid0,
-        uint256 paid1,
-        bytes calldata data
-    ) external returns (bytes4) {
+        address,
+        address,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
         return IAlgebraPlugin.afterFlash.selector;
     }
 }

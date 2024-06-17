@@ -8,7 +8,7 @@ import {
   MockTimeSwapRouter,
   NonfungibleTokenPositionDescriptor,
   TestERC20,
-  IAlgebraFactory,
+  AlgebraFactory,
   MockPluginFactory,
   AlgebraCustomPoolEntryPoint,
   CustomPoolDeployerTest,
@@ -47,7 +47,7 @@ const DEFAULT_TOKENS_RATIONS_DATA: TokenRatioSortData[] = [
 
 const completeFixture: () => Promise<{
   wnative: IWNativeToken;
-  factory: IAlgebraFactory;
+  factory: AlgebraFactory;
   router: MockTimeSwapRouter;
   nft: MockTimeNonfungiblePositionManager;
   nftDescriptor: NonfungibleTokenPositionDescriptor;
@@ -76,7 +76,7 @@ const completeFixture: () => Promise<{
   const pluginFactoryFactory = await ethers.getContractFactory('MockPluginFactory');
   const pluginFactory = await pluginFactoryFactory.deploy(factory) as any as MockPluginFactory;
   
-  factory.setDefaultPluginFactory(pluginFactory);
+  await factory.setDefaultPluginFactory(await pluginFactory.getAddress());
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor');
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy();
@@ -107,7 +107,7 @@ const completeFixture: () => Promise<{
   const entryPoint = await entryPointFactory.deploy(factory) as any as AlgebraCustomPoolEntryPoint;
 
   const customPoolDeployerFactory = await ethers.getContractFactory("CustomPoolDeployerTest");
-  const customPoolDeployer = await customPoolDeployerFactory.deploy(entryPoint) as any as CustomPoolDeployerTest;
+  const customPoolDeployer = await customPoolDeployerFactory.deploy(entryPoint, ZERO_ADDRESS) as any as CustomPoolDeployerTest;
 
   let customPoolDeployerRole = await factory.CUSTOM_POOL_DEPLOYER()
   let poolAdministratorRole = await factory.POOLS_ADMINISTRATOR_ROLE()
@@ -121,10 +121,6 @@ const completeFixture: () => Promise<{
     await customPoolDeployer.getAddress(), // deployer
     tokens[2].address_
   ]
-
-  console.log('factory address: ', factory.target);
-
-  console.log('deployer address in js: ', await customPoolDeployer.getAddress());
 
   return {
     wnative,

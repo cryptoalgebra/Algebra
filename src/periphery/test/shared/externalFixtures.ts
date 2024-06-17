@@ -9,7 +9,7 @@ import {
 
 import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json';
 import { ethers } from 'hardhat';
-import { IAlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '../../typechain';
+import { AlgebraFactory, IWNativeToken, MockTimeSwapRouter } from '../../typechain';
 
 import WNativeToken from '../contracts/WNativeToken.json';
 import { getCreateAddress, ZeroAddress } from 'ethers';
