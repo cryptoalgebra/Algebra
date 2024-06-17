@@ -413,7 +413,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0);
 
         delete _positions[tokenId];
         delete tokenFarmedIn[tokenId];
@@ -428,7 +428,7 @@ contract NonfungiblePositionManager is
     ) external payable override isAuthorizedForToken(tokenId) {
         address newValue;
         if (approve) {
-            require(farmingAddress == farmingCenter, 'Invalid farming address');
+            require(farmingAddress == farmingCenter);
             newValue = farmingAddress;
         }
         farmingApprovals[tokenId] = newValue;
@@ -454,7 +454,6 @@ contract NonfungiblePositionManager is
     function setFarmingCenter(address newFarmingCenter) external override {
         require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
         farmingCenter = newFarmingCenter;
-        emit FarmingCenter(newFarmingCenter);
     }
 
     /// @inheritdoc IERC721Metadata

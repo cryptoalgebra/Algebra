@@ -60,10 +60,6 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of corresponding token
     event FarmingFailed(uint256 indexed tokenId);
 
-    /// @notice Emitted after farming center address change
-    /// @param farmingCenterAddress The new address of connected farming center
-    event FarmingCenter(address farmingCenterAddress);
-
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position

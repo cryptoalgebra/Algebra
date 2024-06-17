@@ -29,36 +29,23 @@ library PoolAddress {
     /// @return pool The contract address of the Algebra pool
     function computeAddress(address poolDeployer, PoolKey memory key) internal pure returns (address pool) {
         require(key.token0 < key.token1, 'Invalid order of tokens');
-        if (key.deployer == address(0)) {
-            pool = address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex'ff',
-                                poolDeployer,
-                                keccak256(abi.encode(key.token0, key.token1)),
-                                POOL_INIT_CODE_HASH
-                            )
+        pool = address(
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            hex'ff',
+                            poolDeployer,
+                            keccak256(
+                                key.deployer == address(0)
+                                    ? abi.encode(key.token0, key.token1)
+                                    : abi.encode(key.deployer, key.token0, key.token1)
+                            ),
+                            POOL_INIT_CODE_HASH
                         )
                     )
                 )
-            );
-        } else {
-            pool = address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                hex'ff',
-                                poolDeployer,
-                                keccak256(abi.encode(key.deployer, key.token0, key.token1)),
-                                POOL_INIT_CODE_HASH
-                            )
-                        )
-                    )
-                )
-            );
-        }
+            )
+        );
     }
 }
