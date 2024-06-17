@@ -23,19 +23,19 @@ async function main() {
   await FarmingCenter.waitForDeployment()
   console.log('FarmingCenter deployed to:', FarmingCenter.target)
 
-  await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target)
+  await (await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target)).wait()
   console.log('Updated farming center address in eternal(incentive) farming')
 
   const pluginFactory = await hre.ethers.getContractAt(BasePluginV1FactoryComplied.abi, deploysData.BasePluginV1Factory)
 
-  await pluginFactory.setFarmingAddress(FarmingCenter.target)
+  await (await pluginFactory.setFarmingAddress(FarmingCenter.target)).wait()
   console.log('Updated farming center address in plugin factory')
 
   const posManager = await hre.ethers.getContractAt(
     'INonfungiblePositionManager',
     deploysData.nonfungiblePositionManager
   )
-  await posManager.setFarmingCenter(FarmingCenter.target)
+  await (await posManager.setFarmingCenter(FarmingCenter.target)).wait()
 
   fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 }
