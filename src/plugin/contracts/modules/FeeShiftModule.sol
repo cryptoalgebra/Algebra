@@ -3,13 +3,11 @@ pragma solidity ^0.8.20;
 
 import {AlgebraBaseModule} from '../base/AlgebraBaseModule.sol';
 
-import {IAlgebraPool} from "@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol";
+import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import {ModuleUtils} from '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/libraries/ModuleUtils.sol';
 import {AlgebraModule} from '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/base/AlgebraModule.sol';
 import {BeforeSwapParams} from '@cryptoalgebra/algebra-modular-hub-v0.8.20/contracts/types/HookParams.sol';
-
-import 'hardhat/console.sol';
 
 contract FeeShiftModule is AlgebraBaseModule {
     struct PriceSnapshot {
@@ -40,10 +38,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         bytes memory params,
         uint16 poolFeeCache
     ) internal virtual override {
-        console.log(3);
-        // TODO: set pool address in init (when module is connected)
         BeforeSwapParams memory decodedParams = abi.decode(params, (BeforeSwapParams));
-
 
         PriceSnapshot memory priceSnapshot = s_priceSnapshot;
         FeeFactors memory currentFeeFactors;
@@ -69,8 +64,6 @@ contract FeeShiftModule is AlgebraBaseModule {
             currentFeeFactors = s_feeFactors;
         }
 
-        console.log(4);
-
         uint16 adjustedFee = decodedParams.zeroToOne ?
             uint16((poolFeeCache * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT) :
             uint16((poolFeeCache * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT);
@@ -82,8 +75,6 @@ contract FeeShiftModule is AlgebraBaseModule {
         int256 currentPrice,
         int256 lastPrice
     ) internal view returns (FeeFactors memory feeFactors) {
-        console.log('lastPrice: ', uint256(lastPrice));
-        console.log('currentPrice: ', uint256(currentPrice));
         // price change is positive after zeroToOne prevalence
         int256 priceChange = currentPrice - lastPrice;
         int128 feeFactorImpact = int128((priceChange << FEE_FACTOR_SHIFT) / lastPrice); // TODO: add coefficient
