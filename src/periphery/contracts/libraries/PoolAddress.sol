@@ -9,18 +9,19 @@ library PoolAddress {
 
     /// @notice The identifying key of the pool
     struct PoolKey {
+        address deployer;
         address token0;
         address token1;
-        address deployer;
     }
 
     /// @notice Returns PoolKey: the ordered tokens
+    /// @param deployer The custom pool deployer address
     /// @param tokenA The first token of a pool, unsorted
     /// @param tokenB The second token of a pool, unsorted
     /// @return Poolkey The pool details with ordered token0 and token1 assignments
-    function getPoolKey(address tokenA, address tokenB, address deployer) internal pure returns (PoolKey memory) {
+    function getPoolKey(address deployer, address tokenA, address tokenB) internal pure returns (PoolKey memory) {
         if (tokenA > tokenB) (tokenA, tokenB) = (tokenB, tokenA);
-        return PoolKey({token0: tokenA, token1: tokenB, deployer: deployer});
+        return PoolKey({deployer: deployer, token0: tokenA, token1: tokenB});
     }
 
     /// @notice Deterministically computes the pool address given the poolDeployer and PoolKey

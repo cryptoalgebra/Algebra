@@ -33,21 +33,21 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         address _poolDeployer
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
-    function getPool(address tokenA, address tokenB, address deployer) private view returns (IAlgebraPool) {
-        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer)));
+    function getPool(address deployer, address tokenA, address tokenB) private view returns (IAlgebraPool) {
+        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(deployer, tokenA, tokenB)));
     }
 
     /// @inheritdoc IAlgebraSwapCallback
     function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
-        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut, deployer);
+        CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta), uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(amount1Delta), uint256(-amount0Delta));
 
-        IAlgebraPool pool = getPool(tokenIn, tokenOut, deployer);
+        IAlgebraPool pool = getPool(deployer, tokenIn, tokenOut);
         (uint160 sqrtPriceX96After, int24 tickAfter, uint16 fee, , , ) = pool.globalState();
 
         if (isExactInput) {
@@ -133,7 +133,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         )
     {
         bool zeroToOne = params.tokenIn < params.tokenOut;
-        IAlgebraPool pool = getPool(params.tokenIn, params.tokenOut, params.deployer);
+        IAlgebraPool pool = getPool(params.deployer, params.tokenIn, params.tokenOut);
 
         uint256 gasBefore = gasleft();
         bytes memory data = abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut);
@@ -234,7 +234,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         )
     {
         bool zeroToOne = params.tokenIn < params.tokenOut;
-        IAlgebraPool pool = getPool(params.tokenIn, params.tokenOut, params.deployer);
+        IAlgebraPool pool = getPool(params.deployer, params.tokenIn, params.tokenOut);
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (params.limitSqrtPrice == 0) amountOutCached = params.amount;

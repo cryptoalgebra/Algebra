@@ -54,7 +54,11 @@ abstract contract LiquidityManagement is IAlgebraMintCallback, PeripheryImmutabl
         internal
         returns (uint128 liquidity, uint128 actualLiquidity, uint256 amount0, uint256 amount1, IAlgebraPool pool)
     {
-        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({token0: params.token0, token1: params.token1, deployer: params.deployer});
+        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({
+            deployer: params.deployer,
+            token0: params.token0,
+            token1: params.token1
+        });
 
         pool = IAlgebraPool(PoolAddress.computeAddress(poolDeployer, poolKey));
 

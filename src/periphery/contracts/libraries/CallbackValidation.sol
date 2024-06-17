@@ -10,16 +10,17 @@ import './PoolAddress.sol';
 library CallbackValidation {
     /// @notice Returns the address of a valid Algebra Pool
     /// @param poolDeployer The contract address of the Algebra pool deployer
+    /// @param deployer The custom pool deployer address
     /// @param tokenA The contract address of either token0 or token1
     /// @param tokenB The contract address of the other token
     /// @return pool The Algebra pool contract address
     function verifyCallback(
         address poolDeployer,
+        address deployer,
         address tokenA,
-        address tokenB,
-        address deployer
+        address tokenB
     ) internal view returns (IAlgebraPool pool) {
-        return verifyCallback(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer));
+        return verifyCallback(poolDeployer, PoolAddress.getPoolKey(deployer, tokenA, tokenB));
     }
 
     /// @notice Returns the address of a valid Algebra Pool

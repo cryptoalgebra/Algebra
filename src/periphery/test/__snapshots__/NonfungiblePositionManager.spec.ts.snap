@@ -14,17 +14,17 @@ exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease [ @
 
 exports[`NonfungiblePositionManager #decreaseLiquidity gas partial decrease [ @skip-on-coverage ] 1`] = `174001`;
 
-exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `180333`;
+exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `180336`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool [ @skip-on-coverage ] 1`] = `632767`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool [ @skip-on-coverage ] 1`] = `632773`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with non-zero refund [ @skip-on-coverage ] 1`] = `647130`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with non-zero refund [ @skip-on-coverage ] 1`] = `647136`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with zero refund [ @skip-on-coverage ] 1`] = `639963`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with zero refund [ @skip-on-coverage ] 1`] = `639969`;
 
-exports[`NonfungiblePositionManager #mint gas mint for same pool, different ticks [ @skip-on-coverage ] 1`] = `438467`;
+exports[`NonfungiblePositionManager #mint gas mint for same pool, different ticks [ @skip-on-coverage ] 1`] = `438473`;
 
-exports[`NonfungiblePositionManager #mint gas mint on same ticks [ @skip-on-coverage ] 1`] = `328325`;
+exports[`NonfungiblePositionManager #mint gas mint on same ticks [ @skip-on-coverage ] 1`] = `328331`;
 
 exports[`NonfungiblePositionManager #permit owned by eoa gas [ @skip-on-coverage ] 1`] = `60014`;
 
@@ -34,6 +34,6 @@ exports[`NonfungiblePositionManager #transferFrom gas [ @skip-on-coverage ] 1`] 
 
 exports[`NonfungiblePositionManager #transferFrom gas comes from approved [ @skip-on-coverage ] 1`] = `87247`;
 
-exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `21882`;
+exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `21884`;
 
 exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `245031`;

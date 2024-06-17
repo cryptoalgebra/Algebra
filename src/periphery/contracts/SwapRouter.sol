@@ -44,8 +44,8 @@ contract SwapRouter is
     ) PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer) {}
 
     /// @dev Returns the pool for the given token pair. The pool contract may or may not exist.
-    function getPool(address tokenA, address tokenB, address deployer) private view returns (IAlgebraPool) {
-        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(tokenA, tokenB, deployer)));
+    function getPool(address deployer, address tokenA, address tokenB) private view returns (IAlgebraPool) {
+        return IAlgebraPool(PoolAddress.computeAddress(poolDeployer, PoolAddress.getPoolKey(deployer, tokenA, tokenB)));
     }
 
     struct SwapCallbackData {
@@ -58,7 +58,7 @@ contract SwapRouter is
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address deployer, address tokenOut) = data.path.decodeFirstPool();
-        CallbackValidation.verifyCallback(poolDeployer, tokenIn, tokenOut, deployer);
+        CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
         (bool isExactInput, uint256 amountToPay) = amount0Delta > 0
             ? (tokenIn < tokenOut, uint256(amount0Delta))
@@ -91,7 +91,7 @@ contract SwapRouter is
 
         bool zeroToOne = tokenIn < tokenOut;
 
-        (int256 amount0, int256 amount1) = getPool(tokenIn, tokenOut, deployer).swap(
+        (int256 amount0, int256 amount1) = getPool(deployer, tokenIn, tokenOut).swap(
             recipient,
             zeroToOne,
             amountIn.toInt256(),
@@ -112,7 +112,10 @@ contract SwapRouter is
             params.amountIn,
             params.recipient,
             params.limitSqrtPrice,
-            SwapCallbackData({path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut), payer: msg.sender})
+            SwapCallbackData({
+                path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut),
+                payer: msg.sender
+            })
         );
         require(amountOut >= params.amountOutMinimum, 'Too little received');
     }
@@ -162,16 +165,17 @@ contract SwapRouter is
 
         bool zeroToOne = params.tokenIn < params.tokenOut;
 
-        (int256 amount0, int256 amount1) = getPool(params.tokenIn, params.tokenOut, params.deployer).swapWithPaymentInAdvance(
-            msg.sender,
-            recipient,
-            zeroToOne,
-            params.amountIn.toInt256(),
-            params.limitSqrtPrice == 0
-                ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-                : params.limitSqrtPrice,
-            abi.encode(data)
-        );
+        (int256 amount0, int256 amount1) = getPool(params.deployer, params.tokenIn, params.tokenOut)
+            .swapWithPaymentInAdvance(
+                msg.sender,
+                recipient,
+                zeroToOne,
+                params.amountIn.toInt256(),
+                params.limitSqrtPrice == 0
+                    ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                    : params.limitSqrtPrice,
+                abi.encode(data)
+            );
 
         amountOut = uint256(-(zeroToOne ? amount1 : amount0));
 
@@ -191,7 +195,7 @@ contract SwapRouter is
 
         bool zeroToOne = tokenIn < tokenOut;
 
-        (int256 amount0Delta, int256 amount1Delta) = getPool(tokenIn, tokenOut, deployer).swap(
+        (int256 amount0Delta, int256 amount1Delta) = getPool(deployer, tokenIn, tokenOut).swap(
             recipient,
             zeroToOne,
             -amountOut.toInt256(),
@@ -219,7 +223,10 @@ contract SwapRouter is
             params.amountOut,
             params.recipient,
             params.limitSqrtPrice,
-            SwapCallbackData({path: abi.encodePacked(params.tokenOut, params.deployer, params.tokenIn), payer: msg.sender})
+            SwapCallbackData({
+                path: abi.encodePacked(params.tokenOut, params.deployer, params.tokenIn),
+                payer: msg.sender
+            })
         );
 
         require(amountIn <= params.amountInMaximum, 'Too much requested');

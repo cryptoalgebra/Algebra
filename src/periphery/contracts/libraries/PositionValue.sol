@@ -101,7 +101,11 @@ library PositionValue {
                 IAlgebraPool(
                     PoolAddress.computeAddress(
                         positionManager.poolDeployer(),
-                        PoolAddress.PoolKey({token0: position.token0, token1: position.token1, deployer: position.deployer})
+                        PoolAddress.PoolKey({
+                            deployer: position.deployer,
+                            token0: position.token0,
+                            token1: position.token1
+                        })
                     )
                 ),
                 position.tickLower,

@@ -181,7 +181,7 @@ contract NonfungiblePositionManager is
         // idempotent set
         uint80 poolId = _cachePoolKey(
             address(pool),
-            PoolAddress.PoolKey({token0: params.token0, token1: params.token1, deployer: params.deployer})
+            PoolAddress.PoolKey({deployer: params.deployer, token0: params.token0, token1: params.token1})
         );
 
         _positions[tokenId] = Position({

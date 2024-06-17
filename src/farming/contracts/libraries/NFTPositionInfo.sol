@@ -25,6 +25,8 @@ library NFTPositionInfo {
     address pluginDeployer;
     (, , token0, token1, pluginDeployer, tickLower, tickUpper, liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
 
-    pool = IAlgebraPool(PoolAddress.computeAddress(address(deployer), PoolAddress.PoolKey({token0: token0, token1: token1, deployer: pluginDeployer})));
+    pool = IAlgebraPool(
+      PoolAddress.computeAddress(address(deployer), PoolAddress.PoolKey({deployer: pluginDeployer, token0: token0, token1: token1}))
+    );
   }
 }

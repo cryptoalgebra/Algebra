@@ -140,6 +140,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     require(msg.sender == address(eternalFarming), 'Only farming can call this');
     require(virtualPool != address(0), 'Zero address as virtual pool');
     pool = IAlgebraPool(plugin.pool());
-    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1(), address(0))), 'Invalid pool');
+    require(
+      address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(address(0), pool.token0(), pool.token1())),
+      'Invalid pool'
+    );
   }
 }
