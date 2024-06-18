@@ -4,9 +4,9 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { mockFactoryFixture } from './shared/fixtures';
+import { ZERO_ADDRESS, mockFactoryFixture } from './shared/fixtures';
 import { PLUGIN_FLAGS, encodePriceSqrt } from "./shared/utilities";
-import { AlgebraModularHub, MockPool } from "../typechain";
+import { AlgebraModularHub, FeeShiftModuleFactory, MockPool } from "../typechain";
 
 
 describe("FeeShiftModule", function () {
@@ -19,34 +19,27 @@ describe("FeeShiftModule", function () {
 
         const poolMock = await PoolMock.deploy() as any as MockPool;
 
-        const AlgebraModularHub = await ethers.getContractFactory(
-            "AlgebraModularHub"
-        );
-        const algebraModularHub = await AlgebraModularHub.deploy(poolMock, mockFactory) as any as AlgebraModularHub;
+        const feeShiftModuleFactoryFactory = await ethers.getContractFactory("FeeShiftModuleFactory");
+        const feeShiftModuleFactory = await feeShiftModuleFactoryFactory.deploy(mockFactory) as any as FeeShiftModuleFactory;
 
-        await poolMock.setPlugin(algebraModularHub);
+        const basePluginFactoryFactory = await ethers.getContractFactory("MockTimeDSFactory");
+        const basePluginFactory = await basePluginFactoryFactory.deploy(mockFactory, [feeShiftModuleFactory]);
 
-        const feeShiftModuleFactory = await ethers.getContractFactory("FeeShiftModule");
-        feeShiftModule = await feeShiftModuleFactory.deploy(algebraModularHub);
+        await mockFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("POOLS_ADMINISTRATOR")), basePluginFactory);
+        await mockFactory.grantRole(ethers.keccak256(ethers.toUtf8Bytes("ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR")), basePluginFactory);
 
-        const moduleGlobalIndex = await algebraModularHub.registerModule.staticCall(feeShiftModule);
-        await algebraModularHub.registerModule(feeShiftModule);
+        await poolMock.setPluginFactory(basePluginFactory);
 
+        await basePluginFactory.beforeCreatePoolHook(poolMock, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
+        const pluginAddress = await basePluginFactory.pluginByPool(poolMock);
+        await basePluginFactory.afterCreatePoolHook(pluginAddress, poolMock, ZERO_ADDRESS);
 
-        const selector =
-            algebraModularHub.interface.getFunction("beforeSwap").selector;
+        const algebraModularHubFactory = await ethers.getContractFactory('AlgebraModularHub');
+        const algebraModularHub = algebraModularHubFactory.attach(pluginAddress) as any as AlgebraModularHub;
 
-        await algebraModularHub.insertModulesToHookLists([{
-            selector: selector,
-            indexInHookList: 0,
-            moduleGlobalIndex: moduleGlobalIndex,
-            useDelegate: false,
-            useDynamicFee: true
-        }]);
-
-
-        const currentPluginConfig = (await poolMock.globalState()).pluginConfig; 
-        await poolMock.setPluginConfig(currentPluginConfig | BigInt(PLUGIN_FLAGS.DYNAMIC_FEE));
+        const feeShiftModuleAddress = await feeShiftModuleFactory.poolToPlugin(poolMock);
+        const feeShiftModule_Factory = await ethers.getContractFactory("FeeShiftModule");
+        feeShiftModule = await feeShiftModule_Factory.attach(feeShiftModuleAddress);
 
         return { poolMock, algebraModularHub, owner, otherAccount };
     }
