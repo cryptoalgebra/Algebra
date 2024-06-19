@@ -30,6 +30,8 @@ contract FeeShiftModule is AlgebraBaseModule {
 
     PriceSnapshot internal s_priceSnapshot;
 
+    event PriceChangeFactor(uint256 priceChangeFactor);
+
     constructor(address _modularHub) AlgebraModule(_modularHub) {
         FeeFactors memory feeFactors = FeeFactors(
             uint128(1 << FEE_FACTOR_SHIFT),
@@ -39,12 +41,18 @@ contract FeeShiftModule is AlgebraBaseModule {
         s_feeFactors = feeFactors;
     }
 
+    function setPriceChangeFactor(uint256 _priceChangeFactor) external {
+        // TODO: add authorization
+        s_priceChangeFactor = _priceChangeFactor;
+
+        emit PriceChangeFactor(_priceChangeFactor);
+    }
+
     function _beforeSwap(
         bytes memory params,
         uint16 poolFeeCache
     ) internal virtual override {
         console.log(3);
-        // TODO: set pool address in init (when module is connected)
         BeforeSwapParams memory decodedParams = abi.decode(params, (BeforeSwapParams));
 
 
@@ -89,7 +97,7 @@ contract FeeShiftModule is AlgebraBaseModule {
         console.log('currentPrice: ', uint256(currentPrice));
         // price change is positive after zeroToOne prevalence
         int256 priceChange = currentPrice - lastPrice;
-        int128 feeFactorImpact = int128((priceChange * 2 << FEE_FACTOR_SHIFT) / lastPrice); // TODO: add coefficient
+        int128 feeFactorImpact = int128((priceChange * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT) / lastPrice);
 
         feeFactors = s_feeFactors;
 
