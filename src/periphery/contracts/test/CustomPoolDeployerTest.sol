@@ -35,6 +35,10 @@ contract CustomPoolDeployerTest {
         return poolToPlugin[pool];
     }
 
+    function afterCreatePoolHook(address, address, address) external pure {
+        return;
+    }
+
     function setPluginForPool(address pool, address plugin) external {
         poolToPlugin[pool] = plugin;
     }

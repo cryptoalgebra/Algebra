@@ -22,8 +22,13 @@ contract FeeShiftModule is AlgebraBaseModule {
 
     uint64 internal constant FEE_FACTOR_SHIFT = 64;
 
-    PriceSnapshot internal s_priceSnapshot;
     FeeFactors public s_feeFactors;
+
+    uint256 public s_priceChangeFactor = 1;
+
+    PriceSnapshot internal s_priceSnapshot;
+
+    event PriceChangeFactor(uint256 priceChangeFactor);
 
     constructor(address _modularHub) AlgebraModule(_modularHub) {
         FeeFactors memory feeFactors = FeeFactors(
@@ -32,6 +37,13 @@ contract FeeShiftModule is AlgebraBaseModule {
         );
 
         s_feeFactors = feeFactors;
+    }
+
+    function setPriceChangeFactor(uint256 _priceChangeFactor) external {
+        // TODO: add authorization
+        s_priceChangeFactor = _priceChangeFactor;
+
+        emit PriceChangeFactor(_priceChangeFactor);
     }
 
     function _beforeSwap(
@@ -77,7 +89,7 @@ contract FeeShiftModule is AlgebraBaseModule {
     ) internal view returns (FeeFactors memory feeFactors) {
         // price change is positive after zeroToOne prevalence
         int256 priceChange = currentPrice - lastPrice;
-        int128 feeFactorImpact = int128((priceChange << FEE_FACTOR_SHIFT) / lastPrice); // TODO: add coefficient
+        int128 feeFactorImpact = int128((priceChange * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT) / lastPrice);
 
         feeFactors = s_feeFactors;
 

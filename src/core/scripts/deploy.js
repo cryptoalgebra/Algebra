@@ -37,7 +37,28 @@ async function main() {
 
   console.log('AlgebraVaultFactoryStub deployed to:', vaultFactoryStub.target);
 
-  await factory.setVaultFactory(vaultFactoryStub);
+  const setVaultTx = await factory.setVaultFactory(vaultFactoryStub);
+  await setVaultTx.wait()
+
+  // protocol fee settings
+  const algebraFeeRecipient = "0x1d8b6fa722230153be08c4fa4aa4b4c7cd01a95a" 
+  const partnerAddress = "0xDeaD1F5aF792afc125812E875A891b038f888258" // owner address, must be changed
+  const algebraFeeShare =  1000 // specified on algebraVault, 100% of community fee by default(3% of all fees) 
+  const defaultCommunityFee = 30 // 3% by default
+
+  const setCommunityFeeTx = await factory.setDefaultCommunityFee(defaultCommunityFee)
+  await setCommunityFeeTx.wait()
+
+  const changeAlgebraFeeReceiverTx = await vault.changeAlgebraFeeReceiver(algebraFeeRecipient)
+  await changeAlgebraFeeReceiverTx.wait()
+
+  const changePartnerFeeReceiverTx = await vault.changeCommunityFeeReceiver(partnerAddress)
+  await changePartnerFeeReceiverTx.wait()
+
+  await (await vault.proposeAlgebraFeeChange(algebraFeeShare)).wait()
+  await (await vault.acceptAlgebraFeeChangeProposal(algebraFeeShare)).wait()
+
+  await (await factory.transferOwnership(partnerAddress)).wait()
 
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));

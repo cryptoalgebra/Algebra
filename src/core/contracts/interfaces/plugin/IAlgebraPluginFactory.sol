@@ -21,9 +21,9 @@ interface IAlgebraPluginFactory {
     bytes calldata data
   ) external returns (address);
 
-  function afterCreatePoolHook(
-    address modularHub,
-    address pool,
-    address deployer
-  ) external;
+  /// @notice Called after the pool is created
+  /// @param plugin The plugin address
+  /// @param pool The address of the new pool
+  /// @param deployer The address of new plugin deployer contract (0 if not used)
+  function afterCreatePoolHook(address plugin, address pool, address deployer) external;
 }
