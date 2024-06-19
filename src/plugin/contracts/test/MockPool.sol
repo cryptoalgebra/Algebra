@@ -233,6 +233,38 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     globalState.pluginConfig = newConfig;
   }
 
+  function setPrice(uint160 newPrice) external {
+    globalState.price = newPrice;
+  }
+
+  function pseudoSwap(uint160 toPrice) external {
+        uint160 _price = globalState.price;
+        bool zto = toPrice <= _price;
+
+        IAlgebraPlugin(plugin).beforeSwap(
+            msg.sender,
+            msg.sender,
+            zto,
+            1000000000,
+            0,
+            false,
+            ""
+        );
+
+        globalState.price = toPrice;
+
+        IAlgebraPlugin(plugin).afterSwap(
+            msg.sender,
+            msg.sender,
+            zto,
+            1000000000,
+            0,
+            -1000000000,
+            1000000000,
+            ""
+        );
+    }
+
   /// @inheritdoc IAlgebraPoolPermissionedActions
   function setFee(uint16 newFee) external override {
     require(msg.sender == owner || msg.sender == plugin);

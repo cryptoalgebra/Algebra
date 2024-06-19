@@ -7,7 +7,7 @@ interface MockFactoryFixture {
 }
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-async function mockFactoryFixture(): Promise<MockFactoryFixture> {
+export async function mockFactoryFixture(): Promise<MockFactoryFixture> {
   const mockFactoryFactory = await ethers.getContractFactory('MockFactory');
   const mockFactory = (await mockFactoryFactory.deploy()) as any as MockFactory;
 
