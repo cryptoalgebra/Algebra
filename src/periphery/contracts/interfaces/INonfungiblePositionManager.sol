@@ -207,27 +207,50 @@ interface INonfungiblePositionManager is
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
-    function withdrawalFeePoolParams(
-        address pool
-    ) external view returns (uint64 apr0, uint64 apr1, uint16 withdrawalFee);
-
-    function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external;
-
-    function setTokenAPR(address pool, uint64 _apr0, uint64 _apr1) external;
-
-    function withdrawalFeesVault() external view returns (address vault);
-
-    function setVaultAddress(address newVault) external;
-
-    function positionsWithdrawalFee(
-        uint256 tokenId
-    ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
-
     struct WithdrawalFeePoolParams {
         uint64 apr0;
         uint64 apr1;
         uint16 withdrawalFee;
     }
+
+    /// @notice Returns withdrawal fee params for pool
+    /// @param pool Pool address
+    /// @return apr0
+    /// @return apr1
+    /// @return withdrawalFee
+    function withdrawalFeePoolParams(
+        address pool
+    ) external view returns (uint64 apr0, uint64 apr1, uint16 withdrawalFee);
+
+    /// @notice Changes withdrawalFee for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param newWithdrawalFee Percentage of lst token earnings that will be sent to the vault
+    function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external;
+
+    /// @notice Changes tokens apr for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param apr0 APR of LST token0
+    /// @param apr1 APR of LST token1
+    function setTokenAPR(address pool, uint64 apr0, uint64 apr1) external;
+
+    /// @notice Returns vault address to which fees will be sent
+    /// @return vault The actual vault address
+    function withdrawalFeesVault() external view returns (address vault);
+
+    /// @notice Changes vault address
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param newVault The new address of vault
+    function setVaultAddress(address newVault) external;
+
+    /// @notice Returns withdrawalFee information associated with a given token ID
+    /// @param tokenId The ID of the token that represents the position
+    /// @return lastUpdateTimestamp Last increase/decrease liquidity timestamp
+    /// @return withdrawalFeeLiquidity Liqudity of accumulated withdrawal fee
+    function positionsWithdrawalFee(
+        uint256 tokenId
+    ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
 
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE

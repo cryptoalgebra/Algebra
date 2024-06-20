@@ -50,9 +50,10 @@ contract NonfungiblePositionManager is
         uint128 tokensOwed1;
     }
 
+    // details about withdrawal fee for position
     struct PositionWithdrawalFee {
-        uint32 lastUpdateTimestamp;
-        uint128 withdrawalFeeLiquidity;
+        uint32 lastUpdateTimestamp; // last increase/decrease liquidity timestamp
+        uint128 withdrawalFeeLiquidity; // liqudity of accumulated withdrawal fee
     }
 
     /// @dev The role which has the right to change the farming center address
@@ -64,6 +65,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     address public override farmingCenter;
 
+    /// @inheritdoc INonfungiblePositionManager
     address public override withdrawalFeesVault;
 
     /// @inheritdoc INonfungiblePositionManager
@@ -72,6 +74,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
+    /// @inheritdoc INonfungiblePositionManager
     mapping(address pool => WithdrawalFeePoolParams params) public override withdrawalFeePoolParams;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
@@ -86,6 +89,7 @@ contract NonfungiblePositionManager is
     /// @dev The token ID position data
     mapping(uint256 tokenId => Position position) private _positions;
 
+    /// @dev The token ID  withdrawal fee poisiton data
     mapping(uint256 tokenId => PositionWithdrawalFee data) private _positionsWithdrawalFee;
 
     /// @dev The ID of the next token that will be minted. Skips 0
@@ -584,6 +588,7 @@ contract NonfungiblePositionManager is
         emit FarmingCenter(newFarmingCenter);
     }
 
+    /// @inheritdoc INonfungiblePositionManager
     function setTokenAPR(address pool, uint64 _apr0, uint64 _apr1) external override onlyAdministrator {
         require(_apr0 <= FEE_DENOMINATOR && _apr1 <= FEE_DENOMINATOR);
         WithdrawalFeePoolParams storage params = withdrawalFeePoolParams[pool];
@@ -591,11 +596,13 @@ contract NonfungiblePositionManager is
         params.apr1 = _apr1;
     }
 
+    /// @inheritdoc INonfungiblePositionManager
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
         require(newWithdrawalFee <= FEE_DENOMINATOR);
         withdrawalFeePoolParams[pool].withdrawalFee = newWithdrawalFee;
     }
 
+    /// @inheritdoc INonfungiblePositionManager
     function setVaultAddress(address newVault) external override onlyAdministrator {
         require(newVault != address(0));
         withdrawalFeesVault = newVault;
