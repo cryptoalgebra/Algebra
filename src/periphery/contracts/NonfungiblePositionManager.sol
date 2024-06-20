@@ -286,7 +286,7 @@ contract NonfungiblePositionManager is
         uint128 liquidity
     ) private view returns (uint128 withdrawalFeeLiquidity) {
         WithdrawalFeePoolParams memory params = withdrawalFeePoolParams[pool];
-        
+
         uint256 token0apr = params.apr0;
         uint256 token1apr = params.apr1;
         uint16 withdrawalFee = params.withdrawalFee;
@@ -321,7 +321,7 @@ contract NonfungiblePositionManager is
             if (token1apr > 0) {
                 uint256 amount1EarnedFromStake = (token1apr * period * liquidityAmount1) / (FEE_DENOMINATOR * 365 days);
                 uint128 amount1ToWithdraw = uint128((amount1EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
-                withdrawalFeeLiquidity = LiquidityAmounts.getLiquidityForAmount1(
+                withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount1(
                     tickLowerPrice,
                     tickUpperPrice,
                     amount1ToWithdraw
