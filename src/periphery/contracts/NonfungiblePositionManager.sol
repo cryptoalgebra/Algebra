@@ -89,7 +89,7 @@ contract NonfungiblePositionManager is
     /// @dev The token ID position data
     mapping(uint256 tokenId => Position position) private _positions;
 
-    /// @dev The token ID  withdrawal fee poisiton data
+    /// @dev The token ID withdrawal fee position data
     mapping(uint256 tokenId => PositionWithdrawalFee data) private _positionsWithdrawalFee;
 
     /// @dev The ID of the next token that will be minted. Skips 0
