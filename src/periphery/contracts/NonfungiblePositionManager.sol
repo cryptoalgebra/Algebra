@@ -448,13 +448,11 @@ contract NonfungiblePositionManager is
             pool.collect(withdrawalFeesVault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
         }
 
-        (amount0, amount1) = pool._burnPositionInPool(
-            tickLower,
-            tickUpper,
-            params.liquidity > positionLiquidity - positionWithdrawalFeeLiquidity
-                ? positionLiquidity - positionWithdrawalFeeLiquidity
-                : params.liquidity
-        );
+        uint128 liquidityDeltaWithoutFee = params.liquidity > positionLiquidity - positionWithdrawalFeeLiquidity
+            ? positionLiquidity - positionWithdrawalFeeLiquidity
+            : params.liquidity;
+
+        (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, liquidityDeltaWithoutFee);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
 
@@ -470,14 +468,12 @@ contract NonfungiblePositionManager is
                 positionLiquidity
             );
 
-            positionLiquidity -= positionWithdrawalFeeLiquidity;
-
             unchecked {
                 position.tokensOwed0 += uint128(amount0) + tokensOwed0;
                 position.tokensOwed1 += uint128(amount1) + tokensOwed1;
 
                 // subtraction is safe because we checked positionLiquidity is gte params.liquidity
-                position.liquidity = params.liquidity >= positionLiquidity ? 0 : positionLiquidity - params.liquidity;
+                position.liquidity = positionLiquidity - liquidityDeltaWithoutFee - positionWithdrawalFeeLiquidity;
             }
         }
 
@@ -485,12 +481,7 @@ contract NonfungiblePositionManager is
 
         _applyLiquidityDeltaInFarming(
             params.tokenId,
-            -int256(
-                uint256(
-                    (params.liquidity > positionLiquidity ? positionLiquidity : params.liquidity) +
-                        positionWithdrawalFeeLiquidity
-                )
-            )
+            -int256(uint256(liquidityDeltaWithoutFee + positionWithdrawalFeeLiquidity))
         );
     }
 
