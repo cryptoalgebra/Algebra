@@ -72,9 +72,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
-    mapping(address pool => Aprs apr) public override aprs;
-
-    mapping(address pool => uint16 withdrawalFee) public override withdrawalFees;
+    mapping(address pool => WithdrawalFeePoolParams params) public override withdrawalFeePoolParams;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
@@ -287,9 +285,12 @@ contract NonfungiblePositionManager is
         int24 tickUpper,
         uint128 liquidity
     ) private view returns (uint128 withdrawalFeeLiquidity) {
-        uint256 token0apr = aprs[pool].apr0;
-        uint256 token1apr = aprs[pool].apr1;
-        uint16 withdrawalFee = withdrawalFees[pool];
+        WithdrawalFeePoolParams memory params = withdrawalFeePoolParams[pool];
+        
+        uint256 token0apr = params.apr0;
+        uint256 token1apr = params.apr1;
+        uint16 withdrawalFee = params.withdrawalFee;
+
         if ((token0apr > 0 || token1apr > 0) && withdrawalFee > 0) {
             uint32 period = uint32(_blockTimestamp()) - lastUpdateTimestamp;
 
@@ -590,14 +591,16 @@ contract NonfungiblePositionManager is
         emit FarmingCenter(newFarmingCenter);
     }
 
-    function setTokenAPR(address pool, uint128 _apr0, uint128 _apr1) external override onlyAdministrator {
+    function setTokenAPR(address pool, uint64 _apr0, uint64 _apr1) external override onlyAdministrator {
         require(_apr0 <= FEE_DENOMINATOR && _apr1 <= FEE_DENOMINATOR);
-        aprs[pool] = Aprs({apr0: _apr0, apr1: _apr1});
+        WithdrawalFeePoolParams storage params = withdrawalFeePoolParams[pool];
+        params.apr0 = _apr0;
+        params.apr1 = _apr1;
     }
 
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
         require(newWithdrawalFee <= FEE_DENOMINATOR);
-        withdrawalFees[pool] = newWithdrawalFee;
+        withdrawalFeePoolParams[pool].withdrawalFee = newWithdrawalFee;
     }
 
     /// @inheritdoc IERC721Metadata

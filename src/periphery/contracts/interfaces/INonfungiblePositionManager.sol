@@ -207,13 +207,13 @@ interface INonfungiblePositionManager is
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
-    function aprs(address pool) external view returns (uint128 apr0, uint128 apr1);
-
-    function withdrawalFees(address pool) external view returns (uint16 withdrawalFee);
+    function withdrawalFeePoolParams(
+        address pool
+    ) external view returns (uint64 apr0, uint64 apr1, uint16 withdrawalFee);
 
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external;
 
-    function setTokenAPR(address pool, uint128 _apr0, uint128 _apr1) external;
+    function setTokenAPR(address pool, uint64 _apr0, uint64 _apr1) external;
 
     function withdrawalFeesVault() external view returns (address vault);
 
@@ -221,9 +221,10 @@ interface INonfungiblePositionManager is
         uint256 tokenId
     ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
 
-    struct Aprs {
-        uint128 apr0;
-        uint128 apr1;
+    struct WithdrawalFeePoolParams {
+        uint64 apr0;
+        uint64 apr1;
+        uint16 withdrawalFee;
     }
 
     /// @notice Changes address of farmingCenter
