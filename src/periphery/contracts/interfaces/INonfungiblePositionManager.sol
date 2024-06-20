@@ -217,6 +217,8 @@ interface INonfungiblePositionManager is
 
     function withdrawalFeesVault() external view returns (address vault);
 
+    function setVaultAddress(address newVault) external;
+
     function positionsWithdrawalFee(
         uint256 tokenId
     ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
