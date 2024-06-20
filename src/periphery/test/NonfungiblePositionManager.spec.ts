@@ -9,6 +9,7 @@ import {
   IAlgebraFactory,
   SwapRouter,
   MockPositionFollower,
+  MockOraclePlugin
 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { computePoolAddress } from './shared/computePoolAddress';
@@ -25,6 +26,7 @@ import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
 
 import { abi as IAlgebraPoolABI } from '@cryptoalgebra/integral-core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
+import { token } from '../typechain/@openzeppelin/contracts';
 
 describe('NonfungiblePositionManager', () => {
   let wallets: Wallet[];
@@ -427,6 +429,94 @@ describe('NonfungiblePositionManager', () => {
       );
     });
   });
+
+  describe('#withdrawalFee plugin', () => {
+    const tokenId = 1;
+    beforeEach('create a position and set withdrawal fee params', async () => {
+      await nft.createAndInitializePoolIfNecessary(
+        tokens[0].getAddress(),
+        tokens[1].getAddress(),
+        encodePriceSqrt(1, 1)
+      );
+
+      await nft.mint({
+        token0: tokens[0].getAddress(),
+        token1: tokens[1].getAddress(),
+        tickLower: -60,
+        tickUpper: 60,
+        recipient: other.getAddress(),
+        amount0Desired: 1000,
+        amount1Desired: 1000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      });
+
+      const poolAddress = await factory.poolByPair(tokens[0], tokens[1]);
+
+      const MockOraclePluginFactory = await ethers.getContractFactory('MockOraclePlugin');
+      const mockOraclePlugin = await MockOraclePluginFactory.deploy();
+
+      const pool = new ethers.Contract(poolAddress, IAlgebraPoolABI, wallet);
+      await pool.setPlugin(mockOraclePlugin)
+      await nft.setTokenAPR(poolAddress, 0, 100) // 10% apr
+      await nft.setWithdrawalFee(poolAddress, 500) // withdrawal fee 50%
+
+    });
+
+      
+    it('liquidity decrease works correct', async () => {
+      await nft.setTime(15768000)
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15768000,
+      });
+
+      const {liquidity} = await nft.positions(tokenId)
+
+      const {withdrawalFeeLiquidity} = await nft.positionsWithdrawalFee(tokenId)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 })
+
+      expect((await nft.positions(tokenId)).liquidity).to.be.eq(liquidity - 1000n - withdrawalFeeLiquidity)
+    })
+
+    it('withdrawal fees positions timestamp updates correct', async () => {
+
+      await nft.setTime(15768000)
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15768000,
+      });
+
+      expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15768000)
+      
+      await nft.setTime(15778000)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15778000 })
+
+      expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15778000)
+
+    }) 
+
+    it('correct reward calculation', async () => {
+      await nft.setTime(15768000)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+      const balanceAfter0 = await tokens[0].balanceOf(factory)
+      const balanceAfter1 = await tokens[1].balanceOf(factory)
+      expect(balanceAfter0).to.be.eq(14) 
+      expect(balanceAfter1).to.be.eq(14)
+    })
+
+  })
 
   describe('#increaseLiquidity', () => {
     const tokenId = 1;
