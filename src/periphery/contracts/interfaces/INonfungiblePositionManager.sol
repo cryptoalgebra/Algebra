@@ -43,9 +43,16 @@ interface INonfungiblePositionManager is
     /// @notice Emitted when liquidity is decreased for a position NFT
     /// @param tokenId The ID of the token for which liquidity was decreased
     /// @param liquidity The amount by which liquidity for the NFT position was decreased
+    /// @param withdrawalFeeliquidity Withdrawal fee liq
     /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
     /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
-    event DecreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event DecreaseLiquidity(
+        uint256 indexed tokenId,
+        uint128 liquidity,
+        uint128 withdrawalFeeliquidity,
+        uint256 amount0,
+        uint256 amount1
+    );
 
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
@@ -199,6 +206,25 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of the token
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
+
+    function aprs(address pool) external view returns (uint128 apr0, uint128 apr1);
+
+    function withdrawalFees(address pool) external view returns (uint16 withdrawalFee);
+
+    function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external;
+
+    function setTokenAPR(address pool, uint128 _apr0, uint128 _apr1) external;
+
+    function withdrawalFeesVault() external view returns (address vault);
+
+    function positionsWithdrawalFee(
+        uint256 tokenId
+    ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
+
+    struct Aprs {
+        uint128 apr0;
+        uint128 apr1;
+    }
 
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
