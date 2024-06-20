@@ -114,7 +114,6 @@ contract NonfungiblePositionManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
-        require(_vault != address(0));
         withdrawalFeesVault = _vault;
     }
 
@@ -295,8 +294,10 @@ contract NonfungiblePositionManager is
         if ((token0apr > 0 || token1apr > 0) && withdrawalFee > 0) {
             uint32 period = uint32(_blockTimestamp()) - lastUpdateTimestamp;
 
+            if (period == 0) return 0;
             address oracle = IAlgebraPool(pool).plugin();
-            if (oracle == address(0) || period == 0) return 0;
+
+            if (oracle == address(0)) return 0;
             int24 timeWeightedAverageTick = OracleLibrary.consult(oracle, period);
 
             uint160 tickLowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
@@ -540,7 +541,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0);
 
         delete _positions[tokenId];
         delete tokenFarmedIn[tokenId];
@@ -555,7 +556,7 @@ contract NonfungiblePositionManager is
     ) external payable override isAuthorizedForToken(tokenId) {
         address newValue;
         if (approve) {
-            require(farmingAddress == farmingCenter, 'Invalid farming address');
+            require(farmingAddress == farmingCenter);
             newValue = farmingAddress;
         }
         farmingApprovals[tokenId] = newValue;
@@ -596,7 +597,7 @@ contract NonfungiblePositionManager is
     }
 
     function setVaultAddress(address newVault) external override onlyAdministrator {
-        require(newVault != address(0), 'Zero address');
+        require(newVault != address(0));
         withdrawalFeesVault = newVault;
     }
 
