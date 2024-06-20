@@ -114,6 +114,7 @@ contract NonfungiblePositionManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
+        require(_vault != address(0));
         withdrawalFeesVault = _vault;
     }
 
@@ -601,6 +602,11 @@ contract NonfungiblePositionManager is
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
         require(newWithdrawalFee <= FEE_DENOMINATOR);
         withdrawalFeePoolParams[pool].withdrawalFee = newWithdrawalFee;
+    }
+
+    function setVaultAddress(address newVault) external override onlyAdministrator {
+        require(newVault != address(0), 'Zero address');
+        withdrawalFeesVault = newVault;
     }
 
     /// @inheritdoc IERC721Metadata

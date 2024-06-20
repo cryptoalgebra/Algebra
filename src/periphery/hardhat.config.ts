@@ -20,6 +20,21 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   },
 };
 
+const ZERO_OPTIMIZER_COMPILER_SETTINGS = {
+  version: '0.8.20',
+  settings: {
+    evmVersion: 'paris',
+    viaIR: true,
+    optimizer: {
+      enabled: true,
+      runs: 0,
+    },
+    metadata: {
+      bytecodeHash: 'none',
+    },
+  },
+};
+
 const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
   settings: {
@@ -70,7 +85,7 @@ export default {
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
-      'contracts/NonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/NonfungiblePositionManager.sol': ZERO_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/MockTimeNonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/NFTDescriptorTest.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
