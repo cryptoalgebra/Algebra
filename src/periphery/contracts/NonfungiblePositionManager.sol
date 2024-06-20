@@ -279,7 +279,7 @@ contract NonfungiblePositionManager is
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
     }
 
-    function _updateWithdrawalFees(
+    function _calculateWithdrawalFees(
         address pool,
         uint32 lastUpdateTimestamp,
         int24 tickLower,
@@ -384,7 +384,7 @@ contract NonfungiblePositionManager is
 
         {
             PositionWithdrawalFee storage _position = _positionsWithdrawalFee[params.tokenId];
-            uint128 withdrawalFeeLiquidity = _updateWithdrawalFees(
+            uint128 withdrawalFeeLiquidity = _calculateWithdrawalFees(
                 address(pool),
                 _position.lastUpdateTimestamp,
                 tickLower,
@@ -428,7 +428,7 @@ contract NonfungiblePositionManager is
         {
             PositionWithdrawalFee storage _position = _positionsWithdrawalFee[params.tokenId];
             positionWithdrawalFeeLiquidity = _position.withdrawalFeeLiquidity;
-            positionWithdrawalFeeLiquidity += _updateWithdrawalFees(
+            positionWithdrawalFeeLiquidity += _calculateWithdrawalFees(
                 address(pool),
                 _position.lastUpdateTimestamp,
                 tickLower,
