@@ -16,7 +16,7 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
 
   address public immutable override algebraFactory;
 
-  address public override withdrawalFeePlugin;
+  address public override modifyLiquidityEntrypoint;
 
   /// @dev values of constants for sigmoids in fee calculation formula
   AlgebraFeeConfiguration public override defaultFeeConfiguration;
@@ -72,9 +72,9 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     emit FarmingAddress(newFarmingAddress);
   }
 
-  function setWithdrawalFeePlugin(address newWithDrawalFeePlugin) external override {
-    require(withdrawalFeePlugin != newWithDrawalFeePlugin);
-    withdrawalFeePlugin = newWithDrawalFeePlugin;
-    emit WithdrawalFeePlugin(newWithDrawalFeePlugin);
+  function setModifyLiquidityEntrypoint(address newWithDrawalFeePlugin) external override {
+    require(modifyLiquidityEntrypoint != newWithDrawalFeePlugin);
+    modifyLiquidityEntrypoint = newWithDrawalFeePlugin;
+    emit ModifyLiquidityEntrypoint(newWithDrawalFeePlugin);
   }
 }
