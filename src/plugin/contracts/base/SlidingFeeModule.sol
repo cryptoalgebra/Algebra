@@ -3,6 +3,9 @@ pragma solidity =0.8.20;
 
 import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import {Timestamp} from '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
+import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+
+import 'hardhat/console.sol';
 
 abstract contract SlidingFeeModule is Timestamp {
     struct FeeFactors {
@@ -28,18 +31,26 @@ abstract contract SlidingFeeModule is Timestamp {
     }
 
     function _getFeeAndUpdateFactors(
-        uint256 currentPrice,
-        uint256 lastPrice,
+        int24 currenTick,
+        int24 lastTick,
         uint16 poolFee,
         bool zeroToOne
     ) internal returns (uint16) {
+        console.log('mi v _getFeeAndUpdateFactors');
         FeeFactors memory currentFeeFactors;
 
-        if (lastPrice == 0) {
+        // console.log('current price: ', currentPrice);
+        // console.log('last price: ', lastPrice);
+        // console.log('zero to one: ', zeroToOne);
+
+        // ❗❗❗
+        // раньше было currentPrice = 0, я так понял проверка на то, инициализирована ли была цена
+        // теперь currentTick = 0 - валидное значение, возможно стоит передавать доп аргумент
+        if (lastTick == 0) {
             return poolFee;
         }
 
-        currentFeeFactors = _calculateFeeFactors(int256(currentPrice), int256(lastPrice));
+        currentFeeFactors = _calculateFeeFactors(currenTick, lastTick);
 
         s_feeFactors = currentFeeFactors;
 
@@ -51,13 +62,15 @@ abstract contract SlidingFeeModule is Timestamp {
     }
 
     function _calculateFeeFactors(
-        int256 currentPrice,
-        int256 lastPrice
+        int24 currentTick,
+        int24 lastTick
     ) internal view returns (FeeFactors memory feeFactors) {
         // price change is positive after zeroToOne prevalence
-        int256 priceChange = currentPrice - lastPrice;
-        int128 feeFactorImpact = int128((priceChange * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT) / lastPrice);
-
+        // int256 priceChange = currentPrice - lastPrice;
+        int128 priceChangeRatio = int128(uint128(TickMath.getSqrtRatioAtTick(currentTick - lastTick) - 1)); // (currentPrice - lastPrice) / lastPrice
+        int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT);
+        console.log('feeFactorImpact: ', uint128(feeFactorImpact));
+        // int128 feeFactorImpact = int128((priceChange * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT) / lastPrice);
         feeFactors = s_feeFactors;
 
         // if there were zeroToOne prevalence in the last price change,

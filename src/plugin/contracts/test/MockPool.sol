@@ -13,6 +13,8 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolPermi
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolErrors.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Mock of Algebra concentrated liquidity pool for plugins testing
 contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlgebraPoolState {
   struct GlobalState {
@@ -233,6 +235,40 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
     }
 
     globalState.fee = newFee;
+  }
+
+  function setPrice(uint160 newPrice) external {
+    globalState.price = newPrice;
+    globalState.tick = TickMath.getTickAtSqrtRatio(newPrice);
+  }
+
+  function pseudoSwap(uint160 toPrice) external {
+      uint160 _price = globalState.price;
+      bool zto = toPrice <= _price;
+
+      IAlgebraPlugin(plugin).beforeSwap(
+          msg.sender,
+          msg.sender,
+          zto,
+          1000000000,
+          0,
+          false,
+          ""
+      );
+
+      globalState.price = toPrice;
+      globalState.tick = TickMath.getTickAtSqrtRatio(toPrice);
+
+      IAlgebraPlugin(plugin).afterSwap(
+          msg.sender,
+          msg.sender,
+          zto,
+          1000000000,
+          0,
+          -1000000000,
+          1000000000,
+          ""
+      );
   }
 
   function setCommunityVault(address newCommunityVault) external override {

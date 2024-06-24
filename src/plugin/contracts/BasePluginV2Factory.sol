@@ -1,37 +1,43 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import '../base/AlgebraFeeConfiguration.sol';
-import '../libraries/AdaptiveFee.sol';
+import './interfaces/IBasePluginV1Factory.sol';
+import './libraries/AdaptiveFee.sol';
+import './AlgebraBasePluginV2.sol';
 
-import './MockTimeAlgebraBasePluginV2.sol';
-
-import '../interfaces/IBasePluginV1Factory.sol';
-
-import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
-
-contract MockTimeDSFactory is IBasePluginV1Factory {
+/// @title Algebra Integral 1.1 default plugin factory
+/// @notice This contract creates Algebra default plugins for Algebra liquidity pools
+/// @dev This plugin factory can only be used for Algebra base pools
+contract BasePluginV2Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
+  /// @inheritdoc IBasePluginV1Factory
   address public immutable override algebraFactory;
 
-  /// @dev values of constants for sigmoids in fee calculation formula
-  AlgebraFeeConfiguration public override defaultFeeConfiguration;
-
   /// @inheritdoc IBasePluginV1Factory
-  mapping(address => address) public override pluginByPool;
+  AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
+  /// @inheritdoc IBasePluginV1Factory
+  mapping(address poolAddress => address pluginAddress) public override pluginByPool;
+
+  modifier onlyAdministrator() {
+    require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'Only administrator');
+    _;
+  }
+
   constructor(address _algebraFactory) {
     algebraFactory = _algebraFactory;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
+    emit DefaultFeeConfiguration(defaultFeeConfiguration);
   }
 
   /// @inheritdoc IAlgebraPluginFactory
   function beforeCreatePoolHook(address pool, address, address, address, address, bytes calldata) external override returns (address) {
+    require(msg.sender == algebraFactory);
     return _createPlugin(pool);
   }
 
@@ -40,6 +46,7 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     require(msg.sender == algebraFactory);
   }
 
+  /// @inheritdoc IBasePluginV1Factory
   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
@@ -50,26 +57,23 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     return _createPlugin(pool);
   }
 
-  function setPluginForPool(address pool, address plugin) external {
-    pluginByPool[pool] = plugin;
-  }
-
   function _createPlugin(address pool) internal returns (address) {
-    MockTimeAlgebraBasePluginV2 volatilityOracle = new MockTimeAlgebraBasePluginV2(pool, algebraFactory, address(this));
+    require(pluginByPool[pool] == address(0), 'Already created');
+    IAlgebraBasePluginV1 volatilityOracle = new AlgebraBasePluginV2(pool, algebraFactory, address(this));
     volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
     pluginByPool[pool] = address(volatilityOracle);
     return address(volatilityOracle);
   }
 
   /// @inheritdoc IBasePluginV1Factory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override {
+  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
   /// @inheritdoc IBasePluginV1Factory
-  function setFarmingAddress(address newFarmingAddress) external override {
+  function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);

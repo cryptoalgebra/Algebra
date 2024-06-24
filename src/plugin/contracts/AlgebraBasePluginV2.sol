@@ -167,14 +167,14 @@ contract AlgebraBasePluginV2 is SlidingFeeModule, IAlgebraBasePluginV1, IAlgebra
   }
 
   function _getFeeAtLastTimepoint(
-    uint160 currentPrice,
+    int24 currentTick,
     uint16 lastTimepoinIntex,
     uint16 currentPoolFee,
     bool zeroToOne
   ) internal returns (uint16 fee) {
     VolatilityOracle.Timepoint memory lastTimepoint = timepoints[lastTimepoinIntex];
 
-    return _getFeeAndUpdateFactors(currentPrice, TickMath.getSqrtRatioAtTick(lastTimepoint.tick), currentPoolFee, zeroToOne);
+    return _getFeeAndUpdateFactors(currentTick, lastTimepoint.tick, currentPoolFee, zeroToOne);
   }
 
   // ###### Farming plugin ######
@@ -304,16 +304,25 @@ contract AlgebraBasePluginV2 is SlidingFeeModule, IAlgebraBasePluginV1, IAlgebra
     require(_isInitialized, 'Not initialized');
 
     uint32 currentTimestamp = _blockTimestamp();
-
-    if (_lastTimepointTimestamp == currentTimestamp) return;
+    console.log(1);
+    // if (_lastTimepointTimestamp == currentTimestamp) return;
+    console.log(2);
 
     (uint160 currentPrice, int24 tick, uint16 fee, ) = _getPoolState();
+    console.log('current price in write: ', currentPrice);
+    console.log('current price in tick: ', TickMath.getSqrtRatioAtTick(tick));
+    console.log('last index: ', _lastIndex);
     (uint16 newLastIndex, uint16 newOldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
+    console.log('newlast index: ', newLastIndex);
+    {
+      VolatilityOracle.Timepoint memory lastTimepoint = timepoints[newLastIndex];
+      console.log('last timepoint index: ', TickMath.getSqrtRatioAtTick(lastTimepoint.tick));
+    }
 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;
 
-    uint16 newFee = _getFeeAtLastTimepoint(currentPrice, newLastIndex, fee, zeroToOne);
+    uint16 newFee = _getFeeAtLastTimepoint(tick, _lastIndex, fee, zeroToOne);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }
