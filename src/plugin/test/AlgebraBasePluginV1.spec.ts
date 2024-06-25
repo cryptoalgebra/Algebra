@@ -6,14 +6,14 @@ import { expect } from './shared/expect';
 import { TEST_POOL_START_TIME, pluginFixture } from './shared/fixtures';
 import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTick } from './shared/utilities';
 
-import { MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
+import { MockPool, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
 
 import snapshotGasCost from './shared/snapshotGasCost';
 
 describe('AlgebraBasePluginV1', () => {
   let wallet: Wallet, other: Wallet;
 
-  let plugin: MockTimeAlgebraBasePluginV1; // modified plugin
+  let plugin: MockTimeAlgebraBasePluginV2; // modified plugin
   let mockPool: MockPool; // mock of AlgebraPool
   let mockPluginFactory: MockTimeDSFactory; // modified plugin factory
 
@@ -811,12 +811,14 @@ describe('AlgebraBasePluginV1', () => {
 
         console.log('fee factors4: ', await plugin.s_feeFactors());
 
-        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq(1n << 63n); // 0.5
-        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq((3n << 64n) / 2n); // 1.5
+        // expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq(1n << 95n); // 0.5
+        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately(1n << 95n, 1n << 81n);
+        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.approximately((3n << 96n) / 2n, 1n << 81n); // 1.5
     });
 
     it("Shifts correct with negative price change", async function () {
         await mockPool.setPrice(2n << 96n);
+        await plugin.advanceTime(DAY + 600);
 
         await mockPool.pseudoSwap((1n * 1n) << 96n); // last price -> 2
         await network.provider.send("evm_mine")
@@ -825,12 +827,15 @@ describe('AlgebraBasePluginV1', () => {
         // current price = 1
         await mockPool.pseudoSwap((3n * 1n) << 96n);
 
-        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq((3n << 64n) / 2n); // 1.5
-        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq(1n << 63n); // 0.5
+        console.log('fee factors4: ', await plugin.s_feeFactors());
+
+        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately((3n << 96n) / 2n, 1n << 81n); // 1.5
+        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.approximately(1n << 95n, 1n << 81n); // 0.5
     });
 
     it("Factors should be reset", async function () {
         await mockPool.setPrice(4n << 96n);
+        // await plugin.advanceTime(DAY + 600);
 
         await mockPool.pseudoSwap((6n * 1n) << 96n); // last price -> 4
         await network.provider.send("evm_mine")
@@ -843,15 +848,17 @@ describe('AlgebraBasePluginV1', () => {
         // current price = 3
         await mockPool.pseudoSwap((3n * 1n) << 96n);
 
-        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq(1n << 64n); // 1
-        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq(1n << 64n); // 1
+        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq(1n << 96n); // 1
+        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq(1n << 96n); // 1
     });
 
     it("Shift correct after two oneToZero (positive) movements", async function () {
         await mockPool.setPrice(8n << 96n);
+        await plugin.advanceTime(DAY + 600);
 
         await mockPool.pseudoSwap((4n * 1n) << 96n); // last price -> 8
         await network.provider.send("evm_mine");
+        await plugin.advanceTime(DAY + 600);
 
         // last price    = 8
         // current price = 4
@@ -862,15 +869,19 @@ describe('AlgebraBasePluginV1', () => {
         // current price = 3
         await mockPool.pseudoSwap((5n * 1n) << 96n); // oneToZeroFeeFactor should increase on 0.25
 
-        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq((7n << 64n) / 4n); // 1.75
-        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq((1n << 64n) / 4n); // 0.25
+        console.log('fee factors4: ', await plugin.s_feeFactors());
+
+        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately((7n << 96n) / 4n, 1n << 81n); // 1.75
+        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.approximately((1n << 96n) / 4n, 1n << 81n); // 0.25
     });
 
     it("Shift correct after two zeroToOne (positive) movements", async function () {
         await mockPool.setPrice(8n << 96n);
+        await plugin.advanceTime(DAY + 600);
 
         await mockPool.pseudoSwap((12n * 1n) << 96n); // last price -> 8
         await network.provider.send("evm_mine");
+        await plugin.advanceTime(DAY + 600);
 
         // last price    = 8
         // current price = 12
@@ -881,8 +892,8 @@ describe('AlgebraBasePluginV1', () => {
         // current price = 15
         await mockPool.pseudoSwap((16n * 1n) << 96n); // zeroToOneFeeFactor should increase on 0.25
 
-        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.eq((1n << 64n) / 4n); // 0.25
-        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq((7n << 64n) / 4n); // 1.75
+        expect((await plugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately((1n << 96n) / 4n, 1n << 81n); // 0.25
+        expect((await plugin.s_feeFactors()).zeroToOneFeeFactor).to.be.approximately((7n << 96n) / 4n, 1n << 81n); // 1.75
     });
 });
 });

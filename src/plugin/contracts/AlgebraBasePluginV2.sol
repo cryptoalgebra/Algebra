@@ -304,20 +304,18 @@ contract AlgebraBasePluginV2 is SlidingFeeModule, IAlgebraBasePluginV1, IAlgebra
     require(_isInitialized, 'Not initialized');
 
     uint32 currentTimestamp = _blockTimestamp();
-    console.log(1);
     // if (_lastTimepointTimestamp == currentTimestamp) return;
-    console.log(2);
 
     (uint160 currentPrice, int24 tick, uint16 fee, ) = _getPoolState();
-    console.log('current price in write: ', currentPrice);
-    console.log('current price in tick: ', TickMath.getSqrtRatioAtTick(tick));
-    console.log('last index: ', _lastIndex);
+    // console.log('current price in write: ', currentPrice);
+    // console.log('current price in tick: ', TickMath.getSqrtRatioAtTick(tick));
+    // console.log('last index: ', _lastIndex);
     (uint16 newLastIndex, uint16 newOldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
-    console.log('newlast index: ', newLastIndex);
-    {
-      VolatilityOracle.Timepoint memory lastTimepoint = timepoints[newLastIndex];
-      console.log('last timepoint index: ', TickMath.getSqrtRatioAtTick(lastTimepoint.tick));
-    }
+    // console.log('newlast index: ', newLastIndex);
+    // {
+    //   VolatilityOracle.Timepoint memory lastTimepoint = timepoints[newLastIndex];
+    //   console.log('last timepoint index: ', TickMath.getSqrtRatioAtTick(lastTimepoint.tick));
+    // }
 
     timepointIndex = newLastIndex;
     lastTimepointTimestamp = currentTimestamp;

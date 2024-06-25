@@ -13,7 +13,7 @@ abstract contract SlidingFeeModule is Timestamp {
         uint128 oneToZeroFeeFactor;
     }
 
-    uint64 internal constant FEE_FACTOR_SHIFT = 64;
+    uint64 internal constant FEE_FACTOR_SHIFT = 96;
 
     FeeFactors public s_feeFactors;
 
@@ -36,7 +36,6 @@ abstract contract SlidingFeeModule is Timestamp {
         uint16 poolFee,
         bool zeroToOne
     ) internal returns (uint16) {
-        console.log('mi v _getFeeAndUpdateFactors');
         FeeFactors memory currentFeeFactors;
 
         // console.log('current price: ', currentPrice);
@@ -65,12 +64,16 @@ abstract contract SlidingFeeModule is Timestamp {
         int24 currentTick,
         int24 lastTick
     ) internal view returns (FeeFactors memory feeFactors) {
+        console.log('currentTick: ');
+        console.logInt(int256(currentTick));
+        console.log('lastTick: ');
+        console.logInt(int256(lastTick));
         // price change is positive after zeroToOne prevalence
-        // int256 priceChange = currentPrice - lastPrice;
-        int128 priceChangeRatio = int128(uint128(TickMath.getSqrtRatioAtTick(currentTick - lastTick) - 1)); // (currentPrice - lastPrice) / lastPrice
-        int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT);
-        console.log('feeFactorImpact: ', uint128(feeFactorImpact));
-        // int128 feeFactorImpact = int128((priceChange * int256(s_priceChangeFactor) << FEE_FACTOR_SHIFT) / lastPrice);
+        int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
+        console.log('priceChangeRatio: ');
+        console.logInt(priceChangeRatio);
+        int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor));
+
         feeFactors = s_feeFactors;
 
         // if there were zeroToOne prevalence in the last price change,
