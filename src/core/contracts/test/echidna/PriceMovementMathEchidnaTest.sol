@@ -10,7 +10,7 @@ contract PriceMovementMathEchidnaTest {
     uint160 sqrtPriceTargetRaw,
     uint128 liquidity,
     int256 amountRemaining,
-    uint16 feePips
+    uint24 feePips
   ) external pure {
     require(sqrtPriceRaw > 0);
     require(sqrtPriceTargetRaw > 0);

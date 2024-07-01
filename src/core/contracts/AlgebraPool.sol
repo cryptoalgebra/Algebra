@@ -230,8 +230,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     {
       // scope to prevent "stack too deep"
       SwapEventParams memory eventParams;
-      uint256 communityFee;
-      (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, communityFee) = _calculateSwap(
+      FeesAmount memory fees;
+      (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
         overrideFee,
         pluginFee,
         zeroToOne,
@@ -245,14 +245,14 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance0Before + uint256(amount0) > _balanceToken0()) revert insufficientInputAmount();
-        _changeReserves(amount0, amount1, communityFee, 0); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         unchecked {
           if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
-        _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
       }
 
       _emitSwapEvent(recipient, amount0, amount1, eventParams.currentPrice, eventParams.currentLiquidity, eventParams.currentTick);
@@ -303,8 +303,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _updateReserves();
 
     SwapEventParams memory eventParams;
-    uint256 communityFee;
-    (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, communityFee) = _calculateSwap(
+    FeesAmount memory fees;
+    (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, fees) = _calculateSwap(
       overrideFee,
       pluginFee,
       zeroToOne,
@@ -318,12 +318,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount0); // return the leftovers
         if (leftover != 0) _transfer(token0, leftoversRecipient, leftover);
-        _changeReserves(-leftover.toInt256(), amount1, communityFee, 0); // reflect reserve change and pay communityFee
+        _changeReserves(-leftover.toInt256(), amount1, fees.communityFeeAmount, 0); // reflect reserve change and pay communityFee
       } else {
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
-        _changeReserves(amount0, -leftover.toInt256(), 0, communityFee); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount); // reflect reserve change and pay communityFee
       }
     }
 

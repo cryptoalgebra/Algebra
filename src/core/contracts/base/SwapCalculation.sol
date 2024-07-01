@@ -22,9 +22,10 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 totalFeeGrowthInput; // The initial totalFeeGrowth + the fee growth during a swap
     uint256 totalFeeGrowthOutput; // The initial totalFeeGrowth for output token, should not change during swap
     bool exactInput; // Whether the exact input or output is specified
-    uint16 fee; // The current fee value in hundredths of a bip, i.e. 1e-6
+    uint24 fee; // The current fee value in hundredths of a bip, i.e. 1e-6
     int24 prevInitializedTick; // The previous initialized tick in linked list
     int24 nextInitializedTick; // The next initialized tick in linked list
+    uint24 pluginFee;
   }
 
   struct PriceMovementCache {
@@ -35,18 +36,23 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     uint256 feeAmount; // The total amount of fee earned within a current step
   }
 
+  struct FeesAmount {
+    uint256 communityFeeAmount;
+    uint256 pluginFeeAmount;
+  }
+
   function _calculateSwap(
     uint24 overrideFee,
     uint24 pluginFee,
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, uint256 communityFeeAmount) {
+  ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 
     SwapCalculationCache memory cache;
-    (cache.amountRequiredInitial, cache.exactInput) = (amountRequired, amountRequired > 0);
+    (cache.amountRequiredInitial, cache.exactInput, cache.pluginFee) = (amountRequired, amountRequired > 0, pluginFee);
 
     // load from one storage slot
     (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick) = (liquidity, prevTickGlobal, nextTickGlobal);
@@ -54,6 +60,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     // load from one storage slot too
     (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
+    if (overrideFee != 0) cache.fee = overrideFee;
 
     if (zeroToOne) {
       if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
@@ -93,7 +100,13 @@ abstract contract SwapCalculation is AlgebraPoolBase {
         if (cache.communityFee > 0) {
           uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
           step.feeAmount -= delta;
-          communityFeeAmount += delta;
+          fees.communityFeeAmount += delta;
+        }
+
+        if (cache.pluginFee > 0 && cache.fee > 0) {
+          uint256 delta = FullMath.mulDiv(step.feeAmount, cache.pluginFee, cache.fee);
+          step.feeAmount -= delta;
+          fees.pluginFeeAmount += delta;
         }
 
         if (currentLiquidity > 0) cache.totalFeeGrowthInput += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
