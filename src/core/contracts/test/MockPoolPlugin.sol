@@ -91,10 +91,10 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external override returns (bytes4, uint24, uint24) {
+  ) external override returns (bytes4, uint24) {
     emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG)) return (IAlgebraPlugin.beforeModifyPosition.selector, 0, 0);
-    return (IAlgebraPlugin.defaultPluginConfig.selector, 0, 0);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG)) return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+    return (IAlgebraPlugin.defaultPluginConfig.selector, 0);
   }
 
   /// @notice The hook called after a position is modified

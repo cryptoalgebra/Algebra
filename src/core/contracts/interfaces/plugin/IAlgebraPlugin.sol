@@ -38,7 +38,7 @@ interface IAlgebraPlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external returns (bytes4 selector, uint24 feeOverride, uint24 pluginFee);
+  ) external returns (bytes4 selector, uint24 pluginFee);
 
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call

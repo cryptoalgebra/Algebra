@@ -72,7 +72,14 @@ abstract contract ReservesManager is AlgebraPoolBase {
   /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
   /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
   /// @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
-  function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
+  function _changeReserves(
+    int256 deltaR0,
+    int256 deltaR1,
+    uint256 communityFee0,
+    uint256 communityFee1,
+    uint256 pluginFee0,
+    uint256 pluginFee1
+  ) internal {
     if (communityFee0 | communityFee1 != 0) {
       unchecked {
         // overflow is desired since we do not support tokens with totalSupply > type(uint128).max
