@@ -63,11 +63,14 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolState
   mapping(int24 => TickManagement.Tick) public override ticks;
 
-  /// @inheritdoc IAlgebraPoolState
-  uint32 public override communityFeeLastTimestamp;
   /// @dev The amounts of token0 and token1 that will be sent to the vault
   uint104 internal communityFeePending0;
   uint104 internal communityFeePending1;
+  /// @inheritdoc IAlgebraPoolState
+  uint32 public override communityFeeLastTimestamp;
+
+  uint104 internal pluginFeePending0;
+  uint104 internal pluginFeePending1;
 
   /// @inheritdoc IAlgebraPoolState
   address public override plugin;
