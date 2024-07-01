@@ -36,6 +36,8 @@ abstract contract SwapCalculation is AlgebraPoolBase {
   }
 
   function _calculateSwap(
+    uint24 overrideFee,
+    uint24 pluginFee,
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice

@@ -133,18 +133,20 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
     int128 liquidityDelta = -int128(amount);
 
-    _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
+    (uint24 overrideFee, uint24 pluginFee) = _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
     _lock();
 
     _updateReserves();
-    Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
+    {
+      Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
-    (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
+      (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
-    if (amount0 | amount1 != 0) {
-      // since we do not support tokens whose total supply can exceed uint128, these casts are safe
-      // and, theoretically, unchecked cast prevents a complete blocking of burn
-      (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
+      if (amount0 | amount1 != 0) {
+        // since we do not support tokens whose total supply can exceed uint128, these casts are safe
+        // and, theoretically, unchecked cast prevents a complete blocking of burn
+        (position.fees0, position.fees1) = (position.fees0 + uint128(amount0), position.fees1 + uint128(amount1));
+      }
     }
 
     if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
@@ -153,11 +155,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
 
-  function _beforeModifyPos(address owner, int24 bottomTick, int24 topTick, int128 liquidityDelta, bytes calldata data) internal {
+  function _beforeModifyPos(
+    address owner,
+    int24 bottomTick,
+    int24 topTick,
+    int128 liquidityDelta,
+    bytes calldata data
+  ) internal returns (uint24 overrideFee, uint24 pluginFee) {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
-      IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data).shouldReturn(
-        IAlgebraPlugin.beforeModifyPosition.selector
-      );
+      bytes4 selector;
+      (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
+      selector.shouldReturn(IAlgebraPlugin.beforeModifyPosition.selector);
     }
   }
 
@@ -202,6 +210,12 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _unlock();
   }
 
+  struct SwapEventParams {
+    uint160 currentPrice;
+    int24 currentTick;
+    uint128 currentLiquidity;
+  }
+
   /// @inheritdoc IAlgebraPoolActions
   function swap(
     address recipient,
@@ -210,17 +224,21 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint160 limitSqrtPrice,
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
-    _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
     _lock();
 
     {
       // scope to prevent "stack too deep"
-      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      uint160 currentPrice;
-      int24 currentTick;
-      uint128 currentLiquidity;
+      SwapEventParams memory eventParams;
       uint256 communityFee;
-      (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountRequired, limitSqrtPrice);
+      (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, communityFee) = _calculateSwap(
+        overrideFee,
+        pluginFee,
+        zeroToOne,
+        amountRequired,
+        limitSqrtPrice
+      );
+      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
       if (zeroToOne) {
         unchecked {
           if (amount1 < 0) _transfer(token1, recipient, uint256(-amount1)); // amount1 cannot be > 0
@@ -237,7 +255,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _changeReserves(amount0, amount1, 0, communityFee); // reflect reserve change and pay communityFee
       }
 
-      _emitSwapEvent(recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+      _emitSwapEvent(recipient, amount0, amount1, eventParams.currentPrice, eventParams.currentLiquidity, eventParams.currentTick);
     }
 
     _unlock();
@@ -279,16 +297,20 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (amountToSell == 0) revert insufficientInputAmount();
 
     _unlock();
-    _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
+    (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, true, data);
     _lock();
 
     _updateReserves();
 
-    uint160 currentPrice;
-    int24 currentTick;
-    uint128 currentLiquidity;
+    SwapEventParams memory eventParams;
     uint256 communityFee;
-    (amount0, amount1, currentPrice, currentTick, currentLiquidity, communityFee) = _calculateSwap(zeroToOne, amountToSell, limitSqrtPrice);
+    (amount0, amount1, eventParams.currentPrice, eventParams.currentTick, eventParams.currentLiquidity, communityFee) = _calculateSwap(
+      overrideFee,
+      pluginFee,
+      zeroToOne,
+      amountToSell,
+      limitSqrtPrice
+    );
 
     unchecked {
       // transfer to the recipient
@@ -305,7 +327,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    _emitSwapEvent(recipient, amount0, amount1, currentPrice, currentLiquidity, currentTick);
+    _emitSwapEvent(recipient, amount0, amount1, eventParams.currentPrice, eventParams.currentLiquidity, eventParams.currentTick);
 
     _unlock();
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
@@ -316,11 +338,18 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
-  function _beforeSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, bool payInAdvance, bytes calldata data) internal {
+  function _beforeSwap(
+    address recipient,
+    bool zto,
+    int256 amount,
+    uint160 limitPrice,
+    bool payInAdvance,
+    bytes calldata data
+  ) internal returns (uint24 overrideFee, uint24 pluginFee) {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
-      IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data).shouldReturn(
-        IAlgebraPlugin.beforeSwap.selector
-      );
+      bytes4 selector;
+      (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
+      selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
 

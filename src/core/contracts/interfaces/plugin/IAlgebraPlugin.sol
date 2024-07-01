@@ -30,7 +30,7 @@ interface IAlgebraPlugin {
   /// @param topTick The upper tick of the position
   /// @param desiredLiquidityDelta The desired amount of liquidity to mint/burn
   /// @param data Data that passed through the callback
-  /// @return bytes4 The function selector for the hook
+  /// @return selector The function selector for the hook
   function beforeModifyPosition(
     address sender,
     address recipient,
@@ -38,7 +38,7 @@ interface IAlgebraPlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external returns (bytes4);
+  ) external returns (bytes4 selector, uint24 feeOverride, uint24 pluginFee);
 
   /// @notice The hook called after a position is modified
   /// @param sender The initial msg.sender for the modify position call
@@ -71,7 +71,7 @@ interface IAlgebraPlugin {
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param withPaymentInAdvance The flag indicating whether the `swapWithPaymentInAdvance` method was called
   /// @param data Data that passed through the callback
-  /// @return bytes4 The function selector for the hook
+  /// @return selector The function selector for the hook
   function beforeSwap(
     address sender,
     address recipient,
@@ -80,7 +80,7 @@ interface IAlgebraPlugin {
     uint160 limitSqrtPrice,
     bool withPaymentInAdvance,
     bytes calldata data
-  ) external returns (bytes4);
+  ) external returns (bytes4 selector, uint24 feeOverride, uint24 pluginFee);
 
   /// @notice The hook called after a swap
   /// @param sender The initial msg.sender for the swap call
