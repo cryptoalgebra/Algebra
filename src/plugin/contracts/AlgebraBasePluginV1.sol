@@ -242,9 +242,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   /// @dev unused
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4, uint24) {
     _updatePluginConfigInPool(); // should not be called, reset config
-    return IAlgebraPlugin.beforeModifyPosition.selector;
+    return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
   }
 
   /// @dev unused
@@ -253,9 +253,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
+  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
     _writeTimepointAndUpdateFee();
-    return IAlgebraPlugin.beforeSwap.selector;
+    return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
