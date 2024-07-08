@@ -25,6 +25,8 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if invalid amount is passed as amountRequired to swap function
   error invalidAmountRequired();
 
+  error incorrectPluginFee();
+
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
 

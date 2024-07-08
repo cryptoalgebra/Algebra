@@ -48,6 +48,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountRequired,
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
+    if (pluginFee > overrideFee) revert incorrectPluginFee();
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 
@@ -97,16 +98,16 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           cache.amountCalculated = cache.amountCalculated.add((step.input + step.feeAmount).toInt256()); // increase calculated input amount
         }
 
-        if (cache.communityFee > 0) {
-          uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
-          step.feeAmount -= delta;
-          fees.communityFeeAmount += delta;
-        }
-
         if (cache.pluginFee > 0 && cache.fee > 0) {
           uint256 delta = FullMath.mulDiv(step.feeAmount, cache.pluginFee, cache.fee);
           step.feeAmount -= delta;
           fees.pluginFeeAmount += delta;
+        }
+
+        if (cache.communityFee > 0) {
+          uint256 delta = (step.feeAmount.mul(cache.communityFee)) / Constants.COMMUNITY_FEE_DENOMINATOR;
+          step.feeAmount -= delta;
+          fees.communityFeeAmount += delta;
         }
 
         if (currentLiquidity > 0) cache.totalFeeGrowthInput += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);

@@ -18,7 +18,7 @@ library Constants {
   int24 internal constant MIN_TICK_SPACING = 1;
 
   // the frequency with which the accumulated community fees are sent to the vault
-  uint32 internal constant COMMUNITY_FEE_TRANSFER_FREQUENCY = 8 hours;
+  uint32 internal constant FEE_TRANSFER_FREQUENCY = 8 hours;
 
   // max(uint128) / (MAX_TICK - MIN_TICK)
   uint128 internal constant MAX_LIQUIDITY_PER_TICK = 191757638537527648490752896198553;

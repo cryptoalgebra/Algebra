@@ -67,7 +67,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   uint104 internal communityFeePending0;
   uint104 internal communityFeePending1;
   /// @inheritdoc IAlgebraPoolState
-  uint32 public override communityFeeLastTimestamp;
+  uint32 public override lastFeeTransferTimestamp;
 
   uint104 internal pluginFeePending0;
   uint104 internal pluginFeePending1;
