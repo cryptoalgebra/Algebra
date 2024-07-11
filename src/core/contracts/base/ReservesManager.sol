@@ -119,24 +119,26 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 pluginFee0,
     uint256 pluginFee1
   ) internal {
-    bytes32 slot;
-    uint32 lastTimestamp = lastFeeTransferTimestamp;
-    uint32 currentTimestamp = _blockTimestamp();
-    if (communityFee0 | communityFee1 != 0) {
-      assembly {
-        slot := communityFeePending0.slot
+    if (communityFee0 > 0 || communityFee1 > 0 || pluginFee0 > 0 || pluginFee1 > 0) {
+      bytes32 slot;
+      uint32 lastTimestamp = lastFeeTransferTimestamp;
+      uint32 currentTimestamp = _blockTimestamp();
+      if (communityFee0 | communityFee1 != 0) {
+        assembly {
+          slot := communityFeePending0.slot
+        }
+        (deltaR0, deltaR1) = updateFeeAmounts(deltaR0, deltaR1, communityFee0, communityFee1, communityVault, slot, lastTimestamp);
       }
-      (deltaR0, deltaR1) = updateFeeAmounts(deltaR0, deltaR1, communityFee0, communityFee1, communityVault, slot, lastTimestamp);
-    }
 
-    if (pluginFee0 | pluginFee1 != 0) {
-      assembly {
-        slot := pluginFeePending0.slot
+      if (pluginFee0 | pluginFee1 != 0) {
+        assembly {
+          slot := pluginFeePending0.slot
+        }
+        (deltaR0, deltaR1) = updateFeeAmounts(deltaR0, deltaR1, pluginFee0, pluginFee1, plugin, slot, lastTimestamp);
       }
-      (deltaR0, deltaR1) = updateFeeAmounts(deltaR0, deltaR1, pluginFee0, pluginFee1, plugin, slot, lastTimestamp);
-    }
 
-    if (currentTimestamp - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) lastFeeTransferTimestamp = currentTimestamp;
+      if (currentTimestamp - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) lastFeeTransferTimestamp = currentTimestamp;
+    }
 
     if (deltaR0 | deltaR1 == 0) return;
     (uint256 _reserve0, uint256 _reserve1) = (reserve0, reserve1);
