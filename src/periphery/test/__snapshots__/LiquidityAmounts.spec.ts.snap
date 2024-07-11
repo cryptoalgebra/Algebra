@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LiquidityAmounts #getAmount0ForLiquidity gas [ @skip-on-coverage ] 1`] = `349`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price above [ @skip-on-coverage ] 1`] = `478`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price below [ @skip-on-coverage ] 1`] = `499`;
+
+exports[`LiquidityAmounts #getAmountsForLiquidity gas for price inside [ @skip-on-coverage ] 1`] = `834`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount0 gas [ @skip-on-coverage ] 1`] = `559`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount1 gas [ @skip-on-coverage ] 1`] = `359`;
+
+exports[`LiquidityAmounts #getLiquidityForAmount1 gas [ @skip-on-coverage ] 2`] = `365`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price above [ @skip-on-coverage ] 1`] = `530`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price below [ @skip-on-coverage ] 1`] = `706`;
+
+exports[`LiquidityAmounts #getLiquidityForAmounts gas for price inside [ @skip-on-coverage ] 1`] = `1153`;
