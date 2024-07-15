@@ -23,8 +23,7 @@ library PoolInteraction {
             uint128 fees1
         )
     {
-        bytes32 positionKey = PositionKey.compute(owner, tickLower, tickUpper);
-        return pool.positions(positionKey);
+        return pool.positions(PositionKey.compute(owner, tickLower, tickUpper));
     }
 
     function _getSqrtPrice(IAlgebraPool pool) internal view returns (uint160 sqrtPriceX96) {

@@ -36,6 +36,7 @@ interface IQuoterV2 {
     struct QuoteExactInputSingleParams {
         address tokenIn;
         address tokenOut;
+        address deployer;
         uint256 amountIn;
         uint160 limitSqrtPrice;
     }
@@ -91,6 +92,7 @@ interface IQuoterV2 {
     struct QuoteExactOutputSingleParams {
         address tokenIn;
         address tokenOut;
+        address deployer;
         uint256 amount;
         uint160 limitSqrtPrice;
     }

@@ -66,14 +66,25 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         INonfungiblePositionManager positionManager,
         uint256 tokenId
     ) external view override returns (string memory) {
-        (, , address token0, address token1, int24 tickLower, int24 tickUpper, , , , , ) = positionManager.positions(
-            tokenId
-        );
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            address deployer,
+            int24 tickLower,
+            int24 tickUpper,
+            ,
+            ,
+            ,
+            ,
+
+        ) = positionManager.positions(tokenId);
 
         IAlgebraPool pool = IAlgebraPool(
             PoolAddress.computeAddress(
                 positionManager.poolDeployer(),
-                PoolAddress.PoolKey({token0: token0, token1: token1})
+                PoolAddress.PoolKey({deployer: deployer, token0: token0, token1: token1})
             )
         );
 

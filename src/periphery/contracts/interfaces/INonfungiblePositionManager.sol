@@ -60,10 +60,6 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of corresponding token
     event FarmingFailed(uint256 indexed tokenId);
 
-    /// @notice Emitted after farming center address change
-    /// @param farmingCenterAddress The new address of connected farming center
-    event FarmingCenter(address farmingCenterAddress);
-
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
@@ -71,6 +67,7 @@ interface INonfungiblePositionManager is
     /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
+    /// @return deployer The address of the custom pool deployer
     /// @return tickLower The lower end of the tick range for the position
     /// @return tickUpper The higher end of the tick range for the position
     /// @return liquidity The liquidity of the position
@@ -88,6 +85,7 @@ interface INonfungiblePositionManager is
             address operator,
             address token0,
             address token1,
+            address deployer,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
@@ -100,6 +98,7 @@ interface INonfungiblePositionManager is
     struct MintParams {
         address token0;
         address token1;
+        address deployer;
         int24 tickLower;
         int24 tickUpper;
         uint256 amount0Desired;

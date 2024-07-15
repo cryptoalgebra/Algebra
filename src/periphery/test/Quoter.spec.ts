@@ -2,11 +2,15 @@ import { Wallet, ContractTransactionResponse, MaxUint256, ZeroAddress } from 'et
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import {
+  AlgebraCustomPoolEntryPoint,
+  CustomPoolDeployerTest,
   IAlgebraFactory,
   IAlgebraPool,
   IWNativeToken,
+  MockPluginFactory,
   MockTimeNonfungiblePositionManager,
   MockTimeSwapRouter,
+  PoolAddressTest,
   Quoter,
   TestERC20,
 } from '../typechain';
@@ -17,6 +21,7 @@ import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { createPool } from './shared/quoter';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
@@ -27,13 +32,15 @@ describe('Quoter', () => {
   const swapRouterFixture: () => Promise<{
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+    customPoolDeployer: CustomPoolDeployerTest;
+    path: [string, string, string, string, string];
     quoter: Quoter;
     router: MockTimeSwapRouter;
     wnative: IWNativeToken;
     factory: IAlgebraFactory;
   }> = async () => {
     let _tokens;
-    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
+    const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
 
     // approve & fund wallets
@@ -50,6 +57,8 @@ describe('Quoter', () => {
 
     return {
       tokens: _tokens,
+      path: path,
+      customPoolDeployer: customPoolDeployer,
       nft,
       quoter,
       router,
@@ -60,6 +69,7 @@ describe('Quoter', () => {
 
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+  let path: [string, string, string, string, string];
   let quoter: Quoter;
   let router: MockTimeSwapRouter;
   let wnative: IWNativeToken;
@@ -72,20 +82,23 @@ describe('Quoter', () => {
 
   describe('quotes', () => {
     const subFixture = async () => {
-      const { tokens, nft, quoter, router, wnative, factory } = await swapRouterFixture();
-      const pool0 = await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress());
-      await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress());
-      return { tokens, nft, quoter, router, wnative, factory };
+      const { tokens, customPoolDeployer, path, nft, quoter, router, wnative, factory } = await swapRouterFixture();
+      const pool0 = await createPool(nft, wallet, await tokens[0].getAddress(), await tokens[1].getAddress(), ZERO_ADDRESS);
+
+      await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, await tokens[1].getAddress(), await tokens[2].getAddress(), '0x');
+      await createPool(nft, wallet, await tokens[1].getAddress(), await tokens[2].getAddress(), await customPoolDeployer.getAddress());
+
+      return { tokens, path, nft, quoter, router, wnative, factory };
     };
 
     beforeEach(async () => {
-      ({ tokens, nft, quoter, router, wnative, factory } = await loadFixture(subFixture));
+      ({ tokens, path, nft, quoter, router, wnative, factory } = await loadFixture(subFixture));
     });
 
     describe('#quoteExactInput', () => {
       it('0 -> 1', async () => {
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath([tokens[0].address, tokens[1].address]),
+          encodePath([tokens[0].address, ZERO_ADDRESS, tokens[1].address]),
           3
         );
 
@@ -123,20 +136,20 @@ describe('Quoter', () => {
         }
 
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath([tokens[0].address, tokens[1].address]),
+          encodePath([tokens[0].address, ZERO_ADDRESS, tokens[1].address]),
           expandTo18Decimals(300000)
         );
 
         expect(fees[0]).to.eq(500);
 
-        await exactInput([tokens[0].address, tokens[1].address], 300000);
+        await exactInput([tokens[0].address, ZERO_ADDRESS, tokens[1].address], 300000);
 
         await ethers.provider.send('evm_mine', []);
         await ethers.provider.send('evm_increaseTime', [60 * 60 * 3]);
         await ethers.provider.send('evm_mine', []);
 
         const { amountOut: amountOut2, fees: fees2 } = await quoter.quoteExactInput.staticCall(
-          encodePath([tokens[0].address, tokens[1].address]),
+          encodePath([tokens[0].address, ZERO_ADDRESS, tokens[1].address]),
           expandTo18Decimals(300000)
         );
 
@@ -145,7 +158,7 @@ describe('Quoter', () => {
 
       it('1 -> 0', async () => {
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath([tokens[1].address, tokens[0].address]),
+          encodePath([tokens[1].address, ZERO_ADDRESS, tokens[0].address]),
           3
         );
 
@@ -155,7 +168,7 @@ describe('Quoter', () => {
 
       it('0 -> 1 -> 2', async () => {
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath(tokens.map((token) => token.address)),
+          encodePath(path),
           5
         );
 
@@ -165,7 +178,7 @@ describe('Quoter', () => {
 
       it('2 -> 1 -> 0', async () => {
         const { amountOut, fees } = await quoter.quoteExactInput.staticCall(
-          encodePath(tokens.map((token) => token.address).reverse()),
+          encodePath(path.slice().reverse()),
           5
         );
 
@@ -179,6 +192,7 @@ describe('Quoter', () => {
         const { amountOut, fee } = await quoter.quoteExactInputSingle.staticCall(
           tokens[0].address,
           tokens[1].address,
+          ZERO_ADDRESS,
           MaxUint128,
           // -2%
           encodePriceSqrt(100, 102)
@@ -198,6 +212,7 @@ describe('Quoter', () => {
           quoter.quoteExactInputSingle.staticCall(
             tokens[1].address,
             tokens[0].address,
+            ZERO_ADDRESS,
             MaxUint128,
             // -2%, invalid direction
             encodePriceSqrt(98, 100)
@@ -209,6 +224,7 @@ describe('Quoter', () => {
         const { amountOut, fee } = await quoter.quoteExactInputSingle.staticCall(
           tokens[1].address,
           tokens[0].address,
+          ZERO_ADDRESS,
           MaxUint128,
           // +2%
           encodePriceSqrt(102, 100)
@@ -222,7 +238,7 @@ describe('Quoter', () => {
     describe('#quoteExactOutput', () => {
       it('0 -> 1', async () => {
         const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(
-          encodePath([tokens[1].address, tokens[0].address]),
+          encodePath([tokens[1].address, ZERO_ADDRESS, tokens[0].address]),
           1
         );
 
@@ -232,7 +248,7 @@ describe('Quoter', () => {
 
       it('1 -> 0', async () => {
         const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(
-          encodePath([tokens[0].address, tokens[1].address]),
+          encodePath([tokens[0].address, ZERO_ADDRESS, tokens[1].address]),
           1
         );
 
@@ -242,7 +258,7 @@ describe('Quoter', () => {
 
       it('0 -> 1 -> 2', async () => {
         const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(
-          encodePath(tokens.map((token) => token.address).reverse()),
+          encodePath(path),
           1
         );
 
@@ -252,7 +268,7 @@ describe('Quoter', () => {
 
       it('2 -> 1 -> 0', async () => {
         const { amountIn, fees } = await quoter.quoteExactOutput.staticCall(
-          encodePath(tokens.map((token) => token.address)),
+          encodePath(path),
           1
         );
 
@@ -266,6 +282,7 @@ describe('Quoter', () => {
         const { amountIn, fee } = await quoter.quoteExactOutputSingle.staticCall(
           tokens[0].address,
           tokens[1].address,
+          ZERO_ADDRESS,
           MaxUint128,
           encodePriceSqrt(100, 102)
         );
@@ -278,6 +295,7 @@ describe('Quoter', () => {
         const { amountIn, fee } = await quoter.quoteExactOutputSingle.staticCall(
           tokens[1].address,
           tokens[0].address,
+          ZERO_ADDRESS,
           MaxUint128,
           encodePriceSqrt(102, 100)
         );

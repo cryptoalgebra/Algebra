@@ -5,11 +5,13 @@ import {IAlgebraCustomPoolEntryPoint} from '../interfaces/IAlgebraCustomPoolEntr
 
 contract CustomPoolDeployerTest {
     address public immutable entryPoint;
+    address public immutable plugin;
 
     mapping(address => address) public poolToPlugin;
 
-    constructor(address _entryPoint) {
+    constructor(address _entryPoint, address _plugin) {
         entryPoint = _entryPoint;
+        plugin = _plugin;
     }
 
     function createCustomPool(
@@ -23,7 +25,7 @@ contract CustomPoolDeployerTest {
     }
 
     function beforeCreatePoolHook(
-        address pool,
+        address,
         address,
         address,
         address,
@@ -32,7 +34,7 @@ contract CustomPoolDeployerTest {
     ) external view returns (address) {
         require(msg.sender == entryPoint, 'Only entryPoint');
 
-        return poolToPlugin[pool];
+        return plugin;
     }
 
     function afterCreatePoolHook(address, address, address) external pure {

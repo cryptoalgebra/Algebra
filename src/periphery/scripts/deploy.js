@@ -24,9 +24,11 @@ async function main() {
   console.log('EntryPoint deployed to:', entryPoint.target)
 
   const factory = await hre.ethers.getContractAt(AlgebraFactoryComplied.abi, deploysData.factory)
-
-  await factory.grantRole("0xc9cf812513d9983585eb40fcfe6fd49fbb6a45815663ec33b30a6c6c7de3683b", entryPoint.target);
-  await factory.grantRole("0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442", entryPoint.target);
+  
+  const deployerRole = await factory.grantRole("0xc9cf812513d9983585eb40fcfe6fd49fbb6a45815663ec33b30a6c6c7de3683b", entryPoint.target);
+  await deployerRole.wait()
+  const administratorRole = await factory.grantRole("0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442", entryPoint.target);
+  await administratorRole.wait()
 
   const TickLensFactory = await hre.ethers.getContractFactory('TickLens');
   const TickLens = await TickLensFactory.deploy();

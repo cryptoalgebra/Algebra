@@ -108,6 +108,7 @@ contract NonfungiblePositionManager is
             address operator,
             address token0,
             address token1,
+            address deployer,
             int24 tickLower,
             int24 tickUpper,
             uint128 liquidity,
@@ -130,6 +131,7 @@ contract NonfungiblePositionManager is
             position.operator,
             poolKey.token0,
             poolKey.token1,
+            poolKey.deployer,
             tickLower,
             tickUpper,
             liquidity,
@@ -156,6 +158,7 @@ contract NonfungiblePositionManager is
             AddLiquidityParams({
                 token0: params.token0,
                 token1: params.token1,
+                deployer: params.deployer,
                 recipient: address(this),
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
@@ -178,7 +181,7 @@ contract NonfungiblePositionManager is
         // idempotent set
         uint80 poolId = _cachePoolKey(
             address(pool),
-            PoolAddress.PoolKey({token0: params.token0, token1: params.token1})
+            PoolAddress.PoolKey({deployer: params.deployer, token0: params.token0, token1: params.token1})
         );
 
         _positions[tokenId] = Position({
@@ -268,6 +271,7 @@ contract NonfungiblePositionManager is
             AddLiquidityParams({
                 token0: poolKey.token0,
                 token1: poolKey.token1,
+                deployer: poolKey.deployer,
                 tickLower: tickLower,
                 tickUpper: tickUpper,
                 amount0Desired: params.amount0Desired,
@@ -409,7 +413,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0);
 
         delete _positions[tokenId];
         delete tokenFarmedIn[tokenId];
@@ -424,7 +428,7 @@ contract NonfungiblePositionManager is
     ) external payable override isAuthorizedForToken(tokenId) {
         address newValue;
         if (approve) {
-            require(farmingAddress == farmingCenter, 'Invalid farming address');
+            require(farmingAddress == farmingCenter);
             newValue = farmingAddress;
         }
         farmingApprovals[tokenId] = newValue;
@@ -450,7 +454,6 @@ contract NonfungiblePositionManager is
     function setFarmingCenter(address newFarmingCenter) external override {
         require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
         farmingCenter = newFarmingCenter;
-        emit FarmingCenter(newFarmingCenter);
     }
 
     /// @inheritdoc IERC721Metadata

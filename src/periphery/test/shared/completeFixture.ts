@@ -8,8 +8,12 @@ import {
   MockTimeSwapRouter,
   NonfungibleTokenPositionDescriptor,
   TestERC20,
-  IAlgebraFactory,
+  AlgebraFactory,
+  MockPluginFactory,
+  AlgebraCustomPoolEntryPoint,
+  CustomPoolDeployerTest,
 } from '../../typechain';
+import { ZERO_ADDRESS } from '../CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address_: string | undefined };
 
@@ -43,11 +47,13 @@ const DEFAULT_TOKENS_RATIONS_DATA: TokenRatioSortData[] = [
 
 const completeFixture: () => Promise<{
   wnative: IWNativeToken;
-  factory: IAlgebraFactory;
+  factory: AlgebraFactory;
   router: MockTimeSwapRouter;
   nft: MockTimeNonfungiblePositionManager;
   nftDescriptor: NonfungibleTokenPositionDescriptor;
   tokens: [TestERC20, TestERC20, TestERC20];
+  customPoolDeployer: CustomPoolDeployerTest;
+  path: [string, string, string, string, string];
 }> = async () => {
   const { wnative, factory, router } = await v3RouterFixture();
   const tokenFactory = await ethers.getContractFactory('TestERC20');
@@ -66,6 +72,11 @@ const completeFixture: () => Promise<{
     if (!tokenA.address_ || !tokenB.address_) return 0;
     return tokenA.address_.toLowerCase() < tokenB.address_.toLowerCase() ? -1 : 1;
   });
+
+  const pluginFactoryFactory = await ethers.getContractFactory('MockPluginFactory');
+  const pluginFactory = await pluginFactoryFactory.deploy(factory) as any as MockPluginFactory;
+  
+  await factory.setDefaultPluginFactory(await pluginFactory.getAddress());
 
   const nftDescriptorLibraryFactory = await ethers.getContractFactory('NFTDescriptor');
   const nftDescriptorLibrary = await nftDescriptorLibraryFactory.deploy();
@@ -92,11 +103,32 @@ const completeFixture: () => Promise<{
     await factory.poolDeployer()
   )) as any as MockTimeNonfungiblePositionManager;
 
+  const entryPointFactory = await ethers.getContractFactory("AlgebraCustomPoolEntryPoint");
+  const entryPoint = await entryPointFactory.deploy(factory) as any as AlgebraCustomPoolEntryPoint;
+
+  const customPoolDeployerFactory = await ethers.getContractFactory("CustomPoolDeployerTest");
+  const customPoolDeployer = await customPoolDeployerFactory.deploy(entryPoint, ZERO_ADDRESS) as any as CustomPoolDeployerTest;
+
+  let customPoolDeployerRole = await factory.CUSTOM_POOL_DEPLOYER()
+  let poolAdministratorRole = await factory.POOLS_ADMINISTRATOR_ROLE()
+  await factory.grantRole(customPoolDeployerRole, await entryPoint.getAddress());
+  await factory.grantRole(poolAdministratorRole, await entryPoint.getAddress());
+
+  const path: [string, string, string, string, string] = [
+    tokens[0].address_,
+    ZERO_ADDRESS, // deployer
+    tokens[1].address_,
+    await customPoolDeployer.getAddress(), // deployer
+    tokens[2].address_
+  ]
+
   return {
     wnative,
     factory,
     router,
     tokens,
+    customPoolDeployer,
+    path,
     nft,
     nftDescriptor: nftDescriptorProxied,
   };

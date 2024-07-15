@@ -9,7 +9,8 @@ import { expandTo18Decimals } from './shared/expandTo18Decimals';
 import { expect } from './shared/expect';
 import { encodePath } from './shared/path';
 import { getMaxTick, getMinTick } from './shared/ticks';
-import { computePoolAddress } from './shared/computePoolAddress';
+import { computePoolAddress, computeCustomPoolAddress } from './shared/computePoolAddress';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string };
 
@@ -23,6 +24,8 @@ describe('SwapRouter', function () {
   let router: MockTimeSwapRouter;
   let nft: MockTimeNonfungiblePositionManager;
   let tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+  let path: [string, string, string, string, string];
+
   let getBalances: (who: string | MockTimeSwapRouter) => Promise<{
     wnative: bigint;
     token0: bigint;
@@ -36,16 +39,18 @@ describe('SwapRouter', function () {
     _nft: MockTimeNonfungiblePositionManager,
     _wallet: Wallet,
     tokenAddressA: string,
-    tokenAddressB: string
+    tokenAddressB: string,
+    deployer: string
   ) {
     if (tokenAddressA.toLowerCase() > tokenAddressB.toLowerCase())
       [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, encodePriceSqrt(1, 1));
+    await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, deployer, encodePriceSqrt(1, 1));
 
     const liquidityParams = {
       token0: tokenAddressA,
       token1: tokenAddressB,
+      deployer: deployer,
       fee: FeeAmount.MEDIUM,
       tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
       tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
@@ -66,9 +71,11 @@ describe('SwapRouter', function () {
     router: MockTimeSwapRouter;
     nft: MockTimeNonfungiblePositionManager;
     tokens: [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+    path: [string, string, string, string, string];
   }> = async () => {
-    const { wnative, factory, router, tokens, nft } = await loadFixture(completeFixture);
+    const { wnative, factory, router, tokens, customPoolDeployer, path, nft } = await loadFixture(completeFixture);
     let _tokens = tokens as [TestERC20WithAddress, TestERC20WithAddress, TestERC20WithAddress];
+
     // approve & fund wallets
     for (const token of _tokens) {
       await token.approve(router, MaxUint256);
@@ -78,14 +85,17 @@ describe('SwapRouter', function () {
       token.address = await token.getAddress();
     }
 
-    await createPool(nft, wallet, _tokens[0].address, _tokens[1].address);
-    await createPool(nft, wallet, _tokens[1].address, _tokens[2].address);
+    await createPool(nft, wallet, _tokens[0].address, _tokens[1].address, ZERO_ADDRESS);
 
+    await customPoolDeployer.createCustomPool(customPoolDeployer, wallet.address, _tokens[1].getAddress(), _tokens[2].getAddress(), '0x');
+    await createPool(nft, wallet, _tokens[1].address, _tokens[2].address, await customPoolDeployer.getAddress());
+    
     return {
       wnative,
       factory: factory as any as Contract,
       router,
       tokens: _tokens,
+      path: path,
       nft,
     };
   };
@@ -93,7 +103,7 @@ describe('SwapRouter', function () {
   async function createPoolWNativeToken(tokenAddress: string) {
     await wnative.deposit({ value: liquidity });
     await wnative.approve(nft, MaxUint256);
-    return createPool(nft, wallet, await wnative.getAddress(), tokenAddress);
+    return createPool(nft, wallet, await wnative.getAddress(), tokenAddress, ZERO_ADDRESS);
   }
 
   before('create fixture loader', async () => {
@@ -102,7 +112,7 @@ describe('SwapRouter', function () {
 
   // helper for getting wnative and token balances
   beforeEach('load fixture', async () => {
-    ({ router, wnative, factory, tokens, nft } = await loadFixture(swapRouterFixture));
+    ({ router, wnative, factory, tokens, path, nft } = await loadFixture(swapRouterFixture));
 
     getBalances = async (who: string | MockTimeSwapRouter) => {
       let addr;
@@ -153,6 +163,7 @@ describe('SwapRouter', function () {
         router.exactInputSingle({
           tokenIn: tokens[0].address,
           tokenOut: tokens[1].address,
+          deployer: ZERO_ADDRESS,
           limitSqrtPrice: 0,
           amountOutMinimum: 0,
           deadline: 1,
@@ -201,7 +212,7 @@ describe('SwapRouter', function () {
       it('reverts if deadline passed', async () => {
         await expect(
           exactInput(
-            tokens.slice(0, 2).map((token) => token.address),
+            path.slice(0, 3),
             3,
             1,
             2
@@ -217,7 +228,7 @@ describe('SwapRouter', function () {
           const poolBefore = await getBalances(pool);
           const traderBefore = await getBalances(trader.address);
 
-          await exactInput(tokens.slice(0, 2).map((token) => token.address));
+          await exactInput(path.slice(0, 3));
 
           // get balances after
           const poolAfter = await getBalances(pool);
@@ -237,10 +248,9 @@ describe('SwapRouter', function () {
           const traderBefore = await getBalances(trader.address);
 
           await exactInput(
-            tokens
-              .slice(0, 2)
+            path
+              .slice(0, 3)
               .reverse()
-              .map((token) => token.address)
           );
 
           // get balances after
@@ -259,7 +269,7 @@ describe('SwapRouter', function () {
           const traderBefore = await getBalances(trader.address);
 
           await exactInput(
-            tokens.map((token) => token.address),
+            path,
             5,
             1
           );
@@ -273,7 +283,7 @@ describe('SwapRouter', function () {
         it('2 -> 1 -> 0', async () => {
           const traderBefore = await getBalances(trader.address);
 
-          await exactInput(tokens.map((token) => token.address).reverse(), 5, 1);
+          await exactInput(path.slice().reverse(), 5, 1);
 
           const traderAfter = await getBalances(trader.address);
 
@@ -284,7 +294,7 @@ describe('SwapRouter', function () {
         it('events', async () => {
           await expect(
             exactInput(
-              tokens.map((token) => token.address),
+              path,
               5,
               1
             )
@@ -304,12 +314,12 @@ describe('SwapRouter', function () {
             .to.emit(tokens[1], 'Transfer')
             .withArgs(
               await router.getAddress(),
-              computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[2].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[2], path[3], path[4]]),
               3
             )
             .to.emit(tokens[2], 'Transfer')
             .withArgs(
-              computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[2].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[2], path[3], path[4]]),
               trader.address,
               1
             );
@@ -329,7 +339,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInput([await wnative.getAddress(), tokens[0].address]))
+            await expect(exactInput([await wnative.getAddress(), ZERO_ADDRESS, tokens[0].address]))
               .to.emit(wnative, 'Deposit')
               .withArgs(await router.getAddress(), 3);
 
@@ -345,7 +355,7 @@ describe('SwapRouter', function () {
           it('WNativeToken -> 0 -> 1', async () => {
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInput([await wnative.getAddress(), tokens[0].address, tokens[1].address], 5))
+            await expect(exactInput([await wnative.getAddress(), ZERO_ADDRESS, tokens[0].address, ZERO_ADDRESS, tokens[1].address], 5))
               .to.emit(wnative, 'Deposit')
               .withArgs(await router.getAddress(), 5);
 
@@ -370,7 +380,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInput([tokens[0].address, await wnative.getAddress()]))
+            await expect(exactInput([tokens[0].address, ZERO_ADDRESS, await wnative.getAddress()]))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 1);
 
@@ -387,7 +397,7 @@ describe('SwapRouter', function () {
             // get balances before
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInput([tokens[0].address, tokens[1].address, await wnative.getAddress()], 5))
+            await expect(exactInput([tokens[0].address, ZERO_ADDRESS, tokens[1].address, ZERO_ADDRESS, await wnative.getAddress()], 5))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 1);
 
@@ -404,6 +414,7 @@ describe('SwapRouter', function () {
       async function exactInputSingle(
         tokenIn: string,
         tokenOut: string,
+        deployer: string,
         amountIn: number = 3,
         amountOutMinimum: number = 1,
         limitSqrtPrice?: bigint,
@@ -417,6 +428,7 @@ describe('SwapRouter', function () {
         const params = {
           tokenIn,
           tokenOut,
+          deployer: deployer,
           fee: FeeAmount.MEDIUM,
           limitSqrtPrice:
             limitSqrtPrice ?? tokenIn.toLowerCase() < tokenOut.toLowerCase()
@@ -434,6 +446,7 @@ describe('SwapRouter', function () {
 
         // ensure that the swap fails if the limit is any tighter
         params.amountOutMinimum += 1;
+        // await router.connect(trader).exactInputSingle(params, { value })
         await expect(router.connect(trader).exactInputSingle(params, { value })).to.be.revertedWith(
           'Too little received'
         );
@@ -447,7 +460,7 @@ describe('SwapRouter', function () {
       }
 
       it('reverts if deadline passed', async () => {
-        await expect(exactInputSingle(tokens[0].address, tokens[1].address, 3, 1, undefined, 2)).to.be.revertedWith(
+        await expect(exactInputSingle(tokens[0].address, tokens[1].address, ZERO_ADDRESS, 3, 1, undefined, 2)).to.be.revertedWith(
           'Transaction too old'
         );
       });
@@ -459,7 +472,7 @@ describe('SwapRouter', function () {
         const poolBefore = await getBalances(pool);
         const traderBefore = await getBalances(trader.address);
 
-        await exactInputSingle(tokens[0].address, tokens[1].address);
+        await exactInputSingle(tokens[0].address, tokens[1].address, ZERO_ADDRESS);
 
         // get balances after
         const poolAfter = await getBalances(pool);
@@ -478,7 +491,7 @@ describe('SwapRouter', function () {
         const poolBefore = await getBalances(pool);
         const traderBefore = await getBalances(trader.address);
 
-        await exactInputSingle(tokens[1].address, tokens[0].address);
+        await exactInputSingle(tokens[1].address, tokens[0].address, ZERO_ADDRESS);
 
         // get balances after
         const poolAfter = await getBalances(pool);
@@ -503,7 +516,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInputSingle(await wnative.getAddress(), tokens[0].address))
+            await expect(exactInputSingle(await wnative.getAddress(), tokens[0].address, ZERO_ADDRESS))
               .to.emit(wnative, 'Deposit')
               .withArgs(await router.getAddress(), 3);
 
@@ -532,7 +545,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInputSingle(tokens[0].address, await wnative.getAddress()))
+            await expect(exactInputSingle(tokens[0].address, await wnative.getAddress(), ZERO_ADDRESS))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 1);
 
@@ -552,6 +565,7 @@ describe('SwapRouter', function () {
       async function exactInputSingleSupportingFeeOnTransferTokens(
         tokenIn: string,
         tokenOut: string,
+        deployer: string,
         amountIn: number = 300000,
         amountOutMinimum: number = 100000,
         limitSqrtPrice?: bigint,
@@ -565,6 +579,7 @@ describe('SwapRouter', function () {
         const params = {
           tokenIn,
           tokenOut,
+          deployer: deployer,
           limitSqrtPrice:
             limitSqrtPrice ?? tokenIn.toLowerCase() < tokenOut.toLowerCase()
               ? BigInt('4295128740')
@@ -581,6 +596,7 @@ describe('SwapRouter', function () {
 
         // ensure that the swap fails if the limit is tighter
         params.amountOutMinimum *= 5;
+        // await router.connect(trader).exactInputSingleSupportingFeeOnTransferTokens(params)
         await expect(router.connect(trader).exactInputSingleSupportingFeeOnTransferTokens(params)).to.be.revertedWith(
           'Too little received'
         );
@@ -600,8 +616,9 @@ describe('SwapRouter', function () {
       });
 
       it('reverts if deadline passed', async () => {
+        // await exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address, ZERO_ADDRESS, 3, 1, undefined, 2)
         await expect(
-          exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address, 3, 1, undefined, 2)
+          exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address, ZERO_ADDRESS, 3, 1, undefined, 2)
         ).to.be.revertedWith('Transaction too old');
       });
 
@@ -612,7 +629,7 @@ describe('SwapRouter', function () {
         const poolBefore = await getBalances(pool);
         const traderBefore = await getBalances(trader.address);
 
-        await exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address);
+        await exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, tokens[1].address, ZERO_ADDRESS);
 
         // get balances after
         const poolAfter = await getBalances(pool);
@@ -631,7 +648,7 @@ describe('SwapRouter', function () {
         const poolBefore = await getBalances(pool);
         const traderBefore = await getBalances(trader.address);
 
-        await exactInputSingleSupportingFeeOnTransferTokens(tokens[1].address, tokens[0].address);
+        await exactInputSingleSupportingFeeOnTransferTokens(tokens[1].address, tokens[0].address, ZERO_ADDRESS);
 
         // get balances after
         const poolAfter = await getBalances(pool);
@@ -657,7 +674,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, await wnative.getAddress()))
+            await expect(exactInputSingleSupportingFeeOnTransferTokens(tokens[0].address, await wnative.getAddress(), ZERO_ADDRESS))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 219146);
 
@@ -701,6 +718,7 @@ describe('SwapRouter', function () {
 
         // ensure that the swap fails if the limit is any tighter
         params.amountInMaximum -= 1;
+        // router.connect(trader).exactOutput(params, { value })
         await expect(router.connect(trader).exactOutput(params, { value })).to.be.revertedWith('Too much requested');
         params.amountInMaximum += 1;
 
@@ -711,7 +729,7 @@ describe('SwapRouter', function () {
       it('reverts if deadline passed', async () => {
         await expect(
           exactOutput(
-            tokens.slice(0, 2).map((token) => token.address),
+            path.slice(0, 3),
             1,
             3,
             2
@@ -726,8 +744,8 @@ describe('SwapRouter', function () {
           // get balances before
           const poolBefore = await getBalances(pool);
           const traderBefore = await getBalances(trader.address);
-
-          await exactOutput(tokens.slice(0, 2).map((token) => token.address));
+          
+          await exactOutput(path.slice(0, 3));
 
           // get balances after
           const poolAfter = await getBalances(pool);
@@ -747,10 +765,9 @@ describe('SwapRouter', function () {
           const traderBefore = await getBalances(trader.address);
 
           await exactOutput(
-            tokens
-              .slice(0, 2)
+            path
+              .slice(0, 3)
               .reverse()
-              .map((token) => token.address)
           );
 
           // get balances after
@@ -769,7 +786,7 @@ describe('SwapRouter', function () {
           const traderBefore = await getBalances(trader.address);
 
           await exactOutput(
-            tokens.map((token) => token.address),
+            path,
             1,
             5
           );
@@ -783,7 +800,7 @@ describe('SwapRouter', function () {
         it('2 -> 1 -> 0', async () => {
           const traderBefore = await getBalances(trader.address);
 
-          await exactOutput(tokens.map((token) => token.address).reverse(), 1, 5);
+          await exactOutput(path.slice().reverse(), 1, 5);
 
           const traderAfter = await getBalances(trader.address);
 
@@ -794,21 +811,21 @@ describe('SwapRouter', function () {
         it('events', async () => {
           await expect(
             exactOutput(
-              tokens.map((token) => token.address),
+              path,
               1,
               5
             )
           )
             .to.emit(tokens[2], 'Transfer')
             .withArgs(
-              computePoolAddress(await factory.poolDeployer(), [tokens[2].address, tokens[1].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[4], path[3], path[2]]),
               trader.address,
               1
             )
             .to.emit(tokens[1], 'Transfer')
             .withArgs(
               computePoolAddress(await factory.poolDeployer(), [tokens[1].address, tokens[0].address]),
-              computePoolAddress(await factory.poolDeployer(), [tokens[2].address, tokens[1].address]),
+              computeCustomPoolAddress(await factory.poolDeployer(), [path[4], path[3], path[2]]),
               3
             )
             .to.emit(tokens[0], 'Transfer')
@@ -833,7 +850,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactOutput([await wnative.getAddress(), tokens[0].address]))
+            await expect(exactOutput([await wnative.getAddress(), ZERO_ADDRESS, tokens[0].address]))
               .to.emit(wnative, 'Deposit')
               .withArgs(await router.getAddress(), 3);
 
@@ -849,7 +866,7 @@ describe('SwapRouter', function () {
           it('WNativeToken -> 0 -> 1', async () => {
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactOutput([await wnative.getAddress(), tokens[0].address, tokens[1].address], 1, 5))
+            await expect(exactOutput([await wnative.getAddress(), ZERO_ADDRESS, tokens[0].address, ZERO_ADDRESS, tokens[1].address], 1, 5))
               .to.emit(wnative, 'Deposit')
               .withArgs(await router.getAddress(), 5);
 
@@ -874,7 +891,7 @@ describe('SwapRouter', function () {
             const poolBefore = await getBalances(pool);
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactOutput([tokens[0].address, await wnative.getAddress()]))
+            await expect(exactOutput([tokens[0].address, ZERO_ADDRESS, await wnative.getAddress()]))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 1);
 
@@ -891,7 +908,7 @@ describe('SwapRouter', function () {
             // get balances before
             const traderBefore = await getBalances(trader.address);
 
-            await expect(exactOutput([tokens[0].address, tokens[1].address, await wnative.getAddress()], 1, 5))
+            await expect(exactOutput([tokens[0].address, ZERO_ADDRESS, tokens[1].address, ZERO_ADDRESS, await wnative.getAddress()], 1, 5))
               .to.emit(wnative, 'Withdrawal')
               .withArgs(await router.getAddress(), 1);
 
@@ -921,6 +938,7 @@ describe('SwapRouter', function () {
         const params = {
           tokenIn,
           tokenOut,
+          deployer: ZERO_ADDRESS,
           fee: FeeAmount.MEDIUM,
           recipient: outputIsWNativeToken ? ZeroAddress : trader.address,
           deadline: 1,
@@ -1057,7 +1075,7 @@ describe('SwapRouter', function () {
       it('#sweepTokenWithFee', async () => {
         const amountOutMinimum = 100;
         const params = {
-          path: encodePath([tokens[0].address, tokens[1].address]),
+          path: encodePath([tokens[0].address, ZERO_ADDRESS, tokens[1].address]),
           recipient: await router.getAddress(),
           deadline: 1,
           amountIn: 102,
@@ -1087,7 +1105,7 @@ describe('SwapRouter', function () {
 
         const amountOutMinimum = 100;
         const params = {
-          path: encodePath([tokens[0].address, await wnative.getAddress()]),
+          path: encodePath([tokens[0].address, ZERO_ADDRESS, await wnative.getAddress()]),
           recipient: await router.getAddress(),
           deadline: 1,
           amountIn: 102,
