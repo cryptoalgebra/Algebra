@@ -41,8 +41,8 @@ contract CustomPoolDeployerTest {
         return;
     }
 
-    function setPluginForPool(address pool, address plugin) external {
-        poolToPlugin[pool] = plugin;
+    function setPluginForPool(address pool, address _plugin) external {
+        poolToPlugin[pool] = _plugin;
     }
 
     function setTickSpacing(address pool, int24 newTickSpacing) external {

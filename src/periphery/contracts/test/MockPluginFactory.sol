@@ -28,6 +28,11 @@ contract MockPluginFactory is IAlgebraPluginFactory {
         return _createPlugin(pool);
     }
 
+    /// @inheritdoc IAlgebraPluginFactory
+    function afterCreatePoolHook(address, address, address) external view override {
+        require(msg.sender == algebraFactory);
+    }
+
     //   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     //     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     //     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
