@@ -18,16 +18,24 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
     function createAndInitializePoolIfNecessary(
         address token0,
         address token1,
+        address deployer,
         uint160 sqrtPriceX96
     ) external payable override returns (address pool) {
         require(token0 < token1, 'Invalid order of tokens');
 
-        pool = IAlgebraFactory(factory).poolByPair(token0, token1);
+        IAlgebraFactory _factory = IAlgebraFactory(factory);
+
+        if (deployer == address(0)) pool = _factory.poolByPair(token0, token1);
+        else {
+            pool = _factory.customPoolByPair(deployer, token0, token1);
+        }
 
         if (pool == address(0)) {
-            pool = IAlgebraFactory(factory).createPool(token0, token1);
+            if (deployer == address(0)) {
+                pool = _factory.createPool(token0, token1);
 
-            _initializePool(pool, sqrtPriceX96);
+                _initializePool(pool, sqrtPriceX96);
+            }
         } else {
             uint160 sqrtPriceX96Existing = IAlgebraPool(pool)._getSqrtPrice();
             if (sqrtPriceX96Existing == 0) {

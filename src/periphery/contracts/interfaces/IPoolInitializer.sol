@@ -17,6 +17,7 @@ interface IPoolInitializer {
     function createAndInitializePoolIfNecessary(
         address token0,
         address token1,
+        address deployer,
         uint160 sqrtPriceX96
     ) external payable returns (address pool);
 }

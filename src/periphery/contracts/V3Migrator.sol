@@ -57,6 +57,7 @@ contract V3Migrator is IV3Migrator, PeripheryImmutableState, PoolInitializer, Mu
             INonfungiblePositionManager.MintParams({
                 token0: params.token0,
                 token1: params.token1,
+                deployer: params.deployer,
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
                 amount0Desired: amount0V2ToMigrate,

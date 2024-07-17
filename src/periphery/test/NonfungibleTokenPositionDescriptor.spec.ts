@@ -9,6 +9,7 @@ import { FeeAmount, TICK_SPACINGS, tokenAddresses } from './shared/constants';
 import { getMaxTick, getMinTick } from './shared/ticks';
 import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 type TestERC20WithAddress = TestERC20 & { address: string | undefined };
 
@@ -114,12 +115,13 @@ describe('NonfungibleTokenPositionDescriptor', () => {
   describe('#tokenURI', () => {
     it('displays Native as token symbol for WNativeToken token', async () => {
       const [token0, token1] = await sortedTokens(wnative, tokens[1]);
-      await nft.createAndInitializePoolIfNecessary(token0, token1, encodePriceSqrt(1, 1));
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
       await wnative.approve(nft, 100);
       await tokens[1].approve(nft, 100);
       await nft.mint({
         token0: token0,
         token1: token1,
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,
@@ -138,12 +140,13 @@ describe('NonfungibleTokenPositionDescriptor', () => {
 
     it('displays returned token symbols when neither token is WNativeToken ', async () => {
       const [token0, token1] = await sortedTokens(tokens[2], tokens[1]);
-      await nft.createAndInitializePoolIfNecessary(token0, token1, encodePriceSqrt(1, 1));
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
       await tokens[1].approve(nft, 100);
       await tokens[2].approve(nft, 100);
       await nft.mint({
         token0: token0,
         token1: token1,
+        deployer: ZERO_ADDRESS,
         tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
         recipient: wallets[0].address,

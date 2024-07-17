@@ -18,6 +18,7 @@ import { expect } from './shared/expect';
 import { encodePriceSqrt } from './shared/encodePriceSqrt';
 
 import { abi as IAlgebraPoolABI } from '@cryptoalgebra/integral-core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
+import { ZERO_ADDRESS } from './CallbackValidation.spec';
 
 describe('CustomPoolEntryPoint', () => {
   let wallets: Wallet[];
@@ -67,7 +68,7 @@ describe('CustomPoolEntryPoint', () => {
     entryPoint = (await entryPointFactory.deploy(factory)) as any as AlgebraCustomPoolEntryPoint;
 
     const customPoolDeployerFactory = await ethers.getContractFactory('CustomPoolDeployerTest');
-    customPoolDeployer = (await customPoolDeployerFactory.deploy(await entryPoint.getAddress())) as any as CustomPoolDeployerTest;
+    customPoolDeployer = (await customPoolDeployerFactory.deploy(await entryPoint.getAddress(), ZERO_ADDRESS)) as any as CustomPoolDeployerTest;
 
     let customPoolDeployerRole = await factory.CUSTOM_POOL_DEPLOYER()
     let poolAdministratorRole = await factory.POOLS_ADMINISTRATOR_ROLE()

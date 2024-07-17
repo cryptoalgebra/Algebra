@@ -73,7 +73,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
             )
         );
         address owner = ownerOf(tokenId);
-        require(spender != owner, 'ERC721Permit: approval to current owner');
+        require(spender != owner, 'Approval to current owner');
 
         if (Address.isContract(owner)) {
             _checkAuthorization(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e);

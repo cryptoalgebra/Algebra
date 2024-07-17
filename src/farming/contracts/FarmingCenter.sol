@@ -84,7 +84,7 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     bytes32 _eternalIncentiveId = deposits[tokenId];
     if (_eternalIncentiveId != bytes32(0)) {
       address tokenOwner = nonfungiblePositionManager.ownerOf(tokenId);
-      (, , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
+      (, , , , , , , uint128 liquidity, , , , ) = nonfungiblePositionManager.positions(tokenId);
 
       IncentiveKey memory key = incentiveKeys[_eternalIncentiveId];
 
@@ -140,6 +140,9 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
     require(msg.sender == address(eternalFarming), 'Only farming can call this');
     require(virtualPool != address(0), 'Zero address as virtual pool');
     pool = IAlgebraPool(plugin.pool());
-    require(address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pool.token0(), pool.token1())), 'Invalid pool');
+    require(
+      address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(address(0), pool.token0(), pool.token1())),
+      'Invalid pool'
+    );
   }
 }
