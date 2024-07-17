@@ -9,6 +9,12 @@ interface IAlgebraPlugin {
   /// The last bit indicates whether the plugin contains dynamic fees logic
   function defaultPluginConfig() external view returns (uint8);
 
+  /// @notice Handle plugin fee transfer on plugin contract
+  /// @param pluginFee0 Fee0 amount transferred to plugin
+  /// @param pluginFee1 Fee1 amount transferred to plugin
+  /// @return bytes4 The function selector
+  function handlePluginFee(uint256 pluginFee0, uint256 pluginFee1) external returns (bytes4);
+
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call
   /// @param sqrtPriceX96 The sqrt(price) of the pool as a Q64.96

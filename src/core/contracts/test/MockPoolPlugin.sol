@@ -60,6 +60,10 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     selectorsDisableConfig = newSelectorsDisableConfig;
   }
 
+  function handlePluginFee(uint256, uint256) external pure override returns (bytes4) {
+    return IAlgebraPlugin.handlePluginFee.selector;
+  }
+
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call
   /// @param sqrtPriceX96 The sqrt(price) of the pool as a Q64.96
