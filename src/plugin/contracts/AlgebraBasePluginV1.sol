@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeTransfer.sol';
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
@@ -105,6 +106,17 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     isInitialized = true;
 
     _updatePluginConfigInPool();
+  }
+
+  /// @inheritdoc IAlgebraBasePluginV1
+  function collectPluginFee(address token, uint256 amount, address recipient) external override {
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+    SafeTransfer.safeTransfer(token, recipient, amount);
+  }
+
+  /// @inheritdoc IAlgebraPlugin
+  function handlePluginFee(uint256, uint256) external view override onlyPool returns (bytes4) {
+    return IAlgebraPlugin.handlePluginFee.selector;
   }
 
   // ###### Volatility and TWAP oracle ######
