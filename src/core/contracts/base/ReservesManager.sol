@@ -4,6 +4,7 @@ pragma solidity =0.8.20;
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
 import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
@@ -150,7 +151,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
         uint256 pluginFeeSent1;
         (deltaR0, deltaR1, pluginFeeSent0, pluginFeeSent1) = updateFeeAmounts(deltaR0, deltaR1, pluginFee0, pluginFee1, plugin, slot, lastTimestamp);
         if (pluginFeeSent0 > 0 || pluginFeeSent1 > 0) {
-          IAlgebraPlugin(plugin).handlePluginFee(pluginFeeSent0, pluginFeeSent1);
+          if (IAlgebraPlugin(plugin).handlePluginFee(pluginFeeSent0, pluginFeeSent1) != IAlgebraPlugin.handlePluginFee.selector) revert IAlgebraPoolErrors.invalidPluginResponce();  
         }
       }
 
