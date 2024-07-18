@@ -134,6 +134,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int128 liquidityDelta = -int128(amount);
 
     uint24 pluginFee = _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
+    if (pluginFee > 1e6) revert incorrectOverrideFee();
     _lock();
 
     _updateReserves();
@@ -238,6 +239,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
     (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
+    if (overrideFee > 1e6) revert incorrectOverrideFee();
     _lock();
 
     {

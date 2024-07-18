@@ -24,12 +24,15 @@ interface IAlgebraPoolErrors {
 
   /// @notice Emitted if invalid amount is passed as amountRequired to swap function
   error invalidAmountRequired();
-  
-  /// @notice Emitted if plugin fee param greater than fee
+
+  /// @notice Emitted if plugin fee param greater than fee/override fee
   error incorrectPluginFee();
 
   /// @notice Emitted if a plugin returns invalid selector after pluginFeeHandle call
   error invalidPluginResponce();
+
+  /// @notice Emitted if override fee param greater than 1e6
+  error incorrectOverrideFee();
 
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
