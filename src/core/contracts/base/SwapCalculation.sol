@@ -48,7 +48,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int256 amountRequired,
     uint160 limitSqrtPrice
   ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
-    if (pluginFee > overrideFee) revert incorrectPluginFee();
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 

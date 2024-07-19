@@ -2449,8 +2449,8 @@ describe('AlgebraPool', () => {
 
     it('swap fails if plugin fee exceeds max value', async () => {
       await poolPlugin.setPluginFees(1000001, 4000);
-      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'incorrectOverrideFee');
-      await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), '0x')).to.be.revertedWithCustomError(pool, 'incorrectOverrideFee'); 
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'incorrectPluginFee');
+      await expect(pool.burn(minTick, maxTick, expandTo18Decimals(1), '0x')).to.be.revertedWithCustomError(pool, 'incorrectPluginFee'); 
     })
 
     it('swap fails if plugin return incorrect selector', async () => {

@@ -134,7 +134,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     int128 liquidityDelta = -int128(amount);
 
     uint24 pluginFee = _beforeModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, data);
-    if (pluginFee > 1e6) revert incorrectOverrideFee();
     _lock();
 
     _updateReserves();
@@ -179,6 +178,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
       bytes4 selector;
       (selector, pluginFee) = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
+      if (pluginFee >= 1e6) revert incorrectPluginFee();
       selector.shouldReturn(IAlgebraPlugin.beforeModifyPosition.selector);
     }
   }
@@ -239,7 +239,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) external override returns (int256 amount0, int256 amount1) {
     (uint24 overrideFee, uint24 pluginFee) = _beforeSwap(recipient, zeroToOne, amountRequired, limitSqrtPrice, false, data);
-    if (overrideFee > 1e6) revert incorrectOverrideFee();
     _lock();
 
     {
@@ -364,6 +363,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       bytes4 selector;
       (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
+      if (overrideFee >= 1e6 || pluginFee > overrideFee) revert incorrectPluginFee();
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
