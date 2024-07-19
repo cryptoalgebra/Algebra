@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Plugins.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/SafeTransfer.sol';
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPlugin.sol';
@@ -105,6 +106,17 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     isInitialized = true;
 
     _updatePluginConfigInPool();
+  }
+
+  /// @inheritdoc IAlgebraBasePluginV1
+  function collectPluginFee(address token, uint256 amount, address recipient) external override {
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+    SafeTransfer.safeTransfer(token, recipient, amount);
+  }
+
+  /// @inheritdoc IAlgebraPlugin
+  function handlePluginFee(uint256, uint256) external view override onlyPool returns (bytes4) {
+    return IAlgebraPlugin.handlePluginFee.selector;
   }
 
   // ###### Volatility and TWAP oracle ######
@@ -242,9 +254,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   }
 
   /// @dev unused
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4, uint24) {
     _updatePluginConfigInPool(); // should not be called, reset config
-    return IAlgebraPlugin.beforeModifyPosition.selector;
+    return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
   }
 
   /// @dev unused
@@ -253,9 +265,9 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
+  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
     _writeTimepointAndUpdateFee();
-    return IAlgebraPlugin.beforeSwap.selector;
+    return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
