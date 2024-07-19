@@ -137,6 +137,10 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
     return (communityFeePending0, communityFeePending1);
   }
 
+  function getPluginFeePending() external view override returns (uint128, uint128) {
+    return (pluginFeePending0, pluginFeePending1);
+  }
+
   /// @inheritdoc IAlgebraPoolState
   function fee() external view override returns (uint16 currentFee) {
     currentFee = globalState.lastFee;

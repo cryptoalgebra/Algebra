@@ -78,6 +78,12 @@ interface IAlgebraPoolState {
   /// @return communityFeePending1 The amount of token1 that will be sent to the vault
   function getCommunityFeePending() external view returns (uint128 communityFeePending0, uint128 communityFeePending1);
 
+  /// @notice The amounts of token0 and token1 that will be sent to the plugin
+  /// @dev Will be sent FEE_TRANSFER_FREQUENCY after feeLastTransferTimestamp
+  /// @return pluginFeePending0 The amount of token0 that will be sent to the plugin
+  /// @return pluginFeePending1 The amount of token1 that will be sent to the plugin
+  function getPluginFeePending() external view returns (uint128 pluginFeePending0, uint128 pluginFeePending1);
+
   /// @notice Returns the address of currently used plugin
   /// @dev The plugin is subject to change
   /// @return pluginAddress The address of currently used plugin
