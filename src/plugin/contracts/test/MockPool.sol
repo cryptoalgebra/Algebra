@@ -78,6 +78,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   }
 
   /// @inheritdoc IAlgebraPoolState
+  function getPluginFeePending() external pure override returns (uint128, uint128) {
+    revert('not implemented');
+  }
+
+  /// @inheritdoc IAlgebraPoolState
   function fee() external pure returns (uint16) {
     revert('not implemented');
   }
