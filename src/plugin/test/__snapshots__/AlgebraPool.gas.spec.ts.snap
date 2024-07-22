@@ -1,143 +1,143 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee large swap crossing several initialized ticks 1`] = `208199`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee large swap crossing several initialized ticks 1`] = `208344`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle 1`] = `160214`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle 1`] = `160359`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 4h 1`] = `195652`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 4h 1`] = `195797`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 8h 1`] = `188438`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 8h 1`] = `188583`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 24h 1`] = `156706`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps dynamic fee small swap with filled volatilityOracle after 24h 1`] = `156851`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee large swap crossing several initialized ticks 1`] = `205313`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee large swap crossing several initialized ticks 1`] = `205458`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle 1`] = `155060`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle 1`] = `155205`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 4h 1`] = `188525`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 4h 1`] = `188670`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 8h 1`] = `199459`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 8h 1`] = `199604`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 24h 1`] = `154532`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Filled VolatilityOracle swaps static fee small swap with filled volatilityOracle after 24h 1`] = `154677`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price burn when only position using ticks 1`] = `115380`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price burn when only position using ticks 1`] = `117065`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price entire position burn but other positions are using the ticks 1`] = `108750`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price entire position burn but other positions are using the ticks 1`] = `110857`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price partial position burn 1`] = `113550`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn above current price partial position burn 1`] = `115657`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price burn when only position using ticks 1`] = `125259`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price burn when only position using ticks 1`] = `126944`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price entire position burn but other positions are using the ticks 1`] = `113158`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price entire position burn but other positions are using the ticks 1`] = `115265`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price partial position burn 1`] = `117958`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn around current price partial position burn 1`] = `120065`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price burn when only position using ticks 1`] = `124816`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price burn when only position using ticks 1`] = `126501`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price entire position burn but other positions are using the ticks 1`] = `109411`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price entire position burn but other positions are using the ticks 1`] = `111518`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price partial position burn 1`] = `114211`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #burn below current price partial position burn 1`] = `116318`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case 1`] = `52593`;
 
 exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #collect close to worst case, two tokens 1`] = `70312`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price add to position existing 1`] = `126330`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price add to position existing 1`] = `128469`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price new position mint first in range 1`] = `280193`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price new position mint first in range 1`] = `282332`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price second position in same range 1`] = `143430`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint above current price second position in same range 1`] = `145569`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price add to position existing 1`] = `151399`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price add to position existing 1`] = `153538`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price new position mint first in range 1`] = `358307`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price new position mint first in range 1`] = `360446`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price second position in same range 1`] = `168499`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint around current price second position in same range 1`] = `170638`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price add to position existing 1`] = `126898`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price add to position existing 1`] = `129037`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price new position mint first in range 1`] = `354538`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price new position mint first in range 1`] = `356677`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price second position in same range 1`] = `143998`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #mint below current price second position in same range 1`] = `146137`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #poke best case 1`] = `61604`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] Positions #poke best case 1`] = `63711`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `149627`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `149772`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement 1`] = `149596`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement 1`] = `149741`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `150320`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `150465`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `166187`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `166332`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `199737`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `199882`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `149694`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `149839`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `199737`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `199882`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `218937`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `219082`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `114094`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `114239`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block with no tick movement 1`] = `114058`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block with no tick movement 1`] = `114203`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `129839`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `129984`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `164210`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `164355`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 several large swaps with pauses 1`] = `226699`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 several large swaps with pauses 1`] = `226844`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `157227`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `157372`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `149688`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `149833`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block with no tick movement 1`] = `149636`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 first swap in block with no tick movement 1`] = `149781`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 second swap in block with no tick movement 1`] = `114119`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap #swapExact1For0 second swap in block with no tick movement 1`] = `114264`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `180882`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `181166`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block with no tick movement 1`] = `180830`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected first swap in block with no tick movement 1`] = `181114`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected second swap in block with no tick movement 1`] = `128213`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is off #swap farming connected second swap in block with no tick movement 1`] = `128497`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `160126`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block moves tick, no initialized crossings 1`] = `160259`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement 1`] = `160095`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement 1`] = `160228`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `150557`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block with no tick movement, static fee 1`] = `150690`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `176923`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing a single initialized tick 1`] = `177056`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `211184`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap crossing several initialized ticks 1`] = `211317`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `160193`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 first swap in block, large swap, no initialized crossings 1`] = `160326`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `211184`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks after some time passes 1`] = `211317`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `230384`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 large swap crossing several initialized ticks second time after some time passes 1`] = `230517`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `124593`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block moves tick, no initialized crossings 1`] = `124726`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block with no tick movement 1`] = `124557`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block with no tick movement 1`] = `124690`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `140575`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing a single initialized tick 1`] = `140708`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `175657`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 second swap in block, large swap crossing several initialized ticks 1`] = `175790`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 several large swaps with pauses 1`] = `238146`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 several large swaps with pauses 1`] = `238279`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `157464`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact0For1 small swap after several large swaps with pauses 1`] = `157597`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `160198`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block moves tick, no initialized crossings 1`] = `160331`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block with no tick movement 1`] = `160146`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 first swap in block with no tick movement 1`] = `160279`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 second swap in block with no tick movement 1`] = `124629`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap #swapExact1For0 second swap in block with no tick movement 1`] = `124762`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `191392`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block moves tick, no initialized crossings 1`] = `191664`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block with no tick movement 1`] = `191340`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected first swap in block with no tick movement 1`] = `191612`;
 
-exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected second swap in block with no tick movement 1`] = `138723`;
+exports[`AlgebraPool gas tests [ @skip-on-coverage ] fee is on #swap farming connected second swap in block with no tick movement 1`] = `138995`;

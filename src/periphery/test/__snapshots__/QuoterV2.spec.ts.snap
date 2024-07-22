@@ -1,29 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`QuoterV2 quotes #quoteExactInputSingle gas [ @skip-on-coverage ] 0 -> 2 1`] = `156854`;
+exports[`QuoterV2 quotes #quoteExactInputSingle gas [ @skip-on-coverage ] 0 -> 2 1`] = `156869`;
 
-exports[`QuoterV2 quotes #quoteExactInputSingle gas [ @skip-on-coverage ] 2 -> 0 1`] = `156802`;
+exports[`QuoterV2 quotes #quoteExactInputSingle gas [ @skip-on-coverage ] 2 -> 0 1`] = `156805`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 -> 1 1`] = `248739`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 -> 1 1`] = `248736`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 0 tick starting tick initialized 1`] = `106438`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 0 tick starting tick initialized 1`] = `106435`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 0 tick starting tick not initialized 1`] = `91106`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 0 tick starting tick not initialized 1`] = `91088`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 1 tick 1`] = `126534`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 1 tick 1`] = `126531`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 2 tick 1`] = `156767`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 2 tick 1`] = `156770`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 2 where tick after is initialized 1`] = `126543`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 0 -> 2 cross 2 where tick after is initialized 1`] = `126540`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 1 tick 1`] = `126865`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 1 tick 1`] = `126874`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 2 ticks 1`] = `157372`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 2 ticks 1`] = `157387`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 2 where tick after is initialized 1`] = `157376`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 0 cross 2 where tick after is initialized 1`] = `157391`;
 
-exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 1 1`] = `91991`;
+exports[`QuoterV2 quotes #quoteExactOutput gas [ @skip-on-coverage ] 2 -> 1 1`] = `91985`;
 
-exports[`QuoterV2 quotes #quoteExactOutputSingle gas [ @skip-on-coverage ] 0 -> 1 1`] = `92087`;
+exports[`QuoterV2 quotes #quoteExactOutputSingle gas [ @skip-on-coverage ] 0 -> 1 1`] = `92069`;
 
-exports[`QuoterV2 quotes #quoteExactOutputSingle gas [ @skip-on-coverage ] 1 -> 0 1`] = `92104`;
+exports[`QuoterV2 quotes #quoteExactOutputSingle gas [ @skip-on-coverage ] 1 -> 0 1`] = `92086`;
