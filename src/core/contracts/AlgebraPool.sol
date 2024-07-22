@@ -168,6 +168,10 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
 
+  function _isPlugin() internal view returns (bool) {
+    return msg.sender == plugin;
+  }
+
   function _beforeModifyPos(
     address owner,
     int24 bottomTick,
@@ -176,6 +180,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) internal returns (uint24 pluginFee) {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_POSITION_MODIFY_FLAG)) {
+      if (_isPlugin()) return 0;
       bytes4 selector;
       (selector, pluginFee) = IAlgebraPlugin(plugin).beforeModifyPosition(msg.sender, owner, bottomTick, topTick, liquidityDelta, data);
       if (pluginFee >= 1e6) revert incorrectPluginFee();
@@ -184,6 +189,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   function _afterModifyPos(address owner, int24 bTick, int24 tTick, int128 deltaL, uint256 amount0, uint256 amount1, bytes calldata data) internal {
+    if (_isPlugin()) return;
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_POSITION_MODIFY_FLAG)) {
       IAlgebraPlugin(plugin).afterModifyPosition(msg.sender, owner, bTick, tTick, deltaL, amount0, amount1, data).shouldReturn(
         IAlgebraPlugin.afterModifyPosition.selector
@@ -361,6 +367,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bytes calldata data
   ) internal returns (uint24 overrideFee, uint24 pluginFee) {
     if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
+      if (_isPlugin()) return (0, 0);
       bytes4 selector;
       (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
       if (overrideFee >= 1e6 || pluginFee > overrideFee) revert incorrectPluginFee();
@@ -370,6 +377,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
   function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
+      if (_isPlugin()) return;
       IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
         IAlgebraPlugin.afterSwap.selector
       );
