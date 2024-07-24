@@ -102,7 +102,7 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0], tokens[1]);
+      await factory.createPool(tokens[0], tokens[1], '0x');
       const code = await wallet.provider.getCode(expectedAddress);
       expect(code).to.not.eq('0x');
       await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(2, 1));
@@ -113,7 +113,7 @@ describe('NonfungiblePositionManager', () => {
         await tokens[0].getAddress(),
         await tokens[1].getAddress(),
       ]);
-      await factory.createPool(tokens[0], tokens[1]);
+      await factory.createPool(tokens[0], tokens[1], '0x');
       const pool = new ethers.Contract(expectedAddress, IAlgebraPoolABI, wallet);
 
       await pool.initialize(encodePriceSqrt(3, 1));

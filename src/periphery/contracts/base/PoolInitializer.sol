@@ -32,7 +32,7 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
 
         if (pool == address(0)) {
             if (deployer == address(0)) {
-                pool = _factory.createPool(token0, token1);
+                pool = _factory.createPool(token0, token1, '');
 
                 _initializePool(pool, sqrtPriceX96);
             }

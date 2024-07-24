@@ -57,7 +57,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x4b9e4a8044ce5695e06fce9421a63b6f5c3db8a561eebb30ea4c775469e36eaf;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x53a254b73c7f4f4a23175de0908ad4b30f3bc60806bd69bba905db6f24b991a5;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -97,8 +97,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function createPool(address tokenA, address tokenB) external override nonReentrant returns (address pool) {
-    return _createPool(address(0), msg.sender, tokenA, tokenB, '');
+  function createPool(address tokenA, address tokenB, bytes calldata data) external override nonReentrant returns (address pool) {
+    return _createPool(address(0), msg.sender, tokenA, tokenB, data);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -124,7 +124,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     address plugin;
     if (deployer == address(0)) {
       if (address(defaultPluginFactory) != address(0)) {
-        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, '');
+        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, data);
       }
     } else {
       plugin = IAlgebraPluginFactory(msg.sender).beforeCreatePoolHook(

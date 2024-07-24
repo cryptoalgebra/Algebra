@@ -39,7 +39,7 @@ const HIGH_COMPILER_SETTINGS: SolcUserConfig = {
     evmVersion: 'paris',
     optimizer: {
       enabled: true,
-      runs: 1600,
+      runs: 500,
     },
     metadata: {
       bytecodeHash: 'none',

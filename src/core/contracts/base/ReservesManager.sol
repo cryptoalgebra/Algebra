@@ -3,7 +3,8 @@ pragma solidity =0.8.20;
 
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
-
+import '../interfaces/plugin/IAlgebraPlugin.sol';
+import '../interfaces/pool/IAlgebraPoolErrors.sol';
 /// @title Algebra reserves management abstract contract
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
@@ -66,35 +67,95 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
+  function updateFeeAmounts(
+    int256 deltaR0,
+    int256 deltaR1,
+    uint256 fee0,
+    uint256 fee1,
+    address feesRecipient,
+    bytes32 slot,
+    uint32 lastTimestamp
+  ) internal returns (int256, int256, uint256, uint256) {
+    uint256 feePending0;
+    uint256 feePending1;
+
+    assembly {
+      // Load the storage slot specified by the slot argument
+      let sl := sload(slot)
+
+      // Extract the uint104 value
+      feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+
+      // Shift right by 104 bits and extract the uint104 value
+      feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+    }
+
+    feePending0 += fee0;
+    feePending1 += fee1;
+
+    uint256 feeSent0;
+    uint256 feeSent1;
+
+    if (_blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY || feePending0 > type(uint104).max || feePending1 > type(uint104).max) {
+      if (feePending0 > 0) {
+        _transfer(token0, feesRecipient, feePending0);
+        deltaR0 = deltaR0 - feePending0.toInt256();
+        feeSent0 = feePending0;
+        feePending0 = 0;
+      }
+      if (feePending1 > 0) {
+        _transfer(token1, feesRecipient, feePending1);
+        deltaR1 = deltaR1 - feePending1.toInt256();
+        feeSent1 = feePending1;
+        feePending1 = 0;
+      }
+    }
+
+    assembly {
+      sstore(slot, or(or(feePending0, shl(104, feePending1)), shl(208, lastTimestamp)))
+    }
+
+    return (deltaR0, deltaR1, feeSent0, feeSent1);
+  }
+
   /// @notice Applies deltas to reserves and pays communityFees
   /// @dev Community fee is sent to the vault at a specified frequency or when variables communityFeePending{0,1} overflow
   /// @param deltaR0 Amount of token0 to add/subtract to/from reserve0, must not exceed uint128
   /// @param deltaR1 Amount of token1 to add/subtract to/from reserve1, must not exceed uint128
   /// @param communityFee0 Amount of token0 to pay as communityFee, must not exceed uint128
   /// @param communityFee1 Amount of token1 to pay as communityFee, must not exceed uint128
-  function _changeReserves(int256 deltaR0, int256 deltaR1, uint256 communityFee0, uint256 communityFee1) internal {
-    if (communityFee0 | communityFee1 != 0) {
-      unchecked {
-        // overflow is desired since we do not support tokens with totalSupply > type(uint128).max
-        uint256 _cfPending0 = uint256(communityFeePending0) + communityFee0;
-        uint256 _cfPending1 = uint256(communityFeePending1) + communityFee1;
-        uint32 currentTimestamp = _blockTimestamp();
-        // underflow in timestamps is desired
-        if (
-          currentTimestamp - communityFeeLastTimestamp >= Constants.COMMUNITY_FEE_TRANSFER_FREQUENCY ||
-          _cfPending0 > type(uint104).max ||
-          _cfPending1 > type(uint104).max
-        ) {
-          address _communityVault = communityVault;
-          if (_cfPending0 > 0) _transfer(token0, _communityVault, _cfPending0);
-          if (_cfPending1 > 0) _transfer(token1, _communityVault, _cfPending1);
-          communityFeeLastTimestamp = currentTimestamp;
-          (deltaR0, deltaR1) = (deltaR0 - _cfPending0.toInt256(), deltaR1 - _cfPending1.toInt256());
-          (_cfPending0, _cfPending1) = (0, 0);
+  function _changeReserves(
+    int256 deltaR0,
+    int256 deltaR1,
+    uint256 communityFee0,
+    uint256 communityFee1,
+    uint256 pluginFee0,
+    uint256 pluginFee1
+  ) internal {
+    if (communityFee0 > 0 || communityFee1 > 0 || pluginFee0 > 0 || pluginFee1 > 0) {
+      bytes32 slot;
+      uint32 lastTimestamp = lastFeeTransferTimestamp;
+      uint32 currentTimestamp = _blockTimestamp();
+      if (communityFee0 | communityFee1 != 0) {
+        assembly {
+          slot := communityFeePending0.slot
         }
-        // the previous block guarantees that no overflow occurs
-        (communityFeePending0, communityFeePending1) = (uint104(_cfPending0), uint104(_cfPending1));
+        (deltaR0, deltaR1, , ) = updateFeeAmounts(deltaR0, deltaR1, communityFee0, communityFee1, communityVault, slot, lastTimestamp);
       }
+
+      if (pluginFee0 | pluginFee1 != 0) {
+        assembly {
+          slot := pluginFeePending0.slot
+        }
+        uint256 pluginFeeSent0;
+        uint256 pluginFeeSent1;
+        (deltaR0, deltaR1, pluginFeeSent0, pluginFeeSent1) = updateFeeAmounts(deltaR0, deltaR1, pluginFee0, pluginFee1, plugin, slot, lastTimestamp);
+        if (pluginFeeSent0 > 0 || pluginFeeSent1 > 0) {
+          if (IAlgebraPlugin(plugin).handlePluginFee(pluginFeeSent0, pluginFeeSent1) != IAlgebraPlugin.handlePluginFee.selector) revert IAlgebraPoolErrors.invalidPluginResponce();  
+        }
+      }
+
+      if (currentTimestamp - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) lastFeeTransferTimestamp = currentTimestamp;
     }
 
     if (deltaR0 | deltaR1 == 0) return;
