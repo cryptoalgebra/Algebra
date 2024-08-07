@@ -34,6 +34,6 @@ exports[`NonfungiblePositionManager #transferFrom gas [ @skip-on-coverage ] 1`] 
 
 exports[`NonfungiblePositionManager #transferFrom gas comes from approved [ @skip-on-coverage ] 1`] = `86295`;
 
-exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `24605`;
+exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `24093`;
 
 exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `241114`;
