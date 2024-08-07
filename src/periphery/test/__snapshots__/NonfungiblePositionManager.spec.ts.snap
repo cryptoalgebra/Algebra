@@ -10,11 +10,11 @@ exports[`NonfungiblePositionManager #collect gas transfers token1 only [ @skip-o
 
 exports[`NonfungiblePositionManager #createAndInitializePoolIfNecessary gas [ @skip-on-coverage ] 1`] = `4813190`;
 
-exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease [ @skip-on-coverage ] 1`] = `171138`;
+exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease [ @skip-on-coverage ] 1`] = `171100`;
 
-exports[`NonfungiblePositionManager #decreaseLiquidity gas partial decrease [ @skip-on-coverage ] 1`] = `176117`;
+exports[`NonfungiblePositionManager #decreaseLiquidity gas partial decrease [ @skip-on-coverage ] 1`] = `176070`;
 
-exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `181484`;
+exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `181510`;
 
 exports[`NonfungiblePositionManager #mint gas first mint for pool [ @skip-on-coverage ] 1`] = `628160`;
 
@@ -34,6 +34,6 @@ exports[`NonfungiblePositionManager #transferFrom gas [ @skip-on-coverage ] 1`] 
 
 exports[`NonfungiblePositionManager #transferFrom gas comes from approved [ @skip-on-coverage ] 1`] = `86295`;
 
-exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `24605`;
+exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `24093`;
 
-exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `246083`;
+exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `246045`;
