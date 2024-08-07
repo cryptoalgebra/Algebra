@@ -483,7 +483,13 @@ contract NonfungiblePositionManager is
             }
         }
 
-        emit DecreaseLiquidity(params.tokenId, params.liquidity, positionWithdrawalFeeLiquidity, amount0, amount1);
+        emit DecreaseLiquidity(
+            params.tokenId,
+            liquidityDeltaWithoutFee,
+            positionWithdrawalFeeLiquidity,
+            amount0,
+            amount1
+        );
 
         _applyLiquidityDeltaInFarming(
             params.tokenId,
