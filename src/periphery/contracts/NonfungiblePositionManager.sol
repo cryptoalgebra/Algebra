@@ -308,7 +308,7 @@ contract NonfungiblePositionManager is
             uint160 tickLowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
             uint160 tickUpperPrice = TickMath.getSqrtRatioAtTick(tickUpper);
 
-            (uint256 liquidityAmount0, uint256 liquidityAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+            (uint256 averageAmount0, uint256 averageAmount1) = LiquidityAmounts.getAmountsForLiquidity(
                 TickMath.getSqrtRatioAtTick(timeWeightedAverageTick),
                 tickLowerPrice,
                 tickUpperPrice,
@@ -316,7 +316,7 @@ contract NonfungiblePositionManager is
             );
 
             if (token0apr > 0) {
-                uint256 amount0EarnedFromStake = (token0apr * period * liquidityAmount0) / (FEE_DENOMINATOR * 365 days);
+                uint256 amount0EarnedFromStake = (token0apr * period * averageAmount0) / (FEE_DENOMINATOR * 365 days);
                 uint128 amount0ToWithdraw = uint128((amount0EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
                 withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount0(
                     tickLowerPrice,
@@ -326,7 +326,7 @@ contract NonfungiblePositionManager is
             }
 
             if (token1apr > 0) {
-                uint256 amount1EarnedFromStake = (token1apr * period * liquidityAmount1) / (FEE_DENOMINATOR * 365 days);
+                uint256 amount1EarnedFromStake = (token1apr * period * averageAmount1) / (FEE_DENOMINATOR * 365 days);
                 uint128 amount1ToWithdraw = uint128((amount1EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
                 withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount1(
                     tickLowerPrice,
