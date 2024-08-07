@@ -103,7 +103,7 @@ contract NonfungiblePositionManager is
     }
 
     modifier onlyAdministrator() {
-        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+        _hasRoleOrOwner();
         _;
     }
 
@@ -118,6 +118,7 @@ contract NonfungiblePositionManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
+        require(_vault != address(0));
         withdrawalFeesVault = _vault;
     }
 
@@ -628,6 +629,10 @@ contract NonfungiblePositionManager is
 
     function _checkAuthorizationForToken(uint256 tokenId) private view {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+    }
+
+    function _hasRoleOrOwner() private view {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
