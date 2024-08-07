@@ -230,7 +230,7 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   // ###### withdrawalFeePlugin ######
 
   function setModifyLiquidityEntrypoint(address newModifyLiquidityEntrypoint) external override {
-    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+    require(IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
     modifyLiquidityEntrypoint = newModifyLiquidityEntrypoint;
   }
 
