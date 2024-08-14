@@ -64,4 +64,6 @@ contract MockVolatilityOracle is IVolatilityOracle {
   function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {}
 
   function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external override {}
+
+  function initialize() external {}
 }

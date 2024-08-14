@@ -33,6 +33,10 @@ interface IVolatilityOracle {
   /// @return index of the last timepoint written
   function timepointIndex() external view returns (uint16);
 
+  /// @notice Initialize the plugin externally
+  /// @dev This function allows to initialize the plugin if it was created after the pool was created
+  function initialize() external;
+
   /// @notice Returns the timestamp of the last timepoint that was written.
   /// @return timestamp of the last timepoint
   function lastTimepointTimestamp() external view returns (uint32);
