@@ -91,10 +91,25 @@ abstract contract BasePlugin is IBasePlugin, Timestamp {
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  // TODO
   function _updatePluginConfigInPool(uint8 newPluginConfig) internal {
 
     (, , , uint8 currentPluginConfig) = _getPoolState();
+    if (currentPluginConfig != newPluginConfig) {
+      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+    }
+  }
+
+  function _disablePluginFlags(uint8 config) internal {
+    (, , , uint8 currentPluginConfig) = _getPoolState();
+    uint8 newPluginConfig = currentPluginConfig & ~config;
+    if (currentPluginConfig != newPluginConfig) {
+      IAlgebraPool(pool).setPluginConfig(newPluginConfig);
+    }
+  }
+
+  function _enablePluginFlags(uint8 config) internal {
+    (, , , uint8 currentPluginConfig) = _getPoolState();
+    uint8 newPluginConfig = currentPluginConfig | config;
     if (currentPluginConfig != newPluginConfig) {
       IAlgebraPool(pool).setPluginConfig(newPluginConfig);
     }
