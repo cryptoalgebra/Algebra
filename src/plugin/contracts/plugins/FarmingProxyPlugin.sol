@@ -55,7 +55,7 @@ abstract contract FarmingProxyPlugin is BasePlugin, IFarmingPlugin {
     }
 
     if (isPluginConnected) {
-      _updatePluginConfigInPool(defaultPluginConfig);
+      _enablePluginFlags(defaultPluginConfig);
     }
   }
 
@@ -75,7 +75,7 @@ abstract contract FarmingProxyPlugin is BasePlugin, IFarmingPlugin {
       (, int24 tick, , ) = _getPoolState();
       IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
     } else {
-      _updatePluginConfigInPool(defaultPluginConfig); // should not be called, reset config
+      _disablePluginFlags(defaultPluginConfig); // should not be called, reset config
     }
   }
 }

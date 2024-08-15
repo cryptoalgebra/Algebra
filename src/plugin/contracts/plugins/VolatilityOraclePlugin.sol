@@ -47,7 +47,7 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
     lastTimepointTimestamp = time;
     isInitialized = true;
 
-    _updatePluginConfigInPool(defaultPluginConfig);
+    _enablePluginFlags(defaultPluginConfig);
   }
   // ###### Volatility and TWAP oracle ######
 
@@ -95,10 +95,9 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
 
     (, int24 tick, , ) = _getPoolState();
     timepoints.write(_lastIndex, currentTimestamp, tick);
-
   }
 
-  function _getAverageVolatility() internal view returns (uint88 volatilityAverage) {
+  function _getAverageVolatilityLast() internal view returns (uint88 volatilityAverage) {
 
     uint32 currentTimestamp = _blockTimestamp();
     (, int24 tick, , ) = _getPoolState();
