@@ -85,7 +85,7 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
     }
   }
 
-  function _writeTimepoint() internal returns(uint88 volatilityAverage) {
+  function _writeTimepoint() internal {
     // single SLOAD
     uint16 _lastIndex = timepointIndex;
     uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
@@ -94,13 +94,21 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
     require(_isInitialized, 'Not initialized');
 
     uint32 currentTimestamp = _blockTimestamp();
-    // TODO
-    if (_lastTimepointTimestamp == currentTimestamp) return 0;
+    if (_lastTimepointTimestamp == currentTimestamp) return;
 
     (, int24 tick, , ) = _getPoolState();
-    (uint16 newLastIndex, uint16 newOldestIndex) = timepoints.write(_lastIndex, currentTimestamp, tick);
+    timepoints.write(_lastIndex, currentTimestamp, tick);
 
-    volatilityAverage = timepoints.getAverageVolatility(currentTimestamp, tick, newLastIndex, newOldestIndex);
+  }
 
+  function _getAverageVolatility() internal view returns (uint88 volatilityAverage) {
+
+    uint32 currentTimestamp = _blockTimestamp();
+    (, int24 tick, , ) = _getPoolState();
+
+    uint16 lastTimepointIndex = timepointIndex;
+    uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
+
+    volatilityAverage = timepoints.getAverageVolatility(currentTimestamp, tick, lastTimepointIndex, oldestIndex);
   }
 }

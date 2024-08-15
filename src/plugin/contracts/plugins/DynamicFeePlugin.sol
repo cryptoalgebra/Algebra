@@ -48,10 +48,7 @@ abstract contract DynamicFeePlugin is BasePlugin, IDynamicFeeManager {
     emit FeeConfiguration(_config);
   }
 
-  // TODO
-  /// @inheritdoc IAlgebraDynamicFeePlugin
-  function getCurrentFee() external view override returns (uint16 fee) {
-    uint88 volatilityAverage;
+  function _getCurrentFee(uint88 volatilityAverage) internal view returns (uint16 fee) {
     AlgebraFeeConfigurationU144 feeConfig_ = _feeConfig;
     if (feeConfig_.alpha1() | feeConfig_.alpha2() == 0) return feeConfig_.baseFee();
 
