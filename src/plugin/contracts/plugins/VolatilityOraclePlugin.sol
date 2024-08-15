@@ -94,7 +94,10 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
     if (_lastTimepointTimestamp == currentTimestamp) return;
 
     (, int24 tick, , ) = _getPoolState();
-    timepoints.write(_lastIndex, currentTimestamp, tick);
+    (uint16 newLastIndex, ) = timepoints.write(_lastIndex, currentTimestamp, tick);
+
+    timepointIndex = newLastIndex;
+    lastTimepointTimestamp = currentTimestamp;
   }
 
   function _getAverageVolatilityLast() internal view returns (uint88 volatilityAverage) {
