@@ -16,7 +16,7 @@ import '../base/BasePlugin.sol';
 abstract contract FarmingProxyPlugin is BasePlugin, IFarmingPlugin {
   using Plugins for uint8;
 
-  uint8 private constant defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.AFTER_SWAP_FLAG);
+  uint8 private constant defaultPluginConfig = uint8(Plugins.AFTER_SWAP_FLAG);
 
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
