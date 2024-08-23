@@ -110,4 +110,9 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
 
     volatilityAverage = timepoints.getAverageVolatility(currentTimestamp, tick, lastTimepointIndex, oldestIndex);
   }
+
+  function _getLastTick() internal view returns(int24 lastTick) {
+    VolatilityOracle.Timepoint memory lastTimepoint = timepoints[timepointIndex];
+    return lastTimepoint.tick;
+  }
 }
