@@ -5,9 +5,9 @@ import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IA
 import {Timestamp} from '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
-import 'hardhat/console.sol';
+import {BasePlugin} from '../base/BasePlugin.sol';
 
-abstract contract SlidingFeeModule is Timestamp {
+abstract contract SlidingFeePlugin is BasePlugin {
     struct FeeFactors {
         uint128 zeroToOneFeeFactor;
         uint128 oneToZeroFeeFactor;
@@ -31,25 +31,14 @@ abstract contract SlidingFeeModule is Timestamp {
     }
 
     function _getFeeAndUpdateFactors(
-        int24 currenTick,
+        bool zeroToOne,
+        int24 currentTick,
         int24 lastTick,
-        uint16 poolFee,
-        bool zeroToOne
+        uint16 poolFee
     ) internal returns (uint16) {
         FeeFactors memory currentFeeFactors;
 
-        // console.log('current price: ', currentPrice);
-        // console.log('last price: ', lastPrice);
-        // console.log('zero to one: ', zeroToOne);
-
-        // ❗❗❗
-        // раньше было currentPrice = 0, я так понял проверка на то, инициализирована ли была цена
-        // теперь currentTick = 0 - валидное значение, возможно стоит передавать доп аргумент
-        if (lastTick == 0) {
-            return poolFee;
-        }
-
-        currentFeeFactors = _calculateFeeFactors(currenTick, lastTick);
+        currentFeeFactors = _calculateFeeFactors(currentTick, lastTick);
 
         s_feeFactors = currentFeeFactors;
 
@@ -64,14 +53,8 @@ abstract contract SlidingFeeModule is Timestamp {
         int24 currentTick,
         int24 lastTick
     ) internal view returns (FeeFactors memory feeFactors) {
-        console.log('currentTick: ');
-        console.logInt(int256(currentTick));
-        console.log('lastTick: ');
-        console.logInt(int256(lastTick));
         // price change is positive after zeroToOne prevalence
         int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
-        console.log('priceChangeRatio: ');
-        console.logInt(priceChangeRatio);
         int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor));
 
         feeFactors = s_feeFactors;
