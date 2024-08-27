@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
+import '@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol';
+
+import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import './interfaces/IBasePluginV1Factory.sol';
 import './libraries/AdaptiveFee.sol';
 import './AlgebraBasePluginV1.sol';
+import './base/BasePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
@@ -21,6 +25,10 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
+  address public defaultPluginImplementation;
+
+  bytes public initData;
+
   /// @inheritdoc IBasePluginV1Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
@@ -29,8 +37,9 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     _;
   }
 
-  constructor(address _algebraFactory) {
+  constructor(address _algebraFactory, address _defaultPluginImplementation) {
     algebraFactory = _algebraFactory;
+    defaultPluginImplementation = _defaultPluginImplementation;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
     emit DefaultFeeConfiguration(defaultFeeConfiguration);
   }
@@ -59,10 +68,19 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
-    IDynamicFeeManager volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
-    volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
-    pluginByPool[pool] = address(volatilityOracle);
-    return address(volatilityOracle);
+    address admin = IAlgebraFactory(algebraFactory).owner();
+    address pluginAddress = address(new TransparentUpgradeableProxy(defaultPluginImplementation, admin, initData));
+    BasePlugin(pluginAddress).initialize(pool, algebraFactory, address(this));
+    pluginByPool[pool] = pluginAddress;
+    return pluginAddress;
+  }
+
+  function setDefaultImplementation(address newDefaultImplementation) external onlyAdministrator {
+    defaultPluginImplementation = newDefaultImplementation;
+  }
+
+  function setDefaultInitData(bytes calldata _initData) external onlyAdministrator {
+    initData = _initData;
   }
 
   /// @inheritdoc IBasePluginV1Factory

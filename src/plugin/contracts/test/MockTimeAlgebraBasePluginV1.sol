@@ -10,8 +10,8 @@ contract MockTimeAlgebraBasePluginV1 is AlgebraBasePluginV1 {
   // Monday, October 5, 2020 9:00:00 AM GMT-05:00
   uint256 public time = 1601906400;
 
-  constructor(address _pool, address _factory, address _pluginFactory) AlgebraBasePluginV1(_pool, _factory, _pluginFactory) {
-    //
+  constructor(address _pool, address _factory, address _pluginFactory) {
+    initialize(_pool, _factory, _pluginFactory);
   }
 
   function advanceTime(uint256 by) external {
@@ -30,21 +30,22 @@ contract MockTimeAlgebraBasePluginV1 is AlgebraBasePluginV1 {
   }
 
   function batchUpdate(UpdateParams[] calldata params) external {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
     // sload everything
-    uint16 _index = timepointIndex;
-    uint32 _time = lastTimepointTimestamp;
+    uint16 _index = vol.timepointIndex;
+    uint32 _time = vol.lastTimepointTimestamp;
     int24 _tick;
     unchecked {
       for (uint256 i; i < params.length; ++i) {
         _time += params[i].advanceTimeBy;
         _tick = params[i].tick;
-        (_index, ) = timepoints.write(_index, _time, _tick);
+        (_index, ) = vol.timepoints.write(_index, _time, _tick);
       }
     }
 
     // sstore everything
-    lastTimepointTimestamp = _time;
-    timepointIndex = _index;
+    vol.lastTimepointTimestamp = _time;
+    vol.timepointIndex = _index;
     time = _time;
   }
 
@@ -59,12 +60,14 @@ contract MockTimeAlgebraBasePluginV1 is AlgebraBasePluginV1 {
     int24 tick,
     uint16 lastIndex
   ) external view returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
-    return timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    return vol.timepoints.getTimepoints(_time, secondsAgos, tick, lastIndex);
   }
 
   function getAverageVolatility(uint32 timestamp, int24 tick) public view returns (uint88 volatilityAverage) {
-    uint16 index = timepointIndex;
-    uint16 oldestIndex = timepoints.getOldestIndex(index);
-    return timepoints.getAverageVolatility(timestamp, tick, index, oldestIndex);
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    uint16 index = vol.timepointIndex;
+    uint16 oldestIndex = vol.timepoints.getOldestIndex(index);
+    return vol.timepoints.getAverageVolatility(timestamp, tick, index, oldestIndex);
   }
 }

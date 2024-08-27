@@ -9,11 +9,13 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
+import '@openzeppelin/contracts/proxy/utils/Initializable.sol';
+
 import '../interfaces/IBasePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-abstract contract BasePlugin is IBasePlugin, Timestamp {
+abstract contract BasePlugin is IBasePlugin, Timestamp, Initializable {
   using Plugins for uint8;
 
   /// @dev The role can be granted in AlgebraFactory
@@ -21,16 +23,16 @@ abstract contract BasePlugin is IBasePlugin, Timestamp {
 
   uint8 private constant defaultPluginConfig = 0;
 
-  address public immutable override pool;
-  address internal immutable factory;
-  address internal immutable pluginFactory;
+  address public override pool;
+  address internal factory;
+  address internal pluginFactory;
 
   modifier onlyPool() {
     _checkIfFromPool();
     _;
   }
 
-  constructor(address _pool, address _factory, address _pluginFactory) {
+  function initialize(address _pool, address _factory, address _pluginFactory) public initializer {
     (factory, pool, pluginFactory) = (_factory, _pool, _pluginFactory);
   }
 
@@ -59,40 +61,56 @@ abstract contract BasePlugin is IBasePlugin, Timestamp {
 
   // ###### HOOKS ######
 
-  function beforeInitialize(address, uint160) external override virtual onlyPool returns (bytes4) {
+  function beforeInitialize(address, uint160) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.beforeInitialize.selector;
   }
 
-  function afterInitialize(address, uint160, int24) external override virtual onlyPool returns (bytes4) {
+  function afterInitialize(address, uint160, int24) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override virtual onlyPool returns (bytes4, uint24) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external virtual override onlyPool returns (bytes4, uint24) {
     return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
   }
 
-  function afterModifyPosition(address, address, int24, int24, int128, uint256, uint256, bytes calldata) external override virtual onlyPool returns (bytes4) {
+  function afterModifyPosition(
+    address,
+    address,
+    int24,
+    int24,
+    int128,
+    uint256,
+    uint256,
+    bytes calldata
+  ) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override virtual onlyPool returns (bytes4, uint24, uint24) {
+  function beforeSwap(
+    address,
+    address,
+    bool,
+    int256,
+    uint160,
+    bool,
+    bytes calldata
+  ) external virtual override onlyPool returns (bytes4, uint24, uint24) {
     return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
   }
 
-  function afterSwap(address, address, bool, int256, uint160, int256, int256, bytes calldata) external override virtual onlyPool returns (bytes4) {
+  function afterSwap(address, address, bool, int256, uint160, int256, int256, bytes calldata) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.afterSwap.selector;
   }
 
-  function beforeFlash(address, address, uint256, uint256, bytes calldata) external override virtual onlyPool returns (bytes4) {
+  function beforeFlash(address, address, uint256, uint256, bytes calldata) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.beforeFlash.selector;
   }
 
-  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override virtual onlyPool returns (bytes4) {
+  function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external virtual override onlyPool returns (bytes4) {
     return IAlgebraPlugin.afterFlash.selector;
   }
 
   function _updatePluginConfigInPool(uint8 newPluginConfig) internal {
-
     (, , , uint8 currentPluginConfig) = _getPoolState();
     if (currentPluginConfig != newPluginConfig) {
       IAlgebraPool(pool).setPluginConfig(newPluginConfig);
@@ -114,5 +132,4 @@ abstract contract BasePlugin is IBasePlugin, Timestamp {
       IAlgebraPool(pool).setPluginConfig(newPluginConfig);
     }
   }
-
 }

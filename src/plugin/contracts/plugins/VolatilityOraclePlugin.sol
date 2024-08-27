@@ -12,7 +12,7 @@ import '../base/BasePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
+abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
   using Plugins for uint8;
 
   uint256 internal constant UINT16_MODULO = 65536;
@@ -20,34 +20,85 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
 
   uint8 private constant defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG);
 
-  /// @inheritdoc IVolatilityOracle
-  VolatilityOracle.Timepoint[UINT16_MODULO] public override timepoints;
+  bytes32 internal constant VOLATILITY_ORACLE_NAMESPACE = keccak256('namespace.volatility.oracle');
 
-  /// @inheritdoc IVolatilityOracle
-  uint16 public override timepointIndex;
+  struct VolatiltyOracleLayout {
+    VolatilityOracle.Timepoint[UINT16_MODULO] timepoints;
+    uint16 timepointIndex;
+    uint32 lastTimepointTimestamp;
+    bool isInitialized;
+  }
 
-  /// @inheritdoc IVolatilityOracle
-  uint32 public override lastTimepointTimestamp;
+  function timepoints(
+    uint256 index
+  )
+    external
+    view
+    override
+    returns (
+      bool initialized,
+      uint32 blockTimestamp,
+      int56 tickCumulative,
+      uint88 volatilityCumulative,
+      int24 tick,
+      int24 averageTick,
+      uint16 windowStartIndex
+    )
+  {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
 
-  /// @inheritdoc IVolatilityOracle
-  bool public override isInitialized;
+    VolatilityOracle.Timepoint memory timepoint = vol.timepoints[index];
+
+    initialized = timepoint.initialized;
+    blockTimestamp = timepoint.blockTimestamp;
+    tickCumulative = timepoint.tickCumulative;
+    volatilityCumulative = timepoint.volatilityCumulative;
+    tick = timepoint.tick;
+    averageTick = timepoint.averageTick;
+    windowStartIndex = timepoint.windowStartIndex;
+  }
+
+  function timepointIndex() external view override returns (uint16) {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    return vol.timepointIndex;
+  }
+
+  function lastTimepointTimestamp() external view override returns (uint32) {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    return vol.lastTimepointTimestamp;
+  }
+
+  function isInitialized() external view override returns (bool) {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    return vol.isInitialized;
+  }
+
+  /// @dev Fetch pointer of Volatility Oracle's storage
+  function getVolatiltyOraclePointer() internal pure returns (VolatiltyOracleLayout storage vol) {
+    bytes32 position = VOLATILITY_ORACLE_NAMESPACE;
+    // solhint-disable-next-line no-inline-assembly
+    assembly {
+      vol.slot := position
+    }
+  }
 
   /// @inheritdoc IVolatilityOracle
   function initialize() external override {
-    require(!isInitialized, 'Already initialized');
     require(_getPluginInPool() == address(this), 'Plugin not attached');
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
     _initialize_TWAP(tick);
-    
   }
 
   function _initialize_TWAP(int24 tick) internal {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+
+    require(!vol.isInitialized, 'Already initialized');
 
     uint32 time = _blockTimestamp();
-    timepoints.initialize(time, tick);
-    lastTimepointTimestamp = time;
-    isInitialized = true;
+    vol.timepoints.initialize(time, tick);
+    vol.lastTimepointTimestamp = time;
+    vol.isInitialized = true;
 
     _enablePluginFlags(defaultPluginConfig);
   }
@@ -55,11 +106,18 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
 
   /// @inheritdoc IVolatilityOracle
   function getSingleTimepoint(uint32 secondsAgo) external view override returns (int56 tickCumulative, uint88 volatilityCumulative) {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
     // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
     (, int24 tick, , ) = _getPoolState();
-    uint16 lastTimepointIndex = timepointIndex;
-    uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
-    VolatilityOracle.Timepoint memory result = timepoints.getSingleTimepoint(_blockTimestamp(), secondsAgo, tick, lastTimepointIndex, oldestIndex);
+    uint16 lastTimepointIndex = vol.timepointIndex;
+    uint16 oldestIndex = vol.timepoints.getOldestIndex(lastTimepointIndex);
+    VolatilityOracle.Timepoint memory result = vol.timepoints.getSingleTimepoint(
+      _blockTimestamp(),
+      secondsAgo,
+      tick,
+      lastTimepointIndex,
+      oldestIndex
+    );
     (tickCumulative, volatilityCumulative) = (result.tickCumulative, result.volatilityCumulative);
   }
 
@@ -67,54 +125,60 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
   function getTimepoints(
     uint32[] memory secondsAgos
   ) external view override returns (int56[] memory tickCumulatives, uint88[] memory volatilityCumulatives) {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
     // `volatilityCumulative` values for timestamps after the last timepoint _should not_ be compared: they may differ due to interpolation errors
     (, int24 tick, , ) = _getPoolState();
-    return timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, timepointIndex);
+    return vol.timepoints.getTimepoints(_blockTimestamp(), secondsAgos, tick, vol.timepointIndex);
   }
 
   /// @inheritdoc IVolatilityOracle
   function prepayTimepointsStorageSlots(uint16 startIndex, uint16 amount) external override {
-    require(!timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
+    require(!vol.timepoints[startIndex].initialized); // if not initialized, then all subsequent ones too
     require(amount > 0 && type(uint16).max - startIndex >= amount);
 
     unchecked {
       for (uint256 i = startIndex; i < startIndex + amount; ++i) {
-        timepoints[i].blockTimestamp = 1; // will be overwritten
+        vol.timepoints[i].blockTimestamp = 1; // will be overwritten
       }
     }
   }
 
   function _writeTimepoint() internal {
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
     // single SLOAD
-    uint16 _lastIndex = timepointIndex;
-    uint32 _lastTimepointTimestamp = lastTimepointTimestamp;
+    uint16 _lastIndex = vol.timepointIndex;
+    uint32 _lastTimepointTimestamp = vol.lastTimepointTimestamp;
 
-    bool _isInitialized = isInitialized;
+    bool _isInitialized = vol.isInitialized;
     require(_isInitialized, 'Not initialized');
 
     uint32 currentTimestamp = _blockTimestamp();
     if (_lastTimepointTimestamp == currentTimestamp) return;
 
     (, int24 tick, , ) = _getPoolState();
-    (uint16 newLastIndex, ) = timepoints.write(_lastIndex, currentTimestamp, tick);
+    (uint16 newLastIndex, ) = vol.timepoints.write(_lastIndex, currentTimestamp, tick);
 
-    timepointIndex = newLastIndex;
-    lastTimepointTimestamp = currentTimestamp;
+    vol.timepointIndex = newLastIndex;
+    vol.lastTimepointTimestamp = currentTimestamp;
   }
 
   function _getAverageVolatilityLast() internal view returns (uint88 volatilityAverage) {
-
     uint32 currentTimestamp = _blockTimestamp();
     (, int24 tick, , ) = _getPoolState();
 
-    uint16 lastTimepointIndex = timepointIndex;
-    uint16 oldestIndex = timepoints.getOldestIndex(lastTimepointIndex);
+    VolatiltyOracleLayout storage vol = getVolatiltyOraclePointer();
 
-    volatilityAverage = timepoints.getAverageVolatility(currentTimestamp, tick, lastTimepointIndex, oldestIndex);
+    uint16 lastTimepointIndex = vol.timepointIndex;
+    uint16 oldestIndex = vol.timepoints.getOldestIndex(lastTimepointIndex);
+
+    volatilityAverage = vol.timepoints.getAverageVolatility(currentTimestamp, tick, lastTimepointIndex, oldestIndex);
   }
 
-  function _getLastTick() internal view returns(int24 lastTick) {
-    VolatilityOracle.Timepoint memory lastTimepoint = timepoints[timepointIndex];
+  function _getLastTick() internal view returns (int24 lastTick) {
+    VolatiltyOracleLayout memory vol = getVolatiltyOraclePointer();
+
+    VolatilityOracle.Timepoint memory lastTimepoint = vol.timepoints[vol.timepointIndex];
     return lastTimepoint.tick;
   }
 }

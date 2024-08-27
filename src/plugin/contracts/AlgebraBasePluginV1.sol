@@ -16,11 +16,8 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
   using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
-
-  constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {
-  
-  }
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
   // ###### HOOKS ######
 
@@ -32,7 +29,7 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
   function afterInitialize(address, uint160, int24 tick) external override onlyPool returns (bytes4) {
     _initialize_TWAP(tick);
 
-    IAlgebraPool(pool).setFee(_feeConfig.baseFee());
+    IAlgebraPool(pool).setFee(getBaseFee());
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
@@ -72,9 +69,8 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  function getCurrentFee() external view override returns(uint16 fee) {
+  function getCurrentFee() external view override returns (uint16 fee) {
     uint88 volatilityAverage = _getAverageVolatilityLast();
-    fee =_getCurrentFee(volatilityAverage);
-  } 
-
+    fee = _getCurrentFee(volatilityAverage);
+  }
 }
