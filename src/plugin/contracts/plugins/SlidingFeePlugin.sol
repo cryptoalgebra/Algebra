@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.20;
 
+import {IAlgebraFactory} from '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import {Timestamp} from '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
@@ -8,14 +9,14 @@ import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMat
 import {BasePlugin} from '../base/BasePlugin.sol';
 
 abstract contract SlidingFeePlugin is BasePlugin {
-    struct FeeFactors {
-        uint128 zeroToOneFeeFactor;
-        uint128 oneToZeroFeeFactor;
-    }
+  struct FeeFactors {
+    uint128 zeroToOneFeeFactor;
+    uint128 oneToZeroFeeFactor;
+  }
 
-    uint64 internal constant FEE_FACTOR_SHIFT = 96;
+  uint64 internal constant FEE_FACTOR_SHIFT = 96;
 
-    FeeFactors public s_feeFactors;
+  FeeFactors public s_feeFactors;
 
   uint256 public s_priceChangeFactor = 1;
 
@@ -27,8 +28,7 @@ abstract contract SlidingFeePlugin is BasePlugin {
     s_feeFactors = feeFactors;
   }
 
-  function _getFeeAndUpdateFactors(int24 currenTick, int24 lastTick, uint16 poolFee, bool zeroToOne) internal returns (uint16) {
- 
+  function _getFeeAndUpdateFactors(bool zeroToOne, int24 currenTick, int24 lastTick, uint16 poolFee) internal returns (uint16) {
     FeeFactors memory currentFeeFactors;
 
     currentFeeFactors = _calculateFeeFactors(currenTick, lastTick);
@@ -42,45 +42,40 @@ abstract contract SlidingFeePlugin is BasePlugin {
     return adjustedFee;
   }
 
-    function _calculateFeeFactors(
-        int24 currentTick,
-        int24 lastTick
-    ) internal view returns (FeeFactors memory feeFactors) {
-        // price change is positive after zeroToOne prevalence
-        int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
-        int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor));
+  function setPriceChangeFactor(uint256 newPriceChangeFactor) external {
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
 
-        feeFactors = s_feeFactors;
+    s_priceChangeFactor = newPriceChangeFactor;
 
-        // if there were zeroToOne prevalence in the last price change,
-        // in result price has increased
-        // we need to increase zeroToOneFeeFactor
-        // and vice versa
-        int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) + feeFactorImpact;
+    emit PriceChangeFactor(newPriceChangeFactor);
+  }
 
-        if ((int128(-2) << FEE_FACTOR_SHIFT) < newZeroToOneFeeFactor && newZeroToOneFeeFactor < int128(uint128(2) << FEE_FACTOR_SHIFT)) {
-            feeFactors = FeeFactors(
-                uint128(newZeroToOneFeeFactor),
-                uint128(int128(feeFactors.oneToZeroFeeFactor) - feeFactorImpact)
-            );
-        } else if (newZeroToOneFeeFactor <= 0) {
-            // In this case price has decreased that much so newZeroToOneFeeFactor is less than 0
-            // So we set it to the minimal value == 0
-            // It means that there were too much oneToZero prevalence and we want to decrease it
-            // Basically price change is -100%
-            feeFactors = FeeFactors(
-                uint128(2 << FEE_FACTOR_SHIFT),
-                0
-            );
-        } else {
-            // In this case priceChange is big enough that newZeroToOneFeeFactor is greater than 2
-            // So we set it to the maximum value
-            // It means that there were too much zeroToOne prevalence and we want to decrease it
-            feeFactors = FeeFactors(
-                0,
-                uint128(2 << FEE_FACTOR_SHIFT)
-            );
-        }
+  function _calculateFeeFactors(int24 currentTick, int24 lastTick) internal view returns (FeeFactors memory feeFactors) {
+    // price change is positive after zeroToOne prevalence
+    int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
+    int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor));
+
+    feeFactors = s_feeFactors;
+
+    // if there were zeroToOne prevalence in the last price change,
+    // in result price has increased
+    // we need to increase zeroToOneFeeFactor
+    // and vice versa
+    int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) + feeFactorImpact;
+
+    if ((int128(-2) << FEE_FACTOR_SHIFT) < newZeroToOneFeeFactor && newZeroToOneFeeFactor < int128(uint128(2) << FEE_FACTOR_SHIFT)) {
+      feeFactors = FeeFactors(uint128(newZeroToOneFeeFactor), uint128(int128(feeFactors.oneToZeroFeeFactor) - feeFactorImpact));
+    } else if (newZeroToOneFeeFactor <= 0) {
+      // In this case price has decreased that much so newZeroToOneFeeFactor is less than 0
+      // So we set it to the minimal value == 0
+      // It means that there were too much oneToZero prevalence and we want to decrease it
+      // Basically price change is -100%
+      feeFactors = FeeFactors(uint128(2 << FEE_FACTOR_SHIFT), 0);
+    } else {
+      // In this case priceChange is big enough that newZeroToOneFeeFactor is greater than 2
+      // So we set it to the maximum value
+      // It means that there were too much zeroToOne prevalence and we want to decrease it
+      feeFactors = FeeFactors(0, uint128(2 << FEE_FACTOR_SHIFT));
     }
   }
 }

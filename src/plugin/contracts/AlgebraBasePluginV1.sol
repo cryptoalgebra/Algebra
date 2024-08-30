@@ -16,7 +16,8 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
   using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
   constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {}
 
@@ -35,9 +36,9 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
   }
 
   /// @dev unused
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4, uint24) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
     _updatePluginConfigInPool(defaultPluginConfig); // should not be called, reset config
-    return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+    return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
   /// @dev unused
@@ -46,11 +47,11 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
+  function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
     _writeTimepoint();
     uint88 volatilityAverage = _getAverageVolatilityLast();
     _updateFee(volatilityAverage);
-    return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+    return IAlgebraPlugin.beforeSwap.selector;
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
@@ -70,9 +71,8 @@ contract AlgebraBasePluginV1 is DynamicFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  function getCurrentFee() external view override returns(uint16 fee) {
+  function getCurrentFee() external view override returns (uint16 fee) {
     uint88 volatilityAverage = _getAverageVolatilityLast();
-    fee =_getCurrentFee(volatilityAverage);
-  } 
-
+    fee = _getCurrentFee(volatilityAverage);
+  }
 }

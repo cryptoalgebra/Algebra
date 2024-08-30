@@ -11,15 +11,14 @@ import './plugins/VolatilityOraclePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
+contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
   using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
-  constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {
-  
-  }
+  constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {}
 
   // ###### HOOKS ######
 
@@ -35,9 +34,9 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
   }
 
   /// @dev unused
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4, uint24) {
+  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
     _updatePluginConfigInPool(defaultPluginConfig); // should not be called, reset config
-    return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
+    return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
   /// @dev unused
@@ -46,8 +45,8 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool zeroToOne, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
-    ( , int24 currentTick, uint16 fee, ) = _getPoolState(); 
+  function beforeSwap(address, address, bool zeroToOne, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
+    (, int24 currentTick, uint16 fee, ) = _getPoolState();
     int24 lastTick = _getLastTick();
     uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick, fee);
     if (newFee != fee) {
@@ -55,7 +54,7 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
     }
 
     _writeTimepoint();
-    return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+    return IAlgebraPlugin.beforeSwap.selector;
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
@@ -75,8 +74,7 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  function getCurrentFee() external view returns(uint16 fee) {
-    ( , , fee, ) = _getPoolState();
-  } 
-
+  function getCurrentFee() external view returns (uint16 fee) {
+    (, , fee, ) = _getPoolState();
+  }
 }

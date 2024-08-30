@@ -103,10 +103,12 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       });
 
       describe('#swapExact1For0', () => {
-        it('first swap in block with no tick movement', async () => {
+        it.only('first swap in block with no tick movement', async () => {
+          console.log(await pool.liquidity())
           await snapshotGasCost(swapExact1For0(2000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
+          console.log(await pool.liquidity())
         });
 
         it('first swap in block moves tick, no initialized crossings', async () => {
