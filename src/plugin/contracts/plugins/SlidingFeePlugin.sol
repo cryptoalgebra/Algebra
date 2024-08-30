@@ -59,12 +59,12 @@ abstract contract SlidingFeePlugin is BasePlugin {
 
     // if there were zeroToOne prevalence in the last price change,
     // in result price has increased
-    // we need to increase zeroToOneFeeFactor
+    // we need to decrease zeroToOneFeeFactor
     // and vice versa
-    int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) + feeFactorImpact;
+    int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) - feeFactorImpact;
 
     if ((int128(-2) << FEE_FACTOR_SHIFT) < newZeroToOneFeeFactor && newZeroToOneFeeFactor < int128(uint128(2) << FEE_FACTOR_SHIFT)) {
-      feeFactors = FeeFactors(uint128(newZeroToOneFeeFactor), uint128(int128(feeFactors.oneToZeroFeeFactor) - feeFactorImpact));
+      feeFactors = FeeFactors(uint128(newZeroToOneFeeFactor), uint128(int128(feeFactors.oneToZeroFeeFactor) + feeFactorImpact));
     } else if (newZeroToOneFeeFactor <= 0) {
       // In this case price has decreased that much so newZeroToOneFeeFactor is less than 0
       // So we set it to the minimal value == 0
