@@ -34,7 +34,9 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     uint16 priceChangeFactor = s_priceChangeFactor;
     uint16 baseFee = s_baseFee;
 
-    currentFeeFactors = _calculateFeeFactors(currenTick, lastTick, priceChangeFactor);
+    if (currenTick != lastTick) {
+      currentFeeFactors = _calculateFeeFactors(currenTick, lastTick, priceChangeFactor);
+    }
 
     s_feeFactors = currentFeeFactors;
 
