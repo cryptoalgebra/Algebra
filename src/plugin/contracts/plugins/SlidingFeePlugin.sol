@@ -20,7 +20,7 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   FeeFactors public s_feeFactors;
 
   uint16 public s_priceChangeFactor = 1;
-  uint16 public s_baseFee;  
+  uint16 public s_baseFee;
 
   constructor() {
     FeeFactors memory feeFactors = FeeFactors(uint128(1 << FEE_FACTOR_SHIFT), uint128(1 << FEE_FACTOR_SHIFT));
@@ -53,12 +53,12 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     emit PriceChangeFactor(newPriceChangeFactor);
   }
 
-  function setBaseFee(uint16 newBaseFee) external override{
+  function setBaseFee(uint16 newBaseFee) external override {
     require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
 
     s_baseFee = newBaseFee;
     emit BaseFee(newBaseFee);
-  } 
+  }
 
   function _calculateFeeFactors(int24 currentTick, int24 lastTick, uint16 priceChangeFactor) internal view returns (FeeFactors memory feeFactors) {
     // price change is positive after zeroToOne prevalence
@@ -80,12 +80,12 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
       // So we set it to the minimal value == 0
       // It means that there were too much oneToZero prevalence and we want to decrease it
       // Basically price change is -100%
-      feeFactors = FeeFactors(uint128(2 << FEE_FACTOR_SHIFT), 0);
+      feeFactors = FeeFactors(0, uint128(2 << FEE_FACTOR_SHIFT));
     } else {
       // In this case priceChange is big enough that newZeroToOneFeeFactor is greater than 2
       // So we set it to the maximum value
       // It means that there were too much zeroToOne prevalence and we want to decrease it
-      feeFactors = FeeFactors(0, uint128(2 << FEE_FACTOR_SHIFT));
+      feeFactors = FeeFactors(uint128(2 << FEE_FACTOR_SHIFT), 0);
     }
   }
 }
