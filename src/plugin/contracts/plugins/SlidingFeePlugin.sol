@@ -6,9 +6,10 @@ import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IA
 import {Timestamp} from '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
+import {ISlidingFeePlugin} from '../interfaces/plugins/ISlidingFeePlugin.sol';
 import {BasePlugin} from '../base/BasePlugin.sol';
 
-abstract contract SlidingFeePlugin is BasePlugin {
+abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   struct FeeFactors {
     uint128 zeroToOneFeeFactor;
     uint128 oneToZeroFeeFactor;
@@ -18,9 +19,8 @@ abstract contract SlidingFeePlugin is BasePlugin {
 
   FeeFactors public s_feeFactors;
 
-  uint256 public s_priceChangeFactor = 1;
-
-  event PriceChangeFactor(uint256 priceChangeFactor);
+  uint16 public s_priceChangeFactor = 1;
+  uint16 public s_baseFee;  
 
   constructor() {
     FeeFactors memory feeFactors = FeeFactors(uint128(1 << FEE_FACTOR_SHIFT), uint128(1 << FEE_FACTOR_SHIFT));
@@ -28,32 +28,42 @@ abstract contract SlidingFeePlugin is BasePlugin {
     s_feeFactors = feeFactors;
   }
 
-  function _getFeeAndUpdateFactors(bool zeroToOne, int24 currenTick, int24 lastTick, uint16 poolFee) internal returns (uint16) {
+  function _getFeeAndUpdateFactors(bool zeroToOne, int24 currenTick, int24 lastTick) internal returns (uint16) {
     FeeFactors memory currentFeeFactors;
 
-    currentFeeFactors = _calculateFeeFactors(currenTick, lastTick);
+    uint16 priceChangeFactor = s_priceChangeFactor;
+    uint16 baseFee = s_baseFee;
+
+    currentFeeFactors = _calculateFeeFactors(currenTick, lastTick, priceChangeFactor);
 
     s_feeFactors = currentFeeFactors;
 
     uint16 adjustedFee = zeroToOne
-      ? uint16((poolFee * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT)
-      : uint16((poolFee * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT);
+      ? uint16((baseFee * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT)
+      : uint16((baseFee * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT);
 
     return adjustedFee;
   }
 
-  function setPriceChangeFactor(uint256 newPriceChangeFactor) external {
-    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+  function setPriceChangeFactor(uint16 newPriceChangeFactor) external override {
+    require(IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
 
     s_priceChangeFactor = newPriceChangeFactor;
 
     emit PriceChangeFactor(newPriceChangeFactor);
   }
 
-  function _calculateFeeFactors(int24 currentTick, int24 lastTick) internal view returns (FeeFactors memory feeFactors) {
+  function setBaseFee(uint16 newBaseFee) external override{
+    require(msg.sender == pluginFactory || IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
+
+    s_baseFee = newBaseFee;
+    emit BaseFee(newBaseFee);
+  } 
+
+  function _calculateFeeFactors(int24 currentTick, int24 lastTick, uint16 priceChangeFactor) internal view returns (FeeFactors memory feeFactors) {
     // price change is positive after zeroToOne prevalence
     int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
-    int128 feeFactorImpact = int128(priceChangeRatio * int256(s_priceChangeFactor));
+    int128 feeFactorImpact = int128(priceChangeRatio * int16(priceChangeFactor));
 
     feeFactors = s_feeFactors;
 

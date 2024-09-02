@@ -48,7 +48,7 @@ contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
   function beforeSwap(address, address, bool zeroToOne, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4) {
     (, int24 currentTick, uint16 fee, ) = _getPoolState();
     int24 lastTick = _getLastTick();
-    uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick, fee);
+    uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick);
     if (newFee != fee) {
       IAlgebraPool(pool).setFee(newFee);
     }

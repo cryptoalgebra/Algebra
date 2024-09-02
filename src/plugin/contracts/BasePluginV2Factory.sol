@@ -3,6 +3,7 @@ pragma solidity =0.8.20;
 
 import './interfaces/IBasePluginV2Factory.sol';
 import './AlgebraBasePluginV2.sol';
+import './interfaces/plugins/ISlidingFeePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
@@ -16,6 +17,9 @@ contract BasePluginV2Factory is IBasePluginV2Factory {
 
   /// @inheritdoc IBasePluginV2Factory
   address public override farmingAddress;
+
+  /// @inheritdoc IBasePluginV2Factory
+  uint16 public override defaultBaseFee;
 
   /// @inheritdoc IBasePluginV2Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
@@ -53,9 +57,10 @@ contract BasePluginV2Factory is IBasePluginV2Factory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
-    address plugin = address(new AlgebraBasePluginV2(pool, algebraFactory, address(this)));
-    pluginByPool[pool] = plugin;
-    return plugin;
+    ISlidingFeePlugin plugin = new AlgebraBasePluginV2(pool, algebraFactory, address(this));
+    plugin.setBaseFee(defaultBaseFee);
+    pluginByPool[pool] = address(plugin);
+    return address(plugin);
   }
 
   /// @inheritdoc IBasePluginV2Factory
@@ -63,5 +68,12 @@ contract BasePluginV2Factory is IBasePluginV2Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  /// @inheritdoc IBasePluginV2Factory
+  function setDefaultBaseFee(uint16 newDefaultBaseFee) external override onlyAdministrator {
+    require(defaultBaseFee != newDefaultBaseFee);
+    defaultBaseFee = newDefaultBaseFee;
+    emit DefaultBaseFee(newDefaultBaseFee);
   }
 }

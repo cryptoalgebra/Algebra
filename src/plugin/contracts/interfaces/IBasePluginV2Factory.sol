@@ -11,6 +11,8 @@ interface IBasePluginV2Factory is IAlgebraPluginFactory {
   /// @param newFarmingAddress The farming address after the address was changed
   event FarmingAddress(address newFarmingAddress);
 
+  event DefaultBaseFee(uint16 newDefaultBaseFee);
+
   /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR' used as role
   /// @dev allows to change settings of BasePluginV2Factory
   function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32);
@@ -22,6 +24,8 @@ interface IBasePluginV2Factory is IAlgebraPluginFactory {
   /// @notice Returns current farming address
   /// @return The farming contract address
   function farmingAddress() external view returns (address);
+
+  function defaultBaseFee() external view returns (uint16);
 
   /// @notice Returns address of plugin created for given AlgebraPool
   /// @param pool The address of AlgebraPool
@@ -37,4 +41,6 @@ interface IBasePluginV2Factory is IAlgebraPluginFactory {
   /// @dev updates farmings manager address on the factory
   /// @param newFarmingAddress The new tokenomics contract address
   function setFarmingAddress(address newFarmingAddress) external;
+
+  function setDefaultBaseFee(uint16 newDefaultBaseFee) external;
 }
