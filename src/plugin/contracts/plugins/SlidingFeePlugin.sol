@@ -15,11 +15,12 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     uint128 oneToZeroFeeFactor;
   }
 
+  int16 internal constant FACTOR_DENOMINATOR = 1000;
   uint64 internal constant FEE_FACTOR_SHIFT = 96;
 
   FeeFactors public s_feeFactors;
 
-  uint16 public s_priceChangeFactor = 1;
+  uint16 public s_priceChangeFactor = 1000;
   uint16 public s_baseFee;
 
   constructor() {
@@ -65,7 +66,7 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   function _calculateFeeFactors(int24 currentTick, int24 lastTick, uint16 priceChangeFactor) internal view returns (FeeFactors memory feeFactors) {
     // price change is positive after zeroToOne prevalence
     int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
-    int128 feeFactorImpact = int128(priceChangeRatio * int16(priceChangeFactor));
+    int128 feeFactorImpact = int128(priceChangeRatio * int16(priceChangeFactor)) / FACTOR_DENOMINATOR;
 
     feeFactors = s_feeFactors;
 
