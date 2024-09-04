@@ -373,7 +373,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
       (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
-      if (overrideFee >= 1e6 || pluginFee > overrideFee) revert incorrectPluginFee();
+      if ((overrideFee + pluginFee) >= 1e6) revert incorrectPluginFee();
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }
