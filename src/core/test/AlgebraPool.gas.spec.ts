@@ -47,7 +47,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     });
   });
 
-  for (const communityFee of [0, 60]) {
+  for (const communityFee of [0, 500]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
       const startingPrice = encodePriceSqrt(100001, 100000);
       const startingTick = 0;
@@ -104,7 +104,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
       describe('#swapExact1For0', () => {
         it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact1For0(2000, wallet.address));
+          await snapshotGasCost(swapExact1For0(4000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
         });
@@ -152,7 +152,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
       describe('#swapExact0For1', () => {
         it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact0For1(2000, wallet.address));
+          await snapshotGasCost(swapExact0For1(4000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
         });
