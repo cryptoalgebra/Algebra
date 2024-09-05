@@ -2430,7 +2430,7 @@ describe('AlgebraPool', () => {
     });
   });
 
-  describe.only('#pluginFee', () => {
+  describe('#pluginFee', () => {
     let poolPlugin : MockPoolPlugin;
 
     beforeEach('initialize the pool', async () => {
@@ -2512,7 +2512,6 @@ describe('AlgebraPool', () => {
       expect(pluginBalance0After - pluginBalance0Before).to.be.eq(4n * 10n**15n);
       expect(pluginBalance1After - pluginBalance1Before).to.be.eq(0);
     })
-
 
     it('works correct with communityFee', async () => {
       await poolPlugin.setPluginFees(1000, 4000);

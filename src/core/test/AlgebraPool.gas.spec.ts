@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool, AlgebraPool } from '../typechain';
+import { MockTimeAlgebraPool, AlgebraPool, MockPoolPlugin } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';
@@ -120,6 +120,34 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await snapshotGasCost(swapExact1For0(2000, wallet.address));
           expect((await pool.globalState()).tick).to.eq(startingTick + 1);
         });
+      })
+
+      describe('#swapExact1For0 with plugin fee on', () => {
+
+        beforeEach('load the fixture', async () => {
+          const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
+          let poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
+          await poolPlugin.setPluginFees(0, 1000);
+          await pool.setPlugin(poolPlugin);
+          await pool.setPluginConfig(255);
+        });
+
+        it('first swap in block with no tick movement, without transfer', async () => {
+          await swapExact1For0(1000, wallet.address)
+          await pool.advanceTime(1)
+          await snapshotGasCost(swapExact1For0(1000, wallet.address));
+        });
+
+        it('first swap in block with no tick movement, with transfer', async () => {
+          await snapshotGasCost(swapExact1For0(10000, wallet.address));
+        });
+
+        it('first swap in block moves tick, no initialized crossings, with transfer', async () => {
+          await swapExact1For0(1000, wallet.address);
+          await pool.advanceTime(86400)
+          await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
+        });
+
       })
 
       describe('#swapExact0For1', () => {
