@@ -2460,7 +2460,10 @@ describe('AlgebraPool', () => {
     it('swap fails if plugin return incorrect selector', async () => {
       await poolPlugin.disablePluginFeeHandle();
       await poolPlugin.setPluginFees(5000, 4000);
-      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.revertedWithCustomError(pool, 'invalidPluginResponce') ;
+      const selector = poolPlugin.interface.getFunction('handlePluginFee').selector;
+
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).
+        to.be.revertedWithCustomError(pool, 'invalidHookResponse').withArgs(selector);
     })
 
     it('works correct on swap', async () => {

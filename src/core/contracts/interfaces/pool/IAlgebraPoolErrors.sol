@@ -28,9 +28,6 @@ interface IAlgebraPoolErrors {
   /// @notice Emitted if plugin fee param greater than fee/override fee
   error incorrectPluginFee();
 
-  /// @notice Emitted if a plugin returns invalid selector after pluginFeeHandle call
-  error invalidPluginResponce();
-
   /// @notice Emitted if the pool received fewer tokens than it should have
   error insufficientInputAmount();
 
