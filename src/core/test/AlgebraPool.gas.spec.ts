@@ -130,6 +130,13 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
           await poolPlugin.setPluginFees(0, 1000);
           await pool.setPlugin(poolPlugin);
           await pool.setPluginConfig(255);
+
+          await pool.advanceTime(86400);
+          await swapExact0For1(expandTo18Decimals(1), wallet.address);
+          await pool.advanceTime(1);
+          await swapToHigherPrice(startingPrice, wallet.address);
+          expect((await pool.globalState()).tick).to.eq(startingTick);
+          expect((await pool.globalState()).price).to.eq(startingPrice);
         });
 
         it('first swap in block with no tick movement, without transfer', async () => {
