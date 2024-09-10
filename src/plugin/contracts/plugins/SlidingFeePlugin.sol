@@ -21,7 +21,7 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   FeeFactors public s_feeFactors;
 
   uint16 public s_priceChangeFactor = 1000;
-  uint16 public s_baseFee;
+  uint16 public s_baseFee = 500;
 
   constructor() {
     FeeFactors memory feeFactors = FeeFactors(uint128(1 << FEE_FACTOR_SHIFT), uint128(1 << FEE_FACTOR_SHIFT));
@@ -43,11 +43,12 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
       currentFeeFactors = s_feeFactors;
     }
 
-    uint16 adjustedFee = zeroToOne
-      ? uint16((baseFee * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT)
-      : uint16((baseFee * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT);
+    uint256 adjustedFee = zeroToOne
+      ? (uint256(baseFee) * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT
+      : (uint256(baseFee) * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT;
 
-    return adjustedFee;
+    if (adjustedFee > type(uint16).max) adjustedFee = type(uint16).max;
+    return uint16(adjustedFee);
   }
 
   function setPriceChangeFactor(uint16 newPriceChangeFactor) external override {
@@ -66,9 +67,16 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   }
 
   function _calculateFeeFactors(int24 currentTick, int24 lastTick, uint16 priceChangeFactor) internal view returns (FeeFactors memory feeFactors) {
+    int256 tickDelta = int256(currentTick) - int256(lastTick);
+    if (tickDelta > TickMath.MAX_TICK) {
+      tickDelta = TickMath.MAX_TICK;
+    } else if (tickDelta < TickMath.MIN_TICK) {
+      tickDelta = TickMath.MIN_TICK;
+    }
+
     // price change is positive after zeroToOne prevalence
-    int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(currentTick - lastTick))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
-    int128 feeFactorImpact = int128(priceChangeRatio * int16(priceChangeFactor)) / FACTOR_DENOMINATOR;
+    int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(int24(tickDelta)))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
+    int256 feeFactorImpact = (priceChangeRatio * int256(uint256(priceChangeFactor))) / FACTOR_DENOMINATOR;
 
     feeFactors = s_feeFactors;
 
@@ -76,10 +84,10 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     // in result price has increased
     // we need to decrease zeroToOneFeeFactor
     // and vice versa
-    int128 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) - feeFactorImpact;
+    int256 newZeroToOneFeeFactor = int128(feeFactors.zeroToOneFeeFactor) - feeFactorImpact;
 
-    if ((int128(-2) << FEE_FACTOR_SHIFT) < newZeroToOneFeeFactor && newZeroToOneFeeFactor < int128(uint128(2) << FEE_FACTOR_SHIFT)) {
-      feeFactors = FeeFactors(uint128(newZeroToOneFeeFactor), uint128(int128(feeFactors.oneToZeroFeeFactor) + feeFactorImpact));
+    if (0 < newZeroToOneFeeFactor && newZeroToOneFeeFactor < (int128(2) << FEE_FACTOR_SHIFT)) {
+      feeFactors = FeeFactors(uint128(int128(newZeroToOneFeeFactor)), uint128(int128(feeFactors.oneToZeroFeeFactor) + int128(feeFactorImpact)));
     } else if (newZeroToOneFeeFactor <= 0) {
       // In this case price has decreased that much so newZeroToOneFeeFactor is less than 0
       // So we set it to the minimal value == 0
