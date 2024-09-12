@@ -26,7 +26,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   bytes32 public constant override CUSTOM_POOL_DEPLOYER = keccak256('CUSTOM_POOL_DEPLOYER');
 
   /// @inheritdoc IAlgebraFactory
-  address public immutable override poolDeployer;
+  address public override poolDeployer;
 
   /// @inheritdoc IAlgebraFactory
   uint16 public override defaultCommunityFee;
@@ -59,9 +59,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
   bytes32 public constant POOL_INIT_CODE_HASH = 0x4b9e4a8044ce5695e06fce9421a63b6f5c3db8a561eebb30ea4c775469e36eaf;
 
-  constructor(address _poolDeployer) {
-    require(_poolDeployer != address(0));
-    poolDeployer = _poolDeployer;
+  constructor() {
     defaultTickspacing = Constants.INIT_DEFAULT_TICK_SPACING;
     defaultFee = Constants.INIT_DEFAULT_FEE;
 
@@ -227,6 +225,12 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
     super.renounceOwnership();
     emit RenounceOwnershipFinish(block.timestamp);
+  }
+
+  function setDeployerAddress(address _poolDeployer) external override onlyOwner {
+    require(poolDeployer == address(0));
+    poolDeployer = _poolDeployer;
+    emit PoolDeployer(_poolDeployer);
   }
 
   /// @dev Transfers ownership of the contract to a new account (`newOwner`).

@@ -61,4 +61,5 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
       token1 := and(_cache1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
     }
   }
+
 }

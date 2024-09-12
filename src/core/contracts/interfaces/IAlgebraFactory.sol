@@ -55,6 +55,8 @@ interface IAlgebraFactory {
   /// @param newVaultFactory The new vaultFactory address
   event VaultFactory(address newVaultFactory);
 
+  event PoolDeployer(address newPoolDeployer);
+
   /// @notice role that can change communityFee and tickspacing in pools
   /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
@@ -188,6 +190,8 @@ interface IAlgebraFactory {
   /// @dev updates vaultFactory address
   /// @param newVaultFactory address of new vault factory
   function setVaultFactory(address newVaultFactory) external;
+
+  function setDeployerAddress(address _poolDeployer) external;
 
   /// @notice Starts process of renounceOwnership. After that, a certain period
   /// of time must pass before the ownership renounce can be completed.
