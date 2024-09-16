@@ -143,16 +143,19 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
 
       if (pluginFee > 0) {
+        uint256 deltaPluginFeePending0;
+        uint256 deltaPluginFeePending1;
+
         if (amount0 > 0) {
-          uint256 deltaPluginFeePending0 = FullMath.mulDiv(amount0, pluginFee, Constants.FEE_DENOMINATOR);
+          deltaPluginFeePending0 = FullMath.mulDiv(amount0, pluginFee, Constants.FEE_DENOMINATOR);
           amount0 -= deltaPluginFeePending0;
-          pluginFeePending0 += uint104(deltaPluginFeePending0);
         }
         if (amount1 > 0) {
-          uint256 deltaPluginFeePending1 = FullMath.mulDiv(amount1, pluginFee, Constants.FEE_DENOMINATOR);
+          deltaPluginFeePending1 = FullMath.mulDiv(amount1, pluginFee, Constants.FEE_DENOMINATOR);
           amount1 -= deltaPluginFeePending1;
-          pluginFeePending1 += uint104(deltaPluginFeePending1);
         }
+
+        _changeReserves(0, 0, 0, 0, deltaPluginFeePending0, deltaPluginFeePending1);
       }
 
       if (amount0 | amount1 != 0) {
@@ -370,7 +373,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
       (selector, overrideFee, pluginFee) = IAlgebraPlugin(plugin).beforeSwap(msg.sender, recipient, zto, amount, limitPrice, payInAdvance, data);
-      if (overrideFee >= 1e6 || pluginFee > overrideFee) revert incorrectPluginFee();
+      // we will check that fee is less than denominator inside the swap calculation
       selector.shouldReturn(IAlgebraPlugin.beforeSwap.selector);
     }
   }

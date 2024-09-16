@@ -60,7 +60,15 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     // load from one storage slot too
     (currentPrice, currentTick, cache.fee, cache.communityFee) = (globalState.price, globalState.tick, globalState.lastFee, globalState.communityFee);
     if (currentPrice == 0) revert notInitialized();
-    if (overrideFee != 0) cache.fee = overrideFee;
+    if (overrideFee != 0) {
+      cache.fee = overrideFee + pluginFee;
+      if (cache.fee >= 1e6) revert incorrectPluginFee();
+    } else {
+      if (pluginFee != 0) {
+        cache.fee += pluginFee;
+        if (cache.fee >= 1e6) revert incorrectPluginFee();
+      }
+    }
 
     if (zeroToOne) {
       if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();

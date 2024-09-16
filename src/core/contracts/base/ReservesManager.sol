@@ -2,6 +2,7 @@
 pragma solidity =0.8.20;
 
 import '../libraries/SafeCast.sol';
+import '../libraries/Plugins.sol';
 import './AlgebraPoolBase.sol';
 import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/pool/IAlgebraPoolErrors.sol';
@@ -9,6 +10,7 @@ import '../interfaces/pool/IAlgebraPoolErrors.sol';
 /// @notice Encapsulates logic for tracking and changing pool reserves
 /// @dev The reserve mechanism allows the pool to keep track of unexpected increases in balances
 abstract contract ReservesManager is AlgebraPoolBase {
+  using Plugins for bytes4;
   using SafeCast for uint256;
 
   /// @dev The tracked token0 and token1 reserves of pool
@@ -67,55 +69,98 @@ abstract contract ReservesManager is AlgebraPoolBase {
     }
   }
 
-  function updateFeeAmounts(
-    int256 deltaR0,
-    int256 deltaR1,
+  /// @notice Accrues fees and transfers them to `recipient`
+  /// @dev If we transfer fees, writes zeros to the storage slot specified by the slot argument
+  /// If we do not transfer fees, returns actual pendingFees
+  function _accrueAndTransferFees(
     uint256 fee0,
     uint256 fee1,
-    address feesRecipient,
-    bytes32 slot,
-    uint32 lastTimestamp
-  ) internal returns (int256, int256, uint256, uint256) {
-    uint256 feePending0;
-    uint256 feePending1;
+    uint256 lastTimestamp,
+    bytes32 receiverSlot,
+    bytes32 feePendingSlot
+  ) internal returns (uint104, uint104, uint256, uint256) {
+    if (fee0 | fee1 != 0) {
+      uint256 feePending0;
+      uint256 feePending1;
+      assembly {
+        // Load the storage slot specified by the slot argument
+        let sl := sload(feePendingSlot)
+        // Extract the uint104 value
+        feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+        // Shift right by 104 bits and extract the uint104 value
+        feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+      }
+      feePending0 += fee0;
+      feePending1 += fee1;
 
-    assembly {
-      // Load the storage slot specified by the slot argument
-      let sl := sload(slot)
+      if (
+        _blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY || feePending0 > type(uint104).max || feePending1 > type(uint104).max
+      ) {
+        // use sload from slot (like pointer dereference) to avoid gas
+        address recipient;
+        assembly {
+          recipient := sload(receiverSlot)
+        }
+        (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
+        // use sload from slot (like pointer dereference) to avoid gas
+        // override `lastFeeTransferTimestamp` with zeros is OK
+        // because we will update it later
+        assembly {
+          sstore(feePendingSlot, 0)
+        }
+        // sent fees return 0 pending and sent fees
+        return (0, 0, feeSent0, feeSent1);
+      } else {
+        // didn't send fees return pending fees and 0 sent
+        return (uint104(feePending0), uint104(feePending1), 0, 0);
+      }
+    } else {
+      if (_blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
+        uint256 feePending0;
+        uint256 feePending1;
+        assembly {
+          // Load the storage slot specified by the slot argument
+          let sl := sload(feePendingSlot)
+          // Extract the uint104 value
+          feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+          // Shift right by 104 bits and extract the uint104 value
+          feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+        }
 
-      // Extract the uint104 value
-      feePending0 := and(sl, 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
-
-      // Shift right by 104 bits and extract the uint104 value
-      feePending1 := and(shr(104, sl), 0xFFFFFFFFFFFFFFFFFFFFFFFFFF)
+        if (feePending0 | feePending1 != 0) {
+          address recipient;
+          // use sload from slot (like pointer dereference) to avoid gas
+          assembly {
+            recipient := sload(receiverSlot)
+          }
+          (uint256 feeSent0, uint256 feeSent1) = _transferFees(feePending0, feePending1, recipient);
+          // use sload from slot (like pointer dereference) to avoid gas
+          assembly {
+            sstore(feePendingSlot, 0)
+          }
+          // sent fees return 0 pending and sent fees
+          return (0, 0, feeSent0, feeSent1);
+        }
+      }
+      // didn't either sent fees or increased pending
+      return (0, 0, 0, 0);
     }
+  }
 
-    feePending0 += fee0;
-    feePending1 += fee1;
-
+  function _transferFees(uint256 feePending0, uint256 feePending1, address feesRecipient) private returns (uint256, uint256) {
     uint256 feeSent0;
     uint256 feeSent1;
 
-    if (_blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY || feePending0 > type(uint104).max || feePending1 > type(uint104).max) {
-      if (feePending0 > 0) {
-        _transfer(token0, feesRecipient, feePending0);
-        deltaR0 = deltaR0 - feePending0.toInt256();
-        feeSent0 = feePending0;
-        feePending0 = 0;
-      }
-      if (feePending1 > 0) {
-        _transfer(token1, feesRecipient, feePending1);
-        deltaR1 = deltaR1 - feePending1.toInt256();
-        feeSent1 = feePending1;
-        feePending1 = 0;
-      }
+    if (feePending0 > 0) {
+      _transfer(token0, feesRecipient, feePending0);
+      feeSent0 = feePending0;
+    }
+    if (feePending1 > 0) {
+      _transfer(token1, feesRecipient, feePending1);
+      feeSent1 = feePending1;
     }
 
-    assembly {
-      sstore(slot, or(or(feePending0, shl(104, feePending1)), shl(208, lastTimestamp)))
-    }
-
-    return (deltaR0, deltaR1, feeSent0, feeSent1);
+    return (feeSent0, feeSent1);
   }
 
   /// @notice Applies deltas to reserves and pays communityFees
@@ -133,29 +178,57 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 pluginFee1
   ) internal {
     if (communityFee0 > 0 || communityFee1 > 0 || pluginFee0 > 0 || pluginFee1 > 0) {
-      bytes32 slot;
+      bytes32 feePendingSlot;
+      bytes32 feeRecipientSlot;
       uint32 lastTimestamp = lastFeeTransferTimestamp;
-      uint32 currentTimestamp = _blockTimestamp();
-      if (communityFee0 | communityFee1 != 0) {
-        assembly {
-          slot := communityFeePending0.slot
-        }
-        (deltaR0, deltaR1, , ) = updateFeeAmounts(deltaR0, deltaR1, communityFee0, communityFee1, communityVault, slot, lastTimestamp);
+      bool feeSent;
+
+      assembly {
+        feePendingSlot := communityFeePending0.slot
+        feeRecipientSlot := communityVault.slot
+      }
+      // pass feeRecipientSlot to avoid redundant sload of an address
+      (uint104 feePending0, uint104 feePending1, uint256 feeSent0, uint256 feeSent1) = _accrueAndTransferFees(
+        communityFee0,
+        communityFee1,
+        lastTimestamp,
+        feeRecipientSlot,
+        feePendingSlot
+      );
+      if (feeSent0 | feeSent1 != 0) {
+        // sent fees so decrease deltas
+        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
+        feeSent = true;
+      } else {
+        // update pending if we accrued fees
+        if (feePending0 | feePending1 != 0) (communityFeePending0, communityFeePending1) = (feePending0, feePending1);
       }
 
-      if (pluginFee0 | pluginFee1 != 0) {
-        assembly {
-          slot := pluginFeePending0.slot
-        }
-        uint256 pluginFeeSent0;
-        uint256 pluginFeeSent1;
-        (deltaR0, deltaR1, pluginFeeSent0, pluginFeeSent1) = updateFeeAmounts(deltaR0, deltaR1, pluginFee0, pluginFee1, plugin, slot, lastTimestamp);
-        if (pluginFeeSent0 > 0 || pluginFeeSent1 > 0) {
-          if (IAlgebraPlugin(plugin).handlePluginFee(pluginFeeSent0, pluginFeeSent1) != IAlgebraPlugin.handlePluginFee.selector) revert IAlgebraPoolErrors.invalidPluginResponce();  
-        }
+      assembly {
+        feePendingSlot := pluginFeePending0.slot
+        feeRecipientSlot := plugin.slot
+      }
+      // pass feeRecipientSlot to avoid redundant sload of an address
+      (feePending0, feePending1, feeSent0, feeSent1) = _accrueAndTransferFees(
+        pluginFee0,
+        pluginFee1,
+        lastTimestamp,
+        feeRecipientSlot,
+        feePendingSlot
+      );
+      if (feeSent0 | feeSent1 != 0) {
+        // sent fees so decrease deltas
+        (deltaR0, deltaR1) = (deltaR0 - feeSent0.toInt256(), deltaR1 - feeSent1.toInt256());
+        feeSent = true;
+
+        // notify plugin about sent fees
+        IAlgebraPlugin(plugin).handlePluginFee(feeSent0, feeSent1).shouldReturn(IAlgebraPlugin.handlePluginFee.selector);
+      } else {
+        // update pending if we accrued fees
+        if (feePending0 | feePending1 != 0) (pluginFeePending0, pluginFeePending1) = (feePending0, feePending1);
       }
 
-      if (currentTimestamp - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) lastFeeTransferTimestamp = currentTimestamp;
+      if (feeSent) lastFeeTransferTimestamp = _blockTimestamp();
     }
 
     if (deltaR0 | deltaR1 == 0) return;
