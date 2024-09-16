@@ -35,7 +35,7 @@ library PoolAddress {
                 uint256(
                     keccak256(
                         abi.encodePacked(
-                            hex'ff',
+                            hex'41',
                             poolDeployer,
                             keccak256(
                                 key.deployer == address(0)
