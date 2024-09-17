@@ -77,7 +77,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
     uint256 fee1,
     uint256 lastTimestamp,
     bytes32 receiverSlot,
-    bytes32 feePendingSlot
+    bytes32 feePendingSlot,
+    bool dontCheck
   ) internal returns (uint104, uint104, uint256, uint256) {
     if (fee0 | fee1 != 0) {
       uint256 feePending0;
@@ -94,6 +95,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
       feePending1 += fee1;
 
       if (
+        dontCheck ||
         _blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY || feePending0 > type(uint104).max || feePending1 > type(uint104).max
       ) {
         // use sload from slot (like pointer dereference) to avoid gas
@@ -193,7 +195,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
         communityFee1,
         lastTimestamp,
         feeRecipientSlot,
-        feePendingSlot
+        feePendingSlot,
+        false
       );
       if (feeSent0 | feeSent1 != 0) {
         // sent fees so decrease deltas
@@ -214,7 +217,8 @@ abstract contract ReservesManager is AlgebraPoolBase {
         pluginFee1,
         lastTimestamp,
         feeRecipientSlot,
-        feePendingSlot
+        feePendingSlot,
+        feeSent
       );
       if (feeSent0 | feeSent1 != 0) {
         // sent fees so decrease deltas

@@ -2528,6 +2528,20 @@ describe('AlgebraPool', () => {
       expect(pluginFees[0]).to.be.eq(4n * 10n**15n);
     })
 
+    it('sends pluginFee when communityFee overflows', async () => {
+      await poolPlugin.setPluginFees(100000, 1);
+      await pool.setCommunityFee(800);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address);
+      // after such swap community fee is going to overflow uint104, but pluginFee is not
+      await swapExact0For1(10n**35n, wallet.address);
+      const communityFees = await  pool.getCommunityFeePending();
+      const pluginFees = await pool.getPluginFeePending();
+
+      // expected to transfer both fees anyway
+      expect(communityFees[0]).to.be.eq(0);
+      expect(pluginFees[0]).to.be.eq(0);
+    })
+
   })
 
   describe('PermissionedActions', async () => {
