@@ -117,7 +117,7 @@ abstract contract ReservesManager is AlgebraPoolBase {
         return (uint104(feePending0), uint104(feePending1), 0, 0);
       }
     } else {
-      if (_blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
+      if (dontCheck || _blockTimestamp() - lastTimestamp >= Constants.FEE_TRANSFER_FREQUENCY) {
         uint256 feePending0;
         uint256 feePending1;
         assembly {
