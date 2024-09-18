@@ -19,7 +19,8 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
         address token0,
         address token1,
         address deployer,
-        uint160 sqrtPriceX96
+        uint160 sqrtPriceX96,
+        bytes calldata data
     ) external payable override returns (address pool) {
         require(token0 < token1, 'Invalid order of tokens');
 
@@ -32,7 +33,7 @@ abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
 
         if (pool == address(0)) {
             if (deployer == address(0)) {
-                pool = _factory.createPool(token0, token1, '');
+                pool = _factory.createPool(token0, token1, data);
 
                 _initializePool(pool, sqrtPriceX96);
             }

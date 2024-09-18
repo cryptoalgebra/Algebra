@@ -2,38 +2,38 @@
 
 exports[`NonfungiblePositionManager #burn gas [ @skip-on-coverage ] 1`] = `62302`;
 
-exports[`NonfungiblePositionManager #collect gas transfers both [ @skip-on-coverage ] 1`] = `125983`;
+exports[`NonfungiblePositionManager #collect gas transfers both [ @skip-on-coverage ] 1`] = `126407`;
 
-exports[`NonfungiblePositionManager #collect gas transfers token0 only [ @skip-on-coverage ] 1`] = `122321`;
+exports[`NonfungiblePositionManager #collect gas transfers token0 only [ @skip-on-coverage ] 1`] = `122745`;
 
-exports[`NonfungiblePositionManager #collect gas transfers token1 only [ @skip-on-coverage ] 1`] = `122512`;
+exports[`NonfungiblePositionManager #collect gas transfers token1 only [ @skip-on-coverage ] 1`] = `122936`;
 
-exports[`NonfungiblePositionManager #createAndInitializePoolIfNecessary gas [ @skip-on-coverage ] 1`] = `5277310`;
+exports[`NonfungiblePositionManager #createAndInitializePoolIfNecessary gas [ @skip-on-coverage ] 1`] = `5231043`;
 
-exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease [ @skip-on-coverage ] 1`] = `171239`;
+exports[`NonfungiblePositionManager #decreaseLiquidity gas complete decrease [ @skip-on-coverage ] 1`] = `171665`;
 
-exports[`NonfungiblePositionManager #decreaseLiquidity gas partial decrease [ @skip-on-coverage ] 1`] = `176207`;
+exports[`NonfungiblePositionManager #decreaseLiquidity gas partial decrease [ @skip-on-coverage ] 1`] = `176589`;
 
-exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `182683`;
+exports[`NonfungiblePositionManager #increaseLiquidity gas [ @skip-on-coverage ] 1`] = `184149`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool [ @skip-on-coverage ] 1`] = `635168`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool [ @skip-on-coverage ] 1`] = `636773`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with non-zero refund [ @skip-on-coverage ] 1`] = `649531`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with non-zero refund [ @skip-on-coverage ] 1`] = `651121`;
 
-exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with zero refund [ @skip-on-coverage ] 1`] = `642364`;
+exports[`NonfungiblePositionManager #mint gas first mint for pool using eth with zero refund [ @skip-on-coverage ] 1`] = `643954`;
 
-exports[`NonfungiblePositionManager #mint gas mint for same pool, different ticks [ @skip-on-coverage ] 1`] = `440868`;
+exports[`NonfungiblePositionManager #mint gas mint for same pool, different ticks [ @skip-on-coverage ] 1`] = `442385`;
 
-exports[`NonfungiblePositionManager #mint gas mint on same ticks [ @skip-on-coverage ] 1`] = `330678`;
+exports[`NonfungiblePositionManager #mint gas mint on same ticks [ @skip-on-coverage ] 1`] = `332156`;
 
-exports[`NonfungiblePositionManager #permit owned by eoa gas [ @skip-on-coverage ] 1`] = `60014`;
+exports[`NonfungiblePositionManager #permit owned by eoa gas [ @skip-on-coverage ] 1`] = `60003`;
 
-exports[`NonfungiblePositionManager #permit owned by verifying contract gas [ @skip-on-coverage ] 1`] = `63880`;
+exports[`NonfungiblePositionManager #permit owned by verifying contract gas [ @skip-on-coverage ] 1`] = `63869`;
 
 exports[`NonfungiblePositionManager #transferFrom gas [ @skip-on-coverage ] 1`] = `86323`;
 
 exports[`NonfungiblePositionManager #transferFrom gas comes from approved [ @skip-on-coverage ] 1`] = `87247`;
 
-exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `21901`;
+exports[`NonfungiblePositionManager bytecode size [ @skip-on-coverage ] 1`] = `22015`;
 
-exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `246963`;
+exports[`NonfungiblePositionManager multicall exit gas [ @skip-on-coverage ] 1`] = `247432`;

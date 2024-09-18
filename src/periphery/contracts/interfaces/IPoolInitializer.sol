@@ -13,11 +13,13 @@ interface IPoolInitializer {
     /// @param token0 The contract address of token0 of the pool
     /// @param token1 The contract address of token1 of the pool
     /// @param sqrtPriceX96 The initial square root price of the pool as a Q64.96 value
+    /// @param data Data for plugin initialization
     /// @return pool Returns the pool address based on the pair of tokens and fee, will return the newly created pool address if necessary
     function createAndInitializePoolIfNecessary(
         address token0,
         address token1,
         address deployer,
-        uint160 sqrtPriceX96
+        uint160 sqrtPriceX96,
+        bytes calldata data
     ) external payable returns (address pool);
 }
