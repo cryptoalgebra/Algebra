@@ -13,8 +13,8 @@ interface IQuoterV2 {
     /// @notice Returns the amount out received for a given exact input swap without executing the swap
     /// @param path The path of the swap, i.e. each token pair
     /// @param amountInRequired The desired amount of the first token to swap
-    /// @return amountOut The amount of the last token that would be received
-    /// @return amountIn The amount of the last token that should be paid
+    /// @return amountOutList The amount of the last token that would be received
+    /// @return amountInList The amount of the last token that should be paid
     /// @return sqrtPriceX96AfterList List of the sqrt price after the swap for each pool in the path
     /// @return initializedTicksCrossedList List of the initialized ticks that the swap crossed for each pool in the path
     /// @return gasEstimate The estimate of the gas that the swap consumes
@@ -25,8 +25,8 @@ interface IQuoterV2 {
     )
         external
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
+            uint256[] memory amountOutList,
+            uint256[] memory amountInList,
             uint160[] memory sqrtPriceX96AfterList,
             uint32[] memory initializedTicksCrossedList,
             uint256 gasEstimate,
@@ -69,8 +69,8 @@ interface IQuoterV2 {
     /// @notice Returns the amount in required for a given exact output swap without executing the swap
     /// @param path The path of the swap, i.e. each token pair. Path must be provided in reverse order
     /// @param amountOutRequired The amount of the last token to receive
-    /// @return amountOut The amount of the last token that would be received
-    /// @return amountIn The amount of first token required to be paid
+    /// @return amountOutList The amount of the last token that would be received
+    /// @return amountInList The amount of first token required to be paid
     /// @return sqrtPriceX96AfterList List of the sqrt price after the swap for each pool in the path
     /// @return initializedTicksCrossedList List of the initialized ticks that the swap crossed for each pool in the path
     /// @return gasEstimate The estimate of the gas that the swap consumes
@@ -81,8 +81,8 @@ interface IQuoterV2 {
     )
         external
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
+            uint256[] memory amountOutList,
+            uint256[] memory amountInList,
             uint160[] memory sqrtPriceX96AfterList,
             uint32[] memory initializedTicksCrossedList,
             uint256 gasEstimate,
