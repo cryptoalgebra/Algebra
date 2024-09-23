@@ -5,6 +5,7 @@ import {IAlgebraFactory} from '@cryptoalgebra/integral-core/contracts/interfaces
 import {IAlgebraPool} from '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import {Timestamp} from '@cryptoalgebra/integral-core/contracts/base/common/Timestamp.sol';
 import {TickMath} from '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
+import {FullMath} from '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
 
 import {ISlidingFeePlugin} from '../interfaces/plugins/ISlidingFeePlugin.sol';
 import {BasePlugin} from '../base/BasePlugin.sol';
@@ -73,9 +74,10 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     } else if (tickDelta < TickMath.MIN_TICK) {
       tickDelta = TickMath.MIN_TICK;
     }
+    uint256 sqrtPriceDelta = uint256(TickMath.getSqrtRatioAtTick(int24(tickDelta)));
 
     // price change is positive after zeroToOne prevalence
-    int256 priceChangeRatio = int256(uint256(TickMath.getSqrtRatioAtTick(int24(tickDelta)))) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
+    int256 priceChangeRatio = int256(FullMath.mulDiv(sqrtPriceDelta, sqrtPriceDelta, 2 ** 96)) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
     int256 feeFactorImpact = (priceChangeRatio * int256(uint256(priceChangeFactor))) / FACTOR_DENOMINATOR;
 
     feeFactors = s_feeFactors;

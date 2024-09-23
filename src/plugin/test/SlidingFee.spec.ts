@@ -34,9 +34,9 @@ describe('SlidingFee', () => {
       it("Shifts correct with positive price change, factor is " + factor, async function () {
 
           await slidingFeePlugin.changeFactor(factor) 
-          // swap, price increased x4 (otz)
+          // swap, price increased x2 (otz)
           let lastTick = 10000
-          let currentTick  = 23864
+          let currentTick  = 16932
 
           await slidingFeePlugin.getFeeForSwap(false, lastTick, currentTick);
 
@@ -60,7 +60,7 @@ describe('SlidingFee', () => {
           await slidingFeePlugin.changeFactor(factor)
 
           // swap, price decreased x0.25 (zto)
-          let lastTick = 23864  
+          let lastTick = 16932  
           let currentTick  = 10000 
 
           await slidingFeePlugin.getFeeForSwap(false, lastTick, currentTick);
@@ -84,14 +84,14 @@ describe('SlidingFee', () => {
 
     it("Factors should be reset", async function () {
 
-      // swap, price increased x2.25 (otz)
+      // swap, price increased x1.5 (otz)
       let lastTick = 10000
-      let currentTick = 18110 
+      let currentTick =  14055
       await slidingFeePlugin.getFeeForSwap(false, lastTick, currentTick); // 1.5, 0.5
 
-      // swap, price decreased x0.25 (zto)
-      lastTick = 18110
-      currentTick = 4246
+      // swap, price decreased x0.5 (zto)
+      lastTick = 14055
+      currentTick = 7123
       await slidingFeePlugin.getFeeForSwap(true, lastTick, currentTick); // 1, 1
 
       expect((await slidingFeePlugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately(1n << 96n, 1n << 81n); // 1
@@ -100,14 +100,14 @@ describe('SlidingFee', () => {
 
     it("Shift correct after two oneToZero (positive) movements", async function () {
       await slidingFeePlugin.changeFactor(500)
-      // swap, price increased x4 (otz)
+      // swap, price increased x2 (otz)
       let lastTick = 10000
-      let currentTick  = 23864
+      let currentTick  = 16932
       await slidingFeePlugin.getFeeForSwap(true, lastTick, currentTick);
 
-      // swap, price increased x2.25 (otz)
-      lastTick = 23864
-      currentTick  = 31974
+      // swap, price increased x1.5 (otz)
+      lastTick = 16932
+      currentTick  = 20987
       await slidingFeePlugin.getFeeForSwap(true, lastTick, currentTick);
 
 
@@ -117,15 +117,15 @@ describe('SlidingFee', () => {
 
     it("Shift correct after two zeroToOne (positive) movements", async function () {
       await slidingFeePlugin.changeFactor(500)
-      // swap, price decreased x0.25 (zt0)
-      let lastTick = 23864
-      let currentTick  = 10000
+      // swap, price decreased x0.5 (zt0)
+      let lastTick = 20987
+      let currentTick  = 14055
       await slidingFeePlugin.getFeeForSwap(true, lastTick, currentTick);
 
 
-      // swap, price decreased x0.25 (zt0)
-      lastTick = 10000
-      currentTick  = -3864
+      // swap, price decreased x0.5 (zt0)
+      lastTick = 14055
+      currentTick  = 7123
       await slidingFeePlugin.getFeeForSwap(true, lastTick, currentTick);
 
       expect((await slidingFeePlugin.s_feeFactors()).oneToZeroFeeFactor).to.be.approximately(1n << 95n , 1n << 81n); // 0.5
