@@ -76,7 +76,7 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
     }
     uint256 sqrtPriceDelta = uint256(TickMath.getSqrtRatioAtTick(int24(tickDelta)));
 
-    // price change is positive after zeroToOne prevalence
+    // price change is positive after oneToZero prevalence
     int256 priceChangeRatio = int256(FullMath.mulDiv(sqrtPriceDelta, sqrtPriceDelta, 2 ** 96)) - int256(1 << FEE_FACTOR_SHIFT); // (currentPrice - lastPrice) / lastPrice
     int256 feeFactorImpact = (priceChangeRatio * int256(uint256(priceChangeFactor))) / FACTOR_DENOMINATOR;
 
