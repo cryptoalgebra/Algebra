@@ -100,7 +100,7 @@ describe('SlidingFee', () => {
       expect((await slidingFeePlugin.s_feeFactors()).zeroToOneFeeFactor).to.be.approximately(1n << 96n, 1n << 81n); // 1
     });
 
-    it("Huge swap zto", async function () {
+    it("Huge swap otz", async function () {
 
       // swap, price changed from min to max
       let lastTick = -887272
@@ -112,7 +112,7 @@ describe('SlidingFee', () => {
       expect((await slidingFeePlugin.s_feeFactors()).zeroToOneFeeFactor).to.be.eq(0n << 96n); // 0
     });
 
-    it("Huge swap otz", async function () {
+    it("Huge swap zto", async function () {
 
       // swap, price changed from min to max
       let lastTick = 887272
