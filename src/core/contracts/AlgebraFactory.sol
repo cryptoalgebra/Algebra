@@ -138,6 +138,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     }
 
     pool = IAlgebraPoolDeployer(poolDeployer).deploy(plugin, token0, token1, deployer);
+    require(pool.code.length > 0, 'pool has not been created');
 
     if (deployer == address(0)) {
       if (address(defaultPluginFactory) != address(0)) {

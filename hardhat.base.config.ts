@@ -96,8 +96,18 @@ export default {
     artheraTestnet: {
       url: `https://rpc-test.arthera.net`,
       chainId: 10243,
+
+    },
+    rskMainnet: {
+      url: "https://rpc.mainnet.rootstock.io/",
+      chainId: 30,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    rskTestnet: {
+      url: "https://public-node.testnet.rsk.co",
+      chainId: 31,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    }
   },
   etherscan: {
     // Your API key for Etherscan
@@ -135,6 +145,14 @@ export default {
           apiURL: 'https://explorer.mantle.xyz/api',
           browserURL: 'https://explorer.mantle.xyz/',
         },
+      },
+      {
+        network: "rskTestnet",
+        chainId: 31,
+        urls: {
+          apiURL: "https://rootstock-testnet.blockscout.com/api/",
+          browserURL: "https://rootstock-testnet.blockscout.com/",
+        }
       },
       {
         network: 'beraTestnet',
