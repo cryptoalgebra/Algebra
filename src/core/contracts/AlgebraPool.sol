@@ -165,7 +165,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
+    if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1, pluginFee);
 
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
@@ -278,7 +278,16 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
       }
 
-      _emitSwapEvent(recipient, amount0, amount1, eventParams.currentPrice, eventParams.currentLiquidity, eventParams.currentTick);
+      _emitSwapEvent(
+        recipient,
+        amount0,
+        amount1,
+        eventParams.currentPrice,
+        eventParams.currentLiquidity,
+        eventParams.currentTick,
+        overrideFee,
+        pluginFee
+      );
     }
 
     _unlock();
@@ -350,15 +359,33 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    _emitSwapEvent(recipient, amount0, amount1, eventParams.currentPrice, eventParams.currentLiquidity, eventParams.currentTick);
+    _emitSwapEvent(
+      recipient,
+      amount0,
+      amount1,
+      eventParams.currentPrice,
+      eventParams.currentLiquidity,
+      eventParams.currentTick,
+      overrideFee,
+      pluginFee
+    );
 
     _unlock();
     _afterSwap(recipient, zeroToOne, amountToSell, limitSqrtPrice, amount0, amount1, data);
   }
 
   /// @dev internal function to reduce bytecode size
-  function _emitSwapEvent(address recipient, int256 amount0, int256 amount1, uint160 newPrice, uint128 newLiquidity, int24 newTick) private {
-    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
+  function _emitSwapEvent(
+    address recipient,
+    int256 amount0,
+    int256 amount1,
+    uint160 newPrice,
+    uint128 newLiquidity,
+    int24 newTick,
+    uint24 overrideFee,
+    uint24 pluginFee
+  ) private {
+    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick, overrideFee, pluginFee);
   }
 
   function _beforeSwap(
