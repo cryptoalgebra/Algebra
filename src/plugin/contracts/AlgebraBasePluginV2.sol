@@ -11,15 +11,14 @@ import './plugins/VolatilityOraclePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
+contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
   using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPlugin
-  uint8 public constant override defaultPluginConfig = uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+  uint8 public constant override defaultPluginConfig =
+    uint8(Plugins.AFTER_INIT_FLAG | Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
-  constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {
-  
-  }
+  constructor(address _pool, address _factory, address _pluginFactory) BasePlugin(_pool, _factory, _pluginFactory) {}
 
   // ###### HOOKS ######
 
@@ -47,15 +46,12 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
   }
 
   function beforeSwap(address, address, bool zeroToOne, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
-    ( , int24 currentTick, uint16 fee, ) = _getPoolState(); 
+    ( , int24 currentTick, , ) = _getPoolState(); 
     int24 lastTick = _getLastTick();
-    uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick, fee);
-    if (newFee != fee) {
-      IAlgebraPool(pool).setFee(newFee);
-    }
+    uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick);
 
     _writeTimepoint();
-    return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+    return (IAlgebraPlugin.beforeSwap.selector, newFee, 0);
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
@@ -75,8 +71,7 @@ contract AlgebraBasePluginV1 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterFlash.selector;
   }
 
-  function getCurrentFee() external view returns(uint16 fee) {
-    ( , , fee, ) = _getPoolState();
-  } 
-
+  function getCurrentFee() external view returns (uint16 fee) {
+    (, , fee, ) = _getPoolState();
+  }
 }
