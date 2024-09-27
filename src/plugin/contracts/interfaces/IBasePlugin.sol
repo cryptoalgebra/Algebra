@@ -11,8 +11,4 @@ interface IBasePlugin is IAlgebraPlugin {
   /// @param amount Amount of tokens
   /// @param recipient Recipient address
   function collectPluginFee(address token, uint256 amount, address recipient) external;
-
-  /// @notice Returns the address of the pool the plugin is created for
-  /// @return address of the pool
-  function pool() external view returns (address);
 }

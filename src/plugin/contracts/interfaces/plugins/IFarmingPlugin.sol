@@ -25,4 +25,8 @@ interface IFarmingPlugin {
   /// @dev if there is no active incentive at the moment, incentiveAddress would be equal to address(0)
   /// @return  The address associated with the current active incentive
   function incentive() external view returns (address);
+
+  /// @notice Returns the address of the pool the plugin is created for
+  /// @return address of the pool
+  function getPool() external view returns (address);
 }

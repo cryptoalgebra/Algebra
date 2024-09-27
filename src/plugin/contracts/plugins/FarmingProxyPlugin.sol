@@ -77,7 +77,9 @@ abstract contract FarmingProxyPlugin is BasePlugin, IFarmingPlugin {
     } else {
       _disablePluginFlags(defaultPluginConfig); // should not be called, reset config
     }
-
   }
 
+  function getPool() external view override returns (address) {
+    return pool;
+  }
 }
