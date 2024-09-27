@@ -72,6 +72,11 @@ export default {
       chainId: 34443,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    holesky: {
+      url: `https://ethereum-holesky-rpc.publicnode.com`,
+      chainId: 17000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
     blastTestnet: {
       url: `https://blast-sepolia.blockpi.network/v1/rpc/public`,
       chainId: 168587773,
