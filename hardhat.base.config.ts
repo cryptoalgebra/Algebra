@@ -99,8 +99,9 @@ export default {
 
     },
     rskMainnet: {
-      url: "https://rpc.mainnet.rootstock.io/",
+      url: "https://public-node.rsk.co",
       chainId: 30,
+      gasPrice: 60_000_000,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     rskTestnet: {
@@ -152,6 +153,14 @@ export default {
         urls: {
           apiURL: "https://rootstock-testnet.blockscout.com/api/",
           browserURL: "https://rootstock-testnet.blockscout.com/",
+        }
+      },
+      {
+        network: "rskMainnet",
+        chainId: 30,
+        urls: {
+          apiURL: "https://rootstock.blockscout.com/api/",
+          browserURL: "https://rootstock.blockscout.com/",
         }
       },
       {

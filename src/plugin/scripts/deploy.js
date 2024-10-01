@@ -14,10 +14,10 @@ async function main() {
 
     console.log("PluginFactory to:", dsFactory.target);
 
-    const factory = await hre.ethers.getContractAt('IAlgebraFactory', deploysData.factory)
+    // const factory = await hre.ethers.getContractAt('IAlgebraFactory', deploysData.factory)
 
-    await factory.setDefaultPluginFactory(dsFactory.target)
-    console.log('Updated plugin factory address in factory')
+    // await factory.setDefaultPluginFactory(dsFactory.target)
+    // console.log('Updated plugin factory address in factory')
 
     deploysData.BasePluginV1Factory = dsFactory.target;
     fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
