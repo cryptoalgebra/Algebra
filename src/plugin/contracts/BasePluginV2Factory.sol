@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './interfaces/IBasePluginV1Factory.sol';
-import './libraries/AdaptiveFee.sol';
-import './AlgebraBasePluginV1.sol';
+import './interfaces/IBasePluginV2Factory.sol';
+import './AlgebraBasePluginV2.sol';
+import './interfaces/plugins/ISlidingFeePlugin.sol';
 
 /// @title Algebra Integral 1.1 default plugin factory
 /// @notice This contract creates Algebra default plugins for Algebra liquidity pools
 /// @dev This plugin factory can only be used for Algebra base pools
-contract BasePluginV1Factory is IBasePluginV1Factory {
-  /// @inheritdoc IBasePluginV1Factory
+contract BasePluginV2Factory is IBasePluginV2Factory {
+  /// @inheritdoc IBasePluginV2Factory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
-  /// @inheritdoc IBasePluginV1Factory
+  /// @inheritdoc IBasePluginV2Factory
   address public immutable override algebraFactory;
 
-  /// @inheritdoc IBasePluginV1Factory
-  AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
-
-  /// @inheritdoc IBasePluginV1Factory
+  /// @inheritdoc IBasePluginV2Factory
   address public override farmingAddress;
 
-  /// @inheritdoc IBasePluginV1Factory
+  /// @inheritdoc IBasePluginV2Factory
+  uint16 public override defaultBaseFee = 500;
+
+  /// @inheritdoc IBasePluginV2Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
   modifier onlyAdministrator() {
@@ -31,8 +31,6 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
   constructor(address _algebraFactory) {
     algebraFactory = _algebraFactory;
-    defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
-    emit DefaultFeeConfiguration(defaultFeeConfiguration);
   }
 
   /// @inheritdoc IAlgebraPluginFactory
@@ -46,7 +44,7 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     require(msg.sender == algebraFactory);
   }
 
-  /// @inheritdoc IBasePluginV1Factory
+  /// @inheritdoc IBasePluginV2Factory
   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
@@ -59,23 +57,23 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
-    IDynamicFeeManager volatilityOracle = new AlgebraBasePluginV1(pool, algebraFactory, address(this));
-    volatilityOracle.changeFeeConfiguration(defaultFeeConfiguration);
-    pluginByPool[pool] = address(volatilityOracle);
-    return address(volatilityOracle);
+    ISlidingFeePlugin plugin = new AlgebraBasePluginV2(pool, algebraFactory, address(this));
+    plugin.setBaseFee(defaultBaseFee);
+    pluginByPool[pool] = address(plugin);
+    return address(plugin);
   }
 
-  /// @inheritdoc IBasePluginV1Factory
-  function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
-    AdaptiveFee.validateFeeConfiguration(newConfig);
-    defaultFeeConfiguration = newConfig;
-    emit DefaultFeeConfiguration(newConfig);
-  }
-
-  /// @inheritdoc IBasePluginV1Factory
+  /// @inheritdoc IBasePluginV2Factory
   function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  /// @inheritdoc IBasePluginV2Factory
+  function setDefaultBaseFee(uint16 newDefaultBaseFee) external override onlyAdministrator {
+    require(defaultBaseFee != newDefaultBaseFee);
+    defaultBaseFee = newDefaultBaseFee;
+    emit DefaultBaseFee(newDefaultBaseFee);
   }
 }

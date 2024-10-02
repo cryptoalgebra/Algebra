@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
+exports[`AlgebraBasePluginV2 #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
 Array [
   "Fee: 123 ",
   "Fee: 123 ",
@@ -30,7 +30,7 @@ Array [
 ]
 `;
 
-exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
+exports[`AlgebraBasePluginV2 #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
 Array [
   "Fee: 3714 ",
   "Fee: 3000 ",
@@ -60,7 +60,7 @@ Array [
 ]
 `;
 
-exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
+exports[`AlgebraBasePluginV2 #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
 Array [
   "Fee: 3000 ",
   "Fee: 3000 ",
@@ -90,7 +90,7 @@ Array [
 ]
 `;
 
-exports[`AlgebraBasePluginV1 #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
+exports[`AlgebraBasePluginV2 #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
 Array [
   "Fee: 15000 ",
   "Fee: 15000 ",
@@ -120,4 +120,4 @@ Array [
 ]
 `;
 
-exports[`AlgebraBasePluginV1 AlgebraBasePluginV1 external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23774`;
+exports[`AlgebraBasePluginV2 AlgebraBasePluginV1 external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23708`;
