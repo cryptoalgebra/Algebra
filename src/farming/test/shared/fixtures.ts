@@ -273,9 +273,9 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const fee = FeeAmount.MEDIUM;
 
-  await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1));
+  await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1),'0x');
 
-  await nft.createAndInitializePoolIfNecessary(tokens[1], tokens[2], ZERO_ADDRESS, encodePriceSqrt(1, 1));
+  await nft.createAndInitializePoolIfNecessary(tokens[1], tokens[2], ZERO_ADDRESS, encodePriceSqrt(1, 1),'0x');
 
   const pool01 = await factory.poolByPair(tokens[0], tokens[1]);
 

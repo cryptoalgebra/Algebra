@@ -5,6 +5,7 @@ const skipFiles = testContracts.map((x) => "test/" + x)
 
 module.exports = {
   skipFiles: skipFiles,
+  configureYulOptimizer: true,
   mocha: {
     grep: '@skip-on-coverage', // Find everything with this tag
     invert: true, // Run the grep's inverse set.

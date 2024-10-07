@@ -190,7 +190,7 @@ describe('unit/FarmingCenter', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResultEternal = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -489,7 +489,7 @@ describe('unit/FarmingCenter', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResultEternal = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
