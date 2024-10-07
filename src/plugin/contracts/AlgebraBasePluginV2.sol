@@ -45,8 +45,16 @@ contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
     return IAlgebraPlugin.afterModifyPosition.selector;
   }
 
-  function beforeSwap(address, address, bool zeroToOne, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
-    ( , int24 currentTick, , ) = _getPoolState(); 
+  function beforeSwap(
+    address,
+    address,
+    bool zeroToOne,
+    int256,
+    uint160,
+    bool,
+    bytes calldata
+  ) external override onlyPool returns (bytes4, uint24, uint24) {
+    (, int24 currentTick, , ) = _getPoolState();
     int24 lastTick = _getLastTick();
     uint16 newFee = _getFeeAndUpdateFactors(zeroToOne, currentTick, lastTick);
 
@@ -69,9 +77,5 @@ contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, Volatility
   function afterFlash(address, address, uint256, uint256, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
     _updatePluginConfigInPool(defaultPluginConfig); // should not be called, reset config
     return IAlgebraPlugin.afterFlash.selector;
-  }
-
-  function getCurrentFee() external view returns (uint16 fee) {
-    (, , fee, ) = _getPoolState();
   }
 }

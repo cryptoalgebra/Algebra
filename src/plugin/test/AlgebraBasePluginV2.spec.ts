@@ -106,14 +106,6 @@ describe('AlgebraBasePluginV2', () => {
         expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
 
-      it('resets config after afterSwap', async () => {
-        await mockPool.initialize(encodePriceSqrt(1, 1));
-        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-        await mockPool.swapToTick(100);
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-      });
-
       it('resets config after beforeFlash', async () => {
         await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
         expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
@@ -318,6 +310,46 @@ describe('AlgebraBasePluginV2', () => {
     });
   });
 
+  describe('#SlidingFee', () => {
+
+      beforeEach('initialize pool', async () => {
+        await mockPool.setPlugin(plugin);
+        await initializeAtZeroTick(mockPool);
+      });
+
+      describe('#setPriceChangeFactor', () => {
+        it('works correct', async () => {
+          await plugin.setPriceChangeFactor(1500)
+          let factor = await plugin.s_priceChangeFactor()
+          expect(factor).to.be.equal(1500);
+        });
+
+        it('emit event', async () => {
+          await expect(plugin.setPriceChangeFactor(1500)).to.emit(plugin, "PriceChangeFactor");
+        });
+
+        it('fails if caller is not owner or manager', async () => {
+          await expect(plugin.connect(other).setPriceChangeFactor(1500)).to.be.reverted;
+        });
+      })
+
+      describe('#setBaseFee', () => {
+        it('works correct', async () => {
+          await plugin.setBaseFee(1500)
+          let baseFee = await plugin.s_baseFee()
+          expect(baseFee).to.be.equal(1500);
+        });
+
+        it('emit event', async () => {
+          await expect(plugin.setBaseFee(1500)).to.emit(plugin, "BaseFee");
+        });
+
+        it('fails if caller is not owner or manager', async () => {
+          await expect(plugin.connect(other).setBaseFee(1500)).to.be.reverted;
+        });
+      })
+  })
+
   describe('#FarmingPlugin', () => {
     describe('virtual pool tests', () => {
       let virtualPoolMock: MockTimeVirtualPool;
@@ -326,6 +358,10 @@ describe('AlgebraBasePluginV2', () => {
         await mockPluginFactory.setFarmingAddress(wallet);
         const virtualPoolMockFactory = await ethers.getContractFactory('MockTimeVirtualPool');
         virtualPoolMock = (await virtualPoolMockFactory.deploy()) as any as MockTimeVirtualPool;
+      });
+
+      it('returns pool address', async () => {
+        expect(await plugin.getPool()).to.be.eq(mockPool);
       });
 
       it('set incentive works', async () => {

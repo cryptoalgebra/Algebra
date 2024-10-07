@@ -24,7 +24,7 @@ describe('SlidingFee', () => {
     expect(await slidingFeePlugin.s_priceChangeFactor()).to.be.eq(1000)
   });
 
-  describe('#getSlidingFee', () => {
+  describe('#FeeFactors', () => {
     beforeEach('set config', async () => {
       await slidingFeePlugin.changeBaseFee(500)
       await slidingFeePlugin.changeFactor(1000)
@@ -193,6 +193,48 @@ describe('SlidingFee', () => {
     });
 
   });
+
+  describe('#getSlidingFee', () => {
+
+    async function getFee(zto: boolean, lastTick: number, currentTick: number) : Promise<number>{
+      let tx = await slidingFeePlugin.getFeeForSwap(zto, lastTick, currentTick); 
+      return (await tx.wait()).logs[0].args['fee']
+    } 
+    
+    beforeEach('set config', async () => {
+      await slidingFeePlugin.changeBaseFee(500)
+      await slidingFeePlugin.changeFactor(1000)
+    });
+
+    it("returns base fee value", async function () {
+      let fee = await getFee(false, 10000, 10000)
+      expect(fee).to.be.eq(500)
+    });
+
+    it("one to zero fee should be increased x1.5", async function () {
+      let feeOtZ = await getFee(false, 10000, 14055)
+      expect(feeOtZ).to.be.eq(750)
+    });
+
+    it("zero to one fee should be decreased x1.5", async function () {
+      let feeZtO = await getFee(true, 10000, 14054)
+      expect(feeZtO).to.be.eq(250)
+    });
+
+    it("handle overflow", async function () {
+      await slidingFeePlugin.changeBaseFee(50000)
+      let feeOtZ = await getFee(false, 10000,100000)
+      expect(feeOtZ).to.be.eq(65535)
+    });
+
+    it("MIN fee is 1 (0.0001%)", async function () {
+      await slidingFeePlugin.changeBaseFee(50000)
+      let feeOtZ = await getFee(true, 10000,100000)
+      expect(feeOtZ).to.be.eq(1)
+    });
+
+  })
+
 
   describe('#getFee gas cost  [ @skip-on-coverage ]', () => {
     it('gas cost of same tick', async () => {

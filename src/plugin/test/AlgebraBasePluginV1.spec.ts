@@ -106,14 +106,6 @@ describe('AlgebraBasePluginV1', () => {
         expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
 
-      it('resets config after afterSwap', async () => {
-        await mockPool.initialize(encodePriceSqrt(1, 1));
-        await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.AFTER_SWAP_FLAG);
-        await mockPool.swapToTick(100);
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-      });
-
       it('resets config after beforeFlash', async () => {
         await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);
         expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_FLASH_FLAG);

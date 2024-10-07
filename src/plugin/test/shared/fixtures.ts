@@ -64,6 +64,18 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
   };
 };
 
+export const pluginFactoryFixtureV2: Fixture<PluginFactoryFixture> = async function (): Promise<PluginFactoryFixture> {
+  const { mockFactory } = await mockFactoryFixture();
+
+  const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV2Factory');
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as BasePluginV2Factory;
+
+  return {
+    pluginFactory,
+    mockFactory,
+  };
+};
+
 
 export const pluginFixtureV2: Fixture<PluginFixture> = async function (): Promise<PluginFixture> {
   const { mockFactory } = await mockFactoryFixture();
