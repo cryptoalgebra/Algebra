@@ -170,6 +170,13 @@ describe('AlgebraFactory', () => {
       expect(await pool.plugin()).to.be.eq(pluginAddress);
     });
 
+    it('data passed to defaultPluginFactory', async () => {
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
+      const create = factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x0200');
+
+     await expect(create).to.emit(defaultPluginFactory, 'DataOnPoolCreation').withArgs('0x0200');
+    });
+
     it('sets vault in pool', async () => {
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
