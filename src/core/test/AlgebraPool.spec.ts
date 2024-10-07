@@ -1186,7 +1186,7 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(2), other.address);
         await expect(pool.burn(-120, 0, expandTo18Decimals(1), '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, -120, 0, expandTo18Decimals(1), '6017734268818165', 0)
+          .withArgs(wallet.address, -120, 0, expandTo18Decimals(1),'6017734268818165', 0, 0)
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         await expect(pool.collect(wallet.address, -120, 0, MaxUint128, MaxUint128))
@@ -2527,6 +2527,51 @@ describe('AlgebraPool', () => {
       const pluginBalance1After = await token1.balanceOf(poolPlugin);
       expect(pluginBalance0After - pluginBalance0Before).to.be.eq(4n * 10n**15n);
       expect(pluginBalance1After - pluginBalance1Before).to.be.eq(0);
+    })
+
+    it('fees transfered to plugin, if comm fee is zero', async () => {
+      await poolPlugin.setPluginFees(5000, 4000);
+      await swapExact1For0(expandTo18Decimals(1), wallet.address)
+      const pluginBalance0Before = await token0.balanceOf(poolPlugin);
+      const pluginBalance1Before = await token1.balanceOf(poolPlugin);
+      await pool.advanceTime(86400);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      const pluginBalance0After = await token0.balanceOf(poolPlugin);
+      const pluginBalance1After = await token1.balanceOf(poolPlugin);
+      expect(pluginBalance0After - pluginBalance0Before).to.be.eq(4n * 10n**15n);
+      expect(pluginBalance1After - pluginBalance1Before).to.be.eq(0);
+    })
+
+    it('fees transfered to plugin, after disable plugin fee and enable comm fee', async () => {
+      await poolPlugin.setPluginFees(5000, 4000);
+      await swapExact1For0(expandTo18Decimals(1), wallet.address)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      const pluginBalance0Before = await token0.balanceOf(poolPlugin);
+      const pluginBalance1Before = await token1.balanceOf(poolPlugin);
+      await pool.advanceTime(86400);
+      await poolPlugin.setPluginFees(5000, 0);
+      await pool.setCommunityFee(100);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      const pluginBalance0After = await token0.balanceOf(poolPlugin);
+      const pluginBalance1After = await token1.balanceOf(poolPlugin);
+      expect(pluginBalance0After - pluginBalance0Before).to.be.eq(4n * 10n**15n);
+      expect(pluginBalance1After - pluginBalance1Before).to.be.eq(0);
+    })
+
+    it('fees transfered to vault, after disable comm fee and enable plugin fee', async () => {
+      await pool.setCommunityFee(100);
+      await swapExact1For0(expandTo18Decimals(1), wallet.address)
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      const vaultBalance0Before = await token0.balanceOf(vaultAddress);
+      const vaultBalance1Before = await token1.balanceOf(vaultAddress);
+      await pool.advanceTime(86400);
+      await poolPlugin.setPluginFees(5000, 4000);
+      await pool.setCommunityFee(0);
+      await swapExact0For1(expandTo18Decimals(1), wallet.address)
+      const vaultBalance0After = await token0.balanceOf(vaultAddress);
+      const vaultBalance1After = await token1.balanceOf(vaultAddress);
+      expect(vaultBalance0After - vaultBalance0Before).to.be.eq(5n * 10n**13n);
+      expect(vaultBalance1After - vaultBalance1Before).to.be.eq(0);
     })
 
     it('works correct with communityFee', async () => {
