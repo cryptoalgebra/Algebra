@@ -2506,6 +2506,18 @@ describe('AlgebraPool', () => {
       expect(pluginBalance1After - pluginBalance1Before).to.be.eq(6n * 10n**15n-1n);
     })
 
+    it('works correct on burn single-sided position', async () => {
+      await poolPlugin.setPluginFees(0, 6000);
+      await mint(wallet.address, -120, -60, expandTo18Decimals(1));
+      await mint(wallet.address, 60, 120, expandTo18Decimals(1));
+      await pool.burn(minTick, maxTick, expandTo18Decimals(1), '0x')
+      await pool.burn(-120, -60, expandTo18Decimals(1), '0x')
+      await pool.burn(60, 120, expandTo18Decimals(1), '0x')
+      let res = await pool.getPluginFeePending()
+      expect(res[0]).to.be.eq(17918296827593n);
+      expect(res[1]).to.be.eq(17918296827593n);
+    })
+
     it('fees transfered to plugin', async () => {
       await poolPlugin.setPluginFees(5000, 4000);
       const pluginBalance0Before = await token0.balanceOf(poolPlugin);
@@ -2527,6 +2539,30 @@ describe('AlgebraPool', () => {
 
       expect(communityFees[0]).to.be.eq(expandTo18Decimals(1) * 5n / 10000n); // 0.05%
       expect(pluginFees[0]).to.be.eq(4n * 10n**15n);
+    })
+
+    it('emits an event with plugin fee and override fee on swap', async () => {
+      await poolPlugin.setPluginFees(4000, 6000);
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'Swap').withArgs(
+        await swapTarget.getAddress(),
+        wallet.address,
+        10n**18n,
+        -497487437185929648n,
+        39813146992092631956554748913n,
+        1000000000000000000n,
+        -13764,
+        4000,
+        6000
+      )
+    })
+
+    it('emits an event with plugin fee and override fee on burn', async () => {
+      await poolPlugin.setPluginFees(4000, 6000);
+      await mint(wallet.address, 60, 120, expandTo18Decimals(1));
+      await expect(pool.burn(60, 120, expandTo18Decimals(1), '0x'))
+      .to.emit(pool, 'Burn')
+      .withArgs(wallet.address, 60, 120, expandTo18Decimals(1), '2968464507771288', 0, 6000)
+
     })
 
   })
