@@ -6,6 +6,7 @@ import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../libraries/Plugins.sol';
+import './TestERC20.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
@@ -196,5 +197,30 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     emit AfterFlash(sender, recipient, amount0, amount1, paid0, paid1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_FLASH_FLAG)) return IAlgebraPlugin.afterFlash.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
+  }
+
+  function swap() external {
+    IAlgebraPool(pool).swap(address(this), true, 10000, 4295128740, '');
+  }
+  
+  function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata ) external {
+    require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
+
+    (address token, uint256 amountToPay) = amount0Delta > 0
+        ? (IAlgebraPool(pool).token0(), uint256(amount0Delta))
+        : (IAlgebraPool(pool).token1(), uint256(amount1Delta));
+      
+    TestERC20(token).transfer(pool, amountToPay);
+  }
+  
+
+  function mint() external {
+    IAlgebraPool(pool).mint(address(this), address(this), -60, 60, 1000, '');
+  }
+
+  function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata ) external {
+
+    if (amount0Owed > 0) TestERC20(IAlgebraPool(pool).token0()).transfer(pool, amount0Owed);
+    if (amount1Owed > 0) TestERC20(IAlgebraPool(pool).token1()).transfer(pool, amount1Owed);
   }
 }

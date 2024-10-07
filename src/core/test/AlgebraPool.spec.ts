@@ -37,6 +37,7 @@ import {
   PriceMovementMathTest,
   IERC20Minimal,
 } from '../typechain';
+import { plugin } from '../typechain/contracts/interfaces';
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
 
@@ -2898,6 +2899,25 @@ describe('AlgebraPool', () => {
         await pool.setPluginConfig(223);
         await expect(flash(100, 200, other.address)).not.to.be.emit(poolPlugin, 'AfterFlash');
       });
+
+      it('before/after swap hook is not called if caller is a plugin,', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        await token0.transfer(poolPlugin, expandTo18Decimals(1))
+        await token1.transfer(poolPlugin, expandTo18Decimals(1))
+        await expect(poolPlugin.swap()).not.to.be.emit(poolPlugin, 'BeforeSwap');
+        await expect(poolPlugin.swap()).not.to.be.emit(poolPlugin, 'AfterSwap');
+      });
+
+      it('before/after modify hook is not called if caller is a plugin,', async () => {
+        await pool.initialize(encodePriceSqrt(1, 1));
+        await mint(wallet.address, minTick, maxTick, expandTo18Decimals(1));
+        await token0.transfer(poolPlugin, expandTo18Decimals(1))
+        await token1.transfer(poolPlugin, expandTo18Decimals(1))
+        await expect(poolPlugin.mint()).not.to.be.emit(poolPlugin, 'BeforeModifyPosition');
+        await expect(poolPlugin.mint()).not.to.be.emit(poolPlugin, 'AfterModifyPosition');
+      });
+
     });
 
     describe('#setPlugin', () => {
