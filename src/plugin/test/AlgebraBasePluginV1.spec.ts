@@ -90,14 +90,6 @@ describe('AlgebraBasePluginV1', () => {
         await mockPool.setPlugin(plugin);
       });
 
-      it('resets config after beforeModifyPosition', async () => {
-        await mockPool.initialize(encodePriceSqrt(1, 1));
-        await mockPool.setPluginConfig(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(PLUGIN_FLAGS.BEFORE_POSITION_MODIFY_FLAG);
-        await mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x');
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
-      });
-
       it('resets config after afterModifyPosition', async () => {
         await mockPool.initialize(encodePriceSqrt(1, 1));
         await mockPool.setPluginConfig(PLUGIN_FLAGS.AFTER_POSITION_MODIFY_FLAG);

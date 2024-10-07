@@ -103,7 +103,7 @@ contract NonfungiblePositionManager is
     }
 
     modifier onlyAdministrator() {
-        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+        _hasRoleOrOwner();
         _;
     }
 
@@ -118,6 +118,7 @@ contract NonfungiblePositionManager is
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
+        require(_vault != address(0));
         withdrawalFeesVault = _vault;
     }
 
@@ -307,7 +308,7 @@ contract NonfungiblePositionManager is
             uint160 tickLowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
             uint160 tickUpperPrice = TickMath.getSqrtRatioAtTick(tickUpper);
 
-            (uint256 liquidityAmount0, uint256 liquidityAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+            (uint256 averageAmount0, uint256 averageAmount1) = LiquidityAmounts.getAmountsForLiquidity(
                 TickMath.getSqrtRatioAtTick(timeWeightedAverageTick),
                 tickLowerPrice,
                 tickUpperPrice,
@@ -315,7 +316,7 @@ contract NonfungiblePositionManager is
             );
 
             if (token0apr > 0) {
-                uint256 amount0EarnedFromStake = (token0apr * period * liquidityAmount0) / (FEE_DENOMINATOR * 365 days);
+                uint256 amount0EarnedFromStake = (token0apr * period * averageAmount0) / (FEE_DENOMINATOR * 365 days);
                 uint128 amount0ToWithdraw = uint128((amount0EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
                 withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount0(
                     tickLowerPrice,
@@ -325,7 +326,7 @@ contract NonfungiblePositionManager is
             }
 
             if (token1apr > 0) {
-                uint256 amount1EarnedFromStake = (token1apr * period * liquidityAmount1) / (FEE_DENOMINATOR * 365 days);
+                uint256 amount1EarnedFromStake = (token1apr * period * averageAmount1) / (FEE_DENOMINATOR * 365 days);
                 uint128 amount1ToWithdraw = uint128((amount1EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
                 withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount1(
                     tickLowerPrice,
@@ -482,7 +483,13 @@ contract NonfungiblePositionManager is
             }
         }
 
-        emit DecreaseLiquidity(params.tokenId, params.liquidity, positionWithdrawalFeeLiquidity, amount0, amount1);
+        emit DecreaseLiquidity(
+            params.tokenId,
+            liquidityDeltaWithoutFee,
+            positionWithdrawalFeeLiquidity,
+            amount0,
+            amount1
+        );
 
         _applyLiquidityDeltaInFarming(
             params.tokenId,
@@ -628,6 +635,10 @@ contract NonfungiblePositionManager is
 
     function _checkAuthorizationForToken(uint256 tokenId) private view {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+    }
+
+    function _hasRoleOrOwner() private view {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {
