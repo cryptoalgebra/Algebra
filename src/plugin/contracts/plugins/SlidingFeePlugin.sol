@@ -48,7 +48,11 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
       ? (uint256(baseFee) * currentFeeFactors.zeroToOneFeeFactor) >> FEE_FACTOR_SHIFT
       : (uint256(baseFee) * currentFeeFactors.oneToZeroFeeFactor) >> FEE_FACTOR_SHIFT;
 
-    if (adjustedFee > type(uint16).max) adjustedFee = type(uint16).max;
+    if (adjustedFee > type(uint16).max) {
+      adjustedFee = type(uint16).max;
+    } else if (adjustedFee == 0) {
+      adjustedFee = 1;
+    }
     return uint16(adjustedFee);
   }
 
