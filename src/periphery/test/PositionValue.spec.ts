@@ -40,7 +40,7 @@ describe('PositionValue', async () => {
       await token.transfer(wallets[0].address, expandTo18Decimals(1_000_000));
     }
 
-    await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1));
+    await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
     return {
       positionValue,
