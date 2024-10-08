@@ -11,7 +11,7 @@ import '../interfaces/plugins/IFarmingPlugin.sol';
 
 import '../base/BasePlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin
+/// @title Algebra Integral 1.2 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 abstract contract FarmingProxyPlugin is BasePlugin, IFarmingPlugin {
   using Plugins for uint8;

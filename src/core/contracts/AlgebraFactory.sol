@@ -17,7 +17,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
-/// @dev Version: Algebra Integral 1.1
+/// @dev Version: Algebra Integral 1.2
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value

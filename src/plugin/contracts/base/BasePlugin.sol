@@ -11,7 +11,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import '../interfaces/IBasePlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin
+/// @title Algebra Integral 1.2 default plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 abstract contract BasePlugin is IBasePlugin, Timestamp {
   using Plugins for uint8;

@@ -5,8 +5,8 @@ import './interfaces/IBasePluginV2Factory.sol';
 import './AlgebraBasePluginV2.sol';
 import './interfaces/plugins/ISlidingFeePlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin factory
-/// @notice This contract creates Algebra default plugins for Algebra liquidity pools
+/// @title Algebra Integral 1.2 default plugin factory
+/// @notice This contract creates Algebra sliding fee plugins for Algebra liquidity pools
 /// @dev This plugin factory can only be used for Algebra base pools
 contract BasePluginV2Factory is IBasePluginV2Factory {
   /// @inheritdoc IBasePluginV2Factory

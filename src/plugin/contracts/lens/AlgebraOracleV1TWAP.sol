@@ -8,7 +8,7 @@ import './IAlgebraOracleV1TWAP.sol';
 
 import '../libraries/integration/OracleLibrary.sol';
 
-/// @title Algebra Integral 1.1 base plugin V1 oracle frontend
+/// @title Algebra Integral 1.2 base plugin V1 oracle frontend
 /// @notice Provides data from oracle corresponding pool
 /// @dev These functions are not very gas efficient and it is better not to use them on-chain
 contract AlgebraOracleV1TWAP is IAlgebraOracleV1TWAP {

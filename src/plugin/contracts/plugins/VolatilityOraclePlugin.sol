@@ -10,9 +10,9 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../libraries/VolatilityOracle.sol';
 import '../base/BasePlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin
+/// @title Algebra Integral 1.2 VolatilityOraclePlugin plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
-abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
+abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle {
   using Plugins for uint8;
 
   uint256 internal constant UINT16_MODULO = 65536;
@@ -39,11 +39,9 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
     (uint160 price, int24 tick, , ) = _getPoolState();
     require(price != 0, 'Pool is not initialized');
     _initialize_TWAP(tick);
-    
   }
 
   function _initialize_TWAP(int24 tick) internal {
-
     uint32 time = _blockTimestamp();
     timepoints.initialize(time, tick);
     lastTimepointTimestamp = time;
@@ -103,7 +101,6 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
   }
 
   function _getAverageVolatilityLast() internal view returns (uint88 volatilityAverage) {
-
     uint32 currentTimestamp = _blockTimestamp();
     (, int24 tick, , ) = _getPoolState();
 
@@ -113,7 +110,7 @@ abstract contract VolatilityOraclePlugin is BasePlugin, IVolatilityOracle{
     volatilityAverage = timepoints.getAverageVolatility(currentTimestamp, tick, lastTimepointIndex, oldestIndex);
   }
 
-  function _getLastTick() internal view returns(int24 lastTick) {
+  function _getLastTick() internal view returns (int24 lastTick) {
     VolatilityOracle.Timepoint memory lastTimepoint = timepoints[timepointIndex];
     return lastTimepoint.tick;
   }

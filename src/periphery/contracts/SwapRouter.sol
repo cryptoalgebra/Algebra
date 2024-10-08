@@ -15,7 +15,7 @@ import './libraries/Path.sol';
 import './libraries/PoolAddress.sol';
 import './libraries/CallbackValidation.sol';
 
-/// @title Algebra Integral 1.1 Swap Router
+/// @title Algebra Integral 1.2 Swap Router
 /// @notice Router for stateless execution of swaps against Algebra
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery

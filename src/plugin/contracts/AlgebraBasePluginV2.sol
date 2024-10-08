@@ -9,8 +9,7 @@ import './plugins/FarmingProxyPlugin.sol';
 import './plugins/SlidingFeePlugin.sol';
 import './plugins/VolatilityOraclePlugin.sol';
 
-/// @title Algebra Integral 1.1 default plugin
-/// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
+/// @title Algebra Integral 1.2 sliding fee plugin
 contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
   using Plugins for uint8;
 

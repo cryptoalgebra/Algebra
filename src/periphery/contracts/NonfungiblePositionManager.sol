@@ -19,7 +19,7 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
-/// @title Algebra Integral 1.1 NFT positions
+/// @title Algebra Integral 1.2 NFT positions
 /// @notice Wraps Algebra positions in the ERC721 non-fungible token interface
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery

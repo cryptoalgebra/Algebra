@@ -6,7 +6,6 @@ pragma solidity =0.8.20;
 /// @dev Instances of stored oracle data, "timepoints", are collected in the oracle array
 /// Timepoints are overwritten when the full length of the timepoints array is populated.
 /// The most recent timepoint is available by passing 0 to getSingleTimepoint().
-/// Version for AlgebraBasePluginV1
 library VolatilityOracle {
   /// @notice `target` timestamp is older than oldest timepoint
   error targetIsTooOld();
