@@ -120,4 +120,4 @@ Array [
 ]
 `;
 
-exports[`AlgebraBasePluginV1 AlgebraBasePluginV1 external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23779`;
+exports[`AlgebraBasePluginV1 AlgebraBasePluginV1 external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23708`;

@@ -1270,7 +1270,7 @@ describe('unit/EternalFarms', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResult = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -1412,7 +1412,7 @@ describe('unit/EternalFarms', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResult = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -1594,7 +1594,7 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 10000,
         });
 
-        await Time.setAndMine(timestamps.startTime + 1);
+        await Time.setAndMine(timestamps.startTime + 100);
 
         await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
         await context.nft.connect(lpUser0).approveForFarming(tokenIdOut, true, context.farmingCenter);
@@ -1898,7 +1898,7 @@ describe('unit/EternalFarms', () => {
 
         await erc20Helper.ensureBalancesAndApprovals(lpUser0, [token0, token1], amountDesired, await context.nft.getAddress());
 
-        await context.nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+        await context.nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
         const poolAddress = await context.factory.poolByPair(token0, token1);
 

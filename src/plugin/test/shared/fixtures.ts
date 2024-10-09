@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, BasePluginV1Factory } from '../../typechain';
+import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory } from '../../typechain';
 
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {
@@ -15,8 +15,8 @@ async function mockFactoryFixture(): Promise<MockFactoryFixture> {
 }
 
 interface PluginFixture extends MockFactoryFixture {
-  plugin: MockTimeAlgebraBasePluginV1;
-  mockPluginFactory: MockTimeDSFactory;
+  plugin: MockTimeAlgebraBasePluginV1 | MockTimeAlgebraBasePluginV2;
+  mockPluginFactory: MockTimeDSFactory | MockTimeDSFactoryV2;
   mockPool: MockPool;
 }
 
@@ -49,7 +49,7 @@ export const pluginFixture: Fixture<PluginFixture> = async function (): Promise<
 };
 
 interface PluginFactoryFixture extends MockFactoryFixture {
-  pluginFactory: BasePluginV1Factory;
+  pluginFactory: BasePluginV1Factory | BasePluginV2Factory;
 }
 
 export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async function (): Promise<PluginFactoryFixture> {
@@ -60,6 +60,43 @@ export const pluginFactoryFixture: Fixture<PluginFactoryFixture> = async functio
 
   return {
     pluginFactory,
+    mockFactory,
+  };
+};
+
+export const pluginFactoryFixtureV2: Fixture<PluginFactoryFixture> = async function (): Promise<PluginFactoryFixture> {
+  const { mockFactory } = await mockFactoryFixture();
+
+  const pluginFactoryFactory = await ethers.getContractFactory('BasePluginV2Factory');
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as BasePluginV2Factory;
+
+  return {
+    pluginFactory,
+    mockFactory,
+  };
+};
+
+
+export const pluginFixtureV2: Fixture<PluginFixture> = async function (): Promise<PluginFixture> {
+  const { mockFactory } = await mockFactoryFixture();
+  //const { token0, token1, token2 } = await tokensFixture()
+
+  const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSFactoryV2');
+  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory)) as any as MockTimeDSFactoryV2;
+
+  const mockPoolFactory = await ethers.getContractFactory('MockPool');
+  const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
+
+  await mockPluginFactory.beforeCreatePoolHook(mockPool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
+  const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
+
+  const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeAlgebraBasePluginV2');
+  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeAlgebraBasePluginV2;
+
+  return {
+    plugin,
+    mockPluginFactory,
+    mockPool,
     mockFactory,
   };
 };

@@ -271,7 +271,7 @@ describe('AlgebraFarming', () => {
           })
         )
       );
-      await time.setNextBlockTimestamp(startTime + 1);
+      await time.setNextBlockTimestamp(startTime + 100);
       const trader = actors.traderUser0();
       await helpers.makeTickGoFlow({
         trader,
@@ -300,7 +300,7 @@ describe('AlgebraFarming', () => {
 
         const { helpers, createIncentiveResult } = subject;
 
-        await time.increaseTo(endTime + 1);
+        await time.increaseTo(endTime + 100);
 
         const trader = actors.traderUser0();
         await helpers.makeTickGoFlow({
@@ -341,7 +341,7 @@ describe('AlgebraFarming', () => {
         const startTime = epoch + 1_000;
         const endTime = startTime + duration;
 
-        await time.increaseTo(endTime + 1);
+        await time.increaseTo(endTime + 100);
 
         const trader = actors.traderUser0();
         await helpers.makeTickGoFlow({
@@ -407,7 +407,7 @@ describe('AlgebraFarming', () => {
           deadline: (await blockTimestamp()) + 1000,
         });
 
-        await time.setNextBlockTimestamp(endTime + 1);
+        await time.setNextBlockTimestamp(endTime + 100);
 
         const trader = actors.traderUser0();
         await helpers.makeTickGoFlow({

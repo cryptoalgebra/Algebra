@@ -143,7 +143,7 @@ describe('V3Migrator', () => {
 
     it('works once v3 pool is initialized', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
       await pair.approve(migrator, expectedLiquidity);
       await migrator.migrate({
@@ -172,7 +172,7 @@ describe('V3Migrator', () => {
 
     it('works for partial', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
       const tokenBalanceBefore = await token.balanceOf(wallet.address);
       const wnativeBalanceBefore = await wnative.balanceOf(wallet.address);
@@ -210,7 +210,7 @@ describe('V3Migrator', () => {
 
     it('double the price', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(2, 1));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(2, 1), '0x');
 
       const tokenBalanceBefore = await token.balanceOf(wallet.address);
       const wnativeBalanceBefore = await wnative.balanceOf(wallet.address);
@@ -254,7 +254,7 @@ describe('V3Migrator', () => {
 
     it('half the price', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 2));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 2), '0x');
 
       const tokenBalanceBefore = await token.balanceOf(wallet.address);
       const wnativeBalanceBefore = await wnative.balanceOf(wallet.address);
@@ -298,7 +298,7 @@ describe('V3Migrator', () => {
 
     it('double the price - as Native', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(2, 1));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(2, 1), '0x');
 
       const tokenBalanceBefore = await token.balanceOf(wallet.address);
 
@@ -342,7 +342,7 @@ describe('V3Migrator', () => {
 
     it('half the price - as Native', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 2));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 2), '0x');
 
       const tokenBalanceBefore = await token.balanceOf(wallet.address);
 
@@ -386,7 +386,7 @@ describe('V3Migrator', () => {
 
     it('gas [ @skip-on-coverage ]', async () => {
       const [token0, token1] = await sortedTokens(wnative, token);
-      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+      await migrator.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
       await pair.approve(migrator, expectedLiquidity);
       await snapshotGasCost(

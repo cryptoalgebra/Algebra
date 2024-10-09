@@ -42,8 +42,8 @@ describe('unit/Multicall', () => {
 
     multicallFixture = async () => {
       const context = await algebraFixture();
-      const helpers = HelperCommands.fromTestContext(context, actors, provider);
 
+      const helpers = HelperCommands.fromTestContext(context, actors, provider);
       await erc20Helper.ensureBalancesAndApprovals(multicaller, [context.token0, context.token1], amountDesired, await context.nft.getAddress());
 
       const mintResult = await helpers.mintFlow({
@@ -66,7 +66,6 @@ describe('unit/Multicall', () => {
         totalReward,
         await context.eternalFarming.getAddress()
       );
-
       await helpers.createIncentiveFlow({
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
@@ -77,7 +76,6 @@ describe('unit/Multicall', () => {
         rewardRate: 10n,
         bonusRewardRate: 50n,
       });
-
       await context.nft.connect(multicaller).approveForFarming(tokenId, true, context.farmingCenter);
       await context.farmingCenter.connect(multicaller).enterFarming(farmIncentiveKey, tokenId);
 
