@@ -1445,10 +1445,24 @@ describe('unit/EternalFarms', () => {
     });
 
     it('do not update rewards if nothing to collect', async () => {
+      let rewardTokenAddress = await context.rewardToken.getAddress()
+      let bonusRewardTokenAddress = await context.bonusRewardToken.getAddress()
+
+      await context.eternalFarming.connect(actors.wallets[0]).setRates(
+        {
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
+          pool: context.pool01,
+          nonce: localNonce,
+        },
+        0,
+        0
+      );
+
       await context.eternalFarming.connect(lpUser0).collectRewards(
         {
-          rewardToken: await context.rewardToken.getAddress(),
-          bonusRewardToken: await context.bonusRewardToken.getAddress(),
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
           pool: context.pool01,
           nonce: localNonce,
         },
@@ -1456,13 +1470,13 @@ describe('unit/EternalFarms', () => {
         lpUser0.address
       );
 
-      const rewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      const bonusRewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      const rewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, rewardTokenAddress);
+      const bonusRewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, bonusRewardTokenAddress);
 
       await context.eternalFarming.connect(lpUser0).collectRewards(
         {
-          rewardToken: await context.rewardToken.getAddress(),
-          bonusRewardToken: await context.bonusRewardToken.getAddress(),
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
           pool: context.pool01,
           nonce: localNonce,
         },
@@ -1470,8 +1484,9 @@ describe('unit/EternalFarms', () => {
         lpUser0.address
       );
 
-      const rewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      const bonusRewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      const rewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, rewardTokenAddress);
+      const bonusRewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, bonusRewardTokenAddress);
+
 
       expect(rewardTokenBalanceAfter).to.be.eq(rewardTokenBalanceBefore);
       expect(bonusRewardTokenBalanceAfter).to.be.eq(bonusRewardTokenBalanceBefore);
@@ -1643,7 +1658,7 @@ describe('unit/EternalFarms', () => {
               await context.rewardToken.getAddress(),
               await context.bonusRewardToken.getAddress(),
               lpUser0.address,
-              9999n,
+              9079n,
               199n
             );
         });

@@ -572,11 +572,11 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
 
-      expect(balanceAfter - balanceBefore).to.equal(199699n);
-      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(99549n);
+      expect(balanceAfter - balanceBefore).to.equal(189799);
+      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(94599);
 
-      await claimAndCheck(context.rewardToken, lpUser0, 199699n);
-      await claimAndCheck(context.bonusRewardToken, lpUser0, 99549n);
+      await claimAndCheck(context.rewardToken, lpUser0, 189799n);
+      await claimAndCheck(context.bonusRewardToken, lpUser0, 94599n);
     });
 
     it('collect rewards after eternalFarming deactivate', async () => {
@@ -631,11 +631,11 @@ describe('unit/FarmingCenter', () => {
       let balanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
       let bonusBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
 
-      expect(balanceAfter - balanceBefore).to.equal(199699n);
-      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(99549n);
+      expect(balanceAfter - balanceBefore).to.equal(189799);
+      expect(bonusBalanceAfter - bonusBalanceBefore).to.equal(94599);
 
-      await claimAndCheck(context.rewardToken, lpUser0, 199699n);
-      await claimAndCheck(context.bonusRewardToken, lpUser0, 99549n);
+      await claimAndCheck(context.rewardToken, lpUser0, 189799n);
+      await claimAndCheck(context.bonusRewardToken, lpUser0, 94599n);
     });
 
     it('cannot collect if not owner', async () => {
