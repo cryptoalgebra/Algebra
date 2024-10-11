@@ -125,9 +125,9 @@ export class HelperCommands {
       },
       pluginAddres
     );
-    // @ts-ignore
-    virtualPoolAddress = (await txResult.wait(1)).logs[4].args['virtualPool'];
 
+    // @ts-ignore
+    virtualPoolAddress = (await txResult.wait()).logs[3].args['virtualPool'];
     return {
       ..._.pick(params, ['poolAddress', 'totalReward', 'bonusReward', 'rewardToken', 'bonusRewardToken']),
       nonce,

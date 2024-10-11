@@ -78,7 +78,7 @@ describe('TickLens', () => {
 
     if (BigInt(tokenAddressA) > BigInt(tokenAddressB)) [tokenAddressA, tokenAddressB] = [tokenAddressB, tokenAddressA];
 
-    const tx = await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+    const tx = await _nft.createAndInitializePoolIfNecessary(tokenAddressA, tokenAddressB, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
     await tx.wait();
 
     const liquidityParams = {

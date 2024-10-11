@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { Wallet } from 'ethers';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { MockTimeAlgebraPool, AlgebraPool } from '../typechain';
+import { MockTimeAlgebraPool, AlgebraPool, MockPoolPlugin } from '../typechain';
 import { expect } from './shared/expect';
 
 import { poolFixture } from './shared/fixtures';
@@ -47,7 +47,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
     });
   });
 
-  for (const communityFee of [0, 60]) {
+  for (const communityFee of [0, 500]) {
     describe(communityFee > 0 ? 'fee is on' : 'fee is off', () => {
       const startingPrice = encodePriceSqrt(100001, 100000);
       const startingTick = 0;
@@ -93,6 +93,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
       let swapExact1For0: SwapFunction;
       let swapToHigherPrice: SwapToPriceFunction;
       let swapToLowerPrice: SwapToPriceFunction;
+      let poolPlugin: MockPoolPlugin;
       let pool: MockTimeAlgebraPool;
       let mint: MintFunction;
 
@@ -104,7 +105,7 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
       describe('#swapExact1For0', () => {
         it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact1For0(2000, wallet.address));
+          await snapshotGasCost(swapExact1For0(4000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
         });
@@ -122,9 +123,49 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
         });
       })
 
+      describe('#swapExact1For0 with plugin fee on', () => {
+        beforeEach('load the fixture', async () => {
+          const MockPoolPluginFactory = await ethers.getContractFactory('MockPoolPlugin');
+          poolPlugin = (await MockPoolPluginFactory.deploy(await pool.getAddress())) as any as MockPoolPlugin;
+          await poolPlugin.setPluginFees(0, 1000);
+          await pool.setPlugin(poolPlugin);
+          await pool.setPluginConfig(255);
+
+          await pool.advanceTime(86400);
+          await swapExact0For1(expandTo18Decimals(1), wallet.address);
+          await pool.advanceTime(1);
+          await swapToHigherPrice(startingPrice, wallet.address);
+          expect((await pool.globalState()).tick).to.eq(startingTick);
+          expect((await pool.globalState()).price).to.eq(startingPrice);
+        });
+
+        it('first swap in block with no tick movement, without transfer', async () => {
+          await swapExact1For0(10000, wallet.address)
+          await pool.advanceTime(1)
+          await snapshotGasCost(swapExact1For0(10000, wallet.address));
+          expect((await pool.globalState()).price).to.not.eq(startingPrice);
+          expect((await pool.globalState()).tick).to.eq(startingTick);
+          expect((await pool.getPluginFeePending())[1]).to.be.gt(0)
+        });
+
+        it('first swap in block with no tick movement, with transfer', async () => {
+          await pool.advanceTime(86400)
+          await snapshotGasCost(swapExact1For0(10000, wallet.address));
+          expect((await pool.globalState()).price).to.not.eq(startingPrice);
+          expect((await pool.globalState()).tick).to.eq(startingTick);
+        });
+
+        it('first swap in block moves tick, no initialized crossings, with transfer', async () => {
+          await pool.advanceTime(86400)
+          await snapshotGasCost(swapExact1For0(expandTo18Decimals(1) / 10000n, wallet.address));
+          expect((await pool.getPluginFeePending())[1]).to.be.eq(0)
+          expect((await pool.globalState()).tick).to.eq(startingTick + 1);
+        });
+      })
+
       describe('#swapExact0For1', () => {
         it('first swap in block with no tick movement', async () => {
-          await snapshotGasCost(swapExact0For1(2000, wallet.address));
+          await snapshotGasCost(swapExact0For1(4000, wallet.address));
           expect((await pool.globalState()).price).to.not.eq(startingPrice);
           expect((await pool.globalState()).tick).to.eq(startingTick);
         });

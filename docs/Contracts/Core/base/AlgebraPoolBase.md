@@ -267,7 +267,7 @@ function getCommunityFeePending() external view returns (uint128, uint128)
 
 The amounts of token0 and token1 that will be sent to the vault
 
-*Developer note: Will be sent COMMUNITY_FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
+*Developer note: Will be sent FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
 
 **Returns:**
 

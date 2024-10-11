@@ -13,7 +13,7 @@ import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 import '../libraries/PoolTicksCounter.sol';
 
-/// @title  Algebra Integral 1.1 QuoterV2
+/// @title  Algebra Integral 1.2 QuoterV2
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
@@ -160,14 +160,16 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         public
         override
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
+            uint256[] memory amountOutList,
+            uint256[] memory amountInList,
             uint160[] memory sqrtPriceX96AfterList,
             uint32[] memory initializedTicksCrossedList,
             uint256 gasEstimate,
             uint16[] memory feeList
         )
     {
+        amountOutList = new uint256[](path.numPools());
+        amountInList = new uint256[](path.numPools());
         sqrtPriceX96AfterList = new uint160[](path.numPools());
         initializedTicksCrossedList = new uint32[](path.numPools());
         feeList = new uint16[](path.numPools());
@@ -185,21 +187,17 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             }
 
             // the outputs of prior swaps become the inputs to subsequent ones
-            uint256 _amountOut;
-            uint256 _amountIn;
             uint256 _gasEstimate;
             (
-                _amountOut,
-                _amountIn,
+                amountOutList[i],
+                amountInList[i],
                 sqrtPriceX96AfterList[i],
                 initializedTicksCrossedList[i],
                 _gasEstimate,
                 feeList[i]
             ) = quoteExactInputSingle(params);
 
-            if (i == 0) amountIn = _amountIn;
-
-            amountInRequired = _amountOut;
+            amountInRequired = amountOutList[i];
             gasEstimate += _gasEstimate;
             i++;
 
@@ -208,8 +206,8 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 path = path.skipToken();
             } else {
                 return (
-                    amountInRequired,
-                    amountIn,
+                    amountOutList,
+                    amountInList,
                     sqrtPriceX96AfterList,
                     initializedTicksCrossedList,
                     gasEstimate,
@@ -264,14 +262,16 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         public
         override
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
+            uint256[] memory amountOutList,
+            uint256[] memory amountInList,
             uint160[] memory sqrtPriceX96AfterList,
             uint32[] memory initializedTicksCrossedList,
             uint256 gasEstimate,
             uint16[] memory feeList
         )
     {
+        amountOutList = new uint256[](path.numPools());
+        amountInList = new uint256[](path.numPools());
         sqrtPriceX96AfterList = new uint160[](path.numPools());
         initializedTicksCrossedList = new uint32[](path.numPools());
         feeList = new uint16[](path.numPools());
@@ -289,21 +289,17 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             }
 
             // the inputs of prior swaps become the outputs of subsequent ones
-            uint256 _amountOut;
-            uint256 _amountIn;
             uint256 _gasEstimate;
             (
-                _amountOut,
-                _amountIn,
+                amountOutList[i],
+                amountInList[i],
                 sqrtPriceX96AfterList[i],
                 initializedTicksCrossedList[i],
                 _gasEstimate,
                 feeList[i]
             ) = quoteExactOutputSingle(params);
 
-            if (i == 0) amountOut = _amountOut;
-
-            amountOutRequired = _amountIn;
+            amountOutRequired = amountInList[i];
             gasEstimate += _gasEstimate;
             i++;
 
@@ -312,8 +308,8 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 path = path.skipToken();
             } else {
                 return (
-                    amountOut,
-                    amountOutRequired,
+                    amountOutList,
+                    amountInList,
                     sqrtPriceX96AfterList,
                     initializedTicksCrossedList,
                     gasEstimate,

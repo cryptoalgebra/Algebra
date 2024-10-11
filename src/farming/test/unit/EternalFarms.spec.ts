@@ -1270,7 +1270,7 @@ describe('unit/EternalFarms', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResult = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -1412,7 +1412,7 @@ describe('unit/EternalFarms', () => {
         bonusRewardRate: 50n,
       });
 
-      await Time.setAndMine(timestamps.startTime + 1);
+      await Time.setAndMine(timestamps.startTime + 100);
 
       const mintResult = await helpers.mintDepositFarmFlow({
         lp: lpUser0,
@@ -1445,10 +1445,24 @@ describe('unit/EternalFarms', () => {
     });
 
     it('do not update rewards if nothing to collect', async () => {
+      let rewardTokenAddress = await context.rewardToken.getAddress()
+      let bonusRewardTokenAddress = await context.bonusRewardToken.getAddress()
+
+      await context.eternalFarming.connect(actors.wallets[0]).setRates(
+        {
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
+          pool: context.pool01,
+          nonce: localNonce,
+        },
+        0,
+        0
+      );
+
       await context.eternalFarming.connect(lpUser0).collectRewards(
         {
-          rewardToken: await context.rewardToken.getAddress(),
-          bonusRewardToken: await context.bonusRewardToken.getAddress(),
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
           pool: context.pool01,
           nonce: localNonce,
         },
@@ -1456,13 +1470,13 @@ describe('unit/EternalFarms', () => {
         lpUser0.address
       );
 
-      const rewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      const bonusRewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      const rewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, rewardTokenAddress);
+      const bonusRewardTokenBalanceBefore = await context.eternalFarming.rewards(lpUser0.address, bonusRewardTokenAddress);
 
       await context.eternalFarming.connect(lpUser0).collectRewards(
         {
-          rewardToken: await context.rewardToken.getAddress(),
-          bonusRewardToken: await context.bonusRewardToken.getAddress(),
+          rewardToken: rewardTokenAddress,
+          bonusRewardToken: bonusRewardTokenAddress,
           pool: context.pool01,
           nonce: localNonce,
         },
@@ -1470,8 +1484,9 @@ describe('unit/EternalFarms', () => {
         lpUser0.address
       );
 
-      const rewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.rewardToken);
-      const bonusRewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, context.bonusRewardToken);
+      const rewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, rewardTokenAddress);
+      const bonusRewardTokenBalanceAfter = await context.eternalFarming.rewards(lpUser0.address, bonusRewardTokenAddress);
+
 
       expect(rewardTokenBalanceAfter).to.be.eq(rewardTokenBalanceBefore);
       expect(bonusRewardTokenBalanceAfter).to.be.eq(bonusRewardTokenBalanceBefore);
@@ -1594,7 +1609,7 @@ describe('unit/EternalFarms', () => {
           deadline: (await blockTimestamp()) + 10000,
         });
 
-        await Time.setAndMine(timestamps.startTime + 1);
+        await Time.setAndMine(timestamps.startTime + 100);
 
         await context.nft.connect(lpUser0).approveForFarming(tokenId, true, context.farmingCenter);
         await context.nft.connect(lpUser0).approveForFarming(tokenIdOut, true, context.farmingCenter);
@@ -1643,7 +1658,7 @@ describe('unit/EternalFarms', () => {
               await context.rewardToken.getAddress(),
               await context.bonusRewardToken.getAddress(),
               lpUser0.address,
-              9999n,
+              9079n,
               199n
             );
         });
@@ -1898,7 +1913,7 @@ describe('unit/EternalFarms', () => {
 
         await erc20Helper.ensureBalancesAndApprovals(lpUser0, [token0, token1], amountDesired, await context.nft.getAddress());
 
-        await context.nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+        await context.nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
 
         const poolAddress = await context.factory.poolByPair(token0, token1);
 

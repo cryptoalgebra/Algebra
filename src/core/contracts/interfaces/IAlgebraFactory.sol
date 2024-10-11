@@ -147,10 +147,11 @@ interface IAlgebraFactory {
   /// @notice Creates a pool for the given two tokens
   /// @param tokenA One of the two tokens in the desired pool
   /// @param tokenB The other of the two tokens in the desired pool
+  /// @param data Data for plugin creation
   /// @dev tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
   /// The call will revert if the pool already exists or the token arguments are invalid.
   /// @return pool The address of the newly created pool
-  function createPool(address tokenA, address tokenB) external returns (address pool);
+  function createPool(address tokenA, address tokenB, bytes calldata data) external returns (address pool);
 
   /// @notice Creates a custom pool for the given two tokens using `deployer` contract
   /// @param deployer The address of plugin deployer, also used for custom pool address calculation

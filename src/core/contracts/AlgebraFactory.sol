@@ -17,7 +17,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
-/// @dev Version: Algebra Integral 1.1
+/// @dev Version: Algebra Integral 1.2
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
@@ -57,7 +57,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x4b9e4a8044ce5695e06fce9421a63b6f5c3db8a561eebb30ea4c775469e36eaf;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0xb3fc09be5eb433d99b1ec89fd8435aaf5ffea75c1879e19028aa2414a14b3c85;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -97,8 +97,8 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
   }
 
   /// @inheritdoc IAlgebraFactory
-  function createPool(address tokenA, address tokenB) external override nonReentrant returns (address pool) {
-    return _createPool(address(0), msg.sender, tokenA, tokenB, '');
+  function createPool(address tokenA, address tokenB, bytes calldata data) external override nonReentrant returns (address pool) {
+    return _createPool(address(0), msg.sender, tokenA, tokenB, data);
   }
 
   /// @inheritdoc IAlgebraFactory
@@ -124,7 +124,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     address plugin;
     if (deployer == address(0)) {
       if (address(defaultPluginFactory) != address(0)) {
-        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, '');
+        plugin = defaultPluginFactory.beforeCreatePoolHook(computePoolAddress(token0, token1), creator, address(0), token0, token1, data);
       }
     } else {
       plugin = IAlgebraPluginFactory(msg.sender).beforeCreatePoolHook(

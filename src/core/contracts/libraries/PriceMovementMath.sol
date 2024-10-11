@@ -113,7 +113,7 @@ library PriceMovementMath {
     uint160 targetPrice,
     uint128 liquidity,
     int256 amountAvailable,
-    uint16 fee
+    uint24 fee
   ) internal pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
     unchecked {
       function(uint160, uint160, uint128) pure returns (uint256) getInputTokenAmount = zeroToOne ? getInputTokenDelta01 : getInputTokenDelta10;

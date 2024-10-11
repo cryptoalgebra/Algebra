@@ -7,7 +7,7 @@ import {IAlgebraFactory} from '@cryptoalgebra/integral-core/contracts/interfaces
 
 /// @title Algebra custom pool entry point
 /// @notice Is used to create custom pools
-/// @dev Version: Algebra Integral 2.0
+/// @dev Version: Algebra Integral 1.2
 contract AlgebraCustomPoolEntryPoint is IAlgebraCustomPoolEntryPoint {
     /// @inheritdoc IAlgebraCustomPoolEntryPoint
     address public immutable override factory;

@@ -6,10 +6,14 @@ import '../interfaces/plugin/IAlgebraPlugin.sol';
 import '../interfaces/plugin/IAlgebraDynamicFeePlugin.sol';
 import '../interfaces/IAlgebraPool.sol';
 import '../libraries/Plugins.sol';
+import './TestERC20.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
   uint8 public selectorsDisableConfig;
+  uint24 public overrideFee;
+  uint24 public pluginFee;
+  bool public isDisabled;
 
   constructor(address _pool) {
     pool = _pool;
@@ -60,6 +64,19 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     selectorsDisableConfig = newSelectorsDisableConfig;
   }
 
+  function handlePluginFee(uint256, uint256) external view override returns (bytes4 selector) {
+    if (isDisabled) return selector;
+    return IAlgebraPlugin.handlePluginFee.selector;
+  }
+
+  function setPluginFees(uint24 _overrideFee, uint24 _pluginFee) external {
+    (overrideFee, pluginFee) = (_overrideFee, _pluginFee);
+  }
+
+  function disablePluginFeeHandle() external {
+    isDisabled = true;
+  }
+
   /// @notice The hook called before the state of a pool is initialized
   /// @param sender The initial msg.sender for the initialize call
   /// @param sqrtPriceX96 The sqrt(price) of the pool as a Q64.96
@@ -91,10 +108,11 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     int24 topTick,
     int128 desiredLiquidityDelta,
     bytes calldata data
-  ) external override returns (bytes4) {
+  ) external override returns (bytes4, uint24) {
     emit BeforeModifyPosition(sender, recipient, bottomTick, topTick, desiredLiquidityDelta, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG)) return IAlgebraPlugin.beforeModifyPosition.selector;
-    return IAlgebraPlugin.defaultPluginConfig.selector;
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_POSITION_MODIFY_FLAG))
+      return (IAlgebraPlugin.beforeModifyPosition.selector, pluginFee);
+    return (IAlgebraPlugin.defaultPluginConfig.selector, pluginFee);
   }
 
   /// @notice The hook called after a position is modified
@@ -126,10 +144,10 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     bool withPaymentInAdvance,
     bytes calldata data
-  ) external override returns (bytes4) {
+  ) external override returns (bytes4, uint24, uint24) {
     emit BeforeSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, withPaymentInAdvance, data);
-    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return IAlgebraPlugin.beforeSwap.selector;
-    return IAlgebraPlugin.defaultPluginConfig.selector;
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.BEFORE_SWAP_FLAG)) return (IAlgebraPlugin.beforeSwap.selector, overrideFee, pluginFee);
+    return (IAlgebraPlugin.defaultPluginConfig.selector, overrideFee, pluginFee);
   }
 
   /// @notice The hook called after a swap
@@ -179,5 +197,30 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     emit AfterFlash(sender, recipient, amount0, amount1, paid0, paid1, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_FLASH_FLAG)) return IAlgebraPlugin.afterFlash.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
+  }
+
+  function swap() external {
+    IAlgebraPool(pool).swap(address(this), true, 10000, 4295128740, '');
+  }
+  
+  function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata ) external {
+    require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
+
+    (address token, uint256 amountToPay) = amount0Delta > 0
+        ? (IAlgebraPool(pool).token0(), uint256(amount0Delta))
+        : (IAlgebraPool(pool).token1(), uint256(amount1Delta));
+      
+    TestERC20(token).transfer(pool, amountToPay);
+  }
+  
+
+  function mint() external {
+    IAlgebraPool(pool).mint(address(this), address(this), -60, 60, 1000, '');
+  }
+
+  function algebraMintCallback(uint256 amount0Owed, uint256 amount1Owed, bytes calldata ) external {
+
+    if (amount0Owed > 0) TestERC20(IAlgebraPool(pool).token0()).transfer(pool, amount0Owed);
+    if (amount1Owed > 0) TestERC20(IAlgebraPool(pool).token1()).transfer(pool, amount1Owed);
   }
 }

@@ -97,7 +97,7 @@ describe('AlgebraFactory', () => {
   });
 
   it('pool bytecode size  [ @skip-on-coverage ]', async () => {
-    await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+    await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
     const poolAddress = getCreate2Address(
       await poolDeployer.getAddress(),
       [TEST_ADDRESSES[0], TEST_ADDRESSES[1]],
@@ -108,12 +108,12 @@ describe('AlgebraFactory', () => {
 
   async function createAndCheckPool(tokens: [string, string]) {
     const create2Address = getCreate2Address(await poolDeployer.getAddress(), tokens, poolBytecode);
-    const create = factory.createPool(tokens[0], tokens[1]);
+    const create = factory.createPool(tokens[0], tokens[1], '0x');
 
     await expect(create).to.emit(factory, 'Pool');
 
-    await expect(factory.createPool(tokens[0], tokens[1])).to.be.reverted;
-    await expect(factory.createPool(tokens[1], tokens[0])).to.be.reverted;
+    await expect(factory.createPool(tokens[0], tokens[1], '0x')).to.be.reverted;
+    await expect(factory.createPool(tokens[1], tokens[0], '0x')).to.be.reverted;
     expect(await factory.poolByPair(tokens[0], tokens[1]), 'getPool in order').to.eq(create2Address);
     expect(await factory.poolByPair(tokens[1], tokens[0]), 'getPool in reverse').to.eq(create2Address);
 
@@ -170,6 +170,13 @@ describe('AlgebraFactory', () => {
       expect(await pool.plugin()).to.be.eq(pluginAddress);
     });
 
+    it('data passed to defaultPluginFactory', async () => {
+      await factory.setDefaultPluginFactory(defaultPluginFactory);
+      const create = factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x0200');
+
+     await expect(create).to.emit(defaultPluginFactory, 'DataOnPoolCreation').withArgs('0x0200');
+    });
+
     it('sets vault in pool', async () => {
       await createAndCheckPool([TEST_ADDRESSES[0], TEST_ADDRESSES[1]]);
 
@@ -198,22 +205,22 @@ describe('AlgebraFactory', () => {
     });
 
     it('fails if token a == token b', async () => {
-      await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[0])).to.be.reverted;
+      await expect(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[0], '0x')).to.be.reverted;
     });
 
     it('fails if token a is 0 or token b is 0', async () => {
-      await expect(factory.createPool(TEST_ADDRESSES[0], ZeroAddress)).to.be.reverted;
-      await expect(factory.createPool(ZeroAddress, TEST_ADDRESSES[0])).to.be.reverted;
-      expect(factory.createPool(ZeroAddress, ZeroAddress)).to.be.revertedWithoutReason;
+      await expect(factory.createPool(TEST_ADDRESSES[0], ZeroAddress, '0x')).to.be.reverted;
+      await expect(factory.createPool(ZeroAddress, TEST_ADDRESSES[0], '0x')).to.be.reverted;
+      expect(factory.createPool(ZeroAddress, ZeroAddress, '0x')).to.be.revertedWithoutReason;
     });
 
     it('gas [ @skip-on-coverage ]', async () => {
-      await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]));
+      await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x'));
     });
 
     it('gas for second pool [ @skip-on-coverage ]', async () => {
-      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
-      await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[2]));
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      await snapshotGasCost(factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[2], '0x'));
     });
   });
 

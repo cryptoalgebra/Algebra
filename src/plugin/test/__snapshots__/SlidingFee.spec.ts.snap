@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SlidingFee #getFee gas cost  [ @skip-on-coverage ] gas cost of same tick 1`] = `26776`;
+
+exports[`SlidingFee #getFee gas cost  [ @skip-on-coverage ] gas cost of tick decrease 1`] = `31875`;
+
+exports[`SlidingFee #getFee gas cost  [ @skip-on-coverage ] gas cost of tick increase 1`] = `31766`;

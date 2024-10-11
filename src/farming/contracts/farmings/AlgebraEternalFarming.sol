@@ -23,7 +23,7 @@ import '../libraries/NFTPositionInfo.sol';
 
 import './EternalVirtualPool.sol';
 
-/// @title Algebra Integral 1.1  eternal (v2-like) farming
+/// @title Algebra Integral 1.2  eternal (v2-like) farming
 /// @notice Manages rewards and virtual pools
 contract AlgebraEternalFarming is IAlgebraEternalFarming {
   using SafeCast for int256;

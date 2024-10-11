@@ -41,7 +41,7 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
   /// @inheritdoc IAlgebraPoolState
   int24 public override tickSpacing;
   /// @inheritdoc IAlgebraPoolState
-  uint32 public override communityFeeLastTimestamp;
+  uint32 public override lastFeeTransferTimestamp;
 
   /// @inheritdoc IAlgebraPoolState
   uint32 public override tickTreeRoot; // The root bitmap of search tree
@@ -74,6 +74,11 @@ contract MockPool is IAlgebraPoolActions, IAlgebraPoolPermissionedActions, IAlge
 
   /// @inheritdoc IAlgebraPoolState
   function getCommunityFeePending() external pure override returns (uint128, uint128) {
+    revert('not implemented');
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getPluginFeePending() external pure override returns (uint128, uint128) {
     revert('not implemented');
   }
 

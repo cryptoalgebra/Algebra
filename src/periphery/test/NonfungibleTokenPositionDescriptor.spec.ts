@@ -115,7 +115,7 @@ describe('NonfungibleTokenPositionDescriptor', () => {
   describe('#tokenURI', () => {
     it('displays Native as token symbol for WNativeToken token', async () => {
       const [token0, token1] = await sortedTokens(wnative, tokens[1]);
-      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
       await wnative.approve(nft, 100);
       await tokens[1].approve(nft, 100);
       await nft.mint({
@@ -140,7 +140,7 @@ describe('NonfungibleTokenPositionDescriptor', () => {
 
     it('displays returned token symbols when neither token is WNativeToken ', async () => {
       const [token0, token1] = await sortedTokens(tokens[2], tokens[1]);
-      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1));
+      await nft.createAndInitializePoolIfNecessary(token0, token1, ZERO_ADDRESS, encodePriceSqrt(1, 1), '0x');
       await tokens[1].approve(nft, 100);
       await tokens[2].approve(nft, 100);
       await nft.mint({
