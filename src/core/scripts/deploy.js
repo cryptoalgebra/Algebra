@@ -42,7 +42,7 @@ async function main() {
 
   // protocol fee settings
   const algebraFeeRecipient = "0x6cbd743d9b97DA1855E64893D3226F8eDCa16e76" 
-  const partnerAddress = "0x844F095CE7A09d71DC1EE3A67066017D18321ca3" // owner address, must be changed
+  const partnerAddress = "0x84667f1aecf4C6c2c1d2Bd180572Bc5fdffBe836" // owner address, must be changed
   const algebraFeeShare = 200 // specified on algebraVault, 100% of community fee by default(3% of all fees) 
   const defaultCommunityFee = 150 // 3% by default
 
