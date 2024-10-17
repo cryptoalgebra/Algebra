@@ -1,6 +1,6 @@
 const path = require('path');
 const config = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
+const { ZETACHAIN_BLOCKSOUT_API_KEY, TAIKOSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
   config.parsed || {};
 
 export default {
@@ -38,6 +38,26 @@ export default {
       chainId: 42,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
       gasPrice: 8000000000,
+    },
+    sepolia: {
+      url: `https://rpc2.sepolia.org`,
+      chainId: 11155111,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    scrollSepolia: {
+      url: `https://scroll-testnet-public.unifra.io`,
+      chainId: 534351,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    hekla: {
+      url: `https://rpc.hekla.taiko.xyz`,
+      chainId: 167009,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    taiko: {
+      url: `https://taiko.blockpi.network/v1/rpc/public`,
+      chainId: 167000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     bscTestnet: {
       url: `https://data-seed-prebsc-2-s3.binance.org:8545`,
@@ -98,11 +118,26 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    baseMainnet: {
+      url: `https://base.llamarpc.com`,
+      chainId: 8453,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    baseSepolia: {
+      url: `https://base-sepolia.blockpi.network/v1/rpc/public`,
+      chainId: 84532,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    zetachain: {
+      url: `https://zetachain-mainnet.public.blastapi.io`,
+      chainId: 7000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    }
   },
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: `${POLYGONSCAN_API_KEY}`,
+    apiKey: `${ZETACHAIN_BLOCKSOUT_API_KEY}`,
     customChains: [
       {
         network: 'seiTestnet',
@@ -144,6 +179,54 @@ export default {
           browserURL: 'https://artio.beratrail.io/',
         },
       },
+      {
+        network: 'baseMainnet',
+        chainId: 8453,
+        urls: {
+          apiURL: 'https://api.basescan.org/api',
+          browserURL: 'https://basescan.org/',
+        },
+      },
+      {
+        network: 'baseSepolia',
+        chainId: 84532,
+        urls: {
+          apiURL: 'https://api-sepolia.basescan.org/api',
+          browserURL: 'https://sepolia.basescan.org/',
+        },
+      },
+      {
+        network: 'scrollSepolia',
+        chainId: 534351,
+        urls: {
+          apiURL: 'https://api-sepolia.scrollscan.com/api',
+          browserURL: 'https://scroll-testnet-public.unifra.io',
+        },
+      },
+      {
+        network: 'hekla',
+        chainId: 167009,
+        urls: {
+          apiURL: 'https://api-hekla.taikoscan.io/api',
+          browserURL: 'https://hekla.taikoscan.io/',
+        },
+      },
+      {
+        network: 'taiko',
+        chainId: 167000,
+        urls: {
+          apiURL: 'https://api.taikoscan.io/api',
+          browserURL: 'https://taikoscan.io/',
+        },
+      },
+      {
+        network: 'zetachain',
+        chainId: 7000,
+        urls: {
+          apiURL: 'https://zetachain.blockscout.com/api',
+          browserURL: 'https://zetachain.blockscout.com',
+        },
+      }
     ],
   },
 };
