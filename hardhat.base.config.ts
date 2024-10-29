@@ -31,7 +31,9 @@ export default {
       url: `https://rinkeby.infura.io/v3/${INFURA_ID_PROJECT}`,
     },
     goerli: {
-      url: `https://goerli.infura.io/v3/${INFURA_ID_PROJECT}`,
+      url: `https://eth-goerli.public.blastapi.io`,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+      chainId: 5,
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_ID_PROJECT}`,

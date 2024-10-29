@@ -25,6 +25,10 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
+  address public limitOrderPlugin;
+
+  event LimitOrderPlugin(address limitOrderPlugin);
+
   constructor(address _algebraFactory) {
     algebraFactory = _algebraFactory;
     defaultFeeConfiguration = AdaptiveFee.initialFeeConfiguration();
@@ -73,5 +77,11 @@ contract MockTimeDSFactory is IBasePluginV1Factory {
     require(farmingAddress != newFarmingAddress);
     farmingAddress = newFarmingAddress;
     emit FarmingAddress(newFarmingAddress);
+  }
+
+  function setLimitOrderPlugin(address newLimitOrderPlugin) external {
+    require(limitOrderPlugin != newLimitOrderPlugin);
+    limitOrderPlugin = newLimitOrderPlugin;
+    emit LimitOrderPlugin(newLimitOrderPlugin);
   }
 }

@@ -9,6 +9,7 @@ import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTi
 import { MockPool, MockTimeAlgebraBasePluginV1, MockTimeDSFactory, MockTimeVirtualPool } from '../typechain';
 
 import snapshotGasCost from './shared/snapshotGasCost';
+import { describe } from 'mocha';
 
 describe('AlgebraBasePluginV1', () => {
   let wallet: Wallet, other: Wallet;
@@ -497,6 +498,19 @@ describe('AlgebraBasePluginV1', () => {
       });
     });
   });
+
+  describe('LimitOrderPlugin', () => {
+    it('setLimitOrderPlugin works', async () => {
+      await mockPool.setPlugin(plugin);
+      await plugin.setLimitOrderPlugin(other);
+      expect(await plugin.limitOrderPlugin()).to.be.eq(other.address);
+    });
+
+    it('reverts if caller is not manager', async () => {
+      await mockPool.setPlugin(plugin);
+      await expect(plugin.connect(other).setLimitOrderPlugin(other)).to.be.reverted;
+    });
+  })
 
   describe('#FarmingPlugin', () => {
     describe('virtual pool tests', () => {
