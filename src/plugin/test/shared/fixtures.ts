@@ -12,9 +12,9 @@ import {
   abi as POOL_ABI,
   bytecode as POOL_BYTECODE,
 } from '@cryptoalgebra/integral-core/artifacts/contracts/AlgebraPool.sol/AlgebraPool.json';
-import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory, LimitOrderPlugin, IWNativeToken } from '../../typechain';
+import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory, LimitOrderPluginFactory,LimitOrderPlugin, IWNativeToken } from '../../typechain';
 import {tokensFixture} from './externalFixtures';
-import { getCreateAddress } from 'ethers';
+import { getCreateAddress, ZeroAddress } from 'ethers';
 import {AlgebraPool, AlgebraFactory, TestAlgebraCallee, AlgebraPoolDeployer, TestERC20 } from '@cryptoalgebra/integral-core/typechain';
 
 type Fixture<T> = () => Promise<T>;
@@ -117,7 +117,7 @@ export const pluginFixtureV2: Fixture<PluginFixture> = async function (): Promis
   };
 };
 interface LimitOrderPluginFixture{
-  pluginFactory: BasePluginV1Factory;
+  pluginFactory: LimitOrderPluginFactory;
   loPlugin: LimitOrderPlugin;
   token0: TestERC20;
   token1: TestERC20;
@@ -151,8 +151,8 @@ export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async f
 
   const poolFactory = await ethers.getContractFactory(POOL_ABI, POOL_BYTECODE);
 
-  const BasePluginV1FactoryFactory = await ethers.getContractFactory('BasePluginV1Factory');
-  const pluginFactory = (await BasePluginV1FactoryFactory.deploy(factory)) as any as BasePluginV1Factory;
+  const BasePluginV1FactoryFactory = await ethers.getContractFactory('LimitOrderPluginFactory');
+  const pluginFactory = (await BasePluginV1FactoryFactory.deploy(factory)) as any as LimitOrderPluginFactory;
 
   const loPluginFactory = await ethers.getContractFactory('LimitOrderPlugin');
   const loPlugin = (await loPluginFactory.deploy(wnative, poolDeployer, pluginFactory, factory)) as any as LimitOrderPlugin
@@ -160,17 +160,17 @@ export const limitOrderPluginFixture: Fixture<LimitOrderPluginFixture> = async f
   await pluginFactory.setLimitOrderPlugin(loPlugin);
   await factory.setDefaultPluginFactory(pluginFactory)
 
-  await factory.createPool(token0, token1);
+  await factory.createPool(token0, token1, ZERO_ADDRESS);
   const poolAddress = await factory.poolByPair(token0, token1);
   const pool = (poolFactory.attach(poolAddress)) as any as AlgebraPool;
 
-  await factory.createPool(token0, wnative);
+  await factory.createPool(token0, wnative, ZERO_ADDRESS);
   const poolAddress0Wnative = await factory.poolByPair(token0, wnative);
   const pool0Wnative = (poolFactory.attach(poolAddress0Wnative)) as any as AlgebraPool;
 
   await pluginFactory.setLimitOrderPlugin(ZERO_ADDRESS);
 
-  await factory.createPool(wnative, token1);
+  await factory.createPool(wnative, token1, ZERO_ADDRESS);
   const poolAddressWnative1 = await factory.poolByPair(wnative, token1);
   const poolWnative1 = (poolFactory.attach(poolAddressWnative1)) as any as AlgebraPool;
 

@@ -163,14 +163,4 @@ describe('BasePluginV1Factory', () => {
     });
   });
 
-  describe('#setLimitOrderPlugin', () => {
-    it('fails if caller is not owner', async () => {
-      await expect(pluginFactory.connect(other).setLimitOrderPlugin(wallet.address)).to.be.revertedWith('Only administrator');
-    });
-
-    it('cannot set current address', async () => {
-      await pluginFactory.setLimitOrderPlugin(other.address);
-      await expect(pluginFactory.setLimitOrderPlugin(other.address)).to.be.reverted;
-    });
-  });
 });

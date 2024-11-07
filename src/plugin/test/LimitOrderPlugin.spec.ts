@@ -5,7 +5,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ZERO_ADDRESS, limitOrderPluginFixture } from './shared/fixtures';
 import { encodePriceSqrt, expandTo18Decimals} from './shared/utilities';
 
-import { LimitOrderPlugin, BasePluginV1Factory, TestERC20, IWNativeToken, AlgebraBasePluginV1 } from '../typechain';
+import { LimitOrderPlugin, LimitOrderPluginFactory, TestERC20, IWNativeToken, AlgebraLimitOrderPlugin } from '../typechain';
 
 import snapshotGasCost from './shared/snapshotGasCost';
 import { AlgebraPool, TestAlgebraCallee } from '@cryptoalgebra/integral-core/typechain';
@@ -18,13 +18,13 @@ describe('LimitOrders', () => {
   let pool: AlgebraPool; 
   let pool0Wnative: AlgebraPool;
   let poolWnative1: AlgebraPool;
-  let pluginFactory: BasePluginV1Factory; 
+  let pluginFactory: LimitOrderPluginFactory; 
   let token0: TestERC20;
   let token1: TestERC20;
   let wnative: IWNativeToken;
   let swapTarget: TestAlgebraCallee;
-  let poolKey: {token0: string, token1: string};
-  let poolKeyWnative: {token0: string, token1: string};
+  let poolKey: {token0: string, token1: string, deployer: string};
+  let poolKeyWnative: {token0: string, token1: string, deployer: string};
  
 
   async function initializeAtZeroTick(_pool: AlgebraPool) {
@@ -38,8 +38,8 @@ describe('LimitOrders', () => {
   beforeEach('deploy test limitOrderPlugin', async () => {
     ({ pluginFactory, loPlugin, token0, token1, wnative, pool, pool0Wnative, poolWnative1, swapTarget } = await loadFixture(limitOrderPluginFixture));
 
-    poolKey = {token0: await token0.getAddress(), token1: await token1.getAddress()}
-    poolKeyWnative = {token0: await token0.getAddress(), token1: await wnative.getAddress()}
+    poolKey = {token0: await token0.getAddress(), token1: await token1.getAddress(), deployer: ZeroAddress}
+    poolKeyWnative = {token0: await token0.getAddress(), token1: await wnative.getAddress(), deployer: ZeroAddress}
     
     await initializeAtZeroTick(pool);
     await initializeAtZeroTick(pool0Wnative);
@@ -73,12 +73,12 @@ describe('LimitOrders', () => {
     await swapTarget.mint(pool, poolWnative1, -600, 600, 10n**8n)
     await swapTarget.swapToLowerSqrtPrice(poolWnative1, encodePriceSqrt(1,2), wallet);
 
-    const pluginContractFacroty = await ethers.getContractFactory('AlgebraBasePluginV1');
+    const pluginContractFacroty = await ethers.getContractFactory('AlgebraLimitOrderPlugin');
     let pluginAddress = await poolWnative1.plugin();
-    let plugin = (pluginContractFacroty.attach(pluginAddress)) as any as AlgebraBasePluginV1;
+    let plugin = (pluginContractFacroty.attach(pluginAddress)) as any as AlgebraLimitOrderPlugin;
 
     await plugin.setLimitOrderPlugin(loPlugin);
-    await loPlugin.place({token0: await wnative.getAddress(), token1: await token1.getAddress()}, -60, true, 10n**8n);
+    await loPlugin.place({token0: await wnative.getAddress(), token1: await token1.getAddress(), deployer: ZeroAddress}, -60, true, 10n**8n);
 
     expect(await loPlugin.tickLowerLasts(poolWnative1)).to.be.eq(-6960)
   })

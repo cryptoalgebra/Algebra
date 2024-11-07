@@ -499,18 +499,6 @@ describe('AlgebraBasePluginV1', () => {
     });
   });
 
-  describe('LimitOrderPlugin', () => {
-    it('setLimitOrderPlugin works', async () => {
-      await mockPool.setPlugin(plugin);
-      await plugin.setLimitOrderPlugin(other);
-      expect(await plugin.limitOrderPlugin()).to.be.eq(other.address);
-    });
-
-    it('reverts if caller is not manager', async () => {
-      await mockPool.setPlugin(plugin);
-      await expect(plugin.connect(other).setLimitOrderPlugin(other)).to.be.reverted;
-    });
-  })
 
   describe('#FarmingPlugin', () => {
     describe('virtual pool tests', () => {
