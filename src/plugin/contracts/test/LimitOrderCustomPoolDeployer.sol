@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './interfaces/ILimitOrderPluginFactory.sol';
-import './AlgebraLimitOrderPlugin.sol';
+import '@cryptoalgebra/integral-periphery/contracts/interfaces/IAlgebraCustomPoolEntryPoint.sol';
+
+import '../interfaces/ILimitOrderPluginFactory.sol';
+import '../AlgebraLimitOrderPlugin.sol';
 
 /// @title Algebra Integral limit plugin factory
-contract LimitOrderPluginFactory is ILimitOrderPluginFactory {
+contract LimitOrderCustomPoolDeployer is ILimitOrderPluginFactory {
   /// @inheritdoc ILimitOrderPluginFactory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
   /// @inheritdoc ILimitOrderPluginFactory
   address public immutable override algebraFactory;
+
+  address public immutable entryPoint;
 
   address public limitOrderPlugin;
 
@@ -22,7 +26,8 @@ contract LimitOrderPluginFactory is ILimitOrderPluginFactory {
     _;
   }
 
-  constructor(address _algebraFactory) {
+  constructor(address _algebraFactory, address _entryPoint) {
+    entryPoint = _entryPoint;
     algebraFactory = _algebraFactory;
   }
 
@@ -62,5 +67,31 @@ contract LimitOrderPluginFactory is ILimitOrderPluginFactory {
     require(limitOrderPlugin != newLimitOrderPlugin);
     limitOrderPlugin = newLimitOrderPlugin;
     emit LimitOrderPlugin(newLimitOrderPlugin);
+  }
+
+  function createCustomPool(
+    address deployer,
+    address creator,
+    address tokenA,
+    address tokenB,
+    bytes calldata data
+  ) external returns (address customPool) {
+    return IAlgebraCustomPoolEntryPoint(entryPoint).createCustomPool(deployer, creator, tokenA, tokenB, data);
+  }
+
+  function setTickSpacing(address pool, int24 newTickSpacing) external {
+    IAlgebraCustomPoolEntryPoint(entryPoint).setTickSpacing(pool, newTickSpacing);
+  }
+
+  function setPlugin(address pool, address newPluginAddress) external {
+    IAlgebraCustomPoolEntryPoint(entryPoint).setPlugin(pool, newPluginAddress);
+  }
+
+  function setPluginConfig(address pool, uint8 newConfig) external {
+    IAlgebraCustomPoolEntryPoint(entryPoint).setPluginConfig(pool, newConfig);
+  }
+
+  function setFee(address pool, uint16 newFee) external {
+    IAlgebraCustomPoolEntryPoint(entryPoint).setFee(pool, newFee);
   }
 }
