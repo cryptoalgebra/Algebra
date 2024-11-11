@@ -3,13 +3,12 @@ import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ZERO_ADDRESS, limitOrderPluginFixture } from './shared/fixtures';
-import { encodePriceSqrt, expandTo18Decimals} from './shared/utilities';
+import { encodePriceSqrt} from './shared/utilities';
 
 import { LimitOrderPlugin, LimitOrderPluginFactory, TestERC20, IWNativeToken, AlgebraLimitOrderPlugin } from '../typechain';
 
 import snapshotGasCost from './shared/snapshotGasCost';
 import { AlgebraPool, TestAlgebraCallee } from '@cryptoalgebra/integral-core/typechain';
-import { token } from '../typechain/@openzeppelin/contracts';
 
 describe('LimitOrders', () => {
   let wallet: Wallet, other: Wallet;
@@ -18,7 +17,6 @@ describe('LimitOrders', () => {
   let pool: AlgebraPool; 
   let pool0Wnative: AlgebraPool;
   let poolWnative1: AlgebraPool;
-  let pluginFactory: LimitOrderPluginFactory; 
   let token0: TestERC20;
   let token1: TestERC20;
   let wnative: IWNativeToken;
@@ -64,7 +62,7 @@ describe('LimitOrders', () => {
     
   });
 
-  it('initialize works correct', async () => {
+  it('initialize on place works correct', async () => {
       
     await initializeAtZeroTick(poolWnative1)
 
@@ -78,8 +76,10 @@ describe('LimitOrders', () => {
     let plugin = (pluginContractFacroty.attach(pluginAddress)) as any as AlgebraLimitOrderPlugin;
 
     await plugin.setLimitOrderPlugin(loPlugin);
+    expect(await loPlugin.initialized(poolWnative1)).to.be.eq(false);
     await loPlugin.place({token0: await wnative.getAddress(), token1: await token1.getAddress(), deployer: ZeroAddress}, -60, true, 10n**8n);
 
+    expect(await loPlugin.initialized(poolWnative1)).to.be.eq(true);
     expect(await loPlugin.tickLowerLasts(poolWnative1)).to.be.eq(-6960)
   })
 
@@ -199,6 +199,24 @@ describe('LimitOrders', () => {
       expect(token1Total).to.be.eq(300435);
 
       expect(await loPlugin.getEpochLiquidity(1,wallet)).to.be.eq(10n**8n);
+    });
+
+
+    it.only('cross few los', async () => {
+      
+      for (let i = 0; i < 20; i++) {
+        await loPlugin.place(poolKey, i*60, true, 10n**8n);
+      }
+      await swapTarget.swapToHigherSqrtPrice(pool, encodePriceSqrt(2,1), wallet);
+
+      for (let i = 1; i < 21; i++) {
+        const {filled, liquidityTotal, token0Total, } = await loPlugin.epochInfos(i);
+        expect(filled).to.be.eq(true);
+        expect(liquidityTotal).to.be.eq(10n**8n);
+        expect(token0Total).to.be.eq(0);
+
+        expect(await loPlugin.getEpochLiquidity(1,wallet)).to.be.eq(10n**8n);
+      }
     });
 
     it('cross ticks without lo', async () => {
@@ -343,7 +361,7 @@ describe('LimitOrders', () => {
       await loPlugin.place(poolKey, -60, false, 10n**8n);
       await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(98,100), wallet);
 
-      await expect(loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, wallet)).to.be.revertedWithCustomError(loPlugin,"InsufficientLiquidity()")      
+      await expect(loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, wallet)).to.be.revertedWithCustomError(loPlugin,"Filled()")      
     });
 
     it('reverts if kill 0 liquidity', async () => {
