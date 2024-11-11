@@ -3,7 +3,7 @@ import { ethers } from 'hardhat';
 import { expect } from './shared/expect';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ZERO_ADDRESS, limitOrderPluginFixture } from './shared/fixtures';
-import { encodePriceSqrt} from './shared/utilities';
+import { encodePriceSqrt, MAX_SQRT_RATIO, MIN_SQRT_RATIO} from './shared/utilities';
 
 import { LimitOrderPlugin, LimitOrderPluginFactory, TestERC20, IWNativeToken, AlgebraLimitOrderPlugin } from '../typechain';
 
@@ -17,6 +17,7 @@ describe('LimitOrders', () => {
   let pool: AlgebraPool; 
   let pool0Wnative: AlgebraPool;
   let poolWnative1: AlgebraPool;
+  let pluginFactory: LimitOrderPluginFactory;
   let token0: TestERC20;
   let token1: TestERC20;
   let wnative: IWNativeToken;
@@ -116,6 +117,28 @@ describe('LimitOrders', () => {
         expect(liquidityTotal).to.be.eq(10n**8n);
       });
 
+      it('place lo at min tick', async () => {
+        await loPlugin.place(poolKey, -887220, false, 10n**8n);
+
+        const {tickLower, tickUpper, liquidityTotal} = await loPlugin.epochInfos(1);
+
+        expect(tickLower).to.be.eq(-887220);
+        expect(tickUpper).to.be.eq(-887160);
+        expect(liquidityTotal).to.be.eq(10n**8n);
+      });
+
+      it('place lo at tick with closed lo', async () => {
+        await loPlugin.place(poolKey, 60, true, 10n**8n);
+        await swapTarget.swapToHigherSqrtPrice(pool, encodePriceSqrt(102,100), wallet);
+        await loPlugin.place(poolKey, 60, false, 10n**8n);
+        const {filled, tickLower, tickUpper, liquidityTotal} = await loPlugin.epochInfos(2);
+
+        expect(tickLower).to.be.eq(60);
+        expect(tickUpper).to.be.eq(120);
+        expect(liquidityTotal).to.be.eq(10n**8n);
+        expect(filled).to.be.eq(false);
+      });
+
       it('create new lo at same tick', async () => {
         await loPlugin.place(poolKey, -60, false, 10n**8n);
         await loPlugin.connect(other).place(poolKey, -60, false, 10n**8n);
@@ -167,6 +190,10 @@ describe('LimitOrders', () => {
       it('try to place 0 liquidity lo', async () => {
         await expect(loPlugin.place(poolKey, -60, false, 0)).to.be.revertedWithCustomError(loPlugin,"ZeroLiquidity()");
       });
+
+      it('try to place lo at max tick', async () => {
+        await expect(loPlugin.place(poolKey, 887220, true, 10n**8n)).to.be.reverted;
+      });
     });
 
   });
@@ -201,8 +228,48 @@ describe('LimitOrders', () => {
       expect(await loPlugin.getEpochLiquidity(1,wallet)).to.be.eq(10n**8n);
     });
 
+    it('close lo at ~min tick', async () => {
+      await pool.setTickSpacing(200)
+      await loPlugin.place(poolKey, -887200, false, 10n**8n);
+      await swapTarget.swapToLowerSqrtPrice(pool, MIN_SQRT_RATIO + 1n, wallet);
 
-    it.only('cross few los', async () => {
+      const {filled, liquidityTotal, token0Total, token1Total} = await loPlugin.epochInfos(1);
+
+      expect(filled).to.be.eq(true);
+      expect(liquidityTotal).to.be.eq(10n**8n);
+      expect(token0Total).to.be.eq(18287264462421443532704155n);
+      expect(token1Total).to.be.eq(0);
+    });
+
+    it('close lo at ~max tick', async () => {
+      await pool.setTickSpacing(200)
+      await loPlugin.place(poolKey, 887000, true, 10n**8n);
+      await swapTarget.swapToHigherSqrtPrice(pool, MAX_SQRT_RATIO - 1n, wallet);
+
+      const {filled, liquidityTotal, token0Total, token1Total} = await loPlugin.epochInfos(1);
+
+      expect(filled).to.be.eq(true);
+      expect(liquidityTotal).to.be.eq(10n**8n);
+      expect(token0Total).to.be.eq(0);
+      expect(token1Total).to.be.eq(18287264566953458853389250n);
+    });
+
+    it('close lo with several swaps', async () => {
+      await loPlugin.place(poolKey, -60, false, 10n**8n);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(9995,10000), wallet);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(9985,10000), wallet);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(9950,10000), wallet);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(9900,10000), wallet);
+
+      const {filled, liquidityTotal, token0Total, token1Total} = await loPlugin.epochInfos(1);
+
+      expect(filled).to.be.eq(true);
+      expect(liquidityTotal).to.be.eq(10n**8n);
+      expect(token0Total).to.be.eq(300435);
+      expect(token1Total).to.be.eq(0);
+    })
+
+    it('cross several los', async () => {
       
       for (let i = 0; i < 20; i++) {
         await loPlugin.place(poolKey, i*60, true, 10n**8n);
@@ -220,7 +287,6 @@ describe('LimitOrders', () => {
     });
 
     it('cross ticks without lo', async () => {
-  
       await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(98,100), wallet);
 
       expect(await loPlugin.tickLowerLasts(pool)).to.be.eq(-240)
@@ -245,6 +311,22 @@ describe('LimitOrders', () => {
         let balanceAfter =  await token0.balanceOf(wallet);
         expect(balanceAfter - balanceBefore).to.be.eq(300435)
     });
+
+    it('withdraw filled lo from tick with other los', async () => {
+      await loPlugin.place(poolKey, -60, false, 10n**8n);
+      await loPlugin.connect(other).place(poolKey, -60, false, 10n**8n);
+      await loPlugin.connect(other).place(poolKey, -60, false, 10n**8n);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(99,100), wallet);
+
+      let balanceBefore = await token0.balanceOf(wallet);
+      await loPlugin.withdraw(1, wallet);
+      let balanceAfter =  await token0.balanceOf(wallet);
+
+      const {filled, liquidityTotal} = await loPlugin.epochInfos(1);
+      expect(filled).to.be.eq(true)
+      expect(liquidityTotal).to.be.eq(10n ** 8n * 2n)
+      expect(balanceAfter - balanceBefore).to.be.eq(300435)
+  });
 
     it('distribution is correct', async () => {
       await loPlugin.place(poolKey, -60, false, 10n**8n);
@@ -356,12 +438,32 @@ describe('LimitOrders', () => {
       await expect(balanceAfter0 - balanceBefore0).to.be.eq(250941)   
     });
 
+    it('works correct for partial filled lo on tick with few los', async () => {
+      await loPlugin.place(poolKey, -60, false, 10n**8n);
+      await loPlugin.connect(other).place(poolKey, -60, false, 10n**8n);
+      await loPlugin.connect(other).place(poolKey, -60, false, 10n**8n);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(995,1000), wallet);
+
+      let balanceBefore1 = await token1.balanceOf(other);
+      let balanceBefore0 = await token0.balanceOf(other);
+      await loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, other);
+      let balanceAfter1 =  await token1.balanceOf(other);
+      let balanceAfter0 =  await token0.balanceOf(other);
+
+      const {filled, liquidityTotal} = await loPlugin.epochInfos(1);
+      await expect(filled).to.be.eq(false);
+      await expect(liquidityTotal).to.be.eq(10n**8n * 2n);
+      await expect(balanceAfter1 - balanceBefore1).to.be.eq(49222)   
+      await expect(balanceAfter0 - balanceBefore0).to.be.eq(250941)   
+    });
 
     it('reverts if kill filled lo', async () => {
-      await loPlugin.place(poolKey, -60, false, 10n**8n);
-      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(98,100), wallet);
+      await loPlugin.place(poolKey, -600, false, 10n**8n);
+      await swapTarget.swapToLowerSqrtPrice(pool, encodePriceSqrt(50,100), wallet);
 
-      await expect(loPlugin.kill(poolKey, -60, 0, 10n ** 8n, false, wallet)).to.be.revertedWithCustomError(loPlugin,"Filled()")      
+      await expect(loPlugin.kill(poolKey, -600, -540, 10n ** 8n, false, wallet)).to.be.revertedWithCustomError(loPlugin,"InsufficientLiquidity()")  
+      await loPlugin.place(poolKey, -600, true, 10n**8n);   
+      await loPlugin.kill(poolKey, -600, -540, 10n ** 8n, true, wallet) 
     });
 
     it('reverts if kill 0 liquidity', async () => {
@@ -376,9 +478,12 @@ describe('LimitOrders', () => {
       await loPlugin.place(poolKey, -60, false, 10n**8n);
 
       let balanceBefore = await token1.balanceOf(other);
-      await loPlugin.kill(poolKey, -60, 0, 5n ** 8n, false, other);
+      await loPlugin.kill(poolKey, -60, 0, (10n ** 8n)/2n, false, other);
+      const {filled, liquidityTotal} = await loPlugin.epochInfos(1);
       let balanceAfter =  await token1.balanceOf(other);
-      await expect(balanceAfter - balanceBefore).to.be.eq(1170)   
+      await expect(balanceAfter - balanceBefore).to.be.eq(149767)   
+      await expect(filled).to.be.eq(false)
+      await expect(liquidityTotal).to.be.eq((10n ** 8n)/2n)
     });
 
   })
