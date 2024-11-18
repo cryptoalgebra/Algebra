@@ -22,10 +22,8 @@ abstract contract SecurityPlugin is BasePlugin, ISecurityPlugin {
   function _checkStatus(bool isBurn) internal {
     ISecurityRegistry.Status status = ISecurityRegistry(securityRegistry).getPoolStatus(msg.sender);
     if (status == ISecurityRegistry.Status.DISABLED) {
-      _updatePluginConfigInPool(defaultPluginConfig);
       revert PoolDisabled();
-    } else if (status == ISecurityRegistry.Status.BURN_ONLY && isBurn == true) {
-      _updatePluginConfigInPool(defaultPluginConfig);
+    } else if (status == ISecurityRegistry.Status.BURN_ONLY && isBurn == false) {
       revert BurnOnly();
     }
   }

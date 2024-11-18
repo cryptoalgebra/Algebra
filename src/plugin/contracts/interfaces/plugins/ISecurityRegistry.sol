@@ -4,8 +4,8 @@ pragma solidity >=0.5.0;
 interface ISecurityRegistry {
   enum Status {
     ENABLED,
-    DISABLED,
-    BURN_ONLY
+    BURN_ONLY,
+    DISABLED
   }
 
   error OnlyOwner();
