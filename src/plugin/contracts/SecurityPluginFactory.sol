@@ -54,6 +54,7 @@ contract SecurityPluginFactory is ISecurityPluginFactory {
     require(pluginByPool[pool] == address(0), 'Already created');
     ISecurityPlugin plugin = new AlgebraSecurityPlugin(pool, algebraFactory, address(this));
     plugin.setSecurityRegistry(securityRegistry);
+    pluginByPool[pool] = address(plugin);
     return address(plugin);
   }
 

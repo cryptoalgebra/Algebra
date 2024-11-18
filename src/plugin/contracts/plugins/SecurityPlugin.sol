@@ -19,9 +19,6 @@ abstract contract SecurityPlugin is BasePlugin, ISecurityPlugin {
 
   address internal securityRegistry;
 
-  error PoolDisabled();
-  error BurnOnly();
-
   function _checkStatus(bool isBurn) internal {
     ISecurityRegistry.Status status = ISecurityRegistry(securityRegistry).getPoolStatus(msg.sender);
     if (status == ISecurityRegistry.Status.DISABLED) {

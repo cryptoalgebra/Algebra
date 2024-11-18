@@ -32,8 +32,16 @@ contract AlgebraSecurityPlugin is SecurityPlugin {
   }
 
   /// @dev
-  function beforeModifyPosition(address, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4, uint24) {
-    _checkStatus(true);
+  function beforeModifyPosition(
+    address,
+    address,
+    int24,
+    int24,
+    int128 liquidity,
+    bytes calldata
+  ) external override onlyPool returns (bytes4, uint24) {
+    bool isBurn = liquidity > 0 ? false : true;
+    _checkStatus(isBurn);
     return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
   }
 

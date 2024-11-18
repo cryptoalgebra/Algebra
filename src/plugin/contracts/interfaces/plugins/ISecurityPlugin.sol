@@ -7,4 +7,7 @@ interface ISecurityPlugin {
   function getSecurityRegistry() external view returns (address);
 
   event SecurityRegistry(address registry);
+
+  error PoolDisabled();
+  error BurnOnly();
 }

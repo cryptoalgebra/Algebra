@@ -4,7 +4,7 @@ pragma solidity =0.8.20;
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '../interfaces/plugins/ISecurityRegistry.sol';
 
-contract SecuryityRegistry is ISecurityRegistry {
+contract SecurityRegistry is ISecurityRegistry {
   address public immutable override algebraFactory;
   bytes32 public constant override GUARD = keccak256('GUARD');
 
