@@ -66,7 +66,7 @@ contract NonfungiblePositionManager is
     address public override farmingCenter;
 
     /// @inheritdoc INonfungiblePositionManager
-    address public override withdrawalFeesVault;
+    address public override defaultWithdrawalFeesVault;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public override farmingApprovals;
@@ -119,7 +119,7 @@ contract NonfungiblePositionManager is
     {
         _tokenDescriptor = _tokenDescriptor_;
         require(_vault != address(0));
-        withdrawalFeesVault = _vault;
+        defaultWithdrawalFeesVault = _vault;
     }
 
     function positionsWithdrawalFee(
@@ -451,7 +451,10 @@ contract NonfungiblePositionManager is
 
         if (positionWithdrawalFeeLiquidity > 0) {
             (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, positionWithdrawalFeeLiquidity);
-            pool.collect(withdrawalFeesVault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+            address vault = withdrawalFeePoolParams[address(pool)].feeVault == address(0)
+                ? defaultWithdrawalFeesVault
+                : withdrawalFeePoolParams[address(pool)].feeVault;
+            pool.collect(vault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
         }
 
         uint128 liquidityDeltaWithoutFee = params.liquidity > positionLiquidity - positionWithdrawalFeeLiquidity
@@ -603,6 +606,11 @@ contract NonfungiblePositionManager is
         params.apr1 = _apr1;
     }
 
+    function setVaultForPool(address pool, address newVault) external override onlyAdministrator {
+        withdrawalFeePoolParams[pool].feeVault = newVault;
+        emit FeeVaultForPool(pool, newVault);
+    }
+
     /// @inheritdoc INonfungiblePositionManager
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
         require(newWithdrawalFee <= FEE_DENOMINATOR);
@@ -612,7 +620,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function setVaultAddress(address newVault) external override onlyAdministrator {
         require(newVault != address(0));
-        withdrawalFeesVault = newVault;
+        defaultWithdrawalFeesVault = newVault;
     }
 
     /// @inheritdoc IERC721Metadata
