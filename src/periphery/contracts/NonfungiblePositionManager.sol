@@ -622,17 +622,20 @@ contract NonfungiblePositionManager is
         params.apr1 = _apr1;
     }
 
-    function setVaultForPool(
+    function setVaultsForPool(
         address pool,
         uint16[] memory fees,
         address[] memory vaults
     ) external override onlyAdministrator {
         uint16 totalFee;
-        FeesVault[] memory vaultsForPool;
+        FeesVault[] storage vaultsForPool = withdrawalFeePoolParams[pool].feeVaults;
+        if (vaultsForPool.length != 0) {
+            delete withdrawalFeePoolParams[pool].feeVaults;
+        }
         for (uint256 i = 0; i < fees.length; i++) {
             require(fees[i] <= FEE_DENOMINATOR);
             require(vaults[i] != address(0));
-            vaultsForPool[i] = FeesVault(vaults[i], fees[i]);
+            vaultsForPool.push(FeesVault(vaults[i], fees[i]));
             totalFee += fees[i];
         }
         require(totalFee == FEE_DENOMINATOR);
