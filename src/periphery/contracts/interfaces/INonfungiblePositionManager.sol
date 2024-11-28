@@ -209,22 +209,22 @@ interface INonfungiblePositionManager is
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
+    struct FeesVault {
+        address feeVault;
+        uint16 fee;
+    }
+
     struct WithdrawalFeePoolParams {
         uint64 apr0;
         uint64 apr1;
         uint16 withdrawalFee;
-        address feeVault;
+        FeesVault[] feeVaults;
     }
 
     /// @notice Returns withdrawal fee params for pool
     /// @param pool Pool address
-    /// @return apr0
-    /// @return apr1
-    /// @return withdrawalFee
-    /// @return feeVault
-    function withdrawalFeePoolParams(
-        address pool
-    ) external view returns (uint64 apr0, uint64 apr1, uint16 withdrawalFee, address feeVault);
+    /// @return params
+    function getWithdrawalFeePoolParams(address pool) external view returns (WithdrawalFeePoolParams memory params);
 
     /// @notice Changes withdrawalFee for pool
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
@@ -242,8 +242,9 @@ interface INonfungiblePositionManager is
     /// @notice Changes fee vault for pool
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
     /// @param pool The address of the pool to which the settings have been applied
-    /// @param vault The address of vault
-    function setVaultForPool(address pool, address vault) external;
+    /// @param fees array of fees values
+    /// @param vaults array of vault addresses
+    function setVaultForPool(address pool, uint16[] memory fees, address[] memory vaults) external;
 
     /// @notice Returns vault address to which fees will be sent
     /// @return vault The actual vault address
