@@ -244,7 +244,7 @@ interface INonfungiblePositionManager is
     /// @param pool The address of the pool to which the settings have been applied
     /// @param fees array of fees values
     /// @param vaults array of vault addresses
-    function setVaultForPool(address pool, uint16[] memory fees, address[] memory vaults) external;
+    function setVaultsForPool(address pool, uint16[] memory fees, address[] memory vaults) external;
 
     /// @notice Returns vault address to which fees will be sent
     /// @return vault The actual vault address

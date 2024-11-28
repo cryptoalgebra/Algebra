@@ -509,12 +509,54 @@ describe('NonfungiblePositionManager', () => {
 
     it('correct reward calculation', async () => {
       await nft.setTime(15768000)
+      const balanceBefore0 = await tokens[0].balanceOf(factory)
+      const balanceBefore1 = await tokens[1].balanceOf(factory)
       await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
       const balanceAfter0 = await tokens[0].balanceOf(factory)
       const balanceAfter1 = await tokens[1].balanceOf(factory)
-      expect(balanceAfter0).to.be.eq(14) 
-      expect(balanceAfter1).to.be.eq(14)
+      expect(balanceAfter0 - balanceBefore0).to.be.eq(14) 
+      expect(balanceAfter1 - balanceBefore1).to.be.eq(14)
     })
+
+    it('tokens transfer to different vaults', async () => {
+      await nft.setTime(15768000)
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      const balanceBefore0 = await tokens[0].balanceOf(vault0)
+      const balanceBefore1 = await tokens[0].balanceOf(vault1)
+      const balanceBefore2 = await tokens[0].balanceOf(vault2)
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+      const balanceAfter0 = await tokens[0].balanceOf(vault0)
+      const balanceAfter1 = await tokens[0].balanceOf(vault1)
+      const balanceAfter2 = await tokens[0].balanceOf(vault2)
+      expect(balanceAfter0 - balanceBefore0).to.be.eq(1) 
+      expect(balanceAfter1 - balanceBefore1).to.be.eq(1)
+      expect(balanceAfter2 - balanceBefore2).to.be.eq(11)
+    })
+
+    it('setVaultsForPool rewrite vaults', async () => {
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+      await nft.setTime(15768000)
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.setVaultsForPool(poolAddress,  [500, 500], [vault1.getAddress(), vault0.getAddress()])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+
+      let vault = (await nft.getWithdrawalFeePoolParams(poolAddress)).feeVaults[1]
+      expect(vault.toString()).to.be.eq([vault0.address, 500n].toString())
+    })
+
 
   })
 
