@@ -557,6 +557,23 @@ describe('NonfungiblePositionManager', () => {
       expect(vault.toString()).to.be.eq([vault0.address, 500n].toString())
     })
 
+    it('delete vaults', async () => {
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+      await nft.setTime(15768000)
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.setVaultsForPool(poolAddress,  [], [])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+
+      let vault = (await nft.getWithdrawalFeePoolParams(poolAddress)).feeVaults
+      expect(vault.toString()).to.be.eq("")
+    })
+
 
   })
 
