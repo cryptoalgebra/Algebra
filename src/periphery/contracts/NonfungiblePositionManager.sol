@@ -629,17 +629,20 @@ contract NonfungiblePositionManager is
     ) external override onlyAdministrator {
         uint16 totalFee;
         FeesVault[] storage vaultsForPool = withdrawalFeePoolParams[pool].feeVaults;
-        if (vaultsForPool.length != 0) {
+        require(vaults.length == fees.length, 'Vaults and fees length mismatch');
+        if (vaultsForPool.length != 0 || fees.length == 0) {
             delete withdrawalFeePoolParams[pool].feeVaults;
         }
         for (uint256 i = 0; i < fees.length; i++) {
-            require(vaults[i] != address(0));
+            require(vaults[i] != address(0), 'Vault address cannot be 0');
             vaultsForPool.push(FeesVault(vaults[i], fees[i]));
             totalFee += fees[i];
             emit FeeVaultForPool(pool, vaults[i], fees[i]);
         }
-        require(totalFee == FEE_DENOMINATOR);
-        withdrawalFeePoolParams[pool].feeVaults = vaultsForPool;
+        if (fees.length != 0) {
+            require(totalFee == FEE_DENOMINATOR, 'Total fee must be equal to FEE_DENOMINATOR');
+            withdrawalFeePoolParams[pool].feeVaults = vaultsForPool;
+        }
     }
 
     /// @inheritdoc INonfungiblePositionManager
