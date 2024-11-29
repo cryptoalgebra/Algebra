@@ -54,7 +54,11 @@ interface INonfungiblePositionManager is
         uint256 amount1
     );
 
-    event FeeVaultForPool(address pool, address feeVault);
+    /// @notice Emitted when a fee vault is set for a pool
+    /// @param pool The address of the pool to which the vault have been applied
+    /// @param feeVault The address of the fee vault
+    /// @param fee Percentage of withdrawal fee that will be sent to the vault
+    event FeeVaultForPool(address pool, address feeVault, uint16 fee);
 
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
