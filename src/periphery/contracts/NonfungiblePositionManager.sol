@@ -636,6 +636,7 @@ contract NonfungiblePositionManager is
             require(vaults[i] != address(0));
             vaultsForPool.push(FeesVault(vaults[i], fees[i]));
             totalFee += fees[i];
+            emit FeeVaultForPool(pool, vaults[i], fees[i]);
         }
         require(totalFee == FEE_DENOMINATOR);
         withdrawalFeePoolParams[pool].feeVaults = vaultsForPool;
