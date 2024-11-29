@@ -633,7 +633,6 @@ contract NonfungiblePositionManager is
             delete withdrawalFeePoolParams[pool].feeVaults;
         }
         for (uint256 i = 0; i < fees.length; i++) {
-            require(fees[i] <= FEE_DENOMINATOR);
             require(vaults[i] != address(0));
             vaultsForPool.push(FeesVault(vaults[i], fees[i]));
             totalFee += fees[i];
