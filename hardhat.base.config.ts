@@ -87,6 +87,11 @@ export default {
       chainId: 80085,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    sonicTestnet: {
+      url: `https://rpc.blaze.soniclabs.com`,
+      chainId: 57054,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
     maticMainnet: {
       url: `https://rpc-mainnet.matic.quiknode.pro`,
       chainId: 137,
@@ -141,6 +146,14 @@ export default {
         chainId: 80085,
         urls: {
           apiURL: 'https://api.routescan.io/v2/network/testnet/evm/80085/etherscan/api/',
+          browserURL: 'https://artio.beratrail.io/',
+        },
+      },
+      {
+        network: 'sonicTestnet',
+        chainId: 57054,
+        urls: {
+          apiURL: 'https://api.routescan.io/v2/network/testnet/evm/57054/etherscan/api/',
           browserURL: 'https://artio.beratrail.io/',
         },
       },

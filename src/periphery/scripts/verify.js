@@ -54,7 +54,8 @@ async function main() {
             deploysData.factory,
             deploysData.wrapped,
             deploysData.proxy,
-            deploysData.poolDeployer
+            deploysData.poolDeployer,
+            deploysData.vault
         ],
         });
 }

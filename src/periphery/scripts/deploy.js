@@ -8,7 +8,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
   // WNativeTokenAddress
-  const WNativeTokenAddress = '0x6E2542aFC68a1697FeB2810437DF9409D3b93493';
+  const WNativeTokenAddress = '0x845e4145F7de2822d16FE233Ecd0181c61f1d65F';
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
@@ -67,7 +67,7 @@ async function main() {
   );
   const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(
     WNativeTokenAddress,
-    'WTLS',
+    'WSONIC',
     []
   );
 
@@ -92,7 +92,8 @@ async function main() {
     deploysData.factory,
     WNativeTokenAddress,
     Proxy.target,
-    deploysData.poolDeployer
+    deploysData.poolDeployer,
+    deploysData.vault
   );
 
   await NonfungiblePositionManager.waitForDeployment();
