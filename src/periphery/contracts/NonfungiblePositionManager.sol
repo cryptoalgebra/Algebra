@@ -10,6 +10,7 @@ import './interfaces/INonfungiblePositionManager.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IPositionFollower.sol';
 import './libraries/PoolInteraction.sol';
+import './libraries/OracleLibrary.sol';
 import './libraries/PoolAddress.sol';
 import './base/LiquidityManagement.sol';
 import './base/PeripheryImmutableState.sol';
@@ -49,18 +50,31 @@ contract NonfungiblePositionManager is
         uint128 tokensOwed1;
     }
 
+    // details about withdrawal fee for position
+    struct PositionWithdrawalFee {
+        uint32 lastUpdateTimestamp; // last increase/decrease liquidity timestamp
+        uint128 withdrawalFeeLiquidity; // liqudity of accumulated withdrawal fee
+    }
+
     /// @dev The role which has the right to change the farming center address
     bytes32 public constant NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE =
         keccak256('NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE');
 
+    uint64 public constant FEE_DENOMINATOR = 1e3;
+
     /// @inheritdoc INonfungiblePositionManager
     address public override farmingCenter;
+
+    /// @inheritdoc INonfungiblePositionManager
+    address public override defaultWithdrawalFeesVault;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public override farmingApprovals;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
+
+    mapping(address pool => WithdrawalFeePoolParams params) private withdrawalFeePoolParams;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
@@ -74,6 +88,9 @@ contract NonfungiblePositionManager is
     /// @dev The token ID position data
     mapping(uint256 tokenId => Position position) private _positions;
 
+    /// @dev The token ID withdrawal fee position data
+    mapping(uint256 tokenId => PositionWithdrawalFee data) private _positionsWithdrawalFee;
+
     /// @dev The ID of the next token that will be minted. Skips 0
     uint176 private _nextId = 1;
     /// @dev The ID of the next pool that is used for the first time. Skips 0
@@ -84,16 +101,37 @@ contract NonfungiblePositionManager is
         _;
     }
 
+    modifier onlyAdministrator() {
+        _hasRoleOrOwner();
+        _;
+    }
+
     constructor(
         address _factory,
         address _WNativeToken,
         address _tokenDescriptor_,
-        address _poolDeployer
+        address _poolDeployer,
+        address _vault
     )
         ERC721Permit('Algebra Positions NFT-V2', 'ALGB-POS', '2')
         PeripheryImmutableState(_factory, _WNativeToken, _poolDeployer)
     {
         _tokenDescriptor = _tokenDescriptor_;
+        require(_vault != address(0));
+        defaultWithdrawalFeesVault = _vault;
+    }
+
+    function positionsWithdrawalFee(
+        uint256 tokenId
+    ) external view override returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity) {
+        PositionWithdrawalFee memory _position = _positionsWithdrawalFee[tokenId];
+        return (_position.lastUpdateTimestamp, _position.withdrawalFeeLiquidity);
+    }
+
+    function getWithdrawalFeePoolParams(
+        address pool
+    ) external view override returns (WithdrawalFeePoolParams memory params) {
+        return withdrawalFeePoolParams[pool];
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -194,6 +232,11 @@ contract NonfungiblePositionManager is
             tokensOwed1: 0
         });
 
+        _positionsWithdrawalFee[tokenId] = PositionWithdrawalFee({
+            lastUpdateTimestamp: uint32(_blockTimestamp()),
+            withdrawalFeeLiquidity: 0
+        });
+
         emit IncreaseLiquidity(tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
     }
 
@@ -243,6 +286,60 @@ contract NonfungiblePositionManager is
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+    }
+
+    function _calculateWithdrawalFees(
+        address pool,
+        uint32 lastUpdateTimestamp,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 liquidity
+    ) private view returns (uint128 withdrawalFeeLiquidity) {
+        WithdrawalFeePoolParams memory params = withdrawalFeePoolParams[pool];
+
+        uint256 token0apr = params.apr0;
+        uint256 token1apr = params.apr1;
+        uint16 withdrawalFee = params.withdrawalFee;
+
+        if ((token0apr > 0 || token1apr > 0) && withdrawalFee > 0) {
+            uint32 period = uint32(_blockTimestamp()) - lastUpdateTimestamp;
+
+            if (period == 0) return 0;
+            address oracle = IAlgebraPool(pool).plugin();
+
+            if (oracle == address(0)) return 0;
+            int24 timeWeightedAverageTick = OracleLibrary.consult(oracle, period);
+
+            uint160 tickLowerPrice = TickMath.getSqrtRatioAtTick(tickLower);
+            uint160 tickUpperPrice = TickMath.getSqrtRatioAtTick(tickUpper);
+
+            (uint256 averageAmount0, uint256 averageAmount1) = LiquidityAmounts.getAmountsForLiquidity(
+                TickMath.getSqrtRatioAtTick(timeWeightedAverageTick),
+                tickLowerPrice,
+                tickUpperPrice,
+                liquidity
+            );
+
+            if (token0apr > 0) {
+                uint256 amount0EarnedFromStake = (token0apr * period * averageAmount0) / (FEE_DENOMINATOR * 365 days);
+                uint128 amount0ToWithdraw = uint128((amount0EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
+                withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount0(
+                    tickLowerPrice,
+                    tickUpperPrice,
+                    amount0ToWithdraw
+                );
+            }
+
+            if (token1apr > 0) {
+                uint256 amount1EarnedFromStake = (token1apr * period * averageAmount1) / (FEE_DENOMINATOR * 365 days);
+                uint128 amount1ToWithdraw = uint128((amount1EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
+                withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount1(
+                    tickLowerPrice,
+                    tickUpperPrice,
+                    amount1ToWithdraw
+                );
+            }
+        }
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -296,6 +393,19 @@ contract NonfungiblePositionManager is
             position.liquidity = positionLiquidity + liquidity;
         }
 
+        {
+            PositionWithdrawalFee storage _position = _positionsWithdrawalFee[params.tokenId];
+            uint128 withdrawalFeeLiquidity = _calculateWithdrawalFees(
+                address(pool),
+                _position.lastUpdateTimestamp,
+                tickLower,
+                tickUpper,
+                positionLiquidity
+            );
+            _position.lastUpdateTimestamp = uint32(_blockTimestamp());
+            _position.withdrawalFeeLiquidity += withdrawalFeeLiquidity;
+        }
+
         emit IncreaseLiquidity(params.tokenId, liquidityDesired, liquidity, amount0, amount1, address(pool));
 
         _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(liquidity)));
@@ -324,7 +434,50 @@ contract NonfungiblePositionManager is
         require(positionLiquidity >= params.liquidity);
 
         IAlgebraPool pool = IAlgebraPool(_getPoolById(poolId));
-        (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, params.liquidity);
+
+        uint128 positionWithdrawalFeeLiquidity;
+        {
+            PositionWithdrawalFee storage _position = _positionsWithdrawalFee[params.tokenId];
+            positionWithdrawalFeeLiquidity = _position.withdrawalFeeLiquidity;
+            positionWithdrawalFeeLiquidity += _calculateWithdrawalFees(
+                address(pool),
+                _position.lastUpdateTimestamp,
+                tickLower,
+                tickUpper,
+                positionLiquidity
+            );
+            _position.lastUpdateTimestamp = uint32(_blockTimestamp());
+            positionWithdrawalFeeLiquidity = positionWithdrawalFeeLiquidity > positionLiquidity
+                ? positionLiquidity
+                : positionWithdrawalFeeLiquidity;
+
+            _position.withdrawalFeeLiquidity = 0;
+        }
+
+        if (positionWithdrawalFeeLiquidity > 0) {
+            (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, positionWithdrawalFeeLiquidity);
+            FeesVault[] memory vaults = withdrawalFeePoolParams[address(pool)].feeVaults;
+            if (vaults.length == 0) {
+                pool.collect(defaultWithdrawalFeesVault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+            } else {
+                for (uint i = 0; i < vaults.length; i++) {
+                    uint16 feePart = vaults[i].fee;
+                    pool.collect(
+                        vaults[i].feeVault,
+                        tickLower,
+                        tickUpper,
+                        uint128((amount0 * feePart) / FEE_DENOMINATOR),
+                        uint128((amount1 * feePart) / FEE_DENOMINATOR)
+                    );
+                }
+            }
+        }
+
+        uint128 liquidityDeltaWithoutFee = params.liquidity > positionLiquidity - positionWithdrawalFeeLiquidity
+            ? positionLiquidity - positionWithdrawalFeeLiquidity
+            : params.liquidity;
+
+        (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, liquidityDeltaWithoutFee);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
 
@@ -345,13 +498,22 @@ contract NonfungiblePositionManager is
                 position.tokensOwed1 += uint128(amount1) + tokensOwed1;
 
                 // subtraction is safe because we checked positionLiquidity is gte params.liquidity
-                position.liquidity = positionLiquidity - params.liquidity;
+                position.liquidity = positionLiquidity - liquidityDeltaWithoutFee - positionWithdrawalFeeLiquidity;
             }
         }
 
-        emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
+        emit DecreaseLiquidity(
+            params.tokenId,
+            liquidityDeltaWithoutFee,
+            positionWithdrawalFeeLiquidity,
+            amount0,
+            amount1
+        );
 
-        _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
+        _applyLiquidityDeltaInFarming(
+            params.tokenId,
+            -int256(uint256(liquidityDeltaWithoutFee + positionWithdrawalFeeLiquidity))
+        );
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -409,7 +571,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity | position.tokensOwed0 | position.tokensOwed1 == 0);
 
         delete _positions[tokenId];
         delete tokenFarmedIn[tokenId];
@@ -424,7 +586,7 @@ contract NonfungiblePositionManager is
     ) external payable override isAuthorizedForToken(tokenId) {
         address newValue;
         if (approve) {
-            require(farmingAddress == farmingCenter, 'Invalid farming address');
+            require(farmingAddress == farmingCenter);
             newValue = farmingAddress;
         }
         farmingApprovals[tokenId] = newValue;
@@ -447,10 +609,52 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function setFarmingCenter(address newFarmingCenter) external override {
-        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
+    function setFarmingCenter(address newFarmingCenter) external override onlyAdministrator {
         farmingCenter = newFarmingCenter;
         emit FarmingCenter(newFarmingCenter);
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setTokenAPR(address pool, uint64 _apr0, uint64 _apr1) external override onlyAdministrator {
+        require(_apr0 <= FEE_DENOMINATOR && _apr1 <= FEE_DENOMINATOR);
+        WithdrawalFeePoolParams storage params = withdrawalFeePoolParams[pool];
+        params.apr0 = _apr0;
+        params.apr1 = _apr1;
+    }
+
+    function setVaultsForPool(
+        address pool,
+        uint16[] memory fees,
+        address[] memory vaults
+    ) external override onlyAdministrator {
+        uint16 totalFee;
+        FeesVault[] storage vaultsForPool = withdrawalFeePoolParams[pool].feeVaults;
+        require(vaults.length == fees.length, 'Vaults and fees length mismatch');
+        if (vaultsForPool.length != 0 || fees.length == 0) {
+            delete withdrawalFeePoolParams[pool].feeVaults;
+        }
+        for (uint256 i = 0; i < fees.length; i++) {
+            require(vaults[i] != address(0), 'Vault address cannot be 0');
+            vaultsForPool.push(FeesVault(vaults[i], fees[i]));
+            totalFee += fees[i];
+            emit FeeVaultForPool(pool, vaults[i], fees[i]);
+        }
+        if (fees.length != 0) {
+            require(totalFee == FEE_DENOMINATOR, 'Total fee must be equal to FEE_DENOMINATOR');
+            withdrawalFeePoolParams[pool].feeVaults = vaultsForPool;
+        }
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
+        require(newWithdrawalFee <= FEE_DENOMINATOR);
+        withdrawalFeePoolParams[pool].withdrawalFee = newWithdrawalFee;
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
+    function setVaultAddress(address newVault) external override onlyAdministrator {
+        require(newVault != address(0));
+        defaultWithdrawalFeesVault = newVault;
     }
 
     /// @inheritdoc IERC721Metadata
@@ -473,6 +677,10 @@ contract NonfungiblePositionManager is
 
     function _checkAuthorizationForToken(uint256 tokenId) private view {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+    }
+
+    function _hasRoleOrOwner() private view {
+        require(IAlgebraFactory(factory).hasRoleOrOwner(NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE, msg.sender));
     }
 
     function _applyLiquidityDeltaInFarming(uint256 tokenId, int256 liquidityDelta) private {

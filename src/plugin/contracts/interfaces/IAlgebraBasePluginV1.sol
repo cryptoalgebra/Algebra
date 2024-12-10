@@ -13,4 +13,12 @@ interface IAlgebraBasePluginV1 is IVolatilityOracle, IDynamicFeeManager, IFarmin
   /// @notice Initialize the plugin externally
   /// @dev This function allows to initialize the plugin if it was created after the pool was created
   function initialize() external;
+
+  /// @notice Set the entrypoint address
+  /// @param newModifyLiquidityEntrypoint New entrypoint address
+  function setModifyLiquidityEntrypoint(address newModifyLiquidityEntrypoint) external;
+
+  /// @notice Returns the address of entrypoint
+  /// @return The modifyLiquidityEntrypoint contract address
+  function modifyLiquidityEntrypoint() external view returns (address);
 }

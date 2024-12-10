@@ -9,6 +9,7 @@ import {
   IAlgebraFactory,
   SwapRouter,
   MockPositionFollower,
+  MockOraclePlugin
 } from '../typechain';
 import completeFixture from './shared/completeFixture';
 import { computePoolAddress } from './shared/computePoolAddress';
@@ -25,6 +26,7 @@ import { sortedTokens } from './shared/tokenSort';
 import { extractJSONFromURI } from './shared/extractJSONFromURI';
 
 import { abi as IAlgebraPoolABI } from '@cryptoalgebra/integral-core/artifacts/contracts/interfaces/IAlgebraPool.sol/IAlgebraPool.json';
+import { token } from '../typechain/@openzeppelin/contracts';
 
 describe('NonfungiblePositionManager', () => {
   let wallets: Wallet[];
@@ -427,6 +429,153 @@ describe('NonfungiblePositionManager', () => {
       );
     });
   });
+
+  describe('#withdrawalFee plugin', () => {
+    const tokenId = 1;
+    beforeEach('create a position and set withdrawal fee params', async () => {
+      await nft.createAndInitializePoolIfNecessary(
+        tokens[0].getAddress(),
+        tokens[1].getAddress(),
+        encodePriceSqrt(1, 1)
+      );
+
+      await nft.mint({
+        token0: tokens[0].getAddress(),
+        token1: tokens[1].getAddress(),
+        tickLower: -60,
+        tickUpper: 60,
+        recipient: other.getAddress(),
+        amount0Desired: 1000,
+        amount1Desired: 1000,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 1,
+      });
+
+      const poolAddress = await factory.poolByPair(tokens[0], tokens[1]);
+
+      const MockOraclePluginFactory = await ethers.getContractFactory('MockOraclePlugin');
+      const mockOraclePlugin = await MockOraclePluginFactory.deploy();
+
+      const pool = new ethers.Contract(poolAddress, IAlgebraPoolABI, wallet);
+      await pool.setPlugin(mockOraclePlugin)
+      await nft.setTokenAPR(poolAddress, 0, 100) // 10% apr
+      await nft.setWithdrawalFee(poolAddress, 500) // withdrawal fee 50%
+
+    });
+
+      
+    it('liquidity decrease works correct', async () => {
+      await nft.setTime(15768000)
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15768000,
+      });
+
+      const {liquidity} = await nft.positions(tokenId)
+
+      const {withdrawalFeeLiquidity} = await nft.positionsWithdrawalFee(tokenId)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 })
+
+      expect((await nft.positions(tokenId)).liquidity).to.be.eq(liquidity - 1000n - withdrawalFeeLiquidity)
+    })
+
+    it('withdrawal fees positions timestamp updates correct', async () => {
+
+      await nft.setTime(15768000)
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 100,
+        amount1Desired: 100,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15768000,
+      });
+
+      expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15768000)
+      
+      await nft.setTime(15778000)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15778000 })
+
+      expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15778000)
+
+    }) 
+
+    it('correct reward calculation', async () => {
+      await nft.setTime(15768000)
+      const balanceBefore0 = await tokens[0].balanceOf(factory)
+      const balanceBefore1 = await tokens[1].balanceOf(factory)
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+      const balanceAfter0 = await tokens[0].balanceOf(factory)
+      const balanceAfter1 = await tokens[1].balanceOf(factory)
+      expect(balanceAfter0 - balanceBefore0).to.be.eq(14) 
+      expect(balanceAfter1 - balanceBefore1).to.be.eq(14)
+    })
+
+    it('tokens transfer to different vaults', async () => {
+      await nft.setTime(15768000)
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      const balanceBefore0 = await tokens[0].balanceOf(vault0)
+      const balanceBefore1 = await tokens[0].balanceOf(vault1)
+      const balanceBefore2 = await tokens[0].balanceOf(vault2)
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+      const balanceAfter0 = await tokens[0].balanceOf(vault0)
+      const balanceAfter1 = await tokens[0].balanceOf(vault1)
+      const balanceAfter2 = await tokens[0].balanceOf(vault2)
+      expect(balanceAfter0 - balanceBefore0).to.be.eq(1) 
+      expect(balanceAfter1 - balanceBefore1).to.be.eq(1)
+      expect(balanceAfter2 - balanceBefore2).to.be.eq(11)
+    })
+
+    it('setVaultsForPool rewrite vaults', async () => {
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+      await nft.setTime(15768000)
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.setVaultsForPool(poolAddress,  [500, 500], [vault1.getAddress(), vault0.getAddress()])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+
+      let vault = (await nft.getWithdrawalFeePoolParams(poolAddress)).feeVaults[1]
+      expect(vault.toString()).to.be.eq([vault0.address, 500n].toString())
+    })
+
+    it('delete vaults', async () => {
+      let [vault0, vault1, vault2] = wallets.slice(2, 5);
+      await nft.setTime(15768000)
+
+      const poolAddress = computePoolAddress(await factory.poolDeployer(), [
+        await tokens[0].getAddress(),
+        await tokens[1].getAddress(),
+      ]);
+
+      await nft.setVaultsForPool(poolAddress,  [100, 100, 800], [vault0.getAddress(), vault1.getAddress(), vault2.getAddress()])
+      await nft.setVaultsForPool(poolAddress,  [], [])
+      await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 1000, amount0Min: 0, amount1Min: 0, deadline: 15768000 });
+
+      let vault = (await nft.getWithdrawalFeePoolParams(poolAddress)).feeVaults
+      expect(vault.toString()).to.be.eq("")
+    })
+
+
+  })
 
   describe('#increaseLiquidity', () => {
     const tokenId = 1;
@@ -847,19 +996,19 @@ describe('NonfungiblePositionManager', () => {
     });
 
     it('cannot be called while there is still liquidity', async () => {
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('cannot be called while there is still partial liquidity', async () => {
       await nft.connect(other).decreaseLiquidity({ tokenId, liquidity: 50, amount0Min: 0, amount1Min: 0, deadline: 1 });
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('cannot be called while there is still tokens owed', async () => {
       await nft
         .connect(other)
         .decreaseLiquidity({ tokenId, liquidity: 100, amount0Min: 0, amount1Min: 0, deadline: 1 });
-      await expect(nft.connect(other).burn(tokenId)).to.be.revertedWith('Not cleared');
+      await expect(nft.connect(other).burn(tokenId)).to.be.reverted;
     });
 
     it('deletes the token', async () => {
@@ -1349,9 +1498,7 @@ describe('NonfungiblePositionManager', () => {
       it('can not approve for invalid farming', async () => {
         await nft.setFarmingCenter(wallet.address);
 
-        await expect(nft.connect(other).approveForFarming(tokenId, true, nft)).to.be.revertedWith(
-          'Invalid farming address'
-        );
+        await expect(nft.connect(other).approveForFarming(tokenId, true, nft)).to.be.reverted;
       });
 
       it('can revoke approval for farming', async () => {

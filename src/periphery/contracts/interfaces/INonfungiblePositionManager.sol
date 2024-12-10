@@ -43,9 +43,22 @@ interface INonfungiblePositionManager is
     /// @notice Emitted when liquidity is decreased for a position NFT
     /// @param tokenId The ID of the token for which liquidity was decreased
     /// @param liquidity The amount by which liquidity for the NFT position was decreased
+    /// @param withdrawalFeeliquidity Withdrawal fee liq
     /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
     /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
-    event DecreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event DecreaseLiquidity(
+        uint256 indexed tokenId,
+        uint128 liquidity,
+        uint128 withdrawalFeeliquidity,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    /// @notice Emitted when a fee vault is set for a pool
+    /// @param pool The address of the pool to which the vault have been applied
+    /// @param feeVault The address of the fee vault
+    /// @param fee Percentage of withdrawal fee that will be sent to the vault
+    event FeeVaultForPool(address pool, address feeVault, uint16 fee);
 
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
@@ -199,6 +212,60 @@ interface INonfungiblePositionManager is
     /// @param tokenId The ID of the token
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
+
+    struct FeesVault {
+        address feeVault;
+        uint16 fee;
+    }
+
+    struct WithdrawalFeePoolParams {
+        uint64 apr0;
+        uint64 apr1;
+        uint16 withdrawalFee;
+        FeesVault[] feeVaults;
+    }
+
+    /// @notice Returns withdrawal fee params for pool
+    /// @param pool Pool address
+    /// @return params
+    function getWithdrawalFeePoolParams(address pool) external view returns (WithdrawalFeePoolParams memory params);
+
+    /// @notice Changes withdrawalFee for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param newWithdrawalFee Percentage of lst token earnings that will be sent to the vault
+    function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external;
+
+    /// @notice Changes tokens apr for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param apr0 APR of LST token0
+    /// @param apr1 APR of LST token1
+    function setTokenAPR(address pool, uint64 apr0, uint64 apr1) external;
+
+    /// @notice Changes fee vault for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param fees array of fees values
+    /// @param vaults array of vault addresses
+    function setVaultsForPool(address pool, uint16[] memory fees, address[] memory vaults) external;
+
+    /// @notice Returns vault address to which fees will be sent
+    /// @return vault The actual vault address
+    function defaultWithdrawalFeesVault() external view returns (address vault);
+
+    /// @notice Changes vault address
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param newVault The new address of vault
+    function setVaultAddress(address newVault) external;
+
+    /// @notice Returns withdrawalFee information associated with a given token ID
+    /// @param tokenId The ID of the token that represents the position
+    /// @return lastUpdateTimestamp Last increase/decrease liquidity timestamp
+    /// @return withdrawalFeeLiquidity Liqudity of accumulated withdrawal fee
+    function positionsWithdrawalFee(
+        uint256 tokenId
+    ) external view returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity);
 
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
