@@ -66,7 +66,7 @@ contract NonfungiblePositionManager is
     address public override farmingCenter;
 
     /// @inheritdoc INonfungiblePositionManager
-    address public override withdrawalFeesVault;
+    address public override defaultWithdrawalFeesVault;
 
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public override farmingApprovals;
@@ -74,8 +74,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     mapping(uint256 tokenId => address farmingCenterAddress) public tokenFarmedIn;
 
-    /// @inheritdoc INonfungiblePositionManager
-    mapping(address pool => WithdrawalFeePoolParams params) public override withdrawalFeePoolParams;
+    mapping(address pool => WithdrawalFeePoolParams params) private withdrawalFeePoolParams;
 
     /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
     address private immutable _tokenDescriptor;
@@ -119,7 +118,7 @@ contract NonfungiblePositionManager is
     {
         _tokenDescriptor = _tokenDescriptor_;
         require(_vault != address(0));
-        withdrawalFeesVault = _vault;
+        defaultWithdrawalFeesVault = _vault;
     }
 
     function positionsWithdrawalFee(
@@ -127,6 +126,12 @@ contract NonfungiblePositionManager is
     ) external view override returns (uint32 lastUpdateTimestamp, uint128 withdrawalFeeLiquidity) {
         PositionWithdrawalFee memory _position = _positionsWithdrawalFee[tokenId];
         return (_position.lastUpdateTimestamp, _position.withdrawalFeeLiquidity);
+    }
+
+    function getWithdrawalFeePoolParams(
+        address pool
+    ) external view override returns (WithdrawalFeePoolParams memory params) {
+        return withdrawalFeePoolParams[pool];
     }
 
     /// @inheritdoc INonfungiblePositionManager
@@ -451,7 +456,21 @@ contract NonfungiblePositionManager is
 
         if (positionWithdrawalFeeLiquidity > 0) {
             (amount0, amount1) = pool._burnPositionInPool(tickLower, tickUpper, positionWithdrawalFeeLiquidity);
-            pool.collect(withdrawalFeesVault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+            FeesVault[] memory vaults = withdrawalFeePoolParams[address(pool)].feeVaults;
+            if (vaults.length == 0) {
+                pool.collect(defaultWithdrawalFeesVault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+            } else {
+                for (uint i = 0; i < vaults.length; i++) {
+                    uint16 feePart = vaults[i].fee;
+                    pool.collect(
+                        vaults[i].feeVault,
+                        tickLower,
+                        tickUpper,
+                        uint128((amount0 * feePart) / FEE_DENOMINATOR),
+                        uint128((amount1 * feePart) / FEE_DENOMINATOR)
+                    );
+                }
+            }
         }
 
         uint128 liquidityDeltaWithoutFee = params.liquidity > positionLiquidity - positionWithdrawalFeeLiquidity
@@ -603,6 +622,29 @@ contract NonfungiblePositionManager is
         params.apr1 = _apr1;
     }
 
+    function setVaultsForPool(
+        address pool,
+        uint16[] memory fees,
+        address[] memory vaults
+    ) external override onlyAdministrator {
+        uint16 totalFee;
+        FeesVault[] storage vaultsForPool = withdrawalFeePoolParams[pool].feeVaults;
+        require(vaults.length == fees.length, 'Vaults and fees length mismatch');
+        if (vaultsForPool.length != 0 || fees.length == 0) {
+            delete withdrawalFeePoolParams[pool].feeVaults;
+        }
+        for (uint256 i = 0; i < fees.length; i++) {
+            require(vaults[i] != address(0), 'Vault address cannot be 0');
+            vaultsForPool.push(FeesVault(vaults[i], fees[i]));
+            totalFee += fees[i];
+            emit FeeVaultForPool(pool, vaults[i], fees[i]);
+        }
+        if (fees.length != 0) {
+            require(totalFee == FEE_DENOMINATOR, 'Total fee must be equal to FEE_DENOMINATOR');
+            withdrawalFeePoolParams[pool].feeVaults = vaultsForPool;
+        }
+    }
+
     /// @inheritdoc INonfungiblePositionManager
     function setWithdrawalFee(address pool, uint16 newWithdrawalFee) external override onlyAdministrator {
         require(newWithdrawalFee <= FEE_DENOMINATOR);
@@ -612,7 +654,7 @@ contract NonfungiblePositionManager is
     /// @inheritdoc INonfungiblePositionManager
     function setVaultAddress(address newVault) external override onlyAdministrator {
         require(newVault != address(0));
-        withdrawalFeesVault = newVault;
+        defaultWithdrawalFeesVault = newVault;
     }
 
     /// @inheritdoc IERC721Metadata

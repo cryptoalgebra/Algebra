@@ -54,6 +54,12 @@ interface INonfungiblePositionManager is
         uint256 amount1
     );
 
+    /// @notice Emitted when a fee vault is set for a pool
+    /// @param pool The address of the pool to which the vault have been applied
+    /// @param feeVault The address of the fee vault
+    /// @param fee Percentage of withdrawal fee that will be sent to the vault
+    event FeeVaultForPool(address pool, address feeVault, uint16 fee);
+
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
     /// @param tokenId The ID of the token for which underlying tokens were collected
@@ -207,20 +213,22 @@ interface INonfungiblePositionManager is
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
+    struct FeesVault {
+        address feeVault;
+        uint16 fee;
+    }
+
     struct WithdrawalFeePoolParams {
         uint64 apr0;
         uint64 apr1;
         uint16 withdrawalFee;
+        FeesVault[] feeVaults;
     }
 
     /// @notice Returns withdrawal fee params for pool
     /// @param pool Pool address
-    /// @return apr0
-    /// @return apr1
-    /// @return withdrawalFee
-    function withdrawalFeePoolParams(
-        address pool
-    ) external view returns (uint64 apr0, uint64 apr1, uint16 withdrawalFee);
+    /// @return params
+    function getWithdrawalFeePoolParams(address pool) external view returns (WithdrawalFeePoolParams memory params);
 
     /// @notice Changes withdrawalFee for pool
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
@@ -235,9 +243,16 @@ interface INonfungiblePositionManager is
     /// @param apr1 APR of LST token1
     function setTokenAPR(address pool, uint64 apr0, uint64 apr1) external;
 
+    /// @notice Changes fee vault for pool
+    /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
+    /// @param pool The address of the pool to which the settings have been applied
+    /// @param fees array of fees values
+    /// @param vaults array of vault addresses
+    function setVaultsForPool(address pool, uint16[] memory fees, address[] memory vaults) external;
+
     /// @notice Returns vault address to which fees will be sent
     /// @return vault The actual vault address
-    function withdrawalFeesVault() external view returns (address vault);
+    function defaultWithdrawalFeesVault() external view returns (address vault);
 
     /// @notice Changes vault address
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE

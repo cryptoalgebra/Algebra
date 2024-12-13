@@ -9,7 +9,6 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
   version: '0.8.20',
   settings: {
     evmVersion: 'paris',
-    viaIR: true,
     optimizer: {
       enabled: true,
       runs: 2_000,
@@ -86,7 +85,8 @@ export default {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
       'contracts/NonfungiblePositionManager.sol': ZERO_OPTIMIZER_COMPILER_SETTINGS,
-      'contracts/test/MockTimeNonfungiblePositionManager.sol': LOW_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/test/MockTimeNonfungiblePositionManager.sol': ZERO_OPTIMIZER_COMPILER_SETTINGS,
+      'contracts/base/ERC721Permit': ZERO_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/test/NFTDescriptorTest.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/NonfungibleTokenPositionDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
       'contracts/libraries/NFTDescriptor.sol': LOWEST_OPTIMIZER_COMPILER_SETTINGS,
