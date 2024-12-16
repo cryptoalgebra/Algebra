@@ -22,7 +22,7 @@ abstract contract SlidingFeePlugin is BasePlugin, ISlidingFeePlugin {
   FeeFactors public s_feeFactors;
 
   uint16 public s_priceChangeFactor = 1000;
-  uint16 public s_baseFee = 500;
+  uint16 public s_baseFee = 3000;
 
   constructor() {
     FeeFactors memory feeFactors = FeeFactors(uint128(1 << FEE_FACTOR_SHIFT), uint128(1 << FEE_FACTOR_SHIFT));

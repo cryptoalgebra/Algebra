@@ -7,10 +7,10 @@ async function main() {
     const deployDataPath = path.resolve(__dirname, '../../../deploys.json');
     let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
-    const BasePluginV2Factory = deploysData.BasePluginV2Factory;
+    const BasePluginV1Factory = deploysData.BasePluginV1Factory;
 
     await hre.run("verify:verify", {
-        address: BasePluginV2Factory,
+        address: BasePluginV1Factory,
         constructorArguments: [
             deploysData.factory
         ],

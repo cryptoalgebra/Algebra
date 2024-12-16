@@ -7,8 +7,8 @@ async function main() {
     const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
     const deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'))
 
-    const BasePluginV2Factory = await hre.ethers.getContractFactory("BasePluginV2Factory");
-    const dsFactory = await BasePluginV2Factory.deploy(deploysData.factory);
+    const BasePluginV1Factory = await hre.ethers.getContractFactory("BasePluginV1Factory");
+    const dsFactory = await BasePluginV1Factory.deploy(deploysData.factory);
 
     await dsFactory.waitForDeployment()
 
@@ -19,7 +19,7 @@ async function main() {
     await factory.setDefaultPluginFactory(dsFactory.target)
     console.log('Updated plugin factory address in factory')
 
-    deploysData.BasePluginV2Factory = dsFactory.target;
+    deploysData.BasePluginV1Factory = dsFactory.target;
     fs.writeFileSync(deployDataPath, JSON.stringify(deploysData), 'utf-8');
 
 }

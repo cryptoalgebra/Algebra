@@ -19,7 +19,7 @@ contract BasePluginV2Factory is IBasePluginV2Factory {
   address public override farmingAddress;
 
   /// @inheritdoc IBasePluginV2Factory
-  uint16 public override defaultBaseFee = 500;
+  uint16 public override defaultBaseFee = 3000;
 
   /// @inheritdoc IBasePluginV2Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
