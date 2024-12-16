@@ -1,5 +1,6 @@
 import { ethers } from 'hardhat';
-import { MockFactory, MockPool, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory } from '../../typechain';
+import { MockFactory, MockPool, AlgebraSecurityPlugin, SecurityRegistry, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, SecurityPluginFactory, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory } from '../../typechain';
+import { SecurityRegistryEvent } from '../../typechain/contracts/AlgebraSecurityPlugin';
 
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {
@@ -98,5 +99,41 @@ export const pluginFixtureV2: Fixture<PluginFixture> = async function (): Promis
     mockPluginFactory,
     mockPool,
     mockFactory,
+  };
+};
+
+interface SecurityPluginFixture extends MockFactoryFixture {
+  plugin: AlgebraSecurityPlugin;
+  pluginFactory: SecurityPluginFactory;
+  mockPool: MockPool;
+  registry: SecurityRegistry;
+}
+
+export const securityPluginFixture: Fixture<SecurityPluginFixture> = async function (): Promise<SecurityPluginFixture> {
+  const { mockFactory } = await mockFactoryFixture();
+  //const { token0, token1, token2 } = await tokensFixture()
+
+  const pluginFactoryFactory = await ethers.getContractFactory('SecurityPluginFactory');
+  const pluginFactory = (await pluginFactoryFactory.deploy(mockFactory)) as any as SecurityPluginFactory;
+
+  const mockPoolFactory = await ethers.getContractFactory('MockPool');
+  const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
+
+  const registryFactory = await ethers.getContractFactory('SecurityRegistry');
+  const registry = (await registryFactory.deploy(mockFactory)) as any as SecurityRegistry;
+
+  await pluginFactory.setSecurityRegistry(registry)
+  await mockFactory.beforeCreatePoolHook(pluginFactory, mockPool);
+  const pluginAddress = await pluginFactory.pluginByPool(mockPool);
+
+  const pluginContractFactory = await ethers.getContractFactory('AlgebraSecurityPlugin');
+  const plugin = pluginContractFactory.attach(pluginAddress) as any as AlgebraSecurityPlugin;
+
+  return {
+    plugin,
+    pluginFactory,
+    mockPool,
+    registry,
+    mockFactory
   };
 };

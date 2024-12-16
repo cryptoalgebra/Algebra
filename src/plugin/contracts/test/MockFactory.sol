@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
+import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
+
 /// @title Mock of Algebra factory for plugins testing
 contract MockFactory {
   bytes32 public constant POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR');
@@ -30,5 +32,9 @@ contract MockFactory {
   function stubPool(address token0, address token1, address pool) public {
     poolByPair[token0][token1] = pool;
     poolByPair[token1][token0] = pool;
+  }
+
+  function beforeCreatePoolHook(address pluginFactory, address pool) external {
+    IAlgebraPluginFactory(pluginFactory).beforeCreatePoolHook(pool, address(0), address(0), address(0), address(0), '0x');
   }
 }
