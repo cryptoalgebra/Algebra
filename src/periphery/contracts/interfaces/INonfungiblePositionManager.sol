@@ -225,6 +225,8 @@ interface INonfungiblePositionManager is
         FeesVault[] feeVaults;
     }
 
+    function calculateWithdrawalFees(uint256 tokenId) external view returns (uint128 withdrawalFeeLiquidity);
+
     /// @notice Returns withdrawal fee params for pool
     /// @param pool Pool address
     /// @return params
