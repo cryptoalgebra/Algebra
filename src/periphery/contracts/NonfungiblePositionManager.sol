@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
