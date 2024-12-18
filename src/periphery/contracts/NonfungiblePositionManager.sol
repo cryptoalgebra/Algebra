@@ -657,55 +657,38 @@ contract NonfungiblePositionManager is
         defaultWithdrawalFeesVault = newVault;
     }
 
-    function calculateWithdrawalFees(uint256 tokenId) public view override returns (uint128 withdrawalFeeLiquidity) {
+    function calculateLatestWithdrawalFeesLiquidity(
+        uint256 tokenId
+    ) external view override returns (uint128 latestWithdrawalFeeLiquidity) {
         Position memory position = _positions[tokenId];
-        IAlgebraPool pool = IAlgebraPool(_getPoolById(position.poolId));
-        WithdrawalFeePoolParams memory params = withdrawalFeePoolParams[address(pool)];
-        uint32 lastUpdateTimestamp = _positionsWithdrawalFee[tokenId].lastUpdateTimestamp;
+        address pool = _getPoolById(position.poolId);
+        PositionWithdrawalFee memory positionWithdrawalFee = _positionsWithdrawalFee[tokenId];
 
-        uint256 token0apr = params.apr0;
-        uint256 token1apr = params.apr1;
-        uint16 withdrawalFee = params.withdrawalFee;
-
-        if ((token0apr > 0 || token1apr > 0) && withdrawalFee > 0) {
-            uint32 period = uint32(_blockTimestamp()) - lastUpdateTimestamp;
-
-            if (period == 0) return 0;
-            address oracle = pool.plugin();
-
-            if (oracle == address(0)) return 0;
-            int24 timeWeightedAverageTick = OracleLibrary.consult(oracle, period);
-
-            uint160 tickLowerPrice = TickMath.getSqrtRatioAtTick(position.tickLower);
-            uint160 tickUpperPrice = TickMath.getSqrtRatioAtTick(position.tickUpper);
-
-            (uint256 averageAmount0, uint256 averageAmount1) = LiquidityAmounts.getAmountsForLiquidity(
-                TickMath.getSqrtRatioAtTick(timeWeightedAverageTick),
-                tickLowerPrice,
-                tickUpperPrice,
+        latestWithdrawalFeeLiquidity =
+            positionWithdrawalFee.withdrawalFeeLiquidity +
+            _calculateWithdrawalFees(
+                pool,
+                positionWithdrawalFee.lastUpdateTimestamp,
+                position.tickLower,
+                position.tickUpper,
                 position.liquidity
             );
+    }
 
-            if (token0apr > 0) {
-                uint256 amount0EarnedFromStake = (token0apr * period * averageAmount0) / (FEE_DENOMINATOR * 365 days);
-                uint128 amount0ToWithdraw = uint128((amount0EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
-                withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount0(
-                    tickLowerPrice,
-                    tickUpperPrice,
-                    amount0ToWithdraw
-                );
-            }
+    function calculatePendingWithdrawalFeesLiquidity(
+        uint256 tokenId
+    ) external view override returns (uint128 pendingWithdrawalFeeLiquidity) {
+        Position memory position = _positions[tokenId];
+        address pool = _getPoolById(position.poolId);
+        uint32 lastUpdateTimestamp = _positionsWithdrawalFee[tokenId].lastUpdateTimestamp;
 
-            if (token1apr > 0) {
-                uint256 amount1EarnedFromStake = (token1apr * period * averageAmount1) / (FEE_DENOMINATOR * 365 days);
-                uint128 amount1ToWithdraw = uint128((amount1EarnedFromStake * withdrawalFee) / FEE_DENOMINATOR);
-                withdrawalFeeLiquidity += LiquidityAmounts.getLiquidityForAmount1(
-                    tickLowerPrice,
-                    tickUpperPrice,
-                    amount1ToWithdraw
-                );
-            }
-        }
+        pendingWithdrawalFeeLiquidity = _calculateWithdrawalFees(
+            pool,
+            lastUpdateTimestamp,
+            position.tickLower,
+            position.tickUpper,
+            position.liquidity
+        );
     }
 
     /// @inheritdoc IERC721Metadata
