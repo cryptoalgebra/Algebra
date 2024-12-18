@@ -505,6 +505,43 @@ describe('NonfungiblePositionManager', () => {
 
       expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15778000)
 
+    })
+    
+    it('withdrawal fees view funcitons works correct', async () => {
+
+      await nft.setTime(15768000)
+      let pendingLiq= await nft.calculatePendingWithdrawalFeesLiquidity(tokenId)
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 10n ** 18n,
+        amount1Desired: 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15768000,
+      });
+
+      expect((await nft.positionsWithdrawalFee(tokenId)).lastUpdateTimestamp).to.be.eq(15768000)
+      
+      await nft.setTime(15778000)
+      let pendingLiqBeforeUpdate = await nft.calculatePendingWithdrawalFeesLiquidity(tokenId)
+      let latestLiqBeforeUpdate = await nft.calculateLatestWithdrawalFeesLiquidity(tokenId)
+
+      await nft.increaseLiquidity({
+        tokenId: tokenId,
+        amount0Desired: 10n ** 18n,
+        amount1Desired: 10n ** 18n,
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: 15778001,
+      });
+
+      let pendingLiqAfterUpdate = await nft.calculatePendingWithdrawalFeesLiquidity(tokenId)
+      let latestLiqAfterUpdate = await nft.calculateLatestWithdrawalFeesLiquidity(tokenId)
+
+      await expect(pendingLiqBeforeUpdate + pendingLiq).to.be.eq(latestLiqBeforeUpdate)
+      await expect(pendingLiqAfterUpdate).to.be.eq(0)
+      await expect(latestLiqAfterUpdate).to.be.eq(latestLiqBeforeUpdate)
+
     }) 
 
     it('correct reward calculation', async () => {
