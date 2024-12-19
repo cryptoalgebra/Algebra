@@ -20,10 +20,11 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
   /// @inheritdoc IBasePluginV1Factory
   address public override farmingAddress;
 
-  address public override modifyLiquidityEntrypoint;
-
   /// @inheritdoc IBasePluginV1Factory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
+
+  /// @inheritdoc IBasePluginV1Factory
+  mapping(address modifyLiqudityEntryPoint => bool isEnabled) public override modifyLiquidityEntryPointsStatuses;
 
   modifier onlyAdministrator() {
     require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR, msg.sender), 'Only administrator');
@@ -75,9 +76,17 @@ contract BasePluginV1Factory is IBasePluginV1Factory {
     emit FarmingAddress(newFarmingAddress);
   }
 
-  function setModifyLiquidityEntrypoint(address newWithDrawalFeePlugin) external override onlyAdministrator {
-    require(modifyLiquidityEntrypoint != newWithDrawalFeePlugin);
-    modifyLiquidityEntrypoint = newWithDrawalFeePlugin;
-    emit ModifyLiquidityEntrypoint(newWithDrawalFeePlugin);
+  /// @inheritdoc IBasePluginV1Factory
+  function addModifyLiquidityEntrypoint(address entrypoint) external override onlyAdministrator {
+    require(modifyLiquidityEntryPointsStatuses[entrypoint] == false);
+    modifyLiquidityEntryPointsStatuses[entrypoint] = true;
+    emit AddModifyLiquidityEntrypoint(entrypoint);
+  }
+
+  /// @inheritdoc IBasePluginV1Factory
+  function removeModifyLiquidityEntrypoint(address entrypoint) external override onlyAdministrator {
+    require(modifyLiquidityEntryPointsStatuses[entrypoint] == true);
+    modifyLiquidityEntryPointsStatuses[entrypoint] = false;
+    emit RemoveModifyLiquidityEntrypoint(entrypoint);
   }
 }

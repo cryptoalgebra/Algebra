@@ -53,8 +53,6 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
   /// @dev AlgebraFeeConfiguration struct packed in uint144
   AlgebraFeeConfigurationU144 private _feeConfig;
 
-  address public override modifyLiquidityEntrypoint;
-
   /// @inheritdoc IFarmingPlugin
   address public override incentive;
 
@@ -103,7 +101,6 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     require(price != 0, 'Pool is not initialized');
 
     uint32 time = _blockTimestamp();
-    modifyLiquidityEntrypoint = IBasePluginV1Factory(pluginFactory).modifyLiquidityEntrypoint();
     timepoints.initialize(time, tick);
     lastTimepointTimestamp = time;
     isInitialized = true;
@@ -227,13 +224,6 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return true;
   }
 
-  // ###### withdrawalFeePlugin ######
-
-  function setModifyLiquidityEntrypoint(address newModifyLiquidityEntrypoint) external override {
-    require(IAlgebraFactory(factory).hasRoleOrOwner(ALGEBRA_BASE_PLUGIN_MANAGER, msg.sender));
-    modifyLiquidityEntrypoint = newModifyLiquidityEntrypoint;
-  }
-
   // ###### HOOKS ######
 
   function beforeInitialize(address, uint160) external override onlyPool returns (bytes4) {
@@ -252,10 +242,8 @@ contract AlgebraBasePluginV1 is IAlgebraBasePluginV1, Timestamp, IAlgebraPlugin 
     return IAlgebraPlugin.afterInitialize.selector;
   }
 
-  function beforeModifyPosition(address caller, address, int24, int24, int128, bytes calldata) external override onlyPool returns (bytes4) {
-    if (modifyLiquidityEntrypoint != address(0)) {
-      require(caller == modifyLiquidityEntrypoint, 'only modifyLiquidityEntrypoint');
-    }
+  function beforeModifyPosition(address caller, address, int24, int24, int128, bytes calldata) external view override onlyPool returns (bytes4) {
+    require(IBasePluginV1Factory(pluginFactory).modifyLiquidityEntryPointsStatuses(caller) == true, 'only modifyLiquidityEntrypoint');
     return IAlgebraPlugin.beforeModifyPosition.selector;
   }
 
