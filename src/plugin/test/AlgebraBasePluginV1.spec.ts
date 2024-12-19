@@ -30,6 +30,7 @@ describe('AlgebraBasePluginV1', () => {
 
   beforeEach('deploy test AlgebraBasePluginV1', async () => {
     ({ plugin, mockPool, mockPluginFactory } = await loadFixture(pluginFixture));
+    mockPluginFactory.addModifyLiquidityEntrypoint(wallet.address)
   });
 
   describe('#Initialize', async () => {

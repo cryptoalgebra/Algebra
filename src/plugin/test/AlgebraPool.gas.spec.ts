@@ -70,7 +70,8 @@ describe('AlgebraPool gas tests [ @skip-on-coverage ]', () => {
 
     await pool.initialize(encodePriceSqrt(1, 1));
     await pool.setCommunityVault(wallet.address);
-
+    mockPluginFactory.addModifyLiquidityEntrypoint(wallet.address)
+    mockPluginFactory.addModifyLiquidityEntrypoint(fix.swapTargetCallee)
     await advanceTime(1);
     await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
     await swapExact0For1(expandTo18Decimals(1), wallet.address);
