@@ -9,7 +9,7 @@ import { MockPool, AlgebraSecurityPlugin, SecurityPluginFactory, SecurityRegistr
 
 import snapshotGasCost from './shared/snapshotGasCost';
 
-describe('AlgebaraSecurityPlugin', () => {
+describe('AlgebraSecurityPlugin', () => {
   let wallet: Wallet, other: Wallet;
 
   let plugin: AlgebraSecurityPlugin; 
@@ -137,14 +137,26 @@ describe('AlgebaraSecurityPlugin', () => {
   describe('#SecurtityRegistry', () => {
 
     describe('#setPoolStatus', async () => {
-        it('works correct', async () => {
-          await registry.setPoolsStatus([mockPool], [1]);
-          expect(await registry.poolStatus(mockPool)).to.be.eq(1);
-          await registry.setPoolsStatus([mockPool], [2]);
-          expect(await registry.poolStatus(mockPool)).to.be.eq(2);
-          await registry.setPoolsStatus([mockPool], [0]);
-          expect(await registry.poolStatus(mockPool)).to.be.eq(0);
-        });
+      it('works correct', async () => {
+        await registry.setPoolsStatus([mockPool], [1]);
+        expect(await registry.poolStatus(mockPool)).to.be.eq(1);
+        await registry.setPoolsStatus([mockPool], [2]);
+        expect(await registry.poolStatus(mockPool)).to.be.eq(2);
+        await registry.setPoolsStatus([mockPool], [0]);
+        expect(await registry.poolStatus(mockPool)).to.be.eq(0);
+      });
+
+      it('add few pools updates isPoolStatusOverrided var', async () => {
+        await registry.setPoolsStatus([mockPool, wallet], [1, 1]);
+        expect(await registry.isPoolStatusOverrided()).to.be.eq(true);
+        await registry.setPoolsStatus([mockPool, wallet], [1, 1]);
+        await registry.setPoolsStatus([mockPool, wallet], [0, 0]);
+        expect(await registry.isPoolStatusOverrided()).to.be.eq(false);
+        await registry.setPoolsStatus([mockPool, wallet], [1, 1]);
+        await registry.setPoolsStatus([mockPool, wallet], [0, 1]);
+        expect(await registry.isPoolStatusOverrided()).to.be.eq(true);
+
+      });
 
       it('only owner can set all pool status', async () => {
         await expect(registry.connect(other).setPoolsStatus([mockPool], [1])).to.be.reverted
