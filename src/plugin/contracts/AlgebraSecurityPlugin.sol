@@ -40,8 +40,11 @@ contract AlgebraSecurityPlugin is SecurityPlugin {
     int128 liquidity,
     bytes calldata
   ) external override onlyPool returns (bytes4, uint24) {
-    bool isBurn = liquidity > 0 ? false : true;
-    _checkStatus(isBurn);
+    if (liquidity < 0) {
+      _checkStatusOnBurn();
+    } else {
+      _checkStatus();
+    }
     return (IAlgebraPlugin.beforeModifyPosition.selector, 0);
   }
 
@@ -52,7 +55,7 @@ contract AlgebraSecurityPlugin is SecurityPlugin {
   }
 
   function beforeSwap(address, address, bool, int256, uint160, bool, bytes calldata) external override onlyPool returns (bytes4, uint24, uint24) {
-    _checkStatus(false);
+    _checkStatus();
     return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
   }
   /// @dev unused
@@ -63,7 +66,7 @@ contract AlgebraSecurityPlugin is SecurityPlugin {
 
   /// @dev
   function beforeFlash(address, address, uint256, uint256, bytes calldata) external override onlyPool returns (bytes4) {
-    _checkStatus(false);
+    _checkStatus();
     return IAlgebraPlugin.beforeFlash.selector;
   }
 
