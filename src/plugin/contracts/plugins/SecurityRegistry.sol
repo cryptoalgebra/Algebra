@@ -21,7 +21,7 @@ contract SecurityRegistry is ISecurityRegistry {
       if (newStatuses[i] == Status.ENABLED || newStatuses[i] == Status.BURN_ONLY) {
         require(msg.sender == IAlgebraFactory(algebraFactory).owner(), 'Only owner');
       } else {
-        require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(GUARD, msg.sender), 'Only administrator');
+        require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(GUARD, msg.sender), 'Only guard');
       }
       poolStatus[pools[i]] = newStatuses[i];
       emit PoolStatus(pools[i], newStatuses[i]);
@@ -33,7 +33,7 @@ contract SecurityRegistry is ISecurityRegistry {
     if (newStatus == Status.ENABLED || newStatus == Status.BURN_ONLY) {
       require(msg.sender == IAlgebraFactory(algebraFactory).owner(), 'Only owner');
     } else {
-      require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(GUARD, msg.sender), 'Only administrator');
+      require(IAlgebraFactory(algebraFactory).hasRoleOrOwner(GUARD, msg.sender), 'Only guard');
     }
     emit GlobalStatus(newStatus);
   }
