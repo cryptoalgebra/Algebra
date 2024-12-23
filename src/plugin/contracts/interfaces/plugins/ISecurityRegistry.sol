@@ -20,4 +20,5 @@ interface ISecurityRegistry {
   function algebraFactory() external view returns (address);
   function GUARD() external pure returns (bytes32);
   function globalStatus() external view returns (Status);
+  function isPoolStatusOverrided() external view returns (bool);
 }
