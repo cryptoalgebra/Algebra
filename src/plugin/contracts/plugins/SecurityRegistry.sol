@@ -12,7 +12,7 @@ contract SecurityRegistry is ISecurityRegistry {
 
   Status public override globalStatus;
   bool public override isPoolStatusOverrided;
-  EnumerableSet.AddressSet private overridedPools;
+  EnumerableSet.AddressSet private overriddenPools;
 
   mapping(address => Status) public poolStatus;
 
@@ -26,14 +26,14 @@ contract SecurityRegistry is ISecurityRegistry {
       poolStatus[pools[i]] = newStatuses[i];
 
       if (newStatuses[i] == Status.ENABLED) {
-        overridedPools.remove(pools[i]);
+        overriddenPools.remove(pools[i]);
       } else {
-        overridedPools.add(pools[i]);
+        overriddenPools.add(pools[i]);
       }
       emit PoolStatus(pools[i], newStatuses[i]);
     }
 
-    if (overridedPools.length() > 0) {
+    if (overriddenPools.length() > 0) {
       isPoolStatusOverrided = true;
     } else {
       isPoolStatusOverrided = false;
