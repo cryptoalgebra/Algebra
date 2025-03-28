@@ -13,6 +13,13 @@ async function main() {
         });
 
     await hre.run("verify:verify", {
+        address: deploysData.entryPoint,
+        constructorArguments: [
+            deploysData.factory
+        ],
+        });
+
+    await hre.run("verify:verify", {
         address: deploysData.quoter,
         constructorArguments: [
             deploysData.factory,
@@ -40,6 +47,24 @@ async function main() {
         });
 
     await hre.run("verify:verify", {
+        address: deploysData.proxy,
+        constructorArguments: [
+            deploysData.nftDescriptor,
+            deploysData.admin,
+            "0x"
+        ],
+        });   
+    
+    await hre.run("verify:verify", {
+        address: deploysData.nftDescriptor,
+        constructorArguments: [
+            deploysData.wrapped,
+            "ETH",
+            []
+        ],
+        });    
+
+    await hre.run("verify:verify", {
         address: deploysData.nonfungiblePositionManager,
         constructorArguments: [
             deploysData.factory,
@@ -48,6 +73,11 @@ async function main() {
             deploysData.poolDeployer
         ],
         });
+
+    await hre.run("verify:verify", {
+        address: deploysData.mcall,
+        constructorArguments: [],
+        });    
 }
 
 // We recommend this pattern to be able to use async/await everywhere
