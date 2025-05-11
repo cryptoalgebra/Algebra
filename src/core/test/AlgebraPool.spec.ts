@@ -2133,6 +2133,34 @@ describe('AlgebraPool', () => {
     expect(await pool.liquidity(), 'pool has run tick transition and liquidity changed').to.eq(liquidity * 2n);
   });
 
+  describe('#Position', async () => {
+
+    it('correctly handle underflow innerFeeGrowth', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, -887220, 887220, initializeLiquidityAmount);
+      await mint(wallet.address, -120, -60, 1000n * initializeLiquidityAmount);
+      await swapExact0For1(10n**18n, wallet.address);
+      await mint(wallet.address, -240, -60, initializeLiquidityAmount);
+      let result = await pool.positions(await getPositionKey(wallet.address, -240, -60, pool));
+      expect(result.innerFeeGrowth0Token).to.be.gt(2n**255n).and.lt(2n**256n)
+      let { amount0} = await pool.collect.staticCall(wallet.address, -240, -60, MaxUint128, MaxUint128);
+      expect(amount0).to.be.eq(0)
+    });
+
+    it('correctly update ticks feeGrowth on mint', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, -887220, 887220, initializeLiquidityAmount);
+      await swapExact0For1(10n**18n, wallet.address);
+      await swapExact1For0(10n**18n, wallet.address);
+      await mint(wallet.address, -240, -60, initializeLiquidityAmount);
+      await mint(wallet.address, -240, 6000, initializeLiquidityAmount);
+      console.log((await pool.globalState()).tick)
+      expect((await pool.ticks(-60)).outerFeeGrowth0Token).to.be.gt(0)
+      expect((await pool.ticks(-240)).outerFeeGrowth0Token).to.be.gt(0)
+      expect((await pool.ticks(6000)).outerFeeGrowth0Token).to.be.eq(0)
+    });
+  });
+
   describe('#fee getter', async () => {
     it('works without plugin', async () => {
       await pool.setFee(150);
