@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
+import 'hardhat/console.sol';
+
 /// @title Provides functions for deriving a pool address from the poolDeployer and tokens
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
@@ -29,6 +31,10 @@ library PoolAddress {
     /// @param key The PoolKey
     /// @return pool The contract address of the Algebra pool
     function computeAddress(address poolDeployer, PoolKey memory key) internal pure returns (address pool) {
+        // console.log('???');
+        // console.log(key.token0);
+        // console.log(key.token1);
+        console.log('SISKA: ', key.token0 < key.token1);
         require(key.token0 < key.token1, 'Invalid order of tokens');
         pool = address(
             uint160(

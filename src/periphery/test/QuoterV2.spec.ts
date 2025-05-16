@@ -1,4 +1,4 @@
-import { MaxUint256, Wallet } from 'ethers';
+import { MaxUint256, Wallet, AbiCoder } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { CustomPoolDeployerTest, IAlgebraFactory, MockTimeNonfungiblePositionManager, QuoterV2, TestERC20 } from '../typechain';
@@ -56,6 +56,7 @@ describe('QuoterV2', function () {
   let path: [string, string, string, string, string];
   let quoter: QuoterV2;
   let factory: IAlgebraFactory;
+  let pluginsData = ['0x', '0x'];
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners();
@@ -84,9 +85,23 @@ describe('QuoterV2', function () {
     });
 
     describe('#quoteExactInput', () => {
+      it('0 -> 1 with plugin data PIZDA', async () => { 
+        pluginsData = [
+          AbiCoder.defaultAbiCoder().encode(['uint24', 'uint128'], [2000, 10000]),
+          AbiCoder.defaultAbiCoder().encode(['uint24', 'uint128'], [1000, 10001])
+        ];
+
+        await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), pluginsData, 10000);
+
+        // await quoter.quoteExactInput.staticCallexactInput(path.slice(0, 3));
+        // expect(await plugin0.swapCalldata()).to.be.eq(2000)
+      });
+
       it('0 -> 2 cross 2 tick', async () => {
+        console.log('anus: ', tokens);
+        console.log('jeppa: ', encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]));
         const { amountOutList, amountInList, sqrtPriceX96AfterList, initializedTicksCrossedList } =
-          await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), 10000);
+          await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), pluginsData, 10000);
 
         ////await snapshotGasCost(gasEstimate)
         expect(sqrtPriceX96AfterList.length).to.eq(1);

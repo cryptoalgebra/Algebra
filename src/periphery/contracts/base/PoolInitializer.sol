@@ -8,6 +8,8 @@ import '../interfaces/IPoolInitializer.sol';
 
 import '../libraries/PoolInteraction.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Creates and initializes Algebra Pools
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery

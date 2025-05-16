@@ -14,6 +14,8 @@ import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 import '../libraries/PoolTicksCounter.sol';
 
+import 'hardhat/console.sol';
+
 /// @title  Algebra Integral 1.2.1 QuoterV2
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
@@ -39,9 +41,14 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
+    function algebraSwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes memory callbackData
+    ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
+        ISwapRouter.SwapCallbackData memory swapCallbackData = abi.decode(callbackData, (ISwapRouter.SwapCallbackData));
+        (address tokenIn, address deployer, address tokenOut) = swapCallbackData.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
@@ -59,6 +66,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 mstore(add(ptr, 0x40), sqrtPriceX96After)
                 mstore(add(ptr, 0x60), tickAfter)
                 mstore(add(ptr, 0x80), fee)
+                // mstore(add(ptr, 0xa0), keccak256(pluginData))
                 revert(ptr, 224)
             }
         } else {
@@ -134,6 +142,9 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         )
     {
         bool zeroToOne = params.tokenIn < params.tokenOut;
+        console.log('???');
+        console.log(params.tokenIn);
+        console.log(params.tokenOut);
         IAlgebraPool pool = getPool(params.deployer, params.tokenIn, params.tokenOut);
 
         uint256 gasBefore = gasleft();
@@ -143,6 +154,25 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             payer: address(0),
             pluginDataForward: new bytes[](0)
         });
+
+        {
+            uint cs;
+            assembly {
+                cs := extcodesize(pool)
+            }
+            console.log('kaka: ', cs);
+        }
+
+        // pool.swap(
+        //         address(this), // address(0) might cause issues with some tokens
+        //         zeroToOne,
+        //         params.amountIn.toInt256(),
+        //         params.limitSqrtPrice == 0
+        //             ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+        //             : params.limitSqrtPrice,
+        //         abi.encode(swapData)
+        //     );
+
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
