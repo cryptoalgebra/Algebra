@@ -39,9 +39,10 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
+    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory callbackData) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
+        ISwapRouter.SwapCallbackData memory swapCallbackData = abi.decode(callbackData, (ISwapRouter.SwapCallbackData));
+        (address tokenIn, address deployer, address tokenOut) = swapCallbackData.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
