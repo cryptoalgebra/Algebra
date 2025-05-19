@@ -85,13 +85,15 @@ describe('QuoterV2', function () {
     });
 
     describe('#quoteExactInput', () => {
-      it('0 -> 1 with plugin data PIZDA', async () => { 
+      it('0 -> 1 with plugin data', async () => { 
         pluginsData = [
           AbiCoder.defaultAbiCoder().encode(['uint24', 'uint128'], [2000, 10000]),
           AbiCoder.defaultAbiCoder().encode(['uint24', 'uint128'], [1000, 10001])
         ];
+        const { quoteResults } =
+          await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), pluginsData, 10000);
 
-        await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), pluginsData, 10000);
+        console.log(quoteResults);
 
         // await quoter.quoteExactInput.staticCallexactInput(path.slice(0, 3));
         // expect(await plugin0.swapCalldata()).to.be.eq(2000)
@@ -100,15 +102,18 @@ describe('QuoterV2', function () {
       it('0 -> 2 cross 2 tick', async () => {
         console.log('anus: ', tokens);
         console.log('jeppa: ', encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]));
-        const { amountOutList, amountInList, sqrtPriceX96AfterList, initializedTicksCrossedList } =
+        const { quoteResults } =
           await quoter.quoteExactInput.staticCall(encodePath([tokens[0].address, ZERO_ADDRESS, tokens[2].address]), pluginsData, 10000);
 
-        ////await snapshotGasCost(gasEstimate)
-        expect(sqrtPriceX96AfterList.length).to.eq(1);
-        expect(sqrtPriceX96AfterList[0]).to.eq('78459826284680823468887704103');
-        expect(initializedTicksCrossedList[0]).to.eq(2);
-        expect(amountInList[0]).to.eq(10000);
-        expect(amountOutList[0]).to.eq(9897);
+
+        console.log(quoteResults);
+
+        //// await snapshotGasCost(gasEstimate)
+        expect(quoteResults.length).to.eq(1);
+        expect(quoteResults[0].sqrtPriceX96After).to.eq('78459826284680823468887704103');
+        expect(quoteResults[0].initializedTicksCrossed).to.eq(2);
+        expect(quoteResults[0].amountIn).to.eq(10000);
+        expect(quoteResults[0].amountOut).to.eq(9897);
       });
 
       it('0 -> 2 cross 2 tick where after is initialized', async () => {

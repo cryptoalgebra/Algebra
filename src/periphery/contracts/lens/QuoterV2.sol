@@ -48,6 +48,12 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     ) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
         ISwapRouter.SwapCallbackData memory swapCallbackData = abi.decode(callbackData, (ISwapRouter.SwapCallbackData));
+        
+        bytes memory scd;
+        assembly {
+            scd := mload(swapCallbackData)
+        }
+        
         (address tokenIn, address deployer, address tokenOut) = swapCallbackData.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
@@ -58,16 +64,25 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         IAlgebraPool pool = getPool(deployer, tokenIn, tokenOut);
         (uint160 sqrtPriceX96After, int24 tickAfter, uint16 fee, , , ) = pool.globalState();
 
+        bytes memory pluginData = swapCallbackData.pluginData;
+
         if (isExactInput) {
             assembly {
-                let ptr := mload(0x40)
-                mstore(ptr, amountReceived)
-                mstore(add(ptr, 0x20), amountToPay)
-                mstore(add(ptr, 0x40), sqrtPriceX96After)
-                mstore(add(ptr, 0x60), tickAfter)
-                mstore(add(ptr, 0x80), fee)
-                // mstore(add(ptr, 0xa0), keccak256(pluginData))
-                revert(ptr, 224)
+                let len := mload(pluginData)
+                let begin := add(pluginData, 0x20) // ptr is pointing to the start of pluginData
+
+                let paddedLen := and(add(len, 31), not(31)) // rounding up length so we will write to the next 32-byte word
+                let end := add(begin, paddedLen) // ptr is pointing to the outside of plugin data
+
+                mstore(end, amountReceived)
+                mstore(add(end, 0x20), amountToPay)
+                mstore(add(end, 0x40), sqrtPriceX96After)
+                mstore(add(end, 0x60), tickAfter)
+                mstore(add(end, 0x80), fee)
+                //       32 bytes      {             paddedLen bytes            }   32 bytes        32 bytes        32 bytes      32 bytes  32 bytes
+                // [pluginData length, pluginData1, pluginData2 ..., pluginDataN, amountReceived, amountToPay, sqrtPriceX96After, tickAfter, fee]
+                // 32 * 6 (192) + paddenLen
+                revert(pluginData, add(paddedLen, 192))
             }
         } else {
             // if the cache has been populated, ensure that the full output amount has been received
@@ -84,21 +99,32 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         }
     }
 
+    struct CallbackData {
+        bytes pluginData;
+        uint256 amountReceived;
+        uint256 amountToPay;
+        uint160 sqrtPriceX96After;
+        int24 tickAfter;
+        uint16 fee;
+    }
+
     /// @dev Parses a revert reason that should contain the numeric quote
     function parseRevertReason(
         bytes memory reason
     )
         private
         pure
-        returns (uint256 amountReceived, uint256 amountToPay, uint160 sqrtPriceX96After, int24 tickAfter, uint16 fee)
+        returns (CallbackData memory)
     {
-        if (reason.length != 224) {
-            require(reason.length > 0, 'Unexpected error');
-            assembly ('memory-safe') {
-                revert(add(32, reason), mload(reason))
-            }
-        }
-        return abi.decode(reason, (uint256, uint256, uint160, int24, uint16));
+        // if (reason.length != 224) {
+        //     require(reason.length > 0, 'Unexpected error');
+        //     assembly ('memory-safe') {
+        //         revert(add(32, reason), mload(reason))
+        //     }
+        // }
+        console.log('reason: ');
+        console.logBytes(reason);
+        return abi.decode(reason, (CallbackData));
     }
 
     function handleRevert(
@@ -109,22 +135,24 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         private
         view
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
-            uint160 sqrtPriceX96After,
-            uint32 initializedTicksCrossed,
-            uint256,
-            uint16 fee
+            QuoteResult memory,
+            uint256
         )
     {
         int24 tickBefore;
-        int24 tickAfter;
         (, tickBefore, , , , ) = pool.globalState();
-        (amountOut, amountIn, sqrtPriceX96After, tickAfter, fee) = parseRevertReason(reason);
+        CallbackData memory callbackData = parseRevertReason(reason);
 
-        initializedTicksCrossed = pool.countInitializedTicksCrossed(tickBefore, tickAfter);
+        uint32 initializedTicksCrossed = pool.countInitializedTicksCrossed(tickBefore, callbackData.tickAfter);
 
-        return (amountOut, amountIn, sqrtPriceX96After, initializedTicksCrossed, gasEstimate, fee);
+        return (QuoteResult({
+            pluginData: callbackData.pluginData,
+            amountOut: callbackData.amountReceived,
+            amountIn: callbackData.amountToPay,
+            sqrtPriceX96After: callbackData.sqrtPriceX96After,
+            initializedTicksCrossed: initializedTicksCrossed,
+            fee: callbackData.fee
+        }), gasEstimate);
     }
 
     function quoteExactInputSingle(
@@ -133,18 +161,11 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         public
         override
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
-            uint160 sqrtPriceX96After,
-            uint32 initializedTicksCrossed,
-            uint256 gasEstimate,
-            uint16 fee
+            QuoteResult memory,
+            uint256 gasEstimate
         )
     {
         bool zeroToOne = params.tokenIn < params.tokenOut;
-        console.log('???');
-        console.log(params.tokenIn);
-        console.log(params.tokenOut);
         IAlgebraPool pool = getPool(params.deployer, params.tokenIn, params.tokenOut);
 
         uint256 gasBefore = gasleft();
@@ -154,24 +175,6 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             payer: address(0),
             pluginDataForward: new bytes[](0)
         });
-
-        {
-            uint cs;
-            assembly {
-                cs := extcodesize(pool)
-            }
-            console.log('kaka: ', cs);
-        }
-
-        // pool.swap(
-        //         address(this), // address(0) might cause issues with some tokens
-        //         zeroToOne,
-        //         params.amountIn.toInt256(),
-        //         params.limitSqrtPrice == 0
-        //             ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-        //             : params.limitSqrtPrice,
-        //         abi.encode(swapData)
-        //     );
 
         try
             pool.swap(
@@ -197,19 +200,23 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         public
         override
         returns (
-            uint256[] memory amountOutList,
-            uint256[] memory amountInList,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksCrossedList,
-            uint256 gasEstimate,
-            uint16[] memory feeList
+            QuoteResult[] memory quoteResults,
+            // bytes[] memory pluginsCalledbackData,
+            // uint256[] memory amountOutList,
+            // uint256[] memory amountInList,
+            // uint160[] memory sqrtPriceX96AfterList,
+            // uint32[] memory initializedTicksCrossedList,
+            uint256 gasEstimate
+            // uint16[] memory feeList
         )
     {
-        amountOutList = new uint256[](path.numPools());
-        amountInList = new uint256[](path.numPools());
-        sqrtPriceX96AfterList = new uint160[](path.numPools());
-        initializedTicksCrossedList = new uint32[](path.numPools());
-        feeList = new uint16[](path.numPools());
+        // pluginsCalledbackData = new bytes[](path.numPools());
+        // amountOutList = new uint256[](path.numPools());
+        // amountInList = new uint256[](path.numPools());
+        // sqrtPriceX96AfterList = new uint160[](path.numPools());
+        // initializedTicksCrossedList = new uint32[](path.numPools());
+        // feeList = new uint16[](path.numPools());
+        quoteResults = new QuoteResult[](path.numPools());
 
         uint256 i = 0;
         while (true) {
@@ -227,15 +234,11 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             // the outputs of prior swaps become the inputs to subsequent ones
             uint256 _gasEstimate;
             (
-                amountOutList[i],
-                amountInList[i],
-                sqrtPriceX96AfterList[i],
-                initializedTicksCrossedList[i],
-                _gasEstimate,
-                feeList[i]
+                quoteResults[i],
+                _gasEstimate
             ) = quoteExactInputSingle(params);
 
-            amountInRequired = amountOutList[i];
+            amountInRequired = quoteResults[i].amountOut;
             gasEstimate += _gasEstimate;
             i++;
 
@@ -244,12 +247,8 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 path = path.skipToken();
             } else {
                 return (
-                    amountOutList,
-                    amountInList,
-                    sqrtPriceX96AfterList,
-                    initializedTicksCrossedList,
-                    gasEstimate,
-                    feeList
+                    quoteResults,
+                    gasEstimate
                 );
             }
         }
@@ -294,7 +293,8 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         {} catch (bytes memory reason) {
             gasEstimate = gasBefore - gasleft();
             if (params.limitSqrtPrice == 0) delete amountOutCached; // clear cache
-            return handleRevert(reason, pool, gasEstimate);
+            return (0, 0, 0, 0, 0, 0);
+            // return handleRevert(reason, pool, gasEstimate);
         }
     }
 

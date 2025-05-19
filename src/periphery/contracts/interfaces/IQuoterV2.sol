@@ -10,16 +10,27 @@ pragma abicoder v2;
 /// Credit to Uniswap Labs under GPL-2.0-or-later license:
 /// https://github.com/Uniswap/v3-periphery
 interface IQuoterV2 {
+    /// @param pluginData Plugin data
+    /// @param amountOut The amount of `tokenOut` that would be received
+    /// @param amountIn The amount of the `tokenIn` that should be paid
+    /// @param sqrtPriceX96After The sqrt price of the pool after the swap
+    /// @param initializedTicksCrossed The number of initialized ticks that the swap crossed
+    /// @param fee The fee value used for swap in the pool
+    struct QuoteResult {
+        bytes pluginData;
+        uint256 amountOut;
+        uint256 amountIn;
+        uint160 sqrtPriceX96After;
+        uint32 initializedTicksCrossed;
+        uint16 fee;
+    }
+
     /// @notice Returns the amount out received for a given exact input swap without executing the swap
     /// @param path The path of the swap, i.e. each token pair
     /// @param pluginsData The swap plugin data
     /// @param amountInRequired The desired amount of the first token to swap
-    /// @return amountOutList The amount of the last token that would be received
-    /// @return amountInList The amount of the last token that should be paid
-    /// @return sqrtPriceX96AfterList List of the sqrt price after the swap for each pool in the path
-    /// @return initializedTicksCrossedList List of the initialized ticks that the swap crossed for each pool in the path
-    /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return feeList List of the fee values used for swaps in the path
+    /// @return quoteResults
+    /// @return gasEstimate
     function quoteExactInput(
         bytes memory path,
         bytes[] memory pluginsData,
@@ -27,12 +38,14 @@ interface IQuoterV2 {
     )
         external
         returns (
-            uint256[] memory amountOutList,
-            uint256[] memory amountInList,
-            uint160[] memory sqrtPriceX96AfterList,
-            uint32[] memory initializedTicksCrossedList,
-            uint256 gasEstimate,
-            uint16[] memory feeList
+            QuoteResult[] memory quoteResults,
+            // bytes[] memory pluginsCalledbackData,
+            // uint256[] memory amountOutList,
+            // uint256[] memory amountInList,
+            // uint160[] memory sqrtPriceX96AfterList,
+            // uint32[] memory initializedTicksCrossedList,
+            uint256 gasEstimate
+            // uint16[] memory feeList
         );
 
     struct QuoteExactInputSingleParams {
@@ -50,23 +63,15 @@ interface IQuoterV2 {
     /// tokenOut The token being swapped out
     /// amountIn The desired input amount
     /// limitSqrtPrice The price limit of the pool that cannot be exceeded by the swap
-    /// @return amountOut The amount of `tokenOut` that would be received
-    /// @return amountIn The amount of the `tokenIn` that should be paid
-    /// @return sqrtPriceX96After The sqrt price of the pool after the swap
-    /// @return initializedTicksCrossed The number of initialized ticks that the swap crossed
-    /// @return gasEstimate The estimate of the gas that the swap consumes
-    /// @return fee The fee value used for swap in the pool
+    /// @return quoteResult
+    /// @return gasEstimate
     function quoteExactInputSingle(
         QuoteExactInputSingleParams memory params
     )
         external
         returns (
-            uint256 amountOut,
-            uint256 amountIn,
-            uint160 sqrtPriceX96After,
-            uint32 initializedTicksCrossed,
-            uint256 gasEstimate,
-            uint16 fee
+            QuoteResult memory quoteResult,
+            uint256 gasEstimate
         );
 
     /// @notice Returns the amount in required for a given exact output swap without executing the swap
