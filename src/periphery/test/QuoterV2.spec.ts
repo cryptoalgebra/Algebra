@@ -105,6 +105,10 @@ describe('QuoterV2', function () {
         expect(amountOutList.length).to.eq(1);
         expect(amountInList[0]).to.eq(10000);
         expect(amountOutList[0]).to.eq(9891); // fee = 1%
+
+        pluginsData = [
+          '0x', '0x'
+        ]
       });
 
       it('0 -> 2 cross 2 tick', async () => {
@@ -233,7 +237,7 @@ describe('QuoterV2', function () {
         expect(amountInList[0]).to.eq(103);
       });
 
-      it('2 -> 1', async () => {
+      it('2 -> 1 jeppa', async () => {
         const { amountOutList, amountInList, sqrtPriceX96AfterList, initializedTicksCrossedList } =
 
           await quoter.quoteExactInput.staticCall(encodePath([path[4], path[3], path[2]]), pluginsData, 10000);

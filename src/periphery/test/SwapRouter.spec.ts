@@ -97,7 +97,7 @@ describe('SwapRouter', function () {
     await createPool(nft, wallet, _tokens[0].address, _tokens[1].address, ZERO_ADDRESS);
     const pool0Address = await factory.poolByPair(_tokens[0].address, _tokens[1].address);
     const pool0 = new ethers.Contract(pool0Address, IAlgebraPoolABI, wallet);
-    await pool0.setPluginConfig(1)
+    await pool0.setPluginConfig(128 + 1)
 
     const plugin0Address = await pool0.plugin();
     plugin0 = (pluginContractFactory.attach(plugin0Address)) as any as MockPlugin; 
@@ -106,7 +106,7 @@ describe('SwapRouter', function () {
     await createPool(nft, wallet, _tokens[1].address, _tokens[2].address, await customPoolDeployer.getAddress());
     const pool1Address = await factory.computeCustomPoolAddress(await customPoolDeployer.getAddress(), _tokens[1].address, _tokens[2].address);
     const pool1 = new ethers.Contract(pool1Address, IAlgebraPoolABI, wallet); 
-    await pool1.setPluginConfig(1)  
+    await pool1.setPluginConfig(128 + 1)  
     
     let plugin1Address = await pool1.plugin()
     plugin1 = (pluginContractFactory.attach(plugin1Address)) as any as MockPlugin;
