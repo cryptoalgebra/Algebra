@@ -7,6 +7,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/callback/IAlgebraSwapCallback.sol';
 
 import '../interfaces/IQuoterV2.sol';
+import '../interfaces/ISwapRouter.sol';
 import '../base/PeripheryImmutableState.sol';
 import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
@@ -38,9 +39,10 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
     }
 
     /// @inheritdoc IAlgebraSwapCallback
-    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
+    function algebraSwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory callbackData) external view override {
         require(amount0Delta > 0 || amount1Delta > 0, 'Zero liquidity swap'); // swaps entirely within 0-liquidity regions are not supported
-        (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
+        ISwapRouter.SwapCallbackData memory swapCallbackData = abi.decode(callbackData, (ISwapRouter.SwapCallbackData));
+        (address tokenIn, address deployer, address tokenOut) = swapCallbackData.path.decodeFirstPool();
         CallbackValidation.verifyCallback(poolDeployer, deployer, tokenIn, tokenOut);
 
         (bool isExactInput, uint256 amountToPay, uint256 amountReceived) = amount0Delta > 0
@@ -136,7 +138,12 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         IAlgebraPool pool = getPool(params.deployer, params.tokenIn, params.tokenOut);
 
         uint256 gasBefore = gasleft();
-        bytes memory data = abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut);
+        ISwapRouter.SwapCallbackData memory swapData = ISwapRouter.SwapCallbackData({
+            pluginData: params.pluginData,
+            path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut),
+            payer: address(0),
+            pluginDataForward: new bytes[](0)
+        });
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
@@ -145,7 +152,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 params.limitSqrtPrice == 0
                     ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : params.limitSqrtPrice,
-                data
+                abi.encode(swapData)
             )
         {} catch (bytes memory reason) {
             gasEstimate = gasBefore - gasleft();
@@ -155,6 +162,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
 
     function quoteExactInput(
         bytes memory path,
+        bytes[] memory pluginsData,
         uint256 amountInRequired
     )
         public
@@ -180,6 +188,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             {
                 (address tokenIn, address deployer, address tokenOut) = path.decodeFirstPool();
 
+                params.pluginData = pluginsData[i];
                 params.tokenIn = tokenIn;
                 params.deployer = deployer;
                 params.tokenOut = tokenOut;
@@ -237,7 +246,12 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (params.limitSqrtPrice == 0) amountOutCached = params.amount;
         uint256 gasBefore = gasleft();
-        bytes memory data = abi.encodePacked(params.tokenOut, params.deployer, params.tokenIn);
+        ISwapRouter.SwapCallbackData memory swapData = ISwapRouter.SwapCallbackData({
+            pluginData: params.pluginData,
+            path: abi.encodePacked(params.tokenIn, params.deployer, params.tokenOut),
+            payer: address(0),
+            pluginDataForward: new bytes[](0)
+        });
         try
             pool.swap(
                 address(this), // address(0) might cause issues with some tokens
@@ -246,7 +260,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
                 params.limitSqrtPrice == 0
                     ? (zeroToOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
                     : params.limitSqrtPrice,
-                data
+                abi.encode(swapData)
             )
         {} catch (bytes memory reason) {
             gasEstimate = gasBefore - gasleft();
@@ -257,6 +271,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
 
     function quoteExactOutput(
         bytes memory path,
+        bytes[] memory pluginsData,
         uint256 amountOutRequired
     )
         public
@@ -282,6 +297,7 @@ contract QuoterV2 is IQuoterV2, IAlgebraSwapCallback, PeripheryImmutableState {
             {
                 (address tokenOut, address deployer, address tokenIn) = path.decodeFirstPool();
 
+                params.pluginData = pluginsData[i];
                 params.tokenIn = tokenIn;
                 params.deployer = deployer;
                 params.tokenOut = tokenOut;

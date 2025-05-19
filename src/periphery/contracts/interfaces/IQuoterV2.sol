@@ -12,6 +12,7 @@ pragma abicoder v2;
 interface IQuoterV2 {
     /// @notice Returns the amount out received for a given exact input swap without executing the swap
     /// @param path The path of the swap, i.e. each token pair
+    /// @param pluginsData The swap plugin data
     /// @param amountInRequired The desired amount of the first token to swap
     /// @return amountOutList The amount of the last token that would be received
     /// @return amountInList The amount of the last token that should be paid
@@ -21,6 +22,7 @@ interface IQuoterV2 {
     /// @return feeList List of the fee values used for swaps in the path
     function quoteExactInput(
         bytes memory path,
+        bytes[] memory pluginsData,
         uint256 amountInRequired
     )
         external
@@ -34,6 +36,7 @@ interface IQuoterV2 {
         );
 
     struct QuoteExactInputSingleParams {
+        bytes pluginData;
         address tokenIn;
         address tokenOut;
         address deployer;
@@ -68,6 +71,7 @@ interface IQuoterV2 {
 
     /// @notice Returns the amount in required for a given exact output swap without executing the swap
     /// @param path The path of the swap, i.e. each token pair. Path must be provided in reverse order
+    /// @param pluginsData The swap plugin data
     /// @param amountOutRequired The amount of the last token to receive
     /// @return amountOutList The amount of the last token that would be received
     /// @return amountInList The amount of first token required to be paid
@@ -77,6 +81,7 @@ interface IQuoterV2 {
     /// @return feeList List of the fee values used for swaps in the path
     function quoteExactOutput(
         bytes memory path,
+        bytes[] memory pluginsData,
         uint256 amountOutRequired
     )
         external
@@ -90,6 +95,7 @@ interface IQuoterV2 {
         );
 
     struct QuoteExactOutputSingleParams {
+        bytes pluginData;
         address tokenIn;
         address tokenOut;
         address deployer;

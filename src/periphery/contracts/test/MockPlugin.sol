@@ -63,7 +63,7 @@ contract MockPlugin is IAlgebraPlugin {
         ISwapRouter.SwapCallbackData memory swapData;
         if (data.length > 0 ) swapData = abi.decode(data, (ISwapRouter.SwapCallbackData));
         swapCalldata = swapData.pluginData.length > 0 ? abi.decode(swapData.pluginData, (uint24)) : 0;
-        return (IAlgebraPlugin.beforeSwap.selector, 0, 0);
+        return (IAlgebraPlugin.beforeSwap.selector, swapCalldata, 0);
     }
 
     function afterSwap(
