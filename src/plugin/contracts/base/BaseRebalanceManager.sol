@@ -15,8 +15,6 @@ import '../interfaces/IRebalanceManager.sol';
 
 import './AlgebraBasePlugin.sol';
 
-import 'hardhat/console.sol';
-
 abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
   bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
 
@@ -197,19 +195,13 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
     ) return;
 
     (DecideStatus decideStatus, State newState) = _decideRebalance(obtainTWAPsResult);
-    console.log('decide status: ', uint(decideStatus));
-    console.log('new state: ', uint(newState));
 
     if (decideStatus == DecideStatus.NoNeed || decideStatus == DecideStatus.TooSoon) return;
-    console.log('1');
 
     if (decideStatus != DecideStatus.NoNeedWithPending) {
-      console.log('2');
       if (decideStatus != DecideStatus.ExtremeVolatility) {
-        console.log('3');
         Ranges memory ranges;
         if (decideStatus == DecideStatus.Normal) {
-          console.log('4');
           if (
             obtainTWAPsResult.currentPriceAccountingDecimals == 0 ||
             obtainTWAPsResult.totalDepositToken == 0 ||
@@ -217,25 +209,17 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
               obtainTWAPsResult.totalPairedInDeposit <=
               _calcPart(obtainTWAPsResult.totalDepositToken + obtainTWAPsResult.totalPairedInDeposit, thresholds.limitReservePct))
           ) return;
-          console.log('WITH STATE');
           ranges = _getRangesWithState(newState, obtainTWAPsResult);
         } else {
-          console.log('WITHOUT STATE');
           ranges = _getRangesWithoutState(obtainTWAPsResult);
         }
-        console.log('6');
-        console.logInt(ranges.baseLower);
-        console.logInt(ranges.baseUpper);
-        console.logInt(ranges.limitLower);
-        console.logInt(ranges.limitUpper);
+
         if (ranges.baseUpper - ranges.baseLower <= 300 || ranges.limitUpper - ranges.limitLower <= 300) return;
-        console.log('7');
 
         require(gasleft() >= 1600000, 'Not enough gas left');
         try IAlgebraVault(vault).rebalance(ranges.baseLower, ranges.baseUpper, ranges.limitLower, ranges.limitUpper, 0) {
           lastRebalanceTimestamp = _blockTimestamp();
           lastRebalanceCurrentPrice = obtainTWAPsResult.currentPriceAccountingDecimals;
-          console.log('new state: ', uint256(newState));
           state = newState;
         } catch {
           state = State.Special;
@@ -415,10 +399,6 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
       uint8 _tokenDecimals = tokenDecimals;
 
       (uint256 upperPriceBound, uint256 targetPrice, uint256 lowerPriceBound) = _getPriceBounds(newState, twapResult, _allowToken1);
-      console.log('prices: ');
-      console.log('lower: ', lowerPriceBound);
-      console.log('target: ', targetPrice);
-      console.log('upper: ', upperPriceBound);
       int24 roundedTick = roundTickToTickSpacing(_tickSpacing, twapResult.currentTick);
       bool currentTickIsRound = roundedTick == twapResult.currentTick;
 
@@ -441,12 +421,6 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
         int24 lowerTick = getTickAtPrice(_tokenDecimals, lowerPriceBound);
         tickForLowerPrice = roundTickToTickSpacingConsideringNegative(_tickSpacing, lowerTick);
       }
-
-      console.log('ticks');
-      console.logInt(tickForLowerPrice);
-      console.logInt(commonTick);
-      console.logInt(tickForHigherPrice);
-
       if (!_allowToken1) {
         ranges.baseLower = int24(commonTick);
         ranges.baseUpper = int24(tickForLowerPrice);
@@ -472,12 +446,6 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
         ranges.limitLower = int24(commonTick);
         ranges.limitUpper = int24(tickForHigherPrice);
 
-        console.log('TICKS BEFORE: ');
-        console.logInt(ranges.baseLower);
-        console.logInt(ranges.baseUpper);
-        console.logInt(ranges.limitLower);
-        console.logInt(ranges.limitUpper);
-
         if (newState != State.UnderInventory) {
           ranges.limitUpper = roundTickToTickSpacing(_tickSpacing, TickMath.MAX_TICK);
         }
@@ -500,12 +468,6 @@ abstract contract BaseRebalanceManager is IRebalanceManager, Timestamp {
           ranges.baseUpper = currentTickIsRound ? twapResult.currentTick - _tickSpacing : ranges.baseUpper;
           ranges.limitLower = currentTickIsRound ? twapResult.currentTick : ranges.limitLower;
         }
-
-        console.log('TICKS AFTER: ');
-        console.logInt(ranges.baseLower);
-        console.logInt(ranges.baseUpper);
-        console.logInt(ranges.limitLower);
-        console.logInt(ranges.limitUpper);
       }
     }
 
