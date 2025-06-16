@@ -1,33 +1,36 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './MockTimeCamelotBasePlugin.sol';
+import './MockTimeHydrexBasePlugin.sol';
 
-import '../interfaces/ICamelotBasePluginFactory.sol';
+import '../interfaces/IHydrexBasePluginFactory.sol';
 
 import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginFactory.sol';
 
-contract MockTimeDSCamelotFactory is ICamelotBasePluginFactory {
-  /// @inheritdoc ICamelotBasePluginFactory
+contract MockTimeDSHydrexFactory is IHydrexBasePluginFactory {
+  /// @inheritdoc IHydrexBasePluginFactory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
   address public immutable override algebraFactory;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+    /// @inheritdoc IHydrexBasePluginFactory
+  address public override farmingAddress;
+
+  /// @inheritdoc IHydrexBasePluginFactory
   AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   mapping(address => address) public override pluginByPool;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   bool public override dynamicFeeStatus;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   bool public override slidingFeeStatus;
 
   uint16 public override defaultBaseFee;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   address public override securityRegistry;
 
   constructor(address _algebraFactory) {
@@ -60,45 +63,52 @@ contract MockTimeDSCamelotFactory is ICamelotBasePluginFactory {
   }
 
   function _createPlugin(address pool) internal returns (address) {
-    MockTimeCamelotBasePlugin plugin = new MockTimeCamelotBasePlugin(pool, algebraFactory, address(this), defaultFeeConfiguration, defaultBaseFee);
+    MockTimeHydrexBasePlugin plugin = new MockTimeHydrexBasePlugin(pool, algebraFactory, address(this), defaultFeeConfiguration, defaultBaseFee);
     IDynamicFeeManager(plugin).changeDynamicFeeStatus(dynamicFeeStatus);
     ISlidingFeePlugin(plugin).changeSlidingFeeStatus(slidingFeeStatus);
     pluginByPool[pool] = address(plugin);
     return address(plugin);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDynamicFeeStatus(bool status) external override {
     require(status != dynamicFeeStatus);
     dynamicFeeStatus = status;
     emit DynamicFeeStatus(status);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setSlidingFeeStatus(bool status) external override {
     require(status != slidingFeeStatus);
     slidingFeeStatus = status;
     emit SlidingFeeStatus(status);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setSecurityRegistry(address _securityRegistry) external override {
     require(securityRegistry != _securityRegistry);
     securityRegistry = _securityRegistry;
     emit SecurityRegistry(_securityRegistry);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDefaultBaseFee(uint16 newDefaultBaseFee) external override {
     require(defaultBaseFee != newDefaultBaseFee);
     defaultBaseFee = newDefaultBaseFee;
     emit DefaultBaseFee(newDefaultBaseFee);
   } 
+
+    /// @inheritdoc IHydrexBasePluginFactory
+  function setFarmingAddress(address newFarmingAddress) external override {
+    require(farmingAddress != newFarmingAddress);
+    farmingAddress = newFarmingAddress;
+    emit FarmingAddress(newFarmingAddress);
+  }
 }

@@ -8,9 +8,10 @@ import './plugins/DynamicFeePlugin.sol';
 import './plugins/VolatilityOraclePlugin.sol';
 import './plugins/SlidingFeePlugin.sol';
 import './plugins/SecurityPlugin.sol';
+import './plugins/FarmingProxyPlugin.sol';
 
 /// @title Algebra Integral 1.2.1 plugin. Contains adaptive + sliding fee, safety switch and twap oracle
-contract CamelotBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFeePlugin, SecurityPlugin {
+contract HydrexBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFeePlugin, SecurityPlugin, FarmingProxyPlugin {
   using Plugins for uint8;
 
   /// @inheritdoc IAlgebraPlugin
@@ -98,8 +99,8 @@ contract CamelotBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingF
     return (IAlgebraPlugin.beforeSwap.selector, newFee, 0);
   }
 
-  function afterSwap(address, address, bool, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
-    _updatePluginConfigInPool(defaultPluginConfig);
+  function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
+    _updateVirtualPoolTick(zeroToOne);
     return IAlgebraPlugin.afterSwap.selector;
   }
 

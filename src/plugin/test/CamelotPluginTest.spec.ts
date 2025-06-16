@@ -6,16 +6,16 @@ import { expect } from './shared/expect';
 import { TEST_POOL_START_TIME, camelotPluginFixture } from './shared/fixtures';
 import { PLUGIN_FLAGS, encodePriceSqrt, expandTo18Decimals, getMaxTick, getMinTick } from './shared/utilities';
 
-import { MockPool, MockTimeCamelotBasePlugin, MockTimeDSCamelotFactory, SecurityRegistry} from '../typechain';
+import { MockPool, MockTimeHydrexBasePlugin, MockTimeDSHydrexFactory, SecurityRegistry} from '../typechain';
 
 import snapshotGasCost from './shared/snapshotGasCost';
 
-describe('CamelotBasePlugin', () => {
+describe('HydrexBasePlugin', () => {
   let wallet: Wallet, other: Wallet;
 
-  let plugin: MockTimeCamelotBasePlugin; // modified plugin
+  let plugin: MockTimeHydrexBasePlugin; // modified plugin
   let mockPool: MockPool; // mock of AlgebraPool
-  let mockPluginFactory: MockTimeDSCamelotFactory; // modified plugin factory
+  let mockPluginFactory: MockTimeDSHydrexFactory; // modified plugin factory
   let registry: SecurityRegistry;
 
   async function initializeAtZeroTick(pool: MockPool) {
@@ -26,7 +26,7 @@ describe('CamelotBasePlugin', () => {
     [wallet, other] = await (ethers as any).getSigners();
   });
 
-  beforeEach('deploy test CamelotBasePlugin', async () => {
+  beforeEach('deploy test HydrexBasePlugin', async () => {
     ({ plugin, mockPluginFactory, mockPool, registry  } = await loadFixture(camelotPluginFixture));
     await plugin.changeSlidingFeeStatus(true);
     await plugin.changeDynamicFeeStatus(true);
@@ -124,7 +124,6 @@ describe('CamelotBasePlugin', () => {
         await expect(mockPool.mint(wallet.address, wallet.address, 0, 60, 100, '0x')).not.to.be.reverted;
         await expect(mockPool.burn(0, 60, 1000, '0x')).not.to.be.reverted; 
         await expect(mockPool.flash(wallet.address, 100, 100, '0x')).not.to.be.reverted; 
-        expect((await mockPool.globalState()).pluginConfig).to.be.eq(defaultConfig);
       });
     });
 
@@ -569,7 +568,7 @@ describe('CamelotBasePlugin', () => {
     });
   });
 
-  describe('CamelotBasePlugin external methods', () => {
+  describe('HydrexBasePlugin external methods', () => {
     describe('#changeFeeConfiguration', () => {
       const configuration = {
         alpha1: 3002,

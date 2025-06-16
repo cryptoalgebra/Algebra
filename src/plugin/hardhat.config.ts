@@ -92,10 +92,10 @@ export default {
       'contracts/BasePluginV4Factory.sol': DEFAULT_COMPILER_SETTINGS,
       'contracts/BasePluginV3Factory.sol': DEFAULT_COMPILER_SETTINGS,
       'contracts/tests/MockBasePluginV4Factory.sol': DEFAULT_COMPILER_SETTINGS,
-      'contracts/tests/MockTimeDSCamelotFactory.sol': LOWEST_COMPILER_SETTINGS,
+      'contracts/tests/MockTimeDSHydrexFactory.sol': LOWEST_COMPILER_SETTINGS,
       'contracts/tests/MockTimeDSFactoryV4.sol': LOWEST_COMPILER_SETTINGS,
-      'contracts/CamelotBasePluginFactory.sol': DEFAULT_COMPILER_SETTINGS,
-      'contracts/CamelotBasePlugin.sol': DEFAULT_COMPILER_SETTINGS
+      'contracts/HydrexBasePluginFactory.sol': DEFAULT_COMPILER_SETTINGS,
+      'contracts/HydrexBasePlugin.sol': DEFAULT_COMPILER_SETTINGS
     },
   },
   docgen: {

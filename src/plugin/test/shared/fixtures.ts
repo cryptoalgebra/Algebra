@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
-import { MockFactory, MockPool, AlgebraSecurityPlugin, SecurityRegistry, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, SecurityPluginFactory, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory, CamelotBasePlugin, CamelotBasePluginFactory } from '../../typechain';
+import { MockFactory, MockPool, AlgebraSecurityPlugin, SecurityRegistry, MockTimeAlgebraBasePluginV1, MockTimeAlgebraBasePluginV2, MockTimeDSFactoryV2, SecurityPluginFactory, MockTimeDSFactory, BasePluginV1Factory, BasePluginV2Factory, HydrexBasePlugin, HydrexBasePluginFactory } from '../../typechain';
 import { MockTimeDSFactoryV4, MockTimeAlgebraBasePluginV4 } from '../../typechain';
-import {MockTimeCamelotBasePlugin, MockTimeDSCamelotFactory} from '../../typechain';
+import {MockTimeHydrexBasePlugin, MockTimeDSHydrexFactory} from '../../typechain';
 type Fixture<T> = () => Promise<T>;
 interface MockFactoryFixture {
   mockFactory: MockFactory;
@@ -168,8 +168,8 @@ export const securityPluginFixture: Fixture<SecurityPluginFixture> = async funct
 };
 
 interface CamelotPluginFixture extends MockFactoryFixture {
-  plugin: MockTimeCamelotBasePlugin;
-  mockPluginFactory: MockTimeDSCamelotFactory;
+  plugin: MockTimeHydrexBasePlugin;
+  mockPluginFactory: MockTimeDSHydrexFactory;
   mockPool: MockPool;
   registry: SecurityRegistry;
 }
@@ -178,8 +178,8 @@ export const camelotPluginFixture: Fixture<CamelotPluginFixture> = async functio
   const { mockFactory } = await mockFactoryFixture();
   //const { token0, token1, token2 } = await tokensFixture()
 
-  const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSCamelotFactory');
-  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory)) as any as MockTimeDSCamelotFactory;
+  const mockPluginFactoryFactory = await ethers.getContractFactory('MockTimeDSHydrexFactory');
+  const mockPluginFactory = (await mockPluginFactoryFactory.deploy(mockFactory)) as any as MockTimeDSHydrexFactory;
 
   const mockPoolFactory = await ethers.getContractFactory('MockPool');
   const mockPool = (await mockPoolFactory.deploy()) as any as MockPool;
@@ -192,8 +192,8 @@ export const camelotPluginFixture: Fixture<CamelotPluginFixture> = async functio
   await mockPluginFactory.beforeCreatePoolHook(mockPool, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, '0x');
   const pluginAddress = await mockPluginFactory.pluginByPool(mockPool);
 
-  const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeCamelotBasePlugin');
-  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeCamelotBasePlugin;
+  const mockDSOperatorFactory = await ethers.getContractFactory('MockTimeHydrexBasePlugin');
+  const plugin = mockDSOperatorFactory.attach(pluginAddress) as any as MockTimeHydrexBasePlugin;
   await plugin.setSecurityRegistry(registry)
 
   return {

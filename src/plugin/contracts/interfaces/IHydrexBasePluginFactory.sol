@@ -6,9 +6,9 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/plugin/IAlgebraPluginF
 
 import '../base/AlgebraFeeConfiguration.sol';
 
-/// @title The interface for the CamelotBasePluginFactory
+/// @title The interface for the HydrexBasePluginFactory
 /// @notice This contract creates Algebra base plugins for Algebra liquidity pools
-interface ICamelotBasePluginFactory is IAlgebraPluginFactory {
+interface IHydrexBasePluginFactory is IAlgebraPluginFactory {
   /// @notice Emitted when the default fee configuration is changed
   /// @param newConfig The structure with dynamic fee parameters
   /// @dev See the AdaptiveFee library for more details
@@ -28,6 +28,10 @@ interface ICamelotBasePluginFactory is IAlgebraPluginFactory {
   /// @param securityRegistry The security registry address after the address was changed
   event SecurityRegistry(address securityRegistry);
 
+  /// @notice Emitted when the farming address is changed
+  /// @param newFarmingAddress The farming address after the address was changed
+  event FarmingAddress(address newFarmingAddress);
+
   /// @notice The hash of 'ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR' used as role
   /// @dev allows to change settings of BasePluginV1Factory
   function ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR() external pure returns (bytes32);
@@ -35,6 +39,10 @@ interface ICamelotBasePluginFactory is IAlgebraPluginFactory {
   /// @notice Returns the address of AlgebraFactory
   /// @return The AlgebraFactory contract address
   function algebraFactory() external view returns (address);
+
+  /// @notice Returns current farming address
+  /// @return The farming contract address
+  function farmingAddress() external view returns (address);
 
   function defaultBaseFee() external view returns (uint16);
 
@@ -88,4 +96,8 @@ interface ICamelotBasePluginFactory is IAlgebraPluginFactory {
   function setSecurityRegistry(address newSecurityRegistry) external;
 
   function setDefaultBaseFee(uint16 newDefaultBaseFee) external;
+
+  /// @dev updates farmings manager address on the factory
+  /// @param newFarmingAddress The new tokenomics contract address
+  function setFarmingAddress(address newFarmingAddress) external;
 }

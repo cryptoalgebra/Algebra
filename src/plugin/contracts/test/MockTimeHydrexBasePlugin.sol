@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.8.20;
 
-import '../CamelotBasePlugin.sol';
+import '../HydrexBasePlugin.sol';
 
 // used for testing time dependent behavior
-contract MockTimeCamelotBasePlugin is CamelotBasePlugin {
+contract MockTimeHydrexBasePlugin is HydrexBasePlugin {
   using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
 
   // Monday, October 5, 2020 9:00:00 AM GMT-05:00
   uint256 public time = 1601906400;
 
-  constructor(address _pool, address _factory, address _pluginFactory, AlgebraFeeConfiguration memory _config, uint16 _baseFee) CamelotBasePlugin(_pool, _factory, _pluginFactory, _config, _baseFee) {
+  constructor(address _pool, address _factory, address _pluginFactory, AlgebraFeeConfiguration memory _config, uint16 _baseFee) HydrexBasePlugin(_pool, _factory, _pluginFactory, _config, _baseFee) {
     //
   }
 

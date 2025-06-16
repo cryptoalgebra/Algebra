@@ -1,36 +1,39 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
 
-import './interfaces/ICamelotBasePluginFactory.sol';
+import './interfaces/IHydrexBasePluginFactory.sol';
 import './libraries/AdaptiveFee.sol';
-import './CamelotBasePlugin.sol';
+import './HydrexBasePlugin.sol';
 
 /// @title Algebra Integral 1.2.1 plugin factory
-/// @notice This contract creates Camelot base plugins for Algebra liquidity pools
+/// @notice This contract creates Hydrex base plugins for Algebra liquidity pools
 /// @dev This plugin factory can only be used for Algebra base pools
-contract CamelotBasePluginFactory is ICamelotBasePluginFactory {
-  /// @inheritdoc ICamelotBasePluginFactory
+contract HydrexBasePluginFactory is IHydrexBasePluginFactory {
+  /// @inheritdoc IHydrexBasePluginFactory
   bytes32 public constant override ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR = keccak256('ALGEBRA_BASE_PLUGIN_FACTORY_ADMINISTRATOR');
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   address public immutable override algebraFactory;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   AlgebraFeeConfiguration public override defaultFeeConfiguration; // values of constants for sigmoids in fee calculation formula
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   bool public override dynamicFeeStatus;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   bool public override slidingFeeStatus;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   address public override securityRegistry;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   uint16 public override defaultBaseFee = 3000;
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
+  address public override farmingAddress;
+
+  /// @inheritdoc IHydrexBasePluginFactory
   mapping(address poolAddress => address pluginAddress) public override pluginByPool;
 
   modifier onlyAdministrator() {
@@ -55,7 +58,7 @@ contract CamelotBasePluginFactory is ICamelotBasePluginFactory {
     require(msg.sender == algebraFactory);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function createPluginForExistingPool(address token0, address token1) external override returns (address) {
     IAlgebraFactory factory = IAlgebraFactory(algebraFactory);
     require(factory.hasRoleOrOwner(factory.POOLS_ADMINISTRATOR_ROLE(), msg.sender));
@@ -68,7 +71,7 @@ contract CamelotBasePluginFactory is ICamelotBasePluginFactory {
 
   function _createPlugin(address pool) internal returns (address) {
     require(pluginByPool[pool] == address(0), 'Already created');
-    address plugin = address(new CamelotBasePlugin(pool, algebraFactory, address(this), defaultFeeConfiguration, defaultBaseFee));
+    address plugin = address(new HydrexBasePlugin(pool, algebraFactory, address(this), defaultFeeConfiguration, defaultBaseFee));
     IDynamicFeeManager(plugin).changeDynamicFeeStatus(dynamicFeeStatus);
     ISecurityPlugin(plugin).setSecurityRegistry(securityRegistry);
     ISlidingFeePlugin(plugin).changeSlidingFeeStatus(slidingFeeStatus);
@@ -76,38 +79,45 @@ contract CamelotBasePluginFactory is ICamelotBasePluginFactory {
     return plugin;
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDefaultFeeConfiguration(AlgebraFeeConfiguration calldata newConfig) external override onlyAdministrator {
     AdaptiveFee.validateFeeConfiguration(newConfig);
     defaultFeeConfiguration = newConfig;
     emit DefaultFeeConfiguration(newConfig);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDynamicFeeStatus(bool status) external override onlyAdministrator {
     require(status != dynamicFeeStatus);
     dynamicFeeStatus = status;
     emit DynamicFeeStatus(status);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setSlidingFeeStatus(bool status) external override onlyAdministrator {
     require(status != slidingFeeStatus);
     slidingFeeStatus = status;
     emit SlidingFeeStatus(status);
   }
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setDefaultBaseFee(uint16 newDefaultBaseFee) external override onlyAdministrator {
     require(defaultBaseFee != newDefaultBaseFee);
     defaultBaseFee = newDefaultBaseFee;
     emit DefaultBaseFee(newDefaultBaseFee);
   } 
 
-  /// @inheritdoc ICamelotBasePluginFactory
+  /// @inheritdoc IHydrexBasePluginFactory
   function setSecurityRegistry(address _securityRegistry) external override onlyAdministrator {
     require(securityRegistry != _securityRegistry);
     securityRegistry = _securityRegistry;
     emit SecurityRegistry(_securityRegistry);
+  }
+
+  /// @inheritdoc IHydrexBasePluginFactory
+  function setFarmingAddress(address newFarmingAddress) external override onlyAdministrator {
+    require(farmingAddress != newFarmingAddress);
+    farmingAddress = newFarmingAddress;
+    emit FarmingAddress(newFarmingAddress);
   }
 }

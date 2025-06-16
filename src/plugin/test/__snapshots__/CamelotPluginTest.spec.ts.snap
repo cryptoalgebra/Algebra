@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CamelotBasePlugin #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
+exports[`HydrexBasePlugin #DynamicFeeManager #adaptiveFee single huge spike after day 1`] = `
 Array [
   "Fee: 500 ",
   "Fee: 500 ",
@@ -30,7 +30,7 @@ Array [
 ]
 `;
 
-exports[`CamelotBasePlugin #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
+exports[`HydrexBasePlugin #DynamicFeeManager #adaptiveFee single huge spike after initialization 1`] = `
 Array [
   "Fee: 500 ",
   "Fee: 500 ",
@@ -60,7 +60,7 @@ Array [
 ]
 `;
 
-exports[`CamelotBasePlugin #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
+exports[`HydrexBasePlugin #DynamicFeeManager #adaptiveFee single huge step after day 1`] = `
 Array [
   "Fee: 500 ",
   "Fee: 500 ",
@@ -90,7 +90,7 @@ Array [
 ]
 `;
 
-exports[`CamelotBasePlugin #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
+exports[`HydrexBasePlugin #DynamicFeeManager #adaptiveFee single huge step after initialization 1`] = `
 Array [
   "Fee: 500 ",
   "Fee: 500 ",
@@ -120,4 +120,4 @@ Array [
 ]
 `;
 
-exports[`CamelotBasePlugin CamelotBasePlugin external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23730`;
+exports[`HydrexBasePlugin HydrexBasePlugin external methods #changeFeeConfiguration feeConfig getter gas cost [ @skip-on-coverage ] 1`] = `23730`;
