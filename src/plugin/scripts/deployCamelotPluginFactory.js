@@ -14,7 +14,7 @@ async function main() {
 
     console.log("PluginFactory to:", dsFactory.target);
 
-    await dsFactory.changeDynamicFeeStatus(true);
+    await dsFactory.setDynamicFeeStatus(true);
     
     const securityRegistryFactory = await hre.ethers.getContractFactory("SecurityRegistry");
     const securityRegistry = await securityRegistryFactory.deploy(deploysData.factory);

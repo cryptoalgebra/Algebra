@@ -77,9 +77,9 @@ export default {
       chainId: 17000,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
-    blastTestnet: {
-      url: `https://blast-sepolia.blockpi.network/v1/rpc/public`,
-      chainId: 168587773,
+    base: {
+      url: `https://base-mainnet.public.blastapi.io`,
+      chainId: 8453,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     telosTestnet: {
