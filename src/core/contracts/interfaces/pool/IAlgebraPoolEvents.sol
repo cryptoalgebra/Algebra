@@ -65,8 +65,7 @@ interface IAlgebraPoolEvents {
   /// @param price The sqrt(price) of the pool after the swap, as a Q64.96
   /// @param liquidity The liquidity of the pool after the swap
   /// @param tick The log base 1.0001 of price of the pool after the swap
-  /// @param overrideFee The fee to be applied to the trade
-  /// @param pluginFee The fee to be sent to the plugin
+
   event Swap(
     address indexed sender,
     address indexed recipient,
@@ -74,10 +73,13 @@ interface IAlgebraPoolEvents {
     int256 amount1,
     uint160 price,
     uint128 liquidity,
-    int24 tick,
-    uint24 overrideFee,
-    uint24 pluginFee
+    int24 tick
   );
+
+  /// @notice Emitted by the pool after any swaps 
+  /// @param overrideFee The fee to be applied to the trade
+  /// @param pluginFee The fee to be sent to the plugin
+  event SwapFees(uint24 overrideFee, uint24 pluginFee);
 
   /// @notice Emitted by the pool for any flashes of token0/token1
   /// @param sender The address that initiated the swap call, and that received the callback

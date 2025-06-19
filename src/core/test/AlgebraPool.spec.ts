@@ -2666,7 +2666,9 @@ describe('AlgebraPool', () => {
         -497487437185929648n,
         39813146992092631956554748913n,
         1000000000000000000n,
-        -13764,
+        -13764
+      )
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'SwapFees').withArgs(
         4000,
         6000
       )

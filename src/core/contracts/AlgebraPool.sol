@@ -385,7 +385,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint24 overrideFee,
     uint24 pluginFee
   ) private {
-    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick, overrideFee, pluginFee);
+    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
+    emit SwapFees(overrideFee, pluginFee);
   }
 
   function _beforeSwap(
