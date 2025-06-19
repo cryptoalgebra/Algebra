@@ -10,7 +10,7 @@ import '../interfaces/plugins/IVolatilityOracle.sol';
 import '../libraries/VolatilityOracle.sol';
 import '../base/AlgebraBasePlugin.sol';
 
-/// @title Algebra Integral 1.2.1 VolatilityOraclePlugin plugin
+/// @title Algebra Integral 1.2.2 VolatilityOraclePlugin plugin
 /// @notice This contract stores timepoints and calculates adaptive fee and statistical averages
 abstract contract VolatilityOraclePlugin is AlgebraBasePlugin, IVolatilityOracle {
   using Plugins for uint8;

@@ -11,7 +11,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import '../interfaces/IBasePlugin.sol';
 
-/// @title Algebra Integral 1.2.1 plugin base
+/// @title Algebra Integral 1.2.2 plugin base
 /// @notice This contract simplifies development process of plugins by providing base functionality
 abstract contract BasePlugin is IBasePlugin, Timestamp {
   using Plugins for uint8;
