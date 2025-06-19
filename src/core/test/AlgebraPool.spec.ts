@@ -3,7 +3,7 @@ import { ContractTransactionReceipt, Wallet, MaxUint256, ZeroAddress } from 'eth
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from './shared/expect';
 
-import { poolFixture } from './shared/fixtures';
+import { poolFixture, ZERO_ADDRESS } from './shared/fixtures';
 
 import {
   expandTo18Decimals,
@@ -119,6 +119,7 @@ describe('AlgebraPool', () => {
     expect(await pool.factory()).to.eq(await factory.getAddress());
     expect(await pool.token0()).to.eq(await token0.getAddress());
     expect(await pool.token1()).to.eq(await token1.getAddress());
+    expect(await pool.pluginDeployer()).to.eq(ZERO_ADDRESS);
     expect(await pool.maxLiquidityPerTick()).to.eq(BigInt('191757638537527648490752896198553'));
   });
 

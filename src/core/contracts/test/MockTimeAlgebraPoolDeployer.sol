@@ -13,6 +13,7 @@ contract MockTimeAlgebraPoolDeployer {
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
   bytes32 private cache1;
+  bytes32 private cache2;
 
   bytes32 public immutable mockPoolHash;
 
@@ -20,16 +21,16 @@ contract MockTimeAlgebraPoolDeployer {
     mockPoolHash = keccak256(type(MockTimeAlgebraPool).creationCode);
   }
 
-  function getDeployParameters() external view returns (address, address, address, address) {
-    (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, token0, token1);
+  function getDeployParameters() external view returns (address, address, address, address, address) {
+    (address dataStorage, address token0, address token1, address pluginDeployer) = _readFromCache();
+    return (dataStorage, factory, token0, token1, pluginDeployer);
   }
 
   event PoolDeployed(address pool);
 
-  function deployMock(address _factory, address token0, address token1) external returns (address pool) {
+  function deployMock(address _factory, address token0, address token1, address pluginDeployer) external returns (address pool) {
     factory = _factory;
-    _writeToCache(address(0), token0, token1);
+    _writeToCache(address(0), token0, token1, pluginDeployer);
     pool = address(new MockTimeAlgebraPool{salt: keccak256(abi.encode(token0, token1))}());
     (cache0, cache1) = (bytes32(0), bytes32(0));
     emit PoolDeployed(pool);
@@ -50,21 +51,23 @@ contract MockTimeAlgebraPoolDeployer {
   }
 
   /// @notice densely packs three addresses into two storage slots
-  function _writeToCache(address dataStorage, address token0, address token1) private {
+  function _writeToCache(address dataStorage, address token0, address token1, address pluginDeployer) private {
     assembly {
       token0 := and(token0, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // clean higher bits, just in case
       sstore(cache0.slot, or(shr(64, token0), shl(96, and(dataStorage, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF))))
       sstore(cache1.slot, or(shl(160, token0), and(token1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)))
+      sstore(cache2.slot, pluginDeployer)
     }
   }
 
   /// @notice reads three densely packed addresses from two storage slots
-  function _readFromCache() private view returns (address dataStorage, address token0, address token1) {
-    (bytes32 _cache0, bytes32 _cache1) = (cache0, cache1);
+  function _readFromCache() private view returns (address dataStorage, address token0, address token1, address pluginDeployer) {
+    (bytes32 _cache0, bytes32 _cache1, bytes32 _cache2) = (cache0, cache1, cache2);
     assembly {
       dataStorage := shr(96, _cache0)
       token0 := or(shl(64, and(_cache0, 0xFFFFFFFFFFFFFFFFFFFFFFFF)), shr(160, _cache1))
       token1 := and(_cache1, 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+      pluginDeployer := _cache2
     }
   }
 }
