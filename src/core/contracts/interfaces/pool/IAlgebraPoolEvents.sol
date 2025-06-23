@@ -46,16 +46,18 @@ interface IAlgebraPoolEvents {
   /// @param liquidityAmount The amount of liquidity to remove
   /// @param amount0 The amount of token0 withdrawn
   /// @param amount1 The amount of token1 withdrawn
-  /// @param pluginFee The fee to be sent to the plugin
   event Burn(
     address indexed owner,
     int24 indexed bottomTick,
     int24 indexed topTick,
     uint128 liquidityAmount,
     uint256 amount0,
-    uint256 amount1,
-    uint24 pluginFee
+    uint256 amount1
   );
+
+  /// @notice Emitted when a position's liquidity is removed
+  /// @param pluginFee The fee to be sent to the plugin
+  event BurnFee(uint24 pluginFee); 
 
   /// @notice Emitted by the pool for any swaps between token0 and token1
   /// @param sender The address that initiated the swap call, and that received the callback

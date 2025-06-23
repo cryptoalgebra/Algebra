@@ -165,8 +165,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       }
     }
 
-    if (amount | amount0 | amount1 != 0) emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1, pluginFee);
-
+    if (amount | amount0 | amount1 != 0) {
+      emit BurnFee(pluginFee);
+      emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
+    }
+    
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
@@ -385,8 +388,8 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint24 overrideFee,
     uint24 pluginFee
   ) private {
-    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
     emit SwapFees(overrideFee, pluginFee);
+    emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
   function _beforeSwap(
