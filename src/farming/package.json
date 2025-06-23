@@ -2,7 +2,7 @@
   "name": "@cryptoalgebra/integral-farming",
   "description": "Liquidity mining contracts for Algebra Integral protocol",
   "license": "GPL-3.0-or-later",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "publishConfig": {
     "access": "public"
   },
@@ -24,9 +24,9 @@
   ],
   "dependencies": {
     "@openzeppelin/contracts": "4.9.3",
-    "@cryptoalgebra/integral-core": "~1.2.6",
-    "@cryptoalgebra/integral-periphery": "~1.2.2",
-    "@cryptoalgebra/integral-base-plugin": "~1.2.2"
+    "@cryptoalgebra/integral-core": "~1.2.7",
+    "@cryptoalgebra/integral-periphery": "~1.2.3",
+    "@cryptoalgebra/integral-base-plugin": "~1.2.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.170",
