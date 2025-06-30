@@ -2668,7 +2668,8 @@ describe('AlgebraPool', () => {
         1000000000000000000n,
         -13764
       )
-      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'SwapFees').withArgs(
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'SwapFee').withArgs(
+        await swapTarget.getAddress(),
         4000,
         6000
       )
@@ -2679,7 +2680,7 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, 60, 120, expandTo18Decimals(1));
       await expect(pool.burn(60, 120, expandTo18Decimals(1), '0x'))
       .to.emit(pool, 'BurnFee')
-      .withArgs(6000)
+      .withArgs(wallet.address, 6000)
 
     })
 
