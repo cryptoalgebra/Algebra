@@ -17,10 +17,6 @@ interface IAlgebraPoolImmutables {
   /// @return The token contract address
   function token1() external view returns (address);
 
-  /// @notice The address of the plugin deployer, returns zero address for base pools
-  /// @return The plugin deployer contract address
-  function pluginDeployer() external view returns (address);
-
   /// @notice The maximum amount of position liquidity that can use any tick in the range
   /// @dev This parameter is enforced per tick to prevent liquidity from overflowing a uint128 at any point, and
   /// also prevents out-of-range liquidity from being used to prevent adding in-range liquidity to a pool

@@ -105,7 +105,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
       const ADMIN_ROLE = await factory.POOLS_ADMINISTRATOR_ROLE();
       await factory.grantRole(ADMIN_ROLE, mockTimePoolDeployer);
 
-      await mockTimePoolDeployer.deployMock(factory, firstToken, secondToken, ZERO_ADDRESS);
+      await mockTimePoolDeployer.deployMock(factory, firstToken, secondToken);
 
       const firstAddress = await firstToken.getAddress();
       const secondAddress = await secondToken.getAddress();

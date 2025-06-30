@@ -122,7 +122,6 @@ describe('AlgebraFactory', () => {
     expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
     expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
     expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
-    expect(await pool.pluginDeployer(), 'pool plugin deployer').to.eq(ZERO_ADDRESS);
   }
 
   describe('#createPool', () => {
@@ -254,7 +253,6 @@ describe('AlgebraFactory', () => {
       expect(await pool.factory(), 'pool factory address').to.eq(await factory.getAddress());
       expect(await pool.token0(), 'pool token0').to.eq(TEST_ADDRESSES[0]);
       expect(await pool.token1(), 'pool token1').to.eq(TEST_ADDRESSES[1]);
-      expect(await pool.pluginDeployer(), 'pool plugin deployer').to.eq(customPoolCreator);
     }
 
     beforeEach('Deploy CustomPoolCreator', async () => {
