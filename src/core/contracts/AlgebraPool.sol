@@ -166,7 +166,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
 
     if (amount | amount0 | amount1 != 0) {
-      emit BurnFee(pluginFee);
+      emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
     
@@ -388,7 +388,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     uint24 overrideFee,
     uint24 pluginFee
   ) private {
-    emit SwapFees(overrideFee, pluginFee);
+    emit SwapFee(msg.sender, overrideFee, pluginFee);
     emit Swap(msg.sender, recipient, amount0, amount1, newPrice, newLiquidity, newTick);
   }
 
