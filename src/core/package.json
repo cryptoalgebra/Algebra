@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.2.5",
+  "version": "1.2.8",
   "keywords": [
     "algebra"
   ],

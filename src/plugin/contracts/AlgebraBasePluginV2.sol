@@ -9,7 +9,7 @@ import './plugins/FarmingProxyPlugin.sol';
 import './plugins/SlidingFeePlugin.sol';
 import './plugins/VolatilityOraclePlugin.sol';
 
-/// @title Algebra Integral 1.2.1 sliding fee plugin
+/// @title Algebra Integral 1.2.2 sliding fee plugin
 contract AlgebraBasePluginV2 is SlidingFeePlugin, FarmingProxyPlugin, VolatilityOraclePlugin {
   using Plugins for uint8;
 

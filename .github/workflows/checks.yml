@@ -3,10 +3,10 @@ name: Checks
 on:
   push:
     branches:
-      - integral-v1.2.1
+      - integral-v1.2.2
   pull_request:
     branches:
-      - integral-v1.2.1
+      - integral-v1.2.2
 
 jobs:
   Codespell:
