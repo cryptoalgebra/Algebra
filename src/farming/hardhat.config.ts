@@ -39,6 +39,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
 
 
 const config: HardhatUserConfig = {
+  sourcify: baseConfig.sourcify,
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   solidity: {

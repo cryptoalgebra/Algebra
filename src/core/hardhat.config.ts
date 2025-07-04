@@ -66,6 +66,7 @@ if (process.env.RUN_COVERAGE == '1') {
 }
 
 export default {
+  sourcify: baseConfig.sourcify,
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   typechain: {

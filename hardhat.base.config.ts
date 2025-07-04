@@ -4,6 +4,11 @@ const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLO
   config.parsed || {};
 
 export default {
+  sourcify: {
+   enabled: true,
+   apiUrl: "https://sourcify.roninchain.com/server/verify/",
+   browserUrl: "https://app.roninchain.com/"
+  },
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
@@ -103,12 +108,39 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    botanix: {
+      url: `https://rpc.botanixlabs.com`,
+      chainId: 3637,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    ronin: {
+      url: `https://api.roninchain.com/rpc`,
+      chainId: 2020,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
   },
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
+     enabled: false,
     apiKey: `${POLYGONSCAN_API_KEY}`,
     customChains: [
+      {
+        network: "ronin",
+        chainId: 2020,
+        urls: {
+          apiURL: "https://sourcify.roninchain.com/server/verify",
+          browserURL: "https://app.roninchain.com/"
+        }
+      },
+      {
+        network: "botanix",
+        chainId: 3637,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/mainnet/evm/3637/etherscan",
+          browserURL: "https://botanixscan.io"
+        }
+      },
       {
         network: 'seiTestnet',
         chainId: 713715,

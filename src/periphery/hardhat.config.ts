@@ -80,6 +80,7 @@ task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
 export default {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
+  
   solidity: {
     compilers: [DEFAULT_COMPILER_SETTINGS],
     overrides: {
