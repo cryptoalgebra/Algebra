@@ -74,8 +74,6 @@ abstract contract FarmingProxyPlugin is AlgebraBasePlugin, IFarmingPlugin {
     if (_incentive != address(0)) {
       (, int24 tick, , ) = _getPoolState();
       IAlgebraVirtualPool(_incentive).crossTo(tick, zeroToOne);
-    } else {
-      _disablePluginFlags(defaultPluginConfig); // should not be called, reset config
     }
   }
 

@@ -9,11 +9,13 @@ import './plugins/VolatilityOraclePlugin.sol';
 import './plugins/SlidingFeePlugin.sol';
 import './plugins/SecurityPlugin.sol';
 import './plugins/FarmingProxyPlugin.sol';
+import './plugins/AlmPlugin.sol';
 
 /// @title Algebra Integral 1.2.1 plugin. Contains adaptive + sliding fee, safety switch and twap oracle
-contract HydrexBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFeePlugin, SecurityPlugin, FarmingProxyPlugin {
+contract HydrexBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFeePlugin, SecurityPlugin, FarmingProxyPlugin, AlmPlugin {
   using Plugins for uint8;
-
+  using VolatilityOracle for VolatilityOracle.Timepoint[UINT16_MODULO];
+  
   /// @inheritdoc IAlgebraPlugin
   uint8 public constant override defaultPluginConfig =
     uint8(
@@ -100,6 +102,16 @@ contract HydrexBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFe
   }
 
   function afterSwap(address, address, bool zeroToOne, int256, uint160, int256, int256, bytes calldata) external override onlyPool returns (bytes4) {
+    if (rebalanceManager == address(0) || !_ableToGetTimepoints(slowTwapPeriod)) return IAlgebraPlugin.afterSwap.selector;
+
+    ( , int24 currentTick, , ) = _getPoolState();
+    uint32 lastBlockTimestamp = _getLastBlockTimestamp();
+
+    int24 slowTwapTick = _getTwapTick(slowTwapPeriod);
+    int24 fastTwapTick = _getTwapTick(fastTwapPeriod);
+
+    _obtainTWAPAndRebalance(currentTick, slowTwapTick, fastTwapTick, lastBlockTimestamp);
+
     _updateVirtualPoolTick(zeroToOne);
     return IAlgebraPlugin.afterSwap.selector;
   }
@@ -119,5 +131,35 @@ contract HydrexBasePlugin is DynamicFeePlugin, VolatilityOraclePlugin, SlidingFe
   function getCurrentFee() external view override returns (uint16 fee) {
     uint88 volatilityAverage = _getAverageVolatilityLast();
     fee = _getCurrentFee(volatilityAverage);
+  }
+
+  function _getLastBlockTimestamp() private view returns (uint32 blockTimestamp) {
+    VolatilityOracle.Timepoint memory lastTimepoint = timepoints[timepointIndex];
+    return lastTimepoint.blockTimestamp;
+  }
+
+  function _getTwapTick(uint32 period) private view returns (int24 timeWeightedAverageTick) {
+    require(period != 0, 'Period is zero');
+
+    uint32[] memory secondAgos = new uint32[](2);
+    secondAgos[0] = period;
+    secondAgos[1] = 0;
+
+    (, int24 tick, , ) = _getPoolState();
+    (int56[] memory tickCumulatives, ) = timepoints.getTimepoints(_blockTimestamp(), secondAgos, tick, timepointIndex);
+
+    int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
+
+    timeWeightedAverageTick = int24(tickCumulativesDelta / int56(uint56(period)));
+
+    // Always round to negative infinity
+    if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(uint56(period)) != 0)) timeWeightedAverageTick--;
+  }
+
+  function _ableToGetTimepoints(uint32 period) private view returns (bool) {
+    uint16 lastIndex = timepoints.getOldestIndex(timepointIndex);
+    uint32 oldestTimestamp = timepoints[lastIndex].blockTimestamp;
+
+    return VolatilityOracle._lteConsideringOverflow(oldestTimestamp, _blockTimestamp() - period, _blockTimestamp());
   }
 }
