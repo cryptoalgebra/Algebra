@@ -116,6 +116,22 @@ Emitted by the pool for any flashes of token0/token1
 | paid0 | uint256 | The amount of token0 paid for the flash, which can exceed the amount0 plus the fee |
 | paid1 | uint256 | The amount of token1 paid for the flash, which can exceed the amount1 plus the fee |
 
+### ExcessTokens
+
+```solidity
+event ExcessTokens(uint256 amount0, uint256 amount1)
+```
+
+Emitted when the pool has higher balances than expected.
+Any excess of tokens will be distributed between liquidity providers as fee.
+
+*Developer note: Fees after flash also will trigger this event due to mechanics of flash.*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount0 | uint256 | The excess of token0 |
+| amount1 | uint256 | The excess of token1 |
+
 ### CommunityFee
 
 ```solidity
@@ -175,4 +191,30 @@ Emitted when the fee changes inside the pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
+
+### CommunityVault
+
+```solidity
+event CommunityVault(address newCommunityVault)
+```
+
+Emitted when the community vault address changes
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newCommunityVault | address | New community vault |
+
+### Skim
+
+```solidity
+event Skim(address to, uint256 amount0, uint256 amount1)
+```
+
+Emitted when the plugin does skim the excess of tokens
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | THe receiver of tokens (plugin) |
+| amount0 | uint256 | The amount of token0 |
+| amount1 | uint256 | The amount of token1 |
 

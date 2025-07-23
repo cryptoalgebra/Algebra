@@ -207,7 +207,7 @@ Used to collect reward from eternal farming. Then reward can be claimed.
 ### claimReward
 
 ```solidity
-function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
+function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 rewardBalanceBefore)
 ```
 **Selector**: `0x2f2d783d`
 
@@ -225,5 +225,5 @@ Used to claim and send rewards from farming(s)
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | The summary amount of claimed rewards |
+| rewardBalanceBefore | uint256 | The total amount of unclaimed reward *before* claim |
 

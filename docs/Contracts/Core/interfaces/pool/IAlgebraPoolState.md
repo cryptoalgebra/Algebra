@@ -155,6 +155,21 @@ Returns the address of currently used plugin
 | ---- | ---- | ----------- |
 | pluginAddress | address | The address of currently used plugin |
 
+### communityVault
+
+```solidity
+function communityVault() external view returns (address communityVaultAddress)
+```
+**Selector**: `0x53e97868`
+
+The contract to which community fees are transferred
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| communityVaultAddress | address | The communityVault address |
+
 ### tickTable
 
 ```solidity

@@ -38,9 +38,9 @@ Returns the amount out received for a given exact input swap without executing t
 ### quoteExactInputSingle
 
 ```solidity
-function quoteExactInputSingle(address tokenIn, address tokenOut, uint256 amountIn, uint160 limitSqrtPrice) external returns (uint256 amountOut, uint16 fee)
+function quoteExactInputSingle(address tokenIn, address tokenOut, address deployer, uint256 amountIn, uint160 limitSqrtPrice) external returns (uint256 amountOut, uint16 fee)
 ```
-**Selector**: `0x2d9ebd1d`
+**Selector**: `0x57028211`
 
 Returns the amount out received for a given exact input but for a swap of a single pool
 
@@ -48,6 +48,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 | ---- | ---- | ----------- |
 | tokenIn | address | The token being swapped in |
 | tokenOut | address | The token being swapped out |
+| deployer | address |  |
 | amountIn | uint256 | The desired input amount |
 | limitSqrtPrice | uint160 | The price limit of the pool that cannot be exceeded by the swap |
 
@@ -82,9 +83,9 @@ Returns the amount in required for a given exact output swap without executing t
 ### quoteExactOutputSingle
 
 ```solidity
-function quoteExactOutputSingle(address tokenIn, address tokenOut, uint256 amountOut, uint160 limitSqrtPrice) external returns (uint256 amountIn, uint16 fee)
+function quoteExactOutputSingle(address tokenIn, address tokenOut, address deployer, uint256 amountOut, uint160 limitSqrtPrice) external returns (uint256 amountIn, uint16 fee)
 ```
-**Selector**: `0x9e73c81d`
+**Selector**: `0x719c8b31`
 
 Returns the amount in required to receive the given exact output amount but for a swap of a single pool
 
@@ -92,6 +93,7 @@ Returns the amount in required to receive the given exact output amount but for 
 | ---- | ---- | ----------- |
 | tokenIn | address | The token being swapped in |
 | tokenOut | address | The token being swapped out |
+| deployer | address |  |
 | amountOut | uint256 | The desired output amount |
 | limitSqrtPrice | uint160 | The price limit of the pool that cannot be exceeded by the swap |
 

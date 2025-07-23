@@ -3,7 +3,7 @@
 # AlgebraBasePluginV1
 
 
-Algebra default plugin
+Algebra Integral 1.1 default plugin
 
 This contract stores timepoints and calculates adaptive fee and statistical averages
 

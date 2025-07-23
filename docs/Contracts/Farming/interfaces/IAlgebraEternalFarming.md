@@ -446,7 +446,7 @@ exitFarmings for Algebra LP token
 ### claimReward
 
 ```solidity
-function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 reward)
+function claimReward(contract IERC20Minimal rewardToken, address to, uint256 amountRequested) external returns (uint256 rewardBalanceBefore)
 ```
 **Selector**: `0x2f2d783d`
 
@@ -462,12 +462,12 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if pos
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | The amount of reward tokens claimed |
+| rewardBalanceBefore | uint256 | The total amount of unclaimed reward *before* claim |
 
 ### claimRewardFrom
 
 ```solidity
-function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 reward)
+function claimRewardFrom(contract IERC20Minimal rewardToken, address from, address to, uint256 amountRequested) external returns (uint256 rewardBalanceBefore)
 ```
 **Selector**: `0x0a530754`
 
@@ -485,7 +485,7 @@ only for FarmingCenter
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | The amount of reward tokens claimed |
+| rewardBalanceBefore | uint256 | The total amount of unclaimed reward *before* claim |
 
 ### getRewardInfo
 
@@ -535,9 +535,9 @@ Returns information about a farmed liquidity NFT
 ### createEternalFarming
 
 ```solidity
-function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
+function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params, address plugin) external returns (address virtualPool)
 ```
-**Selector**: `0x566d3c71`
+**Selector**: `0x547b6da9`
 
 Creates a new liquidity farming incentive program
 
@@ -545,6 +545,7 @@ Creates a new liquidity farming incentive program
 | ---- | ---- | ----------- |
 | key | struct IncentiveKey | Details of the incentive to create |
 | params | struct IAlgebraEternalFarming.IncentiveParams | Params of incentive |
+| plugin | address | The address of corresponding plugin |
 
 **Returns:**
 

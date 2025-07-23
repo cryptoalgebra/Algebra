@@ -3,9 +3,11 @@
 # BasePluginV1Factory
 
 
-Algebra default plugin factory
+Algebra Integral 1.1 default plugin factory
 
 This contract creates Algebra default plugins for Algebra liquidity pools
+
+*Developer note: This plugin factory can only be used for Algebra base pools*
 
 **Inherits:** [IBasePluginV1Factory](interfaces/IBasePluginV1Factory.md)
 ## Modifiers
@@ -81,24 +83,44 @@ constructor(address _algebraFactory) public
 | ---- | ---- | ----------- |
 | _algebraFactory | address |  |
 
-### createPlugin
+### beforeCreatePoolHook
 
 ```solidity
-function createPlugin(address pool) external returns (address)
+function beforeCreatePoolHook(address pool, address, address, address, address, bytes) external returns (address)
 ```
-**Selector**: `0x361c0f76`
+**Selector**: `0x1d0338d9`
 
 Deploys new plugin contract for pool
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| pool | address | The address of the pool for which the new plugin will be created |
+| pool | address | The address of the new pool |
+|  | address |  |
+|  | address |  |
+|  | address |  |
+|  | address |  |
+|  | bytes |  |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address | New plugin address |
+
+### afterCreatePoolHook
+
+```solidity
+function afterCreatePoolHook(address, address, address) external view
+```
+**Selector**: `0x8d5ef8d1`
+
+Called after the pool is created
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+|  | address |  |
+|  | address |  |
+|  | address |  |
 
 ### createPluginForExistingPool
 

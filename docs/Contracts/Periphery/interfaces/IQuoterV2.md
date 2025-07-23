@@ -23,6 +23,7 @@ https://github.com/Uniswap/v3-periphery*
 struct QuoteExactInputSingleParams {
   address tokenIn;
   address tokenOut;
+  address deployer;
   uint256 amountIn;
   uint160 limitSqrtPrice;
 }
@@ -36,6 +37,7 @@ struct QuoteExactInputSingleParams {
 struct QuoteExactOutputSingleParams {
   address tokenIn;
   address tokenOut;
+  address deployer;
   uint256 amount;
   uint160 limitSqrtPrice;
 }
@@ -73,7 +75,7 @@ Returns the amount out received for a given exact input swap without executing t
 ```solidity
 function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) external returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
-**Selector**: `0x5e5e6e0f`
+**Selector**: `0xe94764c4`
 
 Returns the amount out received for a given exact input but for a swap of a single pool
 
@@ -122,7 +124,7 @@ Returns the amount in required for a given exact output swap without executing t
 ```solidity
 function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) external returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
-**Selector**: `0x5877c9b9`
+**Selector**: `0x62086e24`
 
 Returns the amount in required to receive the given exact output amount but for a swap of a single pool
 

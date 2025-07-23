@@ -3,7 +3,7 @@
 # EternalVirtualPool
 
 
-Algebra eternal virtual pool
+Algebra Integral 1.1 eternal virtual pool
 
 used to track active liquidity in farming and distribute rewards
 
