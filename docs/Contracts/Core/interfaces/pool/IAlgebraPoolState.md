@@ -105,14 +105,14 @@ Look up information about a specific tick in the pool
 | outerFeeGrowth0Token | uint256 | The fee growth on the other side of the tick from the current tick in token0 |
 | outerFeeGrowth1Token | uint256 | The fee growth on the other side of the tick from the current tick in token1 In addition, these values are only relative and must be used only in comparison to previous snapshots for a specific position. |
 
-### communityFeeLastTimestamp
+### lastFeeTransferTimestamp
 
 ```solidity
-function communityFeeLastTimestamp() external view returns (uint32)
+function lastFeeTransferTimestamp() external view returns (uint32)
 ```
-**Selector**: `0x1131b110`
+**Selector**: `0x77f8c3a9`
 
-The timestamp of the last sending of tokens to community vault
+The timestamp of the last sending of tokens to vault/plugin
 
 **Returns:**
 
@@ -138,6 +138,24 @@ The amounts of token0 and token1 that will be sent to the vault
 | communityFeePending0 | uint128 | The amount of token0 that will be sent to the vault |
 | communityFeePending1 | uint128 | The amount of token1 that will be sent to the vault |
 
+### getPluginFeePending
+
+```solidity
+function getPluginFeePending() external view returns (uint128 pluginFeePending0, uint128 pluginFeePending1)
+```
+**Selector**: `0xa1eded87`
+
+The amounts of token0 and token1 that will be sent to the plugin
+
+*Developer note: Will be sent FEE_TRANSFER_FREQUENCY after feeLastTransferTimestamp*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pluginFeePending0 | uint128 | The amount of token0 that will be sent to the plugin |
+| pluginFeePending1 | uint128 | The amount of token1 that will be sent to the plugin |
+
 ### plugin
 
 ```solidity
@@ -154,6 +172,21 @@ Returns the address of currently used plugin
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | pluginAddress | address | The address of currently used plugin |
+
+### communityVault
+
+```solidity
+function communityVault() external view returns (address communityVaultAddress)
+```
+**Selector**: `0x53e97868`
+
+The contract to which community fees are transferred
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| communityVaultAddress | address | The communityVault address |
 
 ### tickTable
 

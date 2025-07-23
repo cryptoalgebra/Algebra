@@ -65,6 +65,15 @@ error invalidAmountRequired()
 
 Emitted if invalid amount is passed as amountRequired to swap function
 
+## incorrectPluginFee
+
+```solidity
+error incorrectPluginFee()
+```
+**Selector**: `0x15b2afa9`
+
+Emitted if plugin fee param greater than fee/override fee
+
 ## insufficientInputAmount
 
 ```solidity

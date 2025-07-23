@@ -3,7 +3,7 @@
 # NonfungiblePositionManager
 
 
-NFT positions
+Algebra Integral 1.2 NFT positions
 
 Wraps Algebra positions in the ERC721 non-fungible token interface
 
@@ -104,7 +104,7 @@ constructor(address _factory, address _WNativeToken, address _tokenDescriptor_, 
 ### positions
 
 ```solidity
-function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
+function positions(uint256 tokenId) external view returns (uint88 nonce, address operator, address token0, address token1, address deployer, int24 tickLower, int24 tickUpper, uint128 liquidity, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint128 tokensOwed0, uint128 tokensOwed1)
 ```
 **Selector**: `0x99fbab88`
 
@@ -124,6 +124,7 @@ Returns the position information associated with a given token ID.
 | operator | address | The address that is approved for spending |
 | token0 | address | The address of the token0 for a specific pool |
 | token1 | address | The address of the token1 for a specific pool |
+| deployer | address | The address of the custom pool deployer |
 | tickLower | int24 | The lower end of the tick range for the position |
 | tickUpper | int24 | The higher end of the tick range for the position |
 | liquidity | uint128 | The liquidity of the position |
@@ -137,12 +138,13 @@ Returns the position information associated with a given token ID.
 ```solidity
 function mint(struct INonfungiblePositionManager.MintParams params) external payable returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
 ```
-**Selector**: `0x9cc1a283`
+**Selector**: `0xfe3f3be7`
 
 Creates a new position wrapped in a NFT
 
 *Developer note: Call this when the pool does exist and is initialized. Note that if the pool is created but not initialized
-a method does not exist, i.e. the pool is assumed to be initialized.*
+a method does not exist, i.e. the pool is assumed to be initialized.
+If native token is used as input, this function should be accompanied by a &#x60;refundNativeToken&#x60; in multicall to avoid potential loss of native tokens*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
@@ -165,6 +167,8 @@ function increaseLiquidity(struct INonfungiblePositionManager.IncreaseLiquidityP
 **Selector**: `0x219f5d17`
 
 Increases the amount of liquidity in a position, with tokens paid by the &#x60;msg.sender&#x60;
+
+*Developer note: If native token is used as input, this function should be accompanied by a &#x60;refundNativeToken&#x60; in multicall to avoid potential loss of native tokens*
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |

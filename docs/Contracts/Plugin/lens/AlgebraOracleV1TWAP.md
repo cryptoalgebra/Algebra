@@ -3,7 +3,7 @@
 # AlgebraOracleV1TWAP
 
 
-Algebra base plugin V1 oracle frontend
+Algebra Integral 1.2 base plugin V1 oracle frontend
 
 Provides data from oracle corresponding pool
 

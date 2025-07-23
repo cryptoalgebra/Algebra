@@ -57,21 +57,6 @@ The second of the two tokens of the pool, sorted by address
 | ---- | ---- | ----------- |
 | [0] | address | The token contract address |
 
-### communityVault
-
-```solidity
-function communityVault() external view returns (address)
-```
-**Selector**: `0x53e97868`
-
-The contract to which community fees are transferred
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | The communityVault address |
-
 ### maxLiquidityPerTick
 
 ```solidity

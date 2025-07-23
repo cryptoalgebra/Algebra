@@ -92,15 +92,6 @@ address immutable token1
 The second of the two tokens of the pool, sorted by address
 
 
-### communityVault
-```solidity
-address immutable communityVault
-```
-**Selector**: `0x53e97868`
-
-The contract to which community fees are transferred
-
-
 ### totalFeeGrowth0Token
 ```solidity
 uint256 totalFeeGrowth0Token
@@ -142,13 +133,13 @@ Look up information about a specific tick in the pool
 
 *Developer note: **important security note: caller should check reentrancy lock to prevent read-only reentrancy***
 
-### communityFeeLastTimestamp
+### lastFeeTransferTimestamp
 ```solidity
-uint32 communityFeeLastTimestamp
+uint32 lastFeeTransferTimestamp
 ```
-**Selector**: `0x1131b110`
+**Selector**: `0x77f8c3a9`
 
-The timestamp of the last sending of tokens to community vault
+The timestamp of the last sending of tokens to vault/plugin
 
 
 ### plugin
@@ -160,6 +151,15 @@ address plugin
 Returns the address of currently used plugin
 
 *Developer note: The plugin is subject to change*
+
+### communityVault
+```solidity
+address communityVault
+```
+**Selector**: `0x53e97868`
+
+The contract to which community fees are transferred
+
 
 ### tickTable
 ```solidity
@@ -268,6 +268,24 @@ function getCommunityFeePending() external view returns (uint128, uint128)
 The amounts of token0 and token1 that will be sent to the vault
 
 *Developer note: Will be sent FEE_TRANSFER_FREQUENCY after communityFeeLastTimestamp*
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint128 |  |
+| [1] | uint128 |  |
+
+### getPluginFeePending
+
+```solidity
+function getPluginFeePending() external view returns (uint128, uint128)
+```
+**Selector**: `0xa1eded87`
+
+The amounts of token0 and token1 that will be sent to the plugin
+
+*Developer note: Will be sent FEE_TRANSFER_FREQUENCY after feeLastTransferTimestamp*
 
 **Returns:**
 
