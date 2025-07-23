@@ -8,9 +8,9 @@ Algebra community fee vault
 Community fee from pools is sent here, if it is enabled
 
 *Developer note: Role system is used to withdraw tokens
-Version: Algebra Integral*
+Version: Algebra Integral 1.2.1*
 
-**Inherits:** [IAlgebraCommunityVault](interfaces/IAlgebraCommunityVault.md)
+**Inherits:** [IAlgebraCommunityVault](interfaces/vault/IAlgebraCommunityVault.md)
 ## Modifiers
 ### onlyAdministrator
 
@@ -118,13 +118,14 @@ Address of Algebra fee manager
 ### constructor
 
 ```solidity
-constructor(address _algebraFeeManager) public
+constructor(address _factory, address _algebraFeeManager) public
 ```
 
 
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| _factory | address |  |
 | _algebraFeeManager | address |  |
 
 ### withdraw

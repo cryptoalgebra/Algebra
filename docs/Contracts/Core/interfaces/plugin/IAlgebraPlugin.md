@@ -26,6 +26,26 @@ Returns plugin config
 | ---- | ---- | ----------- |
 | [0] | uint8 | config Each bit of the config is responsible for enabling/disabling the hooks. The last bit indicates whether the plugin contains dynamic fees logic |
 
+### handlePluginFee
+
+```solidity
+function handlePluginFee(uint256 pluginFee0, uint256 pluginFee1) external returns (bytes4)
+```
+**Selector**: `0xaa6b14bb`
+
+Handle plugin fee transfer on plugin contract
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pluginFee0 | uint256 | Fee0 amount transferred to plugin |
+| pluginFee1 | uint256 | Fee1 amount transferred to plugin |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes4 | bytes4 The function selector |
+
 ### beforeInitialize
 
 ```solidity
@@ -70,7 +90,7 @@ The hook called after the state of a pool is initialized
 ### beforeModifyPosition
 
 ```solidity
-function beforeModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, bytes data) external returns (bytes4)
+function beforeModifyPosition(address sender, address recipient, int24 bottomTick, int24 topTick, int128 desiredLiquidityDelta, bytes data) external returns (bytes4 selector, uint24 pluginFee)
 ```
 **Selector**: `0x5e2411b2`
 
@@ -89,7 +109,8 @@ The hook called before a position is modified
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes4 | bytes4 The function selector for the hook |
+| selector | bytes4 | The function selector for the hook |
+| pluginFee | uint24 |  |
 
 ### afterModifyPosition
 
@@ -120,7 +141,7 @@ The hook called after a position is modified
 ### beforeSwap
 
 ```solidity
-function beforeSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bool withPaymentInAdvance, bytes data) external returns (bytes4)
+function beforeSwap(address sender, address recipient, bool zeroToOne, int256 amountRequired, uint160 limitSqrtPrice, bool withPaymentInAdvance, bytes data) external returns (bytes4 selector, uint24 feeOverride, uint24 pluginFee)
 ```
 **Selector**: `0x029c1cb7`
 
@@ -140,7 +161,9 @@ The hook called before a swap
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0] | bytes4 | bytes4 The function selector for the hook |
+| selector | bytes4 | The function selector for the hook |
+| feeOverride | uint24 |  |
+| pluginFee | uint24 |  |
 
 ### afterSwap
 

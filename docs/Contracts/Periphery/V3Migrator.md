@@ -52,7 +52,7 @@ receive() external payable
 ```solidity
 function migrate(struct IV3Migrator.MigrateParams params) external
 ```
-**Selector**: `0x8be74fb6`
+**Selector**: `0xad40d131`
 
 Migrates liquidity to Algebra by burning v2 liquidity and minting a new position for Algebra
 

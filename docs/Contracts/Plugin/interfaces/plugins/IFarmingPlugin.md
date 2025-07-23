@@ -25,21 +25,6 @@ Emitted when new activeIncentive is set
 
 
 ## Functions
-### pool
-
-```solidity
-function pool() external view returns (address)
-```
-**Selector**: `0x16f0115b`
-
-Returns the address of the pool the plugin is created for
-
-**Returns:**
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| [0] | address | address of the pool |
-
 ### setIncentive
 
 ```solidity
@@ -94,4 +79,19 @@ Returns the address of active incentive
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | [0] | address | The address associated with the current active incentive |
+
+### getPool
+
+```solidity
+function getPool() external view returns (address)
+```
+**Selector**: `0x026b1d5f`
+
+Returns the address of the pool the plugin is created for
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | address of the pool |
 
