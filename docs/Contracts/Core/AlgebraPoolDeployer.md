@@ -7,7 +7,7 @@ Algebra pool deployer
 
 Is used by AlgebraFactory to deploy pools
 
-*Developer note: Version: Algebra Integral*
+*Developer note: Version: Algebra Integral 1.2.2*
 
 **Inherits:** [IAlgebraPoolDeployer](interfaces/IAlgebraPoolDeployer.md)
 
@@ -15,7 +15,7 @@ Is used by AlgebraFactory to deploy pools
 ### constructor
 
 ```solidity
-constructor(address _factory, address _communityVault) public
+constructor(address _factory) public
 ```
 
 
@@ -23,12 +23,11 @@ constructor(address _factory, address _communityVault) public
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | _factory | address |  |
-| _communityVault | address |  |
 
 ### getDeployParameters
 
 ```solidity
-function getDeployParameters() external view returns (address _plugin, address _factory, address _communityVault, address _token0, address _token1)
+function getDeployParameters() external view returns (address _plugin, address _factory, address _token0, address _token1)
 ```
 **Selector**: `0x04889e26`
 
@@ -42,16 +41,15 @@ Get the parameters to be used in constructing the pool, set transiently during p
 | ---- | ---- | ----------- |
 | _plugin | address |  |
 | _factory | address |  |
-| _communityVault | address |  |
 | _token0 | address |  |
 | _token1 | address |  |
 
 ### deploy
 
 ```solidity
-function deploy(address plugin, address token0, address token1) external returns (address pool)
+function deploy(address plugin, address token0, address token1, address deployer) external returns (address pool)
 ```
-**Selector**: `0xd9181cd3`
+**Selector**: `0xfd82b73a`
 
 
 
@@ -62,6 +60,7 @@ function deploy(address plugin, address token0, address token1) external returns
 | plugin | address | The pool associated plugin (if any) |
 | token0 | address | The first token of the pool by address sort order |
 | token1 | address | The second token of the pool by address sort order |
+| deployer | address |  |
 
 **Returns:**
 

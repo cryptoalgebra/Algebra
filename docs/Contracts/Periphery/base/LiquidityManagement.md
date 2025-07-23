@@ -32,6 +32,7 @@ struct MintCallbackData {
 struct AddLiquidityParams {
   address token0;
   address token1;
+  address deployer;
   address recipient;
   int24 tickLower;
   int24 tickUpper;

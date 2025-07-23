@@ -3,7 +3,7 @@
 # QuoterV2
 
 
-Provides quotes for swaps
+Algebra Integral 1.2.2 QuoterV2
 
 Allows getting the expected amount out or amount in for a given swap without executing the swap
 
@@ -53,7 +53,7 @@ amount0Delta and amount1Delta can both be 0 if no tokens were swapped.*
 ```solidity
 function quoteExactInputSingle(struct IQuoterV2.QuoteExactInputSingleParams params) public returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
-**Selector**: `0x5e5e6e0f`
+**Selector**: `0xe94764c4`
 
 Returns the amount out received for a given exact input but for a swap of a single pool
 
@@ -75,7 +75,7 @@ Returns the amount out received for a given exact input but for a swap of a sing
 ### quoteExactInput
 
 ```solidity
-function quoteExactInput(bytes path, uint256 amountInRequired) public returns (uint256 amountOut, uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
+function quoteExactInput(bytes path, uint256 amountInRequired) public returns (uint256[] amountOutList, uint256[] amountInList, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
 ```
 **Selector**: `0xcdca1753`
 
@@ -90,8 +90,8 @@ Returns the amount out received for a given exact input swap without executing t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountOut | uint256 | The amount of the last token that would be received |
-| amountIn | uint256 | The amount of the last token that should be paid |
+| amountOutList | uint256[] | The amount of the last token that would be received |
+| amountInList | uint256[] | The amount of the last token that should be paid |
 | sqrtPriceX96AfterList | uint160[] | List of the sqrt price after the swap for each pool in the path |
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |
@@ -102,7 +102,7 @@ Returns the amount out received for a given exact input swap without executing t
 ```solidity
 function quoteExactOutputSingle(struct IQuoterV2.QuoteExactOutputSingleParams params) public returns (uint256 amountOut, uint256 amountIn, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate, uint16 fee)
 ```
-**Selector**: `0x5877c9b9`
+**Selector**: `0x62086e24`
 
 Returns the amount in required to receive the given exact output amount but for a swap of a single pool
 
@@ -124,7 +124,7 @@ Returns the amount in required to receive the given exact output amount but for 
 ### quoteExactOutput
 
 ```solidity
-function quoteExactOutput(bytes path, uint256 amountOutRequired) public returns (uint256 amountOut, uint256 amountIn, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
+function quoteExactOutput(bytes path, uint256 amountOutRequired) public returns (uint256[] amountOutList, uint256[] amountInList, uint160[] sqrtPriceX96AfterList, uint32[] initializedTicksCrossedList, uint256 gasEstimate, uint16[] feeList)
 ```
 **Selector**: `0x2f80bb1d`
 
@@ -139,8 +139,8 @@ Returns the amount in required for a given exact output swap without executing t
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| amountOut | uint256 | The amount of the last token that would be received |
-| amountIn | uint256 | The amount of first token required to be paid |
+| amountOutList | uint256[] | The amount of the last token that would be received |
+| amountInList | uint256[] | The amount of first token required to be paid |
 | sqrtPriceX96AfterList | uint160[] | List of the sqrt price after the swap for each pool in the path |
 | initializedTicksCrossedList | uint32[] | List of the initialized ticks that the swap crossed for each pool in the path |
 | gasEstimate | uint256 | The estimate of the gas that the swap consumes |

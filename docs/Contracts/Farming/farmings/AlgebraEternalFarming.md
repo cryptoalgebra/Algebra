@@ -3,7 +3,7 @@
 # AlgebraEternalFarming
 
 
-Algebra eternal (v2-like) farming
+Algebra Integral 1.2.2  eternal (v2-like) farming
 
 Manages rewards and virtual pools
 
@@ -131,6 +131,16 @@ Returns information about a farmed liquidity NFT
 
 *Developer note: farms[tokenId][incentiveHash] => Farm*
 
+### incentiveKeys
+```solidity
+mapping(address => struct IncentiveKey) incentiveKeys
+```
+**Selector**: `0x57655846`
+
+Returns connected to pool incentive key
+
+*Developer note: pool => IncentiveKey*
+
 ### numOfIncentives
 ```solidity
 uint256 numOfIncentives
@@ -189,9 +199,9 @@ Check if incentive is deactivated (manually or automatically)
 ### createEternalFarming
 
 ```solidity
-function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params) external returns (address virtualPool)
+function createEternalFarming(struct IncentiveKey key, struct IAlgebraEternalFarming.IncentiveParams params, address plugin) external returns (address virtualPool)
 ```
-**Selector**: `0x566d3c71`
+**Selector**: `0x547b6da9`
 
 Creates a new liquidity farming incentive program
 
@@ -199,6 +209,7 @@ Creates a new liquidity farming incentive program
 | ---- | ---- | ----------- |
 | key | struct IncentiveKey | Details of the incentive to create |
 | params | struct IAlgebraEternalFarming.IncentiveParams | Params of incentive |
+| plugin | address | The address of corresponding plugin |
 
 **Returns:**
 
@@ -342,7 +353,7 @@ Transfers &#x60;amountRequested&#x60; of accrued &#x60;rewardToken&#x60; (if pos
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | The amount of reward tokens claimed |
+| reward | uint256 |  |
 
 ### claimRewardFrom
 
@@ -365,7 +376,7 @@ only for FarmingCenter
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| reward | uint256 | The amount of reward tokens claimed |
+| reward | uint256 |  |
 
 ### getRewardInfo
 

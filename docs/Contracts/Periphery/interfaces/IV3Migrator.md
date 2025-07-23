@@ -24,6 +24,7 @@ struct MigrateParams {
   uint8 percentageToMigrate;
   address token0;
   address token1;
+  address deployer;
   int24 tickLower;
   int24 tickUpper;
   uint256 amount0Min;
@@ -41,7 +42,7 @@ struct MigrateParams {
 ```solidity
 function migrate(struct IV3Migrator.MigrateParams params) external
 ```
-**Selector**: `0x8be74fb6`
+**Selector**: `0xad40d131`
 
 Migrates liquidity to Algebra by burning v2 liquidity and minting a new position for Algebra
 
