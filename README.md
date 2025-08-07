@@ -46,7 +46,7 @@ Previous versions of the protocol have been moved to separate repositories:
 
 ## License
 
-Algebra and Algebra Integral smart-contracts is licensed under the Business Source License 1.1 (BUSL-1.1)[https://github.com/cryptoalgebra/Algebra/blob/integral-v1.2.2/src/core/LICENSE] and the MIT License (MIT). Licenses for smart contracts are specified in SPDX headers.
+Algebra and Algebra Integral smart-contracts is licensed under the Business Source License 1.1 [(BUSL-1.1)](https://github.com/cryptoalgebra/Algebra/blob/integral-v1.2.2/src/core/LICENSE) and the MIT License (MIT). Licenses for smart contracts are specified in SPDX headers.
 
 ## Packages
 
