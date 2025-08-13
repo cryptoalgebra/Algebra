@@ -2,7 +2,7 @@ import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
 import { TestContext } from './types';
 import { AlgebraEternalFarming, TestERC20 } from '../typechain';
 import { ethers } from 'hardhat';
-import { blockTimestamp, BNe18, expect, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS, algebraFixture, days, bnSum, mintPosition } from './shared';
+import { blockTimestamp, BNe18, expect, FeeAmount, getMaxTick, getMinTick, TICK_SPACINGS, algebraFixture, days, bnSum, mintPosition, ZERO_ADDRESS } from './shared';
 import { createTimeMachine } from './shared/time';
 import { ERC20Helper, HelperCommands, incentiveResultToFarmAdapter } from './helpers';
 import { provider } from './shared/provider';
@@ -107,7 +107,8 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: 2 ** 23 - 1 + 2 ** 23 - 1,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.poolObj.connect(incentiveCreator).plugin(),
+          ZERO_ADDRESS
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -126,7 +127,8 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: 887272 * 2 + 1,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.poolObj.connect(incentiveCreator).plugin(),
+          ZERO_ADDRESS
         )
       ).to.be.revertedWithCustomError(context.eternalFarming as AlgebraEternalFarming, 'minimalPositionWidthTooWide');
 
@@ -145,7 +147,8 @@ describe('AlgebraFarming', () => {
             bonusRewardRate: 10,
             minimalPositionWidth: (887272 - (887272 % 60)) * 2,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.poolObj.connect(incentiveCreator).plugin(),
+          ZERO_ADDRESS
         )
       ).to.be.not.reverted;
     });

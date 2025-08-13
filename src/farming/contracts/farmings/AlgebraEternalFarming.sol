@@ -125,14 +125,15 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   function createEternalFarming(
     IncentiveKey memory key,
     IncentiveParams memory params,
-    address plugin
+    address plugin,
+    address pluginDeployer
   ) external override onlyIncentiveMaker returns (address virtualPool) {
     address connectedPlugin = key.pool.plugin();
     if (connectedPlugin != plugin || connectedPlugin == address(0)) revert pluginNotConnected();
     if (IFarmingPlugin(connectedPlugin).incentive() != address(0)) revert anotherFarmingIsActive();
 
     virtualPool = address(new EternalVirtualPool(address(this), connectedPlugin));
-    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin));
+    IFarmingCenter(farmingCenter).connectVirtualPoolToPlugin(virtualPool, IFarmingPlugin(connectedPlugin), pluginDeployer);
 
     key.nonce = numOfIncentives++;
     incentiveKeys[address(key.pool)] = key;
@@ -166,7 +167,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   /// @inheritdoc IAlgebraEternalFarming
-  function deactivateIncentive(IncentiveKey memory key) external override onlyIncentiveMaker {
+  function deactivateIncentive(IncentiveKey memory key, address pluginDeployer) external override onlyIncentiveMaker {
     (bytes32 incentiveId, Incentive storage incentive) = _getExistingIncentiveByKey(key);
     // if the virtual pool is deactivated automatically, it is still possible to correctly deactivate it manually
     if (incentive.deactivated) revert incentiveStopped();
@@ -181,7 +182,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (uint128 rewardRate0, uint128 rewardRate1) = virtualPool.rewardRates();
     if (rewardRate0 | rewardRate1 != 0) _setRewardRates(virtualPool, 0, 0, incentiveId);
 
-    IFarmingCenter(farmingCenter).disconnectVirtualPoolFromPlugin(address(virtualPool), plugin);
+    IFarmingCenter(farmingCenter).disconnectVirtualPoolFromPlugin(address(virtualPool), plugin, pluginDeployer);
 
     emit IncentiveDeactivated(incentiveId);
   }

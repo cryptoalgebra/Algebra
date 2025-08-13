@@ -77,7 +77,8 @@ interface IAlgebraEternalFarming {
 
   /// @notice Detach incentive from the pool and deactivate it
   /// @param key The key of the incentive
-  function deactivateIncentive(IncentiveKey memory key) external;
+  /// @param pluginDeployer Pool's plugin deployer address
+  function deactivateIncentive(IncentiveKey memory key, address pluginDeployer) external;
 
   /// @notice Add rewards for incentive
   /// @param key The key of the incentive
@@ -172,8 +173,9 @@ interface IAlgebraEternalFarming {
   /// @param key Details of the incentive to create
   /// @param params Params of incentive
   /// @param plugin The address of corresponding plugin
+  /// @param pluginDeployer Pool's plugin deployer address
   /// @return virtualPool The created virtual pool
-  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params, address plugin) external returns (address virtualPool);
+  function createEternalFarming(IncentiveKey memory key, IncentiveParams memory params, address plugin, address pluginDeployer) external returns (address virtualPool);
 
   /// @notice Change reward rates for incentive
   /// @param key The key of incentive

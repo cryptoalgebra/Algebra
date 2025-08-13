@@ -123,7 +123,8 @@ export class HelperCommands {
         bonusRewardRate: params.bonusRewardRate || 10,
         minimalPositionWidth: params.minimalPositionWidth || 0,
       },
-      pluginAddres
+      pluginAddres,
+      ZERO_ADDRESS
     );
 
     // @ts-ignore

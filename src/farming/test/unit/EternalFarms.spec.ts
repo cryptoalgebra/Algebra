@@ -145,11 +145,12 @@ describe('unit/EternalFarms', () => {
             bonusRewardRate: 100,
             minimalPositionWidth: 100,
           },
-          await context.poolObj.connect(incentiveCreator).plugin()
+          await context.poolObj.connect(incentiveCreator).plugin(),
+          ZERO_ADDRESS
         )
       ).to.be.revertedWithoutReason;
 
-      expect(context.eternalFarming.connect(actors.farmingDeployer()).deactivateIncentive(dummyKey)).to.be.revertedWithoutReason;
+      expect(context.eternalFarming.connect(actors.farmingDeployer()).deactivateIncentive(dummyKey, ZERO_ADDRESS)).to.be.revertedWithoutReason;
 
       expect(context.eternalFarming.connect(actors.farmingDeployer()).setRates(dummyKey, 10, 10)).to.be.revertedWithoutReason;
     });
@@ -348,12 +349,15 @@ describe('unit/EternalFarms', () => {
     });
 
     it('true if incentive deactivated', async () => {
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
-        pool: context.pool01,
-        rewardToken: context.rewardToken,
-        bonusRewardToken: context.bonusRewardToken,
-        nonce: localNonce,
-      });
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(
+        {
+          pool: context.pool01,
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          nonce: localNonce,
+        },
+        ZERO_ADDRESS
+      );
       expect(await context.eternalFarming.isIncentiveDeactivated(incentiveId)).to.be.true;
     });
 
@@ -419,12 +423,15 @@ describe('unit/EternalFarms', () => {
     });
 
     it('returns zero key after farming deactivation', async () => {
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(
+        {
         pool: context.pool01,
         rewardToken: context.rewardToken,
         bonusRewardToken: context.bonusRewardToken,
         nonce: localNonce,
-      });
+        }, 
+        ZERO_ADDRESS
+      );
 
       let {rewardToken, bonusRewardToken, pool, nonce} = await context.eternalFarming.incentiveKeys(await context.poolObj.getAddress())
       expect(rewardToken, bonusRewardToken, pool, nonce).to.be.eq(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, 0);
@@ -679,7 +686,7 @@ describe('unit/EternalFarms', () => {
           rewardToken: context.rewardToken,
           bonusRewardToken: context.bonusRewardToken,
           nonce: localNonce,
-        });
+        }, ZERO_ADDRESS);
         await expect(subject(tokenId, lpUser0)).to.be.revertedWithCustomError(context.eternalFarming, 'incentiveStopped');
       });
 
@@ -991,7 +998,7 @@ describe('unit/EternalFarms', () => {
     it('deactivate incentive', async () => {
       let activeIncentiveBefore = await context.pluginObj.incentive();
 
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
       let activeIncentiveAfter = await context.pluginObj.incentive();
 
       expect(activeIncentiveBefore).to.equal(await virtualPool.getAddress());
@@ -1008,7 +1015,7 @@ describe('unit/EternalFarms', () => {
 
       await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
 
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
       let activeIncentiveAfter = await context.pluginObj.incentive();
 
       expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
@@ -1023,7 +1030,7 @@ describe('unit/EternalFarms', () => {
     it('deactivate incentive only incentiveMaker', async () => {
       let activeIncentiveBefore = await context.pluginObj.incentive();
 
-      expect(context.eternalFarming.connect(lpUser0).deactivateIncentive(incentiveKey)).to.be.revertedWithoutReason;
+      expect(context.eternalFarming.connect(lpUser0).deactivateIncentive(incentiveKey, ZERO_ADDRESS)).to.be.revertedWithoutReason;
       let activeIncentiveAfter = await context.pluginObj.incentive();
 
       expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
@@ -1031,8 +1038,8 @@ describe('unit/EternalFarms', () => {
     });
 
     it('cannot deactivate twice', async () => {
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
-      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.be.revertedWithCustomError(
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS)).to.be.revertedWithCustomError(
         context.eternalFarming,
         'incentiveStopped'
       );
@@ -1041,7 +1048,7 @@ describe('unit/EternalFarms', () => {
     it('cannot deactivate nonexistent incentive', async () => {
       const invalidKey = { ...incentiveKey };
       invalidKey.nonce = 999;
-      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(invalidKey)).to.be.revertedWithCustomError(
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(invalidKey, ZERO_ADDRESS)).to.be.revertedWithCustomError(
         context.eternalFarming,
         'incentiveNotExist'
       );
@@ -1049,7 +1056,7 @@ describe('unit/EternalFarms', () => {
 
     it('can deactivate manually after indirect deactivation', async () => {
       await detachIncentiveIndirectly(localNonce);
-      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS)).to.not.be.reverted;
     });
 
     it('can deactivate manually after indirect deactivation and exit', async () => {
@@ -1115,7 +1122,7 @@ describe('unit/EternalFarms', () => {
       expect(await virtualPool.deactivated()).to.be.true;
       expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.false;
 
-      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS)).to.not.be.reverted;
 
       expect(await virtualPool.deactivated()).to.be.true;
       expect((await context.eternalFarming.incentives(incentiveId)).deactivated).to.be.true;
@@ -1125,7 +1132,7 @@ describe('unit/EternalFarms', () => {
       await context.pluginFactory.setFarmingAddress(incentiveCreator.address);
       await context.pluginObj.connect(incentiveCreator).setIncentive(ZERO_ADDRESS);
 
-      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey)).to.not.be.reverted;
+      await expect(context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS)).to.not.be.reverted;
     });
 
     it('cross lower after deactivate', async () => {
@@ -1209,7 +1216,7 @@ describe('unit/EternalFarms', () => {
 
       await helpers.moveTickTo({ direction: 'up', desiredValue: 150, trader: actors.farmingDeployer() });
 
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
 
       await helpers.moveTickTo({ direction: 'down', desiredValue: -200, trader: actors.farmingDeployer() });
 
@@ -1303,7 +1310,7 @@ describe('unit/EternalFarms', () => {
 
       await helpers.moveTickTo({ direction: 'down', desiredValue: -150, trader: actors.farmingDeployer() });
 
-      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+      await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
 
       await helpers.moveTickTo({ direction: 'up', desiredValue: 200, trader: actors.farmingDeployer() });
 
@@ -1813,12 +1820,15 @@ describe('unit/EternalFarms', () => {
       });
 
       it('can exit from deactivated farming', async () => {
-        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive({
+        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(
+        {
           pool: context.pool01,
           rewardToken: context.rewardToken,
           bonusRewardToken: context.bonusRewardToken,
           nonce: localNonce,
-        });
+        }, 
+        ZERO_ADDRESS
+      );
         await subject(lpUser0);
       });
 
@@ -2287,7 +2297,7 @@ describe('unit/EternalFarms', () => {
       });
 
       it('cannot add rewards to deactivated incentive', async () => {
-        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
 
         await expect(context.eternalFarming.connect(lpUser0).addRewards(incentiveKey, 1, 1)).to.be.revertedWithCustomError(
           context.eternalFarming,
@@ -2390,7 +2400,7 @@ describe('unit/EternalFarms', () => {
       });
 
       it('cannot set nonzero to deactivated incentive', async () => {
-        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
 
         await expect(context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 1, 1)).to.be.revertedWithCustomError(
           context.eternalFarming,
@@ -2399,7 +2409,7 @@ describe('unit/EternalFarms', () => {
       });
 
       it('set zero to deactivated incentive', async () => {
-        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
+        await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey, ZERO_ADDRESS);
         await context.eternalFarming.connect(incentiveCreator).setRates(incentiveKey, 0, 0);
       });
 

@@ -121,27 +121,27 @@ contract FarmingCenter is IFarmingCenter, IPositionFollower, Multicall {
   }
 
   /// @inheritdoc IFarmingCenter
-  function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin) external override {
-    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(newVirtualPool, plugin);
+  function connectVirtualPoolToPlugin(address newVirtualPool, IFarmingPlugin plugin, address pluginDeployer) external override {
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(newVirtualPool, plugin, pluginDeployer);
     require(plugin.incentive() == address(0), 'Another incentive is connected');
     plugin.setIncentive(newVirtualPool); // revert is possible if the plugin does not allow
     virtualPoolAddresses[address(pool)] = newVirtualPool;
   }
 
   /// @inheritdoc IFarmingCenter
-  function disconnectVirtualPoolFromPlugin(address virtualPool, IFarmingPlugin plugin) external override {
-    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(virtualPool, plugin);
+  function disconnectVirtualPoolFromPlugin(address virtualPool, IFarmingPlugin plugin, address pluginDeployer) external override {
+    IAlgebraPool pool = _checkParamsForVirtualPoolToggle(virtualPool, plugin, pluginDeployer);
     if (plugin.incentive() == virtualPool) plugin.setIncentive(address(0)); // plugin _should_ allow to disconnect incentive
     virtualPoolAddresses[address(pool)] = address(0);
   }
 
   /// @dev checks input params and fetches corresponding Algebra Integral pool
-  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin) internal view returns (IAlgebraPool pool) {
+  function _checkParamsForVirtualPoolToggle(address virtualPool, IFarmingPlugin plugin, address pluginDeployer) internal view returns (IAlgebraPool pool) {
     require(msg.sender == address(eternalFarming), 'Only farming can call this');
     require(virtualPool != address(0), 'Zero address as virtual pool');
     pool = IAlgebraPool(plugin.getPool());
     require(
-      address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(address(0), pool.token0(), pool.token1())),
+      address(pool) == PoolAddress.computeAddress(algebraPoolDeployer, PoolAddress.PoolKey(pluginDeployer, pool.token0(), pool.token1())),
       'Invalid pool'
     );
   }
