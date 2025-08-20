@@ -1,0 +1,46 @@
+name: Echidna Core Verification
+
+on:
+  push:
+    branches:
+      - integral-v1.2.2
+  pull_request:
+    branches:
+      - integral-v1.2.2
+
+jobs:
+  VerificationAsserts:
+    strategy:
+      matrix:
+        testName:
+          - LowGasSafeMathEchidnaTest
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm run ci-install
+
+      - name: Compile contracts
+        run: npm run compile
+        working-directory: ./src/core
+
+      - name: Run ${{ matrix.testName }}
+        uses: crytic/echidna-action@v2
+        with:
+          echidna-version: edge
+          solc-version: 0.8.20
+          files: ./src/core/contracts/test/echidna/${{ matrix.testName }}.sol
+          contract: ${{ matrix.testName }}
+          crytic-args: --hardhat-ignore-compile
+          solc-args: --evm-version paris
+          config: ./src/core/contracts/test/echidna/echidna.verification.config.yml
