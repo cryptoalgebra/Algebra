@@ -14,6 +14,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 1_000_000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -28,6 +29,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 800,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -43,6 +45,7 @@ const HIGH_COMPILER_SETTINGS: SolcUserConfig = {
     },
     metadata: {
       bytecodeHash: 'none',
+      useLiteralContent: true,
     },
   },
 };
@@ -66,8 +69,35 @@ if (process.env.RUN_COVERAGE == '1') {
 }
 
 export default {
-  networks: baseConfig.networks,
-  etherscan: baseConfig.etherscan,
+  networks: {
+    'monad': {
+      url: 'https://testnet-rpc.monad.xyz',
+      chainId: 10143
+    },
+  },
+  sourcify: {
+   enabled: true,
+   apiUrl: "https://sourcify-api-monad.blockvision.org",
+   browserUrl: "https://testnet.monadexplorer.com"
+  },
+  etherscan: {
+    enabled: false,
+    apiKey: {
+      'monad': 'DUMMY_VALUE'
+    },
+    customChains: [
+      {
+        network: "monad",
+        chainId: 10143,
+        urls: {
+          apiURL: "https://explorer.monad-testnet.category.xyz/api",
+          browserURL: "https://explorer.monad-testnet.category.xyz"
+        }
+      }
+    ]
+  },
+  // networks: baseConfig.networks,
+  // etherscan: baseConfig.etherscan,
   typechain: {
     outDir: 'typechain',
   },
