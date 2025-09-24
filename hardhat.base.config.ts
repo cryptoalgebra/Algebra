@@ -1,6 +1,6 @@
 const path = require('path');
 const config = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
+const { POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
   config.parsed || {};
 
 export default {
@@ -72,11 +72,6 @@ export default {
       chainId: 34443,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
-    holesky: {
-      url: `https://ethereum-holesky-rpc.publicnode.com`,
-      chainId: 17000,
-      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
-    },
     blastTestnet: {
       url: `https://blast-sepolia.blockpi.network/v1/rpc/public`,
       chainId: 168587773,
@@ -103,6 +98,11 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    monad: {
+      url: `https://monad-testnet.drpc.org`,
+      chainId: 10143,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    }
   },
   etherscan: {
     // Your API key for Etherscan
@@ -149,6 +149,14 @@ export default {
           browserURL: 'https://artio.beratrail.io/',
         },
       },
+      {
+        network: 'monad',
+        chainId: 10143,
+        urls: {
+          apiURL: 'https://testnet.monadexplorer.com/api',
+          browserURL: 'https://testnet.monadexplorer.com/'
+        }
+      }
     ],
   },
 };
