@@ -18,6 +18,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 10000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -32,6 +33,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 99999999,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -39,6 +41,11 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
 
 
 const config: HardhatUserConfig = {
+  sourcify: {
+    enabled: true,
+    apiUrl: "https://sourcify-api-monad.blockvision.org",
+    browserUrl: "https://testnet.monadexplorer.com"
+  },
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   solidity: {

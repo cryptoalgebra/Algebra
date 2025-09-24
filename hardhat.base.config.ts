@@ -105,6 +105,7 @@ export default {
     }
   },
   etherscan: {
+    enabled: false,
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
     apiKey: `${POLYGONSCAN_API_KEY}`,

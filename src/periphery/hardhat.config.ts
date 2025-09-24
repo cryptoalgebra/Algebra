@@ -14,6 +14,7 @@ const LOW_OPTIMIZER_COMPILER_SETTINGS = {
       runs: 2_000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -28,6 +29,7 @@ const ZERO_RUNS_OPTIMIZER_COMPILER_SETTINGS = {
       runs: 0,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -43,6 +45,7 @@ const LOWEST_OPTIMIZER_COMPILER_SETTINGS = {
       runs: 1_000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -57,6 +60,7 @@ const DEFAULT_COMPILER_SETTINGS = {
       runs: 1_000_000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -78,6 +82,11 @@ task('expand-abi', 'adds pool custom errors to abi', async (taskArgs, hre) => {
 });
 
 export default {
+  sourcify: {
+    enabled: true,
+    apiUrl: "https://sourcify-api-monad.blockvision.org",
+    browserUrl: "https://testnet.monadexplorer.com"
+  },
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
   solidity: {
