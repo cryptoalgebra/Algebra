@@ -9,7 +9,7 @@ async function main() {
   let deploysData = JSON.parse(fs.readFileSync(deployDataPath, 'utf8'));
 
   // WNativeTokenAddress
-  const WNativeTokenAddress = '0x4200000000000000000000000000000000000006';
+  const WNativeTokenAddress = '0x6100E367285b01F48D07953803A2d8dCA5D19873';
   const signers = await hre.ethers.getSigners();
   const ProxyAdmin = signers[0].address;
 
@@ -77,7 +77,7 @@ async function main() {
   );
   const NonfungibleTokenPositionDescriptor = await NonfungibleTokenPositionDescriptorFactory.deploy(
     WNativeTokenAddress,
-    'ETH',
+    'WXPL',
     []
   );
 

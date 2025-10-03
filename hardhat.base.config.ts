@@ -1,6 +1,6 @@
 const path = require('path');
 const config = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
+const { POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
   config.parsed || {};
 
 export default {
@@ -72,11 +72,6 @@ export default {
       chainId: 34443,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
-    holesky: {
-      url: `https://ethereum-holesky-rpc.publicnode.com`,
-      chainId: 17000,
-      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
-    },
     blastTestnet: {
       url: `https://blast-sepolia.blockpi.network/v1/rpc/public`,
       chainId: 168587773,
@@ -103,12 +98,81 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    baseMainnet: {
+      url: `https://base.llamarpc.com`,
+      chainId: 8453,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    baseSepolia: {
+      url: `https://base-sepolia.drpc.org`,
+      chainId: 84532,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    zetachain: {
+      url: `https://zetachain-mainnet.public.blastapi.io`,
+      chainId: 7000,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    monadTestnet: {
+      url: `https://testnet-rpc.monad.xyz`,
+      chainId: 10143,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    seimainnet: {
+      url: `https://evm-rpc.sei-apis.com`,
+      chainId: 1329, // Sei mainnet chain ID
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    sonic: {
+      url: `https://rpc.soniclabs.com`,
+      chainId: 146,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    sonicTestnet: {
+      url: `https://rpc.blaze.soniclabs.com`,
+      chainId: 57054,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    HyperEVM: {
+      url: `https://rpc.hypurrscan.io`,
+      chainId: 999,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    somnia: {
+      url: `https://api.infra.mainnet.somnia.network`,
+      chainId: 5031,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    },
+    monad: {
+      url: `https://monad-testnet.drpc.org`,
+      chainId: 10143,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    },
+    mantra: {
+      url: `https://evm.mantrachain.io`,
+      chainId: 5888,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    },
+    plasma: {
+      url: `https://rpc.plasma.to`,
+      chainId: 9745,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    }
   },
+
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
     apiKey: `${POLYGONSCAN_API_KEY}`,
     customChains: [
+      {
+        network: 'seimainnet',
+        chainId: 1329,
+        urls: {
+          apiURL: 'https://seitrace.com/pacific-1/api',
+          browserURL: 'https://seitrace.com'
+        }
+      },
       {
         network: 'seiTestnet',
         chainId: 713715,
@@ -149,6 +213,118 @@ export default {
           browserURL: 'https://artio.beratrail.io/',
         },
       },
+      {
+        network: 'baseMainnet',
+        chainId: 8453,
+        urls: {
+          apiURL: 'https://api.basescan.org/api',
+          browserURL: 'https://basescan.org/',
+        },
+      },
+      {
+        network: 'baseSepolia',
+        chainId: 84532,
+        urls: {
+          apiURL: 'https://api.etherscan.io/v2/api?chainid=84532',
+          browserURL: 'https://sepolia.basescan.org/',
+        },
+      },
+      {
+        network: 'scrollSepolia',
+        chainId: 534351,
+        urls: {
+          apiURL: 'https://api-sepolia.scrollscan.com/api',
+          browserURL: 'https://scroll-testnet-public.unifra.io',
+        },
+      },
+      {
+        network: 'hekla',
+        chainId: 167009,
+        urls: {
+          apiURL: 'https://api-hekla.taikoscan.io/api',
+          browserURL: 'https://hekla.taikoscan.io/',
+        },
+      },
+      {
+        network: 'taiko',
+        chainId: 167000,
+        urls: {
+          apiURL: 'https://api.taikoscan.io/api',
+          browserURL: 'https://taikoscan.io/',
+        },
+      },
+      {
+        network: 'zetachain',
+        chainId: 7000,
+        urls: {
+          apiURL: 'https://zetachain.blockscout.com/api',
+          browserURL: 'https://zetachain.blockscout.com',
+        },
+      },
+      {
+        network: 'monadTestnet',
+        chainId: 10143,
+        urls: {
+          apiURL: 'https://sourcify-api-monad.blockvision.org',
+          browserURL: 'https://testnet.monadexplorer.com',
+        }
+      },
+      {
+        network: 'sonic',
+        chainId: 146,
+        urls: {
+          apiURL: 'https://api.sonicscan.org/api',
+          browserURL: 'https://sonicscan.org'
+        }
+      },
+      {
+        network: 'sonicTestnet',
+        chainId: 57054,
+        urls: {
+          apiURL: 'https://api-testnet.sonicscan.org/api',
+          browserURL: 'https://testnet.sonicscan.org'
+        }
+      },
+      {
+        network: 'HyperEVM',
+        chainId: 999,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=999",
+          browserURL: "https://hyperevmscan.io/"
+        },
+      },
+      {
+        network: 'somnia',
+        chainId: 5031,
+        urls: {
+          apiURL: 'https://mainnet.somnia.w3us.site/api',
+          browserURL: 'https://mainnet.somnia.w3us.site'
+        }
+      },
+      {
+        network: 'monad',
+        chainId: 10143,
+        urls: {
+          apiURL: 'https://testnet.monadexplorer.com/api',
+          browserURL: 'https://testnet.monadexplorer.com/'
+        }
+      },
+      {
+        network: 'mantra',
+        chainId: 5888,
+        urls: {
+          apiURL: 'https://blockscout.mantrascan.io/api',
+          browserURL: 'https://blockscout.mantrascan.io/'
+        }
+      },
+      {
+        network: 'plasma',
+        chainId: 9745,
+        urls: {
+          apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan',
+          browserURL: 'https://plasmascan.to'
+        }
+      }
     ],
   },
 };
