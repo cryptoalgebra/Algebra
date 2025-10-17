@@ -7,9 +7,9 @@ Algebra factory
 
 Is used to deploy pools and its plugins
 
-*Developer note: Version: Algebra Integral*
+*Developer note: Version: Algebra Integral 1.2.2*
 
-**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/)
+**Inherits:** [IAlgebraFactory](interfaces/IAlgebraFactory.md) [Ownable2Step](https://docs.openzeppelin.com/contracts/4.x/) [AccessControlEnumerable](https://docs.openzeppelin.com/contracts/4.x/) [ReentrancyGuard](https://docs.openzeppelin.com/contracts/4.x/)
 
 ## Public variables
 ### POOLS_ADMINISTRATOR_ROLE
@@ -21,6 +21,15 @@ bytes32 constant POOLS_ADMINISTRATOR_ROLE = 0xb73ce166ead2f8e9add217713a7989e4ed
 role that can change communityFee and tickspacing in pools
 
 
+### CUSTOM_POOL_DEPLOYER
+```solidity
+bytes32 constant CUSTOM_POOL_DEPLOYER = 0xc9cf812513d9983585eb40fcfe6fd49fbb6a45815663ec33b30a6c6c7de3683b
+```
+**Selector**: `0x07810754`
+
+role that can call &#x60;createCustomPool&#x60; function
+
+
 ### poolDeployer
 ```solidity
 address immutable poolDeployer
@@ -28,15 +37,6 @@ address immutable poolDeployer
 **Selector**: `0x3119049a`
 
 Returns the current poolDeployerAddress
-
-
-### communityVault
-```solidity
-address immutable communityVault
-```
-**Selector**: `0x53e97868`
-
-Returns the current communityVaultAddress
 
 
 ### defaultCommunityFee
@@ -83,6 +83,17 @@ contract IAlgebraPluginFactory defaultPluginFactory
 
 Return the current pluginFactory address
 
+*Developer note: This contract is used to automatically set a plugin address in new liquidity pools*
+
+### vaultFactory
+```solidity
+contract IAlgebraVaultFactory vaultFactory
+```
+**Selector**: `0xd8a06f73`
+
+Return the current vaultFactory address
+
+*Developer note: This contract is used to automatically set a vault address in new liquidity pools*
 
 ### poolByPair
 ```solidity
@@ -94,9 +105,19 @@ Returns the pool address for a given pair of tokens, or address 0 if it does not
 
 *Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
 
+### customPoolByPair
+```solidity
+mapping(address => mapping(address => mapping(address => address))) customPoolByPair
+```
+**Selector**: `0x23da36cc`
+
+Returns the custom pool address for a customDeployer and a given pair of tokens, or address 0 if it does not exist
+
+*Developer note: tokenA and tokenB may be passed in either token0/token1 or token1/token0 order*
+
 ### POOL_INIT_CODE_HASH
 ```solidity
-bytes32 constant POOL_INIT_CODE_HASH = 0x177d5fbf994f4d130c008797563306f1a168dc689f81b2fa23b4396931014d91
+bytes32 constant POOL_INIT_CODE_HASH = 0x62441ebe4e4315cf3d49d5957f94d66b253dbabe7006f34ad7f70947e60bf15c
 ```
 **Selector**: `0xdc6fd8ab`
 
@@ -162,7 +183,7 @@ function defaultConfigurationForPool() external view returns (uint16 communityFe
 ```
 **Selector**: `0x25b355d6`
 
-Returns the default communityFee and tickspacing
+Returns the default communityFee, tickspacing, fee and communityFeeVault for pool
 
 **Returns:**
 
@@ -194,12 +215,35 @@ Deterministically computes the pool address given the token0 and token1
 | ---- | ---- | ----------- |
 | pool | address | The contract address of the Algebra pool |
 
+### computeCustomPoolAddress
+
+```solidity
+function computeCustomPoolAddress(address deployer, address token0, address token1) public view returns (address customPool)
+```
+**Selector**: `0x1ba89df4`
+
+Deterministically computes the custom pool address given the customDeployer, token0 and token1
+
+*Developer note: The method does not check if such a pool has been created*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| deployer | address |  |
+| token0 | address | first token |
+| token1 | address | second token |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| customPool | address | The contract address of the Algebra pool |
+
 ### createPool
 
 ```solidity
-function createPool(address tokenA, address tokenB) external returns (address pool)
+function createPool(address tokenA, address tokenB, bytes data) external returns (address pool)
 ```
-**Selector**: `0xe3433615`
+**Selector**: `0x321935c6`
 
 Creates a pool for the given two tokens
 
@@ -210,12 +254,39 @@ The call will revert if the pool already exists or the token arguments are inval
 | ---- | ---- | ----------- |
 | tokenA | address | One of the two tokens in the desired pool |
 | tokenB | address | The other of the two tokens in the desired pool |
+| data | bytes | Data for plugin creation |
 
 **Returns:**
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | pool | address | The address of the newly created pool |
+
+### createCustomPool
+
+```solidity
+function createCustomPool(address deployer, address creator, address tokenA, address tokenB, bytes data) external returns (address customPool)
+```
+**Selector**: `0xdbbf3db4`
+
+Creates a custom pool for the given two tokens using &#x60;deployer&#x60; contract
+
+*Developer note: tokenA and tokenB may be passed in either order: token0/token1 or token1/token0.
+The call will revert if the pool already exists or the token arguments are invalid.*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| deployer | address | The address of plugin deployer, also used for custom pool address calculation |
+| creator | address | The initiator of custom pool creation |
+| tokenA | address | One of the two tokens in the desired pool |
+| tokenB | address | The other of the two tokens in the desired pool |
+| data | bytes | The additional data bytes |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| customPool | address | The address of the newly created custom pool |
 
 ### setDefaultCommunityFee
 
@@ -276,6 +347,21 @@ function setDefaultPluginFactory(address newDefaultPluginFactory) external
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | newDefaultPluginFactory | address | address of new plugin factory |
+
+### setVaultFactory
+
+```solidity
+function setVaultFactory(address newVaultFactory) external
+```
+**Selector**: `0x3ea7fbdb`
+
+
+
+*Developer note: updates vaultFactory address*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newVaultFactory | address | address of new vault factory |
 
 ### startRenounceOwnership
 

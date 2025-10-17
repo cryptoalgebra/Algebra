@@ -3,7 +3,7 @@ pragma solidity =0.8.20;
 
 import './BasePlugin.sol';
 
-/// @title Algebra' internal Integral 1.2.1 plugin base
+/// @title Algebra' internal Integral 1.2.2 plugin base
 /// @notice This contract inherits BasePlugin and implements virtual functions
 abstract contract AlgebraBasePlugin is BasePlugin {
   address internal immutable factory;

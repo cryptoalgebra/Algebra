@@ -72,6 +72,36 @@ function getEthBalance(address addr) public view returns (uint256 balance)
 | ---- | ---- | ----------- |
 | balance | uint256 |  |
 
+### gaslimit
+
+```solidity
+function gaslimit() external view returns (uint256)
+```
+**Selector**: `0x2a722839`
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 |  |
+
+### gasLeft
+
+```solidity
+function gasLeft() external view returns (uint256)
+```
+**Selector**: `0x2ddb301b`
+
+
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 |  |
+
 ### multicall
 
 ```solidity
@@ -91,4 +121,26 @@ function multicall(struct AlgebraInterfaceMulticall.Call[] calls) public returns
 | ---- | ---- | ----------- |
 | blockNumber | uint256 |  |
 | returnData | struct AlgebraInterfaceMulticall.Result[] |  |
+
+### multicallWithGasLimitation
+
+```solidity
+function multicallWithGasLimitation(struct AlgebraInterfaceMulticall.Call[] calls, uint256 gasBuffer) public returns (uint256 blockNumber, struct AlgebraInterfaceMulticall.Result[] returnData, uint256 lastSuccessIndex)
+```
+**Selector**: `0xd8f95843`
+
+
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| calls | struct AlgebraInterfaceMulticall.Call[] |  |
+| gasBuffer | uint256 |  |
+
+**Returns:**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| blockNumber | uint256 |  |
+| returnData | struct AlgebraInterfaceMulticall.Result[] |  |
+| lastSuccessIndex | uint256 |  |
 

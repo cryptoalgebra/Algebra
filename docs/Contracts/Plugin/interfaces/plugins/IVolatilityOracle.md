@@ -53,6 +53,17 @@ Returns the index of the last timepoint that was written.
 | ---- | ---- | ----------- |
 | [0] | uint16 | index of the last timepoint written |
 
+### initialize
+
+```solidity
+function initialize() external
+```
+**Selector**: `0x8129fc1c`
+
+Initialize the plugin externally
+
+*Developer note: This function allows to initialize the plugin if it was created after the pool was created*
+
 ### lastTimepointTimestamp
 
 ```solidity

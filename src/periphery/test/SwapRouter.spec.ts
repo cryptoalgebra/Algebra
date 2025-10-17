@@ -347,6 +347,10 @@ describe('SwapRouter', function () {
           await snapshotGasCost(exactInput(path.slice().reverse(), 5, 1))
         });
 
+        it('gas cost [ @skip-on-coverage ]', async () => {
+          await snapshotGasCost(exactInput(path.slice().reverse(), 5, 1))
+        });
+
         it('events', async () => {
           await expect(
             exactInput(

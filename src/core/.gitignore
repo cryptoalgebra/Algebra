@@ -1,6 +1,7 @@
 node_modules
 .env
 cache
+dist
 artifacts
 typechain
 corpus

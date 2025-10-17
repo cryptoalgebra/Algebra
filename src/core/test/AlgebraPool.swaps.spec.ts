@@ -701,9 +701,7 @@ describe('AlgebraPool swap tests', () => {
               poolBalance1Delta,
               globalStateAfter.price,
               liquidityAfter,
-              globalStateAfter.tick,
-              0,
-              0
+              globalStateAfter.tick
             );
 
           const executionPrice = new Decimal(poolBalance1Delta.toString()).div(poolBalance0Delta.toString()).mul(-1);

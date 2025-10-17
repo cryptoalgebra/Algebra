@@ -81,6 +81,19 @@ Emitted when a position&#x27;s liquidity is removed
 | amount0 | uint256 | The amount of token0 withdrawn |
 | amount1 | uint256 | The amount of token1 withdrawn |
 
+### BurnFee
+
+```solidity
+event BurnFee(address owner, uint24 pluginFee)
+```
+
+Emitted when a plugin fee is applied during a burn
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner of the position |
+| pluginFee | uint24 | The fee to be sent to the plugin |
+
 ### Swap
 
 ```solidity
@@ -99,6 +112,20 @@ Emitted by the pool for any swaps between token0 and token1
 | liquidity | uint128 | The liquidity of the pool after the swap |
 | tick | int24 | The log base 1.0001 of price of the pool after the swap |
 
+### SwapFee
+
+```solidity
+event SwapFee(address sender, uint24 overrideFee, uint24 pluginFee)
+```
+
+Emitted by the pool after any swaps
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sender | address | The address that initiated the swap |
+| overrideFee | uint24 | The fee to be applied to the trade |
+| pluginFee | uint24 | The fee to be sent to the plugin |
+
 ### Flash
 
 ```solidity
@@ -115,6 +142,22 @@ Emitted by the pool for any flashes of token0/token1
 | amount1 | uint256 | The amount of token1 that was flashed |
 | paid0 | uint256 | The amount of token0 paid for the flash, which can exceed the amount0 plus the fee |
 | paid1 | uint256 | The amount of token1 paid for the flash, which can exceed the amount1 plus the fee |
+
+### ExcessTokens
+
+```solidity
+event ExcessTokens(uint256 amount0, uint256 amount1)
+```
+
+Emitted when the pool has higher balances than expected.
+Any excess of tokens will be distributed between liquidity providers as fee.
+
+*Developer note: Fees after flash also will trigger this event due to mechanics of flash.*
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount0 | uint256 | The excess of token0 |
+| amount1 | uint256 | The excess of token1 |
 
 ### CommunityFee
 
@@ -175,4 +218,30 @@ Emitted when the fee changes inside the pool
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | fee | uint16 | The current fee in hundredths of a bip, i.e. 1e-6 |
+
+### CommunityVault
+
+```solidity
+event CommunityVault(address newCommunityVault)
+```
+
+Emitted when the community vault address changes
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| newCommunityVault | address | New community vault |
+
+### Skim
+
+```solidity
+event Skim(address to, uint256 amount0, uint256 amount1)
+```
+
+Emitted when the plugin does skim the excess of tokens
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | THe receiver of tokens (plugin) |
+| amount0 | uint256 | The amount of token0 |
+| amount1 | uint256 | The amount of token1 |
 

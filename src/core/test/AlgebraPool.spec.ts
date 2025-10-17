@@ -1131,7 +1131,7 @@ describe('AlgebraPool', () => {
       await swapExact1For0(expandTo18Decimals(2), other.address);
       await expect(pool.burn(0, 120, expandTo18Decimals(1), '0x'))
         .to.emit(pool, 'Burn')
-        .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165', 0)
+        .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165')
         .to.not.emit(token0, 'Transfer')
         .to.not.emit(token1, 'Transfer');
       await expect(pool.collect(wallet.address, 0, 120, MaxUint128, MaxUint128))
@@ -1149,7 +1149,7 @@ describe('AlgebraPool', () => {
       await swapExact0For1(expandTo18Decimals(2), other.address);
       await expect(pool.burn(-120, 0, expandTo18Decimals(1), '0x'))
         .to.emit(pool, 'Burn')
-        .withArgs(wallet.address, -120, 0, expandTo18Decimals(1), '6017734268818165', 0, 0)
+        .withArgs(wallet.address, -120, 0, expandTo18Decimals(1), '6017734268818165', 0)
         .to.not.emit(token0, 'Transfer')
         .to.not.emit(token1, 'Transfer');
       await expect(pool.collect(wallet.address, -120, 0, MaxUint128, MaxUint128))
@@ -1169,7 +1169,7 @@ describe('AlgebraPool', () => {
         await swapExact1For0(expandTo18Decimals(2), other.address);
         await expect(pool.burn(0, 120, expandTo18Decimals(1), '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165', 0)
+          .withArgs(wallet.address, 0, 120, expandTo18Decimals(1), 0, '6017734268818165')
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         await expect(pool.collect(wallet.address, 0, 120, MaxUint128, MaxUint128))
@@ -1186,7 +1186,7 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(2), other.address);
         await expect(pool.burn(-120, 0, expandTo18Decimals(1), '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, -120, 0, expandTo18Decimals(1),'6017734268818165', 0, 0)
+          .withArgs(wallet.address, -120, 0, expandTo18Decimals(1),'6017734268818165', 0)
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         await expect(pool.collect(wallet.address, -120, 0, MaxUint128, MaxUint128))
@@ -2055,7 +2055,7 @@ describe('AlgebraPool', () => {
         await swapExact1For0(expandTo18Decimals(1), wallet.address);
         await expect(pool.burn(120000, 121200, liquidityAmount, '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, 120000, 121200, liquidityAmount, '30012388425661', '999499999999999999', 0)
+          .withArgs(wallet.address, 120000, 121200, liquidityAmount, '30012388425661', '999499999999999999')
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         expect((await pool.globalState()).tick).to.eq(120197);
@@ -2066,7 +2066,7 @@ describe('AlgebraPool', () => {
         await swapExact0For1(expandTo18Decimals(1), wallet.address);
         await expect(pool.burn(-121200, -120000, liquidityAmount, '0x'))
           .to.emit(pool, 'Burn')
-          .withArgs(wallet.address, -121200, -120000, liquidityAmount, '999499999999999999', '30012388425661', 0)
+          .withArgs(wallet.address, -121200, -120000, liquidityAmount, '999499999999999999', '30012388425661')
           .to.not.emit(token0, 'Transfer')
           .to.not.emit(token1, 'Transfer');
         expect((await pool.globalState()).tick).to.eq(-120198);
@@ -2131,6 +2131,34 @@ describe('AlgebraPool', () => {
     expect(tick, 'pool is at the next tick').to.eq(-24082);
     expect(price, 'pool price is still on the p0 boundary').to.eq(p0 - 1n);
     expect(await pool.liquidity(), 'pool has run tick transition and liquidity changed').to.eq(liquidity * 2n);
+  });
+
+  describe('#Position', async () => {
+
+    it('correctly handle underflow innerFeeGrowth', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, -887220, 887220, initializeLiquidityAmount);
+      await mint(wallet.address, -120, -60, 1000n * initializeLiquidityAmount);
+      await swapExact0For1(10n**18n, wallet.address);
+      await mint(wallet.address, -240, -60, initializeLiquidityAmount);
+      let result = await pool.positions(await getPositionKey(wallet.address, -240, -60, pool));
+      expect(result.innerFeeGrowth0Token).to.be.gt(2n**255n).and.lt(2n**256n)
+      let { amount0} = await pool.collect.staticCall(wallet.address, -240, -60, MaxUint128, MaxUint128);
+      expect(amount0).to.be.eq(0)
+    });
+
+    it('correctly update ticks feeGrowth on mint', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, -887220, 887220, initializeLiquidityAmount);
+      await swapExact0For1(10n**18n, wallet.address);
+      await swapExact1For0(10n**18n, wallet.address);
+      await mint(wallet.address, -240, -60, initializeLiquidityAmount);
+      await mint(wallet.address, -240, 6000, initializeLiquidityAmount);
+      console.log((await pool.globalState()).tick)
+      expect((await pool.ticks(-60)).outerFeeGrowth0Token).to.be.gt(0)
+      expect((await pool.ticks(-240)).outerFeeGrowth0Token).to.be.gt(0)
+      expect((await pool.ticks(6000)).outerFeeGrowth0Token).to.be.eq(0)
+    });
   });
 
   describe('#fee getter', async () => {
@@ -2638,7 +2666,10 @@ describe('AlgebraPool', () => {
         -497487437185929648n,
         39813146992092631956554748913n,
         1000000000000000000n,
-        -13764,
+        -13764
+      )
+      await expect(swapExact0For1(expandTo18Decimals(1), wallet.address)).to.be.emit(pool, 'SwapFee').withArgs(
+        await swapTarget.getAddress(),
         4000,
         6000
       )
@@ -2648,8 +2679,8 @@ describe('AlgebraPool', () => {
       await poolPlugin.setPluginFees(4000, 6000);
       await mint(wallet.address, 60, 120, expandTo18Decimals(1));
       await expect(pool.burn(60, 120, expandTo18Decimals(1), '0x'))
-      .to.emit(pool, 'Burn')
-      .withArgs(wallet.address, 60, 120, expandTo18Decimals(1), '2968464507771288', 0, 6000)
+      .to.emit(pool, 'BurnFee')
+      .withArgs(wallet.address, 6000)
 
     })
 
