@@ -148,6 +148,11 @@ export default {
       chainId: 10143,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
     },
+    mantraTestnet: {
+      url: `https://evm.dukong.mantrachain.io`,
+      chainId: 5887,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    },
     mantra: {
       url: `https://evm.mantrachain.io`,
       chainId: 5888,
@@ -156,6 +161,11 @@ export default {
     plasma: {
       url: `https://rpc.plasma.to`,
       chainId: 9745,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
+    },
+    sophonOsTestnet: {
+      url: `https://zksync-os-testnet-sophon.zksync.dev/`,
+      chainId: 531050204,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`]
     }
   },
@@ -310,19 +320,35 @@ export default {
         }
       },
       {
+        network: 'mantraTestnet',
+        chainId: 5887,
+        urls: {
+          apiURL: 'https://explorer.dukong.io/api',
+          browserURL: 'https://explorer.dukong.io/'
+        }
+      },
+      {
         network: 'mantra',
         chainId: 5888,
         urls: {
           apiURL: 'https://blockscout.mantrascan.io/api',
           browserURL: 'https://blockscout.mantrascan.io/'
         }
-      },
+      },      
       {
         network: 'plasma',
         chainId: 9745,
         urls: {
           apiURL: 'https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan',
           browserURL: 'https://plasmascan.to'
+        }
+      },
+      {
+        network: 'sophonOsTestnet',
+        chainId: 531050204,
+        urls: {
+          apiURL: 'https://block-explorer-api.zksync-os-testnet-sophon.zksync.dev/api/',
+          browserURL: 'https://block-explorer.zksync-os-testnet-sophon.zksync.dev/'
         }
       }
     ],
