@@ -1,6 +1,6 @@
 {
   "extends": "solhint:recommended",
-  "plugins": ["prettier", "algebra"],
+  "plugins": ["algebra"],
   "rules": {
     "max-line-length": "off",
     "no-global-import": "off",

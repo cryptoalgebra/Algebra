@@ -33,12 +33,12 @@
   "scripts": {
     "precommit": "pretty-quick --staged --pattern '**/*.sol' && hardhat compile",
     "compile": "npm --prefix ../core run compile && npm --prefix ../periphery run compile && hardhat compile",
-    "solhint": "solhint ./contracts/**/*.sol",
+    "solhint": "solhint --config ../../.solhint.json \"contracts/**/*.sol\"",
     "test": "hardhat test --parallel",
     "coverage": "hardhat coverage --solcoverjs ./.solcover.js"
   },
   "engines": {
-    "npm": ">=8.0.0",
-    "node": ">=16.0.0"
+    "npm": ">=10.0.0",
+    "node": ">=18.18.0"
   }
 }
