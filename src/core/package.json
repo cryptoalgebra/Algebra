@@ -31,7 +31,7 @@
     "./typechain": "./typechain/index.ts"
   },
   "scripts": {
-    "precommit": "pretty-quick --staged --pattern '**/*.sol' && hardhat compile && node ../../scripts/updatePoolHash.js",
+    "precommit": "npx pretty-quick --staged --pattern '**/*.sol' && npx hardhat compile && node ../../scripts/updatePoolHash.js",
     "solhint": "solhint ./contracts/**/*.sol",
     "compile": "hardhat compile",
     "build": "npx tsc",

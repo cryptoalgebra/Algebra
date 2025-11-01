@@ -35,7 +35,6 @@
   "scripts": {
     "compile": "npm --prefix ../periphery run compile && npm --prefix ../plugin run compile && hardhat compile",
     "lint": "eslint . --ext .ts",
-    "prettier:check": "prettier-check contracts/**/*.sol test/**/*.ts types/*.ts",
     "size-contracts": "hardhat compile && hardhat size-contracts",
     "solhint": "solhint ./contracts/**/*.sol",
     "test": "hardhat test --parallel",
