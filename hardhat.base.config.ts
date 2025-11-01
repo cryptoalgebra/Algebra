@@ -1,5 +1,5 @@
 const path = require('path');
-const config = require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+const config = require('dotenv').config({ path: path.resolve(__dirname, '.env'), quiet: true });
 const { ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, DEPLOY_GAS_LIMIT_MAX, DEPLOY_GAS_PRICE, INFURA_ID_PROJECT } =
   config.parsed || {};
 
