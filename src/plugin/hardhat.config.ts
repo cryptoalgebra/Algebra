@@ -14,6 +14,7 @@ const HIGHEST_OPTIMIZER_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 1_000_000,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -28,6 +29,7 @@ const DEFAULT_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 200,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -42,6 +44,7 @@ const LOWEST_COMPILER_SETTINGS: SolcUserConfig = {
       runs: 0,
     },
     metadata: {
+      useLiteralContent: true,
       bytecodeHash: 'none',
     },
   },
@@ -68,6 +71,7 @@ if (process.env.RUN_COVERAGE == '1') {
 export default {
   networks: baseConfig.networks,
   etherscan: baseConfig.etherscan,
+  sourcify: baseConfig.sourcify,
   typechain: {
     outDir: 'typechain',
   },

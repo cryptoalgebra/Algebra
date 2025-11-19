@@ -103,10 +103,21 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    monad: {
+        url: `rpc`,
+        chainId: 143,
+        accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    }
+  },
+  sourcify: {
+   enabled: true,
+   apiURL: 'https://sourcify-api-monad.blockvision.org',
+   browserURL: 'https://mainnet-beta.monvision.io/',
   },
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
+    enabled: false,
     apiKey: `${POLYGONSCAN_API_KEY}`,
     customChains: [
       {
@@ -149,6 +160,14 @@ export default {
           browserURL: 'https://artio.beratrail.io/',
         },
       },
+      {
+          network: 'monad',
+          chainId: 143,
+          urls: {
+          apiURL: 'https://mainnet-beta.monvision.io/api',
+          browserURL: 'https://mainnet-beta.monvision.io/',
+          },
+      }
     ],
   },
 };
