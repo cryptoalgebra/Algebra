@@ -111,8 +111,8 @@ export default {
   },
   sourcify: {
    enabled: true,
-   apiURL: 'https://sourcify-api-monad.blockvision.org',
-   browserURL: 'https://mainnet-beta.monvision.io/',
+   apiUrl: 'https://sourcify-api-monad.blockvision.org',
+   browserUrl: 'https://mainnet-beta.monvision.io/',
   },
   etherscan: {
     // Your API key for Etherscan
