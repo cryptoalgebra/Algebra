@@ -25,6 +25,8 @@ import {
   MIN_TICK,
 } from './shared/utilities';
 
+import { getLiquidityForAmounts } from './shared/liquidityAmounts';
+
 import {
   TestERC20,
   AlgebraFactory,
@@ -3592,6 +3594,92 @@ describe('AlgebraPool', () => {
       await expect(
         underpay.swap(pool, wallet.address, false, MAX_SQRT_RATIO - 1n, -1000, 0, 2000)
       ).to.not.be.revertedWithCustomError(pool, 'insufficientInputAmount');
+    });
+  });
+
+  describe('#rebalance', () => {
+    beforeEach('initialize at zero tick', async () => {
+      await pool.initialize(encodePriceSqrt(1, 1));
+      await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
+    });
+
+    it('rebalance gas usage', async () => {
+      const liquidityDelta = expandTo18Decimals(1);
+      const oldBottomTick = -tickSpacing * 4;
+      const oldTopTick = tickSpacing * 4;
+      const newBottomTick = -tickSpacing * 6;
+      const newTopTick = tickSpacing * 6;
+
+      await mint(wallet.address, oldBottomTick, oldTopTick, liquidityDelta);
+      
+      const tx = await pool.rebalance(
+        wallet.address,
+        wallet.address,
+        oldBottomTick,
+        oldTopTick,
+        newBottomTick,
+        newTopTick
+      );
+
+      const receipt = await tx.wait();
+      console.log('Rebalance gas used:', receipt!.gasUsed.toString());
+    });
+
+    it('burn + collect + mint gas usage', async () => {
+      const liquidityDelta = expandTo18Decimals(1);
+      const oldBottomTick = -tickSpacing * 4;
+      const oldTopTick = tickSpacing * 4;
+      const newBottomTick = -tickSpacing * 6;
+      const newTopTick = tickSpacing * 6;
+
+      await mint(wallet.address, oldBottomTick, oldTopTick, liquidityDelta);
+      
+      const burnTx = await pool.connect(wallet).burn(oldBottomTick, oldTopTick, liquidityDelta, '0x');
+      const burnReceipt = await burnTx.wait();
+      
+      const collected = await pool.connect(wallet).collect.staticCall(
+        wallet.address,
+        oldBottomTick,
+        oldTopTick,
+        MaxUint128,
+        MaxUint128
+      );
+
+      const collectTx = await pool.connect(wallet).collect(
+        wallet.address,
+        oldBottomTick,
+        oldTopTick,
+        MaxUint128,
+        MaxUint128
+      );
+      const collectReceipt = await collectTx.wait();
+
+      // Get sqrt prices from ticks
+      const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+      const tickMath = await tickMathFactory.deploy();
+      
+      const globalState = await pool.globalState();
+      const currentSqrtPrice = globalState.price;
+      const sqrtPriceAX96 = await tickMath.getSqrtRatioAtTick(newBottomTick);
+      const sqrtPriceBX96 = await tickMath.getSqrtRatioAtTick(newTopTick);
+
+      // Calculate expected liquidity from collected amounts
+      const expectedLiquidity = getLiquidityForAmounts(
+        currentSqrtPrice,
+        sqrtPriceAX96,
+        sqrtPriceBX96,
+        collected.amount0,
+        collected.amount1
+      );
+
+      const mintTx = await mint(wallet.address, newBottomTick, newTopTick, expectedLiquidity);
+      const mintReceipt = await mintTx.wait();
+      
+      const totalGas = burnReceipt!.gasUsed + collectReceipt!.gasUsed + mintReceipt!.gasUsed;
+      console.log('Burn gas used:', burnReceipt!.gasUsed.toString());
+      console.log('Collect gas used:', collectReceipt!.gasUsed.toString());
+      console.log('Mint gas used:', mintReceipt!.gasUsed.toString());
+      console.log('Total gas used:', totalGas.toString());
     });
   });
 });

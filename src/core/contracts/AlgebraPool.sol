@@ -174,6 +174,67 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
 
+  function rebalance(
+    address leftoversRecipient,
+    address recipient,
+    int24 prevBottomTick,
+    int24 prevUpperTick,
+    int24 newBottomTick,
+    int24 newUpperTick
+  ) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual) {
+    // todo: plugin fee, events, checks, locks/unlocks
+
+    Position storage position = getOrCreatePosition(msg.sender, prevBottomTick, prevUpperTick);
+
+    //burn
+    (uint256 burnedAmount0, uint256 burnedAmount1) = _updatePositionTicksAndFees(position, prevBottomTick, prevUpperTick, -int128(uint128(position.liquidity)));
+    
+    //mint
+    int24 currentTick = globalState.tick;
+    uint160 currentPrice = globalState.price;
+    if (currentPrice == 0) revert notInitialized();
+
+    unchecked {
+      int24 _tickSpacing = tickSpacing;
+      if (newBottomTick % _tickSpacing | newUpperTick % _tickSpacing != 0) revert tickIsNotSpaced();
+    }
+
+    (amount0, amount1, ) = LiquidityMath.getAmountsForLiquidity(newBottomTick, newUpperTick, type(int128).max, currentTick, currentPrice);
+    
+    {
+      if (burnedAmount0 < amount0) {
+        liquidityActual = uint128(FullMath.mulDiv(uint256(uint128(type(int128).max)), burnedAmount0, amount0));
+      } else {
+        liquidityActual = uint128(type(int128).max);
+      }
+      if (burnedAmount1 < amount1) {
+        uint128 liquidityForRA1 = uint128(FullMath.mulDiv(uint256(uint128(type(int128).max)), burnedAmount1, amount1));
+        if (liquidityForRA1 < liquidityActual) liquidityActual = liquidityForRA1;
+      }
+      if (liquidityActual == 0) revert zeroLiquidityActual();
+    }
+
+    // scope to prevent "stack too deep"
+    {
+      Position storage _position = getOrCreatePosition(recipient, newBottomTick, newUpperTick);
+      (amount0, amount1) = _updatePositionTicksAndFees(_position, newBottomTick, newUpperTick, liquidityActual.toInt128());
+    }
+
+    unchecked {
+      // return leftovers
+      if (amount0 > 0) {
+        if (burnedAmount0 > amount0) _transfer(token0, leftoversRecipient, burnedAmount0 - amount0);
+        else assert(burnedAmount0 == amount0); // must always be true
+      }
+      if (amount1 > 0) {
+        if (burnedAmount1 > amount1) _transfer(token1, leftoversRecipient, burnedAmount1 - amount1);
+        else assert(burnedAmount1 == amount1); // must always be true
+      }
+    }
+
+    _changeReserves(int256(burnedAmount0 - amount0), int256(burnedAmount1 - amount1), 0, 0, 0, 0);
+  }
+
   function _isPlugin() internal view returns (bool) {
     return msg.sender == plugin;
   }
