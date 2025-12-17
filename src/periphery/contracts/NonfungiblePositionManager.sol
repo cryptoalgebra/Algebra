@@ -359,6 +359,78 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
+    function rebalance(
+        RebalanceParams calldata params
+    ) external payable override isAuthorizedForToken(params.tokenId) {
+        // TODO: check deadline modifier
+        Position storage position = _positions[params.tokenId];
+        require(position.liquidity > 0, 'No liquidity');
+
+        IAlgebraPool pool = IAlgebraPool(_getPoolById(position.poolId));
+        
+        uint128 newLiquidity;
+        {
+            int24 oldTickLower = position.tickLower;
+            int24 oldTickUpper = position.tickUpper;
+            uint128 oldLiquidity = position.liquidity;
+            address _tokenFarmedIn = tokenFarmedIn[params.tokenId];
+            
+            // Apply negative delta in farming (if farmed)
+            if (_tokenFarmedIn != address(0)) {
+                _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(oldLiquidity)));
+            }
+            {
+                // Update uncollected fees for old position
+                (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
+                    position,
+                    pool,
+                    address(this),
+                    oldTickLower,
+                    oldTickUpper,
+                    oldLiquidity
+                );
+
+                unchecked {
+                    if (tokensOwed0 | tokensOwed1 != 0) {
+                        position.tokensOwed0 += tokensOwed0;
+                        position.tokensOwed1 += tokensOwed1;
+                    }
+                }
+            }
+
+            // Call rebalance on pool
+            (,, newLiquidity) = pool.rebalance(
+                address(this),
+                address(this),
+                oldTickLower,
+                oldTickUpper,
+                params.tickLower,
+                params.tickUpper
+            );
+        }
+
+        // Update position with new ticks and liquidity
+        position.tickLower = params.tickLower;
+        position.tickUpper = params.tickUpper;
+        position.liquidity = newLiquidity;
+
+        {
+            // Update fee growth snapshots for new position
+            (, uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128, , ) = pool.positions(
+                keccak256(abi.encodePacked(address(this), params.tickLower, params.tickUpper))
+            );
+            position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
+            position.feeGrowthInside1LastX128 = feeGrowthInside1X128;
+
+            // Apply positive delta in farming (if farmed)
+            address _tokenFarmedIn = tokenFarmedIn[params.tokenId];
+            if (_tokenFarmedIn != address(0)) {
+                _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(newLiquidity)));
+            }
+        }
+    }
+
+    /// @inheritdoc INonfungiblePositionManager
     function collect(
         CollectParams calldata params
     ) external payable override isAuthorizedForToken(params.tokenId) returns (uint256 amount0, uint256 amount1) {

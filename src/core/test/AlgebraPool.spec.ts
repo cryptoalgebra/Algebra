@@ -3603,16 +3603,16 @@ describe('AlgebraPool', () => {
       await mint(wallet.address, minTick, maxTick, expandTo18Decimals(2));
     });
 
-    it('rebalance gas usage', async () => {
+    it('rebalance math matches burn + mint separately', async () => {
       const liquidityDelta = expandTo18Decimals(1);
       const oldBottomTick = -tickSpacing * 4;
       const oldTopTick = tickSpacing * 4;
       const newBottomTick = -tickSpacing * 6;
       const newTopTick = tickSpacing * 6;
 
+      // First approach: rebalance via .rebalance()
       await mint(wallet.address, oldBottomTick, oldTopTick, liquidityDelta);
-      
-      const tx = await pool.rebalance(
+      await pool.rebalance(
         wallet.address,
         wallet.address,
         oldBottomTick,
@@ -3621,10 +3621,50 @@ describe('AlgebraPool', () => {
         newTopTick
       );
 
-      const receipt = await tx.wait();
-      console.log('Rebalance gas used:', receipt!.gasUsed.toString());
+      const rebalancedPosition = await pool.positions(
+        await pool.getKeyForPosition(wallet.address, newBottomTick, newTopTick)
+      );
+
+      console.log(await token0.balanceOf(wallet.address));
+      console.log(await token1.balanceOf(wallet.address));
+
+      // Second approach: rebalance via .burn() + .collect() + .mint()
+      await mint(wallet.address, oldBottomTick, oldTopTick, liquidityDelta);
+      await pool.connect(wallet).burn(oldBottomTick, oldTopTick, liquidityDelta, '0x');
+      const collected = await pool.connect(wallet).collect.staticCall(wallet.address, oldBottomTick, oldTopTick, MaxUint128, MaxUint128);
+
+      await pool.connect(wallet).collect(wallet.address, oldBottomTick, oldTopTick, MaxUint128, MaxUint128);
+
+      // Get sqrt prices from ticks
+      const tickMathFactory = await ethers.getContractFactory('TickMathTest');
+      const tickMath = await tickMathFactory.deploy();
+      
+      const globalState = await pool.globalState();
+      const currentSqrtPrice = globalState.price;
+      const sqrtPriceAX96 = await tickMath.getSqrtRatioAtTick(newBottomTick);
+      const sqrtPriceBX96 = await tickMath.getSqrtRatioAtTick(newTopTick);
+
+      // Calculate expected liquidity from collected amounts
+      const expectedLiquidity = getLiquidityForAmounts(
+        currentSqrtPrice,
+        sqrtPriceAX96,
+        sqrtPriceBX96,
+        collected.amount0,
+        collected.amount1
+      );
+
+      // Mint with calculated liquidity
+      await mint(wallet.address, newBottomTick, newTopTick, expectedLiquidity);
+      
+      const manualPosition = await pool.positions(
+        await pool.getKeyForPosition(wallet.address, newBottomTick, newTopTick)
+      );
+
+      // Compare: rebalance should give same liquidity as manual burn+collect+mint
+      expect(rebalancedPosition.liquidity).to.eq(manualPosition.liquidity - rebalancedPosition.liquidity);
     });
 
+    
     it('burn + collect + mint gas usage', async () => {
       const liquidityDelta = expandTo18Decimals(1);
       const oldBottomTick = -tickSpacing * 4;
@@ -3680,6 +3720,28 @@ describe('AlgebraPool', () => {
       console.log('Collect gas used:', collectReceipt!.gasUsed.toString());
       console.log('Mint gas used:', mintReceipt!.gasUsed.toString());
       console.log('Total gas used:', totalGas.toString());
+    });
+
+    it('rebalance gas usage', async () => {
+      const liquidityDelta = expandTo18Decimals(1);
+      const oldBottomTick = -tickSpacing * 4;
+      const oldTopTick = tickSpacing * 4;
+      const newBottomTick = -tickSpacing * 6;
+      const newTopTick = tickSpacing * 6;
+
+      await mint(wallet.address, oldBottomTick, oldTopTick, liquidityDelta);
+      
+      const tx = await pool.rebalance(
+        wallet.address,
+        wallet.address,
+        oldBottomTick,
+        oldTopTick,
+        newBottomTick,
+        newTopTick
+      );
+
+      const receipt = await tx.wait();
+      console.log('Rebalance gas used:', receipt!.gasUsed.toString());
     });
   });
 });

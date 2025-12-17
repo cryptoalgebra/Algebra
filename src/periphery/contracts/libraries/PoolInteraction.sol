@@ -5,6 +5,8 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 import './PositionKey.sol';
 
+import 'hardhat/console.sol';
+
 /// @title Implements commonly used interactions with Algebra pool
 library PoolInteraction {
     function _getPositionInPool(

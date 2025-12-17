@@ -113,4 +113,24 @@ interface IAlgebraPoolActions {
   /// @param amount1 The amount of token1 to send
   /// @param data Any data to be passed through to the callback
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external;
+
+  /// @notice Rebalances liquidity from one tick range to another atomically
+  /// @dev Burns liquidity from old range and mints in new range in a single transaction
+  /// @param leftoversRecipient The address which will receive potential surplus of paid tokens
+  /// @param recipient The address for which the liquidity will be created in the new range
+  /// @param bottomTickOld The lower tick of the old position to burn
+  /// @param topTickOld The upper tick of the old position to burn
+  /// @param bottomTickNew The lower tick of the new position to mint
+  /// @param topTickNew The upper tick of the new position to mint
+  /// @return amount0 The amount of token0 in the new position
+  /// @return amount1 The amount of token1 in the new position
+  /// @return liquidityActual The actual amount of liquidity minted in the new position
+  function rebalance(
+    address leftoversRecipient,
+    address recipient,
+    int24 bottomTickOld,
+    int24 topTickOld,
+    int24 bottomTickNew,
+    int24 topTickNew
+  ) external returns (uint256 amount0, uint256 amount1, uint128 liquidityActual);
 }

@@ -30,6 +30,8 @@ exports[`NonfungiblePositionManager #permit owned by eoa gas [ @skip-on-coverage
 
 exports[`NonfungiblePositionManager #permit owned by verifying contract gas [ @skip-on-coverage ] 1`] = `63902`;
 
+exports[`NonfungiblePositionManager #rebalance gas rebalance [ @skip-on-coverage ] 1`] = `302580`;
+
 exports[`NonfungiblePositionManager #transferFrom gas [ @skip-on-coverage ] 1`] = `86323`;
 
 exports[`NonfungiblePositionManager #transferFrom gas comes from approved [ @skip-on-coverage ] 1`] = `87247`;

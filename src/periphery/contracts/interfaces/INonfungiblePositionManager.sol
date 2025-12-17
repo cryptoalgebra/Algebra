@@ -199,6 +199,21 @@ interface INonfungiblePositionManager is
     /// @param toActive The new status
     function switchFarmingStatus(uint256 tokenId, bool toActive) external;
 
+    struct RebalanceParams {
+        uint256 tokenId;
+        int24 tickLower;
+        int24 tickUpper;
+        uint256 deadline;
+    }
+
+    /// @notice Rebalances an existing position to a new tick range
+    /// @dev Burns liquidity from old range and mints it in new range atomically
+    /// @param params tokenId The ID of the token to rebalance,
+    /// tickLower The new lower tick of the range,
+    /// tickUpper The new upper tick of the range,
+    /// deadline The time by which the transaction must be included to effect the change
+    function rebalance(RebalanceParams calldata params) external payable;
+
     /// @notice Changes address of farmingCenter
     /// @dev can be called only by factory owner or NONFUNGIBLE_POSITION_MANAGER_ADMINISTRATOR_ROLE
     /// @param newFarmingCenter The new address of farmingCenter
