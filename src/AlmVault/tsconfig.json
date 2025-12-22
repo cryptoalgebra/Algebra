@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "allowJs": false,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "composite": true,
+    "removeComments": false,
+    "noEmit": false,
+    "downlevelIteration": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@contracts": ["./types/typechain-types"],
+      "@contracts/*": ["./types/typechain-types/contracts/*"],
+      "@utils": ["utils/index.ts"],
+      "@test-utils": ["test/utils"]
+    }
+  }
+}
