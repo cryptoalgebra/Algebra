@@ -15,16 +15,25 @@ contract AlgebraPoolDeployer is IAlgebraPoolDeployer {
   bytes32 private cache1;
 
   address private immutable factory;
+  address private immutable algebraPoolExtension;
 
-  constructor(address _factory) {
+  constructor(address _factory, address _algebraPoolExtension) {
     require(_factory != address(0));
+    require(_algebraPoolExtension != address(0));
     factory = _factory;
+    algebraPoolExtension = _algebraPoolExtension;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer
-  function getDeployParameters() external view override returns (address _plugin, address _factory, address _token0, address _token1) {
+  function getDeployParameters()
+    external
+    view
+    override
+    returns (address _plugin, address _factory, address _token0, address _token1, address _algebraPoolExtension)
+  {
     (_plugin, _token0, _token1) = _readFromCache();
     _factory = factory;
+    _algebraPoolExtension = algebraPoolExtension;
   }
 
   /// @inheritdoc IAlgebraPoolDeployer

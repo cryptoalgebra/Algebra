@@ -23,14 +23,17 @@ async function factoryFixture(): Promise<FactoryFixture> {
   // precompute
   const poolDeployerAddress = getCreateAddress({
     from: deployer.address,
-    nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
+    nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 2,
   });
 
   const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
   const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
 
+  const poolExtensionFactory = await ethers.getContractFactory('AlgebraPoolExtension');
+  const poolExtension = await poolExtensionFactory.deploy();
+
   const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
-  const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
+  const poolDeployer = (await poolDeployerFactory.deploy(factory, poolExtension)) as any as AlgebraPoolDeployer;
 
   const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
   const vault = (await vaultFactory.deploy(factory, deployer.address)) as any as AlgebraCommunityVault;
@@ -81,6 +84,9 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
   const { token0, token1, token2 } = await tokensFixture();
   //const { dataStorage } = await dataStorageFixture();
 
+  const poolExtensionFactory = await ethers.getContractFactory('AlgebraPoolExtension');
+  const poolExtension = await poolExtensionFactory.deploy();
+
   const MockTimeAlgebraPoolDeployerFactory = await ethers.getContractFactory('MockTimeAlgebraPoolDeployer');
   const MockTimeAlgebraPoolFactory = await ethers.getContractFactory('MockTimeAlgebraPool');
 
@@ -100,7 +106,7 @@ export const poolFixture: Fixture<PoolFixture> = async function (): Promise<Pool
     swapTargetRouter,
     createPool: async (firstToken = token0, secondToken = token1) => {
       const mockTimePoolDeployer =
-        (await MockTimeAlgebraPoolDeployerFactory.deploy()) as any as MockTimeAlgebraPoolDeployer;
+        (await MockTimeAlgebraPoolDeployerFactory.deploy(poolExtension)) as any as MockTimeAlgebraPoolDeployer;
 
       const ADMIN_ROLE = await factory.POOLS_ADMINISTRATOR_ROLE();
       await factory.grantRole(ADMIN_ROLE, mockTimePoolDeployer);

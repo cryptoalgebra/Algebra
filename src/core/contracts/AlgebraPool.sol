@@ -169,7 +169,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
-    
+
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
@@ -422,53 +422,17 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
 
   /// @inheritdoc IAlgebraPoolActions
   function flash(address recipient, uint256 amount0, uint256 amount1, bytes calldata data) external override {
-    if (globalState.pluginConfig.hasFlag(Plugins.BEFORE_FLASH_FLAG)) {
-      IAlgebraPlugin(plugin).beforeFlash(msg.sender, recipient, amount0, amount1, data).shouldReturn(IAlgebraPlugin.beforeFlash.selector);
-    }
-    _lock();
-
-    uint256 paid0;
-    uint256 paid1;
-    {
-      (uint256 balance0Before, uint256 balance1Before) = _updateReserves();
-      uint256 fee0;
-      if (amount0 > 0) {
-        fee0 = FullMath.mulDivRoundingUp(amount0, Constants.FLASH_FEE, Constants.FEE_DENOMINATOR);
-        _transfer(token0, recipient, amount0);
+    (bool success, ) = algebraPoolExtension.delegatecall(
+      abi.encodeWithSignature('flash(address,uint256,uint256,bytes)', recipient, amount0, amount1, data)
+    );
+    if (!success) {
+      // Bubble up the revert reason
+      assembly {
+        let ptr := mload(0x40)
+        let size := returndatasize()
+        returndatacopy(ptr, 0, size)
+        revert(ptr, size)
       }
-      uint256 fee1;
-      if (amount1 > 0) {
-        fee1 = FullMath.mulDivRoundingUp(amount1, Constants.FLASH_FEE, Constants.FEE_DENOMINATOR);
-        _transfer(token1, recipient, amount1);
-      }
-
-      _flashCallback(fee0, fee1, data); // IAlgebraFlashCallback.algebraFlashCallback to msg.sender
-
-      paid0 = _balanceToken0();
-      if (balance0Before + fee0 > paid0) revert flashInsufficientPaid0();
-      paid1 = _balanceToken1();
-      if (balance1Before + fee1 > paid1) revert flashInsufficientPaid1();
-
-      unchecked {
-        paid0 -= balance0Before;
-        paid1 -= balance1Before;
-      }
-
-      uint256 _communityFee = globalState.communityFee;
-      if (_communityFee > 0) {
-        uint256 communityFee0;
-        if (paid0 > 0) communityFee0 = FullMath.mulDiv(paid0, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
-        uint256 communityFee1;
-        if (paid1 > 0) communityFee1 = FullMath.mulDiv(paid1, _communityFee, Constants.COMMUNITY_FEE_DENOMINATOR);
-
-        _changeReserves(int256(communityFee0), int256(communityFee1), communityFee0, communityFee1, 0, 0);
-      }
-      emit Flash(msg.sender, recipient, amount0, amount1, paid0, paid1);
-    }
-
-    _unlock();
-    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_FLASH_FLAG)) {
-      IAlgebraPlugin(plugin).afterFlash(msg.sender, recipient, amount0, amount1, paid0, paid1, data).shouldReturn(IAlgebraPlugin.afterFlash.selector);
     }
   }
 

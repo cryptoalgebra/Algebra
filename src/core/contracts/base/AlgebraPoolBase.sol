@@ -45,9 +45,12 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   /// @inheritdoc IAlgebraPoolImmutables
   address public immutable override factory;
   /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override token0;
+  address public override token0;
   /// @inheritdoc IAlgebraPoolImmutables
-  address public immutable override token1;
+  address public override token1;
+
+  /// @notice The address of the pool extension contract for flash loans
+  address internal immutable algebraPoolExtension;
 
   // ! IMPORTANT security note: the pool state can be manipulated
   // ! external contracts using this data must prevent read-only reentrancy
@@ -99,7 +102,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   constructor() {
     address _plugin;
-    (_plugin, factory, token0, token1) = _getDeployParameters();
+    (_plugin, factory, token0, token1, algebraPoolExtension) = _getDeployParameters();
     (prevTickGlobal, nextTickGlobal) = (TickMath.MIN_TICK, TickMath.MAX_TICK);
     globalState.unlocked = true;
     if (_plugin != address(0)) {
@@ -151,7 +154,7 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
 
   /// @dev Gets the parameter values ​​for creating the pool. They are not passed in the constructor to make it easier to use create2 opcode
   /// Can be overridden in tests
-  function _getDeployParameters() internal virtual returns (address, address, address, address) {
+  function _getDeployParameters() internal virtual returns (address, address, address, address, address) {
     return IAlgebraPoolDeployer(msg.sender).getDeployParameters();
   }
 

@@ -9,6 +9,7 @@ import './MockTimeAlgebraPool.sol';
 
 contract MockTimeAlgebraPoolDeployer {
   address private factory;
+  address private immutable algebraPoolExtension;
 
   /// @dev two storage slots for dense cache packing
   bytes32 private cache0;
@@ -16,13 +17,15 @@ contract MockTimeAlgebraPoolDeployer {
 
   bytes32 public immutable mockPoolHash;
 
-  constructor() {
+  constructor(address _algebraPoolExtension) {
+    require(_algebraPoolExtension != address(0));
+    algebraPoolExtension = _algebraPoolExtension;
     mockPoolHash = keccak256(type(MockTimeAlgebraPool).creationCode);
   }
 
-  function getDeployParameters() external view returns (address, address, address, address) {
+  function getDeployParameters() external view returns (address, address, address, address, address) {
     (address dataStorage, address token0, address token1) = _readFromCache();
-    return (dataStorage, factory, token0, token1);
+    return (dataStorage, factory, token0, token1, algebraPoolExtension);
   }
 
   event PoolDeployed(address pool);
