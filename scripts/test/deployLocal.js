@@ -19,8 +19,6 @@ function encodePriceSqrt(reserve1, reserve0) {
 function deployProtocol(network) {
   execSync(`cd src/core && npx hardhat run --network ${network} scripts/deploy.js`, { stdio: 'inherit' });
 
-  //execSync(`cd src/plugins && npx hardhat run --network ${network} scripts/deploy.js`, { stdio: 'inherit' });
-
   execSync(`cd src/periphery && npx hardhat run --network ${network} scripts/deploy.js`, { stdio: 'inherit' });
 
   //execSync(`cd src/farming && npx hardhat run --network ${network} scripts/deploy.js`, { stdio: 'inherit' });

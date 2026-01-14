@@ -33,7 +33,7 @@
   "scripts": {
     "prepare": "husky",
     "lint": "prettier \"src/**/contracts/**/*.sol\"",
-    "solhint": "npm run solhint --workspace=src/core --if-present && npm run solhint --workspace=src/periphery --if-present && npm run solhint --workspace=src/plugin --if-present && npm run solhint --workspace=src/farming --if-present",
+    "solhint": "npm run solhint --workspace=src/core --if-present && npm run solhint --workspace=src/periphery --if-present && npm run solhint --workspace=src/farming --if-present",
     "bootstrap": "npm install && npm run compile",
     "compile": "cd src/core && hardhat compile && cd ../periphery && hardhat compile && cd ../farming && hardhat compile",
     "ci-install": "npm ci",
