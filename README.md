@@ -56,8 +56,6 @@ Periphery: [https://www.npmjs.com/package/@cryptoalgebra/integral-periphery](htt
 
 Farming: [https://www.npmjs.com/package/@cryptoalgebra/integral-farming](https://www.npmjs.com/package/@cryptoalgebra/integral-farming)
 
-Basic plugin: [https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin](https://www.npmjs.com/package/@cryptoalgebra/integral-base-plugin)
-
 ## Build
 
 *Requires npm >= 8.0.0*
