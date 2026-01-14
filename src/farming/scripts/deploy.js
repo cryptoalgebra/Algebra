@@ -1,7 +1,6 @@
 const hre = require('hardhat')
 const fs = require('fs')
 const path = require('path')
-const BasePluginV1FactoryComplied = require('@cryptoalgebra/integral-base-plugin/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json');
 
 async function main() {
   const deployDataPath = path.resolve(__dirname, '../../../deploys.json')
@@ -25,11 +24,6 @@ async function main() {
 
   await (await AlgebraEternalFarming.setFarmingCenterAddress(FarmingCenter.target)).wait()
   console.log('Updated farming center address in eternal(incentive) farming')
-
-  const pluginFactory = await hre.ethers.getContractAt(BasePluginV1FactoryComplied.abi, deploysData.BasePluginV1Factory)
-
-  await (await pluginFactory.setFarmingAddress(FarmingCenter.target)).wait()
-  console.log('Updated farming center address in plugin factory')
 
   const posManager = await hre.ethers.getContractAt(
     'INonfungiblePositionManager',

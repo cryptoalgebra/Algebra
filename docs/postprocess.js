@@ -5,7 +5,6 @@ const remappings = [
   ['&#x3D;&gt;', '=>'],
   ['../@cryptoalgebra/integral-core/contracts', '../Core'],
   ['../@cryptoalgebra/integral-periphery/contracts', '../Periphery'],
-  ['../@cryptoalgebra/integral-base-plugin/contracts', '../Plugin'],
   [/\([^\(]+@openzeppelin\/contracts[^\(]+\)/g, '(https://docs.openzeppelin.com/contracts/4.x/)'],
 ];
 

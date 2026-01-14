@@ -7,7 +7,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IERC20Minimal.sol';
 import '@cryptoalgebra/integral-periphery/contracts/interfaces/IMulticall.sol';
 import '@cryptoalgebra/integral-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 
-import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/farming-proxy-plugin/contracts/interfaces/IFarmingPlugin.sol';
 
 import '../base/IncentiveKey.sol';
 import '../interfaces/IAlgebraEternalFarming.sol';

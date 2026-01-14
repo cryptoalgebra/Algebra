@@ -15,7 +15,7 @@ import {
 import {
   abi as PLUGIN_FACTORY_ABI,
   bytecode as PLUGIN_FACTORY_BYTECODE,
-} from '@cryptoalgebra/integral-base-plugin/artifacts/contracts/BasePluginV1Factory.sol/BasePluginV1Factory.json';
+} from '@cryptoalgebra/default-plugin/artifacts/contracts/AlgebraDefaultPluginFactory.sol/AlgebraDefaultPluginFactory.json';
 import {
   abi as WNATIVE_ABI,
   bytecode as WNATIVE_BYTECODE,
