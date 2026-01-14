@@ -11,3 +11,7 @@ This module contains smart contracts that can be used by users to easily interac
 ## Farming
 
 A separate module with onchain farming for Algebra protocol concentrated liquidity positions.
+
+## Plugins
+
+Plugins are maintained in a separate repository: [https://github.com/cryptoalgebra/plugins-monorepo](https://github.com/cryptoalgebra/plugins-monorepo)
