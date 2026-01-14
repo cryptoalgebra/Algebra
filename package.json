@@ -33,13 +33,13 @@
   "scripts": {
     "prepare": "husky",
     "lint": "prettier \"src/**/contracts/**/*.sol\"",
-    "solhint": "npm run solhint --workspace=src/core --if-present && npm run solhint --workspace=src/periphery --if-present && npm run solhint --workspace=src/plugin --if-present && npm run solhint --workspace=src/farming --if-present",
+    "solhint": "npm run solhint --workspace=src/core --if-present && npm run solhint --workspace=src/periphery --if-present && npm run solhint --workspace=src/farming --if-present",
     "bootstrap": "npm install && npm run compile",
-    "compile": "cd src/core && hardhat compile && cd ../periphery && hardhat compile && cd ../plugin && hardhat compile && cd ../farming && hardhat compile",
+    "compile": "cd src/core && hardhat compile && cd ../periphery && hardhat compile && cd ../farming && hardhat compile",
     "ci-install": "npm ci",
     "deploy": "node scripts/deployAll.js",
     "verify": "node scripts/verifyAll.js",
-    "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen && cd ../plugin && hardhat docgen && cd ../farming && hardhat docgen && node ../../docs/postprocess.js"
+    "docgen": "cd src/core && hardhat docgen && cd ../periphery && hardhat docgen  cd ../farming && hardhat docgen && node ../../docs/postprocess.js"
   },
   "engines": {
     "npm": ">=10.0.0",

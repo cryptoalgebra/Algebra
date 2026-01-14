@@ -7,7 +7,7 @@ import '@cryptoalgebra/integral-periphery/contracts/interfaces/IPositionFollower
 import '@cryptoalgebra/integral-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
 import '@cryptoalgebra/integral-periphery/contracts/base/Multicall.sol';
 import '@cryptoalgebra/integral-periphery/contracts/libraries/PoolAddress.sol';
-import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/farming-proxy-plugin/contracts/interfaces/IFarmingPlugin.sol';
 
 import './interfaces/IFarmingCenter.sol';
 import './libraries/IncentiveId.sol';

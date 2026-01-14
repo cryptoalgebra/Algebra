@@ -1,6 +1,5 @@
 npm run precommit --workspace=src/core --if-present
 npm run precommit --workspace=src/periphery --if-present
-npm run precommit --workspace=src/plugin --if-present
 npm run precommit --workspace=src/farming --if-present
 
 git add docs

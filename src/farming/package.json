@@ -26,14 +26,15 @@
     "@openzeppelin/contracts": "4.9.3",
     "@cryptoalgebra/integral-core": "~1.2.7",
     "@cryptoalgebra/integral-periphery": "~1.2.4",
-    "@cryptoalgebra/integral-base-plugin": "~1.2.4"
+    "@cryptoalgebra/default-plugin": "2.1.0",
+    "@cryptoalgebra/farming-proxy-plugin": "2.1.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.170",
     "lodash": "^4.17.21"
   },
   "scripts": {
-    "compile": "npm --prefix ../periphery run compile && npm --prefix ../plugin run compile && hardhat compile",
+    "compile": "npm --prefix ../periphery run compile && hardhat compile",
     "lint": "eslint . --ext .ts",
     "size-contracts": "hardhat compile && hardhat size-contracts",
     "solhint": "solhint --config ../../.solhint.json \"contracts/**/*.sol\"",

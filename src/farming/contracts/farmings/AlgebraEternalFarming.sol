@@ -13,7 +13,7 @@ import '@cryptoalgebra/integral-core/contracts/libraries/LowGasSafeMath.sol';
 
 import '@cryptoalgebra/integral-periphery/contracts/libraries/TransferHelper.sol';
 
-import '@cryptoalgebra/integral-base-plugin/contracts/interfaces/plugins/IFarmingPlugin.sol';
+import '@cryptoalgebra/farming-proxy-plugin/contracts/interfaces/IFarmingPlugin.sol';
 
 import '../interfaces/IAlgebraEternalFarming.sol';
 import '../interfaces/IAlgebraEternalVirtualPool.sol';
