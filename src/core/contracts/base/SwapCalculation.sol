@@ -73,9 +73,11 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (zeroToOne) {
       if (limitSqrtPrice >= currentPrice || limitSqrtPrice <= TickMath.MIN_SQRT_RATIO) revert invalidLimitSqrtPrice();
       cache.totalFeeGrowthInput = totalFeeGrowth0Token;
+      cache.totalFeeGrowthOutput = 0;
     } else {
       if (limitSqrtPrice <= currentPrice || limitSqrtPrice >= TickMath.MAX_SQRT_RATIO) revert invalidLimitSqrtPrice();
-      cache.totalFeeGrowthInput = totalFeeGrowth1Token;
+      cache.totalFeeGrowthInput = totalFeeGrowth0Token;
+      cache.totalFeeGrowthOutput = 0;
     }
 
     PriceMovementCache memory step;
@@ -124,7 +126,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           // crossing tick
           if (!cache.crossedAnyTick) {
             cache.crossedAnyTick = true;
-            cache.totalFeeGrowthOutput = zeroToOne ? totalFeeGrowth1Token : totalFeeGrowth0Token;
+            cache.totalFeeGrowthOutput = 0;
           }
 
           int128 liquidityDelta;
@@ -133,7 +135,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             liquidityDelta = -liquidityDelta;
             (currentTick, cache.nextInitializedTick) = (nextTick - 1, nextTick);
           } else {
-            (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(nextTick, cache.totalFeeGrowthOutput, cache.totalFeeGrowthInput);
+            (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(nextTick, cache.totalFeeGrowthInput, cache.totalFeeGrowthOutput);
             (currentTick, cache.prevInitializedTick) = (nextTick, nextTick);
           }
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
@@ -152,10 +154,6 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     if (cache.crossedAnyTick) {
       (liquidity, prevTickGlobal, nextTickGlobal) = (currentLiquidity, cache.prevInitializedTick, cache.nextInitializedTick);
     }
-    if (zeroToOne) {
-      totalFeeGrowth0Token = cache.totalFeeGrowthInput;
-    } else {
-      totalFeeGrowth1Token = cache.totalFeeGrowthInput;
-    }
+    totalFeeGrowth0Token = cache.totalFeeGrowthInput;
   }
 }

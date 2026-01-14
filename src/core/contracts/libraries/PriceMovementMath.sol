@@ -95,6 +95,30 @@ library PriceMovementMath {
     return TokenDeltaMath.getToken0Delta(from, to, liquidity, false);
   }
 
+  /// @dev Helper for exactOutput B->A swaps where fee is in token0 (output)
+  function _handleExactOutput1To0WithFeeInToken0(
+    uint160 currentPrice,
+    uint160 targetPrice,
+    uint128 liquidity,
+    uint256 amountAvailable,
+    uint24 fee
+  ) private pure returns (uint160 resultPrice, uint256 input, uint256 output, uint256 feeAmount) {
+    uint256 outWithFee = FullMath.mulDiv(amountAvailable, Constants.FEE_DENOMINATOR, Constants.FEE_DENOMINATOR - fee);
+    output = getOutputTokenDelta10(targetPrice, currentPrice, liquidity);
+    
+    if (outWithFee >= output) {
+      resultPrice = targetPrice;
+    } else {
+      resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, outWithFee, false);
+      if (targetPrice != resultPrice) output = getOutputTokenDelta10(resultPrice, currentPrice, liquidity);
+      if (output > outWithFee) output = outWithFee;
+    }
+    
+    input = getInputTokenDelta10(resultPrice, currentPrice, liquidity);
+    feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR - fee);
+    output -= feeAmount;
+  }
+
   /// @notice Computes the result of swapping some amount in, or amount out, given the parameters of the swap
   /// @dev The fee, plus the amount in, will never exceed the amount remaining if the swap's `amountSpecified` is positive
   /// @param zeroToOne The direction of price movement
@@ -120,41 +144,55 @@ library PriceMovementMath {
 
       if (amountAvailable >= 0) {
         // exactIn or not
-        uint256 amountAvailableAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
-        input = getInputTokenAmount(targetPrice, currentPrice, liquidity);
-        if (amountAvailableAfterFee >= input) {
-          resultPrice = targetPrice;
-          feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
+        if (zeroToOne) {
+          // A->B: fee from input (token0) - as before
+          uint256 amountAfterFee = FullMath.mulDiv(uint256(amountAvailable), Constants.FEE_DENOMINATOR - fee, Constants.FEE_DENOMINATOR);
+          input = getInputTokenAmount(targetPrice, currentPrice, liquidity);
+          if (amountAfterFee >= input) {
+            resultPrice = targetPrice;
+            feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
+          } else {
+            resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAfterFee, zeroToOne);
+            assert(targetPrice != resultPrice);
+            input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+            feeAmount = uint256(amountAvailable) - input;
+          }
+          output = getOutputTokenDelta01(resultPrice, currentPrice, liquidity);
         } else {
-          resultPrice = getNewPriceAfterInput(currentPrice, liquidity, amountAvailableAfterFee, zeroToOne);
-          assert(targetPrice != resultPrice); // should always be true
-
-          input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
-          // we didn't reach the target, so take the remainder of the maximum input as fee
-          feeAmount = uint256(amountAvailable) - input; // input <= amountAvailable due to used formulas. This invariant is checked by fuzzy tests
+          // B->A: fee from output (token0) - NEW!
+          input = getInputTokenAmount(targetPrice, currentPrice, liquidity);
+          if (uint256(amountAvailable) >= input) {
+            resultPrice = targetPrice;
+          } else {
+            resultPrice = getNewPriceAfterInput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
+            input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+          }
+          output = getOutputTokenDelta10(resultPrice, currentPrice, liquidity);
+          feeAmount = FullMath.mulDivRoundingUp(output, fee, Constants.FEE_DENOMINATOR - fee);
+          output -= feeAmount;
         }
-
-        output = (zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10)(resultPrice, currentPrice, liquidity);
       } else {
         function(uint160, uint160, uint128) pure returns (uint256) getOutputTokenAmount = zeroToOne ? getOutputTokenDelta01 : getOutputTokenDelta10;
 
-        output = getOutputTokenAmount(targetPrice, currentPrice, liquidity);
         amountAvailable = -amountAvailable;
-        if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired(); // in case of type(int256).min
-
-        if (uint256(amountAvailable) >= output) resultPrice = targetPrice;
-        else {
-          resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
-
-          // should be always true if the price is in the allowed range
-          if (targetPrice != resultPrice) output = getOutputTokenAmount(resultPrice, currentPrice, liquidity);
-
-          // cap the output amount to not exceed the remaining output amount
-          if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
+        if (amountAvailable < 0) revert IAlgebraPoolErrors.invalidAmountRequired();
+        
+        if (zeroToOne) {
+          // A->B exactOutput: fee from input (token0)
+          output = getOutputTokenAmount(targetPrice, currentPrice, liquidity);
+          if (uint256(amountAvailable) >= output) {
+            resultPrice = targetPrice;
+          } else {
+            resultPrice = getNewPriceAfterOutput(currentPrice, liquidity, uint256(amountAvailable), zeroToOne);
+            if (targetPrice != resultPrice) output = getOutputTokenAmount(resultPrice, currentPrice, liquidity);
+            if (output > uint256(amountAvailable)) output = uint256(amountAvailable);
+          }
+          input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
+          feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
+        } else {
+          // B->A exactOutput: fee in output (token0)
+          return _handleExactOutput1To0WithFeeInToken0(currentPrice, targetPrice, liquidity, uint256(amountAvailable), fee);
         }
-
-        input = getInputTokenAmount(resultPrice, currentPrice, liquidity);
-        feeAmount = FullMath.mulDivRoundingUp(input, fee, Constants.FEE_DENOMINATOR - fee);
       }
     }
   }
