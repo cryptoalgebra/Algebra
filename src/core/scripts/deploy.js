@@ -12,7 +12,7 @@ async function main() {
 
   const AlgebraFactory = await hre.ethers.getContractFactory('AlgebraFactory');
   const factory = await AlgebraFactory.deploy(poolDeployerAddress);
-
+  
   await factory.waitForDeployment();
 
   const PoolDeployerFactory = await hre.ethers.getContractFactory('AlgebraPoolDeployer');
@@ -20,7 +20,7 @@ async function main() {
 
   await poolDeployer.waitForDeployment();
 
-  console.log('AlgebraPoolDeployer to:', poolDeployer.target);
+  console.log('AlgebraPoolDeployer deployed to:', poolDeployer.target);
   console.log('AlgebraFactory deployed to:', factory.target);
 
   const vaultFactory = await hre.ethers.getContractFactory('AlgebraCommunityVault');
@@ -42,9 +42,9 @@ async function main() {
 
   // protocol fee settings
   const algebraFeeRecipient = "0x6cbd743d9b97DA1855E64893D3226F8eDCa16e76" 
-  const partnerAddress = "0xDeaD1F5aF792afc125812E875A891b038f888258" // owner address, must be changed
-  const algebraFeeShare =  1000 // specified on algebraVault, 100% of community fee by default(3% of all fees) 
-  const defaultCommunityFee = 30 // 3% by default
+  const partnerAddress = "0x42754F24e73e4712FaAd4a780004371D4183BA2c" // owner address, must be changed
+  const algebraFeeShare =  200 // specified on algebraVault, 20% of community fee by default (3% of all fees) 
+  const defaultCommunityFee = 150 // 15% by default
 
   const setCommunityFeeTx = await factory.setDefaultCommunityFee(defaultCommunityFee)
   await setCommunityFeeTx.wait()
