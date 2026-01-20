@@ -117,7 +117,7 @@ Returns the custom pool address for a customDeployer and a given pair of tokens,
 
 ### POOL_INIT_CODE_HASH
 ```solidity
-bytes32 constant POOL_INIT_CODE_HASH = 0x62441ebe4e4315cf3d49d5957f94d66b253dbabe7006f34ad7f70947e60bf15c
+bytes32 constant POOL_INIT_CODE_HASH = 0x28ca930dce4183e0e1f76abe6e52699579ae7beaeab98fac2b94e33c213f7d4a
 ```
 **Selector**: `0xdc6fd8ab`
 

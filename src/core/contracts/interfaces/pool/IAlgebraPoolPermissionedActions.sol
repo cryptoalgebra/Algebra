@@ -41,4 +41,10 @@ interface IAlgebraPoolPermissionedActions {
   /// @notice Forces balances to match reserves. Excessive tokens will be sent to msg.sender
   /// @dev Only plugin can call this function
   function skim() external;
+
+  /// @notice sets delegatees for FTSO delegation reward OR claim delegation rewards for this contract.
+  /// @dev Only callable by factory
+  /// @param target There can only be two addresses. WFLR address or Flare Reward Distribution Contract address
+  /// @param data call data for batchdelegate function or claim function
+  function functionCallForDelegation(address target, bytes calldata data) external;
 }

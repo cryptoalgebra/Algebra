@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.8.20;
-pragma abicoder v1;
 
 import './base/AlgebraPoolBase.sol';
 import './base/ReentrancyGuard.sol';
@@ -169,7 +168,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       emit BurnFee(msg.sender, pluginFee);
       emit Burn(msg.sender, bottomTick, topTick, amount, amount0, amount1);
     }
-    
+
     _unlock();
     _afterModifyPos(msg.sender, bottomTick, topTick, liquidityDelta, amount0, amount1, data);
   }
@@ -550,5 +549,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     _lock();
     _skimReserves(msg.sender);
     _unlock();
+  }
+
+  /// @inheritdoc IAlgebraPoolPermissionedActions
+  function functionCallForDelegation(address target, bytes calldata data) external override {
+    if (msg.sender != factory) revert notAllowed();
+
+    (bool success, ) = target.call(data);
+    if (!success) revert lowLevelCallFailed();
   }
 }
