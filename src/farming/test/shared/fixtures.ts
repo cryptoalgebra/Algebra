@@ -30,6 +30,7 @@ import {
   IAlgebraPool,
   TestIncentiveId,
   FarmingCenter,
+  EternalVirtualPool,
 } from '../../typechain';
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT, ZERO_ADDRESS } from '../shared';
 import { ActorFixture } from './actors';
@@ -232,6 +233,7 @@ export type AlgebraFixtureType = {
   router: ISwapRouter;
   eternalFarming: AlgebraEternalFarming;
   farmingCenter: FarmingCenter;
+  virtualPool: EternalVirtualPool;
   testIncentiveId: TestIncentiveId;
   tokens: [TestERC20, TestERC20, TestERC20, TestERC20];
   token0: TestERC20;
@@ -287,6 +289,10 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const pluginObj = pluginContractFactory.attach(await poolObj.connect(signer).plugin()) as any as IAlgebraBasePluginV1;
 
+  const vitrualPoolAddress = await farmingCenter.virtualPoolAddresses(pool01);
+  const virtualPoolFactory = await ethers.getContractFactory('EternalVirtualPool', signer);
+  const virtualPool = (await virtualPoolFactory.attach(vitrualPoolAddress)) as any as EternalVirtualPool;
+  
   return {
     nft,
     router,
@@ -307,6 +313,7 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
     rewardToken: tokens[2],
     bonusRewardToken: tokens[1],
     ownerSigner,
+    virtualPool,
   };
 };
 

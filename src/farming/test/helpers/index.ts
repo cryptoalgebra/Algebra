@@ -1,7 +1,7 @@
 import { Wallet, MaxUint256, Interface } from 'ethers';
 import { blockTimestamp, BNe18, FeeAmount, getCurrentTick, maxGas, encodePath, arrayWrap, getMinTick, getMaxTick, ZERO_ADDRESS } from '../shared/index';
 import _ from 'lodash';
-import { TestERC20, INonfungiblePositionManager, AlgebraEternalFarming, IAlgebraPool, TestIncentiveId, FarmingCenter } from '../../typechain';
+import { TestERC20, INonfungiblePositionManager, AlgebraEternalFarming, IAlgebraPool, TestIncentiveId, FarmingCenter, EternalVirtualPool } from '../../typechain';
 import abi from '../../artifacts/contracts/farmings/EternalVirtualPool.sol/EternalVirtualPool.json';
 import { HelperTypes } from './types';
 import { ActorFixture } from '../shared/actors';
@@ -27,6 +27,7 @@ export class HelperCommands {
   pool: IAlgebraPool;
   testIncentiveId: TestIncentiveId;
   farmingCenter: FarmingCenter;
+  virtualPool: EternalVirtualPool;
 
   DEFAULT_INCENTIVE_DURATION = 2_000;
   DEFAULT_CLAIM_DURATION = 1_000;
@@ -42,6 +43,7 @@ export class HelperCommands {
     actors,
     testIncentiveId,
     farmingCenter,
+    virtualPool,
   }: {
     provider: any;
     eternalFarming: AlgebraEternalFarming;
@@ -51,6 +53,7 @@ export class HelperCommands {
     pool: IAlgebraPool;
     actors: ActorFixture;
     testIncentiveId: TestIncentiveId;
+    virtualPool: EternalVirtualPool;
   }) {
     this.actors = actors;
     this.provider = provider;
@@ -60,6 +63,7 @@ export class HelperCommands {
     this.pool = pool;
     this.testIncentiveId = testIncentiveId;
     this.farmingCenter = farmingCenter;
+    this.virtualPool = virtualPool;
   }
 
   static fromTestContext = (context: TestContext, actors: ActorFixture, provider: any): HelperCommands => {
@@ -72,6 +76,7 @@ export class HelperCommands {
       pool: context.poolObj,
       testIncentiveId: context.testIncentiveId,
       farmingCenter: context.farmingCenter,
+      virtualPool: context.virtualPool,
     });
   };
 
@@ -521,7 +526,7 @@ export class HelperCommands {
     const erc20Helper = new ERC20Helper();
     await erc20Helper.ensureBalancesAndApprovals(actor, [tok0, tok1], amountIn, await this.router.getAddress());
 
-    const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, tok0Address] : [tok0Address, tok1Address]);
+    const path = encodePath(MAKE_TICK_GO_UP ? [tok1Address, ZERO_ADDRESS, tok0Address] : [tok0Address, ZERO_ADDRESS, tok1Address]);
 
     return this.router.connect(actor).exactInput(
       {
@@ -533,6 +538,16 @@ export class HelperCommands {
       },
       maxGas
     );
+  };
+  getRewardRate: HelperTypes.GetRewardRate.Command = async (params) => {
+    const virtualPool = params.createIncentiveResult.virtualPool;
+    
+    const rewardRates = await virtualPool.rewardRates();
+    
+    return {
+      rewardRate0: rewardRates.rate0 || rewardRates[0],
+      rewardRate1: rewardRates.rate1 || rewardRates[1],
+    };
   };
 }
 
@@ -577,3 +592,4 @@ export const incentiveResultToFarmAdapter: IncentiveAdapterFunc = async (params:
   pool: params.poolAddress,
   nonce: params.nonce,
 });
+
