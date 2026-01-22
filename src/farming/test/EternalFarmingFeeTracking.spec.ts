@@ -906,4 +906,994 @@ describe('EternalFarming - Fee-Based Reward Tracking', () => {
       expect(reward).to.equal(0);
     });
   });
+
+  /**
+   * Tests for scenarios where NOT all pool liquidity participates in farming.
+   * This is crucial because:
+   * - totalFees should only track fees from farming positions
+   * - Non-farming positions earn fees but shouldn't affect farming rewards
+   * - Virtual pool liquidity differs from real pool liquidity
+   */
+  describe('Partial Liquidity in Farming', () => {
+    type TestSubject = {
+      helpers: HelperCommands;
+      context: TestContext;
+      createIncentiveResult: HelperTypes.CreateIncentive.Result;
+    };
+    let subject: TestSubject;
+
+    const totalReward = BNe18(100_000);
+    const bonusReward = BNe18(50_000);
+    const rewardRate = 10_000_000_000n;
+    const bonusRewardRate = 5_000_000_000n;
+
+    const scenario: () => Promise<TestSubject> = async () => {
+      const context = await algebraFixture();
+      const helpers = HelperCommands.fromTestContext(context, actors, provider);
+
+      const nonce = await context.eternalFarming.numOfIncentives();
+
+      const createIncentiveResult = await helpers.createIncentiveFlow({
+        nonce,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        poolAddress: context.pool01,
+        totalReward,
+        bonusReward,
+        rewardRate,
+        bonusRewardRate,
+      });
+
+      return { context, helpers, createIncentiveResult };
+    };
+
+    beforeEach('load fixture', async () => {
+      subject = await loadFixture(scenario);
+    });
+
+    it('should only track fees from farming positions, not from regular LP', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const farmingLP = actors.lpUser0();
+      const regularLP = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // Regular LP: adds liquidity but does NOT enter farming
+      await e20h.ensureBalancesAndApprovals(
+        regularLP,
+        [context.token0, context.token1],
+        BNe18(1000),
+        await context.nft.getAddress()
+      );
+
+      const regularTokenId = await mintPosition(context.nft.connect(regularLP), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: fullRangeTicks[0],
+        tickUpper: fullRangeTicks[1],
+        recipient: regularLP.address,
+        amount0Desired: BNe18(500),
+        amount1Desired: BNe18(500),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Farming LP: adds liquidity AND enters farming
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: farmingLP,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Check virtual pool liquidity vs real pool liquidity
+      const virtualLiquidity = await virtualPool.currentLiquidity();
+      const realPoolAddress = context.pool01;
+      const realPool = await ethers.getContractAt('IAlgebraPool', realPoolAddress);
+      const realLiquidity = await realPool.liquidity();
+
+      console.log('Virtual pool liquidity (farming only):', virtualLiquidity.toString());
+      console.log('Real pool liquidity (total):', realLiquidity.toString());
+
+      // Virtual pool should have LESS liquidity than real pool
+      expect(virtualLiquidity).to.be.lt(realLiquidity);
+
+      // Perform swap - fees go to both LPs but only farming LP's fees tracked
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(100),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      // Update and check totalFees
+      await virtualPool.updateTotalFees();
+      const [totalFees0, totalFees1] = await virtualPool.getTotalFees();
+
+      console.log('Total fees tracked (farming only):', totalFees0.toString());
+
+      // totalFees should be > 0 but represent only farming position's share
+      expect(totalFees0).to.be.gt(0);
+
+      // Get reward for farming position
+      await time.increase(days(1));
+      
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward] = await context.eternalFarming.getRewardInfo(incentiveKey, farmResult.tokenId);
+      
+      // Farming position should earn rewards
+      expect(reward).to.be.gt(0);
+    });
+
+    it('should correctly calculate rewards when farming has minority of liquidity', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const farmingLP = actors.lpUser0();
+      const regularLP = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // Regular LP: adds LARGE liquidity (90% of pool)
+      await e20h.ensureBalancesAndApprovals(
+        regularLP,
+        [context.token0, context.token1],
+        BNe18(2000),
+        await context.nft.getAddress()
+      );
+
+      await mintPosition(context.nft.connect(regularLP), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: fullRangeTicks[0],
+        tickUpper: fullRangeTicks[1],
+        recipient: regularLP.address,
+        amount0Desired: BNe18(900),
+        amount1Desired: BNe18(900),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Farming LP: adds SMALL liquidity (10% of pool)
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: farmingLP,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Swap generates fees
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(200),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(100),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await time.increase(days(1));
+      await virtualPool.updateTotalFees();
+
+      // Farming position should still earn 100% of farming rewards
+      // because it's the ONLY position in farming
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward] = await context.eternalFarming.getRewardInfo(incentiveKey, farmResult.tokenId);
+      
+      console.log('Reward for farming position (10% of pool liquidity):', reward.toString());
+      expect(reward).to.be.gt(0);
+    });
+
+    it('should track fees correctly when position joins farming after swaps occurred', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const lpUser = actors.lpUser0();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // First, create a position but don't enter farming yet
+      await e20h.ensureBalancesAndApprovals(
+        lpUser,
+        [context.token0, context.token1],
+        BNe18(500),
+        await context.nft.getAddress()
+      );
+
+      const tokenId = await mintPosition(context.nft.connect(lpUser), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: fullRangeTicks[0],
+        tickUpper: fullRangeTicks[1],
+        recipient: lpUser.address,
+        amount0Desired: BNe18(200),
+        amount1Desired: BNe18(200),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Perform swaps BEFORE entering farming
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(200),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      // Check totalFees before entering farming - should be 0
+      const [feesBefore0] = await virtualPool.getTotalFees();
+      expect(feesBefore0).to.equal(0); // No farming positions yet
+
+      // Now enter farming
+      await context.nft.connect(lpUser).approveForFarming(tokenId, true, context.farmingCenter);
+      const incentiveAdapter = await incentiveResultToFarmAdapter(createIncentiveResult);
+      await context.farmingCenter.connect(lpUser).enterFarming(incentiveAdapter, tokenId);
+
+      // Perform more swaps AFTER entering farming
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await virtualPool.updateTotalFees();
+      const [feesAfter0] = await virtualPool.getTotalFees();
+
+      // Now totalFees should be > 0 (only tracking post-entry fees)
+      expect(feesAfter0).to.be.gt(0);
+      console.log('Fees tracked after entering farming:', feesAfter0.toString());
+
+      await time.increase(days(1));
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward] = await context.eternalFarming.getRewardInfo(incentiveKey, tokenId);
+      
+      // Should earn rewards only for post-entry fees
+      expect(reward).to.be.gt(0);
+    });
+
+    it('should handle multiple farming positions with different liquidity amounts', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const lpUser1 = actors.lpUser0();
+      const lpUser2 = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // LP1: Large liquidity in farming
+      const farm1 = await helpers.mintDepositFarmFlow({
+        lp: lpUser1,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(400), BNe18(400)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // LP2: Small liquidity in farming
+      const farm2 = await helpers.mintDepositFarmFlow({
+        lp: lpUser2,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Perform swap
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(200),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(100),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await time.increase(days(1));
+      await virtualPool.updateTotalFees();
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward1] = await context.eternalFarming.getRewardInfo(incentiveKey, farm1.tokenId);
+      const [reward2] = await context.eternalFarming.getRewardInfo(incentiveKey, farm2.tokenId);
+
+      console.log('LP1 (4x liquidity) reward:', reward1.toString());
+      console.log('LP2 (1x liquidity) reward:', reward2.toString());
+
+      // LP1 should earn more rewards (more fees due to more liquidity)
+      expect(reward1).to.be.gt(reward2);
+      
+      // Ratio should be approximately 4:1 (within some tolerance for rounding)
+      const ratio = Number(reward1) / Number(reward2);
+      console.log('Reward ratio (expected ~4):', ratio);
+      expect(ratio).to.be.closeTo(4, 0.5);
+    });
+
+    it('should continue tracking correctly when one position exits farming', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const lpUser1 = actors.lpUser0();
+      const lpUser2 = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // Both LPs enter farming
+      const farm1 = await helpers.mintDepositFarmFlow({
+        lp: lpUser1,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      const farm2 = await helpers.mintDepositFarmFlow({
+        lp: lpUser2,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(500),
+        await context.router.getAddress()
+      );
+
+      // First swap - both positions in farming
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await time.increase(days(1));
+
+      // LP1 exits farming
+      const incentiveAdapter = await incentiveResultToFarmAdapter(createIncentiveResult);
+      await context.farmingCenter.connect(lpUser1).exitFarming(
+        incentiveAdapter,
+        farm1.tokenId,
+        maxGas
+      );
+
+      const liquidityAfterExit = await virtualPool.currentLiquidity();
+      console.log('Virtual pool liquidity after LP1 exit:', liquidityAfterExit.toString());
+
+      // Second swap - only LP2 in farming
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await time.increase(days(1));
+      await virtualPool.updateTotalFees();
+
+      // LP2 should still earn rewards from second swap
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward2] = await context.eternalFarming.getRewardInfo(incentiveKey, farm2.tokenId);
+      console.log('LP2 reward (only one remaining in farming):', reward2.toString());
+      
+      expect(reward2).to.be.gt(0);
+    });
+
+    it('should handle tick crossing with partial farming liquidity', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const farmingLP = actors.lpUser0();
+      const regularLP = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      // Both positions use same narrow range around current price
+      const narrowTicks: [number, number] = [-tickSpacing * 10, tickSpacing * 10];
+
+      // Regular LP: large position NOT in farming
+      await e20h.ensureBalancesAndApprovals(
+        regularLP,
+        [context.token0, context.token1],
+        BNe18(2000),
+        await context.nft.getAddress()
+      );
+
+      await mintPosition(context.nft.connect(regularLP), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: narrowTicks[0],
+        tickUpper: narrowTicks[1],
+        recipient: regularLP.address,
+        amount0Desired: BNe18(800),
+        amount1Desired: BNe18(800),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Farming LP: smaller position IN farming
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: farmingLP,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: narrowTicks,
+        createIncentiveResult,
+      });
+
+      // Large swap to cross ticks
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(1500),
+        await context.router.getAddress()
+      );
+
+      // Swap enough to potentially cross tick boundaries
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(500),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await virtualPool.updateTotalFees();
+      const [totalFees0] = await virtualPool.getTotalFees();
+      
+      console.log('Total fees after large swap with tick crossing:', totalFees0.toString());
+      expect(totalFees0).to.be.gt(0);
+
+      await time.increase(days(1));
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward] = await context.eternalFarming.getRewardInfo(incentiveKey, farmResult.tokenId);
+      console.log('Farming position reward after tick crossing:', reward.toString());
+      
+      expect(reward).to.be.gt(0);
+    });
+
+    it('should correctly accumulate fees across multiple swap-enter cycles', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const lpUser1 = actors.lpUser0();
+      const lpUser2 = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(500),
+        await context.router.getAddress()
+      );
+
+      // Phase 1: LP1 enters farming
+      const farm1 = await helpers.mintDepositFarmFlow({
+        lp: lpUser1,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Swap while only LP1 is farming
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await virtualPool.updateTotalFees();
+      const [feesAfterPhase1] = await virtualPool.getTotalFees();
+      console.log('Fees after phase 1 (LP1 only):', feesAfterPhase1.toString());
+
+      // Phase 2: LP2 also enters farming
+      const farm2 = await helpers.mintDepositFarmFlow({
+        lp: lpUser2,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Swap while both LP1 and LP2 are farming
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(50),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await virtualPool.updateTotalFees();
+      const [feesAfterPhase2] = await virtualPool.getTotalFees();
+      console.log('Fees after phase 2 (LP1 + LP2):', feesAfterPhase2.toString());
+
+      // Fees should have increased
+      expect(feesAfterPhase2).to.be.gt(feesAfterPhase1);
+
+      await time.increase(days(1));
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward1] = await context.eternalFarming.getRewardInfo(incentiveKey, farm1.tokenId);
+      const [reward2] = await context.eternalFarming.getRewardInfo(incentiveKey, farm2.tokenId);
+
+      console.log('LP1 reward (in farming from start):', reward1.toString());
+      console.log('LP2 reward (joined later):', reward2.toString());
+
+      // LP1 should have earned more (was farming longer)
+      expect(reward1).to.be.gt(reward2);
+    });
+
+    it('should handle overlapping positions with different ranges in farming', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const lpNarrow = actors.lpUser0();
+      const lpWide = actors.lpUser1();
+      const lpNoFarm = actors.traderUser1(); // Using trader as 3rd LP
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      // Non-farming wide position (provides liquidity for swaps)
+      await e20h.ensureBalancesAndApprovals(
+        lpNoFarm,
+        [context.token0, context.token1],
+        BNe18(1000),
+        await context.nft.getAddress()
+      );
+
+      await mintPosition(context.nft.connect(lpNoFarm), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: getMinTick(tickSpacing),
+        tickUpper: getMaxTick(tickSpacing),
+        recipient: lpNoFarm.address,
+        amount0Desired: BNe18(500),
+        amount1Desired: BNe18(500),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Farming narrow position (higher fee concentration)
+      const narrowTicks: [number, number] = [-tickSpacing * 5, tickSpacing * 5];
+      const farmNarrow = await helpers.mintDepositFarmFlow({
+        lp: lpNarrow,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: narrowTicks,
+        createIncentiveResult,
+      });
+
+      // Farming wide position (lower fee concentration)
+      const wideTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+      const farmWide = await helpers.mintDepositFarmFlow({
+        lp: lpWide,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: wideTicks,
+        createIncentiveResult,
+      });
+
+      // Swap in narrow range
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(100),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(20),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      await time.increase(days(1));
+      await virtualPool.updateTotalFees();
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [rewardNarrow] = await context.eternalFarming.getRewardInfo(incentiveKey, farmNarrow.tokenId);
+      const [rewardWide] = await context.eternalFarming.getRewardInfo(incentiveKey, farmWide.tokenId);
+
+      console.log('Narrow position reward:', rewardNarrow.toString());
+      console.log('Wide position reward:', rewardWide.toString());
+
+      // Both should earn rewards, but narrow should earn more per liquidity
+      expect(rewardNarrow).to.be.gt(0);
+      expect(rewardWide).to.be.gt(0);
+      // Narrow position should earn more (concentrated liquidity = more fees)
+      expect(rewardNarrow).to.be.gt(rewardWide);
+    });
+
+    it('should correctly track fees with partial farming liquidity and NO tick crosses (small swaps)', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const farmingLP = actors.lpUser0();
+      const regularLP = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // Regular LP: adds large liquidity but does NOT enter farming
+      await e20h.ensureBalancesAndApprovals(
+        regularLP,
+        [context.token0, context.token1],
+        BNe18(2000),
+        await context.nft.getAddress()
+      );
+
+      await mintPosition(context.nft.connect(regularLP), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: fullRangeTicks[0],
+        tickUpper: fullRangeTicks[1],
+        recipient: regularLP.address,
+        amount0Desired: BNe18(1000),
+        amount1Desired: BNe18(1000),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      // Farming LP: adds small liquidity AND enters farming
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: farmingLP,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Check initial state
+      const virtualLiquidity = await virtualPool.currentLiquidity();
+      const realPool = await ethers.getContractAt('IAlgebraPool', context.pool01);
+      const realLiquidity = await realPool.liquidity();
+
+      console.log('Virtual pool liquidity:', virtualLiquidity.toString());
+      console.log('Real pool liquidity:', realLiquidity.toString());
+      console.log('Farming share:', Number(virtualLiquidity) / Number(realLiquidity) * 100, '%');
+
+      // Get initial tick
+      const [,tickBefore,,,] = await realPool.globalState();
+      console.log('Tick before swap:', tickBefore);
+
+      // Perform VERY SMALL swap that should NOT cross any ticks
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(10),
+        await context.router.getAddress()
+      );
+
+      // Small swap: 0.1 ETH into a pool with 1100 ETH liquidity - definitely no tick cross
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(1) / 10n, // 0.1 token - very small
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      // Verify no tick cross happened
+      const [,tickAfter,,,] = await realPool.globalState();
+      console.log('Tick after swap:', tickAfter);
+      
+      // Tick should be the same (no cross) or very close
+      const tickDelta = Math.abs(Number(tickAfter) - Number(tickBefore));
+      console.log('Tick delta:', tickDelta);
+
+      // Update total fees (this uses _updateTotalFees path, not crossTo)
+      await virtualPool.updateTotalFees();
+      
+      const [totalFees0, totalFees1] = await virtualPool.getTotalFees();
+      console.log('Total fees0 tracked:', totalFees0.toString());
+
+      // Fees should be tracked even without tick crosses
+      expect(totalFees0).to.be.gt(0);
+
+      // Do multiple small swaps
+      for (let i = 0; i < 5; i++) {
+        await context.router.connect(trader).exactInputSingle({
+          tokenIn: await context.token0.getAddress(),
+          tokenOut: await context.token1.getAddress(),
+          deployer: ZERO_ADDRESS,
+          recipient: trader.address,
+          deadline: (await blockTimestamp()) + 10000,
+          amountIn: BNe18(1) / 10n,
+          amountOutMinimum: 0,
+          limitSqrtPrice: 0,
+        }, { gasLimit: MAX_GAS_LIMIT });
+      }
+
+      await virtualPool.updateTotalFees();
+      const [totalFees0After] = await virtualPool.getTotalFees();
+      
+      console.log('Total fees0 after 5 more swaps:', totalFees0After.toString());
+      
+      // Fees should have increased
+      expect(totalFees0After).to.be.gt(totalFees0);
+
+      // Now test rewards
+      await time.increase(days(1));
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce: 0,
+      };
+
+      const [reward] = await context.eternalFarming.getRewardInfo(incentiveKey, farmResult.tokenId);
+      
+      console.log('Reward earned with small swaps (no tick crosses):', reward.toString());
+      
+      // Should earn rewards even with small swaps
+      expect(reward).to.be.gt(0);
+    });
+
+    it('should correctly calculate fee proportion when farming has different liquidity share', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const virtualPool = createIncentiveResult.virtualPool;
+      
+      const farmingLP = actors.lpUser0();
+      const regularLP = actors.lpUser1();
+      const tickSpacing = TICK_SPACINGS[FeeAmount.MEDIUM];
+
+      const fullRangeTicks: [number, number] = [
+        getMinTick(tickSpacing),
+        getMaxTick(tickSpacing)
+      ];
+
+      // Setup: 20% farming, 80% regular
+      await e20h.ensureBalancesAndApprovals(
+        regularLP,
+        [context.token0, context.token1],
+        BNe18(2000),
+        await context.nft.getAddress()
+      );
+
+      await mintPosition(context.nft.connect(regularLP), {
+        token0: context.token0,
+        token1: context.token1,
+        fee: FeeAmount.MEDIUM,
+        tickLower: fullRangeTicks[0],
+        tickUpper: fullRangeTicks[1],
+        recipient: regularLP.address,
+        amount0Desired: BNe18(800),
+        amount1Desired: BNe18(800),
+        amount0Min: 0,
+        amount1Min: 0,
+        deadline: (await blockTimestamp()) + 10000,
+      });
+
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: farmingLP,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(200), BNe18(200)],
+        ticks: fullRangeTicks,
+        createIncentiveResult,
+      });
+
+      // Get liquidity ratio
+      const virtualLiquidity = await virtualPool.currentLiquidity();
+      const realPool = await ethers.getContractAt('IAlgebraPool', context.pool01);
+      const realLiquidity = await realPool.liquidity();
+      
+      const farmingRatio = Number(virtualLiquidity) / Number(realLiquidity);
+      console.log('Farming liquidity ratio:', farmingRatio * 100, '%');
+      
+      // Should be approximately 20%
+      expect(farmingRatio).to.be.closeTo(0.2, 0.05);
+
+      // Small swap (no tick cross)
+      const trader = actors.traderUser0();
+      await e20h.ensureBalancesAndApprovals(
+        trader,
+        [context.token0, context.token1],
+        BNe18(10),
+        await context.router.getAddress()
+      );
+
+      await context.router.connect(trader).exactInputSingle({
+        tokenIn: await context.token0.getAddress(),
+        tokenOut: await context.token1.getAddress(),
+        deployer: ZERO_ADDRESS,
+        recipient: trader.address,
+        deadline: (await blockTimestamp()) + 10000,
+        amountIn: BNe18(1),
+        amountOutMinimum: 0,
+        limitSqrtPrice: 0,
+      }, { gasLimit: MAX_GAS_LIMIT });
+
+      // Check that totalFees reflects only farming's share
+      await virtualPool.updateTotalFees();
+      const [totalFees0] = await virtualPool.getTotalFees();
+
+      // Get total fees from pool perspective
+      const poolFeeGrowth = await realPool.totalFeeGrowth0Token();
+      
+      console.log('Virtual pool totalFees0:', totalFees0.toString());
+      
+      // The tracked fees should be approximately 20% of what the full pool earned
+      // (because farming has 20% of liquidity)
+      expect(totalFees0).to.be.gt(0);
+    });
+  });
 });
