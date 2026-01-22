@@ -19,8 +19,20 @@ abstract contract Positions is AlgebraPoolBase {
     uint128 fees1; // The amount of token1 owed to a LP
   }
 
+  /// @notice Farming entry data for fee-based farming
+  /// @dev Recorded when position first enters (liquidity goes from 0 to >0)
+  struct FarmingEntry {
+    uint256 feeGrowthInside0AtEntry; // feeGrowthInside0 when position entered farming
+    uint256 accumulatedFees0AtEntry; // pool's accumulatedFees0 when position entered
+    uint256 entryTimestamp;          // timestamp when position entered farming
+  }
+
   /// @inheritdoc IAlgebraPoolState
   mapping(bytes32 => Position) public override positions;
+
+  /// @notice Farming entry data for each position
+  /// @dev Key is the same as for positions mapping
+  mapping(bytes32 => FarmingEntry) public farmingEntries;
 
   /// @notice This function fetches certain position object
   /// @param owner The address owing the position
@@ -33,6 +45,13 @@ abstract contract Positions is AlgebraPoolBase {
       key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
     }
     return positions[key];
+  }
+
+  /// @dev Computes position key
+  function _getPositionKey(address owner, int24 bottomTick, int24 topTick) internal pure returns (bytes32 key) {
+    assembly {
+      key := or(shl(24, or(shl(24, owner), and(bottomTick, 0xFFFFFF))), and(topTick, 0xFFFFFF))
+    }
   }
 
   /// @dev Updates position's ticks and its fees
@@ -112,5 +131,48 @@ abstract contract Positions is AlgebraPoolBase {
         position.fees1 += fees1;
       }
     }
+  }
+
+  /// @notice Records farming entry data when position enters farming (liquidity 0 -> >0)
+  /// @param owner The position owner
+  /// @param bottomTick The position's bottom tick
+  /// @param topTick The position's top tick
+  /// @param feeGrowthInside0 Current feeGrowthInside0 for the position
+  function _recordFarmingEntry(
+    address owner,
+    int24 bottomTick,
+    int24 topTick,
+    uint256 feeGrowthInside0
+  ) internal {
+    bytes32 key = _getPositionKey(owner, bottomTick, topTick);
+    farmingEntries[key] = FarmingEntry({
+      feeGrowthInside0AtEntry: feeGrowthInside0,
+      accumulatedFees0AtEntry: accumulatedFees0,
+      entryTimestamp: _blockTimestamp()
+    });
+  }
+
+  /// @notice Clears farming entry data when position exits (liquidity -> 0)
+  /// @param owner The position owner
+  /// @param bottomTick The position's bottom tick
+  /// @param topTick The position's top tick
+  function _clearFarmingEntry(
+    address owner,
+    int24 bottomTick,
+    int24 topTick
+  ) internal {
+    bytes32 key = _getPositionKey(owner, bottomTick, topTick);
+    delete farmingEntries[key];
+  }
+
+  /// @inheritdoc IAlgebraPoolState
+  function getFarmingEntry(
+    address owner,
+    int24 bottomTick,
+    int24 topTick
+  ) external view override returns (uint256 feeGrowthInside0AtEntry, uint256 accumulatedFees0AtEntry, uint256 entryTimestamp) {
+    bytes32 key = _getPositionKey(owner, bottomTick, topTick);
+    FarmingEntry storage entry = farmingEntries[key];
+    return (entry.feeGrowthInside0AtEntry, entry.accumulatedFees0AtEntry, entry.entryTimestamp);
   }
 }

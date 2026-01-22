@@ -2918,6 +2918,7 @@ describe('AlgebraPool', () => {
             MAX_SQRT_RATIO - 1n,
             -9994,
             10000,
+            6,
             callbackData
           );
       });
@@ -2951,6 +2952,7 @@ describe('AlgebraPool', () => {
             MIN_SQRT_RATIO + 1n,
             10000,
             -9994,
+            6,
             callbackData
           );
       });

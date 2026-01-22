@@ -21,13 +21,13 @@ import {
   bytecode as WNATIVE_BYTECODE,
 } from '@cryptoalgebra/integral-periphery/artifacts/contracts/interfaces/external/IWNativeToken.sol/IWNativeToken.json';
 
-//import WNativeToken from '../contracts/WNativeToken.json'
+import WNativeToken from './external/WNativeToken.json';
 import { getCreateAddress } from 'ethers';
 
 export const vaultAddress = '0x1d8b6fA722230153BE08C4Fa4Aa4B4c7cd01A95a';
 
 const wnativeFixture: () => Promise<{ wnative: IWNativeToken }> = async () => {
-  const wnativeFactory = await ethers.getContractFactory(WNATIVE_ABI, WNATIVE_BYTECODE);
+  const wnativeFactory = await ethers.getContractFactory(WNativeToken.abi, WNativeToken.bytecode);
   const wnative = (await wnativeFactory.deploy()) as any as IWNativeToken;
 
   return { wnative };

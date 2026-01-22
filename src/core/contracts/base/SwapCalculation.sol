@@ -26,6 +26,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     int24 prevInitializedTick; // The previous initialized tick in linked list
     int24 nextInitializedTick; // The next initialized tick in linked list
     uint24 pluginFee;
+    uint256 lpFeeAmount;
   }
 
   struct PriceMovementCache {
@@ -47,7 +48,14 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     bool zeroToOne,
     int256 amountRequired,
     uint160 limitSqrtPrice
-  ) internal returns (int256 amount0, int256 amount1, uint160 currentPrice, int24 currentTick, uint128 currentLiquidity, FeesAmount memory fees) {
+  ) internal returns (
+    int256 amount0,
+    int256 amount1,
+    uint160 currentPrice,
+    int24 currentTick,
+    uint128 currentLiquidity,
+    FeesAmount memory fees
+  ) {
     if (amountRequired == 0) revert zeroAmountRequired();
     if (amountRequired == type(int256).min) revert invalidAmountRequired(); // to avoid problems when changing sign
 
@@ -117,6 +125,8 @@ abstract contract SwapCalculation is AlgebraPoolBase {
           fees.pluginFeeAmount += delta;
         }
 
+        cache.lpFeeAmount += step.feeAmount;
+
         if (currentLiquidity > 0) cache.totalFeeGrowthInput += FullMath.mulDiv(step.feeAmount, Constants.Q128, currentLiquidity);
 
         // min or max tick can not be crossed due to limitSqrtPrice check
@@ -154,6 +164,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
     }
     if (zeroToOne) {
       totalFeeGrowth0Token = cache.totalFeeGrowthInput;
+      accumulatedFees0 += cache.lpFeeAmount; // accumulate LP fees in token0 for fee-based farming
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowthInput;
     }

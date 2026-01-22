@@ -100,7 +100,13 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     // scope to prevent "stack too deep"
     {
       Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
+      bool isNewPosition = _position.liquidity == 0;
       (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, liquidityActual.toInt128());
+      
+      // Record farming entry if position is being created
+      if (isNewPosition) {
+        _recordFarmingEntry(recipient, bottomTick, topTick, _position.innerFeeGrowth0Token);
+      }
     }
 
     unchecked {
@@ -141,6 +147,11 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
       (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
+
+      // Clear farming entry if position is being fully removed (liquidity becomes 0)
+      if (position.liquidity == 0) {
+        _clearFarmingEntry(msg.sender, bottomTick, topTick);
+      }
 
       if (pluginFee > 0) {
         uint256 deltaPluginFeePending0;
@@ -411,7 +422,15 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     }
   }
 
-  function _afterSwap(address recipient, bool zto, int256 amount, uint160 limitPrice, int256 amount0, int256 amount1, bytes calldata data) internal {
+  function _afterSwap(
+    address recipient,
+    bool zto,
+    int256 amount,
+    uint160 limitPrice,
+    int256 amount0,
+    int256 amount1,
+    bytes calldata data
+  ) internal {
     if (globalState.pluginConfig.hasFlag(Plugins.AFTER_SWAP_FLAG)) {
       if (_isPlugin()) return;
       IAlgebraPlugin(plugin).afterSwap(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
