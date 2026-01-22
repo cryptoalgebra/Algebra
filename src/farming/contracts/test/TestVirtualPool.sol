@@ -5,7 +5,7 @@ import '../farmings/EternalVirtualPool.sol';
 
 /// @dev Test contract for Eternal virtual pool
 contract TestVirtualPool is EternalVirtualPool {
-  constructor(address _farmingAddress, address _plugin) EternalVirtualPool(_farmingAddress, _plugin) {
+  constructor(address _farmingAddress, address _plugin, address _pool) EternalVirtualPool(_farmingAddress, _plugin , _pool) {
     //
   }
 

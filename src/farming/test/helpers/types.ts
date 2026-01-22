@@ -85,6 +85,7 @@ export module HelperTypes {
     };
     export type Result = {
       balance: bigint;
+      bonusBalance: bigint;
       exitFarmingdAt: number;
     };
 

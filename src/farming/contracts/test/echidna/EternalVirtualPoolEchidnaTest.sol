@@ -15,7 +15,7 @@ contract EternalVirtualPoolEchidnaTest {
   int24 currentTick = 0;
 
   constructor() {
-    virtualPool = new TestVirtualPool(address(this), address(this));
+    virtualPool = new TestVirtualPool(address(this), address(this), address(this));
   }
 
   function applyLiquidityDeltaToPosition(int24 bottomTick, int24 topTick, int128 liquidityDelta) external {
