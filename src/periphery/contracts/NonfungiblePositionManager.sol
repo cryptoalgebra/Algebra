@@ -5,8 +5,10 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraFactory.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/Constants.sol';
 import '@cryptoalgebra/integral-core/contracts/libraries/FullMath.sol';
+import '@cryptoalgebra/integral-core/contracts/libraries/TickMath.sol';
 
 import './interfaces/INonfungiblePositionManager.sol';
+import './libraries/LiquidityAmounts.sol';
 import './interfaces/INonfungibleTokenPositionDescriptor.sol';
 import './interfaces/IPositionFollower.sol';
 import './libraries/PoolInteraction.sol';
@@ -358,29 +360,80 @@ contract NonfungiblePositionManager is
         _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(params.liquidity)));
     }
 
+    struct RebalanceMintParams {
+        IAlgebraPool pool;
+        address deployer;
+        address token0;
+        address token1;
+        int24 newTickLower;
+        int24 newTickUpper;
+        uint256 amount0;
+        uint256 amount1;
+    }
+
+    struct RebalanceMintResult {
+        uint128 newLiquidity;
+        uint256 leftover0;
+        uint256 leftover1;
+    }
+
+    function _rebalanceMint(RebalanceMintParams memory p) private returns (RebalanceMintResult memory result) {
+        // Calculate liquidity for new position
+        result.newLiquidity = LiquidityAmounts.getLiquidityForAmounts(
+            p.pool._getSqrtPrice(),
+            TickMath.getSqrtRatioAtTick(p.newTickLower),
+            TickMath.getSqrtRatioAtTick(p.newTickUpper),
+            p.amount0,
+            p.amount1
+        );
+
+        require(result.newLiquidity > 0, 'Zero liquidity');
+
+        // Mint new position - callback will pay from contract balance
+        (uint256 mintedAmount0, uint256 mintedAmount1, ) = p.pool.mint(
+            address(this),
+            address(this),
+            p.newTickLower,
+            p.newTickUpper,
+            result.newLiquidity,
+            abi.encode(
+                LiquidityManagement.MintCallbackData({
+                    poolKey: PoolAddress.PoolKey({deployer: p.deployer, token0: p.token0, token1: p.token1}),
+                    payer: address(this)
+                })
+            )
+        );
+
+        // Calculate leftovers
+        unchecked {
+            result.leftover0 = p.amount0 > mintedAmount0 ? p.amount0 - mintedAmount0 : 0;
+            result.leftover1 = p.amount1 > mintedAmount1 ? p.amount1 - mintedAmount1 : 0;
+        }
+    }
+
     /// @inheritdoc INonfungiblePositionManager
-    function rebalance(
-        RebalanceParams calldata params
-    ) external payable override isAuthorizedForToken(params.tokenId) {
-        // TODO: check deadline modifier
+    function rebalance(RebalanceParams calldata params) external payable override isAuthorizedForToken(params.tokenId) {
         Position storage position = _positions[params.tokenId];
         require(position.liquidity > 0, 'No liquidity');
 
         IAlgebraPool pool = IAlgebraPool(_getPoolById(position.poolId));
-        
-        uint128 newLiquidity;
+
+        uint256 collectedAmount0;
+        uint256 collectedAmount1;
+
+        // Scope for burn and collect old position
         {
             int24 oldTickLower = position.tickLower;
             int24 oldTickUpper = position.tickUpper;
             uint128 oldLiquidity = position.liquidity;
-            address _tokenFarmedIn = tokenFarmedIn[params.tokenId];
-            
+
             // Apply negative delta in farming (if farmed)
-            if (_tokenFarmedIn != address(0)) {
+            if (tokenFarmedIn[params.tokenId] != address(0)) {
                 _applyLiquidityDeltaInFarming(params.tokenId, -int256(uint256(oldLiquidity)));
             }
+
+            // Update uncollected fees for old position
             {
-                // Update uncollected fees for old position
                 (uint128 tokensOwed0, uint128 tokensOwed1) = _updateUncollectedFees(
                     position,
                     pool,
@@ -398,34 +451,59 @@ contract NonfungiblePositionManager is
                 }
             }
 
-            // Call rebalance on pool
-            (,, newLiquidity) = pool.rebalance(
-                address(this),
+            // Burn all liquidity from old position
+            pool._burnPositionInPool(oldTickLower, oldTickUpper, oldLiquidity);
+
+            // Collect all tokens from burned position
+            (collectedAmount0, collectedAmount1) = pool.collect(
                 address(this),
                 oldTickLower,
                 oldTickUpper,
-                params.tickLower,
-                params.tickUpper
+                type(uint128).max,
+                type(uint128).max
             );
         }
 
-        // Update position with new ticks and liquidity
+        // Mint new position
+        RebalanceMintResult memory mintResult;
+        {
+            PoolAddress.PoolKey storage poolKey = _poolIdToPoolKey[position.poolId];
+            mintResult = _rebalanceMint(
+                RebalanceMintParams({
+                    pool: pool,
+                    deployer: poolKey.deployer,
+                    token0: poolKey.token0,
+                    token1: poolKey.token1,
+                    newTickLower: params.tickLower,
+                    newTickUpper: params.tickUpper,
+                    amount0: collectedAmount0,
+                    amount1: collectedAmount1
+                })
+            );
+        }
+
+        // Update position
         position.tickLower = params.tickLower;
         position.tickUpper = params.tickUpper;
-        position.liquidity = newLiquidity;
+        position.liquidity = mintResult.newLiquidity;
 
+        unchecked {
+            if (mintResult.leftover0 > 0) position.tokensOwed0 += uint128(mintResult.leftover0);
+            if (mintResult.leftover1 > 0) position.tokensOwed1 += uint128(mintResult.leftover1);
+        }
+
+        // Scope for fee growth update and farming
         {
-            // Update fee growth snapshots for new position
-            (, uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128, , ) = pool.positions(
-                keccak256(abi.encodePacked(address(this), params.tickLower, params.tickUpper))
+            (, uint256 feeGrowthInside0X128, uint256 feeGrowthInside1X128, , ) = pool._getPositionInPool(
+                address(this),
+                params.tickLower,
+                params.tickUpper
             );
             position.feeGrowthInside0LastX128 = feeGrowthInside0X128;
             position.feeGrowthInside1LastX128 = feeGrowthInside1X128;
 
-            // Apply positive delta in farming (if farmed)
-            address _tokenFarmedIn = tokenFarmedIn[params.tokenId];
-            if (_tokenFarmedIn != address(0)) {
-                _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(newLiquidity)));
+            if (tokenFarmedIn[params.tokenId] != address(0)) {
+                _applyLiquidityDeltaInFarming(params.tokenId, int256(uint256(mintResult.newLiquidity)));
             }
         }
     }

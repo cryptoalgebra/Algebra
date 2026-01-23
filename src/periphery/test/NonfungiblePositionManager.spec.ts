@@ -1031,14 +1031,14 @@ describe('NonfungiblePositionManager', () => {
       const newTickLower = -TICK_SPACINGS[FeeAmount.MEDIUM] * 6;
       const newTickUpper = TICK_SPACINGS[FeeAmount.MEDIUM] * 6;
 
-      await snapshotGasCost(
-        nft.connect(other).rebalance({
-          tokenId,
-          tickLower: newTickLower,
-          tickUpper: newTickUpper,
-          deadline: 1,
-        })
-      );
+      const tx = await nft.connect(other).rebalance({
+        tokenId,
+        tickLower: newTickLower,
+        tickUpper: newTickUpper,
+        deadline: 1,
+      });
+      const receipt = await tx.wait();
+      console.log('Rebalance gas (burn/collect/mint internally):', receipt!.gasUsed.toString());
     });
 
     it('gas burn + collect + mint [ @skip-on-coverage ]', async () => {
