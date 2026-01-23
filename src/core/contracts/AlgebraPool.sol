@@ -100,13 +100,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     // scope to prevent "stack too deep"
     {
       Position storage _position = getOrCreatePosition(recipient, bottomTick, topTick);
-      bool isNewPosition = _position.liquidity == 0;
       (amount0, amount1) = _updatePositionTicksAndFees(_position, bottomTick, topTick, liquidityActual.toInt128());
-      
-      // Record farming entry if position is being created
-      if (isNewPosition) {
-        _recordFarmingEntry(recipient, bottomTick, topTick, _position.innerFeeGrowth0Token);
-      }
     }
 
     unchecked {
@@ -147,11 +141,6 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
       Position storage position = getOrCreatePosition(msg.sender, bottomTick, topTick);
 
       (amount0, amount1) = _updatePositionTicksAndFees(position, bottomTick, topTick, liquidityDelta);
-
-      // Clear farming entry if position is being fully removed (liquidity becomes 0)
-      if (position.liquidity == 0) {
-        _clearFarmingEntry(msg.sender, bottomTick, topTick);
-      }
 
       if (pluginFee > 0) {
         uint256 deltaPluginFeePending0;

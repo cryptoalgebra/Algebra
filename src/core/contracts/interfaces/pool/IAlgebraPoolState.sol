@@ -108,10 +108,6 @@ interface IAlgebraPoolState {
   /// @return The fee growth accumulator for token1
   function totalFeeGrowth1Token() external view returns (uint256);
 
-  /// @notice The total accumulated LP fees in token0 for the entire life of the pool
-  /// @dev Used for fee-based farming reward distribution
-  /// @return The total accumulated fees in token0
-  function accumulatedFees0() external view returns (uint256);
 
   /// @notice The current pool fee value
   /// @dev In case dynamic fee is enabled in the pool, this method will call the plugin to get the current fee.
@@ -139,16 +135,6 @@ interface IAlgebraPoolState {
   function positions(
     bytes32 key
   ) external view returns (uint256 liquidity, uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token, uint128 fees0, uint128 fees1);
-
-  /// @notice Returns farming entry data for a position (for fee-based farming)
-  /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
-  /// @param key The position's key is a packed concatenation of the owner address, bottomTick and topTick indexes
-  /// @return feeGrowthInside0AtEntry The feeGrowthInside0 when position entered farming
-  /// @return accumulatedFees0AtEntry The pool's accumulatedFees0 when position entered farming
-  /// @return entryTimestamp The timestamp when position entered farming
-  function farmingEntries(
-    bytes32 key
-  ) external view returns (uint256 feeGrowthInside0AtEntry, uint256 accumulatedFees0AtEntry, uint256 entryTimestamp);
 
   /// @notice The currently in range liquidity available to the pool
   /// @dev This value has no relationship to the total liquidity across all ticks.
@@ -186,18 +172,4 @@ interface IAlgebraPoolState {
   /// **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
   /// @return The node of tick search tree second layer
   function tickTreeSecondLayer(int16) external view returns (uint256);
-
-  /// @notice Returns farming entry data for a position (for fee-based farming)
-  /// @dev **important security note: caller should check reentrancy lock to prevent read-only reentrancy**
-  /// @param owner The position owner
-  /// @param bottomTick The position's bottom tick
-  /// @param topTick The position's top tick
-  /// @return feeGrowthInside0AtEntry The feeGrowthInside0 when position entered farming
-  /// @return accumulatedFees0AtEntry The pool's accumulatedFees0 when position entered farming
-  /// @return entryTimestamp The timestamp when position entered farming
-  function getFarmingEntry(
-    address owner,
-    int24 bottomTick,
-    int24 topTick
-  ) external view returns (uint256 feeGrowthInside0AtEntry, uint256 accumulatedFees0AtEntry, uint256 entryTimestamp);
 }

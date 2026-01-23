@@ -56,8 +56,6 @@ abstract contract AlgebraPoolBase is IAlgebraPool, Timestamp {
   uint256 public override totalFeeGrowth0Token;
   /// @inheritdoc IAlgebraPoolState
   uint256 public override totalFeeGrowth1Token;
-  /// @inheritdoc IAlgebraPoolState
-  uint256 public override accumulatedFees0;
 
   /// @inheritdoc IAlgebraPoolState
   GlobalState public override globalState;

@@ -344,7 +344,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (uint256 totalFees0, uint256 totalFees1) = virtualPool.getTotalFees();
     
     // Get current inner fee growth for position
-    (uint256 currentFeeGrowthInside0, uint256 currentFeeGrowthInside1) = _getInnerFeeGrowthForRangeView(address(key.pool), farm.tickLower, farm.tickUpper);
+    (uint256 currentFeeGrowthInside0, uint256 currentFeeGrowthInside1) = _getInnerFeeGrowthForRange(address(key.pool), farm.tickLower, farm.tickUpper);
     
     uint256 fees0Earned;
     unchecked {
@@ -570,7 +570,4 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     }
   }
 
-  function _getInnerFeeGrowthForRangeView(address pool, int24 tickLower, int24 tickUpper) private view returns (uint256 innerFeeGrowth0Token, uint256 innerFeeGrowth1Token) {
-    return _getInnerFeeGrowthForRange(pool, tickLower, tickUpper);
-  }
 }
