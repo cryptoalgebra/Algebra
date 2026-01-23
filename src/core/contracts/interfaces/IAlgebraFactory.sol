@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import './plugin/IAlgebraPluginFactory.sol';
 import './vault/IAlgebraVaultFactory.sol';
+import {RewardsV2Interface} from '@flarenetwork/flare-periphery-contracts/flare/RewardsV2Interface.sol';
 
 /// @title The interface for the Algebra Factory
 /// @dev Credit to Uniswap Labs under GPL-2.0-or-later license:
@@ -58,6 +59,10 @@ interface IAlgebraFactory {
   /// @notice role that can change communityFee and tickspacing in pools
   /// @return The hash corresponding to this role
   function POOLS_ADMINISTRATOR_ROLE() external view returns (bytes32);
+
+  /// @notice role that can change delegatees and claim rewards for pools
+  /// @return The hash corresponding to this role
+  function POOLS_DELEGATION_ROLE() external view returns (bytes32);
 
   /// @notice role that can call `createCustomPool` function
   /// @return The hash corresponding to this role
@@ -196,4 +201,26 @@ interface IAlgebraFactory {
 
   /// @notice Stops process of renounceOwnership and removes timer.
   function stopRenounceOwnership() external;
+
+  /// @notice changes delegatees of pool for FTSO Delegation reward
+  /// @dev Only callable by POOLS_DELEGATION_ROLE role
+  /// @param pool The address of the pool.
+  /// @param delegatees The addresses of the new delegatees.
+  /// @param bips The percentages of voting power to be delegated expressed in basis points (1/100 of one percent).
+  function callBatchDelegate(address pool, address[] memory delegatees, uint256[] memory bips) external;
+
+  /// @notice Claim FTSO Delegation rewards for pool.
+  /// @dev Only callable by POOLS_DELEGATION_ROLE role
+  /// @param pool The address of the pool.
+  /// @param recipient Address of the reward recipient.
+  /// @param rewardEpochId Id of the reward epoch up to which the rewards are claimed.
+  /// @param wrap Indicates if the reward should be wrapped (deposited) to the WNAT contract.
+  /// @param proofs Array of reward claims with merkle proofs.
+  function callClaimForDelegationReward(
+    address pool,
+    address payable recipient,
+    uint24 rewardEpochId,
+    bool wrap,
+    RewardsV2Interface.RewardClaimWithProof[] calldata proofs
+  ) external;
 }

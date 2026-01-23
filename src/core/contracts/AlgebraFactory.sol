@@ -8,6 +8,7 @@ import './interfaces/IAlgebraPool.sol';
 import './interfaces/IAlgebraPoolDeployer.sol';
 import './interfaces/vault/IAlgebraVaultFactory.sol';
 import './interfaces/plugin/IAlgebraPluginFactory.sol';
+import './interfaces/pool/IAlgebraPoolPermissionedActions.sol';
 
 import './AlgebraCommunityVault.sol';
 
@@ -15,12 +16,17 @@ import '@openzeppelin/contracts/access/Ownable2Step.sol';
 import '@openzeppelin/contracts/access/AccessControlEnumerable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
+import {ContractRegistry} from '@flarenetwork/flare-periphery-contracts/flare/ContractRegistry.sol';
+
 /// @title Algebra factory
 /// @notice Is used to deploy pools and its plugins
 /// @dev Version: Algebra Integral 1.2.2
 contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerable, ReentrancyGuard {
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override POOLS_ADMINISTRATOR_ROLE = keccak256('POOLS_ADMINISTRATOR'); // it`s here for the public visibility of the value
+
+  /// @inheritdoc IAlgebraFactory
+  bytes32 public constant override POOLS_DELEGATION_ROLE = keccak256('POOLS_DELEGATION');
 
   /// @inheritdoc IAlgebraFactory
   bytes32 public constant override CUSTOM_POOL_DEPLOYER = keccak256('CUSTOM_POOL_DEPLOYER');
@@ -57,7 +63,7 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
 
   /// @inheritdoc IAlgebraFactory
   /// @dev keccak256 of AlgebraPool init bytecode. Used to compute pool address deterministically
-  bytes32 public constant POOL_INIT_CODE_HASH = 0x62441ebe4e4315cf3d49d5957f94d66b253dbabe7006f34ad7f70947e60bf15c;
+  bytes32 public constant POOL_INIT_CODE_HASH = 0x28ca930dce4183e0e1f76abe6e52699579ae7beaeab98fac2b94e33c213f7d4a;
 
   constructor(address _poolDeployer) {
     require(_poolDeployer != address(0));
@@ -237,5 +243,42 @@ contract AlgebraFactory is IAlgebraFactory, Ownable2Step, AccessControlEnumerabl
     if (owner() != address(0)) {
       _grantRole(DEFAULT_ADMIN_ROLE, owner());
     }
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function callBatchDelegate(
+    address pool,
+    address[] memory delegatees,
+    uint256[] memory bips
+  ) external override nonReentrant onlyRole(POOLS_DELEGATION_ROLE) {
+    require(IAlgebraPool(pool).factory() == address(this), 'Invalid pool');
+    address wflr = ContractRegistry.getContractAddressByName('WNat');
+    require(IAlgebraPool(pool).token0() == wflr || IAlgebraPool(pool).token1() == wflr, 'wflr token must be in the pool');
+
+    bytes memory data = abi.encodeWithSignature('batchDelegate(address[],uint256[])', delegatees, bips);
+    IAlgebraPoolPermissionedActions(pool).functionCallForDelegation(wflr, data);
+  }
+
+  /// @inheritdoc IAlgebraFactory
+  function callClaimForDelegationReward(
+    address pool,
+    address payable recipient,
+    uint24 rewardEpochId,
+    bool wrap,
+    RewardsV2Interface.RewardClaimWithProof[] calldata proofs
+  ) external override nonReentrant onlyRole(POOLS_DELEGATION_ROLE) {
+    require(IAlgebraPool(pool).factory() == address(this), 'Invalid pool');
+    address wflr = ContractRegistry.getContractAddressByName('WNat');
+    require(IAlgebraPool(pool).token0() == wflr || IAlgebraPool(pool).token1() == wflr, 'wflr token must be in the pool');
+
+    bytes memory data = abi.encodeWithSignature(
+      'claim(address,address,uint24,bool,(bytes32[],(uint24,bytes20,uint120,uint8))[])',
+      pool,
+      recipient,
+      rewardEpochId,
+      wrap,
+      proofs
+    );
+    IAlgebraPoolPermissionedActions(pool).functionCallForDelegation(ContractRegistry.getContractAddressByName('RewardsV2'), data);
   }
 }

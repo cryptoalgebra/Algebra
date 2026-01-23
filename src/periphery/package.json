@@ -25,6 +25,7 @@
     "!artifacts/contracts/base/**/*"
   ],
   "dependencies": {
+    "@flarenetwork/flare-periphery-contracts": "0.1.26",
     "@openzeppelin/contracts": "4.9.3",
     "@uniswap/v2-core": "1.0.1",
     "@cryptoalgebra/integral-core": "~1.2.8"

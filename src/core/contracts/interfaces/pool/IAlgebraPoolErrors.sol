@@ -98,4 +98,7 @@ interface IAlgebraPoolErrors {
   error tickOutOfRange();
   /// @notice Emitted if price is greater than the maximum or less than the minimum allowed value
   error priceOutOfRange();
+
+  /// @notice Emitted if low-level call failed
+  error lowLevelCallFailed();
 }

@@ -1,7 +1,7 @@
 import { Wallet, getCreateAddress, ZeroAddress, keccak256 } from 'ethers';
 import { ethers } from 'hardhat';
 import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
-import { AlgebraFactory, AlgebraPoolDeployer, IAlgebraFactory, MockDefaultPluginFactory, TestAlgebraReentrantCallee } from '../typechain';
+import { AlgebraFactory, AlgebraPoolDeployer, IAlgebraFactory, MockDefaultPluginFactory, TestAlgebraReentrantCallee, MockFlareWNat, MockFlareContractRegistry, MockFlareRewardsV2 } from '../typechain';
 import { expect } from './shared/expect';
 import { ZERO_ADDRESS } from './shared/fixtures';
 import snapshotGasCost from './shared/snapshotGasCost';
@@ -21,6 +21,9 @@ describe('AlgebraFactory', () => {
   let poolDeployer: AlgebraPoolDeployer;
   let poolBytecode: string;
   let defaultPluginFactory: MockDefaultPluginFactory;
+  let mockFlareWNat: MockFlareWNat;
+  let mockFlareContractRegistry: MockFlareContractRegistry;
+  let mockFlareRewardsV2: MockFlareRewardsV2;
 
   const fixture = async () => {
     const [deployer] = await ethers.getSigners();
@@ -82,6 +85,12 @@ describe('AlgebraFactory', () => {
       '0xb73ce166ead2f8e9add217713a7989e4edfba9625f71dfd2516204bb67ad3442'
     );
   });
+  it('has POOLS_DELEGATION_ROLE', async () => {
+    expect(await factory.POOLS_DELEGATION_ROLE()).to.be.eq(
+      '0x3b80e20cf5760b0227257d002e9367a0261e49f0442b866906eb0253042c4d20'
+    );
+  });
+
 
   it('has correct POOL_INIT_CODE_HASH [ @skip-on-coverage ]', async () => {
     expect(await factory.POOL_INIT_CODE_HASH()).to.be.eq(keccak256(poolBytecode));
@@ -588,4 +597,126 @@ describe('AlgebraFactory', () => {
     expect(tickSpacing).to.eq(60);
     expect(fee).to.eq(500);
   });
+
+
+
+
+  describe('Flare FTSO Delegation', () => {
+
+    const flareFixture = async () => {
+      const [deployer] = await ethers.getSigners();
+      // precompute
+      const poolDeployerAddress = getCreateAddress({
+        from: deployer.address,
+        nonce: (await ethers.provider.getTransactionCount(deployer.address)) + 1,
+      });
+  
+      const factoryFactory = await ethers.getContractFactory('AlgebraFactory');
+      const factory = (await factoryFactory.deploy(poolDeployerAddress)) as any as AlgebraFactory;
+  
+      const poolDeployerFactory = await ethers.getContractFactory('AlgebraPoolDeployer');
+      const poolDeployer = (await poolDeployerFactory.deploy(factory)) as any as AlgebraPoolDeployer;
+  
+      const vaultFactory = await ethers.getContractFactory('AlgebraCommunityVault');
+      const vault = await vaultFactory.deploy(factory, deployer.address);
+  
+      const vaultFactoryStubFactory = await ethers.getContractFactory('AlgebraVaultFactoryStub');
+      const vaultFactoryStub = await vaultFactoryStubFactory.deploy(vault);
+  
+      await factory.setVaultFactory(vaultFactoryStub);
+  
+      const defaultPluginFactoryFactory = await ethers.getContractFactory('MockDefaultPluginFactory');
+      const defaultPluginFactory = (await defaultPluginFactoryFactory.deploy()) as any as MockDefaultPluginFactory;
+  
+      const mockFlareWNatFactory = await ethers.getContractFactory('MockFlareWNat');
+      const mockFlareWNat = (await mockFlareWNatFactory.deploy()) as any as MockFlareWNat;
+  
+      const mockFlareRewardsV2Factory = await ethers.getContractFactory('MockFlareRewardsV2');
+      const mockFlareRewardsV2 = (await mockFlareRewardsV2Factory.deploy()) as any as MockFlareRewardsV2;
+  
+      const mockFlareContractRegistryFactory = await ethers.getContractFactory('MockFlareContractRegistry');
+      const flareContractRegistry = (await mockFlareContractRegistryFactory.deploy()) as any as MockFlareContractRegistry;
+  
+      const flareRegistryAddress = '0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019';
+  
+      const newRegistryCode = await ethers.provider.send("eth_getCode", [await flareContractRegistry.getAddress(),]); 
+  
+      await ethers.provider.send("hardhat_setCode", [flareRegistryAddress, newRegistryCode]);
+      const mockFlareContractRegistry = mockFlareContractRegistryFactory.attach(flareRegistryAddress) as any as MockFlareContractRegistry;
+      await mockFlareContractRegistry.initialize(mockFlareWNat, mockFlareRewardsV2);
+  
+      return { factory, poolDeployer, defaultPluginFactory, mockFlareWNat, mockFlareRewardsV2, mockFlareContractRegistry};
+    };
+
+    beforeEach('deploy factory and mock contracts', async () => {
+      ({ factory, poolDeployer, defaultPluginFactory, mockFlareWNat, mockFlareRewardsV2, mockFlareContractRegistry } = await loadFixture(flareFixture));
+    });
+
+    it('fails if caller is not authorized', async () => {
+      const wNat= await mockFlareWNat.getAddress();
+      await factory.createPool(TEST_ADDRESSES[0], wNat, '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], wNat);
+      await expect(factory.callBatchDelegate(poolAddress,[TEST_ADDRESSES[0]],[10000]))
+      .to.be.revertedWith(`AccessControl: account ${wallet.address.toLowerCase()} is missing role ${await factory.POOLS_DELEGATION_ROLE()}`);
+    });
+
+    it('fails if wflr is not in the pool', async () => {
+      await factory.grantRole(await factory.POOLS_DELEGATION_ROLE(),wallet.address);
+      await factory.createPool(TEST_ADDRESSES[0], TEST_ADDRESSES[1], '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], TEST_ADDRESSES[1]);
+      await expect(factory.callBatchDelegate(poolAddress,[TEST_ADDRESSES[0]],[10000]))
+      .to.be.revertedWith(`wflr token must be in the pool`);
+    });    
+
+    it('fails if caller is not factory', async () => {
+      const wNat= await mockFlareWNat.getAddress();
+      await factory.createPool(TEST_ADDRESSES[0], wNat, '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], wNat);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+
+      await expect(pool.functionCallForDelegation(wNat,'0x'))
+      .to.be.revertedWithCustomError(pool,'notAllowed');
+    });   
+    
+    it('fails if low level call failed', async () => {
+      await factory.grantRole(await factory.POOLS_DELEGATION_ROLE(),wallet.address);
+      const wNat= await mockFlareWNat.getAddress();
+      await factory.createPool(TEST_ADDRESSES[0], wNat, '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], wNat);
+      const poolContractFactory = await ethers.getContractFactory('AlgebraPool');
+      let pool = poolContractFactory.attach(poolAddress);
+
+      await expect(factory.callBatchDelegate(poolAddress,[TEST_ADDRESSES[0]],[10000,2000]))
+      .to.be.revertedWithCustomError(pool,'lowLevelCallFailed');
+    });    
+
+    it('valid batch delegate process', async () => {
+      await factory.grantRole(await factory.POOLS_DELEGATION_ROLE(),wallet.address);
+      const wNat= await mockFlareWNat.getAddress();
+      await factory.createPool(TEST_ADDRESSES[0], wNat, '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], wNat);
+
+      
+      await expect(factory.callBatchDelegate(poolAddress,[TEST_ADDRESSES[0],TEST_ADDRESSES[1]],[4000,6000]))
+      .to.emit(mockFlareWNat, "Delegated").withArgs(poolAddress,TEST_ADDRESSES[0],4000)
+      .to.emit(mockFlareWNat, "Delegated").withArgs(poolAddress,TEST_ADDRESSES[1],6000)
+    });    
+
+    it('valid ftso claim process', async () => {
+      await factory.grantRole(await factory.POOLS_DELEGATION_ROLE(),wallet.address);
+      const wNat= await mockFlareWNat.getAddress();
+      await factory.createPool(TEST_ADDRESSES[0], wNat, '0x');
+      let poolAddress = await factory.poolByPair(TEST_ADDRESSES[0], wNat);
+
+      
+      await expect(factory.callClaimForDelegationReward(poolAddress,wallet.address,123,true,[]))
+      .to.emit(mockFlareRewardsV2, "Claimed")
+      .withArgs(poolAddress,poolAddress,wallet.address,123,true)
+    });  
+
+
+  });
+
+
 });
