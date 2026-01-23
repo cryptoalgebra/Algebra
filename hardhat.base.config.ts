@@ -104,15 +104,15 @@ export default {
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
     monad: {
-        url: `rpc`,
+        url: `https://rpc2.monad.xyz`,
         chainId: 143,
         accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     }
   },
   sourcify: {
    enabled: true,
-   apiUrl: 'https://sourcify-api-monad.blockvision.org',
-   browserUrl: 'https://mainnet-beta.monvision.io/',
+   apiUrl: 'https://sourcify-api-monad.blockvision.org/',
+   browserUrl: 'https://monadvision.com/',
   },
   etherscan: {
     // Your API key for Etherscan
