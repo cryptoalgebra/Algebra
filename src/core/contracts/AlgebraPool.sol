@@ -339,7 +339,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         }
         _swapCallback(amount0, amount1, data); // callback to get tokens from the msg.sender
         if (balance1Before + uint256(amount1) > _balanceToken1()) revert insufficientInputAmount();
-        _changeReserves(amount0, amount1, fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, amount1, 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
       }
 
       _emitSwapEvent(
@@ -419,7 +419,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
         if (amount0 < 0) _transfer(token0, recipient, uint256(-amount0)); // amount0 cannot be > 0
         uint256 leftover = uint256(amountToSell - amount1); // return the leftovers
         if (leftover != 0) _transfer(token1, leftoversRecipient, leftover);
-        _changeReserves(amount0, -leftover.toInt256(), fees.communityFeeAmount, 0, fees.pluginFeeAmount, 0); // reflect reserve change and pay communityFee
+        _changeReserves(amount0, -leftover.toInt256(), 0, fees.communityFeeAmount, 0, fees.pluginFeeAmount); // reflect reserve change and pay communityFee
       }
     }
 

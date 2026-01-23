@@ -50,14 +50,14 @@ abstract contract Positions is AlgebraPoolBase {
     bool toggledTop;
     {
       // scope to prevent "stack too deep"
-      (uint256 _totalFeeGrowth0, uint256 _totalFeeGrowth1) = (totalFeeGrowth0Token, 0);
+      (uint256 _totalFeeGrowth0, uint256 _totalFeeGrowth1) = (totalFeeGrowth0Token, totalFeeGrowth1Token);
       if (liquidityDelta != 0) {
         toggledBottom = ticks.update(bottomTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, false); // isTopTick: false
         toggledTop = ticks.update(topTick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, true); // isTopTick: true
       }
 
-      (uint256 feeGrowth0, ) = ticks.getInnerFeeGrowth(bottomTick, topTick, currentTick, _totalFeeGrowth0, 0);
-      _recalculatePosition(position, liquidityDelta, feeGrowth0, 0);
+      (uint256 feeGrowth0, uint256 feeGrowth1) = ticks.getInnerFeeGrowth(bottomTick, topTick, currentTick, _totalFeeGrowth0, _totalFeeGrowth1);
+      _recalculatePosition(position, liquidityDelta, feeGrowth0, feeGrowth1);
     }
 
     if (liquidityDelta != 0) {
@@ -100,14 +100,16 @@ abstract contract Positions is AlgebraPoolBase {
         position.innerFeeGrowth0Token = innerFeeGrowth0Token;
         fees0 = uint128(FullMath.mulDiv(innerFeeGrowth0Token - lastInnerFeeGrowth0Token, liquidityBefore, Constants.Q128));
       }
-      uint128 fees1 = 0;
+      uint128 fees1;
       if (lastInnerFeeGrowth1Token != innerFeeGrowth1Token) {
         position.innerFeeGrowth1Token = innerFeeGrowth1Token;
+        fees1 = uint128(FullMath.mulDiv(innerFeeGrowth1Token - lastInnerFeeGrowth1Token, liquidityBefore, Constants.Q128));
       }
 
       // To avoid overflow owner has to collect fee before it
-      if (fees0 != 0) {
+      if (fees0 | fees1 != 0) {
         position.fees0 += fees0;
+        position.fees1 += fees1;
       }
     }
   }
