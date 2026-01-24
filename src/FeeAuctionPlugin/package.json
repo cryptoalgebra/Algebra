@@ -1,0 +1,53 @@
+{
+  "name": "@cryptoalgebra/fee-auction-plugin",
+  "description": "MEV Auction Plugin for Algebra Integral - captures MEV through priority fee based swap fees",
+  "license": "BUSL-1.1",
+  "version": "1.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "algebra",
+    "mev",
+    "fee-auction",
+    "plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptoalgebra/Algebra"
+  },
+  "files": [
+    "contracts",
+    "!contracts/test",
+    "artifacts/contracts/**/*.json",
+    "!artifacts/contracts/**/*.dbg.json",
+    "!artifacts/contracts/test/**/*"
+  ],
+  "dependencies": {
+    "@openzeppelin/contracts": "4.9.3",
+    "@cryptoalgebra/integral-core": "~1.2.7",
+    "@cryptoalgebra/abstract-plugin": "~2.2.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@typechain/hardhat": "^9.1.0",
+    "hardhat": "^2.19.0",
+    "hardhat-contract-sizer": "^2.10.0",
+    "hardhat-output-validator": "^0.1.19",
+    "solidity-docgen": "^0.6.0-beta.36",
+    "typescript": "^5.3.0"
+  },
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "size-contracts": "hardhat compile && hardhat size-contracts",
+    "solhint": "solhint --config ../../.solhint.json \"contracts/**/*.sol\"",
+    "clean": "rm -rf artifacts cache typechain",
+    "precommit": "pretty-quick --staged --pattern '**/*.sol'"
+  },
+  "engines": {
+    "npm": ">=10.0.0",
+    "node": ">=18.18.0"
+  }
+}
