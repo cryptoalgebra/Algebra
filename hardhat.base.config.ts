@@ -103,11 +103,18 @@ export default {
       chainId: 10243,
       accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
     },
+    flare: {
+      url: `https://flare-api.flare.network/ext/C/rpc`,
+      chainId: 14,
+      accounts: [`0x${MNEMONIC || '1000000000000000000000000000000000000000000000000000000000000000'}`],
+    }
   },
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: `${POLYGONSCAN_API_KEY}`,
+    apiKey: {
+      'flare': '111'
+    },
     customChains: [
       {
         network: 'seiTestnet',
@@ -145,10 +152,20 @@ export default {
         network: 'beraTestnet',
         chainId: 80085,
         urls: {
-          apiURL: 'https://api.routescan.io/v2/network/testnet/evm/80085/etherscan/api/',
+          apiURL: 'https://api.avascan.info/v2/network/testnet/evm/80085/etherscan',
           browserURL: 'https://artio.beratrail.io/',
         },
       },
+      {
+        network: 'flare',
+        chainId: 14,
+        urls: {
+          // apiURL: 'https://flare-explorer.flare.network/api/',
+          // browserURL: 'https://flare-explorer.flare.network/',
+          apiURL: 'https://api.avascan.info/v2/network/mainnet/evm/14/etherscan',
+          browserURL: 'https://flarescan.com/',
+        },
+      }
     ],
   },
 };
