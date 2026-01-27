@@ -25,7 +25,7 @@ import './interfaces/IAlgebraFactory.sol';
 contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positions, SwapCalculation, ReservesManager {
   using SafeCast for uint256;
   using SafeCast for uint128;
-  using Plugins for uint8;
+  using Plugins for uint16;
   using Plugins for bytes4;
 
   /// @inheritdoc IAlgebraPoolActions
@@ -400,7 +400,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
     bool payInAdvance,
     bytes calldata data
   ) internal returns (uint24 overrideFee, uint24 pluginFee) {
-    uint8 pluginConfig = globalState.pluginConfig;
+    uint16 pluginConfig = globalState.pluginConfig;
     if (pluginConfig.hasFlag(Plugins.BEFORE_SWAP_FLAG)) {
       if (_isPlugin()) return (0, 0);
       bytes4 selector;
@@ -505,7 +505,7 @@ contract AlgebraPool is AlgebraPoolBase, TickStructure, ReentrancyGuard, Positio
   }
 
   /// @inheritdoc IAlgebraPoolPermissionedActions
-  function setPluginConfig(uint8 newConfig) external override onlyUnlocked {
+  function setPluginConfig(uint16 newConfig) external override onlyUnlocked {
     address _plugin = plugin;
     if (_plugin == address(0)) revert pluginIsNotConnected(); // it is not allowed to set plugin config without plugin
 

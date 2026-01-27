@@ -6,7 +6,7 @@ import '../interfaces/pool/IAlgebraPoolErrors.sol';
 /// @title Contains logic and constants for interacting with the plugin through hooks
 /// @dev Allows pool to check which hooks are enabled, as well as control the return selector
 library Plugins {
-  function hasFlag(uint8 pluginConfig, uint256 flag) internal pure returns (bool res) {
+  function hasFlag(uint16 pluginConfig, uint256 flag) internal pure returns (bool res) {
     assembly {
       res := gt(and(pluginConfig, flag), 0)
     }
@@ -24,4 +24,5 @@ library Plugins {
   uint256 internal constant AFTER_FLASH_FLAG = 1 << 5;
   uint256 internal constant AFTER_INIT_FLAG = 1 << 6;
   uint256 internal constant DYNAMIC_FEE = 1 << 7;
+  uint256 internal constant AFTER_CROSS_FLAG = 1 << 8;
 }

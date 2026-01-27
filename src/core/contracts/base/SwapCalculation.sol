@@ -5,12 +5,14 @@ import '../libraries/PriceMovementMath.sol';
 import '../libraries/LowGasSafeMath.sol';
 import '../libraries/SafeCast.sol';
 import './AlgebraPoolBase.sol';
+import '../interfaces/plugin/IAlgebraPlugin.sol';
 
 /// @title Algebra swap calculation abstract contract
 /// @notice Contains _calculateSwap encapsulating internal logic of swaps
 abstract contract SwapCalculation is AlgebraPoolBase {
   using TickManagement for mapping(int24 => TickManagement.Tick);
   using SafeCast for uint256;
+  using Plugin for uint16;
   using LowGasSafeMath for uint256;
   using LowGasSafeMath for int256;
 
@@ -136,6 +138,7 @@ abstract contract SwapCalculation is AlgebraPoolBase {
             (liquidityDelta, , cache.nextInitializedTick) = ticks.cross(nextTick, cache.totalFeeGrowthOutput, cache.totalFeeGrowthInput);
             (currentTick, cache.prevInitializedTick) = (nextTick, nextTick);
           }
+          _afterCross(zeroToOne, step.input, step.output, step.feeAmount, nextTick, liquidityDelta);
           currentLiquidity = LiquidityMath.addDelta(currentLiquidity, liquidityDelta);
         } else if (currentPrice != step.stepSqrtPrice) {
           currentTick = TickMath.getTickAtSqrtRatio(currentPrice); // the price has changed but hasn't reached the target
@@ -156,6 +159,15 @@ abstract contract SwapCalculation is AlgebraPoolBase {
       totalFeeGrowth0Token = cache.totalFeeGrowthInput;
     } else {
       totalFeeGrowth1Token = cache.totalFeeGrowthInput;
+    }
+  }
+
+  function _afterCross() internal pure {
+    if (globalState.pluginConfig.hasFlag(Plugins.AFTER_CROSS_FLAG)) {
+      if (msg.sender == plugin) return;
+      IAlgebraPlugin(plugin).afterCross(msg.sender, recipient, zto, amount, limitPrice, amount0, amount1, data).shouldReturn(
+        IAlgebraPlugin.afterCross.selector
+      );
     }
   }
 }

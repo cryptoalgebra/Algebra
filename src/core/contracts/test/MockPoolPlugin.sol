@@ -10,7 +10,7 @@ import './TestERC20.sol';
 
 contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   address public pool;
-  uint8 public selectorsDisableConfig;
+  uint16 public selectorsDisableConfig;
   uint24 public overrideFee;
   uint24 public pluginFee;
   bool public isDisabled;
@@ -54,13 +54,13 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
   event BeforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data);
   event AfterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
 
-  function defaultPluginConfig() external view override returns (uint8) {}
+  function defaultPluginConfig() external view override returns (uint16) {}
 
   function getCurrentFee() external pure override returns (uint16 fee) {
     return 220;
   }
 
-  function setSelectorDisable(uint8 newSelectorsDisableConfig) external {
+  function setSelectorDisable(uint16 newSelectorsDisableConfig) external {
     selectorsDisableConfig = newSelectorsDisableConfig;
   }
 

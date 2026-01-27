@@ -7,7 +7,7 @@ interface IAlgebraPlugin {
   /// @notice Returns plugin config
   /// @return config Each bit of the config is responsible for enabling/disabling the hooks.
   /// The last bit indicates whether the plugin contains dynamic fees logic
-  function defaultPluginConfig() external view returns (uint8);
+  function defaultPluginConfig() external view returns (uint16);
 
   /// @notice Handle plugin fee transfer on plugin contract
   /// @param pluginFee0 Fee0 amount transferred to plugin
@@ -136,5 +136,14 @@ interface IAlgebraPlugin {
     uint256 paid0,
     uint256 paid1,
     bytes calldata data
+  ) external returns (bytes4);
+
+  function afterCross(
+    bool zeroToOne,
+    uint256 amount0,
+    uint256 amount1,
+    uint256 feeAmount,
+    int24 tick, 
+    uint128 liquidityDelta // TODO: add comm fee & plugin fee?
   ) external returns (bytes4);
 }
