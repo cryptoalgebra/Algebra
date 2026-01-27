@@ -34,7 +34,7 @@ The documentation page is located at: [https://docs.algebra.finance/](https://do
 
 Please note that different DEX-partners of our protocol may use different versions of the protocol. This repo contains the latest version: **Algebra Integral**. 
 
-A page describing the versions used by partners can be found in the documentation: [partners page](https://docs-v1.algebra.finance/en/docs/contracts/partners/introduction)
+A page describing the versions used by partners can be found in the documentation: [partners page](https://docs.algebra.finance/algebra-integral-documentation/overview/partners-and-ecosystem)
 
 Previous versions of the protocol have been moved to separate repositories:
 
