@@ -31,10 +31,12 @@ import {
   TestIncentiveId,
   FarmingCenter,
   IAlgebraDefaultPluginFactory,
-  IFarmingPlugin
+  IFarmingPlugin,
+  MockFarmingPlugin
 } from '../../typechain';
 import { FeeAmount, encodePriceSqrt, MAX_GAS_LIMIT, ZERO_ADDRESS } from '../shared';
 import { ActorFixture } from './actors';
+import { pool } from '../../typechain/@cryptoalgebra/integral-core/contracts/interfaces';
 
 type WNativeTokenFixture = { wnative: IWNativeToken };
 
@@ -274,6 +276,8 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
 
   const fee = FeeAmount.MEDIUM;
 
+  await factory.setDefaultPluginFactory(ZERO_ADDRESS);
+
   await nft.createAndInitializePoolIfNecessary(tokens[0], tokens[1], ZERO_ADDRESS, encodePriceSqrt(1, 1),'0x');
 
   await nft.createAndInitializePoolIfNecessary(tokens[1], tokens[2], ZERO_ADDRESS, encodePriceSqrt(1, 1),'0x');
@@ -283,6 +287,13 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
   const pool12 = await factory.poolByPair(tokens[1], tokens[2]);
 
   const poolObj = poolFactory.attach(pool01) as any as IAlgebraPool;
+
+  const farmingPluginFactory = await ethers.getContractFactory('MockFarmingPlugin', signer);
+  const farmingPlugin = (await farmingPluginFactory.deploy(pool01)) as any as MockFarmingPlugin;
+
+  await poolObj.connect(ownerSigner).setPlugin(await farmingPlugin.getAddress());
+  await poolObj.connect(ownerSigner).setPluginConfig(514); // after cross & after swap
+  await poolObj.connect(ownerSigner).setCommunityVault(vaultAddress);
 
   const pluginContractFactory = new ethers.ContractFactory(PLUGIN_ABI, PLUGIN_BYTECODE, signer);
 
