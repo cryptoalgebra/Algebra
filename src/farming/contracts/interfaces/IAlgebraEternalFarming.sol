@@ -60,7 +60,9 @@ interface IAlgebraEternalFarming {
       address virtualPoolAddress,
       uint24 minimalPositionWidth,
       bool deactivated,
-      address pluginAddress
+      address pluginAddress,
+      uint128 rewardRate,
+      uint128 bonusRewardRate
     );
 
   /// @notice Check if incentive is deactivated (manually or automatically)
@@ -156,12 +158,13 @@ interface IAlgebraEternalFarming {
   /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
   /// @return tickLower The lower tick of position,
   /// @return tickUpper The upper tick of position,
-  /// @return innerRewardGrowth0 The last saved reward0 growth inside position,
-  /// @return innerRewardGrowth1 The last saved reward1 growth inside position
+  /// @return timestamp The timestamp when position entered or last collected,
+  /// @return totalFees The total fees at entry/collection (token0 equivalent),
+  /// @return innerFeeGrowth The last saved fee growth inside position (token0 equivalent)
   function farms(
     uint256 tokenId,
     bytes32 incentiveId
-  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint256 innerRewardGrowth0, uint256 innerRewardGrowth1);
+  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint32 timestamp, uint256 totalFees, uint256 innerFeeGrowth);
 
   /// @notice Returns connected to pool incentive key
   function incentiveKeys(
