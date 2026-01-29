@@ -10,7 +10,7 @@ import '@cryptoalgebra/integral-core/contracts/interfaces/pool/IAlgebraPoolState
 import '@cryptoalgebra/integral-core/contracts/interfaces/IAlgebraPool.sol';
 
 contract CustomPlugin is Timestamp, IAlgebraPlugin {
-    using Plugins for uint8;
+    using Plugins for uint16;
 
     address public pool;
     bytes32 public constant ALGEBRA_BASE_PLUGIN_MANAGER = keccak256('ALGEBRA_BASE_PLUGIN_MANAGER');
@@ -20,8 +20,8 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     /// @inheritdoc IAlgebraPlugin
-    uint8 public constant override defaultPluginConfig =
-        uint8(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
+    uint16 public constant override defaultPluginConfig =
+        uint16(Plugins.BEFORE_SWAP_FLAG | Plugins.AFTER_SWAP_FLAG | Plugins.DYNAMIC_FEE);
 
     function beforeInitialize(address, uint160) external override returns (bytes4) {
         pool = msg.sender;
@@ -83,10 +83,23 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
         uint160,
         int256,
         int256,
+        uint256,
         bytes calldata
     ) external override returns (bytes4) {
         IAlgebraPool(pool).setFee(100);
         return IAlgebraPlugin.afterSwap.selector;
+    }
+
+    function afterCross(
+        bool,
+        uint256,
+        uint256,
+        uint256,
+        int24,
+        int128,
+        uint128
+    ) external pure returns (bytes4) {
+        return IAlgebraPlugin.afterCross.selector;
     }
 
     function handlePluginFee(uint256, uint256) external pure returns (bytes4) {
@@ -114,9 +127,9 @@ contract CustomPlugin is Timestamp, IAlgebraPlugin {
     }
 
     function _updatePluginConfigInPool() internal {
-        uint8 newPluginConfig = defaultPluginConfig;
+        uint16 newPluginConfig = defaultPluginConfig;
 
-        (, , , uint8 currentPluginConfig) = _getPoolState();
+        (, , , uint16 currentPluginConfig) = _getPoolState();
         if (currentPluginConfig != newPluginConfig) {
             IAlgebraPool(pool).setPluginConfig(newPluginConfig);
         }
