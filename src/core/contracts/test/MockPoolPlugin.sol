@@ -49,7 +49,17 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
+    uint256 accumulatedFee,
     bytes data
+  );
+  event AfterCross(
+    bool zeroToOne,
+    uint256 amount0,
+    uint256 amount1,
+    uint256 feeAmount,
+    int24 tick,
+    int128 liquidityDelta,
+    uint128 currentLiquidity
   );
   event BeforeFlash(address sender, address recipient, uint256 amount0, uint256 amount1, bytes data);
   event AfterFlash(address sender, address recipient, uint256 amount0, uint256 amount1, uint256 paid0, uint256 paid1, bytes data);
@@ -161,10 +171,26 @@ contract MockPoolPlugin is IAlgebraPlugin, IAlgebraDynamicFeePlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
+    uint256 accumulatedFee,
     bytes calldata data
   ) external override returns (bytes4) {
-    emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, data);
+    emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, accumulatedFee, data);
     if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_SWAP_FLAG)) return IAlgebraPlugin.afterSwap.selector;
+    return IAlgebraPlugin.defaultPluginConfig.selector;
+  }
+
+  /// @notice The hook called after crossing a tick
+  function afterCross(
+    bool zeroToOne,
+    uint256 amount0,
+    uint256 amount1,
+    uint256 feeAmount,
+    int24 tick,
+    int128 liquidityDelta,
+    uint128 currentLiquidity
+  ) external override returns (bytes4) {
+    emit AfterCross(zeroToOne, amount0, amount1, feeAmount, tick, liquidityDelta, currentLiquidity);
+    if (!Plugins.hasFlag(selectorsDisableConfig, Plugins.AFTER_CROSS_FLAG)) return IAlgebraPlugin.afterCross.selector;
     return IAlgebraPlugin.defaultPluginConfig.selector;
   }
 
