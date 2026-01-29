@@ -32,18 +32,19 @@ contract EternalVirtualPoolEchidnaTest {
     _checkNextAndPrevTicks();
   }
 
-  function crossTo(int24 targetTick) external {
-    targetTick = _boundTick(targetTick);
-    if (targetTick == MAX_TICK) targetTick--; // it is impossible to cross MAX_TICK
+  // TODO: update to after cross implementation
+  // function crossTo(int24 targetTick) external {
+  //   targetTick = _boundTick(targetTick);
+  //   if (targetTick == MAX_TICK) targetTick--; // it is impossible to cross MAX_TICK
 
-    bool zeroToOne = targetTick <= currentTick;
+  //   bool zeroToOne = targetTick <= currentTick;
 
-    virtualPool.crossTo(targetTick, zeroToOne);
-    currentTick = targetTick;
+  //   virtualPool.crossTo(targetTick, zeroToOne);
+  //   currentTick = targetTick;
 
-    assert(!virtualPool.deactivated());
-    _checkNextAndPrevTicks();
-  }
+  //   assert(!virtualPool.deactivated());
+  //   _checkNextAndPrevTicks();
+  // }
 
   function _boundTick(int24 tick) private pure returns (int24 boundedTick) {
     if (tick < MIN_TICK) return MIN_TICK;

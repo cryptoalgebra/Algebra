@@ -16,4 +16,20 @@ contract TestVirtualPool is EternalVirtualPool {
   function prevTick() external view returns (int24) {
     return globalPrevInitializedTick;
   }
+
+  function getTotalFeeGrowthInternal() external view returns (uint256) {
+    return _totalFeeGrowth;
+  }
+
+  function getTotalFeesInternal() external view returns (uint256) {
+    return _totalFees;
+  }
+
+  function setGlobalTick(int24 tick) external {
+    globalTick = tick;
+  }
+
+  function setCurrentLiquidity(uint128 liquidity_) external {
+    currentLiquidity = liquidity_;
+  }
 }
