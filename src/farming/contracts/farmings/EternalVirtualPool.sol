@@ -221,7 +221,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   function _convertFeeToToken0(
     bool zeroToOne,
     uint256 feeAmount,
-    uint160 sqrtPrice
+    uint160 sqrtPrice // TODO: chose price for fee conversion, not sure this one is correct
   ) internal pure returns (uint256 feeInToken0) {
     if (zeroToOne) {
       // Fee is already in token0
