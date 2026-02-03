@@ -14,6 +14,8 @@ interface IAlgebraEternalFarming {
     uint128 rewardRate; // The rate of reward distribution per second
     uint128 bonusRewardRate; // The rate of bonus reward distribution per second
     uint24 minimalPositionWidth; // The minimal allowed width of position (tickUpper - tickLower)
+    uint256 weight0; // Weight for token0 fees (WEIGHT_PRECISION = 100%)
+    uint256 weight1; // Weight for token1 fees (WEIGHT_PRECISION = 100%)
   }
 
   error farmDoesNotExist();
@@ -25,6 +27,7 @@ interface IAlgebraEternalFarming {
 
   error minimalPositionWidthTooWide();
   error zeroRewardAmount();
+  error invalidWeights();
 
   error positionIsTooNarrow();
   error zeroLiquidity();
@@ -44,6 +47,9 @@ interface IAlgebraEternalFarming {
   /// @notice Returns hash of 'FARMINGS_ADMINISTRATOR_ROLE', used as role for permissioned actions in farming
   function FARMINGS_ADMINISTRATOR_ROLE() external view returns (bytes32);
 
+  /// @notice Precision for token weights (100000 = 100%)
+  function WEIGHT_PRECISION() external view returns (uint256);
+
   /// @notice The nonfungible position manager with which this farming contract is compatible
   function nonfungiblePositionManager() external view returns (INonfungiblePositionManager);
 
@@ -62,7 +68,9 @@ interface IAlgebraEternalFarming {
       bool deactivated,
       address pluginAddress,
       uint128 rewardRate,
-      uint128 bonusRewardRate
+      uint128 bonusRewardRate,
+      uint256 weight0,
+      uint256 weight1
     );
 
   /// @notice Check if incentive is deactivated (manually or automatically)
@@ -158,13 +166,24 @@ interface IAlgebraEternalFarming {
   /// @return liquidity The amount of liquidity in the NFT as of the last time the rewards were computed,
   /// @return tickLower The lower tick of position,
   /// @return tickUpper The upper tick of position,
-  /// @return timestamp The timestamp when position entered or last collected,
-  /// @return totalFees The total fees at entry/collection (token0 equivalent),
-  /// @return innerFeeGrowth The last saved fee growth inside position (token0 equivalent)
+  /// @return innerFeeGrowth0Last The last saved fee growth inside position for token0,
+  /// @return innerFeeGrowth1Last The last saved fee growth inside position for token1,
+  /// @return totalFees0Last The total fees in token0 at last update,
+  /// @return totalFees1Last The total fees in token1 at last update,
+  /// @return lastUpdateTimestamp The last time rewards were calculated
   function farms(
     uint256 tokenId,
     bytes32 incentiveId
-  ) external view returns (uint128 liquidity, int24 tickLower, int24 tickUpper, uint32 timestamp, uint256 totalFees, uint256 innerFeeGrowth);
+  ) external view returns (
+    uint128 liquidity, 
+    int24 tickLower, 
+    int24 tickUpper, 
+    uint256 innerFeeGrowth0Last, 
+    uint256 innerFeeGrowth1Last,
+    uint256 totalFees0Last,
+    uint256 totalFees1Last,
+    uint32 lastUpdateTimestamp
+  );
 
   /// @notice Returns connected to pool incentive key
   function incentiveKeys(
@@ -183,6 +202,13 @@ interface IAlgebraEternalFarming {
   /// @param rewardRate The new rate of main token (token0) distribution per sec
   /// @param bonusRewardRate The new rate of bonus token (token1) distribution per sec
   function setRates(IncentiveKey memory key, uint128 rewardRate, uint128 bonusRewardRate) external;
+
+  /// @notice Update token weights for reward calculation
+  /// @dev Only incentive maker can call. Affects all positions globally.
+  /// @param key The key of incentive
+  /// @param weight0 New weight for token0 fees
+  /// @param weight1 New weight for token1 fees
+  function setTokenWeights(IncentiveKey memory key, uint256 weight0, uint256 weight1) external;
 
   /// @notice Collect rewards for tokenId
   /// @dev only FarmingCenter
@@ -249,6 +275,12 @@ interface IAlgebraEternalFarming {
   /// @param bonusRewardRate The new rate of bonus token (token1) distribution per sec
   /// @param incentiveId The ID of the incentive for which rates were changed
   event RewardsRatesChanged(uint128 rewardRate, uint128 bonusRewardRate, bytes32 incentiveId);
+
+  /// @notice Event emitted when token weights were changed
+  /// @param weight0 New weight for token0 fees
+  /// @param weight1 New weight for token1 fees
+  /// @param incentiveId The ID of the incentive for which weights were changed
+  event TokenWeightsChanged(uint256 weight0, uint256 weight1, bytes32 incentiveId);
 
   /// @notice Event emitted when rewards were collected
   /// @param tokenId The ID of the token for which rewards were collected

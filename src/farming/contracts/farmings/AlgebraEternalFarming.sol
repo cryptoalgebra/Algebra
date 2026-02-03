@@ -39,7 +39,9 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     bool deactivated;
     address pluginAddress;
     uint128 rewardRate;          
-    uint128 bonusRewardRate;     
+    uint128 bonusRewardRate;
+    uint256 weight0; 
+    uint256 weight1; 
   }
 
   /// @notice Represents the farm for nft
@@ -47,15 +49,19 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     uint128 liquidity;
     int24 tickLower;
     int24 tickUpper;
-    uint32 timestamp;              
-    uint256 totalFees;             
-    uint256 innerFeeGrowth;    
+    uint256 innerFeeGrowth0Last;  
+    uint256 innerFeeGrowth1Last;  
+    uint256 totalFees0Last;       
+    uint256 totalFees1Last;       
+    uint32 lastUpdateTimestamp;   
   }
 
   /// @inheritdoc IAlgebraEternalFarming
   bytes32 public constant override INCENTIVE_MAKER_ROLE = keccak256('INCENTIVE_MAKER_ROLE');
   /// @inheritdoc IAlgebraEternalFarming
   bytes32 public constant override FARMINGS_ADMINISTRATOR_ROLE = keccak256('FARMINGS_ADMINISTRATOR_ROLE');
+  /// @inheritdoc IAlgebraEternalFarming
+  uint256 public constant override WEIGHT_PRECISION = 100000;
 
   /// @inheritdoc IAlgebraEternalFarming
   INonfungiblePositionManager public immutable override nonfungiblePositionManager;
@@ -145,6 +151,14 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (params.reward, params.bonusReward) = _receiveRewards(key, params.reward, params.bonusReward, newIncentive);
     if (params.reward == 0) revert zeroRewardAmount();
 
+    // Validate weights sum to WEIGHT_PRECISION (100%)
+    // If both are 0, use default 50/50
+    if (params.weight0 == 0 && params.weight1 == 0) {
+      params.weight0 = WEIGHT_PRECISION / 2;
+      params.weight1 = WEIGHT_PRECISION / 2;
+    }
+    if (params.weight0 + params.weight1 != WEIGHT_PRECISION) revert invalidWeights();
+
     unchecked {
       if (int256(uint256(params.minimalPositionWidth)) > (int256(TickMath.MAX_TICK) - int256(TickMath.MIN_TICK)))
         revert minimalPositionWidthTooWide();
@@ -154,6 +168,8 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     newIncentive.pluginAddress = connectedPlugin;
     newIncentive.rewardRate = params.rewardRate;
     newIncentive.bonusRewardRate = params.bonusRewardRate;
+    newIncentive.weight0 = params.weight0;
+    newIncentive.weight1 = params.weight1;
 
     emit EternalFarmingCreated(
       key.rewardToken,
@@ -241,23 +257,35 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
   }
 
   /// @inheritdoc IAlgebraEternalFarming
+  function setTokenWeights(IncentiveKey memory key, uint256 weight0, uint256 weight1) external override onlyIncentiveMaker {
+    if (weight0 + weight1 != WEIGHT_PRECISION) revert invalidWeights();
+    (bytes32 incentiveId, Incentive storage incentive) = _getExistingIncentiveByKey(key);
+
+    incentive.weight0 = weight0;
+    incentive.weight1 = weight1;
+
+    emit TokenWeightsChanged(weight0, weight1, incentiveId);
+  }
+
+  /// @inheritdoc IAlgebraEternalFarming
   function enterFarming(IncentiveKey memory key, uint256 tokenId) external override onlyFarmingCenter {
     if (isEmergencyWithdrawActivated) revert emergencyActivated();
     (bytes32 incentiveId, int24 tickLower, int24 tickUpper, uint128 liquidity, address virtualPoolAddress) = _enterFarming(key, tokenId);
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(virtualPoolAddress);
     
-    // Get current state for fee-based reward calculation
-    uint256 innerFeeGrowth = _getInnerFeeGrowth(virtualPool, tickLower, tickUpper);
-    uint256 totalFees = virtualPool.totalFees();
+    // Get current fee growth state for both tokens
+    (uint256 innerFeeGrowth0, uint256 innerFeeGrowth1) = _getInnerFeeGrowth(virtualPool, tickLower, tickUpper);
 
     farms[tokenId][incentiveId] = Farm({
       liquidity: liquidity,
       tickLower: tickLower,
       tickUpper: tickUpper,
-      timestamp: uint32(block.timestamp),
-      totalFees: totalFees,
-      innerFeeGrowth: innerFeeGrowth
+      innerFeeGrowth0Last: innerFeeGrowth0,
+      innerFeeGrowth1Last: innerFeeGrowth1,
+      totalFees0Last: virtualPool.totalFees0Collected(),
+      totalFees1Last: virtualPool.totalFees1Collected(),
+      lastUpdateTimestamp: uint32(block.timestamp)
     });
 
     emit FarmEntered(tokenId, incentiveId, liquidity);
@@ -307,7 +335,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     // pool can "detach" by itself or manually
     int24 tick = _isIncentiveDeactivated(incentive) ? virtualPool.globalTick() : _getTickInPoolAndCheckLock(key.pool);
 
-    (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm, incentive);
+    (reward, bonusReward, , , , ) = _getNewRewardsForFarm(virtualPool, farm, incentive);
 
     // liquidityDelta will be nonzero.
     // If a desynchronization occurs and the current tick in the pool is incorrect from the point of view of the virtual pool,
@@ -328,7 +356,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
     Farm memory farm = _getFarm(tokenId, incentiveId);
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
-    (reward, bonusReward, , ) = _getNewRewardsForFarm(virtualPool, farm, incentive);
+    (reward, bonusReward, , , , ) = _getNewRewardsForFarm(virtualPool, farm, incentive);
   }
 
   /// @notice reward amounts should be updated before calling this method
@@ -343,16 +371,20 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
 
     IAlgebraEternalVirtualPool virtualPool = IAlgebraEternalVirtualPool(incentive.virtualPoolAddress);
 
-    uint256 innerFeeGrowth;
-    uint256 currentTotalFees;
-    (reward, bonusReward, innerFeeGrowth, currentTotalFees) = _getNewRewardsForFarm(virtualPool, farm, incentive);
+    uint256 innerFeeGrowth0;
+    uint256 innerFeeGrowth1;
+    uint256 totalFees0;
+    uint256 totalFees1;
+    (reward, bonusReward, innerFeeGrowth0, innerFeeGrowth1, totalFees0, totalFees1) = _getNewRewardsForFarm(virtualPool, farm, incentive);
 
     {
       // Update farm state for next collect
       Farm storage _farm = farms[tokenId][incentiveId];
-      _farm.innerFeeGrowth = innerFeeGrowth;
-      _farm.totalFees = currentTotalFees;
-      _farm.timestamp = uint32(block.timestamp);
+      _farm.innerFeeGrowth0Last = innerFeeGrowth0;
+      _farm.innerFeeGrowth1Last = innerFeeGrowth1;
+      _farm.totalFees0Last = totalFees0;
+      _farm.totalFees1Last = totalFees1;
+      _farm.lastUpdateTimestamp = uint32(block.timestamp);
     }
     mapping(IERC20Minimal => uint256) storage rewardBalances = rewards[_owner];
     unchecked {
@@ -373,35 +405,52 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     return _deactivated;
   }
 
-  function _getInnerFeeGrowth(IAlgebraEternalVirtualPool virtualPool, int24 tickLower, int24 tickUpper) private view returns (uint256) {
+  function _getInnerFeeGrowth(IAlgebraEternalVirtualPool virtualPool, int24 tickLower, int24 tickUpper) private view returns (uint256, uint256) {
     return virtualPool.getInnerFeeGrowth(tickLower, tickUpper);
   }
 
-  /// @notice Calculate new rewards for a farm position based on fee growth
-  /// @dev Fee-based farming: rewards are distributed proportionally to fees earned by the position
-  ///      reward = (timeDelta * rewardRate) * (positionFees / totalFeesDelta)
+  /// @notice Calculate new rewards for a farm position based on fee share with token weights
   function _getNewRewardsForFarm(
     IAlgebraEternalVirtualPool virtualPool,
     Farm memory farm,
     Incentive storage incentive
-  ) private view returns (uint256 reward, uint256 bonusReward, uint256 innerFeeGrowth, uint256 currentTotalFees) {
-    // Get current fee state
-    innerFeeGrowth = _getInnerFeeGrowth(virtualPool, farm.tickLower, farm.tickUpper);
-    currentTotalFees = virtualPool.totalFees();
+  ) private view returns (uint256 reward, uint256 bonusReward, uint256 innerFeeGrowth0, uint256 innerFeeGrowth1, uint256 totalFees0, uint256 totalFees1) {
+    // Get current fee state for both tokens
+    (innerFeeGrowth0, innerFeeGrowth1) = _getInnerFeeGrowth(virtualPool, farm.tickLower, farm.tickUpper);
+    totalFees0 = virtualPool.totalFees0Collected();
+    totalFees1 = virtualPool.totalFees1Collected();
 
     unchecked {
-      uint256 feeGrowthDelta = innerFeeGrowth - farm.innerFeeGrowth;
-      uint256 feesEarned = FullMath.mulDiv(feeGrowthDelta, farm.liquidity, Constants.Q128);
+      // Calculate time delta for potential reward
+      uint256 timeDelta = block.timestamp - farm.lastUpdateTimestamp;
+      if (timeDelta == 0) return (0, 0, innerFeeGrowth0, innerFeeGrowth1, totalFees0, totalFees1);
       
-      uint256 totalFeesDelta = currentTotalFees - farm.totalFees;
-      
-      uint256 timeDelta = block.timestamp - farm.timestamp;
+      // Calculate potential rewards for this time period
       uint256 potentialReward = timeDelta * incentive.rewardRate;
       uint256 potentialBonusReward = timeDelta * incentive.bonusRewardRate;
       
-      if (totalFeesDelta > 0 && feesEarned > 0) {
-        reward = FullMath.mulDiv(potentialReward, feesEarned, totalFeesDelta);
-        bonusReward = FullMath.mulDiv(potentialBonusReward, feesEarned, totalFeesDelta);
+      // Calculate position fees earned for each token
+      uint256 feeGrowthDelta0 = innerFeeGrowth0 - farm.innerFeeGrowth0Last;
+      uint256 feeGrowthDelta1 = innerFeeGrowth1 - farm.innerFeeGrowth1Last;
+      uint256 positionFees0 = FullMath.mulDiv(feeGrowthDelta0, farm.liquidity, Constants.Q128);
+      uint256 positionFees1 = FullMath.mulDiv(feeGrowthDelta1, farm.liquidity, Constants.Q128);
+      
+      // Calculate total fees delta for each token
+      uint256 totalFeesDelta0 = totalFees0 - farm.totalFees0Last;
+      uint256 totalFeesDelta1 = totalFees1 - farm.totalFees1Last;
+      
+      uint256 weightedShare = 0;
+      if (totalFeesDelta0 > 0 && positionFees0 > 0) {
+        weightedShare += FullMath.mulDiv(positionFees0, incentive.weight0, totalFeesDelta0);
+      }
+      if (totalFeesDelta1 > 0 && positionFees1 > 0) {
+        weightedShare += FullMath.mulDiv(positionFees1, incentive.weight1, totalFeesDelta1);
+      }
+      
+      // Calculate rewards: potentialReward * weightedShare / WEIGHT_PRECISION
+      if (weightedShare > 0) {
+        reward = FullMath.mulDiv(potentialReward, weightedShare, WEIGHT_PRECISION);
+        bonusReward = FullMath.mulDiv(potentialBonusReward, weightedShare, WEIGHT_PRECISION);
       }
     }
   }

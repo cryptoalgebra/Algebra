@@ -143,10 +143,10 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     address _virtualPool = virtualPool;
     if (_virtualPool != address(0) && accumulatedFee > 0) {
 
-      (uint160 sqrtPrice, int24 currentTick, , , , ) = IAlgebraPool(pool).globalState();
+      (, int24 currentTick, , , , ) = IAlgebraPool(pool).globalState();
       uint128 poolLiquidity = IAlgebraPool(pool).liquidity();
 
-      IAlgebraEternalVirtualPool(_virtualPool).afterSwap(zeroToOne, accumulatedFee, currentTick, sqrtPrice, poolLiquidity);
+      IAlgebraEternalVirtualPool(_virtualPool).afterSwap(zeroToOne, accumulatedFee, currentTick, poolLiquidity);
     }
     
     return IAlgebraPlugin.afterSwap.selector;
@@ -167,10 +167,10 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     address _virtualPool = virtualPool;
     if (_virtualPool != address(0)) {
 
-      (uint160 sqrtPrice, , , , , ) = IAlgebraPool(pool).globalState();
+      uint128 poolLiquidity = IAlgebraPool(pool).liquidity();
       
 
-      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeAmount, tick, sqrtPrice, currentLiquidity);
+      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeAmount, tick, poolLiquidity);
     }
     
     return IAlgebraPlugin.afterCross.selector;

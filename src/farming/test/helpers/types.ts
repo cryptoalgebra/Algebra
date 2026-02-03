@@ -18,6 +18,8 @@ export module HelperTypes {
       bonusRewardRate?: bigint;
       minimalPositionWidth?: number;
       plugin?: string;
+      weight0?: bigint;
+      weight1?: bigint;
     };
     export type Result = {
       poolAddress: string;

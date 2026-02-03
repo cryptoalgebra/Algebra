@@ -65,19 +65,17 @@ contract PoolMock {
     bool zeroToOne,
     uint256 feeAmount,
     int24 tick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external {
-    IAlgebraEternalVirtualPool(virtualPool).afterCross(zeroToOne, feeAmount, tick, sqrtPrice, poolLiquidity);
+    IAlgebraEternalVirtualPool(virtualPool).afterCross(zeroToOne, feeAmount, tick, poolLiquidity);
   }
 
   function afterSwap(
     bool zeroToOne,
     uint256 feeAmount,
     int24 currentTick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external {
-    IAlgebraEternalVirtualPool(virtualPool).afterSwap(zeroToOne, feeAmount, currentTick, sqrtPrice, poolLiquidity);
+    IAlgebraEternalVirtualPool(virtualPool).afterSwap(zeroToOne, feeAmount, currentTick, poolLiquidity);
   }
 }

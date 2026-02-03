@@ -10,9 +10,6 @@ import { PoolMock, TestVirtualPool } from '../../typechain';
 const MIN_TICK = -887272;
 const MAX_TICK = 887272;
 
-// Default sqrtPrice for testing (corresponds to price = 1)
-const DEFAULT_SQRT_PRICE = 79228162514264337593543950336n; // 2^96
-
 describe('unit/FeeBasedVirtualPool', () => {
   let pseudoFarming: Wallet;
 
@@ -57,8 +54,8 @@ describe('unit/FeeBasedVirtualPool', () => {
   });
 
   it('cannot call onlyPlugin methods as not plugin', async () => {
-    await expect(virtualPool.afterCross(true, 1000, 0, DEFAULT_SQRT_PRICE, 1000)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
-    await expect(virtualPool.afterSwap(true, 1000, 0, DEFAULT_SQRT_PRICE, 1000)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+    await expect(virtualPool.afterCross(true, 1000, 0, 1000)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+    await expect(virtualPool.afterSwap(true, 1000, 0, 1000)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
   });
 
   it('has correct init configuration', async () => {
@@ -77,12 +74,12 @@ describe('unit/FeeBasedVirtualPool', () => {
     const prevTimestamp = await virtualPool.prevTimestamp();
     expect(prevTimestamp).to.be.eq(initTimestamp);
 
-    // Fee-based: totalFeeGrowth and totalFees start at 1
-    const totalFeeGrowth = await virtualPool.totalFeeGrowth();
-    expect(totalFeeGrowth).to.be.eq(1);
+    // Fee-based: totalFeeGrowth0 and totalFeeGrowth1 start at 1
+    const totalFeeGrowth0 = await virtualPool.totalFeeGrowth0();
+    expect(totalFeeGrowth0).to.be.eq(1);
 
-    const totalFees = await virtualPool.totalFees();
-    expect(totalFees).to.be.eq(1);
+    const totalFeeGrowth1 = await virtualPool.totalFeeGrowth1();
+    expect(totalFeeGrowth1).to.be.eq(1);
   });
 
   describe('#applyLiquidityDeltaToPosition', async () => {
@@ -222,21 +219,37 @@ describe('unit/FeeBasedVirtualPool', () => {
     it('returns 0 if no fees accrued', async () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-      const innerFeeGrowth = await virtualPool.getInnerFeeGrowth(-100, 100);
-      expect(innerFeeGrowth).to.be.eq(0);
+      const [innerFeeGrowth0, innerFeeGrowth1] = await virtualPool.getInnerFeeGrowth(-100, 100);
+      expect(innerFeeGrowth0).to.be.eq(0);
+      expect(innerFeeGrowth1).to.be.eq(0);
     });
 
-    it('returns fee growth after swap', async () => {
+    it('returns fee growth for token0 after zeroToOne swap', async () => {
       await poolMock.setPlugin(poolMock);
       await poolMock.setVirtualPool(virtualPool);
       
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-      // Simulate swap with fee
-      await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+      // Simulate zeroToOne swap with fee
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
 
-      const innerFeeGrowth = await virtualPool.getInnerFeeGrowth(-100, 100);
-      expect(innerFeeGrowth).to.be.gt(0);
+      const [innerFeeGrowth0, innerFeeGrowth1] = await virtualPool.getInnerFeeGrowth(-100, 100);
+      expect(innerFeeGrowth0).to.be.gt(0);
+      expect(innerFeeGrowth1).to.be.eq(0); // No token1 fees for zeroToOne
+    });
+
+    it('returns fee growth for token1 after oneToZero swap', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      // Simulate oneToZero swap with fee
+      await poolMock.afterSwap(false, 1000n, 1, 1000n);
+
+      const [innerFeeGrowth0, innerFeeGrowth1] = await virtualPool.getInnerFeeGrowth(-100, 100);
+      expect(innerFeeGrowth0).to.be.eq(0); // No token0 fees for oneToZero
+      expect(innerFeeGrowth1).to.be.gt(0);
     });
 
     it('returns 0 for out-of-range position even with fees', async () => {
@@ -247,19 +260,20 @@ describe('unit/FeeBasedVirtualPool', () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(200, 300, 1000, 1);
 
       // Simulate swap with fee
-      await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
 
-      const innerFeeGrowthInRange = await virtualPool.getInnerFeeGrowth(-100, 100);
-      expect(innerFeeGrowthInRange).to.be.gt(0);
+      const [innerFeeGrowthInRange0, innerFeeGrowthInRange1] = await virtualPool.getInnerFeeGrowth(-100, 100);
+      expect(innerFeeGrowthInRange0).to.be.gt(0);
 
-      const innerFeeGrowthOutOfRange = await virtualPool.getInnerFeeGrowth(200, 300);
-      expect(innerFeeGrowthOutOfRange).to.be.eq(0);
+      const [innerFeeGrowthOutOfRange0, innerFeeGrowthOutOfRange1] = await virtualPool.getInnerFeeGrowth(200, 300);
+      expect(innerFeeGrowthOutOfRange0).to.be.eq(0);
+      expect(innerFeeGrowthOutOfRange1).to.be.eq(0);
     });
   });
 
   describe('#afterSwap', async () => {
     it('reverts if not from plugin', async () => {
-      await expect(virtualPool.afterSwap(true, 1000n, 0, DEFAULT_SQRT_PRICE, 1000n)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+      await expect(virtualPool.afterSwap(true, 1000n, 0, 1000n)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     });
 
     it('does nothing if deactivated', async () => {
@@ -269,11 +283,14 @@ describe('unit/FeeBasedVirtualPool', () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
       await virtualPool.connect(pseudoFarming).deactivate();
 
-      const feeGrowthBefore = await virtualPool.totalFeeGrowth();
-      await poolMock.afterSwap(true, 1000n, 10, DEFAULT_SQRT_PRICE, 1000n);
-      const feeGrowthAfter = await virtualPool.totalFeeGrowth();
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
+      await poolMock.afterSwap(true, 1000n, 10, 1000n);
+      const feeGrowth0After = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1After = await virtualPool.totalFeeGrowth1();
 
-      expect(feeGrowthAfter).to.be.eq(feeGrowthBefore);
+      expect(feeGrowth0After).to.be.eq(feeGrowth0Before);
+      expect(feeGrowth1After).to.be.eq(feeGrowth1Before);
     });
 
     it('does not update fee growth if zero liquidity', async () => {
@@ -283,25 +300,43 @@ describe('unit/FeeBasedVirtualPool', () => {
       // Position out of range, so currentLiquidity = 0
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 101);
 
-      const feeGrowthBefore = await virtualPool.totalFeeGrowth();
-      await poolMock.afterSwap(true, 1000n, 101, DEFAULT_SQRT_PRICE, 1000n);
-      const feeGrowthAfter = await virtualPool.totalFeeGrowth();
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      await poolMock.afterSwap(true, 1000n, 101, 1000n);
+      const feeGrowth0After = await virtualPool.totalFeeGrowth0();
 
-      expect(feeGrowthAfter).to.be.eq(feeGrowthBefore);
+      expect(feeGrowth0After).to.be.eq(feeGrowth0Before);
     });
 
-    it('updates fee growth proportional to liquidity', async () => {
+    it('updates feeGrowth0 for zeroToOne swap', async () => {
       await poolMock.setPlugin(poolMock);
       await poolMock.setVirtualPool(virtualPool);
       
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-      const feeGrowthBefore = await virtualPool.totalFeeGrowth();
-      // Pool liquidity = 2000, virtual pool liquidity = 1000, so farming gets 50% of fees
-      await poolMock.afterSwap(true, 2000n, 1, DEFAULT_SQRT_PRICE, 2000n);
-      const feeGrowthAfter = await virtualPool.totalFeeGrowth();
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
+      await poolMock.afterSwap(true, 2000n, 1, 2000n);
+      const feeGrowth0After = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1After = await virtualPool.totalFeeGrowth1();
 
-      expect(feeGrowthAfter).to.be.gt(feeGrowthBefore);
+      expect(feeGrowth0After).to.be.gt(feeGrowth0Before);
+      expect(feeGrowth1After).to.be.eq(feeGrowth1Before); // token1 unchanged
+    });
+
+    it('updates feeGrowth1 for oneToZero swap', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
+      await poolMock.afterSwap(false, 1000n, 1, 1000n);
+      const feeGrowth0After = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1After = await virtualPool.totalFeeGrowth1();
+
+      expect(feeGrowth0After).to.be.eq(feeGrowth0Before); // token0 unchanged
+      expect(feeGrowth1After).to.be.gt(feeGrowth1Before);
     });
 
     it('updates global tick', async () => {
@@ -311,28 +346,14 @@ describe('unit/FeeBasedVirtualPool', () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
       expect(await virtualPool.globalTick()).to.be.eq(1);
-      await poolMock.afterSwap(true, 0, 50, DEFAULT_SQRT_PRICE, 1000n);
+      await poolMock.afterSwap(true, 0, 50, 1000n);
       expect(await virtualPool.globalTick()).to.be.eq(50);
-    });
-
-    it('converts token1 fees to token0 equivalent', async () => {
-      await poolMock.setPlugin(poolMock);
-      await poolMock.setVirtualPool(virtualPool);
-      
-      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-
-      const feeGrowthBefore = await virtualPool.totalFeeGrowth();
-      // oneToZero swap - fee is in token1, will be converted to token0
-      await poolMock.afterSwap(false, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
-      const feeGrowthAfter = await virtualPool.totalFeeGrowth();
-
-      expect(feeGrowthAfter).to.be.gt(feeGrowthBefore);
     });
   });
 
   describe('#afterCross', async () => {
     it('reverts if not from plugin', async () => {
-      await expect(virtualPool.afterCross(true, 1000n, 0, DEFAULT_SQRT_PRICE, 1000n)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
+      await expect(virtualPool.afterCross(true, 1000n, 0, 1000n)).to.be.revertedWithCustomError(virtualPool, 'onlyPlugin');
     });
 
     describe('oneToZero (otz)', async () => {
@@ -343,7 +364,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
         // Call afterCross with tick that doesn't require crossing
-        await poolMock.afterCross(false, 100n, 50, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, 50, 1000n);
 
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1); // unchanged since tick 50 is not initialized
@@ -359,7 +380,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
         // Cross tick 100 (going up)
-        await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, 100, 1000n);
         
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(100);
@@ -376,11 +397,12 @@ describe('unit/FeeBasedVirtualPool', () => {
 
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-        const feeGrowthBefore = await virtualPool.totalFeeGrowth();
-        await poolMock.afterCross(false, 1000n, 100, DEFAULT_SQRT_PRICE, 1000n);
-        const feeGrowthAfter = await virtualPool.totalFeeGrowth();
+        const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
+        // oneToZero cross updates feeGrowth1
+        await poolMock.afterCross(false, 1000n, 100, 1000n);
+        const feeGrowth1After = await virtualPool.totalFeeGrowth1();
 
-        expect(feeGrowthAfter).to.be.gt(feeGrowthBefore);
+        expect(feeGrowth1After).to.be.gt(feeGrowth1Before);
       });
 
       it('can cross two ticks otz', async () => {
@@ -391,11 +413,11 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
         // First cross at tick 100
-        await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 2000n);
+        await poolMock.afterCross(false, 100n, 100, 2000n);
         expect(await virtualPool.currentLiquidity()).to.be.eq(1000);
         
         // Second cross at tick 110
-        await poolMock.afterCross(false, 100n, 110, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, 110, 1000n);
         expect(await virtualPool.currentLiquidity()).to.be.eq(0);
         expect(await virtualPool.nextTick()).to.be.eq(MAX_TICK);
         expect(await virtualPool.prevTick()).to.be.eq(110);
@@ -409,7 +431,7 @@ describe('unit/FeeBasedVirtualPool', () => {
 
         expect(await virtualPool.deactivated()).to.be.false;
         // Trying to cross tick -101 with otz direction (should go up, but tick is below current)
-        await poolMock.afterCross(false, 100n, -101, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, -101, 1000n);
         
         expect(await virtualPool.deactivated()).to.be.true;
       });
@@ -422,7 +444,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).deactivate();
 
         const globalTickBefore = await virtualPool.globalTick();
-        await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, 100, 1000n);
         const globalTickAfter = await virtualPool.globalTick();
 
         expect(globalTickAfter).to.be.eq(globalTickBefore);
@@ -438,7 +460,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
         // Call afterCross with tick that doesn't require crossing
-        await poolMock.afterCross(true, 100n, -50, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(true, 100n, -50, 1000n);
 
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(1); // unchanged since tick -50 is not initialized
@@ -454,7 +476,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
         // Cross tick -100 (going down)
-        await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(true, 100n, -100, 1000n);
         
         const globalTick = await virtualPool.globalTick();
         expect(globalTick).to.be.eq(-100);
@@ -473,11 +495,11 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
         // First cross at tick -100
-        await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 2000n);
+        await poolMock.afterCross(true, 100n, -100, 2000n);
         expect(await virtualPool.currentLiquidity()).to.be.eq(1000);
         
         // Second cross at tick -110
-        await poolMock.afterCross(true, 100n, -110, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(true, 100n, -110, 1000n);
         expect(await virtualPool.currentLiquidity()).to.be.eq(0);
         expect(await virtualPool.nextTick()).to.be.eq(-110);
         expect(await virtualPool.prevTick()).to.be.eq(MIN_TICK);
@@ -491,7 +513,7 @@ describe('unit/FeeBasedVirtualPool', () => {
 
         expect(await virtualPool.deactivated()).to.be.false;
         // Trying to cross tick 100 with zto direction (should go down, but tick is above current)
-        await poolMock.afterCross(true, 100n, 100, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(true, 100n, 100, 1000n);
         
         expect(await virtualPool.deactivated()).to.be.true;
       });
@@ -504,7 +526,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).deactivate();
 
         const globalTickBefore = await virtualPool.globalTick();
-        await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(true, 100n, -100, 1000n);
         const globalTickAfter = await virtualPool.globalTick();
 
         expect(globalTickAfter).to.be.eq(globalTickBefore);
@@ -521,7 +543,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, -1);
 
         // Cross tick 0 going down (zto)
-        await poolMock.afterCross(true, 100n, 0, DEFAULT_SQRT_PRICE, 2000n);
+        await poolMock.afterCross(true, 100n, 0, 2000n);
 
         expect(await virtualPool.globalTick()).to.be.eq(0);
         expect(await virtualPool.currentLiquidity()).to.be.eq(1000); // only -600 to 240 position is active
@@ -533,7 +555,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         expect(await virtualPool.prevTick()).to.be.eq(-600);
 
         // Cross tick 0 going up (otz)
-        await poolMock.afterCross(false, 100n, 0, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterCross(false, 100n, 0, 1000n);
 
         expect(await virtualPool.globalTick()).to.be.eq(0);
         expect(await virtualPool.currentLiquidity()).to.be.eq(2000); // both positions active again
@@ -556,7 +578,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
 
         // Cross tick 240 going up (otz)
-        await poolMock.afterCross(false, 100n, 240, DEFAULT_SQRT_PRICE, 2000n);
+        await poolMock.afterCross(false, 100n, 240, 2000n);
 
         expect(await virtualPool.globalTick()).to.be.eq(240);
         expect(await virtualPool.currentLiquidity()).to.be.eq(0); // no positions active above 240
@@ -565,7 +587,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         expect(await virtualPool.prevTick()).to.be.eq(240);
 
         // Cross tick 240 going down (zto)
-        await poolMock.afterCross(true, 100n, 240, DEFAULT_SQRT_PRICE, 0);
+        await poolMock.afterCross(true, 100n, 240, 0);
 
         expect(await virtualPool.globalTick()).to.be.eq(240);
         expect(await virtualPool.currentLiquidity()).to.be.eq(2000); // both positions active again
@@ -576,21 +598,66 @@ describe('unit/FeeBasedVirtualPool', () => {
   });
 
   describe('#fee accumulation', async () => {
-    it('accumulates fees correctly over multiple swaps', async () => {
+    it('accumulates token0 fees correctly over multiple zeroToOne swaps', async () => {
       await poolMock.setPlugin(poolMock);
       await poolMock.setVirtualPool(virtualPool);
       
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-      const initialTotalFees = await virtualPool.totalFees();
+      const initial0 = await virtualPool.totalFeeGrowth0();
+      const initial1 = await virtualPool.totalFeeGrowth1();
       
-      // Multiple swaps
-      await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
-      await poolMock.afterSwap(true, 500n, 1, DEFAULT_SQRT_PRICE, 1000n);
-      await poolMock.afterSwap(false, 750n, 1, DEFAULT_SQRT_PRICE, 1000n);
+      // Multiple zeroToOne swaps
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
+      await poolMock.afterSwap(true, 500n, 1, 1000n);
+      await poolMock.afterSwap(true, 750n, 1, 1000n);
 
-      const finalTotalFees = await virtualPool.totalFees();
-      expect(finalTotalFees).to.be.gt(initialTotalFees);
+      const final0 = await virtualPool.totalFeeGrowth0();
+      const final1 = await virtualPool.totalFeeGrowth1();
+      
+      expect(final0).to.be.gt(initial0);
+      expect(final1).to.be.eq(initial1); // token1 unchanged
+    });
+
+    it('accumulates token1 fees correctly over multiple oneToZero swaps', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      const initial0 = await virtualPool.totalFeeGrowth0();
+      const initial1 = await virtualPool.totalFeeGrowth1();
+      
+      // Multiple oneToZero swaps
+      await poolMock.afterSwap(false, 1000n, 1, 1000n);
+      await poolMock.afterSwap(false, 500n, 1, 1000n);
+
+      const final0 = await virtualPool.totalFeeGrowth0();
+      const final1 = await virtualPool.totalFeeGrowth1();
+      
+      expect(final0).to.be.eq(initial0); // token0 unchanged
+      expect(final1).to.be.gt(initial1);
+    });
+
+    it('accumulates both token fees with mixed direction swaps', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      const initial0 = await virtualPool.totalFeeGrowth0();
+      const initial1 = await virtualPool.totalFeeGrowth1();
+      
+      // Mixed direction swaps
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);  // token0 fee
+      await poolMock.afterSwap(false, 500n, 1, 1000n); // token1 fee
+      await poolMock.afterSwap(true, 750n, 1, 1000n);  // token0 fee
+
+      const final0 = await virtualPool.totalFeeGrowth0();
+      const final1 = await virtualPool.totalFeeGrowth1();
+      
+      expect(final0).to.be.gt(initial0);
+      expect(final1).to.be.gt(initial1);
     });
 
     it('distributes fees proportionally to liquidity share', async () => {
@@ -603,14 +670,14 @@ describe('unit/FeeBasedVirtualPool', () => {
       const feeAmount = 1000n;
       const poolLiquidity = 1000n;
       
-      await poolMock.afterSwap(true, feeAmount, 1, DEFAULT_SQRT_PRICE, poolLiquidity);
+      await poolMock.afterSwap(true, feeAmount, 1, poolLiquidity);
 
       // Only 50% of fee should go to farming (500/1000)
-      const totalFees = await virtualPool.totalFees();
-      expect(totalFees).to.be.gt(1); // Initial value is 1
+      const totalFeeGrowth0 = await virtualPool.totalFeeGrowth0();
+      expect(totalFeeGrowth0).to.be.gt(1); // Initial value is 1
     });
 
-    it('position gets correct share of accumulated fees', async () => {
+    it('position gets correct share of accumulated fees for both tokens', async () => {
       await poolMock.setPlugin(poolMock);
       await poolMock.setVirtualPool(virtualPool);
       
@@ -618,16 +685,19 @@ describe('unit/FeeBasedVirtualPool', () => {
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 500, 1);
       await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-50, 50, 500, 1);
 
-      await poolMock.afterSwap(true, 2000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+      await poolMock.afterSwap(true, 2000n, 1, 1000n);  // token0
+      await poolMock.afterSwap(false, 1000n, 1, 1000n); // token1
 
-      // Both positions should have equal inner fee growth
-      const innerFeeGrowth1 = await virtualPool.getInnerFeeGrowth(-100, 100);
-      const innerFeeGrowth2 = await virtualPool.getInnerFeeGrowth(-50, 50);
+      const [innerFeeGrowth0_1, innerFeeGrowth1_1] = await virtualPool.getInnerFeeGrowth(-100, 100);
+      const [innerFeeGrowth0_2, innerFeeGrowth1_2] = await virtualPool.getInnerFeeGrowth(-50, 50);
 
-      expect(innerFeeGrowth1).to.be.gt(0);
-      expect(innerFeeGrowth2).to.be.gt(0);
+      expect(innerFeeGrowth0_1).to.be.gt(0);
+      expect(innerFeeGrowth1_1).to.be.gt(0);
+      expect(innerFeeGrowth0_2).to.be.gt(0);
+      expect(innerFeeGrowth1_2).to.be.gt(0);
       // The narrower position should have same fee growth since both cover tick 1
-      expect(innerFeeGrowth1).to.be.eq(innerFeeGrowth2);
+      expect(innerFeeGrowth0_1).to.be.eq(innerFeeGrowth0_2);
+      expect(innerFeeGrowth1_1).to.be.eq(innerFeeGrowth1_2);
     });
   });
 
@@ -680,16 +750,16 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, 1000n));
         });
 
         it('with fee accumulation - subsequent swap', async () => {
           await poolMock.setPlugin(poolMock);
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-          await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+          await poolMock.afterSwap(true, 1000n, 1, 1000n);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 500n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 500n, 1, 1000n));
         });
 
         it('with partial liquidity share (50%)', async () => {
@@ -697,7 +767,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 500, 1);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, 1000n));
         });
 
         it('with zero fee amount', async () => {
@@ -705,7 +775,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 0n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 0n, 1, 1000n));
         });
       });
 
@@ -715,17 +785,16 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterSwap(false, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(false, 1000n, 1, 1000n));
         });
 
-        it('with different sqrt price', async () => {
+        it('with different pool liquidity', async () => {
           await poolMock.setPlugin(poolMock);
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-          // sqrtPrice = 2^96 * sqrt(2) ≈ 1.41 price
-          const sqrtPrice2 = 112045541949572287496682733568n;
+          // Different pool liquidity ratio
 
-          await snapshotGasCost(poolMock.afterSwap(false, 1000n, 1, sqrtPrice2, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(false, 1000n, 1, 2000n));
         });
       });
 
@@ -734,7 +803,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setPlugin(poolMock);
           await poolMock.setVirtualPool(virtualPool);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, 1000n));
         });
 
         it('with position out of range', async () => {
@@ -742,7 +811,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 101);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 101, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 101, 1000n));
         });
 
         it('when deactivated', async () => {
@@ -751,7 +820,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).deactivate();
 
-          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 1000n, 1, 1000n));
         });
 
         it('with large fee amount', async () => {
@@ -759,7 +828,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterSwap(true, 10n ** 18n, 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterSwap(true, 10n ** 18n, 1, 1000n));
         });
       });
     });
@@ -771,7 +840,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 50, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 50, 1000n));
         });
 
         it('zto - tick not initialized', async () => {
@@ -779,7 +848,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, -50, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, -50, 1000n));
         });
       });
 
@@ -789,7 +858,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, 1000n));
         });
 
         it('zto - cross lower tick', async () => {
@@ -797,7 +866,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, -100, 1000n));
         });
 
         it('otz - with fee accumulation', async () => {
@@ -805,7 +874,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(false, 10000n, 100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 10000n, 100, 1000n));
         });
 
         it('zto - with fee accumulation', async () => {
@@ -813,7 +882,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(true, 10000n, -100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 10000n, -100, 1000n));
         });
       });
 
@@ -824,7 +893,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 2000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, 2000n));
         });
 
         it('otz - second cross', async () => {
@@ -832,9 +901,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
-          await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(false, 100n, 100, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 110, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 110, 1000n));
         });
 
         it('zto - first cross', async () => {
@@ -843,7 +912,7 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 2000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, -100, 2000n));
         });
 
         it('zto - second cross', async () => {
@@ -851,9 +920,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
-          await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(true, 100n, -100, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, -110, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, -110, 1000n));
         });
       });
 
@@ -864,10 +933,10 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-120, 120, 1000, 1);
-          await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 3000n);
-          await poolMock.afterCross(false, 100n, 110, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(false, 100n, 100, 3000n);
+          await poolMock.afterCross(false, 100n, 110, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 120, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 120, 1000n));
         });
 
         it('zto - third cross', async () => {
@@ -876,10 +945,10 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-110, 110, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-120, 120, 1000, 1);
-          await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 3000n);
-          await poolMock.afterCross(true, 100n, -110, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(true, 100n, -100, 3000n);
+          await poolMock.afterCross(true, 100n, -110, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, -120, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, -120, 1000n));
         });
       });
 
@@ -889,9 +958,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
-          await poolMock.afterCross(false, 100n, 240, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(false, 100n, 240, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, 240, DEFAULT_SQRT_PRICE, 0));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, 240, 0));
         });
 
         it('zto then otz - same tick', async () => {
@@ -899,9 +968,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, -1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, -1);
-          await poolMock.afterCross(true, 100n, 0, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(true, 100n, 0, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 0, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 0, 1000n));
         });
       });
 
@@ -912,14 +981,14 @@ describe('unit/FeeBasedVirtualPool', () => {
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).deactivate();
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, 1000n));
         });
 
         it('with zero liquidity', async () => {
           await poolMock.setPlugin(poolMock);
           await poolMock.setVirtualPool(virtualPool);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, 100, 1000n));
         });
 
         it('crossing to MAX_TICK - 1', async () => {
@@ -927,9 +996,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
-          await poolMock.afterCross(false, 100n, 100, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(false, 100n, 100, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(false, 100n, MAX_TICK - 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(false, 100n, MAX_TICK - 1, 1000n));
         });
 
         it('crossing from MIN_TICK + 1', async () => {
@@ -937,9 +1006,9 @@ describe('unit/FeeBasedVirtualPool', () => {
           await poolMock.setVirtualPool(virtualPool);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
           await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK + 1, MAX_TICK - 1, 1000, 1);
-          await poolMock.afterCross(true, 100n, -100, DEFAULT_SQRT_PRICE, 2000n);
+          await poolMock.afterCross(true, 100n, -100, 2000n);
 
-          await snapshotGasCost(poolMock.afterCross(true, 100n, MIN_TICK + 1, DEFAULT_SQRT_PRICE, 1000n));
+          await snapshotGasCost(poolMock.afterCross(true, 100n, MIN_TICK + 1, 1000n));
         });
       });
     });
@@ -949,7 +1018,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-        await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterSwap(true, 1000n, 1, 1000n);
 
         await snapshotGasCost(virtualPool.getInnerFeeGrowth(-100, 100));
       });
@@ -958,9 +1027,9 @@ describe('unit/FeeBasedVirtualPool', () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
-        await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
-        await poolMock.afterSwap(false, 500n, 1, DEFAULT_SQRT_PRICE, 1000n);
-        await poolMock.afterSwap(true, 750n, 1, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterSwap(true, 1000n, 1, 1000n);
+        await poolMock.afterSwap(false, 500n, 1, 1000n);
+        await poolMock.afterSwap(true, 750n, 1, 1000n);
 
         await snapshotGasCost(virtualPool.getInnerFeeGrowth(-100, 100));
       });
@@ -969,7 +1038,7 @@ describe('unit/FeeBasedVirtualPool', () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
         await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(MIN_TICK, MAX_TICK, 1000, 1);
-        await poolMock.afterSwap(true, 1000n, 1, DEFAULT_SQRT_PRICE, 1000n);
+        await poolMock.afterSwap(true, 1000n, 1, 1000n);
 
         await snapshotGasCost(virtualPool.getInnerFeeGrowth(MIN_TICK, MAX_TICK));
       });

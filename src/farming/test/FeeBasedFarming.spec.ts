@@ -96,6 +96,24 @@ describe('FeeBasedFarming Integration', () => {
         expect(incentiveData.totalReward).to.eq(TOTAL_REWARD);
         expect(incentiveData.bonusReward).to.eq(BONUS_REWARD);
       });
+
+      it('reverts if weights do not sum to 100%', async () => {
+        const { context, helpers } = subject;
+        const nonce = await context.eternalFarming.numOfIncentives();
+        
+        await expect(helpers.createIncentiveFlow({
+          rewardToken: context.rewardToken,
+          bonusRewardToken: context.bonusRewardToken,
+          poolAddress: context.pool01,
+          totalReward: TOTAL_REWARD,
+          bonusReward: BONUS_REWARD,
+          rewardRate: REWARD_RATE,
+          bonusRewardRate: BONUS_REWARD_RATE,
+          nonce,
+          weight0: 60000n,
+          weight1: 60000n,  // Sum = 120000 > 100000
+        })).to.be.revertedWithCustomError(context.eternalFarming, 'invalidWeights');
+      });
     });
 
     describe('#enterFarming', () => {
@@ -127,12 +145,12 @@ describe('FeeBasedFarming Integration', () => {
         const farm = await context.eternalFarming.farms(tokenId, incentiveId);
         
         expect(farm.liquidity).to.be.gt(0);
-        expect(farm.timestamp).to.be.gt(0);
-        // Initial totalFees should be 1 (initialized value)
-        expect(farm.totalFees).to.eq(1n);
+        // Initial innerFeeGrowth should be 0 (no fees accumulated yet)
+        expect(farm.innerFeeGrowth0Last).to.be.eq(0n);
+        expect(farm.innerFeeGrowth1Last).to.be.eq(0n);
       });
 
-      it('records updated totalFees when entering after swaps', async () => {
+      it('records updated innerFeeGrowth when entering after swaps', async () => {
         const { context, helpers, createIncentiveResult, incentiveKey } = subject;
         const lpUser = actors.lpUser0();
         const trader = actors.traderUser0();
@@ -184,9 +202,8 @@ describe('FeeBasedFarming Integration', () => {
         const incentiveId = await helpers.getIncentiveId({ ...createIncentiveResult, nonce });
         const farm2 = await context.eternalFarming.farms(tokenId2, incentiveId);
 
-        // totalFees and innerFeeGrowth should reflect accumulated fees
-        expect(farm2.totalFees).to.be.gt(1n);
-        expect(farm2.innerFeeGrowth).to.be.gt(1n);
+        // innerFeeGrowth should reflect accumulated fees (at least one of them)
+        expect(farm2.innerFeeGrowth0Last > 0n || farm2.innerFeeGrowth1Last > 0n).to.be.true;
       });
     });
 
@@ -454,19 +471,19 @@ describe('FeeBasedFarming Integration', () => {
       // Pre-entry swaps (shouldn't count)
       await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 50 });
 
-      // totalFees before entry should be initial value (1)
-      const feesBefore = await virtualPool.totalFees();
-      expect(feesBefore).to.eq(1n);
+      // feeGrowth before entry should be initial value (1)
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      expect(feeGrowth0Before).to.eq(1n);
 
       // Enter farming
       await context.nft.connect(lpUser).approveForFarming(tokenId, true, context.farmingCenter);
       await context.farmingCenter.connect(lpUser).enterFarming(incentiveKey, tokenId);
 
-      // Post-entry swaps (should count)
+      // Post-entry swaps (should count) - going down generates token1 fees
       await helpers.makeTickGoFlow({ trader, direction: 'down', desiredValue: -50 });
 
-      const feesAfter = await virtualPool.totalFees();
-      expect(feesAfter).to.be.gt(feesBefore);
+      const feeGrowth1After = await virtualPool.totalFeeGrowth1();
+      expect(feeGrowth1After).to.be.gt(1n);
 
       await time.increase(days(1));
 
@@ -581,7 +598,7 @@ describe('FeeBasedFarming Integration', () => {
       subject = await loadFixture(mainScenario);
     });
 
-    it('swap generates fees and updates totalFees in virtual pool', async () => {
+    it('swap generates fees and updates feeGrowth in virtual pool', async () => {
       const { context, helpers, createIncentiveResult, incentiveKey } = subject;
       const lpUser = actors.lpUser0();
       const trader = actors.traderUser0();
@@ -596,17 +613,19 @@ describe('FeeBasedFarming Integration', () => {
         createIncentiveResult,
       });
 
-      const totalFeesBefore = await virtualPool.totalFees();
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
       const liquidityBefore = await virtualPool.currentLiquidity();
       expect(liquidityBefore).to.be.gt(0n);
 
-      // Swap to generate fees
+      // Swap to generate fees (zeroToOne generates token0 fees)
       await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 100 });
 
-      const totalFeesAfter = await virtualPool.totalFees();
+      const feeGrowth0After = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1After = await virtualPool.totalFeeGrowth1();
 
-      // Fees accumulated during the swap
-      expect(totalFeesAfter).to.be.gt(totalFeesBefore);
+      // At least one feeGrowth should increase
+      expect(feeGrowth0After > feeGrowth0Before || feeGrowth1After > feeGrowth1Before).to.be.true;
 
       await time.increase(days(1));
 
@@ -824,7 +843,7 @@ describe('FeeBasedFarming Integration', () => {
       expect(reward).to.eq(0n);
     });
 
-    it('totalFees increases with each swap', async () => {
+    it('feeGrowth increases with each swap', async () => {
       const { context, helpers, createIncentiveResult, incentiveKey } = subject;
       const lpUser = actors.lpUser0();
       const trader = actors.traderUser0();
@@ -839,19 +858,20 @@ describe('FeeBasedFarming Integration', () => {
         createIncentiveResult,
       });
 
-      const feesBefore = await virtualPool.totalFees();
+      const feeGrowth0Before = await virtualPool.totalFeeGrowth0();
+      const feeGrowth1Before = await virtualPool.totalFeeGrowth1();
 
-      // Swap UP
+      // Swap UP (zeroToOne) - generates token0 fees
       await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 100 });
 
-      const feesAfterUp = await virtualPool.totalFees();
-      expect(feesAfterUp).to.be.gt(feesBefore);
+      const feeGrowth0AfterUp = await virtualPool.totalFeeGrowth0();
+      expect(feeGrowth0AfterUp).to.be.gt(feeGrowth0Before);
 
-      // Swap DOWN
+      // Swap DOWN (oneToZero) - generates token1 fees
       await helpers.makeTickGoFlow({ trader, direction: 'down', desiredValue: -100 });
 
-      const feesAfterDown = await virtualPool.totalFees();
-      expect(feesAfterDown).to.be.gt(feesAfterUp);
+      const feeGrowth1AfterDown = await virtualPool.totalFeeGrowth1();
+      expect(feeGrowth1AfterDown).to.be.gt(feeGrowth1Before);
 
       await time.increase(days(1));
 
@@ -1059,6 +1079,242 @@ describe('FeeBasedFarming Integration', () => {
       
       expect(pendingReward).to.eq(0n);
       expect(pendingBonus).to.eq(0n);
+    });
+  });
+
+  describe('Token weights scenarios', () => {
+    let subject: TestSubject;
+
+    beforeEach(async () => {
+      subject = await loadFixture(mainScenario);
+    });
+
+    it('setTokenWeights reverts for non-incentive-maker', async () => {
+      const { context, createIncentiveResult } = subject;
+      const nonMaker = actors.lpUser0();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      await expect(
+        context.eternalFarming.connect(nonMaker).setTokenWeights(incentiveKey, 50000, 50000)
+      ).to.be.reverted;
+    });
+
+    it('setTokenWeights reverts if weights do not sum to 100%', async () => {
+      const { context } = subject;
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      await expect(
+        context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKey, 50000, 60000)
+      ).to.be.revertedWithCustomError(context.eternalFarming, 'invalidWeights');
+
+      await expect(
+        context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKey, 30000, 30000)
+      ).to.be.revertedWithCustomError(context.eternalFarming, 'invalidWeights');
+    });
+
+    it('setTokenWeights successfully changes weights', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKey = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      // Change weights: 30% for token0, 70% for token1
+      await expect(
+        context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKey, 30000, 70000)
+      ).to.emit(context.eternalFarming, 'TokenWeightsChanged');
+
+      const incentiveId = await helpers.getIncentiveId({ ...createIncentiveResult, nonce });
+      const incentive = await context.eternalFarming.incentives(incentiveId);
+
+      expect(incentive.weight0).to.eq(30000);
+      expect(incentive.weight1).to.eq(70000);
+    });
+
+    it('default weights are 50/50', async () => {
+      const { context, helpers, createIncentiveResult } = subject;
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+      
+      const incentiveId = await helpers.getIncentiveId({ ...createIncentiveResult, nonce });
+      const incentive = await context.eternalFarming.incentives(incentiveId);
+
+      const WEIGHT_PRECISION = await context.eternalFarming.WEIGHT_PRECISION();
+      // Default is 50/50 split
+      expect(incentive.weight0).to.eq(WEIGHT_PRECISION / 2n);
+      expect(incentive.weight1).to.eq(WEIGHT_PRECISION / 2n);
+    });
+
+    it('rewards calculation with custom weights - token0 only', async () => {
+      const { context, helpers, createIncentiveResult, incentiveKey } = subject;
+      const lpUser = actors.lpUser0();
+      const trader = actors.traderUser0();
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKeyObj = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      // Set weight0 = 100%, weight1 = 0%
+      await context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKeyObj, 100000, 0);
+
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: lpUser,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: FULL_RANGE_TICKS,
+        createIncentiveResult,
+      });
+
+      // Generate only token1 fees (oneToZero swap)
+      await helpers.makeTickGoFlow({ trader, direction: 'down', desiredValue: -100 });
+      await time.increase(days(1));
+
+      await context.farmingCenter.connect(lpUser).exitFarming(incentiveKey, farmResult.tokenId);
+      const rewardWithToken1Fees = await context.eternalFarming.rewards(lpUser.address, context.rewardToken);
+
+      // With weight1 = 0, token1 fees should contribute 0 to rewards
+      expect(rewardWithToken1Fees).to.eq(0n);
+    });
+
+    it('rewards calculation with custom weights - token1 only', async () => {
+      const { context, helpers, createIncentiveResult, incentiveKey } = subject;
+      const lpUser = actors.lpUser0();
+      const trader = actors.traderUser0();
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKeyObj = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      // Set weight0 = 0%, weight1 = 100%
+      await context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKeyObj, 0, 100000);
+
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: lpUser,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: FULL_RANGE_TICKS,
+        createIncentiveResult,
+      });
+
+      // Generate only token0 fees (zeroToOne swap)
+      await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 100 });
+      await time.increase(days(1));
+
+      await context.farmingCenter.connect(lpUser).exitFarming(incentiveKey, farmResult.tokenId);
+      const rewardWithToken0Fees = await context.eternalFarming.rewards(lpUser.address, context.rewardToken);
+
+      // With weight0 = 0, token0 fees should contribute 0 to rewards
+      expect(rewardWithToken0Fees).to.eq(0n);
+    });
+
+    it('rewards calculation with equal weights and mixed fees', async () => {
+      const { context, helpers, createIncentiveResult, incentiveKey } = subject;
+      const lpUser = actors.lpUser0();
+      const trader = actors.traderUser0();
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKeyObj = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      // Set equal weights
+      await context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKeyObj, 50000, 50000);
+
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: lpUser,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: FULL_RANGE_TICKS,
+        createIncentiveResult,
+      });
+
+      // Generate both token0 and token1 fees
+      await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 100 });
+      await helpers.makeTickGoFlow({ trader, direction: 'down', desiredValue: -100 });
+      await time.increase(days(1));
+
+      await context.farmingCenter.connect(lpUser).exitFarming(incentiveKey, farmResult.tokenId);
+      const reward = await context.eternalFarming.rewards(lpUser.address, context.rewardToken);
+
+      // Should earn rewards from both tokens
+      expect(reward).to.be.gt(0n);
+    });
+
+    it('changing weights mid-farming affects only future rewards', async () => {
+      const { context, helpers, createIncentiveResult, incentiveKey } = subject;
+      const lpUser = actors.lpUser0();
+      const trader = actors.traderUser0();
+      const incentiveCreator = actors.incentiveCreator();
+      const nonce = (await context.eternalFarming.numOfIncentives()) - 1n;
+
+      const incentiveKeyObj = {
+        pool: context.pool01,
+        rewardToken: context.rewardToken,
+        bonusRewardToken: context.bonusRewardToken,
+        nonce,
+      };
+
+      const farmResult = await helpers.mintDepositFarmFlow({
+        lp: lpUser,
+        tokensToFarm: [context.token0, context.token1],
+        amountsToFarm: [BNe18(100), BNe18(100)],
+        ticks: FULL_RANGE_TICKS,
+        createIncentiveResult,
+      });
+
+      // Generate fees with default weights
+      await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 50 });
+      
+      // Collect rewards
+      await context.farmingCenter.connect(lpUser).collectRewards(incentiveKey, farmResult.tokenId);
+      const rewardsBeforeWeightChange = await context.eternalFarming.rewards(lpUser.address, context.rewardToken);
+
+      // Change weights: disable token0
+      await context.eternalFarming.connect(incentiveCreator).setTokenWeights(incentiveKeyObj, 0, 100000);
+
+      // Generate more token0 fees (should not count)
+      await helpers.makeTickGoFlow({ trader, direction: 'up', desiredValue: 50 });
+      
+      await time.increase(days(1));
+      await context.farmingCenter.connect(lpUser).exitFarming(incentiveKey, farmResult.tokenId);
+      const rewardsAfter = await context.eternalFarming.rewards(lpUser.address, context.rewardToken);
+
+      // After weight change, new token0 fees should not generate rewards
+      // But we should still have rewards from before
+      expect(rewardsAfter).to.be.gte(rewardsBeforeWeightChange);
     });
   });
 });

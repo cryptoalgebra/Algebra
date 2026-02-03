@@ -10,34 +10,48 @@ interface IAlgebraEternalVirtualPool { // TODO: return to IAlgebraVirtualPool in
   error onlyFarming();
 
   /// @notice Called by plugin after each tick crossing during swap
-  /// @dev Calculates proportional fee for farmed liquidity, updates totalFeeGrowth,
   ///      and crosses the tick in virtual pool if it exists
+  /// @param zeroToOne Direction of the swap 
+  /// @param feeAmount Amount of fee collected in input token
+  /// @param tick The tick that was crossed
+  /// @param poolLiquidity Current liquidity in the main pool
   function afterCross(
     bool zeroToOne,
     uint256 feeAmount,
     int24 tick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external;
 
-  /// @notice Called by plugin after swap
+  /// @notice Called by plugin after swap to record remaining accumulated fees
+  /// @param zeroToOne Direction of the swap 
+  /// @param feeAmount Remaining accumulated fee since last cross
+  /// @param currentTick Current tick after swap
+  /// @param poolLiquidity Current liquidity in the main pool
   function afterSwap(
     bool zeroToOne,
     uint256 feeAmount,
     int24 currentTick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external;
 
-  /// @notice Returns the accumulated fee growth 
-  function totalFeeGrowth() external view returns (uint256);
+  /// @notice Returns the accumulated fee growth for token0
+  function totalFeeGrowth0() external view returns (uint256);
 
-  /// @notice Retrieves fee growth inside a position's tick range
+  /// @notice Returns the accumulated fee growth for token1
+  function totalFeeGrowth1() external view returns (uint256);
+
+  /// @notice Returns total absolute fees collected in token0
+  function totalFees0Collected() external view returns (uint256);
+
+  /// @notice Returns total absolute fees collected in token1
+  function totalFees1Collected() external view returns (uint256);
+
   /// @dev Used to calculate rewards for a specific position
-  function getInnerFeeGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 feeGrowthInside);
-
-  /// @notice Returns the total collected fees (in token0 equivalent)
-  function totalFees() external view returns (uint256);
+  /// @param bottomTick Lower tick of the position
+  /// @param topTick Upper tick of the position
+  /// @return feeGrowthInside0 Fee growth inside for token0
+  /// @return feeGrowthInside1 Fee growth inside for token1
+  function getInnerFeeGrowth(int24 bottomTick, int24 topTick) external view returns (uint256 feeGrowthInside0, uint256 feeGrowthInside1);
 
   /// @notice Returns address of the AlgebraEternalFarming
   function farmingAddress() external view returns (address);
@@ -46,7 +60,7 @@ interface IAlgebraEternalVirtualPool { // TODO: return to IAlgebraVirtualPool in
   function plugin() external view returns (address);
 
   /// @notice Returns data associated with a tick
-  /// @dev outerFeeGrowth is unified in token0 equivalent
+  /// @dev outerFeeGrowth0Token tracks token0 fees, outerFeeGrowth1Token tracks token1 fees
   function ticks(
     int24 tickId
   )
@@ -58,7 +72,7 @@ interface IAlgebraEternalVirtualPool { // TODO: return to IAlgebraVirtualPool in
       int24 prevTick,
       int24 nextTick,
       uint256 outerFeeGrowth0Token,
-      uint256 outerFeeGrowth1Token // kept for compatibility, always 0 in fee-based farming
+      uint256 outerFeeGrowth1Token
     );
 
   /// @notice Returns the current liquidity in virtual pool

@@ -144,6 +144,8 @@ describe('unit/EternalFarms', () => {
             rewardRate: 100,
             bonusRewardRate: 100,
             minimalPositionWidth: 100,
+            weight0: 50000,
+            weight1: 50000,
           },
           await context.poolObj.connect(incentiveCreator).plugin()
         )
@@ -851,7 +853,7 @@ describe('unit/EternalFarms', () => {
   describe('#decreaseRewards', () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args;
     let incentiveKey: ContractParams.IncentiveKey;
-    let virtualPool: EternalVirtualPool;
+    let incentiveId: string;
 
     let factoryOwner: Wallet;
 
@@ -876,10 +878,8 @@ describe('unit/EternalFarms', () => {
         pool: context.pool01,
       };
 
-      const vpFactory = await ethers.getContractFactory('EternalVirtualPool');
       const createIncentiveResult = await helpers.createIncentiveFlow(incentiveArgs);
-      const _vpool = createIncentiveResult.virtualPool;
-      virtualPool = vpFactory.attach(_vpool) as any as EternalVirtualPool;
+      incentiveId = await helpers.getIncentiveId(createIncentiveResult);
     });
 
     it('onlyOwner', async () => {
@@ -894,10 +894,10 @@ describe('unit/EternalFarms', () => {
         .withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, 100)
         .to.emit(context.eternalFarming, 'RewardAmountsDecreased');
 
-      const reserves = await virtualPool.rewardReserves();
+      const incentive = await context.eternalFarming.incentives(incentiveId);
 
-      expect(reserves[0]).to.be.eq(totalReward - 100n);
-      expect(reserves[1]).to.be.eq(bonusReward - 100n);
+      expect(incentive.totalReward).to.be.eq(totalReward - 100n);
+      expect(incentive.bonusReward).to.be.eq(bonusReward - 100n);
     });
 
     it('can decrease only main reward', async () => {
@@ -907,10 +907,10 @@ describe('unit/EternalFarms', () => {
         .withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, 100)
         .to.not.emit(context.bonusRewardToken, 'Transfer');
 
-      const reserves = await virtualPool.rewardReserves();
+      const incentive = await context.eternalFarming.incentives(incentiveId);
 
-      expect(reserves[0]).to.be.eq(totalReward - 100n);
-      expect(reserves[1]).to.be.eq(bonusReward);
+      expect(incentive.totalReward).to.be.eq(totalReward - 100n);
+      expect(incentive.bonusReward).to.be.eq(bonusReward);
     });
 
     it('can decrease only bonus reward', async () => {
@@ -920,10 +920,10 @@ describe('unit/EternalFarms', () => {
         .withArgs(await context.eternalFarming.getAddress(), factoryOwner.address, 100)
         .to.not.emit(context.rewardToken, 'Transfer');
 
-      const reserves = await virtualPool.rewardReserves();
+      const incentive = await context.eternalFarming.incentives(incentiveId);
 
-      expect(reserves[0]).to.be.eq(totalReward);
-      expect(reserves[1]).to.be.eq(bonusReward - 100n);
+      expect(incentive.totalReward).to.be.eq(totalReward);
+      expect(incentive.bonusReward).to.be.eq(bonusReward - 100n);
     });
 
     it('cannot exceed reserves', async () => {
@@ -952,7 +952,7 @@ describe('unit/EternalFarms', () => {
   describe('#deactivate incentive', () => {
     let incentiveArgs: HelperTypes.CreateIncentive.Args;
     let incentiveKey: ContractParams.IncentiveKey;
-    let virtualPool: EternalVirtualPool;
+    let incentiveId: string;
     let virtualPoolAddress: string;
 
     let localNonce = 0n;
@@ -981,11 +981,9 @@ describe('unit/EternalFarms', () => {
         pool: context.pool01,
       };
 
-      const vpFactory = await ethers.getContractFactory('EternalVirtualPool');
       const createIncentiveResult = await helpers.createIncentiveFlow(incentiveArgs);
-      const _vpool = createIncentiveResult.virtualPool;
-      virtualPool = vpFactory.attach(_vpool) as any as EternalVirtualPool;
-      virtualPoolAddress = await virtualPool.getAddress();
+      incentiveId = await helpers.getIncentiveId(createIncentiveResult);
+      virtualPoolAddress = await createIncentiveResult.virtualPool.getAddress();
     });
 
     it('deactivate incentive', async () => {
@@ -994,13 +992,13 @@ describe('unit/EternalFarms', () => {
       await context.eternalFarming.connect(incentiveCreator).deactivateIncentive(incentiveKey);
       let activeIncentiveAfter = await context.pluginObj.incentive();
 
-      expect(activeIncentiveBefore).to.equal(await virtualPool.getAddress());
+      expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
       expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS);
 
-      const rewardRates = await virtualPool.rewardRates();
+      const incentive = await context.eternalFarming.incentives(incentiveId);
 
-      expect(rewardRates[0]).to.be.eq(0);
-      expect(rewardRates[1]).to.be.eq(0);
+      expect(incentive.rewardRate).to.be.eq(0);
+      expect(incentive.bonusRewardRate).to.be.eq(0);
     });
 
     it('deactivate incentive with zero rates', async () => {
@@ -1014,10 +1012,10 @@ describe('unit/EternalFarms', () => {
       expect(activeIncentiveBefore).to.equal(virtualPoolAddress);
       expect(activeIncentiveAfter).to.equal(ZERO_ADDRESS);
 
-      const rewardRates = await virtualPool.rewardRates();
+      const incentive = await context.eternalFarming.incentives(incentiveId);
 
-      expect(rewardRates[0]).to.be.eq(0);
-      expect(rewardRates[1]).to.be.eq(0);
+      expect(incentive.rewardRate).to.be.eq(0);
+      expect(incentive.bonusRewardRate).to.be.eq(0);
     });
 
     it('deactivate incentive only incentiveMaker', async () => {

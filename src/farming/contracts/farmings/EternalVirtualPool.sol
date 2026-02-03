@@ -31,10 +31,12 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
 
-  uint256 internal _totalFeeGrowth = 1;
-  uint256 internal _totalFees = 1;
+  uint256 internal _totalFeeGrowth0 = 1;
+  uint256 internal _totalFeeGrowth1 = 1;
 
-  uint256 private constant Q192 = 2**192;
+  /// @dev Total fees collected for each token
+  uint256 public override totalFees0Collected;
+  uint256 public override totalFees1Collected;
 
   modifier onlyFromFarming() {
     _checkIsFromFarming();
@@ -51,13 +53,13 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function totalFeeGrowth() external view override returns (uint256) {
-    return _totalFeeGrowth;
+  function totalFeeGrowth0() external view override returns (uint256) {
+    return _totalFeeGrowth0;
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  function totalFees() external view override returns (uint256) {
-    return _totalFees;
+  function totalFeeGrowth1() external view override returns (uint256) {
+    return _totalFeeGrowth1;
   }
 
   /// @inheritdoc IAlgebraEternalVirtualPool
@@ -65,7 +67,6 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     bool zeroToOne,
     uint256 feeAmount,
     int24 tick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external override {
     if (msg.sender != plugin) revert onlyPlugin();
@@ -88,7 +89,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       return;
     }
 
-    _updateFeeGrowth(feeAmount, _currentLiquidity, poolLiquidity, zeroToOne, sqrtPrice);
+    _updateFeeGrowth(feeAmount, _currentLiquidity, poolLiquidity, zeroToOne);
 
     TickManagement.Tick storage tickData = ticks[tick];
     
@@ -101,13 +102,13 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
       unchecked {
         int128 liquidityDelta;
         nextTick = previousTick;
-        (liquidityDelta, previousTick, ) = ticks.cross(previousTick, _totalFeeGrowth, 0);
+        (liquidityDelta, previousTick, ) = ticks.cross(previousTick, _totalFeeGrowth0, _totalFeeGrowth1);
         _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, -liquidityDelta);
       }
     } else {
       int128 liquidityDelta;
       previousTick = nextTick;
-      (liquidityDelta, , nextTick) = ticks.cross(nextTick, _totalFeeGrowth, 0);
+      (liquidityDelta, , nextTick) = ticks.cross(nextTick, _totalFeeGrowth0, _totalFeeGrowth1);
       _currentLiquidity = LiquidityMath.addDelta(_currentLiquidity, liquidityDelta);
     }
 
@@ -123,13 +124,12 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     bool zeroToOne,
     uint256 feeAmount,
     int24 currentTick,
-    uint160 sqrtPrice,
     uint128 poolLiquidity
   ) external override {
     if (msg.sender != plugin) revert onlyPlugin();
     if (deactivated) return;
 
-    _updateFeeGrowth(feeAmount, currentLiquidity, poolLiquidity, zeroToOne, sqrtPrice);
+    _updateFeeGrowth(feeAmount, currentLiquidity, poolLiquidity, zeroToOne);
 
     // Update global tick position
     globalTick = currentTick;
@@ -139,18 +139,15 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   function getInnerFeeGrowth(
     int24 bottomTick,
     int24 topTick
-  ) external view override returns (uint256 feeGrowthInside) {
+  ) external view override returns (uint256 feeGrowthInside0, uint256 feeGrowthInside1) {
     unchecked {
       // check if ticks are initialized
       if (ticks[bottomTick].prevTick == ticks[bottomTick].nextTick || ticks[topTick].prevTick == ticks[topTick].nextTick)
         revert IAlgebraPoolErrors.tickIsNotInitialized();
 
       int24 _globalTick = globalTick;
-      uint256 _totalFeeGrowthLocal = _totalFeeGrowth; // TODO: var naming
-
-      // Get inner fee growth using tick management library
-      // We use outerFeeGrowth0Token for fee-based tracking, outerFeeGrowth1Token is always 0
-      (feeGrowthInside, ) = ticks.getInnerFeeGrowth(bottomTick, topTick, _globalTick, _totalFeeGrowthLocal, 0);
+ 
+      (feeGrowthInside0, feeGrowthInside1) = ticks.getInnerFeeGrowth(bottomTick, topTick, _globalTick, _totalFeeGrowth0, _totalFeeGrowth1);
     }
   }
 
@@ -214,35 +211,25 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   }
 
   function _updateTick(int24 tick, int24 currentTick, int128 liquidityDelta, bool isTopTick) internal returns (bool updated) {
-    return ticks.update(tick, currentTick, liquidityDelta, _totalFeeGrowth, 0, isTopTick);
+    return ticks.update(tick, currentTick, liquidityDelta, _totalFeeGrowth0, _totalFeeGrowth1, isTopTick);
   }
 
-  /// @notice Converts fee amount to token0 equivalent
-  function _convertFeeToToken0(
-    bool zeroToOne,
-    uint256 feeAmount,
-    uint160 sqrtPrice // TODO: chose price for fee conversion, not sure this one is correct
-  ) internal pure returns (uint256 feeInToken0) {
-    if (zeroToOne) {
-      // Fee is already in token0
-      feeInToken0 = feeAmount;
-    } else {
-      feeInToken0 = FullMath.mulDiv(feeAmount, Q192, uint256(sqrtPrice) * sqrtPrice); // TODO: price mul overflow
-    }
-  }
 
-  /// @notice Updates the total fee accumulators
-  /// @dev Distributes fee proportionally to current liquidity
-  function _updateFeeGrowth(uint256 feeAmount, uint128 _currentLiquidity, uint128 poolLiquidity, bool zeroToOne, uint160 sqrtPrice) internal {
-    if (_currentLiquidity > 0 && feeAmount > 0) {
-
+  function _updateFeeGrowth(uint256 feeAmount, uint128 _currentLiquidity, uint128 poolLiquidity, bool zeroToOne) internal {
+    if (_currentLiquidity > 0 && feeAmount > 0 && poolLiquidity > 0) {
+      // Calculate farming's share of fees based on liquidity ratio
       uint256 farmingFees = FullMath.mulDiv(feeAmount, _currentLiquidity, poolLiquidity);
       
-      // Convert fee to token0 equivalent
-      uint256 feeInToken0 = _convertFeeToToken0(zeroToOne, farmingFees, sqrtPrice);
-
-      _totalFeeGrowth += FullMath.mulDiv(feeInToken0, Constants.Q128, _currentLiquidity);
-      _totalFees += feeInToken0;
+      // Update the feeGrowth and totalFees based on swap direction
+      if (zeroToOne) {
+        // zeroToOne: fee collected in token0
+        _totalFeeGrowth0 += FullMath.mulDiv(farmingFees, Constants.Q128, _currentLiquidity);
+        totalFees0Collected += farmingFees;
+      } else {
+        // oneToZero: fee collected in token1
+        _totalFeeGrowth1 += FullMath.mulDiv(farmingFees, Constants.Q128, _currentLiquidity);
+        totalFees1Collected += farmingFees;
+      }
     }
   }
 
