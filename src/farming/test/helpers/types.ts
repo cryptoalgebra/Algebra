@@ -138,4 +138,12 @@ export module HelperTypes {
 
     export type Command = CommandFunction<Args, Result>;
   }
+  export namespace GetRewardRate {
+    export type Command = (params: {
+      createIncentiveResult: CreateIncentive.Result;
+    }) => Promise<{
+      rewardRate0: bigint;
+      rewardRate1: bigint;
+    }>;
+  }
 }
