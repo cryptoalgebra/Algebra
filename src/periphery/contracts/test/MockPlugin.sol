@@ -66,7 +66,6 @@ contract MockPlugin is IAlgebraPlugin {
         bool,
         uint256,
         uint256,
-        uint256,
         int24,
         int128,
         uint128

@@ -19,9 +19,8 @@ contract MockFarmingPlugin is IAlgebraPlugin {
 
   event AfterCross(
     bool zeroToOne,
-    uint256 amount0,
-    uint256 amount1,
-    uint256 feeAmount,
+    uint256 swapStepAmount,
+    uint256 feeStepAmount,
     int24 tick,
     int128 liquidityDelta,
     uint128 currentLiquidity
@@ -35,7 +34,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
-    uint256 accumulatedFee
+    uint256 feeAmount
   );
 
   error onlyPool();
@@ -135,18 +134,18 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
-    uint256 accumulatedFee,
+    uint256 feeAmount,
     bytes calldata
   ) external override _onlyPool returns (bytes4) {
-    emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, accumulatedFee);
+    emit AfterSwap(sender, recipient, zeroToOne, amountRequired, limitSqrtPrice, amount0, amount1, feeAmount);
     
     address _virtualPool = virtualPool;
-    if (_virtualPool != address(0) && accumulatedFee > 0) {
+    if (_virtualPool != address(0) && feeAmount > 0) {
 
       (, int24 currentTick, , , , ) = IAlgebraPool(pool).globalState();
       uint128 poolLiquidity = IAlgebraPool(pool).liquidity();
 
-      IAlgebraEternalVirtualPool(_virtualPool).afterSwap(zeroToOne, accumulatedFee, currentTick, poolLiquidity);
+      IAlgebraEternalVirtualPool(_virtualPool).afterSwap(zeroToOne, feeAmount, currentTick, poolLiquidity);
     }
     
     return IAlgebraPlugin.afterSwap.selector;
@@ -155,14 +154,13 @@ contract MockFarmingPlugin is IAlgebraPlugin {
   /// @inheritdoc IAlgebraPlugin
   function afterCross(
     bool zeroToOne,
-    uint256 amount0,
-    uint256 amount1,
-    uint256 feeAmount,
+    uint256 swapStepAmount,
+    uint256 feeStepAmount,
     int24 tick,
     int128 liquidityDelta,
     uint128 currentLiquidity
   ) external override _onlyPool returns (bytes4) {
-    emit AfterCross(zeroToOne, amount0, amount1, feeAmount, tick, liquidityDelta, currentLiquidity);
+    emit AfterCross(zeroToOne, swapStepAmount, feeStepAmount, tick, liquidityDelta, currentLiquidity);
     
     address _virtualPool = virtualPool;
     if (_virtualPool != address(0)) {
@@ -170,7 +168,7 @@ contract MockFarmingPlugin is IAlgebraPlugin {
       uint128 poolLiquidity = IAlgebraPool(pool).liquidity();
       
 
-      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeAmount, tick, poolLiquidity);
+      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeStepAmount, tick, poolLiquidity);
     }
     
     return IAlgebraPlugin.afterCross.selector;

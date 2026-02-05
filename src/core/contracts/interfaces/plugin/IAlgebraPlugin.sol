@@ -97,7 +97,7 @@ interface IAlgebraPlugin {
   /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
   /// @param amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
   /// @param amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
-  /// @param accumulatedFee The accumulated fee since the last cross
+  /// @param feeAmount The fee amount from the last step (before community/plugin fee deduction)
   /// @param data Data that passed through the callback
   /// @return bytes4 The function selector for the hook
   function afterSwap(
@@ -108,7 +108,7 @@ interface IAlgebraPlugin {
     uint160 limitSqrtPrice,
     int256 amount0,
     int256 amount1,
-    uint256 accumulatedFee,
+    uint256 feeAmount,
     bytes calldata data
   ) external returns (bytes4);
 
@@ -142,20 +142,18 @@ interface IAlgebraPlugin {
 
   /// @notice The hook called after crossing an initialized tick during a swap
   /// @param zeroToOne The direction of the swap
-  /// @param amount0 The amount of token0 in this step
-  /// @param amount1 The amount of token1 in this step  
-  /// @param feeAmount The accumulated fee since last cross 
+  /// @param swapStepAmount The input amount of the swap step
+  /// @param feeStepAmount The accumulated fee since last cross 
   /// @param tick The tick that was crossed
   /// @param liquidityDelta The liquidity delta at the crossed tick 
   /// @param currentLiquidity The pool's current liquidity before the cross
   /// @return bytes4 The function selector for the hook
   function afterCross(
     bool zeroToOne,
-    uint256 amount0,
-    uint256 amount1,
-    uint256 feeAmount,
+    uint256 swapStepAmount,
+    uint256 feeStepAmount,
     int24 tick, 
     int128 liquidityDelta,
-    uint128 currentLiquidity // TODO: remove current liquidity if not needed
+    uint128 currentLiquidity
   ) external returns (bytes4);
 }
