@@ -18,6 +18,7 @@ describe('unit/Multicall', () => {
   let actors: ActorFixture;
   let incentiveCreator: Wallet;
   let multicaller: Wallet;
+  let helpers: HelperCommands;
   const amountDesired = BNe18(10);
   const totalReward = BNe18(100);
   const bonusReward = BNe18(100);
@@ -84,11 +85,18 @@ describe('unit/Multicall', () => {
   });
 
   beforeEach('loadFixture', async () => {
-    ({ context, farmIncentiveKey, tokenId } = await loadFixture(multicallFixture));
+    ({ context, helpers, farmIncentiveKey, tokenId } = await loadFixture(multicallFixture));
   });
 
   it('is implemented', async () => {
-    await Time.step(1000);
+    // Generate fees through swap to enable rewards
+    const trader = actors.traderUser0();
+    
+    await helpers.makeTickGoFlow({
+      trader,
+      direction: 'up',
+      desiredValue: 10,
+    });
 
     const collectRewardsTx = context.farmingCenter.interface.encodeFunctionData('collectRewards', [farmIncentiveKey, tokenId]);
 
@@ -100,7 +108,13 @@ describe('unit/Multicall', () => {
   });
 
   it('can be used to claim multiple tokens from one incentive', async () => {
-    await Time.step(1000);
+    // Generate fees through swap to enable rewards
+    const trader = actors.traderUser0();
+    await helpers.makeTickGoFlow({
+      trader,
+      direction: 'up',
+      desiredValue: 10,
+    });
 
     const collectRewardsTx = context.farmingCenter.interface.encodeFunctionData('collectRewards', [farmIncentiveKey, tokenId]);
 

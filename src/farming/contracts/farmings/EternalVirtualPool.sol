@@ -27,12 +27,10 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
   /// @inheritdoc IAlgebraEternalVirtualPool
   int24 public override globalTick; 
   /// @inheritdoc IAlgebraEternalVirtualPool
-  uint32 public override prevTimestamp;
-  /// @inheritdoc IAlgebraEternalVirtualPool
   bool public override deactivated;
 
-  uint256 internal _totalFeeGrowth0 = 1;
-  uint256 internal _totalFeeGrowth1 = 1;
+  uint256 internal _totalFeeGrowth0;
+  uint256 internal _totalFeeGrowth1;
 
   /// @dev Total fees collected for each token
   uint256 public override totalFees0Collected;
@@ -47,7 +45,6 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     farmingAddress = _farmingAddress;
     plugin = _plugin;
 
-    prevTimestamp = _blockTimestamp();
     globalPrevInitializedTick = TickMath.MIN_TICK;
     globalNextInitializedTick = TickMath.MAX_TICK;
   }
@@ -95,6 +92,7 @@ contract EternalVirtualPool is Timestamp, VirtualTickStructure {
     
     // For an uninitialized tick, prevTick == nextTick == 0
     if (tickData.prevTick == tickData.nextTick) {
+      globalTick = tick;
       return;
     }
 

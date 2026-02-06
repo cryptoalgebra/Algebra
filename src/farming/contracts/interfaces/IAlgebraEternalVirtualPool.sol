@@ -81,9 +81,6 @@ interface IAlgebraEternalVirtualPool { // TODO: return to IAlgebraVirtualPool in
   /// @notice Returns the current tick in virtual pool
   function globalTick() external view returns (int24);
 
-  /// @notice Returns the timestamp after previous virtual pool update
-  function prevTimestamp() external view returns (uint32);
-
   /// @notice Returns true if virtual pool is deactivated
   function deactivated() external view returns (bool);
 

@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross direction changes otz then zto - same tick 1`] = `42704`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross direction changes zto then otz - same tick 1`] = `30050`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross edge cases crossing from MIN_TICK + 1 1`] = `73663`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross edge cases crossing to MAX_TICK - 1 1`] = `73364`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross edge cases when deactivated 1`] = `30062`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross edge cases with zero liquidity 1`] = `35542`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with one tick cross otz - cross upper tick 1`] = `107540`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with one tick cross otz - with fee accumulation 1`] = `107552`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with one tick cross zto - cross lower tick 1`] = `107863`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with one tick cross zto - with fee accumulation 1`] = `107875`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with three or more tick crosses otz - third cross 1`] = `73340`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with three or more tick crosses zto - third cross 1`] = `73663`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with two tick crosses otz - first cross 1`] = `107540`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with two tick crosses otz - second cross 1`] = `73340`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with two tick crosses zto - first cross 1`] = `107863`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross with two tick crosses zto - second cross 1`] = `73663`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross without tick initialization otz - tick not initialized 1`] = `80384`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterCross without tick initialization zto - tick not initialized 1`] = `80781`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap edge cases when deactivated 1`] = `29898`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap edge cases with large fee amount 1`] = `75280`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap edge cases with position out of range 1`] = `30377`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap edge cases without liquidity in virtual pool 1`] = `33177`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap oneToZero with different pool liquidity 1`] = `75207`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap oneToZero with fee accumulation and price conversion 1`] = `75207`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap zeroToOne with fee accumulation - first swap 1`] = `75232`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap zeroToOne with fee accumulation - subsequent swap 1`] = `41032`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap zeroToOne with partial liquidity share (50%) 1`] = `75232`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #afterSwap zeroToOne with zero fee amount 1`] = `30364`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition first position - initializes ticks 1`] = `230818`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition full range position 1`] = `207684`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition position out of range 1`] = `234806`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition remove position - clears ticks 1`] = `78963`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition second position - overlapping range 1`] = `154000`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #applyLiquidityDeltaToPosition second position - same range 1`] = `54725`;
+
+exports[`unit/VirtualPool gas checks [ @skip-on-coverage ] #deactivate deactivate virtual pool 1`] = `26314`;

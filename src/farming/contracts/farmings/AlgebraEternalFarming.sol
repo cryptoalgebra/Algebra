@@ -22,6 +22,7 @@ import '../libraries/IncentiveId.sol';
 import '../libraries/NFTPositionInfo.sol';
 
 import './EternalVirtualPool.sol';
+import 'hardhat/console.sol';
 
 /// @title Algebra Integral 1.2.2  eternal (v2-like) farming
 /// @notice Manages rewards and virtual pools
@@ -208,6 +209,7 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
     (bytes32 incentiveId, Incentive storage incentive) = _getExistingIncentiveByKey(key);
 
     if (rewardAmount >= incentive.totalReward) rewardAmount = incentive.totalReward - 1; // to not trigger 'non-existent incentive'
+    if (bonusRewardAmount > incentive.bonusReward) bonusRewardAmount = incentive.bonusReward;
     incentive.totalReward = incentive.totalReward - rewardAmount;
     incentive.bonusReward = incentive.bonusReward - bonusRewardAmount;
 
@@ -438,19 +440,30 @@ contract AlgebraEternalFarming is IAlgebraEternalFarming {
       // Calculate total fees delta for each token
       uint256 totalFeesDelta0 = totalFees0 - farm.totalFees0Last;
       uint256 totalFeesDelta1 = totalFees1 - farm.totalFees1Last;
-      
+
       uint256 weightedShare = 0;
-      if (totalFeesDelta0 > 0 && positionFees0 > 0) {
-        weightedShare += FullMath.mulDiv(positionFees0, incentive.weight0, totalFeesDelta0);
+      uint256 effectivePrecision = 0;
+      
+      // Only count weights for tokens that have active fees
+      // This ensures proper distribution when only one token generates fees
+      if (totalFeesDelta0 > 0) {
+        effectivePrecision += incentive.weight0;
+        if (positionFees0 > 0) {
+          weightedShare += FullMath.mulDiv(positionFees0, incentive.weight0, totalFeesDelta0);
+        }
       }
-      if (totalFeesDelta1 > 0 && positionFees1 > 0) {
-        weightedShare += FullMath.mulDiv(positionFees1, incentive.weight1, totalFeesDelta1);
+      if (totalFeesDelta1 > 0) {
+        effectivePrecision += incentive.weight1;
+        if (positionFees1 > 0) {
+          weightedShare += FullMath.mulDiv(positionFees1, incentive.weight1, totalFeesDelta1);
+        }
       }
       
-      // Calculate rewards: potentialReward * weightedShare / WEIGHT_PRECISION
-      if (weightedShare > 0) {
-        reward = FullMath.mulDiv(potentialReward, weightedShare, WEIGHT_PRECISION);
-        bonusReward = FullMath.mulDiv(potentialBonusReward, weightedShare, WEIGHT_PRECISION);
+      // Calculate rewards: potentialReward * weightedShare / effectivePrecision
+      // If effectivePrecision = 0 (no fees or weight=0 for active token), no rewards
+      if (effectivePrecision > 0 && weightedShare > 0) {
+        reward = FullMath.mulDiv(potentialReward, weightedShare, effectivePrecision);
+        bonusReward = FullMath.mulDiv(potentialBonusReward, weightedShare, effectivePrecision);
       }
     }
   }

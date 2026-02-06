@@ -164,11 +164,9 @@ contract MockFarmingPlugin is IAlgebraPlugin {
     
     address _virtualPool = virtualPool;
     if (_virtualPool != address(0)) {
-
-      uint128 poolLiquidity = IAlgebraPool(pool).liquidity();
       
-
-      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeStepAmount, tick, poolLiquidity);
+      // currentLiquidity is the pool liquidity before cross
+      IAlgebraEternalVirtualPool(_virtualPool).afterCross(zeroToOne, feeStepAmount, tick, currentLiquidity);
     }
     
     return IAlgebraPlugin.afterCross.selector;

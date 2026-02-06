@@ -10,7 +10,7 @@ import { PoolMock, TestVirtualPool } from '../../typechain';
 const MIN_TICK = -887272;
 const MAX_TICK = 887272;
 
-describe('unit/FeeBasedVirtualPool', () => {
+describe('unit/VirtualPool', () => {
   let pseudoFarming: Wallet;
 
   const Time = createTimeMachine();
@@ -71,15 +71,11 @@ describe('unit/FeeBasedVirtualPool', () => {
     const tick = await virtualPool.globalTick();
     expect(tick).to.be.eq(0);
 
-    const prevTimestamp = await virtualPool.prevTimestamp();
-    expect(prevTimestamp).to.be.eq(initTimestamp);
-
-    // Fee-based: totalFeeGrowth0 and totalFeeGrowth1 start at 1
     const totalFeeGrowth0 = await virtualPool.totalFeeGrowth0();
-    expect(totalFeeGrowth0).to.be.eq(1);
+    expect(totalFeeGrowth0).to.be.eq(0);
 
     const totalFeeGrowth1 = await virtualPool.totalFeeGrowth1();
-    expect(totalFeeGrowth1).to.be.eq(1);
+    expect(totalFeeGrowth1).to.be.eq(0);
   });
 
   describe('#applyLiquidityDeltaToPosition', async () => {
@@ -539,8 +535,9 @@ describe('unit/FeeBasedVirtualPool', () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
 
-        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, -1);
-        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, -1);
+        // Set currentTick to 1 so we can cross tick 0 going down
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 1);
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
 
         // Cross tick 0 going down (zto)
         await poolMock.afterCross(true, 100n, 0, 2000n);
@@ -574,8 +571,9 @@ describe('unit/FeeBasedVirtualPool', () => {
         await poolMock.setPlugin(poolMock);
         await poolMock.setVirtualPool(virtualPool);
 
-        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 1);
-        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 1);
+        // Set currentTick to 239 so we can cross tick 240 going up
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-600, 240, 1000, 239);
+        await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(0, 240, 1000, 239);
 
         // Cross tick 240 going up (otz)
         await poolMock.afterCross(false, 100n, 240, 2000n);
@@ -698,6 +696,124 @@ describe('unit/FeeBasedVirtualPool', () => {
       // The narrower position should have same fee growth since both cover tick 1
       expect(innerFeeGrowth0_1).to.be.eq(innerFeeGrowth0_2);
       expect(innerFeeGrowth1_1).to.be.eq(innerFeeGrowth1_2);
+    });
+  });
+
+  describe('#totalFeesCollected', async () => {
+    it('totalFees0Collected starts at 0', async () => {
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+    });
+
+    it('totalFees1Collected starts at 0', async () => {
+      expect(await virtualPool.totalFees1Collected()).to.eq(0);
+    });
+
+    it('totalFees0Collected accumulates correctly over multiple zeroToOne swaps', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+
+      // First swap: 1000 fee, farming has 100% of pool liquidity
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
+      const fees0After1 = await virtualPool.totalFees0Collected();
+      expect(fees0After1).to.eq(1000n);
+
+      // Second swap
+      await poolMock.afterSwap(true, 500n, 1, 1000n);
+      const fees0After2 = await virtualPool.totalFees0Collected();
+      expect(fees0After2).to.eq(1500n);
+
+      // token1 unchanged
+      expect(await virtualPool.totalFees1Collected()).to.eq(0);
+    });
+
+    it('totalFees1Collected accumulates correctly over multiple oneToZero swaps', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      expect(await virtualPool.totalFees1Collected()).to.eq(0);
+
+      // First swap: 1000 fee, farming has 100% of pool liquidity
+      await poolMock.afterSwap(false, 1000n, 1, 1000n);
+      const fees1After1 = await virtualPool.totalFees1Collected();
+      expect(fees1After1).to.eq(1000n);
+
+      // Second swap
+      await poolMock.afterSwap(false, 750n, 1, 1000n);
+      const fees1After2 = await virtualPool.totalFees1Collected();
+      expect(fees1After2).to.eq(1750n);
+
+      // token0 unchanged
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+    });
+
+    it('totalFees are proportional to farming liquidity share', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      // Virtual pool has 500 liquidity, pool has 1000 (50% share)
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 500, 1);
+
+      // Swap with 1000 fee, farming should get 500 (50%)
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
+      expect(await virtualPool.totalFees0Collected()).to.eq(500n);
+
+      // Swap with 2000 fee, farming should get 1000 more (50%)
+      await poolMock.afterSwap(true, 2000n, 1, 1000n);
+      expect(await virtualPool.totalFees0Collected()).to.eq(1500n);
+    });
+
+    it('totalFees do not accumulate when no farming liquidity', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+
+      // No liquidity added to virtual pool
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+      
+      await poolMock.afterSwap(false, 1000n, 1, 1000n);
+      expect(await virtualPool.totalFees1Collected()).to.eq(0);
+    });
+
+    it('totalFees do not accumulate when pool liquidity is zero', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      // poolLiquidity = 0 means no fees should be distributed
+      await poolMock.afterSwap(true, 1000n, 1, 0);
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+    });
+
+    it('totalFees do not accumulate when deactivated', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+      await virtualPool.connect(pseudoFarming).deactivate();
+
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);
+      expect(await virtualPool.totalFees0Collected()).to.eq(0);
+    });
+
+    it('totalFees accumulate for both tokens with mixed swaps', async () => {
+      await poolMock.setPlugin(poolMock);
+      await poolMock.setVirtualPool(virtualPool);
+      
+      await virtualPool.connect(pseudoFarming).applyLiquidityDeltaToPosition(-100, 100, 1000, 1);
+
+      await poolMock.afterSwap(true, 1000n, 1, 1000n);  // token0
+      await poolMock.afterSwap(false, 500n, 1, 1000n); // token1
+      await poolMock.afterSwap(true, 250n, 1, 1000n);  // token0
+
+      expect(await virtualPool.totalFees0Collected()).to.eq(1250n);
+      expect(await virtualPool.totalFees1Collected()).to.eq(500n);
     });
   });
 

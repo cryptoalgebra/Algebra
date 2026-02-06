@@ -287,13 +287,19 @@ export const algebraFixture: () => Promise<AlgebraFixtureType> = async () => {
   const pool12 = await factory.poolByPair(tokens[1], tokens[2]);
 
   const poolObj = poolFactory.attach(pool01) as any as IAlgebraPool;
+  const poolObj12 = poolFactory.attach(pool12) as any as IAlgebraPool;
 
   const farmingPluginFactory = await ethers.getContractFactory('MockFarmingPlugin', signer);
-  const farmingPlugin = (await farmingPluginFactory.deploy(pool01)) as any as MockFarmingPlugin;
+  const farmingPlugin01 = (await farmingPluginFactory.deploy(pool01)) as any as MockFarmingPlugin;
+  const farmingPlugin12 = (await farmingPluginFactory.deploy(pool12)) as any as MockFarmingPlugin;
 
-  await poolObj.connect(ownerSigner).setPlugin(await farmingPlugin.getAddress());
-  await poolObj.connect(ownerSigner).setPluginConfig(514); // after cross & after swap
+  await poolObj.connect(ownerSigner).setPlugin(await farmingPlugin01.getAddress());
+  await poolObj.connect(ownerSigner).setPluginConfig(258); // AFTER_SWAP_FLAG(2) + AFTER_CROSS_FLAG(256)
   await poolObj.connect(ownerSigner).setCommunityVault(vaultAddress);
+
+  await poolObj12.connect(ownerSigner).setPlugin(await farmingPlugin12.getAddress());
+  await poolObj12.connect(ownerSigner).setPluginConfig(258); // AFTER_SWAP_FLAG(2) + AFTER_CROSS_FLAG(256)
+  await poolObj12.connect(ownerSigner).setCommunityVault(vaultAddress);
 
   const pluginContractFactory = new ethers.ContractFactory(PLUGIN_ABI, PLUGIN_BYTECODE, signer);
 

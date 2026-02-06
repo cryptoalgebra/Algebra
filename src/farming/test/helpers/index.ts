@@ -309,6 +309,15 @@ export class HelperCommands {
     });
   };
 
+  getRewardRate: HelperTypes.GetRewardRate.Command = async (params) => {
+    const incentiveId = await this.getIncentiveId(params.createIncentiveResult);
+    const incentive = await this.eternalFarming.incentives(incentiveId);
+    return {
+      rewardRate0: incentive.rewardRate,
+      rewardRate1: incentive.bonusRewardRate,
+    };
+  };
+
   makeTickGoFlow: HelperTypes.MakeTickGo.Command = async (params) => {
     // await tok0.transfer(trader0.address, BNe18(2).mul(params.numberOfTrades))
     // await tok0
